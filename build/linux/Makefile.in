@@ -1,0 +1,314 @@
+cuda=@HAVECUDA@
+matlab=@HAVEMATLAB@
+
+MATLAB_ROOT=@MATLAB_ROOT@
+
+TARGETS=libastra.la
+
+ifeq ($(matlab),yes)
+TARGETS+=mex
+endif
+
+all: $(TARGETS)
+
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+
+VPATH=../..
+
+CPPFLAGS=@SAVED_CPPFLAGS@
+CXXFLAGS=@SAVED_CXXFLAGS@
+LDFLAGS=@SAVED_LDFLAGS@
+
+CPPFLAGS+=-I../.. -I../../include -I../../lib/include/rapidxml
+CXXFLAGS+=-g -O3 -Wall -Wshadow
+LIBS=-lpthread -lrt
+LDFLAGS+=-g
+
+ifeq ($(cuda),yes)
+CPPFLAGS  += @CPPFLAGS_CUDA@ -DASTRA_CUDA
+NVCCFLAGS  = @NVCCFLAGS@ @CPPFLAGS_CUDA@ -I../.. -I../../include -DASTRA_CUDA
+LDFLAGS   += @LDFLAGS_CUDA@
+LIBS      += -lcudart -lcufft
+NVCC       = @NVCC@
+endif
+
+ifeq ($(matlab),yes)
+CPPFLAGS+=-I$(MATLAB_ROOT)/extern/include -DMATLAB_MEX_FILE
+endif
+
+TNT_CPPFLAGS=@TNT_CPPFLAGS@
+BOOST_CPPFLAGS=
+BOOST_LDFLAGS=
+
+
+CPPFLAGS+=$(TNT_CPPFLAGS) $(BOOST_CPPFLAGS)
+LDFLAGS+=$(BOOST_LDFLAGS)
+
+
+MKDIR=mkdir -p
+CXX=g++
+LD=g++
+SHELL=@SHELL@
+
+ifeq ($(matlab),yes)
+MEXFLAGS  = -cxx 
+MEXLDFLAGS='$$LDFLAGS $(LDFLAGS) -L.libs -lut'
+MEXSUFFIX = @MEXSUFFIX@
+MEX       = @MEX@
+endif
+
+LIBDIR=/usr/local/lib
+
+DEPDIR=.deps
+
+BASE_OBJECTS=\
+	src/Algorithm.lo \
+	src/AsyncAlgorithm.lo \
+	src/ReconstructionAlgorithm2D.lo \
+	src/ReconstructionAlgorithm3D.lo \
+	src/ArtAlgorithm.lo \
+	src/AstraObjectFactory.lo \
+	src/AstraObjectManager.lo \
+	src/BackProjectionAlgorithm.lo \
+	src/CglsAlgorithm.lo \
+	src/ConeProjectionGeometry3D.lo \
+	src/ConeVecProjectionGeometry3D.lo \
+	src/Config.lo \
+	src/DataProjector.lo \
+	src/DataProjectorPolicies.lo \
+	src/FanFlatBeamLineKernelProjector2D.lo \
+	src/FanFlatBeamStripKernelProjector2D.lo \
+	src/FanFlatProjectionGeometry2D.lo \
+	src/FanFlatVecProjectionGeometry2D.lo \
+	src/FilteredBackProjectionAlgorithm.lo \
+	src/Float32Data2D.lo \
+	src/Float32Data3D.lo \
+	src/Float32Data3DMemory.lo \
+	src/Float32Data.lo \
+	src/Float32ProjectionData2D.lo \
+	src/Float32ProjectionData3D.lo \
+	src/Float32ProjectionData3DMemory.lo \
+	src/Float32VolumeData2D.lo \
+	src/Float32VolumeData3D.lo \
+	src/Float32VolumeData3DMemory.lo \
+	src/ForwardProjectionAlgorithm.lo \
+	src/Fourier.lo \
+	src/Globals.lo \
+	src/Logger.lo \
+	src/ParallelBeamBlobKernelProjector2D.lo \
+	src/ParallelBeamLinearKernelProjector2D.lo \
+	src/ParallelBeamLineKernelProjector2D.lo \
+	src/ParallelBeamStripKernelProjector2D.lo \
+	src/ParallelProjectionGeometry2D.lo \
+	src/ParallelProjectionGeometry3D.lo \
+	src/ParallelVecProjectionGeometry3D.lo \
+	src/PlatformDepSystemCode.lo \
+	src/ProjectionGeometry2D.lo \
+	src/ProjectionGeometry3D.lo \
+	src/Projector2D.lo \
+	src/Projector3D.lo \
+	src/SartAlgorithm.lo \
+	src/SirtAlgorithm.lo \
+	src/SparseMatrixProjectionGeometry2D.lo \
+	src/SparseMatrixProjector2D.lo \
+	src/SparseMatrix.lo \
+	src/Utilities.lo \
+	src/VolumeGeometry2D.lo \
+	src/VolumeGeometry3D.lo \
+	src/XMLDocument.lo \
+	src/XMLNode.lo \
+	src/swrap.lo
+
+CUDA_CXX_OBJECTS=\
+	src/CudaProjector2D.lo \
+	src/CudaProjector3D.lo \
+	src/CudaReconstructionAlgorithm2D.lo \
+	src/CudaBackProjectionAlgorithm.lo \
+	src/CudaDartMaskAlgorithm.lo \
+	src/CudaDartMaskAlgorithm3D.lo \
+	src/CudaDataOperationAlgorithm.lo \
+	src/CudaRoiSelectAlgorithm.lo \
+	src/CudaDartSmoothingAlgorithm.lo \
+	src/CudaDartSmoothingAlgorithm3D.lo \
+	src/CudaFilteredBackProjectionAlgorithm.lo \
+	src/CudaForwardProjectionAlgorithm.lo \
+	src/CudaSartAlgorithm.lo \
+	src/CudaSirtAlgorithm.lo \
+	src/CudaCglsAlgorithm.lo \
+	src/CudaCglsAlgorithm3D.lo \
+	src/CudaEMAlgorithm.lo \
+	src/CudaFDKAlgorithm3D.lo \
+	src/CudaSirtAlgorithm3D.lo \
+	src/CudaBackProjectionAlgorithm3D.lo \
+	src/CudaForwardProjectionAlgorithm3D.lo
+
+CUDA_OBJECTS=\
+	cuda/2d/algo.lo \
+	cuda/2d/par_fp.lo \
+	cuda/2d/par_bp.lo \
+	cuda/2d/fan_fp.lo \
+	cuda/2d/fan_bp.lo \
+	cuda/2d/sirt.lo \
+	cuda/2d/sart.lo \
+	cuda/2d/cgls.lo \
+	cuda/2d/em.lo \
+	cuda/2d/astra.lo \
+	cuda/2d/util.lo \
+	cuda/2d/arith.lo \
+	cuda/2d/fft.lo \
+	cuda/2d/darthelper.lo \
+	cuda/3d/darthelper3d.lo \
+	cuda/3d/algo3d.lo \
+	cuda/3d/cgls3d.lo \
+	cuda/3d/cone_fp.lo \
+	cuda/3d/cone_bp.lo \
+	cuda/3d/fdk.lo \
+	cuda/3d/par3d_fp.lo \
+	cuda/3d/par3d_bp.lo \
+	cuda/3d/sirt3d.lo \
+	cuda/3d/astra3d.lo \
+	cuda/3d/util3d.lo \
+	cuda/3d/arith3d.lo
+
+ALL_OBJECTS=$(BASE_OBJECTS)
+ifeq ($(cuda),yes)
+ALL_OBJECTS+=$(CUDA_CXX_OBJECTS) $(CUDA_OBJECTS)
+endif
+
+TEST_OBJECTS=\
+	tests/main.o \
+	tests/test_AstraObjectManager.o \
+	tests/test_ParallelBeamLineKernelProjector2D.o \
+	tests/test_ParallelBeamLinearKernelProjector2D.o \
+	tests/test_Float32Data2D.o \
+	tests/test_VolumeGeometry2D.o \
+	tests/test_ParallelProjectionGeometry2D.o \
+	tests/test_FanFlatProjectionGeometry2D.o \
+	tests/test_Float32VolumeData2D.o \
+	tests/test_Float32ProjectionData2D.o \
+	tests/test_Fourier.o \
+	tests/test_XMLDocument.o
+
+MATLAB_CXX_OBJECTS=\
+	matlab/mex/mexHelpFunctions.o
+
+MATLAB_MEX=\
+	matlab/mex/astra_mex_algorithm_c.$(MEXSUFFIX) \
+	matlab/mex/astra_mex_data2d_c.$(MEXSUFFIX) \
+	matlab/mex/astra_mex_c.$(MEXSUFFIX) \
+	matlab/mex/astra_mex_matrix_c.$(MEXSUFFIX) \
+	matlab/mex/astra_mex_projector_c.$(MEXSUFFIX) \
+	matlab/mex/astra_mex_projector3d_c.$(MEXSUFFIX) \
+	matlab/mex/astra_mex_data3d_c.$(MEXSUFFIX)
+
+
+OBJECT_DIRS = src/ tests/ cuda/2d/ cuda/3d/ matlab/mex/ ./
+DEPDIRS = $(addsuffix $(DEPDIR),$(OBJECT_DIRS))
+-include $(wildcard $(addsuffix /*.d,$(DEPDIRS)))
+LIBDIRS = $(addsuffix .libs,./ src/ cuda/2d/old/ cuda/2d)
+
+
+ifeq ($(matlab),yes)
+mex: $(MATLAB_MEX)
+
+%.$(MEXSUFFIX): %.o $(MATLAB_CXX_OBJECTS) libastra.la
+	$(MEX) LDFLAGS=$(MEXLDFLAGS) $(MEXFLAGS) $(LIBS) -lastra -output $* $*.o $(MATLAB_CXX_OBJECTS)
+endif
+
+libastra.la: $(ALL_OBJECTS)
+	./libtool --mode=link --tag=CXX $(LD) -rpath $(LIBDIR) -o $@ $(LDFLAGS) $(LIBS) $+
+
+%.o: %.cpp
+	$(MKDIR) $(*D)/$(DEPDIR)
+	$(CXX) -Wp,-MMD,"$(*D)/$(DEPDIR)/$(*F).d",-MQ,"$@",-MP $(CXXFLAGS) -fPIC -DPIC $(CPPFLAGS) -c $(<) -o $*.o
+
+%.lo: %.cpp
+	$(MKDIR) $(*D)/$(DEPDIR)
+	./libtool --mode=compile --tag=CXX $(CXX) -Wp,-MMD,"$(*D)/$(DEPDIR)/$(*F).d",-MQ,"$@",-MP $(CXXFLAGS) $(CPPFLAGS) -c $(<) -o $*.o
+
+ifeq ($(cuda),yes)
+%.lo: %.cu
+	@# Behave like libtool: compile both a PIC and a non-PIC object file
+	@$(MKDIR) $(*D)
+	$(NVCC) $(NVCCFLAGS) -c $(<) -o $*.o
+	@$(MKDIR) $(*D)/.libs
+	@$(MKDIR) $(*D)/$(DEPDIR)
+	@$(NVCC) $(NVCCFLAGS) -c $(<) -Xcompiler -fPIC -DPIC -o $(*D)/.libs/$(*F).o >/dev/null 2>&1
+	@# Generate a .d file, and change the target name in it from .o to .lo
+	@$(NVCC) $(NVCCFLAGS) -M $(<) -odir $(*D) -o $(*D)/$(DEPDIR)/$(*F).d2
+	@sed '1s/\.o :/.lo :/' < $(*D)/$(DEPDIR)/$(*F).d2 > $(*D)/$(DEPDIR)/$(*F).d
+	@rm -f $(*D)/$(DEPDIR)/$(*F).d2
+	@# Generate a fake libtool .lo file
+	@echo "# $*.lo - a libtool object file" > $*.lo
+	@echo "# Generated by" `./libtool --version | head -n 1` >> $*.lo
+	@echo "#" >> $*.lo
+	@echo "# Please DO NOT delete this file!" >> $*.lo
+	@echo "# It is necessary for linking the library." >> $*.lo
+	@echo >> $*.lo
+	@echo "# Name of the PIC object." >> $*.lo
+	@echo "pic_object='.libs/$(*F).o'" >> $*.lo
+	@echo >> $*.lo
+	@echo "# Name of the non-PIC object." >> $*.lo
+	@echo "non_pic_object='$(*F).o'" >> $*.lo
+	@# Remove generated .linkinfo file
+	@rm -f $(*F).linkinfo
+endif
+
+test.bin: $(ALL_OBJECTS) $(TEST_OBJECTS)
+	./libtool --mode=link $(LD) -o $@ $(LDFLAGS) $(LIBS) $+ -lboost_unit_test_framework
+
+test: test.bin
+	./test.bin
+
+clean:
+	rm -f $(MATLAB_MEX) libastra.la
+	rm -f $(addsuffix /*.lo,$(OBJECT_DIRS))
+	rm -f $(addsuffix /*.o,$(OBJECT_DIRS))
+	rm -f $(addsuffix /*.d,$(DEPDIRS))
+	rm -f $(addsuffix /*,$(LIBDIRS))
+	rm -f $(TEST_OBJECTS) test.bin
+
+distclean: clean
+	rm -f config.guess config.sub ltmain.sh libtool install-sh
+	rm -f config.log config.status
+	rm -f aclocal.m4
+	rm -rf autom4te.cache
+	rm -f configure Makefile
+
+install: install-libraries install-matlab
+
+install-libraries: libastra.la
+	./install-sh -m 755 -d @libdir@
+	./libtool --mode=install ./install-sh -m 644 libastra.la @libdir@
+	./libtool --mode=finish @libdir@
+
+ifeq ($(matlab),yes)
+# TODO: This install location doesn't work well for /usr or /usr/local
+install-matlab: $(MATLAB_MEX)
+	./install-sh -m 755 -d @prefix@/matlab
+	./install-sh -m 755 -d @prefix@/matlab/mex
+	./install-sh -m 755 -d @prefix@/matlab/tools
+	./install-sh -m 644 $(MATLAB_MEX) @prefix@/matlab/mex
+	./install-sh -m 644 ../../matlab/tools/*.m @prefix@/matlab/tools
+# TODO: docs
+else
+install-matlab:
+endif
+
+
+Makefile: Makefile.in config.status
+	CONFIG_HEADERS= CONFIG_LINKS= CONFIG_FILES=$@ $(SHELL) ./config.status
+
+config.status: configure
+	@echo "configure script has changed. Re-running it with last parameters"
+	$(SHELL) ./config.status --recheck
+
+configure: configure.ac
+	@echo "configure.ac has been changed. Regenerating configure script"
+	$(SHELL) ./autogen.sh
+
+.PHONY: all mex test clean distclean install install-libraries
+
+# don't remove intermediate files:
+.SECONDARY:

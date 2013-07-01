@@ -1,0 +1,6 @@
+; MatlabDLL.def : Declares the module parameters for the DLL.
+
+LIBRARY      "astra"
+
+EXPORTS
+    ; Explicit exports can go here
