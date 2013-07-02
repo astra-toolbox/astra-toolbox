@@ -7,7 +7,7 @@ addpath('..');
 %
 
 % Configuration
-proj_count = 30;
+proj_count = 20;
 dart_iterations = 20;
 filename = 'cylinders.png';
 outdir = './';
@@ -55,7 +55,7 @@ D.smoothing.full3d     = 'yes';
 D.smoothing.gpu_core   = gpu_core;
  
 D.masking.random       = 0.1;
-D.masking.conn         = 6;
+D.masking.conn         = 4;
 D.masking.gpu_core     = gpu_core;
 
 D.output.directory     = outdir;
