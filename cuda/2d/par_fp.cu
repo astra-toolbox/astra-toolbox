@@ -448,7 +448,7 @@ __global__ void FPvertical_simple(float* D_projData, unsigned int projPitch, uns
 
 
 
-bool FP_simple(float* D_volumeData, unsigned int volumePitch,
+bool FP_simple_internal(float* D_volumeData, unsigned int volumePitch,
                float* D_projData, unsigned int projPitch,
                const SDimensions& dims, const float* angles,
                const float* TOffsets, float outputScale)
@@ -531,6 +531,29 @@ bool FP_simple(float* D_volumeData, unsigned int volumePitch,
 	cudaFreeArray(D_dataArray);
 		
 
+	return true;
+}
+
+bool FP_simple(float* D_volumeData, unsigned int volumePitch,
+               float* D_projData, unsigned int projPitch,
+               const SDimensions& dims, const float* angles,
+               const float* TOffsets, float outputScale)
+{
+	for (unsigned int iAngle = 0; iAngle < dims.iProjAngles; iAngle += g_MaxAngles) {
+		SDimensions subdims = dims;
+		unsigned int iEndAngle = iAngle + g_MaxAngles;
+		if (iEndAngle >= dims.iProjAngles)
+			iEndAngle = dims.iProjAngles;
+		subdims.iProjAngles = iEndAngle - iAngle;
+
+		bool ret;
+		ret = FP_simple_internal(D_volumeData, volumePitch,
+		                         D_projData + iAngle * projPitch, projPitch,
+		                         subdims, angles + iAngle,
+		                         TOffsets ? TOffsets + iAngle : 0, outputScale);
+		if (!ret)
+			return false;
+	}
 	return true;
 }
 

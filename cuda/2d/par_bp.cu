@@ -222,7 +222,7 @@ __global__ void devBP_SART(float* D_volData, unsigned int volPitch, float offset
 }
 
 
-bool BP(float* D_volumeData, unsigned int volumePitch,
+bool BP_internal(float* D_volumeData, unsigned int volumePitch,
         float* D_projData, unsigned int projPitch,
         const SDimensions& dims, const float* angles, const float* TOffsets)
 {
@@ -273,6 +273,29 @@ bool BP(float* D_volumeData, unsigned int volumePitch,
 
 	return true;
 }
+
+bool BP(float* D_volumeData, unsigned int volumePitch,
+        float* D_projData, unsigned int projPitch,
+        const SDimensions& dims, const float* angles, const float* TOffsets)
+{
+	for (unsigned int iAngle = 0; iAngle < dims.iProjAngles; iAngle += g_MaxAngles) {
+		SDimensions subdims = dims;
+		unsigned int iEndAngle = iAngle + g_MaxAngles;
+		if (iEndAngle >= dims.iProjAngles)
+			iEndAngle = dims.iProjAngles;
+		subdims.iProjAngles = iEndAngle - iAngle;
+
+		bool ret;
+		ret = BP_internal(D_volumeData, volumePitch,
+		                  D_projData + iAngle * projPitch, projPitch,
+		                  subdims, angles + iAngle,
+		                  TOffsets ? TOffsets + iAngle : 0);
+		if (!ret)
+			return false;
+	}
+	return true;
+}
+
 
 bool BP_SART(float* D_volumeData, unsigned int volumePitch,
              float* D_projData, unsigned int projPitch,
