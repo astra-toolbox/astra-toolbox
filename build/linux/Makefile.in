@@ -53,7 +53,8 @@ SHELL=@SHELL@
 
 ifeq ($(matlab),yes)
 MEXFLAGS  = -cxx 
-MEXLDFLAGS='$$LDFLAGS $(LDFLAGS) -L.libs -lut'
+MEXLDFLAGS='$$LDFLAGS $(LDFLAGS)'
+MEXLIBS   ="-L.libs -lut"
 MEXSUFFIX = @MEXSUFFIX@
 MEX       = @MEX@
 endif
@@ -213,7 +214,7 @@ ifeq ($(matlab),yes)
 mex: $(MATLAB_MEX)
 
 %.$(MEXSUFFIX): %.o $(MATLAB_CXX_OBJECTS) libastra.la
-	$(MEX) LDFLAGS=$(MEXLDFLAGS) $(MEXFLAGS) $(LIBS) -lastra -output $* $*.o $(MATLAB_CXX_OBJECTS)
+	$(MEX) LDFLAGS=$(MEXLDFLAGS) $(MEXFLAGS) $(LIBS) $(MEXLIBS) -lastra -output $* $*.o $(MATLAB_CXX_OBJECTS)
 endif
 
 libastra.la: $(ALL_OBJECTS)
