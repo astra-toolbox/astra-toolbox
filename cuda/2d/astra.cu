@@ -369,6 +369,7 @@ bool AstraFBP::setFilter(E_FBPFILTER _eFilter, const float * _pfHostFilter /* = 
 		case FILTER_BLACKMANHARRIS:
 		case FILTER_BLACKMANNUTTALL:
 		case FILTER_FLATTOP:
+		case FILTER_PARZEN:
 		{
 			genFilter(_eFilter, _fD, pData->dims.iProjAngles, pHostFilter, iFFTRealDetCount, iFreqBinCount, _fFilterParameter);
 			uploadComplexArrayToDevice(pData->dims.iProjAngles, iFreqBinCount, pHostFilter, pData->m_pDevFilter);
@@ -483,7 +484,7 @@ bool AstraFBP::setFilter(E_FBPFILTER _eFilter, const float * _pfHostFilter /* = 
 		}
 		default:
 		{
-			fprintf(stderr, "AstraFBP::setFilter: Weird filter type requested");
+			fprintf(stderr, "AstraFBP::setFilter: Unknown filter type requested");
 			delete [] pHostFilter;
 			return false;
 		}
