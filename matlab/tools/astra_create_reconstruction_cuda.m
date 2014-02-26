@@ -5,7 +5,7 @@ function [recon_id, recon] = astra_create_reconstruction_cuda(rec_type, proj_geo
 %
 % Create a GPU based iterative reconstruction.
 %
-% rec_type: reconstruction type, only 'SIRT_CUDA' for now
+% rec_type: reconstruction type, defaults to 'SIRT_CUDA' if empty
 % proj_geom: projection geometry struct
 % vol_geom: volume geometry struct
 % sinogram: sinogram data OR sinogram identifier
@@ -39,6 +39,10 @@ end
 
 % create reconstruction object
 recon_id = astra_mex_data2d('create', '-vol', vol_geom, 0);
+
+if strcmp(rec_type,'')
+  rec_type = 'SIRT_CUDA';
+end
 
 % configure
 cfg = astra_struct('SIRT_CUDA');
