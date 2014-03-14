@@ -17,3 +17,4 @@ astra_mex_data2d('clear');
 astra_mex_data3d('clear');
 astra_mex_algorithm('clear');
 astra_mex_projector('clear');
+astra_mex_matrix('clear');
