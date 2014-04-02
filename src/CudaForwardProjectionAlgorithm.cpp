@@ -87,7 +87,7 @@ bool CCudaForwardProjectionAlgorithm::initialize(const Config& _cfg)
 	CC.markNodeParsed("VolumeDataId");
 
 	// GPU number
-	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUindex", 0);
+	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUindex", -1);
 	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUIndex", m_iGPUIndex);
 	CC.markOptionParsed("GPUindex");
 	if (!_cfg.self->hasOption("GPUindex"))
@@ -153,7 +153,7 @@ bool CCudaForwardProjectionAlgorithm::check()
 	//ASTRA_CONFIG_CHECK((iImageSideBlocks * G_BLOCKIMAGESIZE) == m_pVolume->getHeight(), "FP_CUDA", "Volume Height must be a multiple of G_BLOCKIMAGESIZE");
 	//ASTRA_CONFIG_CHECK(m_pProjectionGeometry->getDetectorCount() == (m_pVolume->getWidth() * 3 / 2), "SIRT_CUDA", "Number of detectors must be 1.5 times the width of the image");
 
-	ASTRA_CONFIG_CHECK(m_iGPUIndex >= 0, "FP_CUDA", "GPUIndex must be a non-negative integer.");
+	ASTRA_CONFIG_CHECK(m_iGPUIndex >= -1, "FP_CUDA", "GPUIndex must be a non-negative integer.");
 
 	// success
 	m_bIsInitialized = true;

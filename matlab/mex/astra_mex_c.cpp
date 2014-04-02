@@ -36,6 +36,8 @@ $Id$
 
 #include "astra/Globals.h"
 
+#include "../cuda/2d/darthelper.h"
+
 using namespace std;
 using namespace astra;
 
@@ -69,6 +71,22 @@ void astra_mex_use_cuda(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs
 	if (1 <= nlhs) {
 		plhs[0] = mxCreateDoubleScalar(astra::cudaEnabled() ? 1 : 0);
 	}
+}
+
+//-----------------------------------------------------------------------------------------
+/** set_gpu_index = astra_mex('set_gpu_index');
+ * 
+ * Set active GPU
+ */
+void astra_mex_set_gpu_index(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
+{ 
+#ifdef ASTRA_CUDA
+	if (nrhs >= 2) {
+		bool ret = astraCUDA::setGPUIndex((int)mxGetScalar(prhs[1]));
+		if (!ret)
+			mexPrintf("Failed to set GPU %d\n", (int)mxGetScalar(prhs[1]));
+	}
+#endif
 }
 
 //-----------------------------------------------------------------------------------------
@@ -117,6 +135,8 @@ void mexFunction(int nlhs, mxArray* plhs[],
 		astra_mex_use_cuda(nlhs, plhs, nrhs, prhs); 
 	} else if (sMode ==  std::string("credits")) {	
 		astra_mex_credits(nlhs, plhs, nrhs, prhs); 
+	} else if (sMode == std::string("set_gpu_index")) {
+		astra_mex_set_gpu_index(nlhs, plhs, nrhs, prhs);
 	} else {
 		printHelp();
 	}

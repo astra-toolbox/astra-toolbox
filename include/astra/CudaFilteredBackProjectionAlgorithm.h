@@ -61,7 +61,7 @@ public:
 	virtual ~CCudaFilteredBackProjectionAlgorithm();
 
 	virtual bool initialize(const Config& _cfg);
-	bool initialize(CFloat32ProjectionData2D * _pSinogram, CFloat32VolumeData2D * _pReconstruction, E_FBPFILTER _eFilter, const float * _pfFilter = NULL, int _iFilterWidth = 0, int _iGPUIndex = 0, float _fFilterParameter = -1.0f);
+	bool initialize(CFloat32ProjectionData2D * _pSinogram, CFloat32VolumeData2D * _pReconstruction, E_FBPFILTER _eFilter, const float * _pfFilter = NULL, int _iFilterWidth = 0, int _iGPUIndex = -1, float _fFilterParameter = -1.0f);
 
 	virtual void run(int _iNrIterations = 0);
 

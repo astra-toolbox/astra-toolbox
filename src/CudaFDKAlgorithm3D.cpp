@@ -48,7 +48,7 @@ std::string CCudaFDKAlgorithm3D::type = "FDK_CUDA";
 CCudaFDKAlgorithm3D::CCudaFDKAlgorithm3D() 
 {
 	m_bIsInitialized = false;
-	m_iGPUIndex = 0;
+	m_iGPUIndex = -1;
 	m_iVoxelSuperSampling = 1;
 }
 
@@ -100,7 +100,7 @@ bool CCudaFDKAlgorithm3D::initialize(const Config& _cfg)
 		return false;
 	}
 
-	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUindex", 0);
+	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUindex", -1);
 	CC.markOptionParsed("GPUindex");
 	m_iVoxelSuperSampling = (int)_cfg.self->getOptionNumerical("VoxelSuperSampling", 1);
 	CC.markOptionParsed("VoxelSuperSampling");

@@ -381,12 +381,14 @@ bool AstraSIRT3d::enableSinogramMask()
 	
 bool AstraSIRT3d::setGPUIndex(int index)
 {
-	cudaSetDevice(index);
-	cudaError_t err = cudaGetLastError();
+	if (index != -1) {
+		cudaSetDevice(index);
+		cudaError_t err = cudaGetLastError();
 
-	// Ignore errors caused by calling cudaSetDevice multiple times
-	if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
-		return false;
+		// Ignore errors caused by calling cudaSetDevice multiple times
+		if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
+			return false;
+	}
 
 	return true;
 }
@@ -858,12 +860,14 @@ bool AstraCGLS3d::enableSinogramMask()
 	
 bool AstraCGLS3d::setGPUIndex(int index)
 {
-	cudaSetDevice(index);
-	cudaError_t err = cudaGetLastError();
+	if (index != -1) {
+		cudaSetDevice(index);
+		cudaError_t err = cudaGetLastError();
 
-	// Ignore errors caused by calling cudaSetDevice multiple times
-	if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
-		return false;
+		// Ignore errors caused by calling cudaSetDevice multiple times
+		if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
+			return false;
+	}
 
 	return true;
 }
@@ -1156,13 +1160,14 @@ bool astraCudaConeFP(const float* pfVolume, float* pfProjections,
 	if (iDetectorSuperSampling == 0)
 		return false;
 
-	cudaSetDevice(iGPUIndex);
-	cudaError_t err = cudaGetLastError();
+	if (iGPUIndex != -1) {
+		cudaSetDevice(iGPUIndex);
+		cudaError_t err = cudaGetLastError();
 
-	// Ignore errors caused by calling cudaSetDevice multiple times
-	if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
-		return false;
-
+		// Ignore errors caused by calling cudaSetDevice multiple times
+		if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
+			return false;
+	}
 
 	cudaPitchedPtr D_volumeData = allocateVolumeData(dims);
 	bool ok = D_volumeData.ptr;
@@ -1264,13 +1269,14 @@ bool astraCudaPar3DFP(const float* pfVolume, float* pfProjections,
 	if (iDetectorSuperSampling == 0)
 		return false;
 
-	cudaSetDevice(iGPUIndex);
-	cudaError_t err = cudaGetLastError();
+	if (iGPUIndex != -1) {
+		cudaSetDevice(iGPUIndex);
+		cudaError_t err = cudaGetLastError();
 
-	// Ignore errors caused by calling cudaSetDevice multiple times
-	if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
-		return false;
-
+		// Ignore errors caused by calling cudaSetDevice multiple times
+		if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
+			return false;
+	}
 
 
 	cudaPitchedPtr D_volumeData = allocateVolumeData(dims);
@@ -1382,13 +1388,14 @@ bool astraCudaConeBP(float* pfVolume, const float* pfProjections,
 	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || pfAngles == 0)
 		return false;
 
-	cudaSetDevice(iGPUIndex);
-	cudaError_t err = cudaGetLastError();
+	if (iGPUIndex != -1) {
+		cudaSetDevice(iGPUIndex);
+		cudaError_t err = cudaGetLastError();
 
-	// Ignore errors caused by calling cudaSetDevice multiple times
-	if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
-		return false;
-
+		// Ignore errors caused by calling cudaSetDevice multiple times
+		if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
+			return false;
+	}
 
 	cudaPitchedPtr D_volumeData = allocateVolumeData(dims);
 	bool ok = D_volumeData.ptr;
@@ -1487,13 +1494,14 @@ bool astraCudaPar3DBP(float* pfVolume, const float* pfProjections,
 	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || pfAngles == 0)
 		return false;
 
-	cudaSetDevice(iGPUIndex);
-	cudaError_t err = cudaGetLastError();
+	if (iGPUIndex != -1) {
+		cudaSetDevice(iGPUIndex);
+		cudaError_t err = cudaGetLastError();
 
-	// Ignore errors caused by calling cudaSetDevice multiple times
-	if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
-		return false;
-
+		// Ignore errors caused by calling cudaSetDevice multiple times
+		if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
+			return false;
+	}
 
 
 	cudaPitchedPtr D_volumeData = allocateVolumeData(dims);
@@ -1568,13 +1576,14 @@ bool astraCudaFDK(float* pfVolume, const float* pfProjections,
 	if (iVoxelSuperSampling == 0)
 		return false;
 
-	cudaSetDevice(iGPUIndex);
-	cudaError_t err = cudaGetLastError();
+	if (iGPUIndex != -1) {
+		cudaSetDevice(iGPUIndex);
+		cudaError_t err = cudaGetLastError();
 
-	// Ignore errors caused by calling cudaSetDevice multiple times
-	if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
-		return false;
-
+		// Ignore errors caused by calling cudaSetDevice multiple times
+		if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
+			return false;
+	}
 
 
 	cudaPitchedPtr D_volumeData = allocateVolumeData(dims);

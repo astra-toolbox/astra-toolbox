@@ -195,13 +195,15 @@ bool AstraFBP::init(int iGPUIndex)
 		return false;
 	}
 
-	cudaSetDevice(iGPUIndex);
-	cudaError_t err = cudaGetLastError();
+	if (iGPUIndex != -1) {
+		cudaSetDevice(iGPUIndex);
+		cudaError_t err = cudaGetLastError();
 
-	// Ignore errors caused by calling cudaSetDevice multiple times
-	if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
-	{
-		return false;
+		// Ignore errors caused by calling cudaSetDevice multiple times
+		if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
+		{
+			return false;
+		}
 	}
 
 	bool ok = allocateVolume(pData->D_volumeData, pData->dims.iVolWidth+2, pData->dims.iVolHeight+2, pData->volumePitch);
@@ -563,13 +565,14 @@ bool astraCudaFP(const float* pfVolume, float* pfSinogram,
 	dims.iVolWidth = iVolWidth;
 	dims.iVolHeight = iVolHeight;
 
-	cudaSetDevice(iGPUIndex);
-	cudaError_t err = cudaGetLastError();
+	if (iGPUIndex != -1) {
+		cudaSetDevice(iGPUIndex);
+		cudaError_t err = cudaGetLastError();
 
-	// Ignore errors caused by calling cudaSetDevice multiple times
-	if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
-		return false;
-
+		// Ignore errors caused by calling cudaSetDevice multiple times
+		if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
+			return false;
+	}
 
 	bool ok;
 
@@ -649,13 +652,14 @@ bool astraCudaFanFP(const float* pfVolume, float* pfSinogram,
 	dims.iVolWidth = iVolWidth;
 	dims.iVolHeight = iVolHeight;
 
-	cudaSetDevice(iGPUIndex);
-	cudaError_t err = cudaGetLastError();
+	if (iGPUIndex != -1) {
+		cudaSetDevice(iGPUIndex);
+		cudaError_t err = cudaGetLastError();
 
-	// Ignore errors caused by calling cudaSetDevice multiple times
-	if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
-		return false;
-
+		// Ignore errors caused by calling cudaSetDevice multiple times
+		if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
+			return false;
+	}
 
 	bool ok;
 
@@ -759,13 +763,14 @@ bool astraCudaFanFP(const float* pfVolume, float* pfSinogram,
 	dims.iVolWidth = iVolWidth;
 	dims.iVolHeight = iVolHeight;
 
-	cudaSetDevice(iGPUIndex);
-	cudaError_t err = cudaGetLastError();
+	if (iGPUIndex != -1) {
+		cudaSetDevice(iGPUIndex);
+		cudaError_t err = cudaGetLastError();
 
-	// Ignore errors caused by calling cudaSetDevice multiple times
-	if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
-		return false;
-
+		// Ignore errors caused by calling cudaSetDevice multiple times
+		if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
+			return false;
+	}
 
 	bool ok;
 

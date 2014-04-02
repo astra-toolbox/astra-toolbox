@@ -215,12 +215,14 @@ namespace astraCUDA3d {
 
 	bool setGPUIndex(int iGPUIndex)
 	{
-		cudaSetDevice(iGPUIndex);
-		cudaError_t err = cudaGetLastError();
+		if (iGPUIndex != -1) {
+			cudaSetDevice(iGPUIndex);
+			cudaError_t err = cudaGetLastError();
 
-		// Ignore errors caused by calling cudaSetDevice multiple times
-		if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
-			return false;
+			// Ignore errors caused by calling cudaSetDevice multiple times
+			if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
+				return false;
+		}
 
 		return true;
 	}

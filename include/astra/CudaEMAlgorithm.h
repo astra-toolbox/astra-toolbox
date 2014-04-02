@@ -72,7 +72,7 @@ public:
 	bool initialize(CProjector2D* _pProjector,
 	                CFloat32ProjectionData2D* _pSinogram, 
 					CFloat32VolumeData2D* _pReconstruction,
-	                int _iGPUindex = 0, int _iDetectorSuperSampling = 1,
+	                int _iGPUindex = -1, int _iDetectorSuperSampling = 1,
 	                int _iPixelSuperSampling = 1);
 
 	/** Get a description of the class.

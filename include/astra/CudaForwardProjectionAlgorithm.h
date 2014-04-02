@@ -103,7 +103,7 @@ public:
 					CVolumeGeometry2D* _pVolumeGeometry, 
 					CFloat32VolumeData2D* _pVolume, 
 					CFloat32ProjectionData2D* _pSinogram,
-					int _iGPUindex = 0, int _iDetectorSuperSampling = 1);
+					int _iGPUindex = -1, int _iDetectorSuperSampling = 1);
 
 	/** Get all information parameters
 	 *

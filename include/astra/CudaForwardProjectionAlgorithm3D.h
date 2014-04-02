@@ -74,7 +74,7 @@ public:
 	bool initialize(CProjector3D* _pProjector, 
 					CFloat32ProjectionData3DMemory* _pSinogram, 
 					CFloat32VolumeData3DMemory* _pReconstruction,
-					int _iGPUindex = 0, int _iDetectorSuperSampling = 1);
+					int _iGPUindex = -1, int _iDetectorSuperSampling = 1);
 
 
 	/** Get all information parameters

@@ -153,7 +153,7 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 	ASTRA_DELETE(node);
 
 	// GPU number
-	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUindex", 0);
+	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUindex", -1);
 	CC.markOptionParsed("GPUindex");
 
 	// Pixel supersampling factor
@@ -286,7 +286,7 @@ bool CCudaFilteredBackProjectionAlgorithm::check()
 	ASTRA_CONFIG_CHECK(m_pReconstruction->isInitialized(), "FBP_CUDA", "Reconstruction Data Object Not Initialized.");
 
 	// check gpu index
-	ASTRA_CONFIG_CHECK(m_iGPUIndex >= 0, "FBP_CUDA", "GPUIndex must be a non-negative integer.");
+	ASTRA_CONFIG_CHECK(m_iGPUIndex >= -1, "FBP_CUDA", "GPUIndex must be a non-negative integer.");
 	// check pixel supersampling
 	ASTRA_CONFIG_CHECK(m_iPixelSuperSampling >= 0, "FBP_CUDA", "PixelSuperSampling must be a non-negative integer.");
 

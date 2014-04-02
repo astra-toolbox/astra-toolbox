@@ -29,8 +29,6 @@ $Id$
 #ifndef _CUDA_ARITH2_H
 #define _CUDA_ARITH2_H
 
-#include <cuda.h>
-
 namespace astraCUDA {
 
 	void roiSelect(float* out, float radius, unsigned int width, unsigned int height);

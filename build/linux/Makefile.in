@@ -57,6 +57,11 @@ MEXLDFLAGS='$$LDFLAGS $(LDFLAGS)'
 MEXLIBS   ="-L.libs -lut"
 MEXSUFFIX = @MEXSUFFIX@
 MEX       = @MEX@
+
+ifeq ($(cuda),yes)
+MEXFLAGS += -DASTRA_CUDA
+endif
+
 endif
 
 LIBDIR=/usr/local/lib

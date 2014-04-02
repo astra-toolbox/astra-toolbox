@@ -54,7 +54,7 @@ std::string CCudaForwardProjectionAlgorithm3D::type = "FP3D_CUDA";
 CCudaForwardProjectionAlgorithm3D::CCudaForwardProjectionAlgorithm3D() 
 {
 	m_bIsInitialized = false;
-	m_iGPUIndex = 0;
+	m_iGPUIndex = -1;
 	m_iDetectorSuperSampling = 1;
 	m_pProjector = 0;
 	m_pProjections = 0;
@@ -107,7 +107,7 @@ bool CCudaForwardProjectionAlgorithm3D::initialize(const Config& _cfg)
 	CC.markNodeParsed("ProjectorId");
 
 	// GPU number
-	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUindex", 0);
+	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUindex", -1);
 	CC.markOptionParsed("GPUindex");
 	m_iDetectorSuperSampling = (int)_cfg.self->getOptionNumerical("DetectorSuperSampling", 1);
 	CC.markOptionParsed("DetectorSuperSampling");
@@ -160,7 +160,7 @@ bool CCudaForwardProjectionAlgorithm3D::check()
 	ASTRA_CONFIG_CHECK(m_pVolume->isInitialized(), "FP3D_CUDA", "Volume Data Object Not Initialized.");
 
 	ASTRA_CONFIG_CHECK(m_iDetectorSuperSampling >= 1, "FP3D_CUDA", "DetectorSuperSampling must be a positive integer.");
-	ASTRA_CONFIG_CHECK(m_iGPUIndex >= 0, "FP3D_CUDA", "GPUIndex must be a non-negative integer.");
+	ASTRA_CONFIG_CHECK(m_iGPUIndex >= -1, "FP3D_CUDA", "GPUIndex must be a non-negative integer.");
 
 	// check compatibility between projector and data classes
 //	ASTRA_CONFIG_CHECK(m_pSinogram->getGeometry()->isEqual(m_pProjector->getProjectionGeometry()), "SIRT_CUDA", "Projection Data not compatible with the specified Projector.");

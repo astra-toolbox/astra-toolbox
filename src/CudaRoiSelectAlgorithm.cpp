@@ -74,7 +74,7 @@ bool CCudaRoiSelectAlgorithm::initialize(const Config& _cfg)
 	CC.markNodeParsed("DataId");
 
 	// Option: GPU number
-	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUindex", 0);
+	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUindex", -1);
 	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUIndex", m_iGPUIndex);
 	CC.markOptionParsed("GPUindex");
 	if (!_cfg.self->hasOption("GPUindex"))

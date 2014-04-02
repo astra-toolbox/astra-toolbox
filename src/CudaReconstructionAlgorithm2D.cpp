@@ -76,7 +76,7 @@ void CCudaReconstructionAlgorithm2D::_clear()
 	m_bAlgoInit = false;
 	CReconstructionAlgorithm2D::_clear();
 
-	m_iGPUIndex = 0;
+	m_iGPUIndex = -1;
 	m_iDetectorSuperSampling = 1;
 	m_iPixelSuperSampling = 1;
 }
@@ -153,7 +153,7 @@ bool CCudaReconstructionAlgorithm2D::initialize(const Config& _cfg)
 	}
 
 	// GPU number
-	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUindex", 0);
+	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUindex", -1);
 	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUIndex", m_iGPUIndex);
 	CC.markOptionParsed("GPUindex");
 	if (!_cfg.self->hasOption("GPUindex"))
@@ -240,7 +240,7 @@ bool CCudaReconstructionAlgorithm2D::_check()
 
 	ASTRA_CONFIG_CHECK(m_iDetectorSuperSampling >= 1, "SIRT_CUDA", "DetectorSuperSampling must be a positive integer.");
 	ASTRA_CONFIG_CHECK(m_iPixelSuperSampling >= 1, "SIRT_CUDA", "PixelSuperSampling must be a positive integer.");
-	ASTRA_CONFIG_CHECK(m_iGPUIndex >= 0, "SIRT_CUDA", "GPUIndex must be a non-negative integer.");
+	ASTRA_CONFIG_CHECK(m_iGPUIndex >= -1, "SIRT_CUDA", "GPUIndex must be a non-negative integer.");
 
 	// check compatibility between projector and data classes
 //	ASTRA_CONFIG_CHECK(m_pSinogram->getGeometry()->isEqual(m_pProjector->getProjectionGeometry()), "SIRT_CUDA", "Projection Data not compatible with the specified Projector.");

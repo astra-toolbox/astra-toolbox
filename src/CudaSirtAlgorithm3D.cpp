@@ -52,7 +52,7 @@ CCudaSirtAlgorithm3D::CCudaSirtAlgorithm3D()
 {
 	m_bIsInitialized = false;
 	m_pSirt = 0;
-	m_iGPUIndex = 0;
+	m_iGPUIndex = -1;
 	m_iVoxelSuperSampling = 1;
 	m_iDetectorSuperSampling = 1;
 }
@@ -107,7 +107,7 @@ bool CCudaSirtAlgorithm3D::initialize(const Config& _cfg)
 		return false;
 	}
 
-	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUindex", 0);
+	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUindex", -1);
 	CC.markOptionParsed("GPUindex");
 	m_iDetectorSuperSampling = (int)_cfg.self->getOptionNumerical("DetectorSuperSampling", 1);
 	CC.markOptionParsed("DetectorSuperSampling");
