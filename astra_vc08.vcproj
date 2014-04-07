@@ -278,7 +278,7 @@
 			<Tool
 				Name="CUDA Build Rule"
 				Include="lib\include\cuda"
-				Defines="-DDLL_EXPORTS"
+				Defines="DLL_EXPORTS"
 				Runtime="2"
 				Platform="2"
 			/>

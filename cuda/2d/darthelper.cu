@@ -342,7 +342,7 @@ void dartSmoothing(float* out, const float* in, float b, unsigned int radius, un
 
 
 
-bool setGPUIndex(int iGPUIndex)
+_AstraExport bool setGPUIndex(int iGPUIndex)
 {
 	if (iGPUIndex != -1) {
 		cudaSetDevice(iGPUIndex);

@@ -6,8 +6,11 @@ Copyright: iMinds-Vision Lab, University of Antwerp
 License: Open Source under GPLv3
 Contact: astra@ua.ac.be
 Website: http://astra.ua.ac.be
-         http://code.google.com/p/astra-toolbox/
+         http://sf.net/projects/astra-toolbox
 -----------------------------------------------------------------------
+
+1.4 (2014-04-07)
+  * various consistency and bug fixes
 
 1.3 (2013-07-02)
   * various consistency and bug fixes

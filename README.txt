@@ -6,7 +6,7 @@ Copyright: iMinds-Vision Lab, University of Antwerp
 License: Open Source under GPLv3
 Contact: astra@ua.ac.be
 Website: http://astra.ua.ac.be
-         http://code.google.com/p/astra-toolbox/
+         http://sf.net/projects/astra-toolbox
 -----------------------------------------------------------------------
 
 
@@ -29,7 +29,7 @@ Documentation / samples:
 -------------------------
 
 See the matlab code samples in samples/ and on
-http://code.google.com/p/astra-toolbox/ .
+http://sf.net/projects/astra-toolbox .
 
 
 
