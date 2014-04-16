@@ -145,7 +145,7 @@ public:
 	 *
 	 * @param _iGPUIndex New GPU index.
 	 */
-	void setGPUIndex(int _iGPUIndex);
+	void setGPUIndex(int _iGPUIndex) { m_iGPUIndex = _iGPUIndex; }
 
 protected:
 

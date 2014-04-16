@@ -89,6 +89,11 @@ public:
 	 */
 	virtual std::string description() const;
 
+	/** Set the GPU Index to run on.
+	 * TODO: Move this from CAlgorithm to a Context-like class
+	 */
+	virtual void setGPUIndex(int /*_iGPUIndex*/) { };
+
 	/** Signal the algorithm it should abort soon.
 	 *  This is intended to be called from a different thread
 	 *  while the algorithm is running. There are no guarantees
