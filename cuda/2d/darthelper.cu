@@ -320,11 +320,11 @@ void dartSmoothing(float* out, const float* in, float b, unsigned int radius, un
 	float* D_outData;
 
 	unsigned int pitch;
-	allocateVolume(D_inData, width+2, height+2, pitch);
+	allocateVolume(D_inData, width, height, pitch);
 	copyVolumeToDevice(in, width, width, height, D_inData, pitch);
 
-	allocateVolume(D_outData, width+2, height+2, pitch);
-	zeroVolume(D_outData, pitch, width+2, height+2);
+	allocateVolume(D_outData, width, height, pitch);
+	zeroVolume(D_outData, pitch, width, height);
 
 	dim3 blockSize(16,16);
 	dim3 gridSize((width+15)/16, (height+15)/16);
