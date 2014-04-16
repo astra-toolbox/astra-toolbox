@@ -284,7 +284,7 @@ bool FanBP(float* D_volumeData, unsigned int volumePitch,
 	// TODO: process angles block by block
 	assert(dims.iProjAngles <= g_MaxAngles);
 
-	bindProjDataTexture(D_projData, projPitch, dims.iProjDets+2, dims.iProjAngles);
+	bindProjDataTexture(D_projData, projPitch, dims.iProjDets, dims.iProjAngles);
 
 	// transfer angles to constant memory
 	float* tmp = new float[dims.iProjAngles];
