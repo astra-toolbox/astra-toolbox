@@ -225,6 +225,57 @@ __global__ void devFanBP_SART(float* D_volData, unsigned int volPitch, const SDi
 	volData[(Y+1)*volPitch+X+1] += fVal;
 }
 
+// Weighted BP for use in fan beam FBP
+// Each pixel/ray is weighted by 1/L^2 where L is the distance to the source.
+__global__ void devFanBP_FBPWeighted(float* D_volData, unsigned int volPitch, unsigned int startAngle, const SDimensions dims)
+{
+	const int relX = threadIdx.x;
+	const int relY = threadIdx.y;
+
+	int endAngle = startAngle + g_anglesPerBlock;
+	if (endAngle > dims.iProjAngles)
+		endAngle = dims.iProjAngles;
+	const int X = blockIdx.x * g_blockSlices + relX;
+	const int Y = blockIdx.y * g_blockSliceSize + relY;
+
+	if (X >= dims.iVolWidth || Y >= dims.iVolHeight)
+		return;
+
+	const float fX = ( X - 0.5f*dims.iVolWidth + 0.5f );
+	const float fY = - ( Y - 0.5f*dims.iVolHeight + 0.5f );
+
+	float* volData = (float*)D_volData;
+
+	float fVal = 0.0f;
+	float fA = startAngle + 0.5f;
+
+	// TODO: Distance correction?
+
+	for (int angle = startAngle; angle < endAngle; ++angle)
+	{
+		const float fSrcX = gC_SrcX[angle];
+		const float fSrcY = gC_SrcY[angle];
+		const float fDetSX = gC_DetSX[angle];
+		const float fDetSY = gC_DetSY[angle];
+		const float fDetUX = gC_DetUX[angle];
+		const float fDetUY = gC_DetUY[angle];
+
+		const float fXD = fSrcX - fX;
+		const float fYD = fSrcY - fY;
+
+		const float fNum = fDetSY * fXD - fDetSX * fYD + fX*fSrcY - fY*fSrcX;
+		const float fDen = fDetUX * fYD - fDetUY * fXD;
+
+		const float fWeight = fXD*fXD + fYD*fYD;
+		
+		const float fT = fNum / fDen + 1.0f;
+		fVal += tex2D(gT_FanProjTexture, fT, fA) / fWeight;
+		fA += 1.0f;
+	}
+
+	volData[(Y+1)*volPitch+X+1] += fVal;
+}
+
 
 bool FanBP(float* D_volumeData, unsigned int volumePitch,
            float* D_projData, unsigned int projPitch,
@@ -263,6 +314,50 @@ bool FanBP(float* D_volumeData, unsigned int volumePitch,
 			devFanBP_SS<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, dims);
 		else
 			devFanBP<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, dims);
+	}
+	cudaThreadSynchronize();
+
+	cudaTextForceKernelsCompletion();
+
+	cudaStreamDestroy(stream);
+
+	return true;
+}
+
+bool FanBP_FBPWeighted(float* D_volumeData, unsigned int volumePitch,
+           float* D_projData, unsigned int projPitch,
+           const SDimensions& dims, const SFanProjection* angles)
+{
+	// TODO: process angles block by block
+	assert(dims.iProjAngles <= g_MaxAngles);
+
+	bindProjDataTexture(D_projData, projPitch, dims.iProjDets+2, dims.iProjAngles);
+
+	// transfer angles to constant memory
+	float* tmp = new float[dims.iProjAngles];
+
+#define TRANSFER_TO_CONSTANT(name) do { for (unsigned int i = 0; i < dims.iProjAngles; ++i) tmp[i] = angles[i].f##name ; cudaMemcpyToSymbol(gC_##name, tmp, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice); } while (0)
+
+	TRANSFER_TO_CONSTANT(SrcX);
+	TRANSFER_TO_CONSTANT(SrcY);
+	TRANSFER_TO_CONSTANT(DetSX);
+	TRANSFER_TO_CONSTANT(DetSY);
+	TRANSFER_TO_CONSTANT(DetUX);
+	TRANSFER_TO_CONSTANT(DetUY);
+
+#undef TRANSFER_TO_CONSTANT
+
+	delete[] tmp;
+
+	dim3 dimBlock(g_blockSlices, g_blockSliceSize);
+	dim3 dimGrid((dims.iVolWidth+g_blockSlices-1)/g_blockSlices,
+	             (dims.iVolHeight+g_blockSliceSize-1)/g_blockSliceSize);
+
+	cudaStream_t stream;
+	cudaStreamCreate(&stream);
+
+	for (unsigned int i = 0; i < dims.iProjAngles; i += g_anglesPerBlock) {
+		devFanBP_FBPWeighted<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, dims);
 	}
 	cudaThreadSynchronize();
 

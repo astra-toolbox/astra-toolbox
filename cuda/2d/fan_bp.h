@@ -40,6 +40,11 @@ _AstraExport bool FanBP_SART(float* D_volumeData, unsigned int volumePitch,
                 unsigned int angle,
                 const SDimensions& dims, const SFanProjection* angles);
 
+_AstraExport bool FanBP_FBPWeighted(float* D_volumeData, unsigned int volumePitch,
+           float* D_projData, unsigned int projPitch,
+           const SDimensions& dims, const SFanProjection* angles);
+
+
 }
 
 #endif
