@@ -487,7 +487,7 @@ bool transferProjectionsToArray(cudaPitchedPtr D_projData, cudaArray* array, con
 float dotProduct3D(cudaPitchedPtr data, unsigned int x, unsigned int y,
                    unsigned int z)
 {
-	return astraCUDA::dotProduct2D((float*)data.ptr, data.pitch/sizeof(float), x, y*z, 0, 0);
+	return astraCUDA::dotProduct2D((float*)data.ptr, data.pitch/sizeof(float), x, y*z);
 }
 
 

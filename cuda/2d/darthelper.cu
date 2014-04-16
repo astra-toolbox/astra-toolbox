@@ -33,7 +33,7 @@ $Id$
 namespace astraCUDA {
 
 // CUDA function for the selection of ROI
-__global__ void devRoiSelect(float* in, float radius, unsigned int pitch, unsigned int width, unsigned int height, unsigned int padX, unsigned int padY)
+__global__ void devRoiSelect(float* in, float radius, unsigned int pitch, unsigned int width, unsigned int height)
 {
 	float x = (float)(threadIdx.x + 16*blockIdx.x);
 	float y = (float)(threadIdx.y + 16*blockIdx.y);
@@ -44,7 +44,7 @@ __global__ void devRoiSelect(float* in, float radius, unsigned int pitch, unsign
 	if ((x-w)*(x-w) + (y-h)*(y-h) > radius * radius * 0.25f) 
 	{
 		float* d = (float*)in;
-		unsigned int o = (y+padY)*pitch+x+padX; 
+		unsigned int o = y*pitch+x; 
 		d[o] = 0.0f;
 	}
 }
@@ -54,12 +54,12 @@ void roiSelect(float* out, float radius, unsigned int width, unsigned int height
 	float* D_data;
 
 	unsigned int pitch;
-	allocateVolume(D_data, width+2, height+2, pitch);
+	allocateVolume(D_data, width, height, pitch);
 	copyVolumeToDevice(out, width, width, height, D_data, pitch);
 
 	dim3 blockSize(16,16);
 	dim3 gridSize((width+15)/16, (height+15)/16);
-	devRoiSelect<<<gridSize, blockSize>>>(D_data, radius, pitch, width, height, 1, 1);
+	devRoiSelect<<<gridSize, blockSize>>>(D_data, radius, pitch, width, height);
 
 	copyVolumeFromDevice(out, width, width, height, D_data, pitch);
 
@@ -70,7 +70,7 @@ void roiSelect(float* out, float radius, unsigned int width, unsigned int height
 
 
 // CUDA function for the masking of DART with a radius == 1
-__global__ void devDartMask(float* mask, const float* in, unsigned int conn, unsigned int pitch, unsigned int width, unsigned int height, unsigned int padX, unsigned int padY)
+__global__ void devDartMask(float* mask, const float* in, unsigned int conn, unsigned int pitch, unsigned int width, unsigned int height)
 {
 	unsigned int x = threadIdx.x + 16*blockIdx.x;
 	unsigned int y = threadIdx.y + 16*blockIdx.y;
@@ -80,7 +80,7 @@ __global__ void devDartMask(float* mask, const float* in, unsigned int conn, uns
 		float* d = (float*)in;
 		float* m = (float*)mask;
 
-		unsigned int o2 = (y+padY)*pitch+x+padX; // On this row.
+		unsigned int o2 = y*pitch+x; // On this row.
 		unsigned int o1 = o2 - pitch; // On previous row.
 		unsigned int o3 = o2 + pitch; // On next row.
 
@@ -101,7 +101,7 @@ __global__ void devDartMask(float* mask, const float* in, unsigned int conn, uns
 
 
 // CUDA function for the masking of DART with a radius > 1
-__global__ void devDartMaskRadius(float* mask, const float* in, unsigned int conn, unsigned int radius, unsigned int pitch, unsigned int width, unsigned int height, unsigned int padX, unsigned int padY)
+__global__ void devDartMaskRadius(float* mask, const float* in, unsigned int conn, unsigned int radius, unsigned int pitch, unsigned int width, unsigned int height)
 {
 	unsigned int x = threadIdx.x + 16*blockIdx.x;
 	unsigned int y = threadIdx.y + 16*blockIdx.y;
@@ -115,13 +115,13 @@ __global__ void devDartMaskRadius(float* mask, const float* in, unsigned int con
 		int r = radius;
 
 		// o2: index of the current center pixel
-		int o2 = (y+padY)*pitch+x+padX;
+		int o2 = y*pitch+x;
 
 		if (conn == 8) // 8-connected
 		{
 			for (int row = -r; row <= r; row++) 
 			{
-				int o1 = (y+padY+row)*pitch+x+padX; 
+				int o1 = (y+row)*pitch+x; 
 				for (int col = -r; col <= r; col++) 
 				{
 					if (d[o1 + col] != d[o2]) {m[o2] = 1.0f; return;}
@@ -131,7 +131,7 @@ __global__ void devDartMaskRadius(float* mask, const float* in, unsigned int con
 		else if (conn == 4) // 4-connected
 		{
 			// horizontal
-			unsigned int o1 = (y+padY)*pitch+x+padX; 
+			unsigned int o1 = y*pitch+x; 
 			for (int col = -r; col <= r; col++) 
 			{
 				if (d[o1 + col] != d[o2]) {m[o2] = 1.0f; return;}
@@ -140,7 +140,7 @@ __global__ void devDartMaskRadius(float* mask, const float* in, unsigned int con
 			// vertical
 			for (int row = -r; row <= r; row++) 
 			{
-				unsigned int o1 = (y+padY+row)*pitch+x+padX; 
+				unsigned int o1 = (y+row)*pitch+x; 
 				if (d[o1] != d[o2]) {m[o2] = 1.0f; return;}
 			}
 		}
@@ -149,7 +149,7 @@ __global__ void devDartMaskRadius(float* mask, const float* in, unsigned int con
 
 
 // CUDA function for the masking of ADART with a radius == 1
-__global__ void devADartMask(float* mask, const float* in, unsigned int conn, unsigned int threshold, unsigned int pitch, unsigned int width, unsigned int height, unsigned int padX, unsigned int padY)
+__global__ void devADartMask(float* mask, const float* in, unsigned int conn, unsigned int threshold, unsigned int pitch, unsigned int width, unsigned int height)
 {
 	unsigned int x = threadIdx.x + 16*blockIdx.x;
 	unsigned int y = threadIdx.y + 16*blockIdx.y;
@@ -159,7 +159,7 @@ __global__ void devADartMask(float* mask, const float* in, unsigned int conn, un
 		float* d = (float*)in;
 		float* m = (float*)mask;
 
-		unsigned int o2 = (y+padY)*pitch+x+padX; // On this row.
+		unsigned int o2 = y*pitch+x; // On this row.
 		unsigned int o1 = o2 - pitch; // On previous row.
 		unsigned int o3 = o2 + pitch; // On next row.
 
@@ -186,7 +186,7 @@ __global__ void devADartMask(float* mask, const float* in, unsigned int conn, un
 
 
 // CUDA function for the masking of ADART with a radius > 1
-__global__ void devADartMaskRadius(float* mask, const float* in, unsigned int conn, unsigned int radius, unsigned int threshold, unsigned int pitch, unsigned int width, unsigned int height, unsigned int padX, unsigned int padY)
+__global__ void devADartMaskRadius(float* mask, const float* in, unsigned int conn, unsigned int radius, unsigned int threshold, unsigned int pitch, unsigned int width, unsigned int height)
 {
 	unsigned int x = threadIdx.x + 16*blockIdx.x;
 	unsigned int y = threadIdx.y + 16*blockIdx.y;
@@ -199,13 +199,13 @@ __global__ void devADartMaskRadius(float* mask, const float* in, unsigned int co
 	
 		int r = radius;
 
-		unsigned int o2 = (y+padY)*pitch+x+padX; // On this row.
+		unsigned int o2 = y*pitch+x; // On this row.
 
 		if (conn == 8)
 		{
 			for (int row = -r; row <= r; row++) 
 			{
-				unsigned int o1 = (y+padY+row)*pitch+x+padX; 
+				unsigned int o1 = (y+row)*pitch+x; 
 				for (int col = -r; col <= r; col++) 
 				{
 					if (d[o1+col] != d[o2] && --threshold == 0) {m[o2] = 1.0f; return;}
@@ -223,7 +223,7 @@ __global__ void devADartMaskRadius(float* mask, const float* in, unsigned int co
 			// vertical
 			for (int row = -r; row <= r; row++) 
 			{
-				unsigned int o1 = (y+padY+row)*pitch+x+padX; 
+				unsigned int o1 = (y+row)*pitch+x; 
 				if (d[o1] != d[o2] && --threshold == 0) {m[o2] = 1.0f; return;}
 			}
 		}
@@ -237,23 +237,23 @@ void dartMask(float* mask, const float* segmentation, unsigned int conn, unsigne
 	float* D_maskData;
 
 	unsigned int pitch;
-	allocateVolume(D_segmentationData, width+2, height+2, pitch);
+	allocateVolume(D_segmentationData, width, height, pitch);
 	copyVolumeToDevice(segmentation, width, width, height, D_segmentationData, pitch);
 
-	allocateVolume(D_maskData, width+2, height+2, pitch);
-	zeroVolume(D_maskData, pitch, width+2, height+2);
+	allocateVolume(D_maskData, width, height, pitch);
+	zeroVolume(D_maskData, pitch, width, height);
 
 	dim3 blockSize(16,16);
 	dim3 gridSize((width+15)/16, (height+15)/16);
 
 	if (threshold == 1 && radius == 1)
-		devDartMask<<<gridSize, blockSize>>>(D_maskData, D_segmentationData, conn, pitch, width, height, 1, 1);
+		devDartMask<<<gridSize, blockSize>>>(D_maskData, D_segmentationData, conn, pitch, width, height);
 	else if (threshold > 1 && radius == 1)
-		devADartMask<<<gridSize, blockSize>>>(D_maskData, D_segmentationData, conn, threshold, pitch, width, height, 1, 1);
+		devADartMask<<<gridSize, blockSize>>>(D_maskData, D_segmentationData, conn, threshold, pitch, width, height);
 	else if (threshold == 1 && radius > 1)
-		devDartMaskRadius<<<gridSize, blockSize>>>(D_maskData, D_segmentationData, conn, radius, pitch, width, height, 1, 1);
+		devDartMaskRadius<<<gridSize, blockSize>>>(D_maskData, D_segmentationData, conn, radius, pitch, width, height);
 	else 
-		devADartMaskRadius<<<gridSize, blockSize>>>(D_maskData, D_segmentationData, conn, radius, threshold, pitch, width, height, 1, 1);
+		devADartMaskRadius<<<gridSize, blockSize>>>(D_maskData, D_segmentationData, conn, radius, threshold, pitch, width, height);
 
 	copyVolumeFromDevice(mask, width, width, height, D_maskData, pitch);
 
@@ -263,7 +263,7 @@ void dartMask(float* mask, const float* segmentation, unsigned int conn, unsigne
 }
 
 
-__global__ void devDartSmoothingRadius(float* out, const float* in, float b, unsigned int radius, unsigned int pitch, unsigned int width, unsigned int height, unsigned int padX, unsigned int padY)
+__global__ void devDartSmoothingRadius(float* out, const float* in, float b, unsigned int radius, unsigned int pitch, unsigned int width, unsigned int height)
 {
 	unsigned int x = threadIdx.x + 16*blockIdx.x;
 	unsigned int y = threadIdx.y + 16*blockIdx.y;
@@ -274,13 +274,13 @@ __global__ void devDartSmoothingRadius(float* out, const float* in, float b, uns
 		float* d = (float*)in;
 		float* m = (float*)out;
 
-		unsigned int o2 = (y+padY)*pitch+x+padX;
+		unsigned int o2 = y*pitch+x;
 		int r = radius;
 		float res = -d[o2];
 
 		for (int row = -r; row < r; row++) 
 		{
-			unsigned int o1 = (y+padY+row)*pitch+x+padX; 
+			unsigned int o1 = (y+row)*pitch+x; 
 			for (int col = -r; col <= r; col++) 
 			{
 				res += d[o1+col];
@@ -295,7 +295,7 @@ __global__ void devDartSmoothingRadius(float* out, const float* in, float b, uns
 }
 
 
-__global__ void devDartSmoothing(float* out, const float* in, float b, unsigned int pitch, unsigned int width, unsigned int height, unsigned int padX, unsigned int padY)
+__global__ void devDartSmoothing(float* out, const float* in, float b, unsigned int pitch, unsigned int width, unsigned int height)
 {
 	unsigned int x = threadIdx.x + 16*blockIdx.x;
 	unsigned int y = threadIdx.y + 16*blockIdx.y;
@@ -305,7 +305,7 @@ __global__ void devDartSmoothing(float* out, const float* in, float b, unsigned 
 		float* d = (float*)in;
 		float* m = (float*)out;
 
-		unsigned int o2 = (y+padY)*pitch+x+padX; // On this row.
+		unsigned int o2 = y*pitch+x; // On this row.
 		unsigned int o1 = o2 - pitch; // On previous row.
 		unsigned int o3 = o2 + pitch; // On next row.
 
@@ -329,9 +329,9 @@ void dartSmoothing(float* out, const float* in, float b, unsigned int radius, un
 	dim3 blockSize(16,16);
 	dim3 gridSize((width+15)/16, (height+15)/16);
 	if (radius == 1)
-		devDartSmoothing<<<gridSize, blockSize>>>(D_outData, D_inData, b, pitch, width, height, 1, 1);
+		devDartSmoothing<<<gridSize, blockSize>>>(D_outData, D_inData, b, pitch, width, height);
 	else
-		devDartSmoothingRadius<<<gridSize, blockSize>>>(D_outData, D_inData, b, radius, pitch, width, height, 1, 1);
+		devDartSmoothingRadius<<<gridSize, blockSize>>>(D_outData, D_inData, b, radius, pitch, width, height);
 
 	copyVolumeFromDevice(out, width, width, height, D_outData, pitch);
 

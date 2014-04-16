@@ -82,8 +82,8 @@ void reportCudaError(cudaError_t err);
 
 
 float dotProduct2D(float* D_data, unsigned int pitch,
-                   unsigned int width, unsigned int height,
-                   unsigned int padX, unsigned int padY);
+                   unsigned int width, unsigned int height);
+
 
 }
 

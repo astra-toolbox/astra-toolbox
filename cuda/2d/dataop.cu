@@ -39,10 +39,10 @@ void operationVolumeMult(float* data1, float* data2, unsigned int width, unsigne
 	float* D_data2;
 
 	unsigned int pitch;
-	allocateVolume(D_data1, width+2, height+2, pitch);
+	allocateVolume(D_data1, width, height, pitch);
 	copyVolumeToDevice(data1, width, width, height, D_data1, pitch);
 
-	allocateVolume(D_data2, width+2, height+2, pitch);
+	allocateVolume(D_data2, width, height, pitch);
 	copyVolumeToDevice(data2, width, width, height, D_data2, pitch);
 
 	processVol<opMul, VOL>(D_data1, D_data2, pitch, width, height);
@@ -59,10 +59,10 @@ void operationVolumeMultScalarMask(float* data, float* mask, float scalar, unsig
 	float* D_mask;
 
 	unsigned int pitch;
-	allocateVolume(D_data, width+2, height+2, pitch);
+	allocateVolume(D_data, width, height, pitch);
 	copyVolumeToDevice(data, width, width, height, D_data, pitch);
 
-	allocateVolume(D_mask, width+2, height+2, pitch);
+	allocateVolume(D_mask, width, height, pitch);
 	copyVolumeToDevice(mask, width, width, height, D_mask, pitch);
 
 	processVol<opMulMask, VOL>(D_data, D_mask, scalar, pitch, width, height);
@@ -79,7 +79,7 @@ void operationVolumeMultScalar(float* data, float scalar, unsigned int width, un
 	float* D_data;
 
 	unsigned int pitch;
-	allocateVolume(D_data, width+2, height+2, pitch);
+	allocateVolume(D_data, width, height, pitch);
 	copyVolumeToDevice(data, width, width, height, D_data, pitch);
 
 	processVol<opMul, VOL>(D_data, scalar, pitch, width, height);
@@ -96,10 +96,10 @@ void operationVolumeAdd(float* data1, float* data2, unsigned int width, unsigned
 	float* D_data2;
 
 	unsigned int pitch;
-	allocateVolume(D_data1, width+2, height+2, pitch);
+	allocateVolume(D_data1, width, height, pitch);
 	copyVolumeToDevice(data1, width, width, height, D_data1, pitch);
 
-	allocateVolume(D_data2, width+2, height+2, pitch);
+	allocateVolume(D_data2, width, height, pitch);
 	copyVolumeToDevice(data2, width, width, height, D_data2, pitch);
 
 	processVol<opAdd, VOL>(D_data1, D_data2, pitch, width, height);
@@ -116,7 +116,7 @@ void operationVolumeAddScalar(float* data, float scalar, unsigned int width, uns
 	float* D_data;
 
 	unsigned int pitch;
-	allocateVolume(D_data, width+2, height+2, pitch);
+	allocateVolume(D_data, width, height, pitch);
 	copyVolumeToDevice(data, width, width, height, D_data, pitch);
 
 	processVol<opAdd, VOL>(D_data, scalar, pitch, width, height);

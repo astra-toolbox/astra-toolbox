@@ -74,8 +74,8 @@ static bool bindVolumeDataTexture(float* data, cudaArray*& dataArray, unsigned i
 	cudaMallocArray(&dataArray, &channelDesc, width, height);
 	cudaMemcpy2DToArray(dataArray, 0, 0, data, pitch*sizeof(float), width*sizeof(float), height, cudaMemcpyDeviceToDevice);
 
-	gT_volumeTexture.addressMode[0] = cudaAddressModeClamp;
-	gT_volumeTexture.addressMode[1] = cudaAddressModeClamp;
+	gT_volumeTexture.addressMode[0] = cudaAddressModeBorder;
+	gT_volumeTexture.addressMode[1] = cudaAddressModeBorder;
 	gT_volumeTexture.filterMode = cudaFilterModeLinear;
 	gT_volumeTexture.normalized = false;
 
@@ -153,8 +153,8 @@ __global__ void FPhorizontal(float* D_projData, unsigned int projPitch, unsigned
 
 	float fVal = 0.0f;
 	// project detector on slice
-	float fP = (detector - 0.5f*dims.iProjDets + 0.5f - gC_angle_offset[angle]) * fDetStep + (startSlice - 0.5f*dims.iVolWidth + 0.5f) * fSliceStep + 0.5f*dims.iVolHeight - 0.5f + 1.5f;
-	float fS = startSlice + 1.5f;
+	float fP = (detector - 0.5f*dims.iProjDets + 0.5f - gC_angle_offset[angle]) * fDetStep + (startSlice - 0.5f*dims.iVolWidth + 0.5f) * fSliceStep + 0.5f*dims.iVolHeight - 0.5f + 0.5f;
+	float fS = startSlice + 0.5f;
 	int endSlice = startSlice + g_blockSlices;
 	if (endSlice > dims.iVolWidth)
 		endSlice = dims.iVolWidth;
@@ -189,7 +189,7 @@ __global__ void FPhorizontal(float* D_projData, unsigned int projPitch, unsigned
 
 	}
 
-	D_projData[angle*projPitch+detector+1] += fVal * fDistCorr;
+	D_projData[angle*projPitch+detector] += fVal * fDistCorr;
 }
 
 // projection for angles that are roughly vertical
@@ -255,8 +255,8 @@ __global__ void FPvertical(float* D_projData, unsigned int projPitch, unsigned i
 	fDistCorr *= outputScale;
 
 	float fVal = 0.0f;
-	float fP = (detector - 0.5f*dims.iProjDets + 0.5f - gC_angle_offset[angle]) * fDetStep + (startSlice - 0.5f*dims.iVolHeight + 0.5f) * fSliceStep + 0.5f*dims.iVolWidth - 0.5f + 1.5f;
-	float fS = startSlice+1.5f;
+	float fP = (detector - 0.5f*dims.iProjDets + 0.5f - gC_angle_offset[angle]) * fDetStep + (startSlice - 0.5f*dims.iVolHeight + 0.5f) * fSliceStep + 0.5f*dims.iVolWidth - 0.5f + 0.5f;
+	float fS = startSlice+0.5f;
 	int endSlice = startSlice + g_blockSlices;
 	if (endSlice > dims.iVolHeight)
 		endSlice = dims.iVolHeight;
@@ -290,7 +290,7 @@ __global__ void FPvertical(float* D_projData, unsigned int projPitch, unsigned i
 
 	}
 
-	D_projData[angle*projPitch+detector+1] += fVal * fDistCorr;
+	D_projData[angle*projPitch+detector] += fVal * fDistCorr;
 }
 
 // projection for angles that are roughly horizontal
@@ -331,8 +331,8 @@ __global__ void FPhorizontal_simple(float* D_projData, unsigned int projPitch, u
 
 	float fVal = 0.0f;
 	// project detector on slice
-	float fP = (detector - 0.5f*dims.iProjDets + 0.5f - gC_angle_offset[angle]) * fDetStep + (startSlice - 0.5f*dims.iVolWidth + 0.5f) * fSliceStep + 0.5f*dims.iVolHeight - 0.5f + 1.5f;
-	float fS = startSlice + 1.5f;
+	float fP = (detector - 0.5f*dims.iProjDets + 0.5f - gC_angle_offset[angle]) * fDetStep + (startSlice - 0.5f*dims.iVolWidth + 0.5f) * fSliceStep + 0.5f*dims.iVolHeight - 0.5f + 0.5f;
+	float fS = startSlice + 0.5f;
 	int endSlice = startSlice + g_blockSlices;
 	if (endSlice > dims.iVolWidth)
 		endSlice = dims.iVolWidth;
@@ -367,7 +367,7 @@ __global__ void FPhorizontal_simple(float* D_projData, unsigned int projPitch, u
 
 	}
 
-	D_projData[angle*projPitch+detector+1] += fVal * fDistCorr;
+	D_projData[angle*projPitch+detector] += fVal * fDistCorr;
 }
 
 
@@ -408,8 +408,8 @@ __global__ void FPvertical_simple(float* D_projData, unsigned int projPitch, uns
 	fDistCorr *= outputScale;
 
 	float fVal = 0.0f;
-	float fP = (detector - 0.5f*dims.iProjDets + 0.5f - gC_angle_offset[angle]) * fDetStep + (startSlice - 0.5f*dims.iVolHeight + 0.5f) * fSliceStep + 0.5f*dims.iVolWidth - 0.5f + 1.5f;
-	float fS = startSlice+1.5f;
+	float fP = (detector - 0.5f*dims.iProjDets + 0.5f - gC_angle_offset[angle]) * fDetStep + (startSlice - 0.5f*dims.iVolHeight + 0.5f) * fSliceStep + 0.5f*dims.iVolWidth - 0.5f + 0.5f;
+	float fS = startSlice+0.5f;
 	int endSlice = startSlice + g_blockSlices;
 	if (endSlice > dims.iVolHeight)
 		endSlice = dims.iVolHeight;
@@ -443,7 +443,7 @@ __global__ void FPvertical_simple(float* D_projData, unsigned int projPitch, uns
 
 	}
 
-	D_projData[angle*projPitch+detector+1] += fVal * fDistCorr;
+	D_projData[angle*projPitch+detector] += fVal * fDistCorr;
 }
 
 
@@ -457,7 +457,7 @@ bool FP_simple_internal(float* D_volumeData, unsigned int volumePitch,
 	assert(dims.iProjAngles <= g_MaxAngles);
 
 	cudaArray* D_dataArray;
-	bindVolumeDataTexture(D_volumeData, D_dataArray, volumePitch, dims.iVolWidth+2, dims.iVolHeight+2);
+	bindVolumeDataTexture(D_volumeData, D_dataArray, volumePitch, dims.iVolWidth, dims.iVolHeight);
 
 	cudaMemcpyToSymbol(gC_angle, angles, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice);
 
@@ -579,7 +579,7 @@ bool FP(float* D_volumeData, unsigned int volumePitch,
 	assert(dims.fDetScale > 0.9999f);
 
 	cudaArray* D_dataArray;
-	bindVolumeDataTexture(D_volumeData, D_dataArray, volumePitch, dims.iVolWidth+2, dims.iVolHeight+2);
+	bindVolumeDataTexture(D_volumeData, D_dataArray, volumePitch, dims.iVolWidth, dims.iVolHeight);
 
 	cudaMemcpyToSymbol(gC_angle, angles, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice);
 
@@ -682,10 +682,10 @@ int main()
 	dims.iRaysPerDet = 1;
 	unsigned int volumePitch, projPitch;
 
-	allocateVolume(D_volumeData, dims.iVolWidth+2, dims.iVolHeight+2, volumePitch);
+	allocateVolume(D_volumeData, dims.iVolWidth, dims.iVolHeight, volumePitch);
 	printf("pitch: %u\n", volumePitch);
 
-	allocateVolume(D_projData, dims.iProjDets+2, dims.iProjAngles, projPitch);
+	allocateVolume(D_projData, dims.iProjDets, dims.iProjAngles, projPitch);
 	printf("pitch: %u\n", projPitch);
 
 	unsigned int y, x;
@@ -715,7 +715,7 @@ int main()
 			s += sino[y*dims.iProjDets+x] * sino[y*dims.iProjDets+x];
 	printf("cpu norm: %f\n", s);
 
-	//zeroVolume(D_projData, projPitch, dims.iProjDets+2, dims.iProjAngles);
+	//zeroVolume(D_projData, projPitch, dims.iProjDets, dims.iProjAngles);
 	s = dotProduct2D(D_projData, projPitch, dims.iProjDets, dims.iProjAngles, 1, 0);
 	printf("gpu norm: %f\n", s);
 

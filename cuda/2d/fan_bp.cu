@@ -61,12 +61,12 @@ __constant__ float gC_DetUX[g_MaxAngles];
 __constant__ float gC_DetUY[g_MaxAngles];
 
 
-static bool bindProjDataTexture(float* data, unsigned int pitch, unsigned int width, unsigned int height)
+static bool bindProjDataTexture(float* data, unsigned int pitch, unsigned int width, unsigned int height, cudaTextureAddressMode mode = cudaAddressModeBorder)
 {
 	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
 
-	gT_FanProjTexture.addressMode[0] = cudaAddressModeClamp;
-	gT_FanProjTexture.addressMode[1] = cudaAddressModeClamp;
+	gT_FanProjTexture.addressMode[0] = mode;
+	gT_FanProjTexture.addressMode[1] = mode;
 	gT_FanProjTexture.filterMode = cudaFilterModeLinear;
 	gT_FanProjTexture.normalized = false;
 
@@ -116,12 +116,12 @@ __global__ void devFanBP(float* D_volData, unsigned int volPitch, unsigned int s
 		const float fNum = fDetSY * fXD - fDetSX * fYD + fX*fSrcY - fY*fSrcX;
 		const float fDen = fDetUX * fYD - fDetUY * fXD;
 		
-		const float fT = fNum / fDen + 1.0f;
+		const float fT = fNum / fDen;
 		fVal += tex2D(gT_FanProjTexture, fT, fA);
 		fA += 1.0f;
 	}
 
-	volData[(Y+1)*volPitch+X+1] += fVal;
+	volData[Y*volPitch+X] += fVal;
 }
 
 // supersampling version
@@ -171,7 +171,7 @@ __global__ void devFanBP_SS(float* D_volData, unsigned int volPitch, unsigned in
 				const float fNum = fDetSY * fXD - fDetSX * fYD + fX*fSrcY - fY*fSrcX;
 				const float fDen = fDetUX * fYD - fDetUY * fXD;
 		
-				const float fT = fNum / fDen + 1.0f;
+				const float fT = fNum / fDen;
 				fVal += tex2D(gT_FanProjTexture, fT, fA);
 				fY -= fSubStep;
 			}
@@ -180,7 +180,7 @@ __global__ void devFanBP_SS(float* D_volData, unsigned int volPitch, unsigned in
 		fA += 1.0f;
 	}
 
-	volData[(Y+1)*volPitch+X+1] += fVal / (dims.iRaysPerPixelDim * dims.iRaysPerPixelDim);
+	volData[Y*volPitch+X] += fVal / (dims.iRaysPerPixelDim * dims.iRaysPerPixelDim);
 }
 
 
@@ -222,7 +222,7 @@ __global__ void devFanBP_SART(float* D_volData, unsigned int volPitch, const SDi
 	const float fT = fNum / fDen;
 	const float fVal = tex2D(gT_FanProjTexture, fT, 0.5f);
 
-	volData[(Y+1)*volPitch+X+1] += fVal;
+	volData[Y*volPitch+X] += fVal;
 }
 
 // Weighted BP for use in fan beam FBP
@@ -268,12 +268,12 @@ __global__ void devFanBP_FBPWeighted(float* D_volData, unsigned int volPitch, un
 
 		const float fWeight = fXD*fXD + fYD*fYD;
 		
-		const float fT = fNum / fDen + 1.0f;
+		const float fT = fNum / fDen;
 		fVal += tex2D(gT_FanProjTexture, fT, fA) / fWeight;
 		fA += 1.0f;
 	}
 
-	volData[(Y+1)*volPitch+X+1] += fVal;
+	volData[Y*volPitch+X] += fVal;
 }
 
 
@@ -331,7 +331,7 @@ bool FanBP_FBPWeighted(float* D_volumeData, unsigned int volumePitch,
 	// TODO: process angles block by block
 	assert(dims.iProjAngles <= g_MaxAngles);
 
-	bindProjDataTexture(D_projData, projPitch, dims.iProjDets+2, dims.iProjAngles);
+	bindProjDataTexture(D_projData, projPitch, dims.iProjDets, dims.iProjAngles);
 
 	// transfer angles to constant memory
 	float* tmp = new float[dims.iProjAngles];
@@ -376,7 +376,7 @@ bool FanBP_SART(float* D_volumeData, unsigned int volumePitch,
                 const SDimensions& dims, const SFanProjection* angles)
 {
 	// only one angle
-	bindProjDataTexture(D_projData, projPitch, dims.iProjDets, 1);
+	bindProjDataTexture(D_projData, projPitch, dims.iProjDets, 1, cudaAddressModeClamp);
 
 	// transfer angle to constant memory
 #define TRANSFER_TO_CONSTANT(name) do { cudaMemcpyToSymbol(gC_##name, &(angles[angle].f##name), sizeof(float), 0, cudaMemcpyHostToDevice); } while (0)
@@ -442,10 +442,10 @@ int main()
 
 #undef ROTATE0
 
-	allocateVolume(D_volumeData, dims.iVolWidth+2, dims.iVolHeight+2, volumePitch);
+	allocateVolume(D_volumeData, dims.iVolWidth, dims.iVolHeight, volumePitch);
 	printf("pitch: %u\n", volumePitch);
 
-	allocateVolume(D_projData, dims.iProjDets+2, dims.iProjAngles, projPitch);
+	allocateVolume(D_projData, dims.iProjDets, dims.iProjAngles, projPitch);
 	printf("pitch: %u\n", projPitch);
 
 	unsigned int y, x;

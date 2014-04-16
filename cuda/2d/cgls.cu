@@ -73,16 +73,16 @@ void CGLS::reset()
 bool CGLS::init()
 {
 	// Lifetime of z: within an iteration
-	allocateVolume(D_z, dims.iVolWidth+2, dims.iVolHeight+2, zPitch);
+	allocateVolume(D_z, dims.iVolWidth, dims.iVolHeight, zPitch);
 
 	// Lifetime of p: full algorithm
-	allocateVolume(D_p, dims.iVolWidth+2, dims.iVolHeight+2, pPitch);
+	allocateVolume(D_p, dims.iVolWidth, dims.iVolHeight, pPitch);
 
 	// Lifetime of r: full algorithm
-	allocateVolume(D_r, dims.iProjDets+2, dims.iProjAngles, rPitch);
+	allocateVolume(D_r, dims.iProjDets, dims.iProjAngles, rPitch);
 	
 	// Lifetime of w: within an iteration
-	allocateVolume(D_w, dims.iProjDets+2, dims.iProjAngles, wPitch);
+	allocateVolume(D_w, dims.iProjDets, dims.iProjAngles, wPitch);
 
 	// TODO: check if allocations succeeded
 	return true;
@@ -120,13 +120,13 @@ bool CGLS::iterate(unsigned int iterations)
 	if (!sliceInitialized) {
 
 		// copy sinogram
-		cudaMemcpy2D(D_r, sizeof(float)*rPitch, D_sinoData, sizeof(float)*sinoPitch, sizeof(float)*(dims.iProjDets+2), dims.iProjAngles, cudaMemcpyDeviceToDevice);
+		cudaMemcpy2D(D_r, sizeof(float)*rPitch, D_sinoData, sizeof(float)*sinoPitch, sizeof(float)*(dims.iProjDets), dims.iProjAngles, cudaMemcpyDeviceToDevice);
 
 		// r = sino - A*x
 		if (useVolumeMask) {
 			// Use z as temporary storage here since it is unused
-			cudaMemcpy2D(D_z, sizeof(float)*zPitch, D_volumeData, sizeof(float)*volumePitch, sizeof(float)*(dims.iVolWidth+2), dims.iVolHeight+2, cudaMemcpyDeviceToDevice);
-			processVol<opMul, VOL>(D_z, D_maskData, zPitch, dims.iVolWidth, dims.iVolHeight);
+			cudaMemcpy2D(D_z, sizeof(float)*zPitch, D_volumeData, sizeof(float)*volumePitch, sizeof(float)*(dims.iVolWidth), dims.iVolHeight, cudaMemcpyDeviceToDevice);
+			processVol<opMul>(D_z, D_maskData, zPitch, dims.iVolWidth, dims.iVolHeight);
 			callFP(D_z, zPitch, D_r, rPitch, -1.0f);
 		} else {
 			callFP(D_volumeData, volumePitch, D_r, rPitch, -1.0f);
@@ -134,13 +134,13 @@ bool CGLS::iterate(unsigned int iterations)
 
 
 		// p = A'*r
-		zeroVolume(D_p, pPitch, dims.iVolWidth+2, dims.iVolHeight+2);
+		zeroVolume(D_p, pPitch, dims.iVolWidth, dims.iVolHeight);
 		callBP(D_p, pPitch, D_r, rPitch);
 		if (useVolumeMask)
-			processVol<opMul, VOL>(D_p, D_maskData, pPitch, dims.iVolWidth, dims.iVolHeight);
+			processVol<opMul>(D_p, D_maskData, pPitch, dims.iVolWidth, dims.iVolHeight);
 
 
-		gamma = dotProduct2D(D_p, pPitch, dims.iVolWidth, dims.iVolHeight, 1, 1);
+		gamma = dotProduct2D(D_p, pPitch, dims.iVolWidth, dims.iVolHeight);
 
 		sliceInitialized = true;
 	}
@@ -150,32 +150,32 @@ bool CGLS::iterate(unsigned int iterations)
 	for (unsigned int iter = 0; iter < iterations && !shouldAbort; ++iter) {
 
 		// w = A*p
-		zeroVolume(D_w, wPitch, dims.iProjDets+2, dims.iProjAngles);
+		zeroVolume(D_w, wPitch, dims.iProjDets, dims.iProjAngles);
 		callFP(D_p, pPitch, D_w, wPitch, 1.0f);
 
 		// alpha = gamma / <w,w>
-		float ww = dotProduct2D(D_w, wPitch, dims.iProjDets, dims.iProjAngles, 1, 0);
+		float ww = dotProduct2D(D_w, wPitch, dims.iProjDets, dims.iProjAngles);
 		float alpha = gamma / ww;
 
 		// x += alpha*p
-		processVol<opAddScaled, VOL>(D_volumeData, D_p, alpha, volumePitch, dims.iVolWidth, dims.iVolHeight);
+		processVol<opAddScaled>(D_volumeData, D_p, alpha, volumePitch, dims.iVolWidth, dims.iVolHeight);
 
 		// r -= alpha*w
-		processVol<opAddScaled, SINO>(D_r, D_w, -alpha, rPitch, dims.iProjDets, dims.iProjAngles);
+		processVol<opAddScaled>(D_r, D_w, -alpha, rPitch, dims.iProjDets, dims.iProjAngles);
 
 
 		// z = A'*r
-		zeroVolume(D_z, zPitch, dims.iVolWidth+2, dims.iVolHeight+2);
+		zeroVolume(D_z, zPitch, dims.iVolWidth, dims.iVolHeight);
 		callBP(D_z, zPitch, D_r, rPitch);
 		if (useVolumeMask)
-			processVol<opMul, VOL>(D_z, D_maskData, zPitch, dims.iVolWidth, dims.iVolHeight);
+			processVol<opMul>(D_z, D_maskData, zPitch, dims.iVolWidth, dims.iVolHeight);
 
 		float beta = 1.0f / gamma;
-		gamma = dotProduct2D(D_z, zPitch, dims.iVolWidth, dims.iVolHeight, 1, 1);
+		gamma = dotProduct2D(D_z, zPitch, dims.iVolWidth, dims.iVolHeight);
 		beta *= gamma;
 
 		// p = z + beta*p
-		processVol<opScaleAndAdd, VOL>(D_p, D_z, beta, pPitch, dims.iVolWidth, dims.iVolHeight);
+		processVol<opScaleAndAdd>(D_p, D_z, beta, pPitch, dims.iVolWidth, dims.iVolHeight);
 
 	}
 
@@ -189,12 +189,12 @@ float CGLS::computeDiffNorm()
 	// used outside of iterations.
 
 	// copy sinogram to w
-	cudaMemcpy2D(D_w, sizeof(float)*wPitch, D_sinoData, sizeof(float)*sinoPitch, sizeof(float)*(dims.iProjDets+2), dims.iProjAngles, cudaMemcpyDeviceToDevice);
+	cudaMemcpy2D(D_w, sizeof(float)*wPitch, D_sinoData, sizeof(float)*sinoPitch, sizeof(float)*(dims.iProjDets), dims.iProjAngles, cudaMemcpyDeviceToDevice);
 
 	// do FP, subtracting projection from sinogram
 	if (useVolumeMask) {
-			cudaMemcpy2D(D_z, sizeof(float)*zPitch, D_volumeData, sizeof(float)*volumePitch, sizeof(float)*(dims.iVolWidth+2), dims.iVolHeight+2, cudaMemcpyDeviceToDevice);
-			processVol<opMul, VOL>(D_z, D_maskData, zPitch, dims.iVolWidth, dims.iVolHeight);
+			cudaMemcpy2D(D_z, sizeof(float)*zPitch, D_volumeData, sizeof(float)*volumePitch, sizeof(float)*(dims.iVolWidth), dims.iVolHeight, cudaMemcpyDeviceToDevice);
+			processVol<opMul>(D_z, D_maskData, zPitch, dims.iVolWidth, dims.iVolHeight);
 			callFP(D_z, zPitch, D_w, wPitch, -1.0f);
 	} else {
 			callFP(D_volumeData, volumePitch, D_w, wPitch, -1.0f);
@@ -202,7 +202,7 @@ float CGLS::computeDiffNorm()
 
 	// compute norm of D_w
 
-	float s = dotProduct2D(D_w, wPitch, dims.iProjDets, dims.iProjAngles, 1, 0);
+	float s = dotProduct2D(D_w, wPitch, dims.iProjDets, dims.iProjAngles);
 
 	return sqrt(s);
 }
@@ -264,12 +264,12 @@ int main()
 	dims.iRaysPerDet = 1;
 	unsigned int volumePitch, sinoPitch;
 
-	allocateVolume(D_volumeData, dims.iVolWidth+2, dims.iVolHeight+2, volumePitch);
-	zeroVolume(D_volumeData, volumePitch, dims.iVolWidth+2, dims.iVolHeight+2);
+	allocateVolume(D_volumeData, dims.iVolWidth, dims.iVolHeight, volumePitch);
+	zeroVolume(D_volumeData, volumePitch, dims.iVolWidth, dims.iVolHeight);
 	printf("pitch: %u\n", volumePitch);
 
-	allocateVolume(D_sinoData, dims.iProjDets+2, dims.iProjAngles, sinoPitch);
-	zeroVolume(D_sinoData, sinoPitch, dims.iProjDets+2, dims.iProjAngles);
+	allocateVolume(D_sinoData, dims.iProjDets, dims.iProjAngles, sinoPitch);
+	zeroVolume(D_sinoData, sinoPitch, dims.iProjDets, dims.iProjAngles);
 	printf("pitch: %u\n", sinoPitch);
 	
 	unsigned int y, x;

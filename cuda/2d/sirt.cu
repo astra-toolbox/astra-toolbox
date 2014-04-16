@@ -88,17 +88,17 @@ void SIRT::reset()
 
 bool SIRT::init()
 {
-	allocateVolume(D_pixelWeight, dims.iVolWidth+2, dims.iVolHeight+2, pixelPitch);
-	zeroVolume(D_pixelWeight, pixelPitch, dims.iVolWidth+2, dims.iVolHeight+2);
+	allocateVolume(D_pixelWeight, dims.iVolWidth, dims.iVolHeight, pixelPitch);
+	zeroVolume(D_pixelWeight, pixelPitch, dims.iVolWidth, dims.iVolHeight);
 
-	allocateVolume(D_tmpData, dims.iVolWidth+2, dims.iVolHeight+2, tmpPitch);
-	zeroVolume(D_tmpData, tmpPitch, dims.iVolWidth+2, dims.iVolHeight+2);
+	allocateVolume(D_tmpData, dims.iVolWidth, dims.iVolHeight, tmpPitch);
+	zeroVolume(D_tmpData, tmpPitch, dims.iVolWidth, dims.iVolHeight);
 
-	allocateVolume(D_projData, dims.iProjDets+2, dims.iProjAngles, projPitch);
-	zeroVolume(D_projData, projPitch, dims.iProjDets+2, dims.iProjAngles);
+	allocateVolume(D_projData, dims.iProjDets, dims.iProjAngles, projPitch);
+	zeroVolume(D_projData, projPitch, dims.iProjDets, dims.iProjAngles);
 	
-	allocateVolume(D_lineWeight, dims.iProjDets+2, dims.iProjAngles, linePitch);
-	zeroVolume(D_lineWeight, linePitch, dims.iProjDets+2, dims.iProjAngles);
+	allocateVolume(D_lineWeight, dims.iProjDets, dims.iProjAngles, linePitch);
+	zeroVolume(D_lineWeight, linePitch, dims.iProjDets, dims.iProjAngles);
 
 	// We can't precompute lineWeights and pixelWeights when using a mask
 	if (!useVolumeMask && !useSinogramMask)
@@ -110,33 +110,33 @@ bool SIRT::init()
 
 bool SIRT::precomputeWeights()
 {
-	zeroVolume(D_lineWeight, linePitch, dims.iProjDets+2, dims.iProjAngles);
+	zeroVolume(D_lineWeight, linePitch, dims.iProjDets, dims.iProjAngles);
 	if (useVolumeMask) {
 		callFP(D_maskData, maskPitch, D_lineWeight, linePitch, 1.0f);
 	} else {
-		processVol<opSet, VOL>(D_tmpData, 1.0f, tmpPitch, dims.iVolWidth, dims.iVolHeight);
+		processVol<opSet>(D_tmpData, 1.0f, tmpPitch, dims.iVolWidth, dims.iVolHeight);
 		callFP(D_tmpData, tmpPitch, D_lineWeight, linePitch, 1.0f);
 	}
-	processVol<opInvert, SINO>(D_lineWeight, linePitch, dims.iProjDets, dims.iProjAngles);
+	processVol<opInvert>(D_lineWeight, linePitch, dims.iProjDets, dims.iProjAngles);
 
 	if (useSinogramMask) {
 		// scale line weights with sinogram mask to zero out masked sinogram pixels
-		processVol<opMul, SINO>(D_lineWeight, D_smaskData, linePitch, dims.iProjDets, dims.iProjAngles);
+		processVol<opMul>(D_lineWeight, D_smaskData, linePitch, dims.iProjDets, dims.iProjAngles);
 	}
 
 
-	zeroVolume(D_pixelWeight, pixelPitch, dims.iVolWidth+2, dims.iVolHeight+2);
+	zeroVolume(D_pixelWeight, pixelPitch, dims.iVolWidth, dims.iVolHeight);
 	if (useSinogramMask) {
 		callBP(D_pixelWeight, pixelPitch, D_smaskData, smaskPitch);
 	} else {
-		processVol<opSet, SINO>(D_projData, 1.0f, projPitch, dims.iProjDets, dims.iProjAngles);
+		processVol<opSet>(D_projData, 1.0f, projPitch, dims.iProjDets, dims.iProjAngles);
 		callBP(D_pixelWeight, pixelPitch, D_projData, projPitch);
 	}
-	processVol<opInvert, VOL>(D_pixelWeight, pixelPitch, dims.iVolWidth, dims.iVolHeight);
+	processVol<opInvert>(D_pixelWeight, pixelPitch, dims.iVolWidth, dims.iVolHeight);
 
 	if (useVolumeMask) {
 		// scale pixel weights with mask to zero out masked pixels
-		processVol<opMul, VOL>(D_pixelWeight, D_maskData, pixelPitch, dims.iVolWidth, dims.iVolHeight);
+		processVol<opMul>(D_pixelWeight, D_maskData, pixelPitch, dims.iVolWidth, dims.iVolHeight);
 	}
 
 	return true;
@@ -160,7 +160,7 @@ bool SIRT::uploadMinMaxMasks(const float* pfMinMaskData, const float* pfMaxMaskD
 	freeMinMaxMasks = true;
 	bool ok = true;
 	if (pfMinMaskData) {
-		allocateVolume(D_minMaskData, dims.iVolWidth+2, dims.iVolHeight+2, minMaskPitch);
+		allocateVolume(D_minMaskData, dims.iVolWidth, dims.iVolHeight, minMaskPitch);
 		ok = copyVolumeToDevice(pfMinMaskData, iPitch,
 		                        dims.iVolWidth, dims.iVolHeight,
 		                        D_minMaskData, minMaskPitch);
@@ -169,7 +169,7 @@ bool SIRT::uploadMinMaxMasks(const float* pfMinMaskData, const float* pfMaxMaskD
 		return false;
 
 	if (pfMaxMaskData) {
-		allocateVolume(D_maxMaskData, dims.iVolWidth+2, dims.iVolHeight+2, maxMaskPitch);
+		allocateVolume(D_maxMaskData, dims.iVolWidth, dims.iVolHeight, maxMaskPitch);
 		ok = copyVolumeToDevice(pfMaxMaskData, iPitch,
 		                        dims.iVolWidth, dims.iVolHeight,
 		                        D_maxMaskData, maxMaskPitch);
@@ -191,33 +191,33 @@ bool SIRT::iterate(unsigned int iterations)
 	for (unsigned int iter = 0; iter < iterations && !shouldAbort; ++iter) {
 
 		// copy sinogram to projection data
-		cudaMemcpy2D(D_projData, sizeof(float)*projPitch, D_sinoData, sizeof(float)*sinoPitch, sizeof(float)*(dims.iProjDets+2), dims.iProjAngles, cudaMemcpyDeviceToDevice);
+		cudaMemcpy2D(D_projData, sizeof(float)*projPitch, D_sinoData, sizeof(float)*sinoPitch, sizeof(float)*(dims.iProjDets), dims.iProjAngles, cudaMemcpyDeviceToDevice);
 
 		// do FP, subtracting projection from sinogram
 		if (useVolumeMask) {
-				cudaMemcpy2D(D_tmpData, sizeof(float)*tmpPitch, D_volumeData, sizeof(float)*volumePitch, sizeof(float)*(dims.iVolWidth+2), dims.iVolHeight+2, cudaMemcpyDeviceToDevice);
-				processVol<opMul, VOL>(D_tmpData, D_maskData, tmpPitch, dims.iVolWidth, dims.iVolHeight);
+				cudaMemcpy2D(D_tmpData, sizeof(float)*tmpPitch, D_volumeData, sizeof(float)*volumePitch, sizeof(float)*(dims.iVolWidth), dims.iVolHeight, cudaMemcpyDeviceToDevice);
+				processVol<opMul>(D_tmpData, D_maskData, tmpPitch, dims.iVolWidth, dims.iVolHeight);
 				callFP(D_tmpData, tmpPitch, D_projData, projPitch, -1.0f);
 		} else {
 				callFP(D_volumeData, volumePitch, D_projData, projPitch, -1.0f);
 		}
 
-		processVol<opMul, SINO>(D_projData, D_lineWeight, projPitch, dims.iProjDets, dims.iProjAngles);
+		processVol<opMul>(D_projData, D_lineWeight, projPitch, dims.iProjDets, dims.iProjAngles);
 
-		zeroVolume(D_tmpData, tmpPitch, dims.iVolWidth+2, dims.iVolHeight+2);
+		zeroVolume(D_tmpData, tmpPitch, dims.iVolWidth, dims.iVolHeight);
 
 		callBP(D_tmpData, tmpPitch, D_projData, projPitch);
 
-		processVol<opAddMul, VOL>(D_volumeData, D_pixelWeight, D_tmpData, volumePitch, dims.iVolWidth, dims.iVolHeight);
+		processVol<opAddMul>(D_volumeData, D_pixelWeight, D_tmpData, volumePitch, dims.iVolWidth, dims.iVolHeight);
 
 		if (useMinConstraint)
-			processVol<opClampMin, VOL>(D_volumeData, fMinConstraint, volumePitch, dims.iVolWidth, dims.iVolHeight);
+			processVol<opClampMin>(D_volumeData, fMinConstraint, volumePitch, dims.iVolWidth, dims.iVolHeight);
 		if (useMaxConstraint)
-			processVol<opClampMax, VOL>(D_volumeData, fMaxConstraint, volumePitch, dims.iVolWidth, dims.iVolHeight);
+			processVol<opClampMax>(D_volumeData, fMaxConstraint, volumePitch, dims.iVolWidth, dims.iVolHeight);
 		if (D_minMaskData)
-			processVol<opClampMinMask, VOL>(D_volumeData, D_minMaskData, volumePitch, dims.iVolWidth, dims.iVolHeight);
+			processVol<opClampMinMask>(D_volumeData, D_minMaskData, volumePitch, dims.iVolWidth, dims.iVolHeight);
 		if (D_maxMaskData)
-			processVol<opClampMaxMask, VOL>(D_volumeData, D_maxMaskData, volumePitch, dims.iVolWidth, dims.iVolHeight);
+			processVol<opClampMaxMask>(D_volumeData, D_maxMaskData, volumePitch, dims.iVolWidth, dims.iVolHeight);
 	}
 
 	return true;
@@ -226,12 +226,12 @@ bool SIRT::iterate(unsigned int iterations)
 float SIRT::computeDiffNorm()
 {
 	// copy sinogram to projection data
-	cudaMemcpy2D(D_projData, sizeof(float)*projPitch, D_sinoData, sizeof(float)*sinoPitch, sizeof(float)*(dims.iProjDets+2), dims.iProjAngles, cudaMemcpyDeviceToDevice);
+	cudaMemcpy2D(D_projData, sizeof(float)*projPitch, D_sinoData, sizeof(float)*sinoPitch, sizeof(float)*(dims.iProjDets), dims.iProjAngles, cudaMemcpyDeviceToDevice);
 
 	// do FP, subtracting projection from sinogram
 	if (useVolumeMask) {
-			cudaMemcpy2D(D_tmpData, sizeof(float)*tmpPitch, D_volumeData, sizeof(float)*volumePitch, sizeof(float)*(dims.iVolWidth+2), dims.iVolHeight+2, cudaMemcpyDeviceToDevice);
-			processVol<opMul, VOL>(D_tmpData, D_maskData, tmpPitch, dims.iVolWidth, dims.iVolHeight);
+			cudaMemcpy2D(D_tmpData, sizeof(float)*tmpPitch, D_volumeData, sizeof(float)*volumePitch, sizeof(float)*(dims.iVolWidth), dims.iVolHeight, cudaMemcpyDeviceToDevice);
+			processVol<opMul>(D_tmpData, D_maskData, tmpPitch, dims.iVolWidth, dims.iVolHeight);
 			callFP(D_tmpData, tmpPitch, D_projData, projPitch, -1.0f);
 	} else {
 			callFP(D_volumeData, volumePitch, D_projData, projPitch, -1.0f);
@@ -240,7 +240,7 @@ float SIRT::computeDiffNorm()
 
 	// compute norm of D_projData
 
-	float s = dotProduct2D(D_projData, projPitch, dims.iProjDets, dims.iProjAngles, 1, 0);
+	float s = dotProduct2D(D_projData, projPitch, dims.iProjDets, dims.iProjAngles);
 
 	return sqrt(s);
 }
@@ -300,12 +300,12 @@ int main()
 	dims.iRaysPerDet = 1;
 	unsigned int volumePitch, sinoPitch;
 
-	allocateVolume(D_volumeData, dims.iVolWidth+2, dims.iVolHeight+2, volumePitch);
-	zeroVolume(D_volumeData, volumePitch, dims.iVolWidth+2, dims.iVolHeight+2);
+	allocateVolume(D_volumeData, dims.iVolWidth, dims.iVolHeight, volumePitch);
+	zeroVolume(D_volumeData, volumePitch, dims.iVolWidth, dims.iVolHeight);
 	printf("pitch: %u\n", volumePitch);
 
-	allocateVolume(D_sinoData, dims.iProjDets+2, dims.iProjAngles, sinoPitch);
-	zeroVolume(D_sinoData, sinoPitch, dims.iProjDets+2, dims.iProjAngles);
+	allocateVolume(D_sinoData, dims.iProjDets, dims.iProjAngles, sinoPitch);
+	zeroVolume(D_sinoData, sinoPitch, dims.iProjDets, dims.iProjAngles);
 	printf("pitch: %u\n", sinoPitch);
 	
 	unsigned int y, x;

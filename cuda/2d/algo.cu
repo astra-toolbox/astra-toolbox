@@ -214,11 +214,11 @@ bool ReconAlgo::setMaxConstraint(float fMax)
 bool ReconAlgo::allocateBuffers()
 {
 	bool ok;
-	ok = allocateVolume(D_volumeData, dims.iVolWidth+2, dims.iVolHeight+2, volumePitch);
+	ok = allocateVolume(D_volumeData, dims.iVolWidth, dims.iVolHeight, volumePitch);
 	if (!ok)
 		return false;
 
-	ok = allocateVolume(D_sinoData, dims.iProjDets+2, dims.iProjAngles, sinoPitch);
+	ok = allocateVolume(D_sinoData, dims.iProjDets, dims.iProjAngles, sinoPitch);
 	if (!ok) {
 		cudaFree(D_volumeData);
 		D_volumeData = 0;
@@ -226,7 +226,7 @@ bool ReconAlgo::allocateBuffers()
 	}
 
 	if (useVolumeMask) {
-		ok = allocateVolume(D_maskData, dims.iVolWidth+2, dims.iVolHeight+2, maskPitch);
+		ok = allocateVolume(D_maskData, dims.iVolWidth, dims.iVolHeight, maskPitch);
 		if (!ok) {
 			cudaFree(D_volumeData);
 			cudaFree(D_sinoData);
@@ -237,7 +237,7 @@ bool ReconAlgo::allocateBuffers()
 	}
 
 	if (useSinogramMask) {
-		ok = allocateVolume(D_smaskData, dims.iProjDets+2, dims.iProjAngles, smaskPitch);
+		ok = allocateVolume(D_smaskData, dims.iProjDets, dims.iProjAngles, smaskPitch);
 		if (!ok) {
 			cudaFree(D_volumeData);
 			cudaFree(D_sinoData);
@@ -271,7 +271,7 @@ bool ReconAlgo::copyDataToGPU(const float* pfSinogram, unsigned int iSinogramPit
 		return false;
 
 	// rescale sinogram to adjust for pixel size
-	processVol<opMul,SINO>(D_sinoData, fSinogramScale,
+	processVol<opMul>(D_sinoData, fSinogramScale,
 	                       //1.0f/(fPixelSize*fPixelSize),
 	                       sinoPitch,
 	                       dims.iProjDets, dims.iProjAngles);

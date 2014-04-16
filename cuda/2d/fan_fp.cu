@@ -67,8 +67,8 @@ static bool bindVolumeDataTexture(float* data, cudaArray*& dataArray, unsigned i
 	cudaMallocArray(&dataArray, &channelDesc, width, height);
 	cudaMemcpy2DToArray(dataArray, 0, 0, data, pitch*sizeof(float), width*sizeof(float), height, cudaMemcpyDeviceToDevice);
 
-	gT_FanVolumeTexture.addressMode[0] = cudaAddressModeClamp;
-	gT_FanVolumeTexture.addressMode[1] = cudaAddressModeClamp;
+	gT_FanVolumeTexture.addressMode[0] = cudaAddressModeBorder;
+	gT_FanVolumeTexture.addressMode[1] = cudaAddressModeBorder;
 	gT_FanVolumeTexture.filterMode = cudaFilterModeLinear;
 	gT_FanVolumeTexture.normalized = false;
 
@@ -129,8 +129,8 @@ __global__ void FanFPhorizontal(float* D_projData, unsigned int projPitch, unsig
 
 		// intersect ray with first slice
 
-		float fY = -alpha * (startSlice - 0.5f*dims.iVolWidth + 0.5f) - beta + 0.5f*dims.iVolHeight - 0.5f + 1.5f;
-		float fX = startSlice + 1.5f;
+		float fY = -alpha * (startSlice - 0.5f*dims.iVolWidth + 0.5f) - beta + 0.5f*dims.iVolHeight - 0.5f + 0.5f;
+		float fX = startSlice + 0.5f;
 
 		int endSlice = startSlice + g_blockSlices;
 		if (endSlice > dims.iVolWidth)
@@ -148,7 +148,7 @@ __global__ void FanFPhorizontal(float* D_projData, unsigned int projPitch, unsig
 
 	}
 
-	projData[angle*projPitch+detector+1] += fVal;
+	projData[angle*projPitch+detector] += fVal;
 }
 
 
@@ -201,8 +201,8 @@ __global__ void FanFPvertical(float* D_projData, unsigned int projPitch, unsigne
 
 		// intersect ray with first slice
 
-		float fX = -alpha * (startSlice - 0.5f*dims.iVolHeight + 0.5f) + beta + 0.5f*dims.iVolWidth - 0.5f + 1.5f;
-		float fY = startSlice + 1.5f;
+		float fX = -alpha * (startSlice - 0.5f*dims.iVolHeight + 0.5f) + beta + 0.5f*dims.iVolWidth - 0.5f + 0.5f;
+		float fY = startSlice + 0.5f;
 
 		int endSlice = startSlice + g_blockSlices;
 		if (endSlice > dims.iVolHeight)
@@ -221,7 +221,7 @@ __global__ void FanFPvertical(float* D_projData, unsigned int projPitch, unsigne
 
 	}
 
-	projData[angle*projPitch+detector+1] += fVal;
+	projData[angle*projPitch+detector] += fVal;
 }
 
 bool FanFP(float* D_volumeData, unsigned int volumePitch,
@@ -233,7 +233,7 @@ bool FanFP(float* D_volumeData, unsigned int volumePitch,
 	assert(dims.iProjAngles <= g_MaxAngles);
 
 	cudaArray* D_dataArray;
-	bindVolumeDataTexture(D_volumeData, D_dataArray, volumePitch, dims.iVolWidth+2, dims.iVolHeight+2);
+	bindVolumeDataTexture(D_volumeData, D_dataArray, volumePitch, dims.iVolWidth, dims.iVolHeight);
 
 	// transfer angles to constant memory
 	float* tmp = new float[dims.iProjAngles];
@@ -325,10 +325,10 @@ int main()
 
 #undef ROTATE0
 
-	allocateVolume(D_volumeData, dims.iVolWidth+2, dims.iVolHeight+2, volumePitch);
+	allocateVolume(D_volumeData, dims.iVolWidth, dims.iVolHeight, volumePitch);
 	printf("pitch: %u\n", volumePitch);
 
-	allocateVolume(D_projData, dims.iProjDets+2, dims.iProjAngles, projPitch);
+	allocateVolume(D_projData, dims.iProjDets, dims.iProjAngles, projPitch);
 	printf("pitch: %u\n", projPitch);
 
 	unsigned int y, x;
@@ -358,8 +358,8 @@ int main()
 			s += sino[y*dims.iProjDets+x] * sino[y*dims.iProjDets+x];
 	printf("cpu norm: %f\n", s);
 
-	//zeroVolume(D_projData, projPitch, dims.iProjDets+2, dims.iProjAngles);
-	s = dotProduct2D(D_projData, projPitch, dims.iProjDets, dims.iProjAngles, 1, 0);
+	//zeroVolume(D_projData, projPitch, dims.iProjDets, dims.iProjAngles);
+	s = dotProduct2D(D_projData, projPitch, dims.iProjDets, dims.iProjAngles);
 	printf("gpu norm: %f\n", s);
 
 	saveImage("sino.png",dims.iProjAngles,dims.iProjDets,sino);

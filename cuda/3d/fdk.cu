@@ -354,7 +354,7 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 
 	for (int v = 0; v < dims.iProjV; ++v) {
 
-		ok = runCudaFFT(dims.iProjAngles, D_sinoData, projPitch, 0,
+		ok = runCudaFFT(dims.iProjAngles, D_sinoData, projPitch,
 		                dims.iProjU, iPaddedDetCount, iHalfFFTSize,
 		                D_sinoFFT);
 
@@ -364,7 +364,7 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 
 
 		ok = runCudaIFFT(dims.iProjAngles, D_sinoFFT, D_sinoData, projPitch,
-		                 0, dims.iProjU, iPaddedDetCount, iHalfFFTSize);
+		                 dims.iProjU, iPaddedDetCount, iHalfFFTSize);
 
 		if (!ok) break;
 

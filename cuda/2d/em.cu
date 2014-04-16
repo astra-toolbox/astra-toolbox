@@ -73,14 +73,14 @@ void EM::reset()
 
 bool EM::init()
 {
-	allocateVolume(D_pixelWeight, dims.iVolWidth+2, dims.iVolHeight+2, pixelPitch);
-	zeroVolume(D_pixelWeight, pixelPitch, dims.iVolWidth+2, dims.iVolHeight+2);
+	allocateVolume(D_pixelWeight, dims.iVolWidth, dims.iVolHeight, pixelPitch);
+	zeroVolume(D_pixelWeight, pixelPitch, dims.iVolWidth, dims.iVolHeight);
 
-	allocateVolume(D_tmpData, dims.iVolWidth+2, dims.iVolHeight+2, tmpPitch);
-	zeroVolume(D_tmpData, tmpPitch, dims.iVolWidth+2, dims.iVolHeight+2);
+	allocateVolume(D_tmpData, dims.iVolWidth, dims.iVolHeight, tmpPitch);
+	zeroVolume(D_tmpData, tmpPitch, dims.iVolWidth, dims.iVolHeight);
 
-	allocateVolume(D_projData, dims.iProjDets+2, dims.iProjAngles, projPitch);
-	zeroVolume(D_projData, projPitch, dims.iProjDets+2, dims.iProjAngles);
+	allocateVolume(D_projData, dims.iProjDets, dims.iProjAngles, projPitch);
+	zeroVolume(D_projData, projPitch, dims.iProjDets, dims.iProjAngles);
 
 	// We can't precompute pixelWeights when using a volume mask
 #if 0 
@@ -94,22 +94,22 @@ bool EM::init()
 
 bool EM::precomputeWeights()
 {
-	zeroVolume(D_pixelWeight, pixelPitch, dims.iVolWidth+2, dims.iVolHeight+2);
+	zeroVolume(D_pixelWeight, pixelPitch, dims.iVolWidth, dims.iVolHeight);
 #if 0
 	if (useSinogramMask) {
 		callBP(D_pixelWeight, pixelPitch, D_smaskData, smaskPitch);
 	} else
 #endif
 	{
-		processVol<opSet, SINO>(D_projData, 1.0f, projPitch, dims.iProjDets, dims.iProjAngles);
+		processVol<opSet>(D_projData, 1.0f, projPitch, dims.iProjDets, dims.iProjAngles);
 		callBP(D_pixelWeight, pixelPitch, D_projData, projPitch);
 	}
-	processVol<opInvert, VOL>(D_pixelWeight, pixelPitch, dims.iVolWidth, dims.iVolHeight);
+	processVol<opInvert>(D_pixelWeight, pixelPitch, dims.iVolWidth, dims.iVolHeight);
 
 #if 0
 	if (useVolumeMask) {
 		// scale pixel weights with mask to zero out masked pixels
-		processVol<opMul, VOL>(D_pixelWeight, D_maskData, pixelPitch, dims.iVolWidth, dims.iVolHeight);
+		processVol<opMul>(D_pixelWeight, D_maskData, pixelPitch, dims.iVolWidth, dims.iVolHeight);
 	}
 #endif
 
@@ -129,18 +129,18 @@ bool EM::iterate(unsigned int iterations)
 	for (unsigned int iter = 0; iter < iterations && !shouldAbort; ++iter) {
 
 		// Do FP of volumeData 
-		zeroVolume(D_projData, projPitch, dims.iProjDets+2, dims.iProjAngles);
+		zeroVolume(D_projData, projPitch, dims.iProjDets, dims.iProjAngles);
 		callFP(D_volumeData, volumePitch, D_projData, projPitch, 1.0f);
 
 		// Divide sinogram by FP (into projData)
-		processVol<opDividedBy, SINO>(D_projData, D_sinoData, projPitch, dims.iProjDets, dims.iProjAngles);
+		processVol<opDividedBy>(D_projData, D_sinoData, projPitch, dims.iProjDets, dims.iProjAngles);
 
 		// Do BP of projData into tmpData
-		zeroVolume(D_tmpData, tmpPitch, dims.iVolWidth+2, dims.iVolHeight+2);
+		zeroVolume(D_tmpData, tmpPitch, dims.iVolWidth, dims.iVolHeight);
 		callBP(D_tmpData, tmpPitch, D_projData, projPitch);
 
 		// Multiply volumeData with tmpData divided by pixel weights
-		processVol<opMul2, VOL>(D_volumeData, D_tmpData, D_pixelWeight, pixelPitch, dims.iVolWidth, dims.iVolHeight);
+		processVol<opMul2>(D_volumeData, D_tmpData, D_pixelWeight, pixelPitch, dims.iVolWidth, dims.iVolHeight);
 
 	}
 
@@ -150,12 +150,12 @@ bool EM::iterate(unsigned int iterations)
 float EM::computeDiffNorm()
 {
 	// copy sinogram to projection data
-	cudaMemcpy2D(D_projData, sizeof(float)*projPitch, D_sinoData, sizeof(float)*sinoPitch, sizeof(float)*(dims.iProjDets+2), dims.iProjAngles, cudaMemcpyDeviceToDevice);
+	cudaMemcpy2D(D_projData, sizeof(float)*projPitch, D_sinoData, sizeof(float)*sinoPitch, sizeof(float)*(dims.iProjDets), dims.iProjAngles, cudaMemcpyDeviceToDevice);
 
 	// do FP, subtracting projection from sinogram
 	if (useVolumeMask) {
-			cudaMemcpy2D(D_tmpData, sizeof(float)*tmpPitch, D_volumeData, sizeof(float)*volumePitch, sizeof(float)*(dims.iVolWidth+2), dims.iVolHeight+2, cudaMemcpyDeviceToDevice);
-			processVol<opMul, VOL>(D_tmpData, D_maskData, tmpPitch, dims.iVolWidth, dims.iVolHeight);
+			cudaMemcpy2D(D_tmpData, sizeof(float)*tmpPitch, D_volumeData, sizeof(float)*volumePitch, sizeof(float)*(dims.iVolWidth), dims.iVolHeight, cudaMemcpyDeviceToDevice);
+			processVol<opMul>(D_tmpData, D_maskData, tmpPitch, dims.iVolWidth, dims.iVolHeight);
 			callFP(D_tmpData, tmpPitch, D_projData, projPitch, -1.0f);
 	} else {
 			callFP(D_volumeData, volumePitch, D_projData, projPitch, -1.0f);
@@ -164,7 +164,7 @@ float EM::computeDiffNorm()
 
 	// compute norm of D_projData
 
-	float s = dotProduct2D(D_projData, projPitch, dims.iProjDets, dims.iProjAngles, 1, 0);
+	float s = dotProduct2D(D_projData, projPitch, dims.iProjDets, dims.iProjAngles);
 
 	return sqrt(s);
 }
@@ -218,12 +218,12 @@ int main()
 	dims.iRaysPerDet = 1;
 	unsigned int volumePitch, sinoPitch;
 
-	allocateVolume(D_volumeData, dims.iVolWidth+2, dims.iVolHeight+2, volumePitch);
-	zeroVolume(D_volumeData, volumePitch, dims.iVolWidth+2, dims.iVolHeight+2);
+	allocateVolume(D_volumeData, dims.iVolWidth, dims.iVolHeight, volumePitch);
+	zeroVolume(D_volumeData, volumePitch, dims.iVolWidth, dims.iVolHeight);
 	printf("pitch: %u\n", volumePitch);
 
-	allocateVolume(D_sinoData, dims.iProjDets+2, dims.iProjAngles, sinoPitch);
-	zeroVolume(D_sinoData, sinoPitch, dims.iProjDets+2, dims.iProjAngles);
+	allocateVolume(D_sinoData, dims.iProjDets, dims.iProjAngles, sinoPitch);
+	zeroVolume(D_sinoData, sinoPitch, dims.iProjDets, dims.iProjAngles);
 	printf("pitch: %u\n", sinoPitch);
 	
 	unsigned int y, x;

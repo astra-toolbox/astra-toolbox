@@ -57,12 +57,12 @@ __constant__ float gC_angle_sin[g_MaxAngles];
 __constant__ float gC_angle_cos[g_MaxAngles];
 __constant__ float gC_angle_offset[g_MaxAngles];
 
-static bool bindProjDataTexture(float* data, unsigned int pitch, unsigned int width, unsigned int height)
+static bool bindProjDataTexture(float* data, unsigned int pitch, unsigned int width, unsigned int height, cudaTextureAddressMode mode = cudaAddressModeBorder)
 {
 	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
 
-	gT_projTexture.addressMode[0] = cudaAddressModeClamp;
-	gT_projTexture.addressMode[1] = cudaAddressModeClamp;
+	gT_projTexture.addressMode[0] = mode;
+	gT_projTexture.addressMode[1] = mode;
 	gT_projTexture.filterMode = cudaFilterModeLinear;
 	gT_projTexture.normalized = false;
 
@@ -94,7 +94,7 @@ __global__ void devBP(float* D_volData, unsigned int volPitch, unsigned int star
 
 	float fVal = 0.0f;
 	float fA = startAngle + 0.5f;
-	const float fT_base = 0.5f*dims.iProjDets - 0.5f + 1.5f;
+	const float fT_base = 0.5f*dims.iProjDets - 0.5f + 0.5f;
 
 	if (offsets) {
 
@@ -123,7 +123,7 @@ __global__ void devBP(float* D_volData, unsigned int volPitch, unsigned int star
 
 	}
 
-	volData[(Y+1)*volPitch+X+1] += fVal;
+	volData[Y*volPitch+X] += fVal;
 }
 
 // supersampling version
@@ -150,7 +150,7 @@ __global__ void devBP_SS(float* D_volData, unsigned int volPitch, unsigned int s
 
 	float fVal = 0.0f;
 	float fA = startAngle + 0.5f;
-	const float fT_base = 0.5f*dims.iProjDets - 0.5f + 1.5f;
+	const float fT_base = 0.5f*dims.iProjDets - 0.5f + 0.5f;
 
 	if (offsets) {
 
@@ -196,7 +196,7 @@ __global__ void devBP_SS(float* D_volData, unsigned int volPitch, unsigned int s
 
 	}
 
-	volData[(Y+1)*volPitch+X+1] += fVal / (dims.iRaysPerPixelDim * dims.iRaysPerPixelDim);
+	volData[Y*volPitch+X] += fVal / (dims.iRaysPerPixelDim * dims.iRaysPerPixelDim);
 }
 
 __global__ void devBP_SART(float* D_volData, unsigned int volPitch, float offset, float angle_sin, float angle_cos, const SDimensions dims)
@@ -218,7 +218,7 @@ __global__ void devBP_SART(float* D_volData, unsigned int volPitch, float offset
 	const float fT = fT_base + fX * angle_cos - fY * angle_sin + offset;
 	const float fVal = tex2D(gT_projTexture, fT, 0.5f);
 
-	D_volData[(Y+1)*volPitch+X+1] += fVal;
+	D_volData[Y*volPitch+X] += fVal;
 }
 
 
@@ -232,7 +232,7 @@ bool BP_internal(float* D_volumeData, unsigned int volumePitch,
 	float* angle_sin = new float[dims.iProjAngles];
 	float* angle_cos = new float[dims.iProjAngles];
 
-	bindProjDataTexture(D_projData, projPitch, dims.iProjDets+2, dims.iProjAngles);
+	bindProjDataTexture(D_projData, projPitch, dims.iProjDets, dims.iProjAngles);
 
 	for (unsigned int i = 0; i < dims.iProjAngles; ++i) {
 		angle_sin[i] = sinf(angles[i]);
@@ -302,8 +302,10 @@ bool BP_SART(float* D_volumeData, unsigned int volumePitch,
              unsigned int angle, const SDimensions& dims,
              const float* angles, const float* TOffsets)
 {
-	// only one angle
-	bindProjDataTexture(D_projData, projPitch, dims.iProjDets, 1);
+	// Only one angle.
+	// We need to Clamp to the border pixels instead of to zero, because
+	// SART weights with ray length.
+	bindProjDataTexture(D_projData, projPitch, dims.iProjDets, 1, cudaAddressModeClamp);
 
 	float angle_sin = sinf(angles[angle]);
 	float angle_cos = cosf(angles[angle]);
@@ -346,10 +348,10 @@ int main()
 
 	unsigned int volumePitch, projPitch;
 
-	allocateVolume(D_volumeData, dims.iVolWidth+2, dims.iVolHeight+2, volumePitch);
+	allocateVolume(D_volumeData, dims.iVolWidth, dims.iVolHeight, volumePitch);
 	printf("pitch: %u\n", volumePitch);
 
-	allocateVolume(D_projData, dims.iProjDets+2, dims.iProjAngles, projPitch);
+	allocateVolume(D_projData, dims.iProjDets, dims.iProjAngles, projPitch);
 	printf("pitch: %u\n", projPitch);
 
 	unsigned int y, x;

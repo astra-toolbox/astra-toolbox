@@ -209,7 +209,7 @@ bool uploadComplexArrayToDevice(int _iProjectionCount, int _iDetectorCount,
 }
 
 bool runCudaFFT(int _iProjectionCount, const float * _pfDevRealSource,
-                int _iSourcePitch, int _iSourcePadX, int _iProjDets,
+                int _iSourcePitch, int _iProjDets,
                 int _iFFTRealDetectorCount, int _iFFTFourierDetectorCount,
                 cufftComplex * _pDevTargetComplex)
 {
@@ -221,7 +221,7 @@ bool runCudaFFT(int _iProjectionCount, const float * _pfDevRealSource,
 
 	for(int iProjectionIndex = 0; iProjectionIndex < _iProjectionCount; iProjectionIndex++)
 	{
-		const float * pfSourceLocation = _pfDevRealSource + iProjectionIndex * _iSourcePitch + _iSourcePadX;
+		const float * pfSourceLocation = _pfDevRealSource + iProjectionIndex * _iSourcePitch;
 		float * pfTargetLocation = pfDevRealFFTSource + iProjectionIndex * _iFFTRealDetectorCount;
 
 		SAFE_CALL(cudaMemcpy(pfTargetLocation, pfSourceLocation, sizeof(float) * _iProjDets, cudaMemcpyDeviceToDevice));
@@ -241,7 +241,7 @@ bool runCudaFFT(int _iProjectionCount, const float * _pfDevRealSource,
 
 bool runCudaIFFT(int _iProjectionCount, const cufftComplex* _pDevSourceComplex,
                  float * _pfRealTarget,
-                 int _iTargetPitch, int _iTargetPadX, int _iProjDets,
+                 int _iTargetPitch, int _iProjDets,
                  int _iFFTRealDetectorCount, int _iFFTFourierDetectorCount)
 {
 	float * pfDevRealFFTTarget = NULL;
@@ -264,7 +264,7 @@ bool runCudaIFFT(int _iProjectionCount, const cufftComplex* _pDevSourceComplex,
 	for(int iProjectionIndex = 0; iProjectionIndex < _iProjectionCount; iProjectionIndex++)
 	{
 		const float * pfSourceLocation = pfDevRealFFTTarget + iProjectionIndex * _iFFTRealDetectorCount;
-		float* pfTargetLocation = _pfRealTarget + iProjectionIndex * _iTargetPitch + _iTargetPadX;
+		float* pfTargetLocation = _pfRealTarget + iProjectionIndex * _iTargetPitch;
 
 		SAFE_CALL(cudaMemcpy(pfTargetLocation, pfSourceLocation, sizeof(float) * _iProjDets, cudaMemcpyDeviceToDevice));
 	}

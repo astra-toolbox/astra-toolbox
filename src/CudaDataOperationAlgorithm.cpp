@@ -135,42 +135,42 @@ void CCudaDataOperationAlgorithm::run(int _iNrIterations)
 		unsigned int width = m_pData[0]->getWidth();
 		unsigned int height = m_pData[0]->getHeight();
 		if (m_pMask == NULL)
-			astraCUDA::processVolCopy<astraCUDA::opMul,astraCUDA::VOL>(m_pData[0]->getData(), m_fScalar[0], width, height);
+			astraCUDA::processVolCopy<astraCUDA::opMul>(m_pData[0]->getData(), m_fScalar[0], width, height);
 		else
-			astraCUDA::processVolCopy<astraCUDA::opMulMask,astraCUDA::VOL>(m_pData[0]->getData(), m_pMask->getDataConst(), m_fScalar[0], width, height);
+			astraCUDA::processVolCopy<astraCUDA::opMulMask>(m_pData[0]->getData(), m_pMask->getDataConst(), m_fScalar[0], width, height);
 	}
 	else if (m_sOperation == "$1/s1" || m_sOperation == "$1./s1") // data / scalar
 	{
 		unsigned int width = m_pData[0]->getWidth();
 		unsigned int height = m_pData[0]->getHeight();
 		if (m_pMask == NULL)
-			astraCUDA::processVolCopy<astraCUDA::opMul,astraCUDA::VOL>(m_pData[0]->getData(), 1.0f/m_fScalar[0], width, height);
+			astraCUDA::processVolCopy<astraCUDA::opMul>(m_pData[0]->getData(), 1.0f/m_fScalar[0], width, height);
 		else
-			astraCUDA::processVolCopy<astraCUDA::opMulMask,astraCUDA::VOL>(m_pData[0]->getData(), m_pMask->getDataConst(), 1.0f/m_fScalar[0], width, height);
+			astraCUDA::processVolCopy<astraCUDA::opMulMask>(m_pData[0]->getData(), m_pMask->getDataConst(), 1.0f/m_fScalar[0], width, height);
 	}
 	else if (m_sOperation == "$1+s1") // data + scalar
 	{
 		unsigned int width = m_pData[0]->getWidth();
 		unsigned int height = m_pData[0]->getHeight();
-		astraCUDA::processVolCopy<astraCUDA::opAdd,astraCUDA::VOL>(m_pData[0]->getData(), m_fScalar[0], width, height);
+		astraCUDA::processVolCopy<astraCUDA::opAdd>(m_pData[0]->getData(), m_fScalar[0], width, height);
 	}
 	else if (m_sOperation == "$1-s1") // data - scalar
 	{
 		unsigned int width = m_pData[0]->getWidth();
 		unsigned int height = m_pData[0]->getHeight();
-		astraCUDA::processVolCopy<astraCUDA::opAdd,astraCUDA::VOL>(m_pData[0]->getData(), -m_fScalar[0], width, height);
+		astraCUDA::processVolCopy<astraCUDA::opAdd>(m_pData[0]->getData(), -m_fScalar[0], width, height);
 	} 
 	else if (m_sOperation == "$1.*$2") // data .* data
 	{
 		unsigned int width = m_pData[0]->getWidth();
 		unsigned int height = m_pData[0]->getHeight();
-		astraCUDA::processVolCopy<astraCUDA::opMul,astraCUDA::VOL>(m_pData[0]->getData(), m_pData[1]->getDataConst(), width, height);
+		astraCUDA::processVolCopy<astraCUDA::opMul>(m_pData[0]->getData(), m_pData[1]->getDataConst(), width, height);
 	}
 	else if (m_sOperation == "$1+$2") // data + data
 	{
 		unsigned int width = m_pData[0]->getWidth();
 		unsigned int height = m_pData[0]->getHeight();
-		astraCUDA::processVolCopy<astraCUDA::opAdd,astraCUDA::VOL>(m_pData[0]->getData(), m_pData[1]->getDataConst(), width, height);
+		astraCUDA::processVolCopy<astraCUDA::opAdd>(m_pData[0]->getData(), m_pData[1]->getDataConst(), width, height);
 	}
 
 }

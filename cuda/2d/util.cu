@@ -36,11 +36,8 @@ bool copyVolumeToDevice(const float* in_data, unsigned int in_pitch,
 		unsigned int width, unsigned int height,
 		float* outD_data, unsigned int out_pitch)
 {
-	// TODO: a full memset isn't necessary. Only the edges.
 	cudaError_t err;
-	err = cudaMemset2D(outD_data, sizeof(float)*out_pitch, 0, sizeof(float)*(width+2), height+2);
-	ASTRA_CUDA_ASSERT(err);
-	err = cudaMemcpy2D(outD_data + out_pitch + 1, sizeof(float)*out_pitch, in_data, sizeof(float)*in_pitch, sizeof(float)*width, height, cudaMemcpyHostToDevice);
+	err = cudaMemcpy2D(outD_data, sizeof(float)*out_pitch, in_data, sizeof(float)*in_pitch, sizeof(float)*width, height, cudaMemcpyHostToDevice);
 	ASTRA_CUDA_ASSERT(err);
 	assert(err == cudaSuccess);
 	return true;
@@ -50,7 +47,7 @@ bool copyVolumeFromDevice(float* out_data, unsigned int out_pitch,
 		unsigned int width, unsigned int height,
 		float* inD_data, unsigned int in_pitch)
 {
-	cudaError_t err = cudaMemcpy2D(out_data, sizeof(float)*out_pitch, inD_data + (in_pitch + 1), sizeof(float)*in_pitch, sizeof(float)*width, height, cudaMemcpyDeviceToHost);
+	cudaError_t err = cudaMemcpy2D(out_data, sizeof(float)*out_pitch, inD_data, sizeof(float)*in_pitch, sizeof(float)*width, height, cudaMemcpyDeviceToHost);
 	ASTRA_CUDA_ASSERT(err);
 	return true;
 }
@@ -60,7 +57,7 @@ bool copySinogramFromDevice(float* out_data, unsigned int out_pitch,
 		unsigned int width, unsigned int height,
 		float* inD_data, unsigned int in_pitch)
 {   
-	cudaError_t err = cudaMemcpy2D(out_data, sizeof(float)*out_pitch, inD_data + 1, sizeof(float)*in_pitch, sizeof(float)*width, height, cudaMemcpyDeviceToHost);
+	cudaError_t err = cudaMemcpy2D(out_data, sizeof(float)*out_pitch, inD_data, sizeof(float)*in_pitch, sizeof(float)*width, height, cudaMemcpyDeviceToHost);
 	ASTRA_CUDA_ASSERT(err);
 	return true;
 }
@@ -69,11 +66,8 @@ bool copySinogramToDevice(const float* in_data, unsigned int in_pitch,
 		unsigned int width, unsigned int height,
 		float* outD_data, unsigned int out_pitch)
 {   
-	// TODO: a full memset isn't necessary. Only the edges.
 	cudaError_t err;
-	err = cudaMemset2D(outD_data, sizeof(float)*out_pitch, 0, (width+2)*sizeof(float), height);
-	ASTRA_CUDA_ASSERT(err);
-	err = cudaMemcpy2D(outD_data + 1, sizeof(float)*out_pitch, in_data, sizeof(float)*in_pitch, sizeof(float)*width, height, cudaMemcpyHostToDevice);
+	err = cudaMemcpy2D(outD_data, sizeof(float)*out_pitch, in_data, sizeof(float)*in_pitch, sizeof(float)*width, height, cudaMemcpyHostToDevice);
 	ASTRA_CUDA_ASSERT(err);
 	return true;
 }
@@ -132,8 +126,7 @@ __global__ void reduce1D(float *g_idata, float *g_odata, unsigned int n)
 
 __global__ void reduce2D(float *g_idata, float *g_odata,
                          unsigned int pitch,
-                         unsigned int nx, unsigned int ny,
-                         unsigned int padX, unsigned int padY)
+                         unsigned int nx, unsigned int ny)
 {
 	extern __shared__ float sdata[];
 	const unsigned int tidx = threadIdx.x;
@@ -145,11 +138,10 @@ __global__ void reduce2D(float *g_idata, float *g_odata,
 
 	sdata[tid] = 0;
 
-	if (x >= padX && x < padX + nx) {
+	if (x < nx) {
 
-		while (y < padY + ny) {
-			if (y >= padY)
-				sdata[tid] += (g_idata[pitch*y+x] * g_idata[pitch*y+x]);
+		while (y < ny) {
+			sdata[tid] += (g_idata[pitch*y+x] * g_idata[pitch*y+x]);
 			y += 16 * gridDim.y;
 		}
 
@@ -180,11 +172,10 @@ __global__ void reduce2D(float *g_idata, float *g_odata,
 }
 
 float dotProduct2D(float* D_data, unsigned int pitch,
-                   unsigned int width, unsigned int height,
-                   unsigned int padX, unsigned int padY)
+                   unsigned int width, unsigned int height)
 {
-	unsigned int bx = ((width+padX) + 15) / 16;
-	unsigned int by = ((height+padY) + 127) / 128;
+	unsigned int bx = (width + 15) / 16;
+	unsigned int by = (height + 127) / 128;
 	unsigned int shared_mem2 = sizeof(float) * 16 * 16;
 
 	dim3 dimBlock2(16, 16);
@@ -192,26 +183,27 @@ float dotProduct2D(float* D_data, unsigned int pitch,
 
 	float* D_buf;
 	cudaMalloc(&D_buf, sizeof(float) * (bx * by + 1) );
+	float* D_res = D_buf + (bx*by);
 
 	// Step 1: reduce 2D from image to a single vector, taking sum of squares
 
-	reduce2D<<< dimGrid2, dimBlock2, shared_mem2>>>(D_data, D_buf, pitch, width, height, padX, padY);
+	reduce2D<<< dimGrid2, dimBlock2, shared_mem2>>>(D_data, D_buf, pitch, width, height);
 	cudaTextForceKernelsCompletion();
 
 	// Step 2: reduce 1D: add up elements in vector
 	if (bx * by > 512)
-		reduce1D<512><<< 1, 512, sizeof(float)*512>>>(D_buf, D_buf+(bx*by), bx*by);
+		reduce1D<512><<< 1, 512, sizeof(float)*512>>>(D_buf, D_res, bx*by);
 	else if (bx * by > 128)
-		reduce1D<128><<< 1, 128, sizeof(float)*128>>>(D_buf, D_buf+(bx*by), bx*by);
+		reduce1D<128><<< 1, 128, sizeof(float)*128>>>(D_buf, D_res, bx*by);
 	else if (bx * by > 32)
-		reduce1D<32><<< 1, 32, sizeof(float)*32*2>>>(D_buf, D_buf+(bx*by), bx*by);
+		reduce1D<32><<< 1, 32, sizeof(float)*32*2>>>(D_buf, D_res, bx*by);
 	else if (bx * by > 8)
-		reduce1D<8><<< 1, 8, sizeof(float)*8*2>>>(D_buf, D_buf+(bx*by), bx*by);
+		reduce1D<8><<< 1, 8, sizeof(float)*8*2>>>(D_buf, D_res, bx*by);
 	else
-		reduce1D<1><<< 1, 1, sizeof(float)*1*2>>>(D_buf, D_buf+(bx*by), bx*by);
+		reduce1D<1><<< 1, 1, sizeof(float)*1*2>>>(D_buf, D_res, bx*by);
 
 	float x;
-	cudaMemcpy(&x, D_buf+(bx*by), 4, cudaMemcpyDeviceToHost);
+	cudaMemcpy(&x, D_res, 4, cudaMemcpyDeviceToHost);
 
 	cudaTextForceKernelsCompletion();
 
