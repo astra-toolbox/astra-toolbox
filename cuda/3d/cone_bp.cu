@@ -73,9 +73,9 @@ bool bindProjDataTexture(const cudaArray* array)
 {
 	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
 
-	gT_coneProjTexture.addressMode[0] = cudaAddressModeClamp;
-	gT_coneProjTexture.addressMode[1] = cudaAddressModeClamp;
-	gT_coneProjTexture.addressMode[2] = cudaAddressModeClamp;
+	gT_coneProjTexture.addressMode[0] = cudaAddressModeBorder;
+	gT_coneProjTexture.addressMode[1] = cudaAddressModeBorder;
+	gT_coneProjTexture.addressMode[2] = cudaAddressModeBorder;
 	gT_coneProjTexture.filterMode = cudaFilterModeLinear;
 	gT_coneProjTexture.normalized = false;
 
@@ -148,8 +148,8 @@ __global__ void dev_cone_BP(void* D_volData, unsigned int volPitch, int startAng
 			const float fVNum = fCvc + fX * fCvx + fY * fCvy + fZ * fCvz;
 			const float fDen = fCdc + fX * fCdx + fY * fCdy + fZ * fCdz;
 
-			const float fU = fUNum / fDen + 1.0f;
-			const float fV = fVNum / fDen + 1.0f;
+			const float fU = fUNum / fDen;
+			const float fV = fVNum / fDen;
 
 			fVal += tex3D(gT_coneProjTexture, fU, fAngle, fV);
 
@@ -230,8 +230,8 @@ __global__ void dev_cone_BP_SS(void* D_volData, unsigned int volPitch, int start
 				const float fVNum = fCvc + fXs * fCvx + fYs * fCvy + fZs * fCvz;
 				const float fDen = fCdc + fXs * fCdx + fYs * fCdy + fZs * fCdz;
 
-				const float fU = fUNum / fDen + 1.0f;
-				const float fV = fVNum / fDen + 1.0f;
+				const float fU = fUNum / fDen;
+				const float fV = fVNum / fDen;
 
 				fVal += tex3D(gT_coneProjTexture, fU, fAngle, fV);
 

@@ -292,24 +292,20 @@ bool duplicateProjectionData(cudaPitchedPtr& D_dst, const cudaPitchedPtr& D_src,
 // TODO: Consider using a single array of size max(proj,volume) (per dim)
 //       instead of allocating a new one each time
 
-// TODO: Figure out a faster way of zeroing the padding?
-
 cudaArray* allocateVolumeArray(const SDimensions3D& dims)
 {
 	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
 	cudaArray* cuArray;
 	cudaExtent extentA;
-	extentA.width = dims.iVolX+2;
-	extentA.height = dims.iVolY+2;
-	extentA.depth = dims.iVolZ+2;
+	extentA.width = dims.iVolX;
+	extentA.height = dims.iVolY;
+	extentA.depth = dims.iVolZ;
 	cudaError err = cudaMalloc3DArray(&cuArray, &channelDesc, extentA);
 	if (err != cudaSuccess) {
 		astraCUDA::reportCudaError(err);
 		fprintf(stderr, "Failed to allocate %dx%dx%d GPU array\n", dims.iVolX, dims.iVolY, dims.iVolZ);
 		return 0;
 	}
-
-	zeroVolumeArray(cuArray, dims);
 
 	return cuArray;
 }
@@ -318,9 +314,9 @@ cudaArray* allocateProjectionArray(const SDimensions3D& dims)
 	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
 	cudaArray* cuArray;
 	cudaExtent extentA;
-	extentA.width = dims.iProjU+2;
+	extentA.width = dims.iProjU;
 	extentA.height = dims.iProjAngles;
-	extentA.depth = dims.iProjV+2;
+	extentA.depth = dims.iProjV;
 	cudaError err = cudaMalloc3DArray(&cuArray, &channelDesc, extentA);
 
 	if (err != cudaSuccess) {
@@ -329,101 +325,8 @@ cudaArray* allocateProjectionArray(const SDimensions3D& dims)
 		return 0;
 	}
 
-	zeroProjectionArray(cuArray, dims);
-
 	return cuArray;
 }
-bool zeroVolumeArray(cudaArray* array, const SDimensions3D& dims)
-{
-	cudaPitchedPtr zeroBuf;
-	cudaExtent extentS;
-	extentS.width = sizeof(float)*(dims.iVolX+2);
-	extentS.height = dims.iVolY+2;
-	extentS.depth = 1;
-
-	cudaExtent extentA;
-	extentA.width = dims.iVolX+2;
-	extentA.height = dims.iVolY+2;
-	extentA.depth = 1;
-
-
-
-	cudaError err;
-	err = cudaMalloc3D(&zeroBuf, extentS);
-	ASTRA_CUDA_ASSERT(err);
-	err = cudaMemset2D(zeroBuf.ptr, zeroBuf.pitch, 0, sizeof(float)*(dims.iVolX+2), dims.iVolY+2);
-	ASTRA_CUDA_ASSERT(err);
-	
-	// zero array
-	for (unsigned int i = 0; i < dims.iVolZ+2; ++i) {
-		cudaMemcpy3DParms p;
-		cudaPos zp = {0, 0, 0};
-		cudaPos dp = {0, 0, i};
-		p.srcArray = 0;
-		p.srcPos = zp;
-		p.srcPtr = zeroBuf;
-		p.dstArray = array;
-		p.dstPtr.ptr = 0;
-		p.dstPtr.pitch = 0;
-		p.dstPtr.xsize = 0;
-		p.dstPtr.ysize = 0;
-		p.dstPos = dp;
-		p.extent = extentA;
-		p.kind = cudaMemcpyDeviceToDevice;
-
-		err = cudaMemcpy3D(&p);
-		ASTRA_CUDA_ASSERT(err);
-	}
-	cudaFree(zeroBuf.ptr);
-
-	// TODO: check errors
-
-	return true;
-}
-bool zeroProjectionArray(cudaArray* array, const SDimensions3D& dims)
-{
-	cudaPitchedPtr zeroBuf;
-	cudaExtent extentS;
-	extentS.width = sizeof(float)*(dims.iProjU+2);
-	extentS.height = dims.iProjAngles;
-	extentS.depth = 1;
-	cudaExtent extentA;
-	extentA.width = dims.iProjU+2;
-	extentA.height = dims.iProjAngles;
-	extentA.depth = 1;
-
-
-	cudaError err;
-	err = cudaMalloc3D(&zeroBuf, extentS);
-	ASTRA_CUDA_ASSERT(err);
-	err = cudaMemset2D(zeroBuf.ptr, zeroBuf.pitch, 0, sizeof(float)*(dims.iProjU+2), dims.iProjAngles);
-	ASTRA_CUDA_ASSERT(err);
-
-	for (unsigned int i = 0; i < dims.iProjV+2; ++i) {
-		cudaMemcpy3DParms p;
-		cudaPos zp = {0, 0, 0};
-		cudaPos dp = {0, 0, i};
-		p.srcArray = 0;
-		p.srcPos = zp;
-		p.srcPtr = zeroBuf;
-		p.dstArray = array;
-		p.dstPtr.ptr = 0;
-		p.dstPtr.pitch = 0;
-		p.dstPtr.xsize = 0;
-		p.dstPtr.ysize = 0;
-		p.dstPos = dp;
-		p.extent = extentA;
-		p.kind = cudaMemcpyDeviceToDevice;
-
-		err = cudaMemcpy3D(&p);
-		ASTRA_CUDA_ASSERT(err);
-	}
-	cudaFree(zeroBuf.ptr);
-
-	// TODO: check errors
-	return true;
-}
-
 
 bool transferVolumeToArray(cudaPitchedPtr D_volumeData, cudaArray* array, const SDimensions3D& dims)
 {
@@ -434,7 +337,6 @@ bool transferVolumeToArray(cudaPitchedPtr D_volumeData, cudaArray* array, const 
 
 	cudaMemcpy3DParms p;
 	cudaPos zp = {0, 0, 0};
-	cudaPos dp = {1, 1, 1};
 	p.srcArray = 0;
 	p.srcPos = zp;
 	p.srcPtr = D_volumeData;
@@ -443,7 +345,7 @@ bool transferVolumeToArray(cudaPitchedPtr D_volumeData, cudaArray* array, const 
 	p.dstPtr.pitch = 0;
 	p.dstPtr.xsize = 0;
 	p.dstPtr.ysize = 0;
-	p.dstPos = dp;
+	p.dstPos = zp;
 	p.extent = extentA;
 	p.kind = cudaMemcpyDeviceToDevice;
 
@@ -462,7 +364,6 @@ bool transferProjectionsToArray(cudaPitchedPtr D_projData, cudaArray* array, con
 
 	cudaMemcpy3DParms p;
 	cudaPos zp = {0, 0, 0};
-	cudaPos dp = {1, 0, 1};
 	p.srcArray = 0;
 	p.srcPos = zp;
 	p.srcPtr = D_projData;
@@ -471,7 +372,7 @@ bool transferProjectionsToArray(cudaPitchedPtr D_projData, cudaArray* array, con
 	p.dstPtr.pitch = 0;
 	p.dstPtr.xsize = 0;
 	p.dstPtr.ysize = 0;
-	p.dstPos = dp;
+	p.dstPos = zp;
 	p.extent = extentA;
 	p.kind = cudaMemcpyDeviceToDevice;
 

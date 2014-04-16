@@ -71,9 +71,9 @@ static bool bindProjDataTexture(const cudaArray* array)
 {
 	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
 
-	gT_coneProjTexture.addressMode[0] = cudaAddressModeClamp;
-	gT_coneProjTexture.addressMode[1] = cudaAddressModeClamp;
-	gT_coneProjTexture.addressMode[2] = cudaAddressModeClamp;
+	gT_coneProjTexture.addressMode[0] = cudaAddressModeBorder;
+	gT_coneProjTexture.addressMode[1] = cudaAddressModeBorder;
+	gT_coneProjTexture.addressMode[2] = cudaAddressModeBorder;
 	gT_coneProjTexture.filterMode = cudaFilterModeLinear;
 	gT_coneProjTexture.normalized = false;
 
@@ -120,8 +120,8 @@ __global__ void devBP_FDK(void* D_volData, unsigned int volPitch, int startAngle
 	float fY = Y - 0.5f*dims.iVolY + 0.5f;
 	float fZ = startZ - 0.5f*dims.iVolZ + 0.5f - fSrcZ;
 
-	const float fU_base = 0.5f*dims.iProjU - 0.5f + 1.5f;
-	const float fV_base = 0.5f*dims.iProjV - 0.5f + 1.5f + (fDetZ-fSrcZ);
+	const float fU_base = 0.5f*dims.iProjU - 0.5f + 0.5f;
+	const float fV_base = 0.5f*dims.iProjV - 0.5f + 0.5f + (fDetZ-fSrcZ);
 
 	// Note re. fZ/rV_base: the computations below are all relative to the
 	// optical axis, so we do the Z-adjustments beforehand.

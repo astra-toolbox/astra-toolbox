@@ -69,9 +69,9 @@ static bool bindProjDataTexture(const cudaArray* array)
 {
 	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
 
-	gT_par3DProjTexture.addressMode[0] = cudaAddressModeClamp;
-	gT_par3DProjTexture.addressMode[1] = cudaAddressModeClamp;
-	gT_par3DProjTexture.addressMode[2] = cudaAddressModeClamp;
+	gT_par3DProjTexture.addressMode[0] = cudaAddressModeBorder;
+	gT_par3DProjTexture.addressMode[1] = cudaAddressModeBorder;
+	gT_par3DProjTexture.addressMode[2] = cudaAddressModeBorder;
 	gT_par3DProjTexture.filterMode = cudaFilterModeLinear;
 	gT_par3DProjTexture.normalized = false;
 
@@ -139,8 +139,8 @@ __global__ void dev_par3D_BP(void* D_volData, unsigned int volPitch, int startAn
 			const float fUNum = fCuc + fX * fCux + fY * fCuy + fZ * fCuz;
 			const float fVNum = fCvc + fX * fCvx + fY * fCvy + fZ * fCvz;
 
-			const float fU = fUNum + 1.0f;
-			const float fV = fVNum + 1.0f;
+			const float fU = fUNum;
+			const float fV = fVNum;
 
 			fVal += tex3D(gT_par3DProjTexture, fU, fAngle, fV); // TODO: check order
 
@@ -216,8 +216,8 @@ __global__ void dev_par3D_BP_SS(void* D_volData, unsigned int volPitch, int star
 				const float fUNum = fCuc + fXs * fCux + fYs * fCuy + fZs * fCuz;
 				const float fVNum = fCvc + fXs * fCvx + fYs * fCvy + fZs * fCvz;
 
-				const float fU = fUNum + 1.0f;
-				const float fV = fVNum + 1.0f;
+				const float fU = fUNum;
+				const float fV = fVNum;
 
 				fVal += tex3D(gT_par3DProjTexture, fU, fAngle, fV); // TODO: check order
 				fZs += fSubStep;

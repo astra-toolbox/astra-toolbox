@@ -72,9 +72,9 @@ bool bindVolumeDataTexture(const cudaArray* array)
 {
 	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
 
-	gT_coneVolumeTexture.addressMode[0] = cudaAddressModeClamp;
-	gT_coneVolumeTexture.addressMode[1] = cudaAddressModeClamp;
-	gT_coneVolumeTexture.addressMode[2] = cudaAddressModeClamp;
+	gT_coneVolumeTexture.addressMode[0] = cudaAddressModeBorder;
+	gT_coneVolumeTexture.addressMode[1] = cudaAddressModeBorder;
+	gT_coneVolumeTexture.addressMode[2] = cudaAddressModeBorder;
 	gT_coneVolumeTexture.filterMode = cudaFilterModeLinear;
 	gT_coneVolumeTexture.normalized = false;
 
@@ -142,9 +142,9 @@ bool bindVolumeDataTexture(const cudaArray* array)
                                                                                                                    \
 		float fVal = 0.0f;                                                                                         \
                                                                                                                    \
-		float f##c0 = startSlice + 1.5f;                                                                           \
-		float f##c1 = a##c1 * (startSlice - 0.5f*dims.iVol##c0 + 0.5f) + b##c1 + 0.5f*dims.iVol##c1 - 0.5f + 1.5f; \
-		float f##c2 = a##c2 * (startSlice - 0.5f*dims.iVol##c0 + 0.5f) + b##c2 + 0.5f*dims.iVol##c2 - 0.5f + 1.5f; \
+		float f##c0 = startSlice + 0.5f;                                                                           \
+		float f##c1 = a##c1 * (startSlice - 0.5f*dims.iVol##c0 + 0.5f) + b##c1 + 0.5f*dims.iVol##c1 - 0.5f + 0.5f; \
+		float f##c2 = a##c2 * (startSlice - 0.5f*dims.iVol##c0 + 0.5f) + b##c2 + 0.5f*dims.iVol##c2 - 0.5f + 0.5f; \
                                                                                                                    \
 		for (int s = startSlice; s < endSlice; ++s)                                                                \
 		{                                                                                                          \
@@ -218,9 +218,9 @@ bool bindVolumeDataTexture(const cudaArray* array)
                                                                                                                    \
 		float fVal = 0.0f;                                                                                         \
                                                                                                                    \
-		float f##c0 = startSlice + 1.5f;                                                                           \
-		float f##c1 = a##c1 * (startSlice - 0.5f*dims.iVol##c0 + 0.5f) + b##c1 + 0.5f*dims.iVol##c1 - 0.5f + 1.5f; \
-		float f##c2 = a##c2 * (startSlice - 0.5f*dims.iVol##c0 + 0.5f) + b##c2 + 0.5f*dims.iVol##c2 - 0.5f + 1.5f; \
+		float f##c0 = startSlice + 0.5f;                                                                           \
+		float f##c1 = a##c1 * (startSlice - 0.5f*dims.iVol##c0 + 0.5f) + b##c1 + 0.5f*dims.iVol##c1 - 0.5f + 0.5f; \
+		float f##c2 = a##c2 * (startSlice - 0.5f*dims.iVol##c0 + 0.5f) + b##c2 + 0.5f*dims.iVol##c2 - 0.5f + 0.5f; \
                                                                                                                    \
 		for (int s = startSlice; s < endSlice; ++s)                                                                \
 		{                                                                                                          \

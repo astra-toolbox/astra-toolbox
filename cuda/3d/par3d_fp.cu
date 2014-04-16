@@ -72,9 +72,9 @@ static bool bindVolumeDataTexture(const cudaArray* array)
 {
 	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
 
-	gT_par3DVolumeTexture.addressMode[0] = cudaAddressModeClamp;
-	gT_par3DVolumeTexture.addressMode[1] = cudaAddressModeClamp;
-	gT_par3DVolumeTexture.addressMode[2] = cudaAddressModeClamp;
+	gT_par3DVolumeTexture.addressMode[0] = cudaAddressModeBorder;
+	gT_par3DVolumeTexture.addressMode[1] = cudaAddressModeBorder;
+	gT_par3DVolumeTexture.addressMode[2] = cudaAddressModeBorder;
 	gT_par3DVolumeTexture.filterMode = cudaFilterModeLinear;
 	gT_par3DVolumeTexture.normalized = false;
 
@@ -144,9 +144,9 @@ static bool bindVolumeDataTexture(const cudaArray* array)
                                                                                                                  \
 		float fVal = 0.0f;                                                                                       \
                                                                                                                  \
-		float f##c0 = startSlice + 1.5f;                                                                         \
-		float f##c1 = a##c1 * (startSlice - 0.5f*dims.iVol##c0 + 0.5f) + b##c1 + 0.5f*dims.iVol##c1 - 0.5f + 1.5f;\
-		float f##c2 = a##c2 * (startSlice - 0.5f*dims.iVol##c0 + 0.5f) + b##c2 + 0.5f*dims.iVol##c2 - 0.5f + 1.5f;\
+		float f##c0 = startSlice + 0.5f;                                                                         \
+		float f##c1 = a##c1 * (startSlice - 0.5f*dims.iVol##c0 + 0.5f) + b##c1 + 0.5f*dims.iVol##c1 - 0.5f + 0.5f;\
+		float f##c2 = a##c2 * (startSlice - 0.5f*dims.iVol##c0 + 0.5f) + b##c2 + 0.5f*dims.iVol##c2 - 0.5f + 0.5f;\
                                                                                                                  \
 		for (int s = startSlice; s < endSlice; ++s)                                                              \
 		{                                                                                                        \
@@ -226,9 +226,9 @@ static bool bindVolumeDataTexture(const cudaArray* array)
                                                                                                                  \
 		float fVal = 0.0f;                                                                                       \
                                                                                                                  \
-		float f##c0 = startSlice + 1.5f;                                                                         \
-		float f##c1 = a##c1 * (startSlice - 0.5f*dims.iVol##c0 + 0.5f) + b##c1 + 0.5f*dims.iVol##c1 - 0.5f + 1.5f;\
-		float f##c2 = a##c2 * (startSlice - 0.5f*dims.iVol##c0 + 0.5f) + b##c2 + 0.5f*dims.iVol##c2 - 0.5f + 1.5f;\
+		float f##c0 = startSlice + 0.5f;                                                                         \
+		float f##c1 = a##c1 * (startSlice - 0.5f*dims.iVol##c0 + 0.5f) + b##c1 + 0.5f*dims.iVol##c1 - 0.5f + 0.5f;\
+		float f##c2 = a##c2 * (startSlice - 0.5f*dims.iVol##c0 + 0.5f) + b##c2 + 0.5f*dims.iVol##c2 - 0.5f + 0.5f;\
                                                                                                                  \
 		for (int s = startSlice; s < endSlice; ++s)                                                              \
 		{                                                                                                        \
@@ -281,16 +281,16 @@ PAR3D_FP_SS_BODY(Z,X,Y)
 
 
 __device__ float dirWeights(float fX, float fN) {
-	if (fX <= 0.5f) // outside image on left
+	if (fX <= -0.5f) // outside image on left
 		return 0.0f;
-	if (fX <= 1.5f) // half outside image on left
-		return (fX - 0.5f) * (fX - 0.5f);
-	if (fX <= fN + 0.5f) { // inside image
-		float t = fX - 0.5f - floorf(fX - 0.5f);
+	if (fX <= 0.5f) // half outside image on left
+		return (fX + 0.5f) * (fX + 0.5f);
+	if (fX <= fN - 0.5f) { // inside image
+		float t = fX + 0.5f - floorf(fX + 0.5f);
 		return t*t + (1-t)*(1-t);
 	}
-	if (fX <= fN + 1.5f) // half outside image on right
-		return (fN + 1.5f - fX) * (fN + 1.5f - fX);
+	if (fX <= fN + 0.5f) // half outside image on right
+		return (fN + 0.5f - fX) * (fN + 0.5f - fX);
 	return 0.0f; // outside image on right
 }
 
@@ -346,9 +346,9 @@ __device__ float dirWeights(float fX, float fN) {
                                                                                                                  \
 		float fVal = 0.0f;                                                                                       \
                                                                                                                  \
-		float f##c0 = startSlice + 1.5f;                                                                         \
-		float f##c1 = a##c1 * (startSlice - 0.5f*dims.iVol##c0 + 0.5f) + b##c1 + 0.5f*dims.iVol##c1 - 0.5f + 1.5f;\
-		float f##c2 = a##c2 * (startSlice - 0.5f*dims.iVol##c0 + 0.5f) + b##c2 + 0.5f*dims.iVol##c2 - 0.5f + 1.5f;\
+		float f##c0 = startSlice + 0.5f;                                                                         \
+		float f##c1 = a##c1 * (startSlice - 0.5f*dims.iVol##c0 + 0.5f) + b##c1 + 0.5f*dims.iVol##c1 - 0.5f + 0.5f;\
+		float f##c2 = a##c2 * (startSlice - 0.5f*dims.iVol##c0 + 0.5f) + b##c2 + 0.5f*dims.iVol##c2 - 0.5f + 0.5f;\
                                                                                                                  \
 		for (int s = startSlice; s < endSlice; ++s)                                                              \
 		{                                                                                                        \
