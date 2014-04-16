@@ -97,6 +97,30 @@ void zeroVolume(float* data, unsigned int pitch, unsigned int width, unsigned in
 	ASTRA_CUDA_ASSERT(err);
 }
 
+bool allocateVolumeData(float*& D_ptr, unsigned int& pitch, const SDimensions& dims)
+{
+	// TODO: memory order
+	return allocateVolume(D_ptr, dims.iVolWidth, dims.iVolHeight, pitch);
+}
+
+bool allocateProjectionData(float*& D_ptr, unsigned int& pitch, const SDimensions& dims)
+{
+	// TODO: memory order
+	return allocateVolume(D_ptr, dims.iProjDets, dims.iProjAngles, pitch);
+}
+
+void zeroVolumeData(float* D_ptr, unsigned int pitch, const SDimensions& dims)
+{
+	// TODO: memory order
+	zeroVolume(D_ptr, pitch, dims.iVolWidth, dims.iVolHeight);
+}
+
+void zeroProjectionData(float* D_ptr, unsigned int pitch, const SDimensions& dims)
+{
+	// TODO: memory order
+	zeroVolume(D_ptr, pitch, dims.iProjDets, dims.iProjAngles);
+}
+
 
 template <unsigned int blockSize>
 __global__ void reduce1D(float *g_idata, float *g_odata, unsigned int n)

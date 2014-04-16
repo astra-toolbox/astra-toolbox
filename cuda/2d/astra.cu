@@ -240,13 +240,13 @@ bool AstraFBP::init(int iGPUIndex)
 		}
 	}
 
-	bool ok = allocateVolume(pData->D_volumeData, pData->dims.iVolWidth, pData->dims.iVolHeight, pData->volumePitch);
+	bool ok = allocateVolumeData(pData->D_volumeData, pData->volumePitch, pData->dims);
 	if (!ok)
 	{
 		return false;
 	}
 
-	ok = allocateVolume(pData->D_sinoData, pData->dims.iProjDets, pData->dims.iProjAngles, pData->sinoPitch);
+	ok = allocateProjectionData(pData->D_sinoData, pData->sinoPitch, pData->dims);
 	if (!ok)
 	{
 		cudaFree(pData->D_volumeData);
@@ -304,7 +304,7 @@ bool AstraFBP::run()
 		return false;
 	}
 
-	zeroVolume(pData->D_volumeData, pData->volumePitch, pData->dims.iVolWidth, pData->dims.iVolHeight);
+	zeroVolumeData(pData->D_volumeData, pData->volumePitch, pData->dims);
 
 	bool ok = false;
 
@@ -604,7 +604,7 @@ bool BPalgo::init()
 bool BPalgo::iterate(unsigned int)
 {
 	// TODO: This zeroVolume makes an earlier memcpy of D_volumeData redundant
-	zeroVolume(D_volumeData, volumePitch, dims.iVolWidth, dims.iVolHeight);
+	zeroVolumeData(D_volumeData, volumePitch, dims);
 	callBP(D_volumeData, volumePitch, D_sinoData, sinoPitch);
 	return true;
 }
@@ -614,7 +614,7 @@ float BPalgo::computeDiffNorm()
 	float *D_projData;
 	unsigned int projPitch;
 
-	allocateVolume(D_projData, dims.iProjDets, dims.iProjAngles, projPitch);
+	allocateProjectionData(D_projData, projPitch, dims);
 
 	cudaMemcpy2D(D_projData, sizeof(float)*projPitch, D_sinoData, sizeof(float)*sinoPitch, sizeof(float)*dims.iProjDets, dims.iProjAngles, cudaMemcpyDeviceToDevice);
 	callFP(D_volumeData, volumePitch, D_projData, projPitch, -1.0f);
@@ -668,14 +668,14 @@ bool astraCudaFP(const float* pfVolume, float* pfSinogram,
 	float* D_volumeData;
 	unsigned int volumePitch;
 
-	ok = allocateVolume(D_volumeData, dims.iVolWidth, dims.iVolHeight, volumePitch);
+	ok = allocateVolumeData(D_volumeData, volumePitch, dims);
 	if (!ok)
 		return false;
 
 	float* D_sinoData;
 	unsigned int sinoPitch;
 
-	ok = allocateVolume(D_sinoData, dims.iProjDets, dims.iProjAngles, sinoPitch);
+	ok = allocateProjectionData(D_sinoData, sinoPitch, dims);
 	if (!ok) {
 		cudaFree(D_volumeData);
 		return false;
@@ -690,7 +690,7 @@ bool astraCudaFP(const float* pfVolume, float* pfSinogram,
 		return false;
 	}
 
-	zeroVolume(D_sinoData, sinoPitch, dims.iProjDets, dims.iProjAngles);
+	zeroProjectionData(D_sinoData, sinoPitch, dims);
 	ok = FP(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, pfAngles, pfOffsets, 1.0f);
 	if (!ok) {
 		cudaFree(D_volumeData);
@@ -755,14 +755,14 @@ bool astraCudaFanFP(const float* pfVolume, float* pfSinogram,
 	float* D_volumeData;
 	unsigned int volumePitch;
 
-	ok = allocateVolume(D_volumeData, dims.iVolWidth, dims.iVolHeight, volumePitch);
+	ok = allocateVolumeData(D_volumeData, volumePitch, dims);
 	if (!ok)
 		return false;
 
 	float* D_sinoData;
 	unsigned int sinoPitch;
 
-	ok = allocateVolume(D_sinoData, dims.iProjDets, dims.iProjAngles, sinoPitch);
+	ok = allocateProjectionData(D_sinoData, sinoPitch, dims);
 	if (!ok) {
 		cudaFree(D_volumeData);
 		return false;
@@ -777,7 +777,7 @@ bool astraCudaFanFP(const float* pfVolume, float* pfSinogram,
 		return false;
 	}
 
-	zeroVolume(D_sinoData, sinoPitch, dims.iProjDets, dims.iProjAngles);
+	zeroProjectionData(D_sinoData, sinoPitch, dims);
 
 	// TODO: Turn this geometry conversion into a util function
 	SFanProjection* projs = new SFanProjection[dims.iProjAngles];
@@ -866,14 +866,14 @@ bool astraCudaFanFP(const float* pfVolume, float* pfSinogram,
 	float* D_volumeData;
 	unsigned int volumePitch;
 
-	ok = allocateVolume(D_volumeData, dims.iVolWidth, dims.iVolHeight, volumePitch);
+	ok = allocateVolumeData(D_volumeData, volumePitch, dims);
 	if (!ok)
 		return false;
 
 	float* D_sinoData;
 	unsigned int sinoPitch;
 
-	ok = allocateVolume(D_sinoData, dims.iProjDets, dims.iProjAngles, sinoPitch);
+	ok = allocateProjectionData(D_sinoData, sinoPitch, dims);
 	if (!ok) {
 		cudaFree(D_volumeData);
 		return false;
@@ -888,7 +888,7 @@ bool astraCudaFanFP(const float* pfVolume, float* pfSinogram,
 		return false;
 	}
 
-	zeroVolume(D_sinoData, sinoPitch, dims.iProjDets, dims.iProjAngles);
+	zeroProjectionData(D_sinoData, sinoPitch, dims);
 
 	ok = FanFP(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, pAngles, 1.0f);
 

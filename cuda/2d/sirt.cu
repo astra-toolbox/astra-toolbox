@@ -88,17 +88,17 @@ void SIRT::reset()
 
 bool SIRT::init()
 {
-	allocateVolume(D_pixelWeight, dims.iVolWidth, dims.iVolHeight, pixelPitch);
-	zeroVolume(D_pixelWeight, pixelPitch, dims.iVolWidth, dims.iVolHeight);
+	allocateVolumeData(D_pixelWeight, pixelPitch, dims);
+	zeroVolumeData(D_pixelWeight, pixelPitch, dims);
 
-	allocateVolume(D_tmpData, dims.iVolWidth, dims.iVolHeight, tmpPitch);
-	zeroVolume(D_tmpData, tmpPitch, dims.iVolWidth, dims.iVolHeight);
+	allocateVolumeData(D_tmpData, tmpPitch, dims);
+	zeroVolumeData(D_tmpData, tmpPitch, dims);
 
-	allocateVolume(D_projData, dims.iProjDets, dims.iProjAngles, projPitch);
-	zeroVolume(D_projData, projPitch, dims.iProjDets, dims.iProjAngles);
+	allocateProjectionData(D_projData, projPitch, dims);
+	zeroProjectionData(D_projData, projPitch, dims);
 	
-	allocateVolume(D_lineWeight, dims.iProjDets, dims.iProjAngles, linePitch);
-	zeroVolume(D_lineWeight, linePitch, dims.iProjDets, dims.iProjAngles);
+	allocateProjectionData(D_lineWeight, linePitch, dims);
+	zeroProjectionData(D_lineWeight, linePitch, dims);
 
 	// We can't precompute lineWeights and pixelWeights when using a mask
 	if (!useVolumeMask && !useSinogramMask)
@@ -110,7 +110,7 @@ bool SIRT::init()
 
 bool SIRT::precomputeWeights()
 {
-	zeroVolume(D_lineWeight, linePitch, dims.iProjDets, dims.iProjAngles);
+	zeroProjectionData(D_lineWeight, linePitch, dims);
 	if (useVolumeMask) {
 		callFP(D_maskData, maskPitch, D_lineWeight, linePitch, 1.0f);
 	} else {
@@ -125,7 +125,7 @@ bool SIRT::precomputeWeights()
 	}
 
 
-	zeroVolume(D_pixelWeight, pixelPitch, dims.iVolWidth, dims.iVolHeight);
+	zeroVolumeData(D_pixelWeight, pixelPitch, dims);
 	if (useSinogramMask) {
 		callBP(D_pixelWeight, pixelPitch, D_smaskData, smaskPitch);
 	} else {
@@ -160,7 +160,7 @@ bool SIRT::uploadMinMaxMasks(const float* pfMinMaskData, const float* pfMaxMaskD
 	freeMinMaxMasks = true;
 	bool ok = true;
 	if (pfMinMaskData) {
-		allocateVolume(D_minMaskData, dims.iVolWidth, dims.iVolHeight, minMaskPitch);
+		allocateVolumeData(D_minMaskData, minMaskPitch, dims);
 		ok = copyVolumeToDevice(pfMinMaskData, iPitch,
 		                        dims.iVolWidth, dims.iVolHeight,
 		                        D_minMaskData, minMaskPitch);
@@ -169,7 +169,7 @@ bool SIRT::uploadMinMaxMasks(const float* pfMinMaskData, const float* pfMaxMaskD
 		return false;
 
 	if (pfMaxMaskData) {
-		allocateVolume(D_maxMaskData, dims.iVolWidth, dims.iVolHeight, maxMaskPitch);
+		allocateVolumeData(D_maxMaskData, maxMaskPitch, dims);
 		ok = copyVolumeToDevice(pfMaxMaskData, iPitch,
 		                        dims.iVolWidth, dims.iVolHeight,
 		                        D_maxMaskData, maxMaskPitch);
@@ -204,7 +204,7 @@ bool SIRT::iterate(unsigned int iterations)
 
 		processVol<opMul>(D_projData, D_lineWeight, projPitch, dims.iProjDets, dims.iProjAngles);
 
-		zeroVolume(D_tmpData, tmpPitch, dims.iVolWidth, dims.iVolHeight);
+		zeroVolumeData(D_tmpData, tmpPitch, dims);
 
 		callBP(D_tmpData, tmpPitch, D_projData, projPitch);
 

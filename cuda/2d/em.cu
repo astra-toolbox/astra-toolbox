@@ -73,14 +73,14 @@ void EM::reset()
 
 bool EM::init()
 {
-	allocateVolume(D_pixelWeight, dims.iVolWidth, dims.iVolHeight, pixelPitch);
-	zeroVolume(D_pixelWeight, pixelPitch, dims.iVolWidth, dims.iVolHeight);
+	allocateVolumeData(D_pixelWeight, pixelPitch, dims);
+	zeroVolumeData(D_pixelWeight, pixelPitch, dims);
 
-	allocateVolume(D_tmpData, dims.iVolWidth, dims.iVolHeight, tmpPitch);
-	zeroVolume(D_tmpData, tmpPitch, dims.iVolWidth, dims.iVolHeight);
+	allocateVolumeData(D_tmpData, tmpPitch, dims);
+	zeroVolumeData(D_tmpData, tmpPitch, dims);
 
-	allocateVolume(D_projData, dims.iProjDets, dims.iProjAngles, projPitch);
-	zeroVolume(D_projData, projPitch, dims.iProjDets, dims.iProjAngles);
+	allocateProjectionData(D_projData, projPitch, dims);
+	zeroProjectionData(D_projData, projPitch, dims);
 
 	// We can't precompute pixelWeights when using a volume mask
 #if 0 
@@ -94,7 +94,7 @@ bool EM::init()
 
 bool EM::precomputeWeights()
 {
-	zeroVolume(D_pixelWeight, pixelPitch, dims.iVolWidth, dims.iVolHeight);
+	zeroVolumeData(D_pixelWeight, pixelPitch, dims);
 #if 0
 	if (useSinogramMask) {
 		callBP(D_pixelWeight, pixelPitch, D_smaskData, smaskPitch);
@@ -129,14 +129,14 @@ bool EM::iterate(unsigned int iterations)
 	for (unsigned int iter = 0; iter < iterations && !shouldAbort; ++iter) {
 
 		// Do FP of volumeData 
-		zeroVolume(D_projData, projPitch, dims.iProjDets, dims.iProjAngles);
+		zeroProjectionData(D_projData, projPitch, dims);
 		callFP(D_volumeData, volumePitch, D_projData, projPitch, 1.0f);
 
 		// Divide sinogram by FP (into projData)
 		processVol<opDividedBy>(D_projData, D_sinoData, projPitch, dims.iProjDets, dims.iProjAngles);
 
 		// Do BP of projData into tmpData
-		zeroVolume(D_tmpData, tmpPitch, dims.iVolWidth, dims.iVolHeight);
+		zeroVolumeData(D_tmpData, tmpPitch, dims);
 		callBP(D_tmpData, tmpPitch, D_projData, projPitch);
 
 		// Multiply volumeData with tmpData divided by pixel weights

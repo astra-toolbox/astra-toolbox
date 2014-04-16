@@ -73,16 +73,16 @@ void CGLS::reset()
 bool CGLS::init()
 {
 	// Lifetime of z: within an iteration
-	allocateVolume(D_z, dims.iVolWidth, dims.iVolHeight, zPitch);
+	allocateVolumeData(D_z, zPitch, dims);
 
 	// Lifetime of p: full algorithm
-	allocateVolume(D_p, dims.iVolWidth, dims.iVolHeight, pPitch);
+	allocateVolumeData(D_p, pPitch, dims);
 
 	// Lifetime of r: full algorithm
-	allocateVolume(D_r, dims.iProjDets, dims.iProjAngles, rPitch);
+	allocateProjectionData(D_r, rPitch, dims);
 	
 	// Lifetime of w: within an iteration
-	allocateVolume(D_w, dims.iProjDets, dims.iProjAngles, wPitch);
+	allocateProjectionData(D_w, wPitch, dims);
 
 	// TODO: check if allocations succeeded
 	return true;
@@ -134,7 +134,7 @@ bool CGLS::iterate(unsigned int iterations)
 
 
 		// p = A'*r
-		zeroVolume(D_p, pPitch, dims.iVolWidth, dims.iVolHeight);
+		zeroVolumeData(D_p, pPitch, dims);
 		callBP(D_p, pPitch, D_r, rPitch);
 		if (useVolumeMask)
 			processVol<opMul>(D_p, D_maskData, pPitch, dims.iVolWidth, dims.iVolHeight);
@@ -150,7 +150,7 @@ bool CGLS::iterate(unsigned int iterations)
 	for (unsigned int iter = 0; iter < iterations && !shouldAbort; ++iter) {
 
 		// w = A*p
-		zeroVolume(D_w, wPitch, dims.iProjDets, dims.iProjAngles);
+		zeroProjectionData(D_w, wPitch, dims);
 		callFP(D_p, pPitch, D_w, wPitch, 1.0f);
 
 		// alpha = gamma / <w,w>
@@ -165,7 +165,7 @@ bool CGLS::iterate(unsigned int iterations)
 
 
 		// z = A'*r
-		zeroVolume(D_z, zPitch, dims.iVolWidth, dims.iVolHeight);
+		zeroVolumeData(D_z, zPitch, dims);
 		callBP(D_z, zPitch, D_r, rPitch);
 		if (useVolumeMask)
 			processVol<opMul>(D_z, D_maskData, zPitch, dims.iVolWidth, dims.iVolHeight);

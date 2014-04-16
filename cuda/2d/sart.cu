@@ -105,15 +105,18 @@ void SART::reset()
 bool SART::init()
 {
 	if (useVolumeMask) {
-		allocateVolume(D_tmpData, dims.iVolWidth, dims.iVolHeight, tmpPitch);
-		zeroVolume(D_tmpData, tmpPitch, dims.iVolWidth, dims.iVolHeight);
+		allocateVolumeData(D_tmpData, tmpPitch, dims);
+		zeroVolumeData(D_tmpData, tmpPitch, dims);
 	}
 
-	allocateVolume(D_projData, dims.iProjDets, 1, projPitch);
-	zeroVolume(D_projData, projPitch, dims.iProjDets, 1);
+	// NB: Non-standard dimensions
+	SDimensions linedims = dims;
+	linedims.iProjAngles = 1;
+	allocateProjectionData(D_projData, projPitch, linedims);
+	zeroProjectionData(D_projData, projPitch, linedims);
 	
-	allocateVolume(D_lineWeight, dims.iProjDets, dims.iProjAngles, linePitch);
-	zeroVolume(D_lineWeight, linePitch, dims.iProjDets, dims.iProjAngles);
+	allocateProjectionData(D_lineWeight, linePitch, dims);
+	zeroProjectionData(D_lineWeight, linePitch, dims);
 
 	// We can't precompute lineWeights when using a mask
 	if (!useVolumeMask)
@@ -138,13 +141,13 @@ bool SART::setProjectionOrder(int* _projectionOrder, int _projectionCount)
 
 bool SART::precomputeWeights()
 {
-	zeroVolume(D_lineWeight, linePitch, dims.iProjDets, dims.iProjAngles);
+	zeroProjectionData(D_lineWeight, linePitch, dims);
 	if (useVolumeMask) {
 		callFP(D_maskData, maskPitch, D_lineWeight, linePitch, 1.0f);
 	} else {
 		// Allocate tmpData temporarily
-		allocateVolume(D_tmpData, dims.iVolWidth, dims.iVolHeight, tmpPitch);
-		zeroVolume(D_tmpData, tmpPitch, dims.iVolWidth, dims.iVolHeight);
+		allocateVolumeData(D_tmpData, tmpPitch, dims);
+		zeroVolumeData(D_tmpData, tmpPitch, dims);
 
 
 		processVol<opSet>(D_tmpData, 1.0f, tmpPitch, dims.iVolWidth, dims.iVolHeight);
@@ -193,7 +196,7 @@ bool SART::iterate(unsigned int iterations)
 		if (useVolumeMask) {
 			// BP, mask, and add back
 			// TODO: Try putting the masking directly in the BP
-			zeroVolume(D_tmpData, tmpPitch, dims.iVolWidth, dims.iVolHeight);
+			zeroVolumeData(D_tmpData, tmpPitch, dims);
 			callBP_SART(D_tmpData, tmpPitch, D_projData, projPitch, angle);
 			processVol<opAddMul>(D_volumeData, D_maskData, D_tmpData, volumePitch, dims.iVolWidth, dims.iVolHeight);
 		} else {
@@ -216,8 +219,8 @@ float SART::computeDiffNorm()
 {
 	unsigned int pPitch;
 	float *D_p;
-	allocateVolume(D_p, dims.iProjDets, dims.iProjAngles, pPitch);
-	zeroVolume(D_p, pPitch, dims.iProjDets, dims.iProjAngles);
+	allocateProjectionData(D_p, pPitch, dims);
+	zeroProjectionData(D_p, pPitch, dims);
 
 	// copy sinogram to D_p
 	cudaMemcpy2D(D_p, sizeof(float)*pPitch, D_sinoData, sizeof(float)*sinoPitch, sizeof(float)*(dims.iProjDets), dims.iProjAngles, cudaMemcpyDeviceToDevice);

@@ -214,11 +214,11 @@ bool ReconAlgo::setMaxConstraint(float fMax)
 bool ReconAlgo::allocateBuffers()
 {
 	bool ok;
-	ok = allocateVolume(D_volumeData, dims.iVolWidth, dims.iVolHeight, volumePitch);
+	ok = allocateVolumeData(D_volumeData, volumePitch, dims);
 	if (!ok)
 		return false;
 
-	ok = allocateVolume(D_sinoData, dims.iProjDets, dims.iProjAngles, sinoPitch);
+	ok = allocateProjectionData(D_sinoData, sinoPitch, dims);
 	if (!ok) {
 		cudaFree(D_volumeData);
 		D_volumeData = 0;
@@ -226,7 +226,7 @@ bool ReconAlgo::allocateBuffers()
 	}
 
 	if (useVolumeMask) {
-		ok = allocateVolume(D_maskData, dims.iVolWidth, dims.iVolHeight, maskPitch);
+		ok = allocateVolumeData(D_maskData, maskPitch, dims);
 		if (!ok) {
 			cudaFree(D_volumeData);
 			cudaFree(D_sinoData);
@@ -237,7 +237,7 @@ bool ReconAlgo::allocateBuffers()
 	}
 
 	if (useSinogramMask) {
-		ok = allocateVolume(D_smaskData, dims.iProjDets, dims.iProjAngles, smaskPitch);
+		ok = allocateProjectionData(D_smaskData, smaskPitch, dims);
 		if (!ok) {
 			cudaFree(D_volumeData);
 			cudaFree(D_sinoData);
