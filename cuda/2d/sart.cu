@@ -150,14 +150,14 @@ bool SART::precomputeWeights()
 		zeroVolumeData(D_tmpData, tmpPitch, dims);
 
 
-		processVol<opSet>(D_tmpData, 1.0f, tmpPitch, dims.iVolWidth, dims.iVolHeight);
+		processVol<opSet>(D_tmpData, 1.0f, tmpPitch, dims);
 		callFP(D_tmpData, tmpPitch, D_lineWeight, linePitch, 1.0f);
 
 
 		cudaFree(D_tmpData);
 		D_tmpData = 0;
 	}
-	processVol<opInvert>(D_lineWeight, linePitch, dims.iProjDets, dims.iProjAngles);
+	processSino<opInvert>(D_lineWeight, linePitch, dims);
 
 	return true;
 }
@@ -185,7 +185,7 @@ bool SART::iterate(unsigned int iterations)
 		// do FP, subtracting projection from sinogram
 		if (useVolumeMask) {
 				cudaMemcpy2D(D_tmpData, sizeof(float)*tmpPitch, D_volumeData, sizeof(float)*volumePitch, sizeof(float)*(dims.iVolWidth), dims.iVolHeight, cudaMemcpyDeviceToDevice);
-				processVol<opMul>(D_tmpData, D_maskData, tmpPitch, dims.iVolWidth, dims.iVolHeight);
+				processVol<opMul>(D_tmpData, D_maskData, tmpPitch, dims);
 				callFP_SART(D_tmpData, tmpPitch, D_projData, projPitch, angle, -1.0f);
 		} else {
 				callFP_SART(D_volumeData, volumePitch, D_projData, projPitch, angle, -1.0f);
@@ -198,15 +198,15 @@ bool SART::iterate(unsigned int iterations)
 			// TODO: Try putting the masking directly in the BP
 			zeroVolumeData(D_tmpData, tmpPitch, dims);
 			callBP_SART(D_tmpData, tmpPitch, D_projData, projPitch, angle);
-			processVol<opAddMul>(D_volumeData, D_maskData, D_tmpData, volumePitch, dims.iVolWidth, dims.iVolHeight);
+			processVol<opAddMul>(D_volumeData, D_maskData, D_tmpData, volumePitch, dims);
 		} else {
 			callBP_SART(D_volumeData, volumePitch, D_projData, projPitch, angle);
 		}
 
 		if (useMinConstraint)
-			processVol<opClampMin>(D_volumeData, fMinConstraint, volumePitch, dims.iVolWidth, dims.iVolHeight);
+			processVol<opClampMin>(D_volumeData, fMinConstraint, volumePitch, dims);
 		if (useMaxConstraint)
-			processVol<opClampMax>(D_volumeData, fMaxConstraint, volumePitch, dims.iVolWidth, dims.iVolHeight);
+			processVol<opClampMax>(D_volumeData, fMaxConstraint, volumePitch, dims);
 
 		iteration++;
 
@@ -228,7 +228,7 @@ float SART::computeDiffNorm()
 	// do FP, subtracting projection from sinogram
 	if (useVolumeMask) {
 			cudaMemcpy2D(D_tmpData, sizeof(float)*tmpPitch, D_volumeData, sizeof(float)*volumePitch, sizeof(float)*(dims.iVolWidth), dims.iVolHeight, cudaMemcpyDeviceToDevice);
-			processVol<opMul>(D_tmpData, D_maskData, tmpPitch, dims.iVolWidth, dims.iVolHeight);
+			processVol<opMul>(D_tmpData, D_maskData, tmpPitch, dims);
 			callFP(D_tmpData, tmpPitch, D_projData, projPitch, -1.0f);
 	} else {
 			callFP(D_volumeData, volumePitch, D_projData, projPitch, -1.0f);

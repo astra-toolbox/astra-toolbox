@@ -33,9 +33,12 @@ $Id$
 namespace astraCUDA {
 
 bool copyVolumeToDevice(const float* in_data, unsigned int in_pitch,
-		unsigned int width, unsigned int height,
+		const SDimensions& dims,
 		float* outD_data, unsigned int out_pitch)
 {
+	size_t width = dims.iVolWidth;
+	size_t height = dims.iVolHeight;
+	// TODO: memory order
 	cudaError_t err;
 	err = cudaMemcpy2D(outD_data, sizeof(float)*out_pitch, in_data, sizeof(float)*in_pitch, sizeof(float)*width, height, cudaMemcpyHostToDevice);
 	ASTRA_CUDA_ASSERT(err);
@@ -44,9 +47,12 @@ bool copyVolumeToDevice(const float* in_data, unsigned int in_pitch,
 }
 
 bool copyVolumeFromDevice(float* out_data, unsigned int out_pitch,
-		unsigned int width, unsigned int height,
+		const SDimensions& dims,
 		float* inD_data, unsigned int in_pitch)
 {
+	size_t width = dims.iVolWidth;
+	size_t height = dims.iVolHeight;
+	// TODO: memory order
 	cudaError_t err = cudaMemcpy2D(out_data, sizeof(float)*out_pitch, inD_data, sizeof(float)*in_pitch, sizeof(float)*width, height, cudaMemcpyDeviceToHost);
 	ASTRA_CUDA_ASSERT(err);
 	return true;
@@ -54,18 +60,24 @@ bool copyVolumeFromDevice(float* out_data, unsigned int out_pitch,
 
 
 bool copySinogramFromDevice(float* out_data, unsigned int out_pitch,
-		unsigned int width, unsigned int height,
+		const SDimensions& dims,
 		float* inD_data, unsigned int in_pitch)
-{   
+{
+	size_t width = dims.iProjDets;
+	size_t height = dims.iProjAngles;
+	// TODO: memory order
 	cudaError_t err = cudaMemcpy2D(out_data, sizeof(float)*out_pitch, inD_data, sizeof(float)*in_pitch, sizeof(float)*width, height, cudaMemcpyDeviceToHost);
 	ASTRA_CUDA_ASSERT(err);
 	return true;
 }
 
 bool copySinogramToDevice(const float* in_data, unsigned int in_pitch,
-		unsigned int width, unsigned int height,
+		const SDimensions& dims,
 		float* outD_data, unsigned int out_pitch)
-{   
+{
+	size_t width = dims.iProjDets;
+	size_t height = dims.iProjAngles;
+	// TODO: memory order
 	cudaError_t err;
 	err = cudaMemcpy2D(outD_data, sizeof(float)*out_pitch, in_data, sizeof(float)*in_pitch, sizeof(float)*width, height, cudaMemcpyHostToDevice);
 	ASTRA_CUDA_ASSERT(err);
@@ -99,25 +111,21 @@ void zeroVolume(float* data, unsigned int pitch, unsigned int width, unsigned in
 
 bool allocateVolumeData(float*& D_ptr, unsigned int& pitch, const SDimensions& dims)
 {
-	// TODO: memory order
 	return allocateVolume(D_ptr, dims.iVolWidth, dims.iVolHeight, pitch);
 }
 
 bool allocateProjectionData(float*& D_ptr, unsigned int& pitch, const SDimensions& dims)
 {
-	// TODO: memory order
 	return allocateVolume(D_ptr, dims.iProjDets, dims.iProjAngles, pitch);
 }
 
 void zeroVolumeData(float* D_ptr, unsigned int pitch, const SDimensions& dims)
 {
-	// TODO: memory order
 	zeroVolume(D_ptr, pitch, dims.iVolWidth, dims.iVolHeight);
 }
 
 void zeroProjectionData(float* D_ptr, unsigned int pitch, const SDimensions& dims)
 {
-	// TODO: memory order
 	zeroVolume(D_ptr, pitch, dims.iProjDets, dims.iProjAngles);
 }
 
@@ -198,6 +206,7 @@ __global__ void reduce2D(float *g_idata, float *g_odata,
 float dotProduct2D(float* D_data, unsigned int pitch,
                    unsigned int width, unsigned int height)
 {
+#warning FIX MEMORY ORDER
 	unsigned int bx = (width + 15) / 16;
 	unsigned int by = (height + 127) / 128;
 	unsigned int shared_mem2 = sizeof(float) * 16 * 16;

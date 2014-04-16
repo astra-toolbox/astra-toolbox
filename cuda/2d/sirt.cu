@@ -114,14 +114,14 @@ bool SIRT::precomputeWeights()
 	if (useVolumeMask) {
 		callFP(D_maskData, maskPitch, D_lineWeight, linePitch, 1.0f);
 	} else {
-		processVol<opSet>(D_tmpData, 1.0f, tmpPitch, dims.iVolWidth, dims.iVolHeight);
+		processVol<opSet>(D_tmpData, 1.0f, tmpPitch, dims);
 		callFP(D_tmpData, tmpPitch, D_lineWeight, linePitch, 1.0f);
 	}
-	processVol<opInvert>(D_lineWeight, linePitch, dims.iProjDets, dims.iProjAngles);
+	processSino<opInvert>(D_lineWeight, linePitch, dims);
 
 	if (useSinogramMask) {
 		// scale line weights with sinogram mask to zero out masked sinogram pixels
-		processVol<opMul>(D_lineWeight, D_smaskData, linePitch, dims.iProjDets, dims.iProjAngles);
+		processSino<opMul>(D_lineWeight, D_smaskData, linePitch, dims);
 	}
 
 
@@ -129,14 +129,14 @@ bool SIRT::precomputeWeights()
 	if (useSinogramMask) {
 		callBP(D_pixelWeight, pixelPitch, D_smaskData, smaskPitch);
 	} else {
-		processVol<opSet>(D_projData, 1.0f, projPitch, dims.iProjDets, dims.iProjAngles);
+		processSino<opSet>(D_projData, 1.0f, projPitch, dims);
 		callBP(D_pixelWeight, pixelPitch, D_projData, projPitch);
 	}
-	processVol<opInvert>(D_pixelWeight, pixelPitch, dims.iVolWidth, dims.iVolHeight);
+	processVol<opInvert>(D_pixelWeight, pixelPitch, dims);
 
 	if (useVolumeMask) {
 		// scale pixel weights with mask to zero out masked pixels
-		processVol<opMul>(D_pixelWeight, D_maskData, pixelPitch, dims.iVolWidth, dims.iVolHeight);
+		processVol<opMul>(D_pixelWeight, D_maskData, pixelPitch, dims);
 	}
 
 	return true;
@@ -162,7 +162,7 @@ bool SIRT::uploadMinMaxMasks(const float* pfMinMaskData, const float* pfMaxMaskD
 	if (pfMinMaskData) {
 		allocateVolumeData(D_minMaskData, minMaskPitch, dims);
 		ok = copyVolumeToDevice(pfMinMaskData, iPitch,
-		                        dims.iVolWidth, dims.iVolHeight,
+		                        dims,
 		                        D_minMaskData, minMaskPitch);
 	}
 	if (!ok)
@@ -171,7 +171,7 @@ bool SIRT::uploadMinMaxMasks(const float* pfMinMaskData, const float* pfMaxMaskD
 	if (pfMaxMaskData) {
 		allocateVolumeData(D_maxMaskData, maxMaskPitch, dims);
 		ok = copyVolumeToDevice(pfMaxMaskData, iPitch,
-		                        dims.iVolWidth, dims.iVolHeight,
+		                        dims,
 		                        D_maxMaskData, maxMaskPitch);
 	}
 	if (!ok)
@@ -196,28 +196,28 @@ bool SIRT::iterate(unsigned int iterations)
 		// do FP, subtracting projection from sinogram
 		if (useVolumeMask) {
 				cudaMemcpy2D(D_tmpData, sizeof(float)*tmpPitch, D_volumeData, sizeof(float)*volumePitch, sizeof(float)*(dims.iVolWidth), dims.iVolHeight, cudaMemcpyDeviceToDevice);
-				processVol<opMul>(D_tmpData, D_maskData, tmpPitch, dims.iVolWidth, dims.iVolHeight);
+				processVol<opMul>(D_tmpData, D_maskData, tmpPitch, dims);
 				callFP(D_tmpData, tmpPitch, D_projData, projPitch, -1.0f);
 		} else {
 				callFP(D_volumeData, volumePitch, D_projData, projPitch, -1.0f);
 		}
 
-		processVol<opMul>(D_projData, D_lineWeight, projPitch, dims.iProjDets, dims.iProjAngles);
+		processSino<opMul>(D_projData, D_lineWeight, projPitch, dims);
 
 		zeroVolumeData(D_tmpData, tmpPitch, dims);
 
 		callBP(D_tmpData, tmpPitch, D_projData, projPitch);
 
-		processVol<opAddMul>(D_volumeData, D_pixelWeight, D_tmpData, volumePitch, dims.iVolWidth, dims.iVolHeight);
+		processVol<opAddMul>(D_volumeData, D_pixelWeight, D_tmpData, volumePitch, dims);
 
 		if (useMinConstraint)
-			processVol<opClampMin>(D_volumeData, fMinConstraint, volumePitch, dims.iVolWidth, dims.iVolHeight);
+			processVol<opClampMin>(D_volumeData, fMinConstraint, volumePitch, dims);
 		if (useMaxConstraint)
-			processVol<opClampMax>(D_volumeData, fMaxConstraint, volumePitch, dims.iVolWidth, dims.iVolHeight);
+			processVol<opClampMax>(D_volumeData, fMaxConstraint, volumePitch, dims);
 		if (D_minMaskData)
-			processVol<opClampMinMask>(D_volumeData, D_minMaskData, volumePitch, dims.iVolWidth, dims.iVolHeight);
+			processVol<opClampMinMask>(D_volumeData, D_minMaskData, volumePitch, dims);
 		if (D_maxMaskData)
-			processVol<opClampMaxMask>(D_volumeData, D_maxMaskData, volumePitch, dims.iVolWidth, dims.iVolHeight);
+			processVol<opClampMaxMask>(D_volumeData, D_maxMaskData, volumePitch, dims);
 	}
 
 	return true;
@@ -231,7 +231,7 @@ float SIRT::computeDiffNorm()
 	// do FP, subtracting projection from sinogram
 	if (useVolumeMask) {
 			cudaMemcpy2D(D_tmpData, sizeof(float)*tmpPitch, D_volumeData, sizeof(float)*volumePitch, sizeof(float)*(dims.iVolWidth), dims.iVolHeight, cudaMemcpyDeviceToDevice);
-			processVol<opMul>(D_tmpData, D_maskData, tmpPitch, dims.iVolWidth, dims.iVolHeight);
+			processVol<opMul>(D_tmpData, D_maskData, tmpPitch, dims);
 			callFP(D_tmpData, tmpPitch, D_projData, projPitch, -1.0f);
 	} else {
 			callFP(D_volumeData, volumePitch, D_projData, projPitch, -1.0f);
@@ -332,7 +332,7 @@ int main()
 
 	delete[] angle;
 
-	copyVolumeFromDevice(img, dims.iVolWidth, dims.iVolWidth, dims.iVolHeight, D_volumeData, volumePitch);
+	copyVolumeFromDevice(img, dims.iVolWidth, dims, D_volumeData, volumePitch);
 
 	saveImage("vol.png",dims.iVolHeight,dims.iVolWidth,img);
 

@@ -55,21 +55,29 @@ struct opSetMaskedValues;
 struct opMulMask;
 
 
-template<typename op> void processVolCopy(float* out, unsigned int width, unsigned int height);
-template<typename op> void processVolCopy(float* out, float param, unsigned int width, unsigned int height);
-template<typename op> void processVolCopy(float* out1, float* out2, float param1, float param2, unsigned int width, unsigned int height);
-template<typename op> void processVolCopy(float* out, const float* in, unsigned int width, unsigned int height);
-template<typename op> void processVolCopy(float* out, const float* in, float param, unsigned int width, unsigned int height);
-template<typename op> void processVolCopy(float* out, const float* in1, const float* in2, unsigned int width, unsigned int height);
-template<typename op> void processVolCopy(float* out, const float* in1, const float* in2, float param, unsigned int width, unsigned int height);
+template<typename op> void processVolCopy(float* out, const SDimensions& dims);
+template<typename op> void processVolCopy(float* out, float param, const SDimensions& dims);
+template<typename op> void processVolCopy(float* out1, float* out2, float param1, float param2, const SDimensions& dims);
+template<typename op> void processVolCopy(float* out, const float* in, const SDimensions& dims);
+template<typename op> void processVolCopy(float* out, const float* in, float param, const SDimensions& dims);
+template<typename op> void processVolCopy(float* out, const float* in1, const float* in2, const SDimensions& dims);
+template<typename op> void processVolCopy(float* out, const float* in1, const float* in2, float param, const SDimensions& dims);
 
-template<typename op> void processVol(float* out, unsigned int pitch, unsigned int width, unsigned int height);
-template<typename op> void processVol(float* out, float fParam, unsigned int pitch, unsigned int width, unsigned int height);
-template<typename op> void processVol(float* out1, float* out2, float fParam1, float fParam2, unsigned int pitch, unsigned int width, unsigned int height);
-template<typename op> void processVol(float* out, const float* in, unsigned int pitch, unsigned int width, unsigned int height);
-template<typename op> void processVol(float* out, const float* in, float fParam, unsigned int pitch, unsigned int width, unsigned int height);
-template<typename op> void processVol(float* out, const float* in1, const float* in2, float fParam, unsigned int pitch, unsigned int width, unsigned int height);
-template<typename op> void processVol(float* out, const float* in1, const float* in2, unsigned int pitch, unsigned int width, unsigned int height);
+template<typename op> void processVol(float* out, unsigned int pitch, const SDimensions& dims);
+template<typename op> void processVol(float* out, float fParam, unsigned int pitch, const SDimensions& dims);
+template<typename op> void processVol(float* out1, float* out2, float fParam1, float fParam2, unsigned int pitch, const SDimensions& dims);
+template<typename op> void processVol(float* out, const float* in, unsigned int pitch, const SDimensions& dims);
+template<typename op> void processVol(float* out, const float* in, float fParam, unsigned int pitch, const SDimensions& dims);
+template<typename op> void processVol(float* out, const float* in1, const float* in2, float fParam, unsigned int pitch, const SDimensions& dims);
+template<typename op> void processVol(float* out, const float* in1, const float* in2, unsigned int pitch, const SDimensions& dims);
+
+template<typename op> void processSino(float* out, unsigned int pitch, const SDimensions& dims);
+template<typename op> void processSino(float* out, float fParam, unsigned int pitch, const SDimensions& dims);
+template<typename op> void processSino(float* out1, float* out2, float fParam1, float fParam2, unsigned int pitch, const SDimensions& dims);
+template<typename op> void processSino(float* out, const float* in, unsigned int pitch, const SDimensions& dims);
+template<typename op> void processSino(float* out, const float* in, float fParam, unsigned int pitch, const SDimensions& dims);
+template<typename op> void processSino(float* out, const float* in1, const float* in2, float fParam, unsigned int pitch, const SDimensions& dims);
+template<typename op> void processSino(float* out, const float* in1, const float* in2, unsigned int pitch, const SDimensions& dims);
 
 template<typename op> void processVol3D(cudaPitchedPtr& out, const SDimensions3D& dims);
 template<typename op> void processVol3D(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims);

@@ -54,14 +54,19 @@ void roiSelect(float* out, float radius, unsigned int width, unsigned int height
 	float* D_data;
 
 	unsigned int pitch;
-	allocateVolume(D_data, width, height, pitch);
-	copyVolumeToDevice(out, width, width, height, D_data, pitch);
+	// We abuse dims here...
+	SDimensions dims;
+	dims.iVolWidth = width;
+	dims.iVolHeight = width;
+
+	allocateVolumeData(D_data, pitch, dims);
+	copyVolumeToDevice(out, width, dims, D_data, pitch);
 
 	dim3 blockSize(16,16);
 	dim3 gridSize((width+15)/16, (height+15)/16);
 	devRoiSelect<<<gridSize, blockSize>>>(D_data, radius, pitch, width, height);
 
-	copyVolumeFromDevice(out, width, width, height, D_data, pitch);
+	copyVolumeFromDevice(out, width, dims, D_data, pitch);
 
 	cudaFree(D_data);
 }
@@ -237,11 +242,16 @@ void dartMask(float* mask, const float* segmentation, unsigned int conn, unsigne
 	float* D_maskData;
 
 	unsigned int pitch;
-	allocateVolume(D_segmentationData, width, height, pitch);
-	copyVolumeToDevice(segmentation, width, width, height, D_segmentationData, pitch);
+	// We abuse dims here...
+	SDimensions dims;
+	dims.iVolWidth = width;
+	dims.iVolHeight = width;
 
-	allocateVolume(D_maskData, width, height, pitch);
-	zeroVolume(D_maskData, pitch, width, height);
+	allocateVolumeData(D_segmentationData, pitch, dims);
+	copyVolumeToDevice(segmentation, width, dims, D_segmentationData, pitch);
+
+	allocateVolumeData(D_maskData, pitch, dims);
+	zeroVolumeData(D_maskData, pitch, dims);
 
 	dim3 blockSize(16,16);
 	dim3 gridSize((width+15)/16, (height+15)/16);
@@ -255,7 +265,7 @@ void dartMask(float* mask, const float* segmentation, unsigned int conn, unsigne
 	else 
 		devADartMaskRadius<<<gridSize, blockSize>>>(D_maskData, D_segmentationData, conn, radius, threshold, pitch, width, height);
 
-	copyVolumeFromDevice(mask, width, width, height, D_maskData, pitch);
+	copyVolumeFromDevice(mask, width, dims, D_maskData, pitch);
 
 	cudaFree(D_segmentationData);
 	cudaFree(D_maskData);
@@ -320,11 +330,16 @@ void dartSmoothing(float* out, const float* in, float b, unsigned int radius, un
 	float* D_outData;
 
 	unsigned int pitch;
-	allocateVolume(D_inData, width, height, pitch);
-	copyVolumeToDevice(in, width, width, height, D_inData, pitch);
+	// We abuse dims here...
+	SDimensions dims;
+	dims.iVolWidth = width;
+	dims.iVolHeight = width;
 
-	allocateVolume(D_outData, width, height, pitch);
-	zeroVolume(D_outData, pitch, width, height);
+	allocateVolumeData(D_inData, pitch, dims);
+	copyVolumeToDevice(in, width, dims, D_inData, pitch);
+
+	allocateVolumeData(D_outData, pitch, dims);
+	zeroVolumeData(D_outData, pitch, dims);
 
 	dim3 blockSize(16,16);
 	dim3 gridSize((width+15)/16, (height+15)/16);
@@ -333,7 +348,7 @@ void dartSmoothing(float* out, const float* in, float b, unsigned int radius, un
 	else
 		devDartSmoothingRadius<<<gridSize, blockSize>>>(D_outData, D_inData, b, radius, pitch, width, height);
 
-	copyVolumeFromDevice(out, width, width, height, D_outData, pitch);
+	copyVolumeFromDevice(out, width, dims, D_outData, pitch);
 
 	cudaFree(D_outData);
 	cudaFree(D_inData);

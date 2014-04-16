@@ -126,7 +126,7 @@ bool CGLS::iterate(unsigned int iterations)
 		if (useVolumeMask) {
 			// Use z as temporary storage here since it is unused
 			cudaMemcpy2D(D_z, sizeof(float)*zPitch, D_volumeData, sizeof(float)*volumePitch, sizeof(float)*(dims.iVolWidth), dims.iVolHeight, cudaMemcpyDeviceToDevice);
-			processVol<opMul>(D_z, D_maskData, zPitch, dims.iVolWidth, dims.iVolHeight);
+			processVol<opMul>(D_z, D_maskData, zPitch, dims);
 			callFP(D_z, zPitch, D_r, rPitch, -1.0f);
 		} else {
 			callFP(D_volumeData, volumePitch, D_r, rPitch, -1.0f);
@@ -137,7 +137,7 @@ bool CGLS::iterate(unsigned int iterations)
 		zeroVolumeData(D_p, pPitch, dims);
 		callBP(D_p, pPitch, D_r, rPitch);
 		if (useVolumeMask)
-			processVol<opMul>(D_p, D_maskData, pPitch, dims.iVolWidth, dims.iVolHeight);
+			processVol<opMul>(D_p, D_maskData, pPitch, dims);
 
 
 		gamma = dotProduct2D(D_p, pPitch, dims.iVolWidth, dims.iVolHeight);
@@ -158,24 +158,24 @@ bool CGLS::iterate(unsigned int iterations)
 		float alpha = gamma / ww;
 
 		// x += alpha*p
-		processVol<opAddScaled>(D_volumeData, D_p, alpha, volumePitch, dims.iVolWidth, dims.iVolHeight);
+		processVol<opAddScaled>(D_volumeData, D_p, alpha, volumePitch, dims);
 
 		// r -= alpha*w
-		processVol<opAddScaled>(D_r, D_w, -alpha, rPitch, dims.iProjDets, dims.iProjAngles);
+		processSino<opAddScaled>(D_r, D_w, -alpha, rPitch, dims);
 
 
 		// z = A'*r
 		zeroVolumeData(D_z, zPitch, dims);
 		callBP(D_z, zPitch, D_r, rPitch);
 		if (useVolumeMask)
-			processVol<opMul>(D_z, D_maskData, zPitch, dims.iVolWidth, dims.iVolHeight);
+			processVol<opMul>(D_z, D_maskData, zPitch, dims);
 
 		float beta = 1.0f / gamma;
 		gamma = dotProduct2D(D_z, zPitch, dims.iVolWidth, dims.iVolHeight);
 		beta *= gamma;
 
 		// p = z + beta*p
-		processVol<opScaleAndAdd>(D_p, D_z, beta, pPitch, dims.iVolWidth, dims.iVolHeight);
+		processVol<opScaleAndAdd>(D_p, D_z, beta, pPitch, dims);
 
 	}
 
@@ -194,7 +194,7 @@ float CGLS::computeDiffNorm()
 	// do FP, subtracting projection from sinogram
 	if (useVolumeMask) {
 			cudaMemcpy2D(D_z, sizeof(float)*zPitch, D_volumeData, sizeof(float)*volumePitch, sizeof(float)*(dims.iVolWidth), dims.iVolHeight, cudaMemcpyDeviceToDevice);
-			processVol<opMul>(D_z, D_maskData, zPitch, dims.iVolWidth, dims.iVolHeight);
+			processVol<opMul>(D_z, D_maskData, zPitch, dims);
 			callFP(D_z, zPitch, D_w, wPitch, -1.0f);
 	} else {
 			callFP(D_volumeData, volumePitch, D_w, wPitch, -1.0f);

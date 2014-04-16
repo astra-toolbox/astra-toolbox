@@ -279,55 +279,57 @@ __global__ void devDDFtoD(float* pfOut, const float* pfIn1, const float* pfIn2, 
 
 
 
-
 template<typename op>
-void processVolCopy(float* out, unsigned int width, unsigned int height)
+void processVolCopy(float* out, const SDimensions& dims)
 {
 	float* D_out;
+	size_t width = dims.iVolWidth;
 
 	unsigned int pitch;
-	allocateVolume(D_out, width, height, pitch);
-	copyVolumeToDevice(out, width, width, height, D_out, pitch);
+	allocateVolumeData(D_out, pitch, dims);
+	copyVolumeToDevice(out, width, dims, D_out, pitch);
 
-	processVol<op>(D_out, pitch, width, height);
+	processVol<op>(D_out, pitch, dims);
 
-	copyVolumeFromDevice(out, width, width, height, D_out, pitch);
+	copyVolumeFromDevice(out, width, dims, D_out, pitch);
 
 	cudaFree(D_out);
 }
 
 template<typename op>
-void processVolCopy(float* out, float param, unsigned int width, unsigned int height)
+void processVolCopy(float* out, float param, const SDimensions& dims)
 {
 	float* D_out;
+	size_t width = dims.iVolWidth;
 
 	unsigned int pitch;
-	allocateVolume(D_out, width, height, pitch);
-	copyVolumeToDevice(out, width, width, height, D_out, pitch);
+	allocateVolumeData(D_out, pitch, dims);
+	copyVolumeToDevice(out, width, dims, D_out, pitch);
 
-	processVol<op>(D_out, param, pitch, width, height);
+	processVol<op>(D_out, param, pitch, dims);
 
-	copyVolumeFromDevice(out, width, width, height, D_out, pitch);
+	copyVolumeFromDevice(out, width, dims, D_out, pitch);
 
 	cudaFree(D_out);
 }
 
 template<typename op>
-void processVolCopy(float* out1, float* out2, float param1, float param2, unsigned int width, unsigned int height)
+void processVolCopy(float* out1, float* out2, float param1, float param2, const SDimensions& dims)
 {
 	float* D_out1;
 	float* D_out2;
+	size_t width = dims.iVolWidth;
 
 	unsigned int pitch;
-	allocateVolume(D_out1, width, height, pitch);
-	copyVolumeToDevice(out1, width, width, height, D_out1, pitch);
-	allocateVolume(D_out2, width, height, pitch);
-	copyVolumeToDevice(out2, width, width, height, D_out2, pitch);
+	allocateVolumeData(D_out1, pitch, dims);
+	copyVolumeToDevice(out1, width, dims, D_out1, pitch);
+	allocateVolumeData(D_out2, pitch, dims);
+	copyVolumeToDevice(out2, width, dims, D_out2, pitch);
 
-	processVol<op>(D_out1, D_out2, param1, param2, pitch, width, height);
+	processVol<op>(D_out1, D_out2, param1, param2, pitch, dims);
 
-	copyVolumeFromDevice(out1, width, width, height, D_out1, pitch);
-	copyVolumeFromDevice(out2, width, width, height, D_out2, pitch);
+	copyVolumeFromDevice(out1, width, dims, D_out1, pitch);
+	copyVolumeFromDevice(out2, width, dims, D_out2, pitch);
 
 	cudaFree(D_out1);
 	cudaFree(D_out2);
@@ -335,63 +337,66 @@ void processVolCopy(float* out1, float* out2, float param1, float param2, unsign
 
 
 template<typename op>
-void processVolCopy(float* out, const float* in, unsigned int width, unsigned int height)
+void processVolCopy(float* out, const float* in, const SDimensions& dims)
 {
 	float* D_out;
 	float* D_in;
+	size_t width = dims.iVolWidth;
 
 	unsigned int pitch;
-	allocateVolume(D_out, width, height, pitch);
-	copyVolumeToDevice(out, width, width, height, D_out, pitch);
-	allocateVolume(D_in, width, height, pitch);
-	copyVolumeToDevice(in, width, width, height, D_in, pitch);
+	allocateVolumeData(D_out, pitch, dims);
+	copyVolumeToDevice(out, width, dims, D_out, pitch);
+	allocateVolumeData(D_in, pitch, dims);
+	copyVolumeToDevice(in, width, dims, D_in, pitch);
 
-	processVol<op>(D_out, D_in, pitch, width, height);
+	processVol<op>(D_out, D_in, pitch, dims);
 
-	copyVolumeFromDevice(out, width, width, height, D_out, pitch);
+	copyVolumeFromDevice(out, width, dims, D_out, pitch);
 
 	cudaFree(D_out);
 	cudaFree(D_in);
 }
 
 template<typename op>
-void processVolCopy(float* out, const float* in, float param, unsigned int width, unsigned int height)
+void processVolCopy(float* out, const float* in, float param, const SDimensions& dims)
 {
 	float* D_out;
 	float* D_in;
+	size_t width = dims.iVolWidth;
 
 	unsigned int pitch;
-	allocateVolume(D_out, width, height, pitch);
-	copyVolumeToDevice(out, width, width, height, D_out, pitch);
-	allocateVolume(D_in, width, height, pitch);
-	copyVolumeToDevice(in, width, width, height, D_in, pitch);
+	allocateVolumeData(D_out, pitch, dims);
+	copyVolumeToDevice(out, width, dims, D_out, pitch);
+	allocateVolumeData(D_in, pitch, dims);
+	copyVolumeToDevice(in, width, dims, D_in, pitch);
 
-	processVol<op>(D_out, D_in, param, pitch, width, height);
+	processVol<op>(D_out, D_in, param, pitch, dims);
 
-	copyVolumeFromDevice(out, width, width, height, D_out, pitch);
+	copyVolumeFromDevice(out, width, dims, D_out, pitch);
 
 	cudaFree(D_out);
 	cudaFree(D_in);
 }
 
 template<typename op>
-void processVolCopy(float* out, const float* in1, const float* in2, unsigned int width, unsigned int height)
+void processVolCopy(float* out, const float* in1, const float* in2, const SDimensions& dims)
 {
 	float* D_out;
 	float* D_in1;
 	float* D_in2;
+	size_t width = dims.iVolWidth;
 
 	unsigned int pitch;
-	allocateVolume(D_out, width, height, pitch);
-	copyVolumeToDevice(out, width, width, height, D_out, pitch);
-	allocateVolume(D_in1, width, height, pitch);
-	copyVolumeToDevice(in1, width, width, height, D_in1, pitch);
-	allocateVolume(D_in2, width, height, pitch);
-	copyVolumeToDevice(in2, width, width, height, D_in2, pitch);
+	allocateVolumeData(D_out, pitch, dims);
+	copyVolumeToDevice(out, width, dims, D_out, pitch);
+	allocateVolumeData(D_in1, pitch, dims);
+	copyVolumeToDevice(in1, width, dims, D_in1, pitch);
+	allocateVolumeData(D_in2, pitch, dims);
+	copyVolumeToDevice(in2, width, dims, D_in2, pitch);
 
-	processVol<op>(D_out, D_in1, D_in2, pitch, width, height);
+	processVol<op>(D_out, D_in1, D_in2, pitch, dims);
 
-	copyVolumeFromDevice(out, width, width, height, D_out, pitch);
+	copyVolumeFromDevice(out, width, dims, D_out, pitch);
 
 	cudaFree(D_out);
 	cudaFree(D_in1);
@@ -399,23 +404,24 @@ void processVolCopy(float* out, const float* in1, const float* in2, unsigned int
 }
 
 template<typename op>
-void processVolCopy(float* out, const float* in1, const float* in2, float param, unsigned int width, unsigned int height)
+void processVolCopy(float* out, const float* in1, const float* in2, float param, const SDimensions& dims)
 {
 	float* D_out;
 	float* D_in1;
 	float* D_in2;
+	size_t width = dims.iVolWidth;
 
 	unsigned int pitch;
-	allocateVolume(D_out, width, height, pitch);
-	copyVolumeToDevice(out, width, width, height, D_out, pitch);
-	allocateVolume(D_in1, width, height, pitch);
-	copyVolumeToDevice(in1, width, width, height, D_in1, pitch);
-	allocateVolume(D_in2, width, height, pitch);
-	copyVolumeToDevice(in2, width, width, height, D_in2, pitch);
+	allocateVolumeData(D_out, pitch, dims);
+	copyVolumeToDevice(out, width, dims, D_out, pitch);
+	allocateVolumeData(D_in1, pitch, dims);
+	copyVolumeToDevice(in1, width, dims, D_in1, pitch);
+	allocateVolumeData(D_in2, pitch, dims);
+	copyVolumeToDevice(in2, width, dims, D_in2, pitch);
 
-	processVol<op>(D_out, D_in1, D_in2, param, pitch, width, height);
+	processVol<op>(D_out, D_in1, D_in2, param, pitch, dims);
 
-	copyVolumeFromDevice(out, width, width, height, D_out, pitch);
+	copyVolumeFromDevice(out, width, dims, D_out, pitch);
 
 	cudaFree(D_out);
 	cudaFree(D_in1);
@@ -429,9 +435,8 @@ void processVolCopy(float* out, const float* in1, const float* in2, float param,
 
 
 
-
 template<typename op>
-void processVol(float* pfOut, unsigned int pitch, unsigned int width, unsigned int height)
+void processData(float* pfOut, unsigned int pitch, unsigned int width, unsigned int height)
 {
 	dim3 blockSize(16,16);
 	dim3 gridSize((width+15)/16, (height+511)/512);
@@ -442,7 +447,7 @@ void processVol(float* pfOut, unsigned int pitch, unsigned int width, unsigned i
 }
 
 template<typename op>
-void processVol(float* pfOut, float fParam, unsigned int pitch, unsigned int width, unsigned int height)
+void processData(float* pfOut, float fParam, unsigned int pitch, unsigned int width, unsigned int height)
 {
 	dim3 blockSize(16,16);
 	dim3 gridSize((width+15)/16, (height+15)/16);
@@ -453,7 +458,7 @@ void processVol(float* pfOut, float fParam, unsigned int pitch, unsigned int wid
 }
 
 template<typename op>
-void processVol(float* pfOut1, float* pfOut2, float fParam1, float fParam2, unsigned int pitch, unsigned int width, unsigned int height)
+void processData(float* pfOut1, float* pfOut2, float fParam1, float fParam2, unsigned int pitch, unsigned int width, unsigned int height)
 {
 	dim3 blockSize(16,16);
 	dim3 gridSize((width+15)/16, (height+15)/16);
@@ -465,7 +470,7 @@ void processVol(float* pfOut1, float* pfOut2, float fParam1, float fParam2, unsi
 
 
 template<typename op>
-void processVol(float* pfOut, const float* pfIn, unsigned int pitch, unsigned int width, unsigned int height)
+void processData(float* pfOut, const float* pfIn, unsigned int pitch, unsigned int width, unsigned int height)
 {
 	dim3 blockSize(16,16);
 	dim3 gridSize((width+15)/16, (height+15)/16);
@@ -476,7 +481,7 @@ void processVol(float* pfOut, const float* pfIn, unsigned int pitch, unsigned in
 }
 
 template<typename op>
-void processVol(float* pfOut, const float* pfIn, float fParam, unsigned int pitch, unsigned int width, unsigned int height)
+void processData(float* pfOut, const float* pfIn, float fParam, unsigned int pitch, unsigned int width, unsigned int height)
 {
 	dim3 blockSize(16,16);
 	dim3 gridSize((width+15)/16, (height+15)/16);
@@ -487,7 +492,7 @@ void processVol(float* pfOut, const float* pfIn, float fParam, unsigned int pitc
 }
 
 template<typename op>
-void processVol(float* pfOut, const float* pfIn1, const float* pfIn2, float fParam, unsigned int pitch, unsigned int width, unsigned int height)
+void processData(float* pfOut, const float* pfIn1, const float* pfIn2, float fParam, unsigned int pitch, unsigned int width, unsigned int height)
 {
 	dim3 blockSize(16,16);
 	dim3 gridSize((width+15)/16, (height+15)/16);
@@ -498,7 +503,7 @@ void processVol(float* pfOut, const float* pfIn1, const float* pfIn2, float fPar
 }
 
 template<typename op>
-void processVol(float* pfOut, const float* pfIn1, const float* pfIn2, unsigned int pitch, unsigned int width, unsigned int height)
+void processData(float* pfOut, const float* pfIn1, const float* pfIn2, unsigned int pitch, unsigned int width, unsigned int height)
 {
 	dim3 blockSize(16,16);
 	dim3 gridSize((width+15)/16, (height+15)/16);
@@ -513,6 +518,96 @@ void processVol(float* pfOut, const float* pfIn1, const float* pfIn2, unsigned i
 
 
 
+
+
+template<typename op>
+void processVol(float* out, unsigned int pitch, const SDimensions& dims)
+{
+	processData<op>(out, pitch, dims.iVolWidth, dims.iVolHeight);
+}
+
+template<typename op>
+void processVol(float* out, float param, unsigned int pitch, const SDimensions& dims)
+{
+	processData<op>(out, param, pitch, dims.iVolWidth, dims.iVolHeight);
+}
+
+template<typename op>
+void processVol(float* out1, float* out2, float param1, float param2, unsigned int pitch, const SDimensions& dims)
+{
+	processData<op>(out1, out2, param1, param2, pitch, dims.iVolWidth, dims.iVolHeight);
+}
+
+
+template<typename op>
+void processVol(float* out, const float* in, unsigned int pitch, const SDimensions& dims)
+{
+	processData<op>(out, in, pitch, dims.iVolWidth, dims.iVolHeight);
+}
+
+template<typename op>
+void processVol(float* out, const float* in, float param, unsigned int pitch, const SDimensions& dims)
+{
+	processData<op>(out, in, param, pitch, dims.iVolWidth, dims.iVolHeight);
+}
+
+template<typename op>
+void processVol(float* out, const float* in1, const float* in2, unsigned int pitch, const SDimensions& dims)
+{
+	processData<op>(out, in1, in2, pitch, dims.iVolWidth, dims.iVolHeight);
+}
+
+template<typename op>
+void processVol(float* out, const float* in1, const float* in2, float param, unsigned int pitch, const SDimensions& dims)
+{
+	processData<op>(out, in2, in2, param, pitch, dims.iVolWidth, dims.iVolHeight);
+}
+
+
+
+
+template<typename op>
+void processSino(float* out, unsigned int pitch, const SDimensions& dims)
+{
+	processData<op>(out, pitch, dims.iProjDets, dims.iProjAngles);
+}
+
+template<typename op>
+void processSino(float* out, float param, unsigned int pitch, const SDimensions& dims)
+{
+	processData<op>(out, param, pitch, dims.iProjDets, dims.iProjAngles);
+}
+
+template<typename op>
+void processSino(float* out1, float* out2, float param1, float param2, unsigned int pitch, const SDimensions& dims)
+{
+	processData<op>(out1, out2, param1, param2, pitch, dims.iProjDets, dims.iProjAngles);
+}
+
+
+template<typename op>
+void processSino(float* out, const float* in, unsigned int pitch, const SDimensions& dims)
+{
+	processData<op>(out, in, pitch, dims.iProjDets, dims.iProjAngles);
+}
+
+template<typename op>
+void processSino(float* out, const float* in, float param, unsigned int pitch, const SDimensions& dims)
+{
+	processData<op>(out, in, param, pitch, dims.iProjDets, dims.iProjAngles);
+}
+
+template<typename op>
+void processSino(float* out, const float* in1, const float* in2, unsigned int pitch, const SDimensions& dims)
+{
+	processData<op>(out, in1, in2, pitch, dims.iProjDets, dims.iProjAngles);
+}
+
+template<typename op>
+void processSino(float* out, const float* in1, const float* in2, float param, unsigned int pitch, const SDimensions& dims)
+{
+	processData<op>(out, in2, in2, param, pitch, dims.iProjDets, dims.iProjAngles);
+}
 
 
 
@@ -808,45 +903,52 @@ void processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPit
 
 
 #define INST_DFtoD(name) \
-  template void processVolCopy<name>(float* out, const float* in, float param, unsigned int width, unsigned int height); \
-  template void processVol<name>(float* out, const float* in, float param, unsigned int pitch, unsigned int width, unsigned int height); \
+  template void processVolCopy<name>(float* out, const float* in, float param, const SDimensions& dims); \
+  template void processVol<name>(float* out, const float* in, float param, unsigned int pitch, const SDimensions& dims); \
+  template void processSino<name>(float* out, const float* in, float param, unsigned int pitch, const SDimensions& dims); \
   template void processVol3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims); \
   template void processSino3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims);
 
 #define INST_DtoD(name) \
-  template void processVolCopy<name>(float* out, const float* in, unsigned int width, unsigned int height); \
-  template void processVol<name>(float* out, const float* in, unsigned int pitch, unsigned int width, unsigned int height); \
+  template void processVolCopy<name>(float* out, const float* in, const SDimensions& dims); \
+  template void processVol<name>(float* out, const float* in, unsigned int pitch, const SDimensions& dims); \
+  template void processSino<name>(float* out, const float* in, unsigned int pitch, const SDimensions& dims); \
   template void processVol3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims); \
   template void processSino3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims);
 
 #define INST_DDtoD(name) \
-  template void processVolCopy<name>(float* out, const float* in1, const float* in2, unsigned int width, unsigned int height); \
-  template void processVol<name>(float* out, const float* in1, const float* in2, unsigned int pitch, unsigned int width, unsigned int height); \
+  template void processVolCopy<name>(float* out, const float* in1, const float* in2, const SDimensions& dims); \
+  template void processVol<name>(float* out, const float* in1, const float* in2, unsigned int pitch, const SDimensions& dims); \
+  template void processSino<name>(float* out, const float* in1, const float* in2, unsigned int pitch, const SDimensions& dims); \
   template void processVol3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims); \
   template void processSino3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims);
 
 #define INST_DDFtoD(name) \
-  template void processVolCopy<name>(float* out, const float* in1, const float* in2, float fParam, unsigned int width, unsigned int height); \
-  template void processVol<name>(float* out, const float* in1, const float* in2, float fParam, unsigned int pitch, unsigned int width, unsigned int height); \
+  template void processVolCopy<name>(float* out, const float* in1, const float* in2, float fParam, const SDimensions& dims); \
+  template void processVol<name>(float* out, const float* in1, const float* in2, float fParam, unsigned int pitch, const SDimensions& dims); \
+  template void processSino<name>(float* out, const float* in1, const float* in2, float fParam, unsigned int pitch, const SDimensions& dims); \
   template void processVol3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims); \
   template void processSino3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims);
 
 
 #define INST_toD(name) \
-  template void processVolCopy<name>(float* out, unsigned int width, unsigned int height); \
-  template void processVol<name>(float* out, unsigned int pitch, unsigned int width, unsigned int height); \
+  template void processVolCopy<name>(float* out, const SDimensions& dims); \
+  template void processVol<name>(float* out, unsigned int pitch, const SDimensions& dims); \
+  template void processSino<name>(float* out, unsigned int pitch, const SDimensions& dims); \
   template void processVol3D<name>(cudaPitchedPtr& out, const SDimensions3D& dims); \
   template void processSino3D<name>(cudaPitchedPtr& out, const SDimensions3D& dims);
 
 #define INST_FtoD(name) \
-  template void processVolCopy<name>(float* out, float param, unsigned int width, unsigned int height); \
-  template void processVol<name>(float* out, float param, unsigned int pitch, unsigned int width, unsigned int height); \
+  template void processVolCopy<name>(float* out, float param, const SDimensions& dims); \
+  template void processVol<name>(float* out, float param, unsigned int pitch, const SDimensions& dims); \
+  template void processSino<name>(float* out, float param, unsigned int pitch, const SDimensions& dims); \
   template void processVol3D<name>(cudaPitchedPtr& out, float param, const SDimensions3D& dims); \
   template void processSino3D<name>(cudaPitchedPtr& out, float param, const SDimensions3D& dims);
 
 #define INST_FFtoDD(name) \
-  template void processVolCopy<name>(float* out1, float* out2, float fParam1, float fParam2, unsigned int width, unsigned int height); \
-  template void processVol<name>(float* out1, float* out2, float fParam1, float fParam2, unsigned int pitch, unsigned int width, unsigned int height); \
+  template void processVolCopy<name>(float* out1, float* out2, float fParam1, float fParam2, const SDimensions& dims); \
+  template void processVol<name>(float* out1, float* out2, float fParam1, float fParam2, unsigned int pitch, const SDimensions& dims); \
+  template void processSino<name>(float* out1, float* out2, float fParam1, float fParam2, unsigned int pitch, const SDimensions& dims); \
   template void processVol3D<name>(cudaPitchedPtr& out1, cudaPitchedPtr& out2, float fParam1, float fParam2, const SDimensions3D& dims); \
   template void processSino3D<name>(cudaPitchedPtr& out1, cudaPitchedPtr& out2, float fParam1, float fParam2, const SDimensions3D& dims);
 

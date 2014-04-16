@@ -101,15 +101,15 @@ bool EM::precomputeWeights()
 	} else
 #endif
 	{
-		processVol<opSet>(D_projData, 1.0f, projPitch, dims.iProjDets, dims.iProjAngles);
+		processSino<opSet>(D_projData, 1.0f, projPitch, dims);
 		callBP(D_pixelWeight, pixelPitch, D_projData, projPitch);
 	}
-	processVol<opInvert>(D_pixelWeight, pixelPitch, dims.iVolWidth, dims.iVolHeight);
+	processVol<opInvert>(D_pixelWeight, pixelPitch, dims);
 
 #if 0
 	if (useVolumeMask) {
 		// scale pixel weights with mask to zero out masked pixels
-		processVol<opMul>(D_pixelWeight, D_maskData, pixelPitch, dims.iVolWidth, dims.iVolHeight);
+		processVol<opMul>(D_pixelWeight, D_maskData, pixelPitch, dims);
 	}
 #endif
 
@@ -133,14 +133,14 @@ bool EM::iterate(unsigned int iterations)
 		callFP(D_volumeData, volumePitch, D_projData, projPitch, 1.0f);
 
 		// Divide sinogram by FP (into projData)
-		processVol<opDividedBy>(D_projData, D_sinoData, projPitch, dims.iProjDets, dims.iProjAngles);
+		processSino<opDividedBy>(D_projData, D_sinoData, projPitch, dims);
 
 		// Do BP of projData into tmpData
 		zeroVolumeData(D_tmpData, tmpPitch, dims);
 		callBP(D_tmpData, tmpPitch, D_projData, projPitch);
 
 		// Multiply volumeData with tmpData divided by pixel weights
-		processVol<opMul2>(D_volumeData, D_tmpData, D_pixelWeight, pixelPitch, dims.iVolWidth, dims.iVolHeight);
+		processVol<opMul2>(D_volumeData, D_tmpData, D_pixelWeight, pixelPitch, dims);
 
 	}
 
@@ -155,7 +155,7 @@ float EM::computeDiffNorm()
 	// do FP, subtracting projection from sinogram
 	if (useVolumeMask) {
 			cudaMemcpy2D(D_tmpData, sizeof(float)*tmpPitch, D_volumeData, sizeof(float)*volumePitch, sizeof(float)*(dims.iVolWidth), dims.iVolHeight, cudaMemcpyDeviceToDevice);
-			processVol<opMul>(D_tmpData, D_maskData, tmpPitch, dims.iVolWidth, dims.iVolHeight);
+			processVol<opMul>(D_tmpData, D_maskData, tmpPitch, dims);
 			callFP(D_tmpData, tmpPitch, D_projData, projPitch, -1.0f);
 	} else {
 			callFP(D_volumeData, volumePitch, D_projData, projPitch, -1.0f);

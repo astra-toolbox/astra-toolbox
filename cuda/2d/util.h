@@ -60,16 +60,16 @@ $Id$
 namespace astraCUDA {
 
 bool copyVolumeToDevice(const float* in_data, unsigned int in_pitch,
-		unsigned int width, unsigned int height,
+		const SDimensions& dims,
 		float* outD_data, unsigned int out_pitch);
 bool copyVolumeFromDevice(float* out_data, unsigned int out_pitch,
-		unsigned int width, unsigned int height,
+		const SDimensions& dims,
 		float* inD_data, unsigned int in_pitch);
 bool copySinogramFromDevice(float* out_data, unsigned int out_pitch,
-		unsigned int width, unsigned int height,
+		const SDimensions& dims,
 		float* inD_data, unsigned int in_pitch);
 bool copySinogramToDevice(const float* in_data, unsigned int in_pitch,
-		unsigned int width, unsigned int height,
+		const SDimensions& dims,
 		float* outD_data, unsigned int out_pitch);
 
 bool allocateVolume(float*& D_ptr, unsigned int width, unsigned int height, unsigned int& pitch);

@@ -268,17 +268,15 @@ bool AstraFBP::setSinogram(const float* pfSinogram,
 		return false;
 
 	bool ok = copySinogramToDevice(pfSinogram, iSinogramPitch,
-	                               pData->dims.iProjDets,
-	                               pData->dims.iProjAngles,
+	                               pData->dims,
 	                               pData->D_sinoData, pData->sinoPitch);
 	if (!ok)
 		return false;
 
 	// rescale sinogram to adjust for pixel size
-	processVol<opMul>(pData->D_sinoData,
+	processSino<opMul>(pData->D_sinoData,
 	                       1.0f/(pData->fPixelSize*pData->fPixelSize),
-	                       pData->sinoPitch,
-	                       pData->dims.iProjDets, pData->dims.iProjAngles);
+	                       pData->sinoPitch, pData->dims);
 
 	pData->setStartReconstruction = false;
 
@@ -390,8 +388,7 @@ bool AstraFBP::run()
 
 	processVol<opMul>(pData->D_volumeData,
 	                      (M_PI / 2.0f) / (float)pData->dims.iProjAngles,
-	                      pData->volumePitch,
-	                      pData->dims.iVolWidth, pData->dims.iVolHeight);
+	                      pData->volumePitch, pData->dims);
 
 	return true;
 }
@@ -402,8 +399,7 @@ bool AstraFBP::getReconstruction(float* pfReconstruction, unsigned int iReconstr
 		return false;
 
 	bool ok = copyVolumeFromDevice(pfReconstruction, iReconstructionPitch,
-	                               pData->dims.iVolWidth,
-	                               pData->dims.iVolHeight,
+	                               pData->dims,
 	                               pData->D_volumeData, pData->volumePitch);
 	if (!ok)
 		return false;
@@ -682,7 +678,7 @@ bool astraCudaFP(const float* pfVolume, float* pfSinogram,
 	}
 
 	ok = copyVolumeToDevice(pfVolume, dims.iVolWidth,
-	                        dims.iVolWidth, dims.iVolHeight,
+	                        dims,
 	                        D_volumeData, volumePitch);
 	if (!ok) {
 		cudaFree(D_volumeData);
@@ -699,8 +695,7 @@ bool astraCudaFP(const float* pfVolume, float* pfSinogram,
 	}
 
 	ok = copySinogramFromDevice(pfSinogram, dims.iProjDets,
-	                            dims.iProjDets,
-	                            dims.iProjAngles,
+	                            dims,
 	                            D_sinoData, sinoPitch);
 	if (!ok) {
 		cudaFree(D_volumeData);
@@ -769,7 +764,7 @@ bool astraCudaFanFP(const float* pfVolume, float* pfSinogram,
 	}
 
 	ok = copyVolumeToDevice(pfVolume, dims.iVolWidth,
-	                        dims.iVolWidth, dims.iVolHeight,
+	                        dims,
 	                        D_volumeData, volumePitch);
 	if (!ok) {
 		cudaFree(D_volumeData);
@@ -808,8 +803,7 @@ bool astraCudaFanFP(const float* pfVolume, float* pfSinogram,
 	}
 
 	ok = copySinogramFromDevice(pfSinogram, dims.iProjDets,
-	                            dims.iProjDets,
-	                            dims.iProjAngles,
+	                            dims,
 	                            D_sinoData, sinoPitch);
 	if (!ok) {
 		cudaFree(D_volumeData);
@@ -880,7 +874,7 @@ bool astraCudaFanFP(const float* pfVolume, float* pfSinogram,
 	}
 
 	ok = copyVolumeToDevice(pfVolume, dims.iVolWidth,
-	                        dims.iVolWidth, dims.iVolHeight,
+	                        dims,
 	                        D_volumeData, volumePitch);
 	if (!ok) {
 		cudaFree(D_volumeData);
@@ -899,8 +893,7 @@ bool astraCudaFanFP(const float* pfVolume, float* pfSinogram,
 	}
 
 	ok = copySinogramFromDevice(pfSinogram, dims.iProjDets,
-	                            dims.iProjDets,
-	                            dims.iProjAngles,
+	                            dims,
 	                            D_sinoData, sinoPitch);
 	if (!ok) {
 		cudaFree(D_volumeData);

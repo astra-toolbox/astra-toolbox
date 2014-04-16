@@ -264,20 +264,18 @@ bool ReconAlgo::copyDataToGPU(const float* pfSinogram, unsigned int iSinogramPit
 		return false;
 
 	bool ok = copySinogramToDevice(pfSinogram, iSinogramPitch,
-	                               dims.iProjDets,
-	                               dims.iProjAngles,
+	                               dims,
 	                               D_sinoData, sinoPitch);
 	if (!ok)
 		return false;
 
 	// rescale sinogram to adjust for pixel size
-	processVol<opMul>(D_sinoData, fSinogramScale,
+	processSino<opMul>(D_sinoData, fSinogramScale,
 	                       //1.0f/(fPixelSize*fPixelSize),
-	                       sinoPitch,
-	                       dims.iProjDets, dims.iProjAngles);
+	                       sinoPitch, dims);
 
 	ok = copyVolumeToDevice(pfReconstruction, iReconstructionPitch,
-	                        dims.iVolWidth, dims.iVolHeight,
+	                        dims,
 	                        D_volumeData, volumePitch);
 	if (!ok)
 		return false;
@@ -289,7 +287,7 @@ bool ReconAlgo::copyDataToGPU(const float* pfSinogram, unsigned int iSinogramPit
 			return false;
 
 		ok = copyVolumeToDevice(pfVolMask, iVolMaskPitch,
-		                        dims.iVolWidth, dims.iVolHeight,
+		                        dims,
 		                        D_maskData, maskPitch);
 		if (!ok)
 			return false;
@@ -300,7 +298,7 @@ bool ReconAlgo::copyDataToGPU(const float* pfSinogram, unsigned int iSinogramPit
 			return false;
 
 		ok = copySinogramToDevice(pfSinoMask, iSinoMaskPitch,
-		                          dims.iProjDets, dims.iProjAngles,
+		                          dims,
 		                          D_smaskData, smaskPitch);
 		if (!ok)
 			return false;
@@ -313,8 +311,7 @@ bool ReconAlgo::getReconstruction(float* pfReconstruction,
                                   unsigned int iReconstructionPitch) const
 {
 	bool ok = copyVolumeFromDevice(pfReconstruction, iReconstructionPitch,
-	                               dims.iVolWidth,
-	                               dims.iVolHeight,
+	                               dims,
 	                               D_volumeData, volumePitch);
 	if (!ok)
 		return false;
