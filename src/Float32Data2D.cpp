@@ -29,6 +29,7 @@ $Id$
 #include "astra/Float32Data2D.h"
 #include <iostream>
 #include <cstring>
+#include <sstream>
 
 #ifdef _MSC_VER
 #include <malloc.h>
@@ -515,6 +516,16 @@ CFloat32Data2D& CFloat32Data2D::operator-=(const float32& f)
 		m_pfData[i] -= f;
 	}
 	return (*this);
+}
+
+
+std::string CFloat32Data2D::description() const
+{
+	std::stringstream res;
+	res << m_iWidth << "x" << m_iHeight;
+	if (getType() == CFloat32Data2D::PROJECTION) res << " sinogram data \t";
+	if (getType() == CFloat32Data2D::VOLUME) res << " volume data \t";
+	return res.str();
 }
 
 

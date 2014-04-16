@@ -182,18 +182,6 @@ inline CFloat32Data3D::EDataType CFloat32Data3D::getType() const
 	return BASE;
 }
 
-//----------------------------------------------------------------------------------------
-// To String
-inline std::string CFloat32Data3D::description() const
-{
-	std::stringstream res;
-	res << m_iWidth << "x" << m_iHeight << "x" << m_iDepth;
-	if (getType() == CFloat32Data3D::PROJECTION) res << " sinogram data \t";
-	if (getType() == CFloat32Data3D::VOLUME) res << " volume data \t";
-	return res.str();
-}
-//----------------------------------------------------------------------------------------
-
 } // end namespace astra
 
 #endif // _INC_ASTRA_FLOAT32DATA2D

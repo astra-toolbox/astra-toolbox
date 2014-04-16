@@ -27,6 +27,7 @@ $Id$
 */
 
 #include "astra/Float32Data3D.h"
+#include <sstream>
 
 using namespace std;
 
@@ -51,5 +52,16 @@ bool CFloat32Data3D::_data3DSizesEqual(const CFloat32Data3D * _pA, const CFloat3
 {
 	return ((_pA->m_iWidth == _pB->m_iWidth) && (_pA->m_iHeight == _pB->m_iHeight) && (_pA->m_iDepth == _pB->m_iDepth));
 }
+
+std::string CFloat32Data3D::description() const
+{
+	std::stringstream res;
+	res << m_iWidth << "x" << m_iHeight << "x" << m_iDepth;
+	if (getType() == CFloat32Data3D::PROJECTION) res << " sinogram data \t";
+	if (getType() == CFloat32Data3D::VOLUME) res << " volume data \t";
+	return res.str();
+}
+//----------------------------------------------------------------------------------------
+
 
 } // end namespace astra
