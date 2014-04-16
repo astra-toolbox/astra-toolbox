@@ -619,277 +619,6 @@ void processSino(float* out, const float* in1, const float* in2, float param, un
 
 
 
-template<typename op>
-void processVol3D(cudaPitchedPtr& out, const SDimensions3D& dims)
-{
-	dim3 blockSize(16,16);
-	dim3 gridSize((dims.iVolX+15)/16, (dims.iVolY+511)/512);
-	float *pfOut = (float*)out.ptr;
-	unsigned int step = out.pitch/sizeof(float) * dims.iVolY;
-
-	for (unsigned int i = 0; i < dims.iVolZ; ++i) {
-		devtoD<op, 32><<<gridSize, blockSize>>>(pfOut, out.pitch/sizeof(float), dims.iVolX, dims.iVolY);
-		pfOut += step;
-	}
-
-	cudaTextForceKernelsCompletion();
-}
-
-template<typename op>
-void processVol3D(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims)
-{
-	dim3 blockSize(16,16);
-	dim3 gridSize((dims.iVolX+15)/16, (dims.iVolY+511)/512);
-	float *pfOut = (float*)out.ptr;
-	unsigned int step = out.pitch/sizeof(float) * dims.iVolY;
-
-	for (unsigned int i = 0; i < dims.iVolZ; ++i) {
-		devFtoD<op, 32><<<gridSize, blockSize>>>(pfOut, fParam, out.pitch/sizeof(float), dims.iVolX, dims.iVolY);
-		pfOut += step;
-	}
-
-	cudaTextForceKernelsCompletion();
-}
-
-template<typename op>
-void processVol3D(cudaPitchedPtr& out1, cudaPitchedPtr& out2, float fParam1, float fParam2, const SDimensions3D& dims)
-{
-	dim3 blockSize(16,16);
-	dim3 gridSize((dims.iVolX+15)/16, (dims.iVolY+511)/512);
-	float *pfOut1 = (float*)out1.ptr;
-	float *pfOut2 = (float*)out2.ptr;
-	unsigned int step = out1.pitch/sizeof(float) * dims.iVolY;
-
-	for (unsigned int i = 0; i < dims.iVolZ; ++i) {
-		devFFtoDD<op, 32><<<gridSize, blockSize>>>(pfOut1, pfOut2, fParam1, fParam2, out1.pitch/sizeof(float), dims.iVolX, dims.iVolY);
-		pfOut1 += step;
-		pfOut2 += step;
-	}
-
-	cudaTextForceKernelsCompletion();
-}
-
-
-template<typename op>
-void processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims)
-{
-	dim3 blockSize(16,16);
-	dim3 gridSize((dims.iVolX+15)/16, (dims.iVolY+511)/512);
-	float *pfOut = (float*)out.ptr;
-	float *pfIn = (float*)in.ptr;
-	unsigned int step = out.pitch/sizeof(float) * dims.iVolY;
-
-	for (unsigned int i = 0; i < dims.iVolZ; ++i) {
-		devDtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn, out.pitch/sizeof(float), dims.iVolX, dims.iVolY);
-		pfOut += step;
-		pfIn += step;
-	}
-
-	cudaTextForceKernelsCompletion();
-}
-
-template<typename op>
-void processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims)
-{
-	dim3 blockSize(16,16);
-	dim3 gridSize((dims.iVolX+15)/16, (dims.iVolY+511)/512);
-	float *pfOut = (float*)out.ptr;
-	float *pfIn = (float*)in.ptr;
-	unsigned int step = out.pitch/sizeof(float) * dims.iVolY;
-
-	for (unsigned int i = 0; i < dims.iVolZ; ++i) {
-		devDFtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn, fParam, out.pitch/sizeof(float), dims.iVolX, dims.iVolY);
-		pfOut += step;
-		pfIn += step;
-	}
-
-	cudaTextForceKernelsCompletion();
-}
-
-template<typename op>
-void processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims)
-{
-	dim3 blockSize(16,16);
-	dim3 gridSize((dims.iVolX+15)/16, (dims.iVolY+511)/512);
-	float *pfOut = (float*)out.ptr;
-	float *pfIn1 = (float*)in1.ptr;
-	float *pfIn2 = (float*)in2.ptr;
-	unsigned int step = out.pitch/sizeof(float) * dims.iVolY;
-
-	for (unsigned int i = 0; i < dims.iVolZ; ++i) {
-		devDDFtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn1, pfIn2, fParam, out.pitch/sizeof(float), dims.iVolX, dims.iVolY);
-		pfOut += step;
-		pfIn1 += step;
-		pfIn2 += step;
-	}
-
-	cudaTextForceKernelsCompletion();
-}
-
-template<typename op>
-void processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims)
-{
-	dim3 blockSize(16,16);
-	dim3 gridSize((dims.iVolX+15)/16, (dims.iVolY+511)/512);
-	float *pfOut = (float*)out.ptr;
-	float *pfIn1 = (float*)in1.ptr;
-	float *pfIn2 = (float*)in2.ptr;
-	unsigned int step = out.pitch/sizeof(float) * dims.iVolY;
-
-	for (unsigned int i = 0; i < dims.iVolZ; ++i) {
-		devDDtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn1, pfIn2, out.pitch/sizeof(float), dims.iVolX, dims.iVolY);
-		pfOut += step;
-		pfIn1 += step;
-		pfIn2 += step;
-	}
-
-	cudaTextForceKernelsCompletion();
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-template<typename op>
-void processSino3D(cudaPitchedPtr& out, const SDimensions3D& dims)
-{
-	dim3 blockSize(16,16);
-	dim3 gridSize((dims.iProjU+15)/16, (dims.iProjAngles+511)/512);
-	float *pfOut = (float*)out.ptr;
-	unsigned int step = out.pitch/sizeof(float) * dims.iProjAngles;
-
-	for (unsigned int i = 0; i < dims.iProjV; ++i) {
-		devtoD<op, 32><<<gridSize, blockSize>>>(pfOut, out.pitch/sizeof(float), dims.iProjU, dims.iProjAngles);
-		pfOut += step;
-	}
-
-	cudaTextForceKernelsCompletion();
-}
-
-template<typename op>
-void processSino3D(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims)
-{
-	dim3 blockSize(16,16);
-	dim3 gridSize((dims.iProjU+15)/16, (dims.iProjAngles+511)/512);
-	float *pfOut = (float*)out.ptr;
-	unsigned int step = out.pitch/sizeof(float) * dims.iProjAngles;
-
-	for (unsigned int i = 0; i < dims.iProjV; ++i) {
-		devFtoD<op, 32><<<gridSize, blockSize>>>(pfOut, fParam, out.pitch/sizeof(float), dims.iProjU, dims.iProjAngles);
-		pfOut += step;
-	}
-
-	cudaTextForceKernelsCompletion();
-}
-
-template<typename op>
-void processSino3D(cudaPitchedPtr& out1, cudaPitchedPtr& out2, float fParam1, float fParam2, const SDimensions3D& dims)
-{
-	dim3 blockSize(16,16);
-	dim3 gridSize((dims.iProjU+15)/16, (dims.iProjAngles+511)/512);
-	float *pfOut1 = (float*)out1.ptr;
-	float *pfOut2 = (float*)out2.ptr;
-	unsigned int step = out1.pitch/sizeof(float) * dims.iProjAngles;
-
-	for (unsigned int i = 0; i < dims.iProjV; ++i) {
-		devFFtoDD<op, 32><<<gridSize, blockSize>>>(pfOut1, pfOut2, fParam1, fParam2, out1.pitch/sizeof(float), dims.iProjU, dims.iProjAngles);
-		pfOut1 += step;
-		pfOut2 += step;
-	}
-
-	cudaTextForceKernelsCompletion();
-}
-
-
-template<typename op>
-void processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims)
-{
-	dim3 blockSize(16,16);
-	dim3 gridSize((dims.iProjU+15)/16, (dims.iProjAngles+511)/512);
-	float *pfOut = (float*)out.ptr;
-	float *pfIn = (float*)in.ptr;
-	unsigned int step = out.pitch/sizeof(float) * dims.iProjAngles;
-
-	for (unsigned int i = 0; i < dims.iProjV; ++i) {
-		devDtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn, out.pitch/sizeof(float), dims.iProjU, dims.iProjAngles);
-		pfOut += step;
-		pfIn += step;
-	}
-
-	cudaTextForceKernelsCompletion();
-}
-
-template<typename op>
-void processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims)
-{
-	dim3 blockSize(16,16);
-	dim3 gridSize((dims.iProjU+15)/16, (dims.iProjAngles+511)/512);
-	float *pfOut = (float*)out.ptr;
-	float *pfIn = (float*)in.ptr;
-	unsigned int step = out.pitch/sizeof(float) * dims.iProjAngles;
-
-	for (unsigned int i = 0; i < dims.iProjV; ++i) {
-		devDFtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn, fParam, out.pitch/sizeof(float), dims.iProjU, dims.iProjAngles);
-		pfOut += step;
-		pfIn += step;
-	}
-
-	cudaTextForceKernelsCompletion();
-}
-
-template<typename op>
-void processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims)
-{
-	dim3 blockSize(16,16);
-	dim3 gridSize((dims.iProjU+15)/16, (dims.iProjAngles+511)/512);
-	float *pfOut = (float*)out.ptr;
-	float *pfIn1 = (float*)in1.ptr;
-	float *pfIn2 = (float*)in2.ptr;
-	unsigned int step = out.pitch/sizeof(float) * dims.iProjAngles;
-
-	for (unsigned int i = 0; i < dims.iProjV; ++i) {
-		devDDFtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn1, pfIn2, fParam, out.pitch/sizeof(float), dims.iProjU, dims.iProjAngles);
-		pfOut += step;
-		pfIn1 += step;
-		pfIn2 += step;
-	}
-
-	cudaTextForceKernelsCompletion();
-}
-
-template<typename op>
-void processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims)
-{
-	dim3 blockSize(16,16);
-	dim3 gridSize((dims.iProjU+15)/16, (dims.iProjAngles+511)/512);
-	float *pfOut = (float*)out.ptr;
-	float *pfIn1 = (float*)in1.ptr;
-	float *pfIn2 = (float*)in2.ptr;
-	unsigned int step = out.pitch/sizeof(float) * dims.iProjAngles;
-
-	for (unsigned int i = 0; i < dims.iProjV; ++i) {
-		devDDtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn1, pfIn2, out.pitch/sizeof(float), dims.iProjU, dims.iProjAngles);
-		pfOut += step;
-		pfIn1 += step;
-		pfIn2 += step;
-	}
-
-	cudaTextForceKernelsCompletion();
-}
-
-
-
-
-
-
 
 
 
@@ -905,52 +634,38 @@ void processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPit
 #define INST_DFtoD(name) \
   template void processVolCopy<name>(float* out, const float* in, float param, const SDimensions& dims); \
   template void processVol<name>(float* out, const float* in, float param, unsigned int pitch, const SDimensions& dims); \
-  template void processSino<name>(float* out, const float* in, float param, unsigned int pitch, const SDimensions& dims); \
-  template void processVol3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims); \
-  template void processSino3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims);
+  template void processSino<name>(float* out, const float* in, float param, unsigned int pitch, const SDimensions& dims);
 
 #define INST_DtoD(name) \
   template void processVolCopy<name>(float* out, const float* in, const SDimensions& dims); \
   template void processVol<name>(float* out, const float* in, unsigned int pitch, const SDimensions& dims); \
-  template void processSino<name>(float* out, const float* in, unsigned int pitch, const SDimensions& dims); \
-  template void processVol3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims); \
-  template void processSino3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims);
+  template void processSino<name>(float* out, const float* in, unsigned int pitch, const SDimensions& dims);
 
 #define INST_DDtoD(name) \
   template void processVolCopy<name>(float* out, const float* in1, const float* in2, const SDimensions& dims); \
   template void processVol<name>(float* out, const float* in1, const float* in2, unsigned int pitch, const SDimensions& dims); \
-  template void processSino<name>(float* out, const float* in1, const float* in2, unsigned int pitch, const SDimensions& dims); \
-  template void processVol3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims); \
-  template void processSino3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims);
+  template void processSino<name>(float* out, const float* in1, const float* in2, unsigned int pitch, const SDimensions& dims);
 
 #define INST_DDFtoD(name) \
   template void processVolCopy<name>(float* out, const float* in1, const float* in2, float fParam, const SDimensions& dims); \
   template void processVol<name>(float* out, const float* in1, const float* in2, float fParam, unsigned int pitch, const SDimensions& dims); \
-  template void processSino<name>(float* out, const float* in1, const float* in2, float fParam, unsigned int pitch, const SDimensions& dims); \
-  template void processVol3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims); \
-  template void processSino3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims);
+  template void processSino<name>(float* out, const float* in1, const float* in2, float fParam, unsigned int pitch, const SDimensions& dims);
 
 
 #define INST_toD(name) \
   template void processVolCopy<name>(float* out, const SDimensions& dims); \
   template void processVol<name>(float* out, unsigned int pitch, const SDimensions& dims); \
-  template void processSino<name>(float* out, unsigned int pitch, const SDimensions& dims); \
-  template void processVol3D<name>(cudaPitchedPtr& out, const SDimensions3D& dims); \
-  template void processSino3D<name>(cudaPitchedPtr& out, const SDimensions3D& dims);
+  template void processSino<name>(float* out, unsigned int pitch, const SDimensions& dims);
 
 #define INST_FtoD(name) \
   template void processVolCopy<name>(float* out, float param, const SDimensions& dims); \
   template void processVol<name>(float* out, float param, unsigned int pitch, const SDimensions& dims); \
-  template void processSino<name>(float* out, float param, unsigned int pitch, const SDimensions& dims); \
-  template void processVol3D<name>(cudaPitchedPtr& out, float param, const SDimensions3D& dims); \
-  template void processSino3D<name>(cudaPitchedPtr& out, float param, const SDimensions3D& dims);
+  template void processSino<name>(float* out, float param, unsigned int pitch, const SDimensions& dims);
 
 #define INST_FFtoDD(name) \
   template void processVolCopy<name>(float* out1, float* out2, float fParam1, float fParam2, const SDimensions& dims); \
   template void processVol<name>(float* out1, float* out2, float fParam1, float fParam2, unsigned int pitch, const SDimensions& dims); \
-  template void processSino<name>(float* out1, float* out2, float fParam1, float fParam2, unsigned int pitch, const SDimensions& dims); \
-  template void processVol3D<name>(cudaPitchedPtr& out1, cudaPitchedPtr& out2, float fParam1, float fParam2, const SDimensions3D& dims); \
-  template void processSino3D<name>(cudaPitchedPtr& out1, cudaPitchedPtr& out2, float fParam1, float fParam2, const SDimensions3D& dims);
+  template void processSino<name>(float* out1, float* out2, float fParam1, float fParam2, unsigned int pitch, const SDimensions& dims);
 
 
 

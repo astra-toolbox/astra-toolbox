@@ -79,23 +79,6 @@ template<typename op> void processSino(float* out, const float* in, float fParam
 template<typename op> void processSino(float* out, const float* in1, const float* in2, float fParam, unsigned int pitch, const SDimensions& dims);
 template<typename op> void processSino(float* out, const float* in1, const float* in2, unsigned int pitch, const SDimensions& dims);
 
-template<typename op> void processVol3D(cudaPitchedPtr& out, const SDimensions3D& dims);
-template<typename op> void processVol3D(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims);
-template<typename op> void processVol3D(cudaPitchedPtr& out1, cudaPitchedPtr& out2, float fParam1, float fParam2, const SDimensions3D& dims);
-template<typename op> void processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims);
-template<typename op> void processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims);
-template<typename op> void processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims);
-template<typename op> void processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims);
-
-template<typename op> void processSino3D(cudaPitchedPtr& out, const SDimensions3D& dims);
-template<typename op> void processSino3D(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims);
-template<typename op> void processSino3D(cudaPitchedPtr& out1, cudaPitchedPtr& out2, float fParam1, float fParam2, const SDimensions3D& dims);
-template<typename op> void processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims);
-template<typename op> void processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims);
-template<typename op> void processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims);
-template<typename op> void processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims);
-
-
 
 }
 

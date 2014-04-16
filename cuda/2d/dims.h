@@ -53,15 +53,6 @@ struct SDimensions {
 	unsigned int iRaysPerPixelDim;
 };
 
-struct SDimensions3D {
-        unsigned int iVolX;
-        unsigned int iVolY;
-        unsigned int iVolZ;
-        unsigned int iProjAngles;
-        unsigned int iProjU; // number of detectors in the U direction
-        unsigned int iProjV; // number of detectors in the V direction
-};
-
 }
 
 #endif
