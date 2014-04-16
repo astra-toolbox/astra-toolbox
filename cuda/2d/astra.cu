@@ -612,7 +612,7 @@ float BPalgo::computeDiffNorm()
 
 	allocateProjectionData(D_projData, projPitch, dims);
 
-	cudaMemcpy2D(D_projData, sizeof(float)*projPitch, D_sinoData, sizeof(float)*sinoPitch, sizeof(float)*dims.iProjDets, dims.iProjAngles, cudaMemcpyDeviceToDevice);
+	duplicateProjectionData(D_projData, D_sinoData, sinoPitch, dims);
 	callFP(D_volumeData, volumePitch, D_projData, projPitch, -1.0f);
 
 	float s = dotProduct2D(D_projData, projPitch, dims.iProjDets, dims.iProjAngles);

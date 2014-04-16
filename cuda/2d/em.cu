@@ -150,11 +150,11 @@ bool EM::iterate(unsigned int iterations)
 float EM::computeDiffNorm()
 {
 	// copy sinogram to projection data
-	cudaMemcpy2D(D_projData, sizeof(float)*projPitch, D_sinoData, sizeof(float)*sinoPitch, sizeof(float)*(dims.iProjDets), dims.iProjAngles, cudaMemcpyDeviceToDevice);
+	duplicateProjectionData(D_projData, D_sinoData, sinoPitch, dims);
 
 	// do FP, subtracting projection from sinogram
 	if (useVolumeMask) {
-			cudaMemcpy2D(D_tmpData, sizeof(float)*tmpPitch, D_volumeData, sizeof(float)*volumePitch, sizeof(float)*(dims.iVolWidth), dims.iVolHeight, cudaMemcpyDeviceToDevice);
+			duplicateVolumeData(D_tmpData, D_volumeData, volumePitch, dims);
 			processVol<opMul>(D_tmpData, D_maskData, tmpPitch, dims);
 			callFP(D_tmpData, tmpPitch, D_projData, projPitch, -1.0f);
 	} else {

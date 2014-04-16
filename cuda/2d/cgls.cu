@@ -120,12 +120,12 @@ bool CGLS::iterate(unsigned int iterations)
 	if (!sliceInitialized) {
 
 		// copy sinogram
-		cudaMemcpy2D(D_r, sizeof(float)*rPitch, D_sinoData, sizeof(float)*sinoPitch, sizeof(float)*(dims.iProjDets), dims.iProjAngles, cudaMemcpyDeviceToDevice);
+		duplicateProjectionData(D_r, D_sinoData, sinoPitch, dims);
 
 		// r = sino - A*x
 		if (useVolumeMask) {
 			// Use z as temporary storage here since it is unused
-			cudaMemcpy2D(D_z, sizeof(float)*zPitch, D_volumeData, sizeof(float)*volumePitch, sizeof(float)*(dims.iVolWidth), dims.iVolHeight, cudaMemcpyDeviceToDevice);
+			duplicateVolumeData(D_z, D_volumeData, volumePitch, dims);
 			processVol<opMul>(D_z, D_maskData, zPitch, dims);
 			callFP(D_z, zPitch, D_r, rPitch, -1.0f);
 		} else {
@@ -189,11 +189,11 @@ float CGLS::computeDiffNorm()
 	// used outside of iterations.
 
 	// copy sinogram to w
-	cudaMemcpy2D(D_w, sizeof(float)*wPitch, D_sinoData, sizeof(float)*sinoPitch, sizeof(float)*(dims.iProjDets), dims.iProjAngles, cudaMemcpyDeviceToDevice);
+	duplicateProjectionData(D_w, D_sinoData, sinoPitch, dims);
 
 	// do FP, subtracting projection from sinogram
 	if (useVolumeMask) {
-			cudaMemcpy2D(D_z, sizeof(float)*zPitch, D_volumeData, sizeof(float)*volumePitch, sizeof(float)*(dims.iVolWidth), dims.iVolHeight, cudaMemcpyDeviceToDevice);
+			duplicateVolumeData(D_z, D_volumeData, volumePitch, dims);
 			processVol<opMul>(D_z, D_maskData, zPitch, dims);
 			callFP(D_z, zPitch, D_w, wPitch, -1.0f);
 	} else {

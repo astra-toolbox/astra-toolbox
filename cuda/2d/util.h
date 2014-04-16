@@ -80,6 +80,10 @@ bool allocateProjectionData(float*& D_ptr, unsigned int& pitch, const SDimension
 void zeroVolumeData(float* D_ptr, unsigned int pitch, const SDimensions& dims);
 void zeroProjectionData(float* D_ptr, unsigned int pitch, const SDimensions& dims);
 
+void duplicateVolumeData(float* D_dst, float* D_src, unsigned int pitch, const SDimensions& dims);
+void duplicateProjectionData(float* D_dst, float* D_src, unsigned int pitch, const SDimensions& dims);
+
+
 
 bool cudaTextForceKernelsCompletion();
 void reportCudaError(cudaError_t err);

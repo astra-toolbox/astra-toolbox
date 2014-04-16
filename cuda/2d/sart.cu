@@ -180,11 +180,11 @@ bool SART::iterate(unsigned int iterations)
 		}
 
 		// copy one line of sinogram to projection data
-		cudaMemcpy2D(D_projData, sizeof(float)*projPitch, D_sinoData + angle*sinoPitch, sizeof(float)*sinoPitch, sizeof(float)*(dims.iProjDets), 1, cudaMemcpyDeviceToDevice);
+		duplicateProjectionData(D_projData, D_sinoData, sinoPitch, dims);
 
 		// do FP, subtracting projection from sinogram
 		if (useVolumeMask) {
-				cudaMemcpy2D(D_tmpData, sizeof(float)*tmpPitch, D_volumeData, sizeof(float)*volumePitch, sizeof(float)*(dims.iVolWidth), dims.iVolHeight, cudaMemcpyDeviceToDevice);
+				duplicateVolumeData(D_tmpData, D_volumeData, volumePitch, dims);
 				processVol<opMul>(D_tmpData, D_maskData, tmpPitch, dims);
 				callFP_SART(D_tmpData, tmpPitch, D_projData, projPitch, angle, -1.0f);
 		} else {
@@ -223,11 +223,11 @@ float SART::computeDiffNorm()
 	zeroProjectionData(D_p, pPitch, dims);
 
 	// copy sinogram to D_p
-	cudaMemcpy2D(D_p, sizeof(float)*pPitch, D_sinoData, sizeof(float)*sinoPitch, sizeof(float)*(dims.iProjDets), dims.iProjAngles, cudaMemcpyDeviceToDevice);
+	duplicateProjectionData(D_p, D_sinoData, sinoPitch, dims);
 
 	// do FP, subtracting projection from sinogram
 	if (useVolumeMask) {
-			cudaMemcpy2D(D_tmpData, sizeof(float)*tmpPitch, D_volumeData, sizeof(float)*volumePitch, sizeof(float)*(dims.iVolWidth), dims.iVolHeight, cudaMemcpyDeviceToDevice);
+			duplicateVolumeData(D_tmpData, D_volumeData, volumePitch, dims);
 			processVol<opMul>(D_tmpData, D_maskData, tmpPitch, dims);
 			callFP(D_tmpData, tmpPitch, D_projData, projPitch, -1.0f);
 	} else {

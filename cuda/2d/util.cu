@@ -129,6 +129,15 @@ void zeroProjectionData(float* D_ptr, unsigned int pitch, const SDimensions& dim
 	zeroVolume(D_ptr, pitch, dims.iProjDets, dims.iProjAngles);
 }
 
+void duplicateVolumeData(float* D_dst, float* D_src, unsigned int pitch, const SDimensions& dims)
+{
+	cudaMemcpy2D(D_dst, sizeof(float)*pitch, D_src, sizeof(float)*pitch, sizeof(float)*dims.iVolWidth, dims.iVolHeight, cudaMemcpyDeviceToDevice);
+}
+
+void duplicateProjectionData(float* D_dst, float* D_src, unsigned int pitch, const SDimensions& dims)
+{
+	cudaMemcpy2D(D_dst, sizeof(float)*pitch, D_src, sizeof(float)*pitch, sizeof(float)*dims.iProjDets, dims.iProjAngles, cudaMemcpyDeviceToDevice);
+}
 
 template <unsigned int blockSize>
 __global__ void reduce1D(float *g_idata, float *g_odata, unsigned int n)
@@ -206,7 +215,6 @@ __global__ void reduce2D(float *g_idata, float *g_odata,
 float dotProduct2D(float* D_data, unsigned int pitch,
                    unsigned int width, unsigned int height)
 {
-#warning FIX MEMORY ORDER
 	unsigned int bx = (width + 15) / 16;
 	unsigned int by = (height + 127) / 128;
 	unsigned int shared_mem2 = sizeof(float) * 16 * 16;
