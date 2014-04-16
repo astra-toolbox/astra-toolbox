@@ -33,6 +33,7 @@ $Id$
 #include "par_fp.h"
 #include "fan_fp.h"
 #include "par_bp.h"
+#include "fan_bp.h"
 #include "arith.h"
 #include "astra.h"
 
@@ -42,6 +43,9 @@ $Id$
 #include <cuda.h>
 
 #include "../../include/astra/Logger.h"
+
+// For fan beam FBP weighting
+#include "../3d/fdk.h"
 
 using namespace astraCUDA;
 using namespace std;
@@ -61,7 +65,13 @@ public:
 	float* angles;
 	float* TOffsets;
 
+	float fOriginSourceDistance;
+	float fOriginDetectorDistance;
+
 	float fPixelSize;
+
+	bool bFanBeam;
+	bool bShortScan;
 
 	bool initialized;
 	bool setStartReconstruction;
@@ -152,8 +162,32 @@ bool AstraFBP::setProjectionGeometry(unsigned int iProjAngles,
 	pData->angles = new float[iProjAngles];
 	memcpy(pData->angles, pfAngles, iProjAngles * sizeof(pfAngles[0]));
 
+	pData->bFanBeam = false;
+
 	return true;
 }
+
+bool AstraFBP::setFanGeometry(unsigned int iProjAngles,
+                              unsigned int iProjDets,
+                              const float* pfAngles,
+                              float fOriginSourceDistance,
+                              float fOriginDetectorDistance,
+                              float fDetSize,
+                              bool bShortScan)
+{
+	// Slightly abusing setProjectionGeometry for this...
+	if (!setProjectionGeometry(iProjAngles, iProjDets, pfAngles, fDetSize))
+		return false;
+
+	pData->fOriginSourceDistance = fOriginSourceDistance;
+	pData->fOriginDetectorDistance = fOriginDetectorDistance;
+
+	pData->bFanBeam = true;
+	pData->bShortScan = bShortScan;
+
+	return true;
+}
+
 
 bool AstraFBP::setPixelSuperSampling(unsigned int iPixelSuperSampling)
 {
@@ -274,6 +308,34 @@ bool AstraFBP::run()
 
 	bool ok = false;
 
+	if (pData->bFanBeam) {
+		// Call FDK_PreWeight to handle fan beam geometry. We treat
+		// this as a cone beam setup of a single slice:
+
+		// TODO: TOffsets...
+
+		// We create a fake cudaPitchedPtr
+		cudaPitchedPtr tmp;
+		tmp.ptr = pData->D_sinoData;
+		tmp.pitch = pData->sinoPitch * sizeof(float);
+		tmp.xsize = pData->dims.iProjDets;
+		tmp.ysize = pData->dims.iProjAngles;
+		// and a fake Dimensions3D
+		astraCUDA3d::SDimensions3D dims3d;
+		dims3d.iVolX = pData->dims.iVolWidth;
+		dims3d.iVolY = pData->dims.iVolHeight;
+		dims3d.iVolZ = 1;
+		dims3d.iProjAngles = pData->dims.iProjAngles;
+		dims3d.iProjU = pData->dims.iProjDets;
+		dims3d.iProjV = 1;
+		dims3d.iRaysPerDetDim = dims3d.iRaysPerVoxelDim = 1;
+
+		astraCUDA3d::FDK_PreWeight(tmp, pData->fOriginSourceDistance,
+		              pData->fOriginDetectorDistance, 0.0f, 0.0f,
+		              pData->dims.fDetScale, 1.0f, // TODO: Are these correct?
+		              pData->bShortScan, dims3d, pData->angles);
+	}
+
 	if (pData->m_pDevFilter) {
 
 		int iFFTRealDetCount = calcNextPowerOfTwo(2 * pData->dims.iProjDets);
@@ -293,7 +355,34 @@ bool AstraFBP::run()
 
 	}
 
-	ok = BP(pData->D_volumeData, pData->volumePitch, pData->D_sinoData, pData->sinoPitch, pData->dims, pData->angles, pData->TOffsets);
+	if (pData->bFanBeam) {
+		// TODO: TOffsets?
+		// TODO: Remove this code duplication with CudaReconstructionAlgorithm
+		SFanProjection* projs;
+		projs = new SFanProjection[pData->dims.iProjAngles];
+
+		float fSrcX0 = 0.0f;
+		float fSrcY0 = -pData->fOriginSourceDistance / pData->fPixelSize;
+		float fDetUX0 = pData->dims.fDetScale;
+		float fDetUY0 = 0.0f;
+		float fDetSX0 = pData->dims.iProjDets * fDetUX0 / -2.0f;
+		float fDetSY0 = pData->fOriginDetectorDistance / pData->fPixelSize;
+
+#define ROTATE0(name,i,alpha) do { projs[i].f##name##X = f##name##X0 * cos(alpha) - f##name##Y0 * sin(alpha); projs[i].f##name##Y = f##name##X0 * sin(alpha) + f##name##Y0 * cos(alpha); } while(0)
+		for (unsigned int i = 0; i < pData->dims.iProjAngles; ++i) {
+			ROTATE0(Src, i, pData->angles[i]);
+			ROTATE0(DetS, i, pData->angles[i]);
+			ROTATE0(DetU, i, pData->angles[i]);
+		}
+
+#undef ROTATE0
+		ok = FanBP_FBPWeighted(pData->D_volumeData, pData->volumePitch, pData->D_sinoData, pData->sinoPitch, pData->dims, projs);
+
+		delete[] projs;
+
+	} else {
+		ok = BP(pData->D_volumeData, pData->volumePitch, pData->D_sinoData, pData->sinoPitch, pData->dims, pData->angles, pData->TOffsets);
+	}
 	if(!ok)
 	{
 		return false;

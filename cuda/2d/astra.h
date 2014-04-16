@@ -68,6 +68,19 @@ public:
 	                           unsigned int iProjDets,
 	                           const float *pfAngles,
 	                           float fDetSize = 1.0f);
+	// Set the projection angles and number of detector pixels per angle.
+	// pfAngles must be a float array of length iProjAngles.
+	// fDetSize indicates the size of a detector pixel compared to a
+	// volume pixel edge.
+	//
+	// pfAngles will only be read from during this call.
+	bool setFanGeometry(unsigned int iProjAngles,
+	                    unsigned int iProjDets,
+	                    const float *pfAngles,
+	                    float fOriginSourceDistance,
+	                    float fOriginDetectorDistance,
+	                    float fDetSize = 1.0f,
+	                    bool bShortScan = false);
 
 	// Set linear supersampling factor for the BP.
 	// (The number of rays is the square of this)

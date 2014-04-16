@@ -298,8 +298,7 @@ __global__ void devFDK_ParkerWeight(void* D_projData, unsigned int projPitch, un
 
 
 // Perform the FDK pre-weighting and filtering
-bool FDK_Filter(cudaPitchedPtr D_projData,
-                cufftComplex * D_filter,
+bool FDK_PreWeight(cudaPitchedPtr D_projData,
                 float fSrcOrigin, float fDetOrigin,
                 float fSrcZ, float fDetZ,
                 float fDetUSize, float fDetVSize, bool bShortScan,
@@ -335,13 +334,22 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 	}
 
 	cudaTextForceKernelsCompletion();
+	return true;
+}
 
+bool FDK_Filter(cudaPitchedPtr D_projData,
+                cufftComplex * D_filter,
+                float fSrcOrigin, float fDetOrigin,
+                float fSrcZ, float fDetZ,
+                float fDetUSize, float fDetVSize, bool bShortScan,
+                const SDimensions3D& dims, const float* angles)
+{
 
 	// The filtering is a regular ramp filter per detector line.
 
 	int iPaddedDetCount = calcNextPowerOfTwo(2 * dims.iProjU);
 	int iHalfFFTSize = calcFFTFourSize(iPaddedDetCount);
-
+	int projPitch = D_projData.pitch/sizeof(float);
 	
 
 	// We process one sinogram at a time.
@@ -390,10 +398,17 @@ bool FDK(cudaPitchedPtr D_volumeData,
 	int iPaddedDetCount = calcNextPowerOfTwo(2 * dims.iProjU);
 	int iHalfFFTSize = calcFFTFourSize(iPaddedDetCount);
 
+	ok = FDK_PreWeight(D_projData, fSrcOrigin, fDetOrigin,
+	                fSrcZ, fDetZ, fDetUSize, fDetVSize,
+	                bShortScan, dims, angles);
+	if (!ok)
+		return false;
+
 	cufftComplex *pHostFilter = new cufftComplex[dims.iProjAngles * iHalfFFTSize];
 	memset(pHostFilter, 0, sizeof(cufftComplex) * dims.iProjAngles * iHalfFFTSize);
 
 	genFilter(FILTER_RAMLAK, 1.0f, dims.iProjAngles, pHostFilter, iPaddedDetCount, iHalfFFTSize);
+
 
 	allocateComplexOnDevice(dims.iProjAngles, iHalfFFTSize, &D_filter);
 	uploadComplexArrayToDevice(dims.iProjAngles, iHalfFFTSize, pHostFilter, D_filter);
@@ -402,6 +417,8 @@ bool FDK(cudaPitchedPtr D_volumeData,
 
 
 	// Perform filtering
+
+
 
 	ok = FDK_Filter(D_projData, D_filter, fSrcOrigin, fDetOrigin,
 	                fSrcZ, fDetZ, fDetUSize, fDetVSize,

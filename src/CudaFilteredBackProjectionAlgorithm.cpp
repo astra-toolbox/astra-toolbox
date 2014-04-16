@@ -27,6 +27,7 @@ $Id$
 */
 
 #include <astra/CudaFilteredBackProjectionAlgorithm.h>
+#include <astra/FanFlatProjectionGeometry2D.h>
 #include <boost/lexical_cast.hpp>
 #include <cstring>
 
@@ -226,7 +227,8 @@ void CCudaFilteredBackProjectionAlgorithm::run(int _iNrIterations /* = 0 */)
 	if (!m_bAstraFBPInit) {
 
 		const CVolumeGeometry2D& volgeom = *m_pReconstruction->getGeometry();
-		const CParallelProjectionGeometry2D& projgeom = *dynamic_cast<CParallelProjectionGeometry2D*>(m_pSinogram->getGeometry());
+		const CParallelProjectionGeometry2D* parprojgeom = dynamic_cast<CParallelProjectionGeometry2D*>(m_pSinogram->getGeometry());
+		const CFanFlatProjectionGeometry2D* fanprojgeom = dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pSinogram->getGeometry());
 
 		bool ok = true;
 
@@ -235,10 +237,26 @@ void CCudaFilteredBackProjectionAlgorithm::run(int _iNrIterations /* = 0 */)
 		                                         volgeom.getGridRowCount(),
 		                                         volgeom.getPixelLengthX());
 		// TODO: off-center geometry
-		ok &= m_pFBP->setProjectionGeometry(projgeom.getProjectionAngleCount(),
-		                                     projgeom.getDetectorCount(),
-		                                     projgeom.getProjectionAngles(),
-		                                     projgeom.getDetectorWidth());
+		int iDetectorCount;
+		if (parprojgeom) {
+			ok &= m_pFBP->setProjectionGeometry(parprojgeom->getProjectionAngleCount(),
+			                                     parprojgeom->getDetectorCount(),
+			                                     parprojgeom->getProjectionAngles(),
+			                                     parprojgeom->getDetectorWidth());
+			iDetectorCount = parprojgeom->getDetectorCount();
+		} else if (fanprojgeom) {
+			ok &= m_pFBP->setFanGeometry(fanprojgeom->getProjectionAngleCount(),
+			                                     fanprojgeom->getDetectorCount(),
+			                                     fanprojgeom->getProjectionAngles(),
+			                                     fanprojgeom->getOriginSourceDistance(),
+			                                     fanprojgeom->getOriginDetectorDistance(),
+			                                     fanprojgeom->getDetectorWidth(),
+			                                     false); // TODO: Support short-scan
+
+			iDetectorCount = fanprojgeom->getDetectorCount();
+		} else {
+			assert(false);
+		}
 
 		ok &= m_pFBP->setPixelSuperSampling(m_iPixelSuperSampling);
 
@@ -252,7 +270,7 @@ void CCudaFilteredBackProjectionAlgorithm::run(int _iNrIterations /* = 0 */)
 		ok &= m_pFBP->init(m_iGPUIndex);
 		ASTRA_ASSERT(ok);
 
-		ok &= m_pFBP->setSinogram(m_pSinogram->getDataConst(), projgeom.getDetectorCount());
+		ok &= m_pFBP->setSinogram(m_pSinogram->getDataConst(), iDetectorCount);
 		ASTRA_ASSERT(ok);
 
 		ok &= m_pFBP->setFilter(m_eFilter, m_pfFilter, m_iFilterWidth, m_fFilterD, m_fFilterParameter);
