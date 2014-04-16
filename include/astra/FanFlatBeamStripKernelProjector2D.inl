@@ -234,7 +234,7 @@ void CFanFlatBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 		} else {
 
 			// loop detectors
-			for (iDetector = 0; iDetector < m_pProjectionGeometry->getDetectorCount(); ++iDetector) {
+			for (iDetector = _iDetFrom; iDetector < _iDetTo; ++iDetector) {
 
 				iRayIndex = iAngle * m_pProjectionGeometry->getDetectorCount() + iDetector;
 
