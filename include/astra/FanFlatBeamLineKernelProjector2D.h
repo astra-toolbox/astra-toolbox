@@ -178,6 +178,13 @@ public:
 
 	float32 angleBetweenVectors(float32 _fAX, float32 _fAY, float32 _fBX, float32 _fBY);
 
+protected:
+	/** Internal policy-based projection of a range of angles and range.
+ 	 * (_i*From is inclusive, _i*To exclusive) */
+	template <typename Policy>
+	void projectBlock_internal(int _iProjFrom, int _iProjTo,
+	                           int _iDetFrom, int _iDetTo, Policy& _policy);
+
 };
 
 //----------------------------------------------------------------------------------------
