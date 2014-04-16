@@ -161,6 +161,14 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 	m_iPixelSuperSampling = (int)_cfg.self->getOptionNumerical("PixelSuperSampling", 1);
 	CC.markOptionParsed("PixelSuperSampling");
 
+	// Fan beam short scan mode
+	if (m_pSinogram && dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pSinogram->getGeometry())) {
+		m_bShortScan = (int)_cfg.self->getOptionBool("ShortScan", false);
+		CC.markOptionParsed("ShortScan");
+	}
+
+	
+
 
 	m_pFBP = new AstraFBP;
 	m_bAstraFBPInit = false;
@@ -185,6 +193,7 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(CFloat32ProjectionData2D *
 
 	m_eFilter = _eFilter;
 	m_iFilterWidth = _iFilterWidth;
+	m_bShortScan = false;
 
 	// success
 	m_bIsInitialized = true;
@@ -251,7 +260,7 @@ void CCudaFilteredBackProjectionAlgorithm::run(int _iNrIterations /* = 0 */)
 			                                     fanprojgeom->getOriginSourceDistance(),
 			                                     fanprojgeom->getOriginDetectorDistance(),
 			                                     fanprojgeom->getDetectorWidth(),
-			                                     false); // TODO: Support short-scan
+			                                     m_bShortScan);
 
 			iDetectorCount = fanprojgeom->getDetectorCount();
 		} else {

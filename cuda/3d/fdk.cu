@@ -267,7 +267,11 @@ __global__ void devFDK_ParkerWeight(void* D_projData, unsigned int projPitch, un
 	//const float fGamma = atanf(fU / fCentralRayLength);
 	//const float fBeta = gC_angle[angle];
 	const float fGamma = atanf(fU / fCentralRayLength);
-	const float fBeta = -gC_angle[angle];
+	float fBeta = -gC_angle[angle];
+	if (fBeta < 0.0f)
+		fBeta += 2*M_PI;
+	if (fBeta >= 2*M_PI)
+		fBeta -= 2*M_PI;
 
 	// compute the weight depending on the location in the central fan's radon
 	// space

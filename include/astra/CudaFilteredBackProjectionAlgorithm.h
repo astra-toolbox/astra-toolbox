@@ -53,6 +53,7 @@ private:
 	int m_iFilterWidth;	// number of elements per projection direction in filter
 	float m_fFilterParameter;  // some filters allow for parameterization (value < 0.0f -> no parameter)
 	float m_fFilterD;	// frequency cut-off
+	bool m_bShortScan; // short-scan mode for fan beam
 
 	static E_FBPFILTER _convertStringToFilter(const char * _filterType);
 
