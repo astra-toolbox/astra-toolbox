@@ -223,7 +223,6 @@ float SART::computeDiffNorm()
 	unsigned int pPitch;
 	float *D_p;
 	allocateProjectionData(D_p, pPitch, dims);
-	zeroProjectionData(D_p, pPitch, dims);
 
 	// copy sinogram to D_p
 	duplicateProjectionData(D_p, D_sinoData, sinoPitch, dims);
@@ -232,9 +231,9 @@ float SART::computeDiffNorm()
 	if (useVolumeMask) {
 			duplicateVolumeData(D_tmpData, D_volumeData, volumePitch, dims);
 			processVol<opMul>(D_tmpData, D_maskData, tmpPitch, dims);
-			callFP(D_tmpData, tmpPitch, D_projData, projPitch, -1.0f);
+			callFP(D_tmpData, tmpPitch, D_p, pPitch, -1.0f);
 	} else {
-			callFP(D_volumeData, volumePitch, D_projData, projPitch, -1.0f);
+			callFP(D_volumeData, volumePitch, D_p, pPitch, -1.0f);
 	}
 
 
