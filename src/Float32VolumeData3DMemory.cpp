@@ -67,6 +67,14 @@ CFloat32VolumeData3DMemory::CFloat32VolumeData3DMemory(CVolumeGeometry3D* _pGeom
 	m_bInitialized = false;
 	m_bInitialized = initialize(_pGeometry, _fScalar);
 }
+//----------------------------------------------------------------------------------------
+// Create an instance of the CFloat32VolumeData2D class with pre-allocated data
+CFloat32VolumeData3DMemory::CFloat32VolumeData3DMemory(CVolumeGeometry3D* _pGeometry, CFloat32CustomMemory* _pCustomMemory)
+{
+	m_bInitialized = false;
+	m_bInitialized = initialize(_pGeometry, _pCustomMemory);
+}
+
 
 //----------------------------------------------------------------------------------------
 // Destructor
@@ -105,6 +113,15 @@ bool CFloat32VolumeData3DMemory::initialize(CVolumeGeometry3D* _pGeometry, float
 	m_bInitialized = _initialize(m_pGeometry->getGridColCount(), m_pGeometry->getGridRowCount(), m_pGeometry->getGridSliceCount(), _fScalar);
 	return m_bInitialized;
 }
+//----------------------------------------------------------------------------------------
+// Initialization
+bool CFloat32VolumeData3DMemory::initialize(CVolumeGeometry3D* _pGeometry, CFloat32CustomMemory* _pCustomMemory) 
+{
+	m_pGeometry = _pGeometry->clone();
+	m_bInitialized = _initialize(m_pGeometry->getGridColCount(), m_pGeometry->getGridRowCount(), m_pGeometry->getGridSliceCount(), _pCustomMemory);
+	return m_bInitialized;
+}
+
 
 //----------------------------------------------------------------------------------------
 // Fetch a slice

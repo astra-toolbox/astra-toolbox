@@ -157,6 +157,36 @@ bool CFloat32Data3DMemory::_initialize(int _iWidth, int _iHeight, int _iDepth, f
 	return true;
 }
 //----------------------------------------------------------------------------------------
+// Initializes an instance of the CFloat32Data3DMemory class with pre-allocated memory
+bool CFloat32Data3DMemory::_initialize(int _iWidth, int _iHeight, int _iDepth, CFloat32CustomMemory* _pCustomMemory)
+{
+	// basic checks
+	ASTRA_ASSERT(_iWidth > 0);
+	ASTRA_ASSERT(_iHeight > 0);
+	ASTRA_ASSERT(_iDepth > 0);
+	ASTRA_ASSERT(_pCustomMemory != NULL);
+
+	if (m_bInitialized) {
+		_unInit();
+	}
+
+	// calculate size
+	m_iWidth = _iWidth;
+	m_iHeight = _iHeight;
+	m_iDepth = _iDepth;
+	m_iSize = (size_t)m_iWidth * m_iHeight * m_iDepth;
+
+	// allocate memory for the data, but do not fill it
+	m_pCustomMemory = _pCustomMemory;
+	m_pfData = NULL;
+	m_ppfDataRowInd = NULL;
+	m_pppfDataSliceInd = NULL;
+	_allocateData();
+
+	// initialization complete
+	return true;
+}
+//----------------------------------------------------------------------------------------
 
 
 //----------------------------------------------------------------------------------------
@@ -172,14 +202,18 @@ void CFloat32Data3DMemory::_allocateData()
 	ASTRA_ASSERT(m_ppfDataRowInd == NULL);
 	ASTRA_ASSERT(m_pppfDataSliceInd == NULL);
 
-	// allocate contiguous block
+	if (!m_pCustomMemory) {
+		// allocate contiguous block
 #ifdef _MSC_VER
-	m_pfData = (float32*)_aligned_malloc(m_iSize * sizeof(float32), 16);
+		m_pfData = (float32*)_aligned_malloc(m_iSize * sizeof(float32), 16);
 #else
-	int ret = posix_memalign((void**)&m_pfData, 16, m_iSize * sizeof(float32));
-	ASTRA_ASSERT(ret == 0);
+		int ret = posix_memalign((void**)&m_pfData, 16, m_iSize * sizeof(float32));
+		ASTRA_ASSERT(ret == 0);
 #endif
-	ASTRA_ASSERT(((size_t)m_pfData & 15) == 0);
+		ASTRA_ASSERT(((size_t)m_pfData & 15) == 0);
+	} else {
+		m_pfData = m_pCustomMemory->m_fPtr;
+	}
 
 	// create array of pointers to each row of the data block
 	m_ppfDataRowInd = new float32*[m_iHeight*m_iDepth];
@@ -209,12 +243,18 @@ void CFloat32Data3DMemory::_freeData()
 	delete[] m_pppfDataSliceInd;
 	// free memory for index table
 	delete[] m_ppfDataRowInd;
-	// free memory for data block
+
+	if (!m_pCustomMemory) {
+		// free memory for data block
 #ifdef _MSC_VER
-	_aligned_free(m_pfData);
+		_aligned_free(m_pfData);
 #else
-	free(m_pfData);
+		free(m_pfData);
 #endif
+	} else {
+		delete m_pCustomMemory;
+		m_pCustomMemory = 0;
+	}
 }
 
 //----------------------------------------------------------------------------------------
@@ -229,6 +269,7 @@ void CFloat32Data3DMemory::_clear()
 	m_pfData = NULL;
 	m_ppfDataRowInd = NULL;
 	m_pppfDataSliceInd = NULL;
+	m_pCustomMemory = NULL;
 
 	//m_fGlobalMin = 0.0f;
 	//m_fGlobalMax = 0.0f;

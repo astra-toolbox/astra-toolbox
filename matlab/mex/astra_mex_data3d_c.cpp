@@ -53,7 +53,7 @@ $Id$
 using namespace std;
 using namespace astra;
 
-
+#define USE_MATLAB_UNDOCUMENTED
 
 //-----------------------------------------------------------------------------------------
 /**
@@ -259,6 +259,231 @@ void astra_mex_data3d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 	}
 
 }
+
+//-----------------------------------------------------------------------------------------
+
+/** id = astra_mex_data3d('link', datatype, geometry, data);
+ *   
+ * Create a new data 3d object in the astra-library.
+ * type: 
+ * geom: MATLAB struct with the geometry for the data
+ * data: A MATLAB matrix containing the data. 
+ *       This matrix will be edited _in-place_!
+ * id: identifier of the 3d data object as it is now stored in the astra-library.
+ */
+
+#ifdef USE_MATLAB_UNDOCUMENTED
+extern "C" {
+mxArray *mxCreateSharedDataCopy(const mxArray *pr);
+bool mxUnshareArray(const mxArray *pr, const bool noDeepCopy);
+mxArray *mxUnreference(const mxArray *pr);
+}
+
+class CFloat32CustomMemoryMatlab3D : public CFloat32CustomMemory {
+public:
+	// offset allows linking the data object to a sub-volume (in the z direction)
+	// offset is measured in floats.
+	CFloat32CustomMemoryMatlab3D(const mxArray* _pArray, bool bUnshare, size_t iOffset) {
+		//fprintf(stderr, "Passed:\narray: %p\tdata: %p\n", (void*)_pArray, (void*)mxGetData(_pArray));
+		// First unshare the input array, so that we may modify it.
+		if (bUnshare) {
+			mxUnshareArray(_pArray, false);
+			//fprintf(stderr, "Unshared:\narray: %p\tdata: %p\n", (void*)_pArray, (void*)mxGetData(_pArray));
+		}
+		// Then create a (persistent) copy so the data won't be deleted
+		// or changed.
+		m_pLink = mxCreateSharedDataCopy(_pArray);
+		//fprintf(stderr, "SharedDataCopy:\narray: %p\tdata: %p\n", (void*)m_pLink, (void*)mxGetData(m_pLink));
+		mexMakeArrayPersistent(m_pLink);
+		m_fPtr = (float *)mxGetData(m_pLink);
+		m_fPtr += iOffset;
+	}
+	virtual ~CFloat32CustomMemoryMatlab3D() {
+		// destroy the shared array
+		//fprintf(stderr, "Destroy:\narray: %p\tdata: %p\n", (void*)m_pLink, (void*)mxGetData(m_pLink));
+		mxDestroyArray(m_pLink);
+	}
+private:
+	mxArray* m_pLink;
+};
+
+void astra_mex_data3d_link(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray* prhs[])
+{
+	// TODO: Reduce code duplication with _create!
+	// TODO: Also allow empty argument to let this function create its own mxArray
+	// step1: get datatype
+	if (nrhs < 4) {
+		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
+		return;
+	}
+
+	if (!mxIsStruct(prhs[2])) {
+		mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.\n");
+	}
+
+	const mxArray* _pArray = prhs[3];
+
+	string sDataType = mex_util_get_string(prhs[1]);	
+	CFloat32Data3DMemory* pDataObject3D = NULL;
+
+	if (mex_is_scalar(_pArray) || !mxIsSingle(_pArray)) {
+		mexErrMsgTxt("Data must be a single array.");
+		return;
+	}
+
+	unsigned int iZ = 0;
+	bool bUnshare = true;
+	if (nrhs > 4) {
+		if (!mex_is_scalar(prhs[4])) {
+			mexErrMsgTxt("Argument 5 (read-only) must be scalar");
+			return;
+		}
+		// unshare the array if we're not linking read-only
+		bUnshare = !(bool)mxGetScalar(prhs[4]);
+	}
+	if (nrhs > 5) {
+		if (!mex_is_scalar(prhs[5])) {
+			mexErrMsgTxt("Argument 6 (Z) must be scalar");
+			return;
+		}
+		iZ = (unsigned int)mxGetScalar(prhs[5]);
+	}
+
+	mwSize dims[3];
+
+	// SWITCH DataType
+	if (sDataType == "-vol") {
+		// Read geometry
+		Config cfg;
+		XMLDocument* xml = struct2XML("VolumeGeometry", prhs[2]);
+		if (!xml)
+			return;
+		cfg.self = xml->getRootNode();
+		CVolumeGeometry3D* pGeometry = new CVolumeGeometry3D();
+		if (!pGeometry->initialize(cfg)) {
+			mexErrMsgTxt("Geometry class not initialized. \n");
+			delete pGeometry;
+			delete xml;
+			return;
+		}
+		delete xml;
+
+		// If data is specified, check dimensions
+		if (nrhs >= 4) {
+			get3DMatrixDims(prhs[3], dims);
+			bool ok = pGeometry->getGridColCount() == dims[0] && pGeometry->getGridRowCount() == dims[1];
+			if (nrhs == 4) {
+				ok &= pGeometry->getGridSliceCount() == dims[2];
+			} else if (nrhs > 4) {
+				// sub-volume in Z direction
+				ok &= iZ + pGeometry->getGridSliceCount() <= dims[2];
+			}
+			if (!ok) {
+				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
+				delete pGeometry;
+				return;
+			}
+		}
+
+		size_t iOffset = iZ;
+		iOffset *= dims[0];
+		iOffset *= dims[1];
+		CFloat32CustomMemoryMatlab3D* pHandle = new CFloat32CustomMemoryMatlab3D(_pArray, bUnshare, iOffset);
+
+		// Initialize data object
+		pDataObject3D = new CFloat32VolumeData3DMemory(pGeometry, pHandle);		
+
+		//delete pGeometry; // ??
+	}
+	else if (sDataType == "-sino" || sDataType == "-proj3d" || sDataType == "-sinocone") {
+
+		// Read geometry
+		if (!mxIsStruct(prhs[2])) {
+			mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.\n");
+		}
+		XMLDocument* xml = struct2XML("ProjectionGeometry", prhs[2]);
+		if (!xml)
+			return;
+		Config cfg;
+		cfg.self = xml->getRootNode();
+
+		// FIXME: Change how the base class is created. (This is duplicated
+		// in Projector2D.cpp.)
+		std::string type = cfg.self->getAttribute("type");
+		CProjectionGeometry3D* pGeometry = 0;
+		if (type == "parallel3d") {
+			pGeometry = new CParallelProjectionGeometry3D();
+		} else if (type == "parallel3d_vec") {
+			pGeometry = new CParallelVecProjectionGeometry3D();
+		} else if (type == "cone") {
+			pGeometry = new CConeProjectionGeometry3D();
+		} else if (type == "cone_vec") {
+			pGeometry = new CConeVecProjectionGeometry3D();
+		} else {
+			mexErrMsgTxt("Invalid geometry type.\n");
+			return;
+		}
+
+		if (!pGeometry->initialize(cfg)) {
+			mexErrMsgTxt("Geometry class not initialized. \n");
+			delete pGeometry;
+			delete xml;
+			return;
+		}
+		delete xml;
+
+		// If data is specified, check dimensions
+		if (nrhs >= 4) {
+			get3DMatrixDims(prhs[3], dims);
+			bool ok = pGeometry->getDetectorColCount() == dims[0] && pGeometry->getProjectionCount() == dims[1];
+			if (nrhs == 4) {
+				ok &= pGeometry->getDetectorRowCount() == dims[2];
+			} else if (nrhs > 4) {
+				// sub-volume in Z direction
+				ok &= iZ + pGeometry->getDetectorRowCount() <= dims[2];
+			}
+			if (!ok) {
+				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
+				delete pGeometry;
+				return;
+			}
+		}
+
+		size_t iOffset = iZ;
+		iOffset *= dims[0];
+		iOffset *= dims[1];
+		CFloat32CustomMemoryMatlab3D* pHandle = new CFloat32CustomMemoryMatlab3D(_pArray, bUnshare, iOffset);
+
+		// Initialize data object
+		pDataObject3D = new CFloat32ProjectionData3DMemory(pGeometry, pHandle);
+	}
+	else {
+		mexErrMsgTxt("Invalid datatype.  Please specify '-vol' or '-proj3d'. \n");
+		return;
+	}
+
+	// Check initialization
+	if (!pDataObject3D->isInitialized()) {
+		mexErrMsgTxt("Couldn't initialize data object.\n");
+		delete pDataObject3D;
+		return;
+	}
+
+	//pDataObject3D->updateStatistics();
+
+	// step4: store data object
+	int iIndex = CData3DManager::getSingleton().store(pDataObject3D);
+
+	// step5: return data id
+	if (1 <= nlhs) {
+		plhs[0] = mxCreateDoubleScalar(iIndex);
+	}
+
+}
+
+
+#endif
+
 
 //-----------------------------------------------------------------------------------------
 /**
@@ -989,6 +1214,10 @@ void mexFunction(int nlhs, mxArray* plhs[],
 	// 3D data
 	if (sMode ==  std::string("create")) { 
 		astra_mex_data3d_create(nlhs, plhs, nrhs, prhs); 
+#ifdef USE_MATLAB_UNDOCUMENTED
+	} else if (sMode == "link") {
+		astra_mex_data3d_link(nlhs, plhs, nrhs, prhs);
+#endif
 	} else if (sMode ==  std::string("create_cache")) { 
 		astra_mex_data3d_create_cache(nlhs, plhs, nrhs, prhs); 
 	} else if (sMode ==  std::string("get")) { 

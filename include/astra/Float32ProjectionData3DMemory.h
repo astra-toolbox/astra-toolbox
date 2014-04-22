@@ -98,6 +98,19 @@ public:
 	 */
 	CFloat32ProjectionData3DMemory(CProjectionGeometry3D* _pGeometry, float32 _fScalar);
 
+	/** Constructor. Create an instance of the CFloat32ProjectionData3DMemory class with pre-allocated memory.
+	 *
+	 * Creates an instance of the CFloat32ProjectionData3DMemory class. Memory 
+	 * is pre-allocated and passed via the abstract CFloat32CustomMemory handle
+	 * class. The handle will be deleted when the memory can be freed.
+	 * You should override the destructor to provide custom behaviour on free.
+	 *
+	 * @param _pGeometry Projection Geometry object.  This object will be HARDCOPIED into this class.
+	 * @param _pCustomMemory custom memory handle
+	 *
+	 */
+	CFloat32ProjectionData3DMemory(CProjectionGeometry3D* _pGeometry, CFloat32CustomMemory* _pCustomMemory);
+
 	/** 
 	 * Destructor.
 	 */
@@ -139,6 +152,20 @@ public:
 	 * @param _pfData pointer to a one-dimensional float32 data block
 	 */
 	bool initialize(CProjectionGeometry3D* _pGeometry, const float32* _pfData);
+
+	/** Initialization. Initializes an instance of the CFloat32ProjectionData3DMemory class with pre-allocated memory.
+	 *
+	 * Memory is pre-allocated and passed via the abstract CFloat32CustomMemory handle
+	 * class. The handle will be deleted when the memory can be freed.
+	 * You should override the destructor to provide custom behaviour on free.
+	 *
+	 * @param _pGeometry Projection Geometry object.  This object will be HARDCOPIED into this class.
+	 * @param _pCustomMemory custom memory handle
+	 *
+	 */
+	bool initialize(CProjectionGeometry3D* _pGeometry, CFloat32CustomMemory* _pCustomMemory);
+
+
 
 	/** Fetch a COPY of a projection of the data.  Note that if you update the 2D data slice, the data in the 
 	 * 3D data object will remain unaltered.  To copy the data back in the 3D-volume you must return the data by calling 'returnProjection'.

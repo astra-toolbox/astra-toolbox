@@ -70,6 +70,15 @@ CFloat32ProjectionData3DMemory::CFloat32ProjectionData3DMemory(CProjectionGeomet
 }
 
 //----------------------------------------------------------------------------------------
+// Create an instance of the CFloat32ProjectionData2D class with pre-allocated data
+CFloat32ProjectionData3DMemory::CFloat32ProjectionData3DMemory(CProjectionGeometry3D* _pGeometry, CFloat32CustomMemory* _pCustomMemory)
+{
+	m_bInitialized = false;
+	m_bInitialized = initialize(_pGeometry, _pCustomMemory);
+}
+ 
+
+//----------------------------------------------------------------------------------------
 // Initialization
 bool CFloat32ProjectionData3DMemory::initialize(CProjectionGeometry3D* _pGeometry)
 {
@@ -101,6 +110,15 @@ bool CFloat32ProjectionData3DMemory::initialize(CProjectionGeometry3D* _pGeometr
 								 m_pGeometry->getProjectionCount(),	// height
 								 m_pGeometry->getDetectorRowCount(),		// depth
 								 _fScalar);
+	return m_bInitialized;
+}
+
+//----------------------------------------------------------------------------------------
+// Initialization
+bool CFloat32ProjectionData3DMemory::initialize(CProjectionGeometry3D* _pGeometry, CFloat32CustomMemory* _pCustomMemory) 
+{
+	m_pGeometry = _pGeometry->clone();
+	m_bInitialized = _initialize(m_pGeometry->getDetectorColCount(), m_pGeometry->getProjectionCount(), m_pGeometry->getDetectorRowCount(), _pCustomMemory);
 	return m_bInitialized;
 }
 

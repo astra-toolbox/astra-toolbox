@@ -147,6 +147,25 @@ protected:
 	 */
 	bool _initialize(int _iWidth, int _iHeight, int _iDepth, float32 _fScalar);
 
+	/** Initialization. Initializes an instance of the CFloat32Data3DMemory class with pre-allocated memory.
+	 * Can only be called by derived classes.
+	 *
+	 * Initializes an instance of the CFloat32Data3DMemory class. Memory 
+	 * is pre-allocated and passed via the abstract CFloat32CustomMemory handle
+	 * class. The handle will be deleted when the memory can be freed.
+	 * You should override the destructor to provide custom behaviour on free.
+	 * If the object has been initialized before, the 
+	 * object is reinitialized and memory is freed and reallocated if necessary.
+	 * This function does not set m_bInitialized to true if everything is ok.
+	 *
+	 * @param _iWidth width of the 2D data (x-axis), must be > 0
+	 * @param _iHeight height of the 2D data (y-axis), must be > 0 
+	 * @param _iDepth depth of the 2D data (z-axis), must be > 0 
+	 * @param _pCustomMemory the custom memory handle
+	 */
+
+	bool _initialize(int _iWidth, int _iHeight, int _iDepth, CFloat32CustomMemory* _pCustomMemory);
+
 public:
 
 	/** Default constructor. Sets all numeric member variables to 0 and all pointer member variables to NULL.
@@ -270,6 +289,9 @@ public:
 	 * @return l-value
 	 */
 	virtual CFloat32Data3D& clampMax(float32& _fMax);
+
+private:
+	CFloat32CustomMemory* m_pCustomMemory;
 };
 
 
