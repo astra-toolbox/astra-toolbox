@@ -26,7 +26,12 @@ function [sino_id, sino] = astra_create_sino3d_cuda(data, proj_geom, vol_geom)
 
 % store volume
 if (numel(data) > 1)
-	volume_id = astra_mex_data3d('create','-vol', vol_geom, data);
+	if (strcmp(class(data),'single'))
+		% read-only link
+		volume_id = astra_mex_data3d('link','-vol', vol_geom, data, 1);
+	else
+		volume_id = astra_mex_data3d('create','-vol', vol_geom, data);
+	end
 else
 	volume_id = data;
 end
