@@ -180,7 +180,10 @@ bool SART::iterate(unsigned int iterations)
 		}
 
 		// copy one line of sinogram to projection data
-		duplicateProjectionData(D_projData, D_sinoData, sinoPitch, dims);
+		// NB: Non-standard dimensions
+		SDimensions linedims = dims;
+		linedims.iProjAngles = 1;
+		duplicateProjectionData(D_projData, D_sinoData + angle*sinoPitch, sinoPitch, linedims);
 
 		// do FP, subtracting projection from sinogram
 		if (useVolumeMask) {
