@@ -39,6 +39,10 @@ $Id$
 
 namespace astra {
 
+CFloat32CustomMemory::~CFloat32CustomMemory() {
+
+}
+
 
   //----------------------------------------------------------------------------------------
  // Constructors
@@ -77,6 +81,14 @@ CFloat32Data2D::CFloat32Data2D(int _iWidth, int _iHeight, float32 _fScalar)
 }
 
 //----------------------------------------------------------------------------------------
+// Create an instance of the CFloat32Data2D class with pre-allocated memory. 
+CFloat32Data2D::CFloat32Data2D(int _iWidth, int _iHeight, CFloat32CustomMemory *_pCustomMemory)
+{
+	m_bInitialized = false;
+	_initialize(_iWidth, _iHeight, _pCustomMemory);
+}
+
+//----------------------------------------------------------------------------------------
 // Copy constructor
 CFloat32Data2D::CFloat32Data2D(const CFloat32Data2D& _other)
 {
@@ -103,6 +115,11 @@ CFloat32Data2D& CFloat32Data2D::operator=(const CFloat32Data2D& _dataIn)
 
 			memcpy(m_pfData, _dataIn.m_pfData, m_iSize * sizeof(float32));
 		} else {
+			if (m_pCustomMemory) {
+				// Can't re-allocate custom data
+				ASTRA_ASSERT(false);
+				return *(CFloat32Data2D*)0;
+			}
 			// Re-allocate data
 			_unInit();
 			_initialize(_dataIn.getWidth(), _dataIn.getHeight(), _dataIn.getDataConst());
@@ -224,6 +241,36 @@ bool CFloat32Data2D::_initialize(int _iWidth, int _iHeight, float32 _fScalar)
 	return true;
 }
 
+//----------------------------------------------------------------------------------------
+// Initializes an instance of the CFloat32Data2D class with pre-allocated memory
+bool CFloat32Data2D::_initialize(int _iWidth, int _iHeight, CFloat32CustomMemory* _pCustomMemory)
+{
+	// basic checks
+	ASTRA_ASSERT(_iWidth > 0);
+	ASTRA_ASSERT(_iHeight > 0);
+	ASTRA_ASSERT(_pCustomMemory != NULL);
+
+	if (m_bInitialized)
+	{
+		_unInit();
+	}
+
+	// calculate size
+	m_iWidth = _iWidth;
+	m_iHeight = _iHeight;
+	m_iSize = (size_t)m_iWidth * m_iHeight;
+
+	// initialize the data pointers
+	m_pCustomMemory = _pCustomMemory;
+	m_pfData = 0;
+	m_ppfData2D = 0;
+	_allocateData();
+
+	// initialization complete
+	return true;
+}
+
+
 
   //----------------------------------------------------------------------------------------
  // Memory Allocation 
@@ -241,13 +288,19 @@ void CFloat32Data2D::_allocateData()
 	ASTRA_ASSERT(m_pfData == NULL);
 	ASTRA_ASSERT(m_ppfData2D == NULL);
 
-	// allocate contiguous block
+	if (!m_pCustomMemory) {
+
+		// allocate contiguous block
 #ifdef _MSC_VER
-	m_pfData = (float32*)_aligned_malloc(m_iSize * sizeof(float32), 16);
+		m_pfData = (float32*)_aligned_malloc(m_iSize * sizeof(float32), 16);
 #else
-	int ret = posix_memalign((void**)&m_pfData, 16, m_iSize * sizeof(float32));
-	ASTRA_ASSERT(ret == 0);
+		int ret = posix_memalign((void**)&m_pfData, 16, m_iSize * sizeof(float32));
+		ASTRA_ASSERT(ret == 0);
 #endif
+
+	} else {
+		m_pfData = m_pCustomMemory->m_fPtr;
+	}
 
 	// create array of pointers to each row of the data block
 	m_ppfData2D = new float32*[m_iHeight];
@@ -264,15 +317,20 @@ void CFloat32Data2D::_freeData()
 	// basic checks
 	ASTRA_ASSERT(m_pfData != NULL);
 	ASTRA_ASSERT(m_ppfData2D != NULL);
-
 	// free memory for index table
 	delete[] m_ppfData2D;
-	// free memory for data block
+
+	if (!m_pCustomMemory) {
+		// free memory for data block
 #ifdef _MSC_VER
-	_aligned_free(m_pfData);
+		_aligned_free(m_pfData);
 #else
-	free(m_pfData);
+		free(m_pfData);
 #endif
+	} else {
+		delete m_pCustomMemory;
+		m_pCustomMemory = 0;
+	}
 }
 
 
@@ -286,6 +344,7 @@ void CFloat32Data2D::_clear()
 
 	m_pfData = NULL;
 	m_ppfData2D = NULL;
+	m_pCustomMemory = NULL;
 
 	m_fGlobalMin = 0.0f;
 	m_fGlobalMax = 0.0f;

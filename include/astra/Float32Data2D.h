@@ -34,6 +34,13 @@ $Id$
 
 namespace astra {
 
+
+class _AstraExport CFloat32CustomMemory {
+public:
+	virtual ~CFloat32CustomMemory()=0;
+	float32* m_fPtr;
+};
+
 /** 
  * This class represents a two-dimensional block of float32ing point data.
  * It contains member functions for accessing this data and for performing 
@@ -141,6 +148,23 @@ protected:
 	 */
 	bool _initialize(int _iWidth, int _iHeight, float32 _fScalar);
 
+	/** Initialization. Initializes an instance of the CFloat32Data2D class with pre-allocated memory.
+	 * Can only be called by derived classes.
+	 *
+	 * Initializes an instance of the CFloat32Data2D class. Memory 
+	 * is pre-allocated and passed via the abstract CFloat32CustomMemory handle
+	 * class. The handle will be deleted when the memory can be freed.
+	 * You should override the destructor to provide custom behaviour on free.
+	 * If the object has been initialized before, the 
+	 * object is reinitialized and memory is freed and reallocated if necessary.
+	 * This function does not set m_bInitialized to true if everything is ok.
+	 *
+	 * @param _iWidth width of the 2D data (x-axis), must be > 0
+	 * @param _iHeight height of the 2D data (y-axis), must be > 0 
+	 * @param _pfData pointer to a one-dimensional float32 data block
+	 */
+	bool _initialize(int _iWidth, int _iHeight, CFloat32CustomMemory* _pCustomMemory);
+
 	/** Constructor. Create an instance of the CFloat32Data2D class without initializing the data block.
 	 * Can only be called by derived classes.
 	 *
@@ -179,6 +203,21 @@ protected:
 	 * @param _fScalar scalar value to put at each index
 	 */
 	CFloat32Data2D(int _iWidth, int _iHeight, float32 _fScalar);
+
+	/** Constructor. Create an instance of the CFloat32Data2D class with pre-allocated memory.
+
+	 * Can only be called by derived classes.
+	 *
+	 * Creates an instance of the CFloat32Data2D class. Memory 
+	 * is pre-allocated and passed via the abstract CFloat32CustomMemory handle
+	 * class. The handle will be deleted when the memory can be freed.
+	 * You should override the destructor to provide custom behaviour on free.
+	 *
+	 * @param _iWidth width of the 2D data (x-axis), must be > 0
+	 * @param _iHeight height of the 2D data (y-axis), must be > 0 
+	 * @param _pfData pointer to a one-dimensional float32 data block
+	 */
+	CFloat32Data2D(int _iWidth, int _iHeight, CFloat32CustomMemory* _pCustomMemory);
 
 	/** Copy constructor.
 	 */
@@ -418,6 +457,9 @@ public:
 
 	float32& getData(int _index);
 
+
+private:
+	CFloat32CustomMemory* m_pCustomMemory;
 };
 
 
