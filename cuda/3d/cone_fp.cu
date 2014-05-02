@@ -85,193 +85,217 @@ bool bindVolumeDataTexture(const cudaArray* array)
 	return true;
 }
 
+
+// x=0, y=1, z=2
+struct DIR_X {
+	__device__ float nSlices(const SDimensions3D& dims) const { return dims.iVolX; }
+	__device__ float nDim1(const SDimensions3D& dims) const { return dims.iVolY; }
+	__device__ float nDim2(const SDimensions3D& dims) const { return dims.iVolZ; }
+	__device__ float c0(float x, float y, float z) const { return x; }
+	__device__ float c1(float x, float y, float z) const { return y; }
+	__device__ float c2(float x, float y, float z) const { return z; }
+	__device__ float tex(float f0, float f1, float f2) const { return tex3D(gT_coneVolumeTexture, f0, f1, f2); }
+	__device__ float x(float f0, float f1, float f2) const { return f0; }
+	__device__ float y(float f0, float f1, float f2) const { return f1; }
+	__device__ float z(float f0, float f1, float f2) const { return f2; }
+};
+
+// y=0, x=1, z=2
+struct DIR_Y {
+	__device__ float nSlices(const SDimensions3D& dims) const { return dims.iVolY; }
+	__device__ float nDim1(const SDimensions3D& dims) const { return dims.iVolX; }
+	__device__ float nDim2(const SDimensions3D& dims) const { return dims.iVolZ; }
+	__device__ float c0(float x, float y, float z) const { return y; }
+	__device__ float c1(float x, float y, float z) const { return x; }
+	__device__ float c2(float x, float y, float z) const { return z; }
+	__device__ float tex(float f0, float f1, float f2) const { return tex3D(gT_coneVolumeTexture, f1, f0, f2); }
+	__device__ float x(float f0, float f1, float f2) const { return f1; }
+	__device__ float y(float f0, float f1, float f2) const { return f0; }
+	__device__ float z(float f0, float f1, float f2) const { return f2; }
+};
+
+// z=0, x=1, y=2
+struct DIR_Z {
+	__device__ float nSlices(const SDimensions3D& dims) const { return dims.iVolZ; }
+	__device__ float nDim1(const SDimensions3D& dims) const { return dims.iVolX; }
+	__device__ float nDim2(const SDimensions3D& dims) const { return dims.iVolY; }
+	__device__ float c0(float x, float y, float z) const { return z; }
+	__device__ float c1(float x, float y, float z) const { return x; }
+	__device__ float c2(float x, float y, float z) const { return y; }
+	__device__ float tex(float f0, float f1, float f2) const { return tex3D(gT_coneVolumeTexture, f1, f2, f0); }
+	__device__ float x(float f0, float f1, float f2) const { return f1; }
+	__device__ float y(float f0, float f1, float f2) const { return f2; }
+	__device__ float z(float f0, float f1, float f2) const { return f0; }
+};
+
+
 	// threadIdx: x = ??? detector  (u?)
 	//            y = relative angle
 
 	// blockIdx:  x = ??? detector  (u+v?)
     //            y = angle block
 
+template<class COORD>
+__global__ void cone_FP_t(float* D_projData, unsigned int projPitch,
+                          unsigned int startSlice,
+                          unsigned int startAngle, unsigned int endAngle,
+                          const SDimensions3D dims, float fOutputScale)
+{
+	COORD c;
 
-#define CONE_FP_BODY(c0,c1,c2) \
-	int angle = startAngle + blockIdx.y * g_anglesPerBlock + threadIdx.y;                                          \
-	if (angle >= endAngle)                                                                                         \
-		return;                                                                                                    \
-                                                                                                                   \
-	const float fSrcX = gC_SrcX[angle];                                                                            \
-	const float fSrcY = gC_SrcY[angle];                                                                            \
-	const float fSrcZ = gC_SrcZ[angle];                                                                            \
-	const float fDetUX = gC_DetUX[angle];                                                                          \
-	const float fDetUY = gC_DetUY[angle];                                                                          \
-	const float fDetUZ = gC_DetUZ[angle];                                                                          \
-	const float fDetVX = gC_DetVX[angle];                                                                          \
-	const float fDetVY = gC_DetVY[angle];                                                                          \
-	const float fDetVZ = gC_DetVZ[angle];                                                                          \
-	const float fDetSX = gC_DetSX[angle] + 0.5f * fDetUX + 0.5f * fDetVX;                                          \
-	const float fDetSY = gC_DetSY[angle] + 0.5f * fDetUY + 0.5f * fDetVY;                                          \
-	const float fDetSZ = gC_DetSZ[angle] + 0.5f * fDetUZ + 0.5f * fDetVZ;                                          \
-                                                                                                                   \
-	const int detectorU = (blockIdx.x%((dims.iProjU+g_detBlockU-1)/g_detBlockU)) * g_detBlockU + threadIdx.x;      \
-	const int startDetectorV = (blockIdx.x/((dims.iProjU+g_detBlockU-1)/g_detBlockU)) * g_detBlockV;               \
-	int endDetectorV = startDetectorV + g_detBlockV;                                                               \
-	if (endDetectorV > dims.iProjV)                                                                                \
-		endDetectorV = dims.iProjV;                                                                                \
-                                                                                                                   \
-	int endSlice = startSlice + g_blockSlices;                                                                     \
-	if (endSlice > dims.iVol##c0)                                                                                     \
-		endSlice = dims.iVol##c0;                                                                                    \
-                                                                                                                   \
-	for (int detectorV = startDetectorV; detectorV < endDetectorV; ++detectorV)                                    \
-	{                                                                                                              \
-		/* Trace ray from Src to (detectorU,detectorV) from */                                                     \
-		/* X = startSlice to X = endSlice                   */                                                     \
-                                                                                                                   \
-		const float fDetX = fDetSX + detectorU*fDetUX + detectorV*fDetVX;                                          \
-		const float fDetY = fDetSY + detectorU*fDetUY + detectorV*fDetVY;                                          \
-		const float fDetZ = fDetSZ + detectorU*fDetUZ + detectorV*fDetVZ;                                          \
-                                                                                                                   \
-		/*        (x)   ( 1)       ( 0) */                                                                         \
-		/* ray:   (y) = (ay) * x + (by) */                                                                         \
-		/*        (z)   (az)       (bz) */                                                                         \
-                                                                                                                   \
-		const float a##c1 = (fSrc##c1 - fDet##c1) / (fSrc##c0 - fDet##c0);                                         \
-		const float a##c2 = (fSrc##c2 - fDet##c2) / (fSrc##c0 - fDet##c0);                                         \
-		const float b##c1 = fSrc##c1 - a##c1 * fSrc##c0;                                                           \
-		const float b##c2 = fSrc##c2 - a##c2 * fSrc##c0;                                                           \
-                                                                                                                   \
-		const float fDistCorr = sqrt(a##c1*a##c1+a##c2*a##c2+1.0f) * fOutputScale;                                 \
-                                                                                                                   \
-		float fVal = 0.0f;                                                                                         \
-                                                                                                                   \
-		float f##c0 = startSlice + 0.5f;                                                                           \
-		float f##c1 = a##c1 * (startSlice - 0.5f*dims.iVol##c0 + 0.5f) + b##c1 + 0.5f*dims.iVol##c1 - 0.5f + 0.5f; \
-		float f##c2 = a##c2 * (startSlice - 0.5f*dims.iVol##c0 + 0.5f) + b##c2 + 0.5f*dims.iVol##c2 - 0.5f + 0.5f; \
-                                                                                                                   \
-		for (int s = startSlice; s < endSlice; ++s)                                                                \
-		{                                                                                                          \
-			fVal += tex3D(gT_coneVolumeTexture, fX, fY, fZ);                                                       \
-			f##c0 += 1.0f;                                                                                         \
-			f##c1 += a##c1;                                                                                        \
-			f##c2 += a##c2;                                                                                        \
-		}                                                                                                          \
-                                                                                                                   \
-		fVal *= fDistCorr;                                                                                         \
-                                                                                                                   \
-		D_projData[(detectorV*dims.iProjAngles+angle)*projPitch+detectorU] += fVal;                                \
+	int angle = startAngle + blockIdx.y * g_anglesPerBlock + threadIdx.y;
+	if (angle >= endAngle)
+		return;
+
+	const float fSrcX = gC_SrcX[angle];
+	const float fSrcY = gC_SrcY[angle];
+	const float fSrcZ = gC_SrcZ[angle];
+	const float fDetUX = gC_DetUX[angle];
+	const float fDetUY = gC_DetUY[angle];
+	const float fDetUZ = gC_DetUZ[angle];
+	const float fDetVX = gC_DetVX[angle];
+	const float fDetVY = gC_DetVY[angle];
+	const float fDetVZ = gC_DetVZ[angle];
+	const float fDetSX = gC_DetSX[angle] + 0.5f * fDetUX + 0.5f * fDetVX;
+	const float fDetSY = gC_DetSY[angle] + 0.5f * fDetUY + 0.5f * fDetVY;
+	const float fDetSZ = gC_DetSZ[angle] + 0.5f * fDetUZ + 0.5f * fDetVZ;
+
+	const int detectorU = (blockIdx.x%((dims.iProjU+g_detBlockU-1)/g_detBlockU)) * g_detBlockU + threadIdx.x;
+	const int startDetectorV = (blockIdx.x/((dims.iProjU+g_detBlockU-1)/g_detBlockU)) * g_detBlockV;
+	int endDetectorV = startDetectorV + g_detBlockV;
+	if (endDetectorV > dims.iProjV)
+		endDetectorV = dims.iProjV;
+
+	int endSlice = startSlice + g_blockSlices;
+	if (endSlice > c.nSlices(dims))
+		endSlice = c.nSlices(dims);
+
+	for (int detectorV = startDetectorV; detectorV < endDetectorV; ++detectorV)
+	{
+		/* Trace ray from Src to (detectorU,detectorV) from */
+		/* X = startSlice to X = endSlice                   */
+
+		const float fDetX = fDetSX + detectorU*fDetUX + detectorV*fDetVX;
+		const float fDetY = fDetSY + detectorU*fDetUY + detectorV*fDetVY;
+		const float fDetZ = fDetSZ + detectorU*fDetUZ + detectorV*fDetVZ;
+
+		/*        (x)   ( 1)       ( 0) */
+		/* ray:   (y) = (ay) * x + (by) */
+		/*        (z)   (az)       (bz) */
+
+		const float a1 = (c.c1(fSrcX,fSrcY,fSrcZ) - c.c1(fDetX,fDetY,fDetZ)) / (c.c0(fSrcX,fSrcY,fSrcZ) - c.c0(fDetX,fDetY,fDetZ));
+		const float a2 = (c.c2(fSrcX,fSrcY,fSrcZ) - c.c2(fDetX,fDetY,fDetZ)) / (c.c0(fSrcX,fSrcY,fSrcZ) - c.c0(fDetX,fDetY,fDetZ));
+		const float b1 = c.c1(fSrcX,fSrcY,fSrcZ) - a1 * c.c0(fSrcX,fSrcY,fSrcZ);
+		const float b2 = c.c2(fSrcX,fSrcY,fSrcZ) - a2 * c.c0(fSrcX,fSrcY,fSrcZ);
+
+		const float fDistCorr = sqrt(a1*a1+a2*a2+1.0f) * fOutputScale;
+
+		float fVal = 0.0f;
+
+		float f0 = startSlice + 0.5f;
+		float f1 = a1 * (startSlice - 0.5f*c.nSlices(dims) + 0.5f) + b1 + 0.5f*c.nDim1(dims) - 0.5f + 0.5f;
+		float f2 = a2 * (startSlice - 0.5f*c.nSlices(dims) + 0.5f) + b2 + 0.5f*c.nDim2(dims) - 0.5f + 0.5f;
+
+		for (int s = startSlice; s < endSlice; ++s)
+		{
+			fVal += c.tex(f0, f1, f2);
+			f0 += 1.0f;
+			f1 += a1;
+			f2 += a2;
+		}
+
+		fVal *= fDistCorr;
+
+		D_projData[(detectorV*dims.iProjAngles+angle)*projPitch+detectorU] += fVal;
 	}
+}
 
-#define CONE_FP_SS_BODY(c0,c1,c2) \
-	int angle = startAngle + blockIdx.y * g_anglesPerBlock + threadIdx.y;                                          \
-	if (angle >= endAngle)                                                                                         \
-		return;                                                                                                    \
-                                                                                                                   \
-	const float fSrcX = gC_SrcX[angle];                                                                            \
-	const float fSrcY = gC_SrcY[angle];                                                                            \
-	const float fSrcZ = gC_SrcZ[angle];                                                                            \
-	const float fDetUX = gC_DetUX[angle];                                                                          \
-	const float fDetUY = gC_DetUY[angle];                                                                          \
-	const float fDetUZ = gC_DetUZ[angle];                                                                          \
-	const float fDetVX = gC_DetVX[angle];                                                                          \
-	const float fDetVY = gC_DetVY[angle];                                                                          \
-	const float fDetVZ = gC_DetVZ[angle];                                                                          \
-	const float fDetSX = gC_DetSX[angle] + 0.5f * fDetUX + 0.5f * fDetVX;                                          \
-	const float fDetSY = gC_DetSY[angle] + 0.5f * fDetUY + 0.5f * fDetVY;                                          \
-	const float fDetSZ = gC_DetSZ[angle] + 0.5f * fDetUZ + 0.5f * fDetVZ;                                          \
-                                                                                                                   \
-	const int detectorU = (blockIdx.x%((dims.iProjU+g_detBlockU-1)/g_detBlockU)) * g_detBlockU + threadIdx.x;      \
-	const int startDetectorV = (blockIdx.x/((dims.iProjU+g_detBlockU-1)/g_detBlockU)) * g_detBlockV;               \
-	int endDetectorV = startDetectorV + g_detBlockV;                                                               \
-	if (endDetectorV > dims.iProjV)                                                                                \
-		endDetectorV = dims.iProjV;                                                                                \
-                                                                                                                   \
-	int endSlice = startSlice + g_blockSlices;                                                                     \
-	if (endSlice > dims.iVolX)                                                                                     \
-		endSlice = dims.iVolX;                                                                                     \
-                                                                                                                   \
-	const float fSubStep = 1.0f/dims.iRaysPerDetDim;                                                               \
-                                                                                                                   \
-	for (int detectorV = startDetectorV; detectorV < endDetectorV; ++detectorV)                                    \
-	{                                                                                                              \
-		/* Trace ray from Src to (detectorU,detectorV) from */                                                     \
-		/* X = startSlice to X = endSlice                   */                                                     \
-                                                                                                                   \
-		float fV = 0.0f;                                                                                           \
-                                                                                                                   \
-		float fdU = detectorU - 0.5f + 0.5f*fSubStep;                                                              \
-		for (int iSubU = 0; iSubU < dims.iRaysPerDetDim; ++iSubU, fdU+=fSubStep) {                                 \
-		float fdV = detectorV - 0.5f + 0.5f*fSubStep;                                                              \
-		for (int iSubV = 0; iSubV < dims.iRaysPerDetDim; ++iSubV, fdV+=fSubStep) {                                 \
-                                                                                                                   \
-		const float fDetX = fDetSX + fdU*fDetUX + fdV*fDetVX;                                                      \
-		const float fDetY = fDetSY + fdU*fDetUY + fdV*fDetVY;                                                      \
-		const float fDetZ = fDetSZ + fdU*fDetUZ + fdV*fDetVZ;                                                      \
-                                                                                                                   \
-		/*        (x)   ( 1)       ( 0) */                                                                         \
-		/* ray:   (y) = (ay) * x + (by) */                                                                         \
-		/*        (z)   (az)       (bz) */                                                                         \
-                                                                                                                   \
-		const float a##c1 = (fSrc##c1 - fDet##c1) / (fSrc##c0 - fDet##c0);                                         \
-		const float a##c2 = (fSrc##c2 - fDet##c2) / (fSrc##c0 - fDet##c0);                                         \
-		const float b##c1 = fSrc##c1 - a##c1 * fSrc##c0;                                                           \
-		const float b##c2 = fSrc##c2 - a##c2 * fSrc##c0;                                                           \
-                                                                                                                   \
-		const float fDistCorr = sqrt(a##c1*a##c1+a##c2*a##c2+1.0f) * fOutputScale;                                 \
-                                                                                                                   \
-		float fVal = 0.0f;                                                                                         \
-                                                                                                                   \
-		float f##c0 = startSlice + 0.5f;                                                                           \
-		float f##c1 = a##c1 * (startSlice - 0.5f*dims.iVol##c0 + 0.5f) + b##c1 + 0.5f*dims.iVol##c1 - 0.5f + 0.5f; \
-		float f##c2 = a##c2 * (startSlice - 0.5f*dims.iVol##c0 + 0.5f) + b##c2 + 0.5f*dims.iVol##c2 - 0.5f + 0.5f; \
-                                                                                                                   \
-		for (int s = startSlice; s < endSlice; ++s)                                                                \
-		{                                                                                                          \
-			fVal += tex3D(gT_coneVolumeTexture, fX, fY, fZ);                                                       \
-			f##c0 += 1.0f;                                                                                         \
-			f##c1 += a##c1;                                                                                        \
-			f##c2 += a##c2;                                                                                        \
-		}                                                                                                          \
-                                                                                                                   \
-		fVal *= fDistCorr;                                                                                         \
-		fV += fVal;                                                                                                \
-                                                                                                                   \
-		}                                                                                                          \
-		}                                                                                                          \
-                                                                                                                   \
-		D_projData[(detectorV*dims.iProjAngles+angle)*projPitch+detectorU] += fV / (dims.iRaysPerDetDim * dims.iRaysPerDetDim);\
+template<class COORD>
+__global__ void cone_FP_SS_t(float* D_projData, unsigned int projPitch,
+                             unsigned int startSlice,
+                             unsigned int startAngle, unsigned int endAngle,
+                             const SDimensions3D dims, float fOutputScale)
+{
+	COORD c;
+
+	int angle = startAngle + blockIdx.y * g_anglesPerBlock + threadIdx.y;
+	if (angle >= endAngle)
+		return;
+
+	const float fSrcX = gC_SrcX[angle];
+	const float fSrcY = gC_SrcY[angle];
+	const float fSrcZ = gC_SrcZ[angle];
+	const float fDetUX = gC_DetUX[angle];
+	const float fDetUY = gC_DetUY[angle];
+	const float fDetUZ = gC_DetUZ[angle];
+	const float fDetVX = gC_DetVX[angle];
+	const float fDetVY = gC_DetVY[angle];
+	const float fDetVZ = gC_DetVZ[angle];
+	const float fDetSX = gC_DetSX[angle] + 0.5f * fDetUX + 0.5f * fDetVX;
+	const float fDetSY = gC_DetSY[angle] + 0.5f * fDetUY + 0.5f * fDetVY;
+	const float fDetSZ = gC_DetSZ[angle] + 0.5f * fDetUZ + 0.5f * fDetVZ;
+
+	const int detectorU = (blockIdx.x%((dims.iProjU+g_detBlockU-1)/g_detBlockU)) * g_detBlockU + threadIdx.x;
+	const int startDetectorV = (blockIdx.x/((dims.iProjU+g_detBlockU-1)/g_detBlockU)) * g_detBlockV;
+	int endDetectorV = startDetectorV + g_detBlockV;
+	if (endDetectorV > dims.iProjV)
+		endDetectorV = dims.iProjV;
+
+	int endSlice = startSlice + g_blockSlices;
+	if (endSlice > c.nSlices(dims))
+		endSlice = c.nSlices(dims);
+
+	const float fSubStep = 1.0f/dims.iRaysPerDetDim;
+
+	for (int detectorV = startDetectorV; detectorV < endDetectorV; ++detectorV)
+	{
+		/* Trace ray from Src to (detectorU,detectorV) from */
+		/* X = startSlice to X = endSlice                   */
+
+		float fV = 0.0f;
+
+		float fdU = detectorU - 0.5f + 0.5f*fSubStep;
+		for (int iSubU = 0; iSubU < dims.iRaysPerDetDim; ++iSubU, fdU+=fSubStep) {
+		float fdV = detectorV - 0.5f + 0.5f*fSubStep;
+		for (int iSubV = 0; iSubV < dims.iRaysPerDetDim; ++iSubV, fdV+=fSubStep) {
+
+		const float fDetX = fDetSX + fdU*fDetUX + fdV*fDetVX;
+		const float fDetY = fDetSY + fdU*fDetUY + fdV*fDetVY;
+		const float fDetZ = fDetSZ + fdU*fDetUZ + fdV*fDetVZ;
+
+		/*        (x)   ( 1)       ( 0) */
+		/* ray:   (y) = (ay) * x + (by) */
+		/*        (z)   (az)       (bz) */
+
+		const float a1 = (c.c1(fSrcX,fSrcY,fSrcZ) - c.c1(fDetX,fDetY,fDetZ)) / (c.c0(fSrcX,fSrcY,fSrcZ) - c.c0(fDetX,fDetY,fDetZ));
+		const float a2 = (c.c2(fSrcX,fSrcY,fSrcZ) - c.c2(fDetX,fDetY,fDetZ)) / (c.c0(fSrcX,fSrcY,fSrcZ) - c.c0(fDetX,fDetY,fDetZ));
+		const float b1 = c.c1(fSrcX,fSrcY,fSrcZ) - a1 * c.c0(fSrcX,fSrcY,fSrcZ);
+		const float b2 = c.c2(fSrcX,fSrcY,fSrcZ) - a2 * c.c0(fSrcX,fSrcY,fSrcZ);
+
+		const float fDistCorr = sqrt(a1*a1+a2*a2+1.0f) * fOutputScale;
+
+		float fVal = 0.0f;
+
+		float f0 = startSlice + 0.5f;
+		float f1 = a1 * (startSlice - 0.5f*c.nSlices(dims) + 0.5f) + b1 + 0.5f*c.nDim1(dims) - 0.5f + 0.5f;
+		float f2 = a2 * (startSlice - 0.5f*c.nSlices(dims) + 0.5f) + b2 + 0.5f*c.nDim2(dims) - 0.5f + 0.5f;
+
+		for (int s = startSlice; s < endSlice; ++s)
+		{
+			fVal += c.tex(f0, f1, f2);
+			f0 += 1.0f;
+			f1 += a1;
+			f2 += a2;
+		}
+
+		fVal *= fDistCorr;
+		fV += fVal;
+
+		}
+		}
+
+		D_projData[(detectorV*dims.iProjAngles+angle)*projPitch+detectorU] += fV / (dims.iRaysPerDetDim * dims.iRaysPerDetDim);
 	}
-
-
-
-
- 
-__global__ void FP_dirX(float* D_projData, unsigned int projPitch, unsigned int startSlice, unsigned int startAngle, unsigned int endAngle, const SDimensions3D dims, float fOutputScale)
-{
-CONE_FP_BODY(X,Y,Z)
-}
-
-__global__ void FP_dirY(float* D_projData, unsigned int projPitch, unsigned int startSlice, unsigned int startAngle, unsigned int endAngle, const SDimensions3D dims, float fOutputScale)
-{
-CONE_FP_BODY(Y,X,Z)
-}
-
-__global__ void FP_dirZ(float* D_projData, unsigned int projPitch, unsigned int startSlice, unsigned int startAngle, unsigned int endAngle, const SDimensions3D dims, float fOutputScale)
-{
-CONE_FP_BODY(Z,X,Y)
-}
-
- 
-__global__ void FP_SS_dirX(float* D_projData, unsigned int projPitch, unsigned int startSlice, unsigned int startAngle, unsigned int endAngle, const SDimensions3D dims, float fOutputScale)
-{
-CONE_FP_SS_BODY(X,Y,Z)
-}
-
-__global__ void FP_SS_dirY(float* D_projData, unsigned int projPitch, unsigned int startSlice, unsigned int startAngle, unsigned int endAngle, const SDimensions3D dims, float fOutputScale)
-{
-CONE_FP_SS_BODY(Y,X,Z)
-}
-
-__global__ void FP_SS_dirZ(float* D_projData, unsigned int projPitch, unsigned int startSlice, unsigned int startAngle, unsigned int endAngle, const SDimensions3D dims, float fOutputScale)
-{
-CONE_FP_SS_BODY(Z,X,Y)
 }
 
 
@@ -354,21 +378,21 @@ bool ConeFP_Array(cudaArray *D_volArray,
 				if (blockDirection == 0) {
 					for (unsigned int i = 0; i < dims.iVolX; i += g_blockSlices)
 						if (dims.iRaysPerDetDim == 1)
-							FP_dirX<<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, fOutputScale);
+							cone_FP_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, fOutputScale);
 						else
-							FP_SS_dirX<<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, fOutputScale);
+							cone_FP_SS_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, fOutputScale);
 				} else if (blockDirection == 1) {
 					for (unsigned int i = 0; i < dims.iVolY; i += g_blockSlices)
 						if (dims.iRaysPerDetDim == 1)
-							FP_dirY<<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, fOutputScale);
+							cone_FP_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, fOutputScale);
 						else
-							FP_SS_dirY<<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, fOutputScale);
+							cone_FP_SS_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, fOutputScale);
 				} else if (blockDirection == 2) {
 					for (unsigned int i = 0; i < dims.iVolZ; i += g_blockSlices)
 						if (dims.iRaysPerDetDim == 1)
-							FP_dirZ<<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, fOutputScale);
+							cone_FP_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, fOutputScale);
 						else
-							FP_SS_dirZ<<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, fOutputScale);
+							cone_FP_SS_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, fOutputScale);
 				}
 
 			}
