@@ -9,8 +9,14 @@ Website: http://astra.ua.ac.be
          http://sf.net/projects/astra-toolbox
 -----------------------------------------------------------------------
 
+1.5 (2014-05-??)
+  * various consistency and bug fixes
+  * add support for fan beam FBP
+  * add astra_mex_data3d_c('link') command
+
 1.4 (2014-04-07)
   * various consistency and bug fixes
+  * add global astra_set_gpu_index
 
 1.3 (2013-07-02)
   * various consistency and bug fixes
