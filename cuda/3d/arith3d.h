@@ -37,6 +37,7 @@ struct opAddScaled;
 struct opScaleAndAdd;
 struct opAddMulScaled;
 struct opAddMul;
+struct opAdd;
 struct opMul;
 struct opMul2;
 struct opDividedBy;

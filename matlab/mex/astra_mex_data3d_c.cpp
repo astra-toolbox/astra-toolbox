@@ -277,6 +277,7 @@ extern "C" {
 mxArray *mxCreateSharedDataCopy(const mxArray *pr);
 bool mxUnshareArray(const mxArray *pr, const bool noDeepCopy);
 mxArray *mxUnreference(const mxArray *pr);
+bool mxIsSharedArray(const mxArray *pr);
 }
 
 class CFloat32CustomMemoryMatlab3D : public CFloat32CustomMemory {
@@ -287,6 +288,9 @@ public:
 		//fprintf(stderr, "Passed:\narray: %p\tdata: %p\n", (void*)_pArray, (void*)mxGetData(_pArray));
 		// First unshare the input array, so that we may modify it.
 		if (bUnshare) {
+			if (mxIsSharedArray(_pArray)) {
+				fprintf(stderr, "Performance note: unsharing shared array in link\n");
+			}
 			mxUnshareArray(_pArray, false);
 			//fprintf(stderr, "Unshared:\narray: %p\tdata: %p\n", (void*)_pArray, (void*)mxGetData(_pArray));
 		}

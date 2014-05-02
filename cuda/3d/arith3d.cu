@@ -52,6 +52,11 @@ struct opAddMul {
 		out += in1 * in2;
 	}
 };
+struct opAdd {
+	__device__ void operator()(float& out, const float in) {
+		out += in;
+	}
+};
 struct opMul {
 	__device__ void operator()(float& out, const float in) {
 		out *= in;
@@ -594,6 +599,7 @@ INST_DDFtoD(opAddMulScaled)
 INST_DDtoD(opAddMul)
 INST_DDtoD(opMul2)
 INST_DtoD(opMul)
+INST_DtoD(opAdd)
 INST_DtoD(opDividedBy)
 INST_toD(opInvert)
 INST_FtoD(opSet)

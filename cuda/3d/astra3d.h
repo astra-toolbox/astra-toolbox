@@ -429,6 +429,28 @@ _AstraExport bool astraCudaPar3DBP(float* pfVolume, const float* pfProjections,
                       const SPar3DProjection *pfAngles,
                       int iGPUIndex, int iVoxelSuperSampling);
 
+_AstraExport bool astraCudaPar3DBP_SIRTWeighted(float* pfVolume, const float* pfProjections,
+                      unsigned int iVolX,
+                      unsigned int iVolY,
+                      unsigned int iVolZ,
+                      unsigned int iProjAngles,
+                      unsigned int iProjU,
+                      unsigned int iProjV,
+                      float fDetUSize,
+                      float fDetVSize,
+                      const float *pfAngles,
+                      int iGPUIndex, int iVoxelSuperSampling);
+
+_AstraExport bool astraCudaPar3DBP_SIRTWeighted(float* pfVolume, const float* pfProjections,
+                      unsigned int iVolX,
+                      unsigned int iVolY,
+                      unsigned int iVolZ,
+                      unsigned int iProjAngles,
+                      unsigned int iProjU,
+                      unsigned int iProjV,
+                      const SPar3DProjection *pfAngles,
+                      int iGPUIndex, int iVoxelSuperSampling);
+
 _AstraExport bool astraCudaFDK(float* pfVolume, const float* pfProjections,
                   unsigned int iVolX,
                   unsigned int iVolY,

@@ -140,6 +140,13 @@ protected:
 	int m_iGPUIndex;
 	int m_iVoxelSuperSampling;
 
+	/** Option to compute the column weights on the fly, divide by
+	 *  them, and add the result to the current volume. This is both
+	 *  more expensive and more GPU memory intensive than the regular
+	 *  BP, but allows saving system RAM.
+	 */
+	bool m_bSIRTWeighting;
+
 };
 
 // inline functions

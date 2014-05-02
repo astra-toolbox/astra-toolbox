@@ -1463,6 +1463,40 @@ bool astraCudaPar3DBP(float* pfVolume, const float* pfProjections,
 	return ok;
 }
 
+// This computes the column weights, divides by them, and adds the
+// result to the current volume. This is both more expensive and more
+// GPU memory intensive than the regular BP, but allows saving system RAM.
+bool astraCudaPar3DBP_SIRTWeighted(float* pfVolume, const float* pfProjections,
+                      unsigned int iVolX,
+                      unsigned int iVolY,
+                      unsigned int iVolZ,
+                      unsigned int iProjAngles,
+                      unsigned int iProjU,
+                      unsigned int iProjV,
+                      float fDetUSize,
+                      float fDetVSize,
+                      const float *pfAngles,
+                      int iGPUIndex, int iVoxelSuperSampling)
+{
+	if (iVolX == 0 || iVolY == 0 || iVolZ == 0)
+		return false;
+	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || pfAngles == 0)
+		return false;
+
+	SPar3DProjection* p = genPar3DProjections(iProjAngles,
+                                             iProjU, iProjV,
+                                             fDetUSize, fDetVSize,
+                                             pfAngles);
+
+	bool ok;
+	ok = astraCudaPar3DBP_SIRTWeighted(pfVolume, pfProjections, iVolX, iVolY, iVolZ,
+	                      iProjAngles, iProjU, iProjV, p, iGPUIndex, iVoxelSuperSampling);
+
+	delete[] p;
+
+	return ok;
+}
+
 
 bool astraCudaPar3DBP(float* pfVolume, const float* pfProjections,
                       unsigned int iVolX,
@@ -1490,9 +1524,6 @@ bool astraCudaPar3DBP(float* pfVolume, const float* pfProjections,
 		return false;
 
 	dims.iRaysPerVoxelDim = iVoxelSuperSampling;
-
-	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || pfAngles == 0)
-		return false;
 
 	if (iGPUIndex != -1) {
 		cudaSetDevice(iGPUIndex);
@@ -1532,6 +1563,111 @@ bool astraCudaPar3DBP(float* pfVolume, const float* pfProjections,
 	ok &= copyVolumeFromDevice(pfVolume, D_volumeData, dims, dims.iVolX);
 
 
+	cudaFree(D_volumeData.ptr);
+	cudaFree(D_projData.ptr);
+
+	return ok;
+
+}
+
+
+// This computes the column weights, divides by them, and adds the
+// result to the current volume. This is both more expensive and more
+// GPU memory intensive than the regular BP, but allows saving system RAM.
+bool astraCudaPar3DBP_SIRTWeighted(float* pfVolume,
+                      const float* pfProjections,
+                      unsigned int iVolX,
+                      unsigned int iVolY,
+                      unsigned int iVolZ,
+                      unsigned int iProjAngles,
+                      unsigned int iProjU,
+                      unsigned int iProjV,
+                      const SPar3DProjection *pfAngles,
+                      int iGPUIndex, int iVoxelSuperSampling)
+{
+	SDimensions3D dims;
+
+	dims.iVolX = iVolX;
+	dims.iVolY = iVolY;
+	dims.iVolZ = iVolZ;
+	if (iVolX == 0 || iVolY == 0 || iVolZ == 0)
+		return false;
+
+	dims.iProjAngles = iProjAngles;
+	dims.iProjU = iProjU;
+	dims.iProjV = iProjV;
+
+	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || pfAngles == 0)
+		return false;
+
+	dims.iRaysPerVoxelDim = iVoxelSuperSampling;
+
+	if (iGPUIndex != -1) {
+		cudaSetDevice(iGPUIndex);
+		cudaError_t err = cudaGetLastError();
+
+		// Ignore errors caused by calling cudaSetDevice multiple times
+		if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
+			return false;
+	}
+
+
+	cudaPitchedPtr D_pixelWeight = allocateVolumeData(dims);
+	bool ok = D_pixelWeight.ptr;
+	if (!ok)
+		return false;
+
+	cudaPitchedPtr D_volumeData = allocateVolumeData(dims);
+	ok = D_volumeData.ptr;
+	if (!ok) {
+		cudaFree(D_pixelWeight.ptr);
+		return false;
+	}
+
+	cudaPitchedPtr D_projData = allocateProjectionData(dims);
+	ok = D_projData.ptr;
+	if (!ok) {
+		cudaFree(D_pixelWeight.ptr);
+		cudaFree(D_volumeData.ptr);
+		return false;
+	}
+
+	// Compute weights
+	ok &= zeroVolumeData(D_pixelWeight, dims);
+	processSino3D<opSet>(D_projData, 1.0f, dims);
+	ok &= Par3DBP(D_pixelWeight, D_projData, dims, pfAngles);
+	processVol3D<opInvert>(D_pixelWeight, dims);
+	if (!ok) {
+		cudaFree(D_pixelWeight.ptr);
+		cudaFree(D_volumeData.ptr);
+		cudaFree(D_projData.ptr);
+		return false;
+	}
+
+	ok &= copyProjectionsToDevice(pfProjections, D_projData,
+	                              dims, dims.iProjU);
+	ok &= zeroVolumeData(D_volumeData, dims);
+	// Do BP into D_volumeData
+	ok &= Par3DBP(D_volumeData, D_projData, dims, pfAngles);
+	// Multiply with weights
+	processVol3D<opMul>(D_volumeData, D_pixelWeight, dims);
+
+	// Upload previous iterate to D_pixelWeight...
+	ok &= copyVolumeToDevice(pfVolume, D_pixelWeight, dims, dims.iVolX);
+	if (!ok) {
+		cudaFree(D_pixelWeight.ptr);
+		cudaFree(D_volumeData.ptr);
+		cudaFree(D_projData.ptr);
+		return false;
+	}
+	// ...and add it to the weighted BP
+	processVol3D<opAdd>(D_volumeData, D_pixelWeight, dims);
+
+	// Then copy the result back
+	ok &= copyVolumeFromDevice(pfVolume, D_volumeData, dims, dims.iVolX);
+
+
+	cudaFree(D_pixelWeight.ptr);
 	cudaFree(D_volumeData.ptr);
 	cudaFree(D_projData.ptr);
 

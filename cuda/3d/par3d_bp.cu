@@ -136,13 +136,10 @@ __global__ void dev_par3D_BP(void* D_volData, unsigned int volPitch, int startAn
 			const float fCvz = gC_Cvz[angle];
 			const float fCvc = gC_Cvc[angle];
 
-			const float fUNum = fCuc + fX * fCux + fY * fCuy + fZ * fCuz;
-			const float fVNum = fCvc + fX * fCvx + fY * fCvy + fZ * fCvz;
+			const float fU = fCuc + fX * fCux + fY * fCuy + fZ * fCuz;
+			const float fV = fCvc + fX * fCvx + fY * fCvy + fZ * fCvz;
 
-			const float fU = fUNum;
-			const float fV = fVNum;
-
-			fVal += tex3D(gT_par3DProjTexture, fU, fAngle, fV); // TODO: check order
+			fVal += tex3D(gT_par3DProjTexture, fU, fAngle, fV);
 
 		}
 
@@ -213,13 +210,10 @@ __global__ void dev_par3D_BP_SS(void* D_volData, unsigned int volPitch, int star
 			float fZs = fZ;
 			for (int iSubZ = 0; iSubZ < dims.iRaysPerVoxelDim; ++iSubZ) {
 
-				const float fUNum = fCuc + fXs * fCux + fYs * fCuy + fZs * fCuz;
-				const float fVNum = fCvc + fXs * fCvx + fYs * fCvy + fZs * fCvz;
+				const float fU = fCuc + fXs * fCux + fYs * fCuy + fZs * fCuz;
+				const float fV = fCvc + fXs * fCvx + fYs * fCvy + fZs * fCvz;
 
-				const float fU = fUNum;
-				const float fV = fVNum;
-
-				fVal += tex3D(gT_par3DProjTexture, fU, fAngle, fV); // TODO: check order
+				fVal += tex3D(gT_par3DProjTexture, fU, fAngle, fV);
 				fZs += fSubStep;
 			}
 			fYs += fSubStep;
