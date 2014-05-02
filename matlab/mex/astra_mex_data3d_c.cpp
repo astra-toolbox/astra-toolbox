@@ -163,6 +163,7 @@ void astra_mex_data3d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 
 		// Initialize data object
 		pDataObject3D = new CFloat32ProjectionData3DMemory(pGeometry);		
+		delete pGeometry;
 	}
 
 	else if (sDataType == "-sinocone") {
@@ -396,8 +397,7 @@ void astra_mex_data3d_link(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 
 		// Initialize data object
 		pDataObject3D = new CFloat32VolumeData3DMemory(pGeometry, pHandle);		
-
-		//delete pGeometry; // ??
+		delete pGeometry;
 	}
 	else if (sDataType == "-sino" || sDataType == "-proj3d" || sDataType == "-sinocone") {
 
@@ -460,6 +460,7 @@ void astra_mex_data3d_link(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 
 		// Initialize data object
 		pDataObject3D = new CFloat32ProjectionData3DMemory(pGeometry, pHandle);
+		delete pGeometry;
 	}
 	else {
 		mexErrMsgTxt("Invalid datatype.  Please specify '-vol' or '-proj3d'. \n");
