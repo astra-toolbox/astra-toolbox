@@ -73,6 +73,7 @@ bool CFloat32Data3DMemory::_initialize(int _iWidth, int _iHeight, int _iDepth)
 	m_pfData = NULL;
 	m_ppfDataRowInd = NULL;
 	m_pppfDataSliceInd = NULL;
+	m_pCustomMemory = 0;
 	_allocateData();
 
 	// set minmax to default values
@@ -108,6 +109,7 @@ bool CFloat32Data3DMemory::_initialize(int _iWidth, int _iHeight, int _iDepth, c
 	m_pfData = NULL;
 	m_ppfDataRowInd = NULL;
 	m_pppfDataSliceInd = NULL;
+	m_pCustomMemory = 0;
 	_allocateData();
 
 	// fill the data block with a copy of the input data
@@ -144,6 +146,7 @@ bool CFloat32Data3DMemory::_initialize(int _iWidth, int _iHeight, int _iDepth, f
 	m_pfData = NULL;
 	m_ppfDataRowInd = NULL;
 	m_pppfDataSliceInd = NULL;
+	m_pCustomMemory = 0;
 	_allocateData();
 
 	// fill the data block with a copy of the input data

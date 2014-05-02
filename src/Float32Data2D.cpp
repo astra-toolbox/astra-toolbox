@@ -162,6 +162,7 @@ bool CFloat32Data2D::_initialize(int _iWidth, int _iHeight)
 	// allocate memory for the data, but do not fill it
 	m_pfData = 0;
 	m_ppfData2D = 0;
+	m_pCustomMemory = 0;
 	_allocateData();
 
 	// set minmax to default values
@@ -196,6 +197,7 @@ bool CFloat32Data2D::_initialize(int _iWidth, int _iHeight, const float32 *_pfDa
 	// allocate memory for the data 
 	m_pfData = 0;
 	m_ppfData2D = 0;
+	m_pCustomMemory = 0;
 	_allocateData();
 
 	// fill the data block with a copy of the input data
@@ -228,6 +230,7 @@ bool CFloat32Data2D::_initialize(int _iWidth, int _iHeight, float32 _fScalar)
 	// allocate memory for the data 
 	m_pfData = 0;
 	m_ppfData2D = 0;
+	m_pCustomMemory = 0;
 	_allocateData();
 
 	// fill the data block with a copy of the input data
