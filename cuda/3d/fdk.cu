@@ -40,6 +40,7 @@ $Id$
 #endif
 
 #include "dims3d.h"
+#include "arith3d.h"
 #include "../2d/fft.h"
 
 typedef texture<float, 3, cudaReadModeElementType> texture3D;
@@ -442,6 +443,9 @@ bool FDK(cudaPitchedPtr D_volumeData,
 
 	if (!ok)
 		return false;
+
+	processVol3D<opMul>(D_volumeData,
+	                  (M_PI / 2.0f) / (float)dims.iProjAngles, dims);
 
 	return true;
 }
