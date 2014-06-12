@@ -10,7 +10,7 @@ function s = astra_geom_size(geom, dim)
 		s = [numel(geom.ProjectionAngles), geom.DetectorCount];
 		
 	elseif strcmp(geom.type,'parallel3d') || strcmp(geom.type,'cone') 
-		s =  [geom.DetectorRowCount, numel(geom.ProjectionAngles), geom.DetectorColCount];
+		s =  [geom.DetectorColCount, numel(geom.ProjectionAngles), geom.DetectorRowCount];
 		
 	elseif strcmp(geom.type,'fanflat_vec')
 		s = [size(geom.Vectors,1), geom.DetectorCount];
