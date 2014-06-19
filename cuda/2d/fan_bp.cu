@@ -277,11 +277,10 @@ __global__ void devFanBP_FBPWeighted(float* D_volData, unsigned int volPitch, un
 }
 
 
-bool FanBP(float* D_volumeData, unsigned int volumePitch,
+bool FanBP_internal(float* D_volumeData, unsigned int volumePitch,
            float* D_projData, unsigned int projPitch,
            const SDimensions& dims, const SFanProjection* angles)
 {
-	// TODO: process angles block by block
 	assert(dims.iProjAngles <= g_MaxAngles);
 
 	bindProjDataTexture(D_projData, projPitch, dims.iProjDets, dims.iProjAngles);
@@ -324,11 +323,10 @@ bool FanBP(float* D_volumeData, unsigned int volumePitch,
 	return true;
 }
 
-bool FanBP_FBPWeighted(float* D_volumeData, unsigned int volumePitch,
+bool FanBP_FBPWeighted_internal(float* D_volumeData, unsigned int volumePitch,
            float* D_projData, unsigned int projPitch,
            const SDimensions& dims, const SFanProjection* angles)
 {
-	// TODO: process angles block by block
 	assert(dims.iProjAngles <= g_MaxAngles);
 
 	bindProjDataTexture(D_projData, projPitch, dims.iProjDets, dims.iProjAngles);
@@ -368,7 +366,6 @@ bool FanBP_FBPWeighted(float* D_volumeData, unsigned int volumePitch,
 	return true;
 }
 
-
 // D_projData is a pointer to one padded sinogram line
 bool FanBP_SART(float* D_volumeData, unsigned int volumePitch,
                 float* D_projData, unsigned int projPitch,
@@ -399,6 +396,49 @@ bool FanBP_SART(float* D_volumeData, unsigned int volumePitch,
 
 	cudaTextForceKernelsCompletion();
 
+	return true;
+}
+
+bool FanBP(float* D_volumeData, unsigned int volumePitch,
+           float* D_projData, unsigned int projPitch,
+           const SDimensions& dims, const SFanProjection* angles)
+{
+	for (unsigned int iAngle = 0; iAngle < dims.iProjAngles; iAngle += g_MaxAngles) {
+		SDimensions subdims = dims;
+		unsigned int iEndAngle = iAngle + g_MaxAngles;
+		if (iEndAngle >= dims.iProjAngles)
+			iEndAngle = dims.iProjAngles;
+		subdims.iProjAngles = iEndAngle - iAngle;
+
+		bool ret;
+		ret = FanBP_internal(D_volumeData, volumePitch,
+		                  D_projData + iAngle * projPitch, projPitch,
+		                  subdims, angles + iAngle);
+		if (!ret)
+			return false;
+	}
+	return true;
+}
+
+bool FanBP_FBPWeighted(float* D_volumeData, unsigned int volumePitch,
+           float* D_projData, unsigned int projPitch,
+           const SDimensions& dims, const SFanProjection* angles)
+{
+	for (unsigned int iAngle = 0; iAngle < dims.iProjAngles; iAngle += g_MaxAngles) {
+		SDimensions subdims = dims;
+		unsigned int iEndAngle = iAngle + g_MaxAngles;
+		if (iEndAngle >= dims.iProjAngles)
+			iEndAngle = dims.iProjAngles;
+		subdims.iProjAngles = iEndAngle - iAngle;
+
+		bool ret;
+		ret = FanBP_FBPWeighted_internal(D_volumeData, volumePitch,
+		                  D_projData + iAngle * projPitch, projPitch,
+		                  subdims, angles + iAngle);
+
+		if (!ret)
+			return false;
+	}
 	return true;
 }
 

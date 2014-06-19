@@ -224,12 +224,11 @@ __global__ void FanFPvertical(float* D_projData, unsigned int projPitch, unsigne
 	projData[angle*projPitch+detector] += fVal;
 }
 
-bool FanFP(float* D_volumeData, unsigned int volumePitch,
+bool FanFP_internal(float* D_volumeData, unsigned int volumePitch,
            float* D_projData, unsigned int projPitch,
            const SDimensions& dims, const SFanProjection* angles,
            float outputScale)
 {
-	// TODO: load angles into constant memory in smaller blocks
 	assert(dims.iProjAngles <= g_MaxAngles);
 
 	cudaArray* D_dataArray;
@@ -283,6 +282,29 @@ bool FanFP(float* D_volumeData, unsigned int volumePitch,
 
 	cudaFreeArray(D_dataArray);
 
+	return true;
+}
+
+bool FanFP(float* D_volumeData, unsigned int volumePitch,
+           float* D_projData, unsigned int projPitch,
+           const SDimensions& dims, const SFanProjection* angles,
+           float outputScale)
+{
+	for (unsigned int iAngle = 0; iAngle < dims.iProjAngles; iAngle += g_MaxAngles) {
+		SDimensions subdims = dims;
+		unsigned int iEndAngle = iAngle + g_MaxAngles;
+		if (iEndAngle >= dims.iProjAngles)
+			iEndAngle = dims.iProjAngles;
+		subdims.iProjAngles = iEndAngle - iAngle;
+
+		bool ret;
+		ret = FanFP_internal(D_volumeData, volumePitch,
+		                         D_projData + iAngle * projPitch, projPitch,
+		                         subdims, angles + iAngle,
+		                         outputScale);
+		if (!ret)
+			return false;
+	}
 	return true;
 }
 
