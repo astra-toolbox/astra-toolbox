@@ -87,13 +87,13 @@ bool bindProjDataTexture(const cudaArray* array)
 }
 
 
-__global__ void dev_cone_BP(void* D_volData, unsigned int volPitch, int startAngle, const SDimensions3D dims)
+__global__ void dev_cone_BP(void* D_volData, unsigned int volPitch, int startAngle, int angleOffset, const SDimensions3D dims)
 {
 	float* volData = (float*)D_volData;
 
 	int endAngle = startAngle + g_anglesPerBlock;
-	if (endAngle > dims.iProjAngles)
-		endAngle = dims.iProjAngles;
+	if (endAngle > dims.iProjAngles - angleOffset)
+		endAngle = dims.iProjAngles - angleOffset;
 
 	// threadIdx: x = rel x
 	//            y = rel y
@@ -126,7 +126,7 @@ __global__ void dev_cone_BP(void* D_volData, unsigned int volPitch, int startAng
 	{
 
 		float fVal = 0.0f;
-		float fAngle = startAngle + 0.5f;
+		float fAngle = startAngle + angleOffset + 0.5f;
 
 		for (int angle = startAngle; angle < endAngle; ++angle, fAngle += 1.0f)
 		{
@@ -161,13 +161,13 @@ __global__ void dev_cone_BP(void* D_volData, unsigned int volPitch, int startAng
 }
 
 // supersampling version
-__global__ void dev_cone_BP_SS(void* D_volData, unsigned int volPitch, int startAngle, const SDimensions3D dims)
+__global__ void dev_cone_BP_SS(void* D_volData, unsigned int volPitch, int startAngle, int angleOffset, const SDimensions3D dims)
 {
 	float* volData = (float*)D_volData;
 
 	int endAngle = startAngle + g_anglesPerBlock;
-	if (endAngle > dims.iProjAngles)
-		endAngle = dims.iProjAngles;
+	if (endAngle > dims.iProjAngles - angleOffset)
+		endAngle = dims.iProjAngles - angleOffset;
 
 	// threadIdx: x = rel x
 	//            y = rel y
@@ -201,7 +201,7 @@ __global__ void dev_cone_BP_SS(void* D_volData, unsigned int volPitch, int start
 	{
 
 		float fVal = 0.0f;
-		float fAngle = startAngle + 0.5f;
+		float fAngle = startAngle + angleOffset + 0.5f;
 
 		for (int angle = startAngle; angle < endAngle; ++angle, fAngle += 1.0f)
 		{
@@ -256,49 +256,60 @@ bool ConeBP_Array(cudaPitchedPtr D_volumeData,
 {
 	bindProjDataTexture(D_projArray);
 
+	for (unsigned int th = 0; th < dims.iProjAngles; th += g_MaxAngles) {
+		unsigned int angleCount = g_MaxAngles;
+		if (th + angleCount > dims.iProjAngles)
+			angleCount = dims.iProjAngles - th;
 
-	// transfer angles to constant memory
-	float* tmp = new float[dims.iProjAngles];
+		// transfer angles to constant memory
+		float* tmp = new float[angleCount];
 
-#define TRANSFER_TO_CONSTANT(expr,name) do { for (unsigned int i = 0; i < dims.iProjAngles; ++i) tmp[i] = (expr) ; cudaMemcpyToSymbol(gC_##name, tmp, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice); } while (0)
 
-	TRANSFER_TO_CONSTANT( (angles[i].fDetSZ - angles[i].fSrcZ)*angles[i].fDetVY - (angles[i].fDetSY - angles[i].fSrcY)*angles[i].fDetVZ , Cux );
-	TRANSFER_TO_CONSTANT( (angles[i].fDetSX - angles[i].fSrcX)*angles[i].fDetVZ -(angles[i].fDetSZ - angles[i].fSrcZ)*angles[i].fDetVX , Cuy );
-	TRANSFER_TO_CONSTANT( (angles[i].fDetSY - angles[i].fSrcY)*angles[i].fDetVX - (angles[i].fDetSX - angles[i].fSrcX)*angles[i].fDetVY , Cuz );
-	TRANSFER_TO_CONSTANT( (angles[i].fDetSY*angles[i].fDetVZ - angles[i].fDetSZ*angles[i].fDetVY)*angles[i].fSrcX - (angles[i].fDetSX*angles[i].fDetVZ - angles[i].fDetSZ*angles[i].fDetVX)*angles[i].fSrcY + (angles[i].fDetSX*angles[i].fDetVY - angles[i].fDetSY*angles[i].fDetVX)*angles[i].fSrcZ , Cuc );
+		// NB: We increment angles at the end of the loop body.
 
-	TRANSFER_TO_CONSTANT( (angles[i].fDetSY - angles[i].fSrcY)*angles[i].fDetUZ-(angles[i].fDetSZ - angles[i].fSrcZ)*angles[i].fDetUY, Cvx );
-	TRANSFER_TO_CONSTANT( (angles[i].fDetSZ - angles[i].fSrcZ)*angles[i].fDetUX - (angles[i].fDetSX - angles[i].fSrcX)*angles[i].fDetUZ , Cvy );
-	TRANSFER_TO_CONSTANT((angles[i].fDetSX - angles[i].fSrcX)*angles[i].fDetUY-(angles[i].fDetSY - angles[i].fSrcY)*angles[i].fDetUX , Cvz );
-	TRANSFER_TO_CONSTANT( -(angles[i].fDetSY*angles[i].fDetUZ - angles[i].fDetSZ*angles[i].fDetUY)*angles[i].fSrcX + (angles[i].fDetSX*angles[i].fDetUZ - angles[i].fDetSZ*angles[i].fDetUX)*angles[i].fSrcY - (angles[i].fDetSX*angles[i].fDetUY - angles[i].fDetSY*angles[i].fDetUX)*angles[i].fSrcZ , Cvc );
+#define TRANSFER_TO_CONSTANT(expr,name) do { for (unsigned int i = 0; i < angleCount; ++i) tmp[i] = (expr) ; cudaMemcpyToSymbol(gC_##name, tmp, angleCount*sizeof(float), 0, cudaMemcpyHostToDevice); } while (0)
 
-	TRANSFER_TO_CONSTANT( angles[i].fDetUY*angles[i].fDetVZ - angles[i].fDetUZ*angles[i].fDetVY , Cdx );
-	TRANSFER_TO_CONSTANT( angles[i].fDetUZ*angles[i].fDetVX - angles[i].fDetUX*angles[i].fDetVZ , Cdy );
-	TRANSFER_TO_CONSTANT( angles[i].fDetUX*angles[i].fDetVY - angles[i].fDetUY*angles[i].fDetVX , Cdz );
-	TRANSFER_TO_CONSTANT( -angles[i].fSrcX * (angles[i].fDetUY*angles[i].fDetVZ - angles[i].fDetUZ*angles[i].fDetVY) - angles[i].fSrcY * (angles[i].fDetUZ*angles[i].fDetVX - angles[i].fDetUX*angles[i].fDetVZ) - angles[i].fSrcZ * (angles[i].fDetUX*angles[i].fDetVY - angles[i].fDetUY*angles[i].fDetVX) , Cdc );
+		TRANSFER_TO_CONSTANT( (angles[i].fDetSZ - angles[i].fSrcZ)*angles[i].fDetVY - (angles[i].fDetSY - angles[i].fSrcY)*angles[i].fDetVZ , Cux );
+		TRANSFER_TO_CONSTANT( (angles[i].fDetSX - angles[i].fSrcX)*angles[i].fDetVZ -(angles[i].fDetSZ - angles[i].fSrcZ)*angles[i].fDetVX , Cuy );
+		TRANSFER_TO_CONSTANT( (angles[i].fDetSY - angles[i].fSrcY)*angles[i].fDetVX - (angles[i].fDetSX - angles[i].fSrcX)*angles[i].fDetVY , Cuz );
+		TRANSFER_TO_CONSTANT( (angles[i].fDetSY*angles[i].fDetVZ - angles[i].fDetSZ*angles[i].fDetVY)*angles[i].fSrcX - (angles[i].fDetSX*angles[i].fDetVZ - angles[i].fDetSZ*angles[i].fDetVX)*angles[i].fSrcY + (angles[i].fDetSX*angles[i].fDetVY - angles[i].fDetSY*angles[i].fDetVX)*angles[i].fSrcZ , Cuc );
+
+		TRANSFER_TO_CONSTANT( (angles[i].fDetSY - angles[i].fSrcY)*angles[i].fDetUZ-(angles[i].fDetSZ - angles[i].fSrcZ)*angles[i].fDetUY, Cvx );
+		TRANSFER_TO_CONSTANT( (angles[i].fDetSZ - angles[i].fSrcZ)*angles[i].fDetUX - (angles[i].fDetSX - angles[i].fSrcX)*angles[i].fDetUZ , Cvy );
+		TRANSFER_TO_CONSTANT((angles[i].fDetSX - angles[i].fSrcX)*angles[i].fDetUY-(angles[i].fDetSY - angles[i].fSrcY)*angles[i].fDetUX , Cvz );
+		TRANSFER_TO_CONSTANT( -(angles[i].fDetSY*angles[i].fDetUZ - angles[i].fDetSZ*angles[i].fDetUY)*angles[i].fSrcX + (angles[i].fDetSX*angles[i].fDetUZ - angles[i].fDetSZ*angles[i].fDetUX)*angles[i].fSrcY - (angles[i].fDetSX*angles[i].fDetUY - angles[i].fDetSY*angles[i].fDetUX)*angles[i].fSrcZ , Cvc );
+
+		TRANSFER_TO_CONSTANT( angles[i].fDetUY*angles[i].fDetVZ - angles[i].fDetUZ*angles[i].fDetVY , Cdx );
+		TRANSFER_TO_CONSTANT( angles[i].fDetUZ*angles[i].fDetVX - angles[i].fDetUX*angles[i].fDetVZ , Cdy );
+		TRANSFER_TO_CONSTANT( angles[i].fDetUX*angles[i].fDetVY - angles[i].fDetUY*angles[i].fDetVX , Cdz );
+		TRANSFER_TO_CONSTANT( -angles[i].fSrcX * (angles[i].fDetUY*angles[i].fDetVZ - angles[i].fDetUZ*angles[i].fDetVY) - angles[i].fSrcY * (angles[i].fDetUZ*angles[i].fDetVX - angles[i].fDetUX*angles[i].fDetVZ) - angles[i].fSrcZ * (angles[i].fDetUX*angles[i].fDetVY - angles[i].fDetUY*angles[i].fDetVX) , Cdc );
 
 #undef TRANSFER_TO_CONSTANT
 
-	delete[] tmp;
+		delete[] tmp;
 
-	dim3 dimBlock(g_volBlockX, g_volBlockY);
+		dim3 dimBlock(g_volBlockX, g_volBlockY);
 
-	dim3 dimGrid(((dims.iVolX+g_volBlockX-1)/g_volBlockX)*((dims.iVolY+g_volBlockY-1)/g_volBlockY), (dims.iVolZ+g_volBlockZ-1)/g_volBlockZ);
+		dim3 dimGrid(((dims.iVolX+g_volBlockX-1)/g_volBlockX)*((dims.iVolY+g_volBlockY-1)/g_volBlockY), (dims.iVolZ+g_volBlockZ-1)/g_volBlockZ);
 
-	// timeval t;
-	// tic(t);
+		// timeval t;
+		// tic(t);
 
-	for (unsigned int i = 0; i < dims.iProjAngles; i += g_anglesPerBlock) {
+		for (unsigned int i = 0; i < angleCount; i += g_anglesPerBlock) {
 		// printf("Calling BP: %d, %dx%d, %dx%d to %p\n", i, dimBlock.x, dimBlock.y, dimGrid.x, dimGrid.y, (void*)D_volumeData.ptr); 
-		if (dims.iRaysPerVoxelDim == 1)
-			dev_cone_BP<<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, dims);
-		else
-			dev_cone_BP_SS<<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, dims);
+			if (dims.iRaysPerVoxelDim == 1)
+				dev_cone_BP<<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims);
+			else
+				dev_cone_BP_SS<<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims);
+		}
+
+		cudaTextForceKernelsCompletion();
+
+		angles = angles + angleCount;
+		// printf("%f\n", toc(t));
+
 	}
 
-	cudaTextForceKernelsCompletion();
-
-	// printf("%f\n", toc(t));
 
 	return true;
 }

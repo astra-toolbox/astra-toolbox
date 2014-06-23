@@ -299,18 +299,14 @@ __global__ void cone_FP_SS_t(float* D_projData, unsigned int projPitch,
 }
 
 
-
-bool ConeFP_Array(cudaArray *D_volArray,
-                  cudaPitchedPtr D_projData,
-                  const SDimensions3D& dims, const SConeProjection* angles,
+bool ConeFP_Array_internal(cudaPitchedPtr D_projData,
+                  const SDimensions3D& dims, unsigned int angleCount, const SConeProjection* angles,
                   float fOutputScale)
 {
-	bindVolumeDataTexture(D_volArray);
-
 	// transfer angles to constant memory
-	float* tmp = new float[dims.iProjAngles];
+	float* tmp = new float[angleCount];
 
-#define TRANSFER_TO_CONSTANT(name) do { for (unsigned int i = 0; i < dims.iProjAngles; ++i) tmp[i] = angles[i].f##name ; cudaMemcpyToSymbol(gC_##name, tmp, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice); } while (0)
+#define TRANSFER_TO_CONSTANT(name) do { for (unsigned int i = 0; i < angleCount; ++i) tmp[i] = angles[i].f##name ; cudaMemcpyToSymbol(gC_##name, tmp, angleCount*sizeof(float), 0, cudaMemcpyHostToDevice); } while (0)
 
 	TRANSFER_TO_CONSTANT(SrcX);
 	TRANSFER_TO_CONSTANT(SrcY);
@@ -343,9 +339,9 @@ bool ConeFP_Array(cudaArray *D_volArray,
 	// timeval t;
 	// tic(t);
 
-	for (unsigned int a = 0; a <= dims.iProjAngles; ++a) {
+	for (unsigned int a = 0; a <= angleCount; ++a) {
 		int dir;
-		if (a != dims.iProjAngles) {
+		if (a != angleCount) {
 			float dX = fabsf(angles[a].fSrcX - (angles[a].fDetSX + dims.iProjU*angles[a].fDetUX*0.5f + dims.iProjV*angles[a].fDetVX*0.5f));
 			float dY = fabsf(angles[a].fSrcY - (angles[a].fDetSY + dims.iProjU*angles[a].fDetUY*0.5f + dims.iProjV*angles[a].fDetVY*0.5f));
 			float dZ = fabsf(angles[a].fSrcZ - (angles[a].fDetSZ + dims.iProjU*angles[a].fDetUZ*0.5f + dims.iProjV*angles[a].fDetVZ*0.5f));
@@ -358,7 +354,7 @@ bool ConeFP_Array(cudaArray *D_volArray,
 				dir = 2;
 		}
 
-		if (a == dims.iProjAngles || dir != blockDirection) {
+		if (a == angleCount || dir != blockDirection) {
 			// block done
 
 			blockEnd = a;
@@ -414,6 +410,7 @@ bool ConeFP_Array(cudaArray *D_volArray,
 	return true;
 }
 
+
 bool ConeFP(cudaPitchedPtr D_volumeData,
             cudaPitchedPtr D_projData,
             const SDimensions3D& dims, const SConeProjection* angles,
@@ -423,8 +420,24 @@ bool ConeFP(cudaPitchedPtr D_volumeData,
 
 	cudaArray* cuArray = allocateVolumeArray(dims);
 	transferVolumeToArray(D_volumeData, cuArray, dims);
+	bindVolumeDataTexture(cuArray);
 
-	bool ret = ConeFP_Array(cuArray, D_projData, dims, angles, fOutputScale);
+	bool ret;
+
+	for (unsigned int iAngle = 0; iAngle < dims.iProjAngles; iAngle += g_MaxAngles) {
+		unsigned int iEndAngle = iAngle + g_MaxAngles;
+		if (iEndAngle >= dims.iProjAngles)
+			iEndAngle = dims.iProjAngles;
+
+		cudaPitchedPtr D_subprojData = D_projData;
+		D_subprojData.ptr = (char*)D_projData.ptr + iAngle * D_projData.pitch;
+
+		ret = ConeFP_Array_internal(D_subprojData,
+		                            dims, iEndAngle - iAngle, angles + iAngle,
+		                            fOutputScale);
+		if (!ret)
+			break;
+	}
 
 	cudaFreeArray(cuArray);
 
