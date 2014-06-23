@@ -399,19 +399,14 @@ __global__ void par3D_FP_SumSqW_t(float* D_projData, unsigned int projPitch,
 // TODO
 
 
-bool Par3DFP_Array(cudaArray *D_volArray,
-                   cudaPitchedPtr D_projData,
-                   const SDimensions3D& dims, const SPar3DProjection* angles,
+bool Par3DFP_Array_internal(cudaPitchedPtr D_projData,
+                   const SDimensions3D& dims, unsigned int angleCount, const SPar3DProjection* angles,
                    float fOutputScale)
 {
-
-	bindVolumeDataTexture(D_volArray);
-
-
 	// transfer angles to constant memory
 	float* tmp = new float[dims.iProjAngles];
 
-#define TRANSFER_TO_CONSTANT(name) do { for (unsigned int i = 0; i < dims.iProjAngles; ++i) tmp[i] = angles[i].f##name ; cudaMemcpyToSymbol(gC_##name, tmp, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice); } while (0)
+#define TRANSFER_TO_CONSTANT(name) do { for (unsigned int i = 0; i < angleCount; ++i) tmp[i] = angles[i].f##name ; cudaMemcpyToSymbol(gC_##name, tmp, angleCount*sizeof(float), 0, cudaMemcpyHostToDevice); } while (0)
 
 	TRANSFER_TO_CONSTANT(RayX);
 	TRANSFER_TO_CONSTANT(RayY);
@@ -444,7 +439,7 @@ bool Par3DFP_Array(cudaArray *D_volArray,
 	// timeval t;
 	// tic(t);
 
-	for (unsigned int a = 0; a <= dims.iProjAngles; ++a) {
+	for (unsigned int a = 0; a <= angleCount; ++a) {
 		int dir;
 		if (a != dims.iProjAngles) {
 			float dX = fabsf(angles[a].fRayX);
@@ -459,7 +454,7 @@ bool Par3DFP_Array(cudaArray *D_volArray,
 				dir = 2;
 		}
 
-		if (a == dims.iProjAngles || dir != blockDirection) {
+		if (a == angleCount || dir != blockDirection) {
 			// block done
 
 			blockEnd = a;
@@ -524,8 +519,24 @@ bool Par3DFP(cudaPitchedPtr D_volumeData,
 	// transfer volume to array
 	cudaArray* cuArray = allocateVolumeArray(dims);
 	transferVolumeToArray(D_volumeData, cuArray, dims);
+	bindVolumeDataTexture(cuArray);
 
-	bool ret = Par3DFP_Array(cuArray, D_projData, dims, angles, fOutputScale);
+	bool ret;
+
+	for (unsigned int iAngle = 0; iAngle < dims.iProjAngles; iAngle += g_MaxAngles) {
+		unsigned int iEndAngle = iAngle + g_MaxAngles;
+		if (iEndAngle >= dims.iProjAngles)
+			iEndAngle = dims.iProjAngles;
+
+		cudaPitchedPtr D_subprojData = D_projData;
+		D_subprojData.ptr = (char*)D_projData.ptr + iAngle * D_projData.pitch;
+
+		ret = Par3DFP_Array_internal(D_subprojData,
+		                             dims, iEndAngle - iAngle, angles + iAngle,
+		                             fOutputScale);
+		if (!ret)
+			break;
+	}
 
 	cudaFreeArray(cuArray);
 
