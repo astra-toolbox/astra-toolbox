@@ -114,6 +114,7 @@ bool CCudaReconstructionAlgorithm2D::initialize(const Config& _cfg)
 		m_bUseReconstructionMask = true;
 		id = boost::lexical_cast<int>(_cfg.self->getOption("ReconstructionMaskId"));
 		m_pReconstructionMask = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
+		ASTRA_CONFIG_CHECK(m_pReconstructionMask, "CudaReconstruction2D", "Invalid ReconstructionMaskId.");
 	}
 	CC.markOptionParsed("ReconstructionMaskId");
 	// fixed mask
@@ -121,6 +122,7 @@ bool CCudaReconstructionAlgorithm2D::initialize(const Config& _cfg)
 		m_bUseSinogramMask = true;
 		id = boost::lexical_cast<int>(_cfg.self->getOption("SinogramMaskId"));
 		m_pSinogramMask = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
+		ASTRA_CONFIG_CHECK(m_pSinogramMask, "CudaReconstruction2D", "Invalid SinogramMaskId.");
 	}
 	CC.markOptionParsed("SinogramMaskId");
 
@@ -174,7 +176,7 @@ bool CCudaReconstructionAlgorithm2D::initialize(const Config& _cfg)
 		id = boost::lexical_cast<int>(node->getContent());
 		CProjector2D *projector = CProjector2DManager::getSingleton().get(id);
 		if (!dynamic_cast<CCudaProjector2D*>(projector)) {
-			cout << "Warning: non-CUDA Projector2D passed to FP_CUDA" << std::endl;
+			cout << "Warning: non-CUDA Projector2D passed" << std::endl;
 		}
 		delete node;
 	}

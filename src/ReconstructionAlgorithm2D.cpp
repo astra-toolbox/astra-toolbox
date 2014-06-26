@@ -112,6 +112,7 @@ bool CReconstructionAlgorithm2D::initialize(const Config& _cfg)
 		m_bUseReconstructionMask = true;
 		id = boost::lexical_cast<int>(_cfg.self->getOption("ReconstructionMaskId"));
 		m_pReconstructionMask = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
+		ASTRA_CONFIG_CHECK(m_pReconstructionMask, "Reconstruction2D", "Invalid ReconstructionMaskId.");
 	}
 	CC.markOptionParsed("ReconstructionMaskId");
 
@@ -120,6 +121,7 @@ bool CReconstructionAlgorithm2D::initialize(const Config& _cfg)
 		m_bUseSinogramMask = true;
 		id = boost::lexical_cast<int>(_cfg.self->getOption("SinogramMaskId"));
 		m_pSinogramMask = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
+		ASTRA_CONFIG_CHECK(m_pSinogramMask, "Reconstruction2D", "Invalid SinogramMaskId.");
 	}
 	CC.markOptionParsed("SinogramMaskId");
 
