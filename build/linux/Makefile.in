@@ -53,7 +53,7 @@ SHELL=@SHELL@
 ifeq ($(matlab),yes)
 MEXFLAGS  = -cxx 
 MEXLDFLAGS='$$LDFLAGS $(LDFLAGS)'
-MEXLIBS   ="-L.libs -lut"
+MEXLIBS   = -L.libs -lut
 MEXSUFFIX = @MEXSUFFIX@
 MEX       = @MEX@
 
