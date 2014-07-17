@@ -46,19 +46,6 @@ AC_LANG([C++])
 dnl Use iostream to check if the C++ compiler works
 AC_CHECK_HEADER(iostream, , AC_MSG_ERROR([No working c++ compiler found]))
 
-dnl TODO: Use ../../lib/include instead of .../tnt once all other
-dnl       libraries have been moved out of SVN
-TNT_CPPFLAGS="-I../../lib/include/tnt -DJAMA_NO_SUBDIR"
-CPPFLAGS="$CPPFLAGS $TNT_CPPFLAGS"
-AC_CHECK_HEADER(tnt.h, HAVETNT=yes, HAVETNT=no)
-AC_CHECK_HEADER(jama_lu.h, HAVEJAMA=yes, HAVEJAMA=no)
-
-if test x$HAVETNT = xno -o x$HAVEJAMA = xno; then
-  AC_MSG_ERROR([tnt or jama not found])
-fi
-AC_SUBST(TNT_CPPFLAGS)
-
-
 
 # boost-unit-test-framework
 
