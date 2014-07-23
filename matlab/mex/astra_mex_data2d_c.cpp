@@ -105,6 +105,10 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 		mexErrMsgTxt("Data must be single, double or logical.");
 		return;
 	}
+	if (mxIsSparse(prhs[2])) {
+		mexErrMsgTxt("Data may not be sparse.");
+		return;
+	}
 
 	// SWITCH DataType
 	if (sDataType == "-vol") {
@@ -292,6 +296,10 @@ void astra_mex_data2d_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 
 	if (!(mex_is_scalar(prhs[2]) || mxIsDouble(prhs[2]) || mxIsLogical(prhs[2]) || mxIsSingle(prhs[2]))) {
 		mexErrMsgTxt("Data must be single, double or logical.");
+		return;
+	}
+	if (mxIsSparse(prhs[2])) {
+		mexErrMsgTxt("Data may not be sparse.");
 		return;
 	}
 
