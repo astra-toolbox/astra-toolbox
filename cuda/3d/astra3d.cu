@@ -395,14 +395,11 @@ bool AstraSIRT3d::setGPUIndex(int index)
 
 bool AstraSIRT3d::init()
 {
-	fprintf(stderr, "001: %d\n", true);
 	if (pData->initialized)
 		return false;
-	fprintf(stderr, "002: %d\n", true);
 
 	if (pData->dims.iVolX == 0 || pData->dims.iProjAngles == 0)
 		return false;
-	fprintf(stderr, "003: %d\n", true);
 
 	bool ok;
 
@@ -411,7 +408,6 @@ bool AstraSIRT3d::init()
 	} else {
 		ok = pData->sirt.setConeGeometry(pData->dims, pData->projs);
 	}
-	fprintf(stderr, "004: %d\n", ok);
 
 	if (!ok)
 		return false;
@@ -419,15 +415,12 @@ bool AstraSIRT3d::init()
 	ok = pData->sirt.init();
 	if (!ok)
 		return false;
-	fprintf(stderr, "005: %d\n", ok);
 
 	pData->D_volumeData = allocateVolumeData(pData->dims);
 	ok = pData->D_volumeData.ptr;
 	if (!ok)
 		return false;
-	fprintf(stderr, "006: %d\n", ok);
 
-	fprintf(stderr, "proj: %d %d %d\n", pData->dims.iProjAngles, pData->dims.iProjU, pData->dims.iProjV);
 	pData->D_projData = allocateProjectionData(pData->dims);
 	ok = pData->D_projData.ptr;
 	if (!ok) {
@@ -435,7 +428,6 @@ bool AstraSIRT3d::init()
 		pData->D_volumeData.ptr = 0;
 		return false;
 	}
-	fprintf(stderr, "007: %d\n", ok);
 
 	if (pData->useVolumeMask) {
 		pData->D_maskData = allocateVolumeData(pData->dims);
@@ -462,7 +454,6 @@ bool AstraSIRT3d::init()
 			return false;
 		}
 	}
-	fprintf(stderr, "008: %d\n", ok);
 
 	pData->initialized = true;
 
@@ -874,14 +865,11 @@ bool AstraCGLS3d::setGPUIndex(int index)
 
 bool AstraCGLS3d::init()
 {
-	fprintf(stderr, "001: %d\n", true);
 	if (pData->initialized)
 		return false;
-	fprintf(stderr, "002: %d\n", true);
 
 	if (pData->dims.iVolX == 0 || pData->dims.iProjAngles == 0)
 		return false;
-	fprintf(stderr, "003: %d\n", true);
 
 	bool ok;
 
@@ -890,7 +878,6 @@ bool AstraCGLS3d::init()
 	} else {
 		ok = pData->cgls.setConeGeometry(pData->dims, pData->projs);
 	}
-	fprintf(stderr, "004: %d\n", ok);
 
 	if (!ok)
 		return false;
@@ -898,15 +885,12 @@ bool AstraCGLS3d::init()
 	ok = pData->cgls.init();
 	if (!ok)
 		return false;
-	fprintf(stderr, "005: %d\n", ok);
 
 	pData->D_volumeData = allocateVolumeData(pData->dims);
 	ok = pData->D_volumeData.ptr;
 	if (!ok)
 		return false;
-	fprintf(stderr, "006: %d\n", ok);
 
-	fprintf(stderr, "proj: %d %d %d\n", pData->dims.iProjAngles, pData->dims.iProjU, pData->dims.iProjV);
 	pData->D_projData = allocateProjectionData(pData->dims);
 	ok = pData->D_projData.ptr;
 	if (!ok) {
@@ -914,7 +898,6 @@ bool AstraCGLS3d::init()
 		pData->D_volumeData.ptr = 0;
 		return false;
 	}
-	fprintf(stderr, "007: %d\n", ok);
 
 	if (pData->useVolumeMask) {
 		pData->D_maskData = allocateVolumeData(pData->dims);
@@ -941,7 +924,6 @@ bool AstraCGLS3d::init()
 			return false;
 		}
 	}
-	fprintf(stderr, "008: %d\n", ok);
 
 	pData->initialized = true;
 

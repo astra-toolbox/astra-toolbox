@@ -225,8 +225,6 @@ bool SIRT::setBuffers(cudaPitchedPtr& _D_volumeData,
 	D_volumeData = _D_volumeData;
 	D_sinoData = _D_projData;
 
-	fprintf(stderr, "Reconstruction buffer: %p\n", (void*)D_volumeData.ptr);
-
 	return true;
 }
 
