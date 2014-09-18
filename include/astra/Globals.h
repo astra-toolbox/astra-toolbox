@@ -176,7 +176,7 @@ namespace astra {
 		int quad; 
 
 		//x = fmod(x, 2*PI);		// Get rid of values > 2* pi
-		if (x < 0) x =- x;		// cos(-x) = cos(x)
+		if (x < 0) x = -x;		// cos(-x) = cos(x)
 		quad = int(x/PIdiv2);	// Get quadrant # (0 to 3) 
 		switch (quad) {
 			case 0: return  cos_73s(x);
