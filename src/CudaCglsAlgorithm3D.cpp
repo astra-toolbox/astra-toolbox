@@ -195,8 +195,6 @@ void CCudaCglsAlgorithm3D::run(int _iNrIterations)
                                   float fDetVSize,
                                   const float *pfAngles)
 */
-		fprintf(stderr, "01: %d\n", ok);
-
 		if (conegeom) {
 			ok &= m_pCgls->setConeGeometry(conegeom->getProjectionCount(),
 			                               conegeom->getDetectorColCount(),
@@ -219,7 +217,6 @@ void CCudaCglsAlgorithm3D::run(int _iNrIterations)
 		} else {
 			ASTRA_ASSERT(false);
 		}
-		fprintf(stderr, "02: %d\n", ok);
 
 		ok &= m_pCgls->enableSuperSampling(m_iVoxelSuperSampling, m_iDetectorSuperSampling);
 
@@ -231,10 +228,8 @@ void CCudaCglsAlgorithm3D::run(int _iNrIterations)
 #endif
 
 		ASTRA_ASSERT(ok);
-		fprintf(stderr, "03: %d\n", ok);
 
 		ok &= m_pCgls->init();
-		fprintf(stderr, "04: %d\n", ok);
 
 		ASTRA_ASSERT(ok);
 
@@ -247,7 +242,6 @@ void CCudaCglsAlgorithm3D::run(int _iNrIterations)
 
 	ok = m_pCgls->setSinogram(pSinoMem->getDataConst(), m_pSinogram->getGeometry()->getDetectorColCount());
 
-	fprintf(stderr, "1: %d\n", ok);
 	ASTRA_ASSERT(ok);
 
 	if (m_bUseReconstructionMask) {
@@ -262,7 +256,6 @@ void CCudaCglsAlgorithm3D::run(int _iNrIterations)
 		ok &= m_pCgls->setSinogramMask(pSMaskMem->getDataConst(), m_pSinogramMask->getGeometry()->getDetectorColCount());
 	}
 #endif
-	fprintf(stderr, "2: %d\n", ok);
 
 	CFloat32VolumeData3DMemory* pReconMem = dynamic_cast<CFloat32VolumeData3DMemory*>(m_pReconstruction);
 	ASTRA_ASSERT(pReconMem);
@@ -270,7 +263,6 @@ void CCudaCglsAlgorithm3D::run(int _iNrIterations)
 	                                      volgeom.getGridColCount());
 
 	ASTRA_ASSERT(ok);
-	fprintf(stderr, "3: %d\n", ok);
 
 #if 0
 	if (m_bUseMinConstraint)
@@ -278,15 +270,12 @@ void CCudaCglsAlgorithm3D::run(int _iNrIterations)
 	if (m_bUseMaxConstraint)
 		ok &= m_pCgls->setMaxConstraint(m_fMaxValue);
 #endif
-	fprintf(stderr, "4: %d\n", ok);
 
 	ok &= m_pCgls->iterate(_iNrIterations);
 	ASTRA_ASSERT(ok);
-	fprintf(stderr, "5: %d\n", ok);
 
 	ok &= m_pCgls->getReconstruction(pReconMem->getData(),
 	                                 volgeom.getGridColCount());
-	fprintf(stderr, "6: %d\n", ok);
 	ASTRA_ASSERT(ok);
 
 

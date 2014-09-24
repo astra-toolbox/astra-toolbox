@@ -187,7 +187,6 @@ void CCudaSirtAlgorithm3D::run(int _iNrIterations)
 		ok &= m_pSirt->setReconstructionGeometry(volgeom.getGridColCount(),
 		                                         volgeom.getGridRowCount(),
 		                                         volgeom.getGridSliceCount());
-		fprintf(stderr, "01: %d\n", ok);
 
 		if (conegeom) {
 			ok &= m_pSirt->setConeGeometry(conegeom->getProjectionCount(),
@@ -218,7 +217,6 @@ void CCudaSirtAlgorithm3D::run(int _iNrIterations)
 		} else {
 			ASTRA_ASSERT(false);
 		}
-		fprintf(stderr, "02: %d\n", ok);
 
 		ok &= m_pSirt->enableSuperSampling(m_iVoxelSuperSampling, m_iDetectorSuperSampling);
 
@@ -228,10 +226,8 @@ void CCudaSirtAlgorithm3D::run(int _iNrIterations)
 			ok &= m_pSirt->enableSinogramMask();
 
 		ASTRA_ASSERT(ok);
-		fprintf(stderr, "03: %d\n", ok);
 
 		ok &= m_pSirt->init();
-		fprintf(stderr, "04: %d\n", ok);
 
 		ASTRA_ASSERT(ok);
 
@@ -244,7 +240,6 @@ void CCudaSirtAlgorithm3D::run(int _iNrIterations)
 
 	ok = m_pSirt->setSinogram(pSinoMem->getDataConst(), m_pSinogram->getGeometry()->getDetectorColCount());
 
-	fprintf(stderr, "1: %d\n", ok);
 	ASTRA_ASSERT(ok);
 
 	if (m_bUseReconstructionMask) {
@@ -257,7 +252,6 @@ void CCudaSirtAlgorithm3D::run(int _iNrIterations)
 		ASTRA_ASSERT(pSMaskMem);
 		ok &= m_pSirt->setSinogramMask(pSMaskMem->getDataConst(), m_pSinogramMask->getGeometry()->getDetectorColCount());
 	}
-	fprintf(stderr, "2: %d\n", ok);
 
 	CFloat32VolumeData3DMemory* pReconMem = dynamic_cast<CFloat32VolumeData3DMemory*>(m_pReconstruction);
 	ASTRA_ASSERT(pReconMem);
@@ -265,21 +259,17 @@ void CCudaSirtAlgorithm3D::run(int _iNrIterations)
 	                                      volgeom.getGridColCount());
 
 	ASTRA_ASSERT(ok);
-	fprintf(stderr, "3: %d\n", ok);
 
 	if (m_bUseMinConstraint)
 		ok &= m_pSirt->setMinConstraint(m_fMinValue);
 	if (m_bUseMaxConstraint)
 		ok &= m_pSirt->setMaxConstraint(m_fMaxValue);
-	fprintf(stderr, "4: %d\n", ok);
 
 	ok &= m_pSirt->iterate(_iNrIterations);
 	ASTRA_ASSERT(ok);
-	fprintf(stderr, "5: %d\n", ok);
 
 	ok &= m_pSirt->getReconstruction(pReconMem->getData(),
 	                                 volgeom.getGridColCount());
-	fprintf(stderr, "6: %d\n", ok);
 	ASTRA_ASSERT(ok);
 
 
