@@ -20,4 +20,8 @@ cfg.Options.GPUindex = 0;
 alg_id = astra_mex_algorithm('create', cfg);
 astra_mex_algorithm('run', alg_id);
 
+if numel(sinogram) ~= 1
+	astra_mex_data2d('delete', sinogram_id);
+end
+
 FBP = astra_mex_data2d('get', FBP_id);
