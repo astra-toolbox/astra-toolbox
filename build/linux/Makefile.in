@@ -211,7 +211,7 @@ MATLAB_MEX=\
 OBJECT_DIRS = src/ tests/ cuda/2d/ cuda/3d/ matlab/mex/ ./
 DEPDIRS = $(addsuffix $(DEPDIR),$(OBJECT_DIRS))
 -include $(wildcard $(addsuffix /*.d,$(DEPDIRS)))
-LIBDIRS = $(addsuffix .libs,./ src/ cuda/2d/old/ cuda/2d)
+LIBDIRS = $(addsuffix .libs,./ src/ cuda/2d/ cuda/3d/)
 
 
 ifeq ($(matlab),yes)
