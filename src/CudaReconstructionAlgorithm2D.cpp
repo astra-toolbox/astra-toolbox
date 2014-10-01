@@ -350,7 +350,7 @@ bool CCudaReconstructionAlgorithm2D::setupGeometry()
 
 	const CVolumeGeometry2D& volgeom = *m_pReconstruction->getGeometry();
 
-	// TODO: off-center geometry, non-square pixels
+	// TODO: non-square pixels?
 	dims.iVolWidth = volgeom.getGridColCount();
 	dims.iVolHeight = volgeom.getGridRowCount();
 	float fPixelSize = volgeom.getPixelLengthX();
@@ -365,66 +365,42 @@ bool CCudaReconstructionAlgorithm2D::setupGeometry()
 
 	if (parProjGeom) {
 
+		float *offsets, *angles, detSize, outputScale;
+
+		ok = convertAstraGeometry(&volgeom, parProjGeom, offsets, angles, detSize, outputScale);
+
 		dims.iProjAngles = parProjGeom->getProjectionAngleCount();
 		dims.iProjDets = parProjGeom->getDetectorCount();
 		dims.fDetScale = parProjGeom->getDetectorWidth() / fPixelSize;
 
 		ok = m_pAlgo->setGeometry(dims, parProjGeom->getProjectionAngles());
+		ok &= m_pAlgo->setTOffsets(offsets);
 
-	} else if (fanProjGeom) {
+		// CHECKME: outputScale? detSize?
 
-		dims.iProjAngles = fanProjGeom->getProjectionAngleCount();
-		dims.iProjDets = fanProjGeom->getDetectorCount();
-		dims.fDetScale = fanProjGeom->getDetectorWidth() / fPixelSize;
-		float fOriginSourceDistance = fanProjGeom->getOriginSourceDistance();
-		float fOriginDetectorDistance = fanProjGeom->getOriginDetectorDistance();
+		delete[] offsets;
+		delete[] angles;
 
-		const float* angles = fanProjGeom->getProjectionAngles();
+	} else if (fanProjGeom || fanVecProjGeom) {
 
 		astraCUDA::SFanProjection* projs;
-		projs = new astraCUDA::SFanProjection[dims.iProjAngles];
+		float outputScale;
 
-		float fSrcX0 = 0.0f;
-		float fSrcY0 = -fOriginSourceDistance / fPixelSize;
-		float fDetUX0 = dims.fDetScale;
-		float fDetUY0 = 0.0f;
-		float fDetSX0 = dims.iProjDets * fDetUX0 / -2.0f;
-		float fDetSY0 = fOriginDetectorDistance / fPixelSize;
-
-#define ROTATE0(name,i,alpha) do { projs[i].f##name##X = f##name##X0 * cos(alpha) - f##name##Y0 * sin(alpha); projs[i].f##name##Y = f##name##X0 * sin(alpha) + f##name##Y0 * cos(alpha); } while(0)
-		for (unsigned int i = 0; i < dims.iProjAngles; ++i) {
-			ROTATE0(Src, i, angles[i]);
-			ROTATE0(DetS, i, angles[i]);
-			ROTATE0(DetU, i, angles[i]);
+		if (fanProjGeom) {
+			ok = convertAstraGeometry(&volgeom, fanProjGeom, projs, outputScale);
+		} else {
+			ok = convertAstraGeometry(&volgeom, fanVecProjGeom, projs, outputScale);
 		}
 
-#undef ROTATE0
+		dims.iProjAngles = m_pSinogram->getGeometry()->getProjectionAngleCount();
+		dims.iProjDets = m_pSinogram->getGeometry()->getDetectorCount();
+		dims.fDetScale = m_pSinogram->getGeometry()->getDetectorWidth() / fPixelSize;
 
 		ok = m_pAlgo->setFanGeometry(dims, projs);
+
+		// CHECKME: outputScale?
+
 		delete[] projs;
-
-	} else if (fanVecProjGeom) {
-
-		dims.iProjAngles = fanVecProjGeom->getProjectionAngleCount();
-		dims.iProjDets = fanVecProjGeom->getDetectorCount();
-		dims.fDetScale = fanVecProjGeom->getDetectorWidth() / fPixelSize;
-
-		const astraCUDA::SFanProjection* projs;
-		projs = fanVecProjGeom->getProjectionVectors();
-
-		// Rescale projs to fPixelSize == 1
-
-		astraCUDA::SFanProjection* scaledProjs = new astraCUDA::SFanProjection[dims.iProjAngles];
-#define SCALE(name,i,alpha) do { scaledProjs[i].f##name##X = projs[i].f##name##X * alpha; scaledProjs[i].f##name##Y = projs[i].f##name##Y * alpha; } while (0)
-		for (unsigned int i = 0; i < dims.iProjAngles; ++i) {
-			SCALE(Src,i,1.0f/fPixelSize);
-			SCALE(DetS,i,1.0f/fPixelSize);
-			SCALE(DetU,i,1.0f/fPixelSize);
-		}
-
-		ok = m_pAlgo->setFanGeometry(dims, scaledProjs);
-
-		delete[] scaledProjs;
 
 	} else {
 
@@ -439,11 +415,6 @@ bool CCudaReconstructionAlgorithm2D::setupGeometry()
 	if (!ok) return false;
 	if (m_bUseSinogramMask)
 		ok &= m_pAlgo->enableSinogramMask();
-	if (!ok) return false;
-
-	const float *pfTOffsets = m_pSinogram->getGeometry()->getExtraDetectorOffset();
-	if (pfTOffsets)
-		ok &= m_pAlgo->setTOffsets(pfTOffsets);
 	if (!ok) return false;
 
 	ok &= m_pAlgo->init();
