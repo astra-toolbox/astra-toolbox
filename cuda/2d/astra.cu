@@ -43,6 +43,10 @@ $Id$
 #include <cuda.h>
 
 #include "../../include/astra/Logger.h"
+#include "../../include/astra/VolumeGeometry2D.h"
+#include "../../include/astra/ParallelProjectionGeometry2D.h"
+#include "../../include/astra/FanFlatProjectionGeometry2D.h"
+#include "../../include/astra/FanFlatVecProjectionGeometry2D.h"
 
 // For fan beam FBP weighting
 #include "../3d/fdk.h"
@@ -628,7 +632,7 @@ bool astraCudaFP(const float* pfVolume, float* pfSinogram,
                  unsigned int iProjAngles, unsigned int iProjDets,
                  const float *pfAngles, const float *pfOffsets,
                  float fDetSize, unsigned int iDetSuperSampling,
-                 int iGPUIndex)
+                 float fOutputScale, int iGPUIndex)
 {
 	SDimensions dims;
 
@@ -687,7 +691,7 @@ bool astraCudaFP(const float* pfVolume, float* pfSinogram,
 	}
 
 	zeroProjectionData(D_sinoData, sinoPitch, dims);
-	ok = FP(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, pfAngles, pfOffsets, 1.0f);
+	ok = FP(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, pfAngles, pfOffsets, fOutputScale);
 	if (!ok) {
 		cudaFree(D_volumeData);
 		cudaFree(D_sinoData);
@@ -707,123 +711,12 @@ bool astraCudaFP(const float* pfVolume, float* pfSinogram,
 	cudaFree(D_sinoData);
 	return true;
 }
-
-bool astraCudaFanFP(const float* pfVolume, float* pfSinogram,
-                    unsigned int iVolWidth, unsigned int iVolHeight,
-                    unsigned int iProjAngles, unsigned int iProjDets,
-                    const float *pfAngles, float fOriginSourceDistance,
-                    float fOriginDetectorDistance, float fPixelSize,
-                    float fDetSize,
-                    unsigned int iDetSuperSampling,
-                    int iGPUIndex)
-{
-	SDimensions dims;
-
-	if (iProjAngles == 0 || iProjDets == 0 || pfAngles == 0)
-		return false;
-
-	dims.iProjAngles = iProjAngles;
-	dims.iProjDets = iProjDets;
-
-	if (iDetSuperSampling == 0)
-		return false;
-
-	dims.iRaysPerDet = iDetSuperSampling;
-
-	if (iVolWidth <= 0 || iVolHeight <= 0)
-		return false;
-
-	dims.iVolWidth = iVolWidth;
-	dims.iVolHeight = iVolHeight;
-
-	if (iGPUIndex != -1) {
-		cudaSetDevice(iGPUIndex);
-		cudaError_t err = cudaGetLastError();
-
-		// Ignore errors caused by calling cudaSetDevice multiple times
-		if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
-			return false;
-	}
-
-	bool ok;
-
-	float* D_volumeData;
-	unsigned int volumePitch;
-
-	ok = allocateVolumeData(D_volumeData, volumePitch, dims);
-	if (!ok)
-		return false;
-
-	float* D_sinoData;
-	unsigned int sinoPitch;
-
-	ok = allocateProjectionData(D_sinoData, sinoPitch, dims);
-	if (!ok) {
-		cudaFree(D_volumeData);
-		return false;
-	}
-
-	ok = copyVolumeToDevice(pfVolume, dims.iVolWidth,
-	                        dims,
-	                        D_volumeData, volumePitch);
-	if (!ok) {
-		cudaFree(D_volumeData);
-		cudaFree(D_sinoData);
-		return false;
-	}
-
-	zeroProjectionData(D_sinoData, sinoPitch, dims);
-
-	// TODO: Turn this geometry conversion into a util function
-	SFanProjection* projs = new SFanProjection[dims.iProjAngles];
-
-	float fSrcX0 = 0.0f;
-	float fSrcY0 = -fOriginSourceDistance / fPixelSize;
-	float fDetUX0 = fDetSize / fPixelSize;
-	float fDetUY0 = 0.0f;
-	float fDetSX0 = dims.iProjDets * fDetUX0 / -2.0f;
-	float fDetSY0 = fOriginDetectorDistance / fPixelSize;
-
-#define ROTATE0(name,i,alpha) do { projs[i].f##name##X = f##name##X0 * cos(alpha) - f##name##Y0 * sin(alpha); projs[i].f##name##Y = f##name##X0 * sin(alpha) + f##name##Y0 * cos(alpha); } while(0)
-	for (int i = 0; i < dims.iProjAngles; ++i) {
-		ROTATE0(Src, i, pfAngles[i]);
-		ROTATE0(DetS, i, pfAngles[i]);
-		ROTATE0(DetU, i, pfAngles[i]);
-	}
-
-#undef ROTATE0
-
-	ok = FanFP(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, projs, 1.0f);
-	delete[] projs;
-
-	if (!ok) {
-		cudaFree(D_volumeData);
-		cudaFree(D_sinoData);
-		return false;
-	}
-
-	ok = copySinogramFromDevice(pfSinogram, dims.iProjDets,
-	                            dims,
-	                            D_sinoData, sinoPitch);
-	if (!ok) {
-		cudaFree(D_volumeData);
-		cudaFree(D_sinoData);
-		return false;
-	}
-
-	cudaFree(D_volumeData);
-	cudaFree(D_sinoData);
-
-	return true;
-
-}
-
 
 bool astraCudaFanFP(const float* pfVolume, float* pfSinogram,
                     unsigned int iVolWidth, unsigned int iVolHeight,
                     unsigned int iProjAngles, unsigned int iProjDets,
                     const SFanProjection *pAngles,
-                    unsigned int iDetSuperSampling,
+                    unsigned int iDetSuperSampling, float fOutputScale,
                     int iGPUIndex)
 {
 	SDimensions dims;
@@ -884,7 +777,7 @@ bool astraCudaFanFP(const float* pfVolume, float* pfSinogram,
 
 	zeroProjectionData(D_sinoData, sinoPitch, dims);
 
-	ok = FanFP(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, pAngles, 1.0f);
+	ok = FanFP(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, pAngles, fOutputScale);
 
 	if (!ok) {
 		cudaFree(D_volumeData);
@@ -907,6 +800,207 @@ bool astraCudaFanFP(const float* pfVolume, float* pfSinogram,
 	return true;
 
 }
+
+
+bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
+                          const CParallelProjectionGeometry2D* pProjGeom,
+                          float*& detectorOffsets, float*& projectionAngles,
+                          float& detSize, float& outputScale)
+{
+	assert(pVolGeom);
+	assert(pProjGeom);
+	assert(pProjGeom->getProjectionAngles());
+
+	const float EPS = 0.00001f;
+
+	int nth = pProjGeom->getProjectionAngleCount();
+
+	// Check if pixels are square
+	if (abs(pVolGeom->getPixelLengthX() - pVolGeom->getPixelLengthY()) > EPS)
+		return false;
+
+
+	// Scale volume pixels to 1x1
+	detSize = pProjGeom->getDetectorWidth() / pVolGeom->getPixelLengthX();
+
+	// Copy angles
+	float *angles = new float[nth];
+	for (int i = 0; i < nth; ++i)
+		angles[i] = pProjGeom->getProjectionAngles()[i];
+	projectionAngles = angles;
+
+	// Check if we need to translate
+	bool offCenter = false;
+	if (abs(pVolGeom->getWindowMinX() + pVolGeom->getWindowMaxX()) > EPS ||
+	    abs(pVolGeom->getWindowMinY() + pVolGeom->getWindowMaxY()) > EPS)
+	{
+		offCenter = true;
+	}
+
+	// If there are existing detector offsets, or if we need to translate,
+	// we need to return offsets
+	if (pProjGeom->getExtraDetectorOffset() || offCenter)
+	{
+		float* offset = new float[nth];
+
+		if (pProjGeom->getExtraDetectorOffset()) {
+			for (int i = 0; i < nth; ++i)
+				offset[i] = pProjGeom->getExtraDetectorOffset()[i];
+		} else {
+			for (int i = 0; i < nth; ++i)
+				offset[i] = 0.0f;
+		}
+
+		if (offCenter) {
+			float dx = (pVolGeom->getWindowMinX() + pVolGeom->getWindowMaxX()) / 2;
+			float dy = (pVolGeom->getWindowMinY() + pVolGeom->getWindowMaxY()) / 2;
+
+			// CHECKME: Is d in pixels or in units?
+
+			for (int i = 0; i < nth; ++i) {
+				float d = dx * cos(angles[i]) + dy * sin(angles[i]);
+				offset[i] += d;
+			}
+		}
+
+		// CHECKME: Order of scaling and translation
+
+		// Scale volume pixels to 1x1
+		for (int i = 0; i < nth; ++i) {
+			//offset[i] /= pVolGeom->getPixelLengthX();
+			//offset[i] *= detSize;
+		}
+
+
+		detectorOffsets = offset;
+	} else {
+		detectorOffsets = 0;
+	}
+
+	outputScale = pVolGeom->getPixelLengthX();
+	outputScale *= outputScale;
+
+	return true;
+}
+
+static void convertAstraGeometry_internal(const CVolumeGeometry2D* pVolGeom,
+                          unsigned int iProjectionAngleCount,
+                          astraCUDA::SFanProjection*& pProjs,
+                          float& outputScale)
+{
+	// Translate
+	float dx = (pVolGeom->getWindowMinX() + pVolGeom->getWindowMaxX()) / 2;
+	float dy = (pVolGeom->getWindowMinY() + pVolGeom->getWindowMaxY()) / 2;
+
+	for (int i = 0; i < iProjectionAngleCount; ++i) {
+		pProjs[i].fSrcX -= dx;
+		pProjs[i].fSrcY -= dy;
+		pProjs[i].fDetSX -= dx;
+		pProjs[i].fDetSY -= dy;
+	}
+
+	// CHECKME: Order of scaling and translation
+
+	// Scale
+	float factor = 1.0f / pVolGeom->getPixelLengthX();
+	for (int i = 0; i < iProjectionAngleCount; ++i) {
+		pProjs[i].fSrcX *= factor;
+		pProjs[i].fSrcY *= factor;
+		pProjs[i].fDetSX *= factor;
+		pProjs[i].fDetSY *= factor;
+		pProjs[i].fDetUX *= factor;
+		pProjs[i].fDetUY *= factor;
+
+	}
+
+	// CHECKME: Check factor
+	outputScale = pVolGeom->getPixelLengthX();
+//	outputScale *= outputScale;
+}
+
+
+bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
+                          const CFanFlatProjectionGeometry2D* pProjGeom,
+                          astraCUDA::SFanProjection*& pProjs,
+                          float& outputScale)
+{
+	assert(pVolGeom);
+	assert(pProjGeom);
+	assert(pProjGeom->getProjectionAngles());
+
+	const float EPS = 0.00001f;
+
+	int nth = pProjGeom->getProjectionAngleCount();
+
+	// Check if pixels are square
+	if (abs(pVolGeom->getPixelLengthX() - pVolGeom->getPixelLengthY()) > EPS)
+		return false;
+
+	// TODO: Deprecate this.
+//	if (pProjGeom->getExtraDetectorOffset())
+//		return false;
+
+
+	float fOriginSourceDistance = pProjGeom->getOriginSourceDistance();
+	float fOriginDetectorDistance = pProjGeom->getOriginDetectorDistance();
+	float fDetSize = pProjGeom->getDetectorWidth();
+	const float *pfAngles = pProjGeom->getProjectionAngles();
+
+	pProjs = new SFanProjection[nth];
+
+	float fSrcX0 = 0.0f;
+	float fSrcY0 = -fOriginSourceDistance;
+	float fDetUX0 = fDetSize;
+	float fDetUY0 = 0.0f;
+	float fDetSX0 = pProjGeom->getDetectorCount() * fDetUX0 / -2.0f;
+	float fDetSY0 = fOriginDetectorDistance;
+
+#define ROTATE0(name,i,alpha) do { pProjs[i].f##name##X = f##name##X0 * cos(alpha) - f##name##Y0 * sin(alpha); pProjs[i].f##name##Y = f##name##X0 * sin(alpha) + f##name##Y0 * cos(alpha); } while(0)
+	for (int i = 0; i < nth; ++i) {
+		ROTATE0(Src, i, pfAngles[i]);
+		ROTATE0(DetS, i, pfAngles[i]);
+		ROTATE0(DetU, i, pfAngles[i]);
+	}
+
+#undef ROTATE0
+
+	convertAstraGeometry_internal(pVolGeom, nth, pProjs, outputScale);
+
+	return true;
+
+}
+
+bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
+                          const CFanFlatVecProjectionGeometry2D* pProjGeom,
+                          astraCUDA::SFanProjection*& pProjs,
+                          float& outputScale)
+{
+	assert(pVolGeom);
+	assert(pProjGeom);
+	assert(pProjGeom->getProjectionVectors());
+
+	const float EPS = 0.00001f;
+
+	int nx = pVolGeom->getGridColCount();
+	int ny = pVolGeom->getGridRowCount();
+	int nth = pProjGeom->getProjectionAngleCount();
+
+	// Check if pixels are square
+	if (abs(pVolGeom->getPixelLengthX() - pVolGeom->getPixelLengthY()) > EPS)
+		return false;
+
+	pProjs = new SFanProjection[nth];
+
+	// Copy vectors
+	for (int i = 0; i < nth; ++i)
+		pProjs[i] = pProjGeom->getProjectionVectors()[i];
+
+	convertAstraGeometry_internal(pVolGeom, nth, pProjs, outputScale);
+
+	return true;
+}
+
+
 
 
 }

@@ -214,52 +214,45 @@ void CCudaForwardProjectionAlgorithm::run(int)
 
 	bool ok = false;
 	if (parProjGeom) {
+
+		float *offsets, *angles, detSize, outputScale;
+		ok = convertAstraGeometry(pVolGeom, parProjGeom, offsets, angles, detSize, outputScale);
+
+		ASTRA_ASSERT(ok); // FIXME
+
+		// FIXME: Output scaling
+
 		ok = astraCudaFP(m_pVolume->getDataConst(), m_pSinogram->getData(),
 		                 pVolGeom->getGridColCount(), pVolGeom->getGridRowCount(),
 		                 parProjGeom->getProjectionAngleCount(),
 		                 parProjGeom->getDetectorCount(),
-		                 parProjGeom->getProjectionAngles(),
-		                 parProjGeom->getExtraDetectorOffset(), parProjGeom->getDetectorWidth() / pVolGeom->getPixelLengthX(),
-		                 m_iDetectorSuperSampling, m_iGPUIndex);
+		                 angles, offsets, detSize,
+		                 m_iDetectorSuperSampling, 1.0f * outputScale, m_iGPUIndex);
 
-	} else if (fanProjGeom) {
+		delete[] offsets;
+		delete[] angles;
 
-		ok = astraCudaFanFP(m_pVolume->getDataConst(), m_pSinogram->getData(),
-		                    pVolGeom->getGridColCount(), pVolGeom->getGridRowCount(),
-		                    fanProjGeom->getProjectionAngleCount(),
-		                    fanProjGeom->getDetectorCount(),
-		                    fanProjGeom->getProjectionAngles(),
-		                    fanProjGeom->getOriginSourceDistance(),
-		                    fanProjGeom->getOriginDetectorDistance(),
-		                    pVolGeom->getPixelLengthX(),
-		                    fanProjGeom->getDetectorWidth(),
-		                    m_iDetectorSuperSampling, m_iGPUIndex);
+	} else if (fanProjGeom || fanVecProjGeom) {
 
-	} else if (fanVecProjGeom) {
+		astraCUDA::SFanProjection* projs;
+		float outputScale;
 
-		// Rescale projs to fPixelSize == 1
-		float fPixelSize = pVolGeom->getPixelLengthX();
-		const astraCUDA::SFanProjection* projs;
-		projs = fanVecProjGeom->getProjectionVectors();
-
-		astraCUDA::SFanProjection* scaledProjs = new astraCUDA::SFanProjection[fanVecProjGeom->getProjectionAngleCount()];
-#define SCALE(name,i,alpha) do { scaledProjs[i].f##name##X = projs[i].f##name##X * alpha; scaledProjs[i].f##name##Y = projs[i].f##name##Y * alpha; } while (0)
-		for (unsigned int i = 0; i < fanVecProjGeom->getProjectionAngleCount(); ++i) {
-			SCALE(Src,i,1.0f/fPixelSize);
-			SCALE(DetS,i,1.0f/fPixelSize);
-			SCALE(DetU,i,1.0f/fPixelSize);
+		if (fanProjGeom) {
+			ok = convertAstraGeometry(pVolGeom, fanProjGeom, projs, outputScale);
+		} else {
+			ok = convertAstraGeometry(pVolGeom, fanVecProjGeom, projs, outputScale);
 		}
 
+		ASTRA_ASSERT(ok);
 
 		ok = astraCudaFanFP(m_pVolume->getDataConst(), m_pSinogram->getData(),
 		                    pVolGeom->getGridColCount(), pVolGeom->getGridRowCount(),
-		                    fanVecProjGeom->getProjectionAngleCount(),
-		                    fanVecProjGeom->getDetectorCount(),
-		                    scaledProjs,
-		                    /* 1.0f / pVolGeom->getPixelLengthX(), */
-		                    m_iDetectorSuperSampling, m_iGPUIndex);
+		                    m_pSinogram->getGeometry()->getProjectionAngleCount(),
+		                    m_pSinogram->getGeometry()->getDetectorCount(),
+		                    projs,
+		                    m_iDetectorSuperSampling, outputScale, m_iGPUIndex);
 
-		delete[] scaledProjs;
+		delete[] projs;
 
 	} else {
 

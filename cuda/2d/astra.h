@@ -42,6 +42,11 @@ enum Cuda2DProjectionKernel {
 	ker2d_default = 0
 };
 
+class CParallelProjectionGeometry2D;
+class CFanFlatProjectionGeometry2D;
+class CFanFlatVecProjectionGeometry2D;
+class CVolumeGeometry2D;
+
 class AstraFBP_internal;
 
 class _AstraExport AstraFBP {
@@ -195,24 +200,31 @@ _AstraExport bool astraCudaFP(const float* pfVolume, float* pfSinogram,
                  unsigned int iProjAngles, unsigned int iProjDets,
                  const float *pfAngles, const float *pfOffsets,
                  float fDetSize = 1.0f, unsigned int iDetSuperSampling = 1,
-                 int iGPUIndex = 0);
-
-// Do a single forward projection, fan beam
-_AstraExport bool astraCudaFanFP(const float* pfVolume, float* pfSinogram,
-                    unsigned int iVolWidth, unsigned int iVolHeight,
-                    unsigned int iProjAngles, unsigned int iProjDets,
-                    const float *pfAngles, float fOriginSourceDistance,
-                    float fOriginDetectorDistance, float fPixelSize = 1.0f,
-                    float fDetSize = 1.0f,
-                    unsigned int iDetSuperSampling = 1,
-                    int iGPUIndex = 0);
+                 float fOutputScale = 1.0f, int iGPUIndex = 0);
 
 _AstraExport bool astraCudaFanFP(const float* pfVolume, float* pfSinogram,
                     unsigned int iVolWidth, unsigned int iVolHeight,
                     unsigned int iProjAngles, unsigned int iProjDets,
                     const SFanProjection *pAngles,
                     unsigned int iDetSuperSampling = 1,
-                    int iGPUIndex = 0);
+                    float fOutputScale = 1.0f, int iGPUIndex = 0);
+
+
+_AstraExport bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
+                    const CParallelProjectionGeometry2D* pProjGeom,
+                    float*& pfDetectorOffsets, float*& pfProjectionAngles,
+                    float& fDetSize, float& fOutputScale);
+
+_AstraExport bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
+                    const CFanFlatProjectionGeometry2D* pProjGeom,
+                    astraCUDA::SFanProjection*& pProjs,
+                    float& outputScale);
+
+_AstraExport bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
+                    const CFanFlatVecProjectionGeometry2D* pProjGeom,
+                    astraCUDA::SFanProjection*& pProjs,
+                    float& outputScale);
+
 
 }
 #endif
