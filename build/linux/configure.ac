@@ -121,11 +121,15 @@ if test x"$HAVECUDA" = xyes; then
 fi
 AC_MSG_RESULT($HAVECUDA)
 
+AC_ARG_WITH(cuda_compute, [[  --with-cuda-compute=archs  comma separated list of CUDA compute models (optional)]],,)
 if test x"$HAVECUDA" = xyes; then
   AC_MSG_CHECKING([for nvcc archs])
   dnl 10 11 12 13 20 30 32 35 37 50
-  ASTRA_FIND_NVCC_ARCHS([10 12 20 30 35 50],NVCCFLAGS,NVCCARCHS)
-  AC_MSG_RESULT($NVCCARCHS)
+  if test x"$with_cuda_compute" = x; then
+    with_cuda_compute="10,12,20,30,35,50"
+  fi
+  ASTRA_FIND_NVCC_ARCHS([$with_cuda_compute],NVCCFLAGS,NVCCARCHS)
+  AC_MSG_RESULT([$NVCCARCHS])
 fi
 
 
