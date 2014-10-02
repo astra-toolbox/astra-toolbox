@@ -142,6 +142,51 @@ bool SIRT::precomputeWeights()
 	return true;
 }
 
+bool SIRT::doSlabCorrections()
+{
+	// This function compensates for effectively infinitely large slab-like
+	// objects of finite thickness 1.
+
+	// Each ray through the object has an intersection of length d/cos(alpha).
+	// The length of the ray actually intersecting the reconstruction volume is
+	// given by D_lineWeight. By dividing by 1/cos(alpha) and multiplying by the
+	// lineweights, we correct for this missing attenuation outside of the
+	// reconstruction volume, assuming the object is homogeneous.
+
+	// This effectively scales the output values by assuming the thickness d
+	// is 1 unit.
+
+
+	// This function in its current implementation only works if there are no masks.
+	// In this case, init() will also have already called precomputeWeights(),
+	// so we can use D_lineWeight.
+	if (useVolumeMask || useSinogramMask)
+		return false;
+
+	// multiply by line weights
+	processSino<opDiv>(D_sinoData, D_lineWeight, projPitch, dims);
+
+	SDimensions subdims = dims;
+	subdims.iProjAngles = 1;
+
+	// divide by 1/cos(angle)
+	// ...but limit the correction to -80/+80 degrees.
+	float bound = cosf(1.3963f);
+	float* t = (float*)D_sinoData;
+	for (int i = 0; i < dims.iProjAngles; ++i) {
+		float f = fabs(cosf(angles[i]));
+
+		if (f < bound)
+			f = bound;
+
+		processSino<opMul>(t, f, sinoPitch, subdims);
+		t += sinoPitch;
+	}
+
+	return true;
+}
+
+
 bool SIRT::setMinMaxMasks(float* D_minMaskData_, float* D_maxMaskData_,
 	                      unsigned int iPitch)
 {

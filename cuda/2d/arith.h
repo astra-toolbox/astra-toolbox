@@ -41,6 +41,7 @@ struct opAddMul;
 struct opAdd;
 struct opAdd2;
 struct opMul;
+struct opDiv;
 struct opMul2;
 struct opDividedBy;
 struct opInvert;
