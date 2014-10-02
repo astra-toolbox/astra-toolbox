@@ -93,7 +93,7 @@ for arch in $1; do
   $NVCC -c -o conftest.o conftest.cu $$2 $NVCC_opt >conftest.nvcc.out 2>&1 && {
     NVCC_lastarch=$arch
     NVCC_extra="$NVCC_extra $NVCC_opt"
-    NVCC_list="$NVCC_list $arch"
+    NVCC_list="${NVCC_list:+$NVCC_list, }$arch"
   }
 done
 if test $NVCC_lastarch != none; then
