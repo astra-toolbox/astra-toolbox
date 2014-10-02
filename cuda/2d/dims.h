@@ -44,12 +44,29 @@ struct SFanProjection {
 
 
 struct SDimensions {
+	// Width, height of reconstruction volume
 	unsigned int iVolWidth;
 	unsigned int iVolHeight;
+
+	// Number of projection angles
 	unsigned int iProjAngles;
+
+	// Number of detector pixels
 	unsigned int iProjDets;
-	float fDetScale; // size of detector compared to volume pixels
+
+	// size of detector compared to volume pixels
+	float fDetScale;
+
+	// in FP, number of rays to trace per detector pixel.
+	// This should usually be set to 1.
+	// If fDetScale > 1, this should be set to an integer of roughly
+	// the same size as fDetScale.
 	unsigned int iRaysPerDet;
+
+	// in BP, square root of number of rays to trace per volume pixel
+	// This should usually be set to 1.
+	// If fDetScale < 1, this should be set to an integer of roughly
+	// the same size as 1 / fDetScale.
 	unsigned int iRaysPerPixelDim;
 };
 
