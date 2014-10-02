@@ -74,7 +74,7 @@ rm -f conftest.cu conftest.o conftest.nvcc.out
 ])
 
 dnl ASTRA_FIND_NVCC_ARCHS(archs-to-try,cppflags-to-extend,output-list)
-dnl Architectures should be of the form 10, 20, 30, 35,
+dnl Architectures should be of the form 10,20,30,35,
 dnl and should be in order. The last accepted one will be used for PTX output.
 dnl All accepted ones will be used for cubin output.
 AC_DEFUN([ASTRA_FIND_NVCC_ARCHS],[
@@ -88,7 +88,10 @@ _ACEOF
 NVCC_lastarch="none"
 NVCC_extra=""
 NVCC_list=""
+astra_save_IFS=$IFS
+IFS=,
 for arch in $1; do
+  IFS=$astra_save_IFS
   NVCC_opt="-gencode=arch=compute_$arch,code=sm_$arch"
   $NVCC -c -o conftest.o conftest.cu $$2 $NVCC_opt >conftest.nvcc.out 2>&1 && {
     NVCC_lastarch=$arch
@@ -96,6 +99,7 @@ for arch in $1; do
     NVCC_list="${NVCC_list:+$NVCC_list, }$arch"
   }
 done
+IFS=$astra_save_IFS
 if test $NVCC_lastarch != none; then
   NVCC_extra="$NVCC_extra -gencode=arch=compute_${NVCC_lastarch},code=compute_${NVCC_lastarch}"
   $3="$NVCC_list"
