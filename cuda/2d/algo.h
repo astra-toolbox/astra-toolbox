@@ -74,6 +74,13 @@ public:
 	// instead of calling setBuffers, you can also call allocateBuffers
 	// to let ReconAlgo manage its own GPU memory
 	virtual bool allocateBuffers();
+
+	// copy data to GPU. This must be called after allocateBuffers.
+	// pfSinogram, pfReconstruction, pfVolMask, pfSinoMask are the
+	// sinogram, reconstruction, volume mask and sinogram mask in system RAM,
+	// respectively. The corresponding pitch variables give the pitches
+	// of these buffers, measured in floats.
+	// The sinogram is multiplied by fSinogramScale after uploading it.
 	virtual bool copyDataToGPU(const float* pfSinogram, unsigned int iSinogramPitch, float fSinogramScale,
 	                           const float* pfReconstruction, unsigned int iReconstructionPitch,
 	                           const float* pfVolMask, unsigned int iVolMaskPitch,
