@@ -41,6 +41,10 @@ public:
 
 	virtual bool init();
 
+	// Do optional long-object compensation. See the comments in sirt.cu.
+	// Call this after init(). It can not be used in combination with masks.
+	bool doSlabCorrections();
+
 	// Set min/max masks to existing GPU memory buffers
 	bool setMinMaxMasks(float* D_minMaskData, float* D_maxMaskData,
 	                    unsigned int pitch);

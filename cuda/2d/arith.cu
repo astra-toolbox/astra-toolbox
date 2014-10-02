@@ -68,6 +68,14 @@ struct opMul {
 		out *= in;
 	}
 };
+struct opDiv {
+	__device__ void operator()(float& out, const float in) {
+		if (in > 0.000001f) // out is assumed to be positive
+			out /= in;
+		else
+			out = 0.0f;
+	}
+};
 struct opMul2 {
 	__device__ void operator()(float& out, const float in1, const float in2) {
 		out *= in1 * in2;
@@ -682,6 +690,7 @@ INST_DtoD(opDividedBy)
 INST_toD(opInvert)
 INST_FtoD(opSet)
 INST_FtoD(opMul)
+INST_DtoD(opDiv)
 INST_DFtoD(opMulMask)
 INST_FtoD(opAdd)
 INST_FtoD(opClampMin)
