@@ -32,6 +32,7 @@ $Id$
 #include <cstring>
 
 #include "astra/AstraObjectManager.h"
+#include "../cuda/2d/astra.h"
 
 #include <astra/Logger.h>
 
@@ -241,39 +242,71 @@ void CCudaFilteredBackProjectionAlgorithm::run(int _iNrIterations /* = 0 */)
 
 		bool ok = true;
 
-		// TODO: off-center geometry, non-square pixels
+		// TODO: non-square pixels?
 		ok &= m_pFBP->setReconstructionGeometry(volgeom.getGridColCount(),
 		                                         volgeom.getGridRowCount(),
 		                                         volgeom.getPixelLengthX());
-		// TODO: off-center geometry
 		int iDetectorCount;
 		if (parprojgeom) {
+
+			float *offsets, *angles, detSize, outputScale;
+
+			ok = convertAstraGeometry(&volgeom, parprojgeom, offsets, angles, detSize, outputScale);
+
+
 			ok &= m_pFBP->setProjectionGeometry(parprojgeom->getProjectionAngleCount(),
 			                                     parprojgeom->getDetectorCount(),
-			                                     parprojgeom->getProjectionAngles(),
+			                                     angles,
 			                                     parprojgeom->getDetectorWidth());
 			iDetectorCount = parprojgeom->getDetectorCount();
+
+			// TODO: Are detSize and outputScale handled correctly?
+
+			if (offsets)
+				ok &= m_pFBP->setTOffsets(offsets);
+			ASTRA_ASSERT(ok);
+
+			delete[] offsets;
+			delete[] angles;
+
 		} else if (fanprojgeom) {
+
+			astraCUDA::SFanProjection* projs;
+			float outputScale;
+
+			// FIXME: Implement this, and clean up the interface to AstraFBP.
+			if (abs(volgeom.getWindowMinX() + volgeom.getWindowMaxX()) > 0.00001 * volgeom.getPixelLengthX()) {
+				// Off-center volume geometry isn't supported yet
+				ASTRA_ASSERT(false);
+			}
+			if (abs(volgeom.getWindowMinY() + volgeom.getWindowMaxY()) > 0.00001 * volgeom.getPixelLengthY()) {
+				// Off-center volume geometry isn't supported yet
+				ASTRA_ASSERT(false);
+			}
+
+			ok = convertAstraGeometry(&volgeom, fanprojgeom, projs, outputScale);
+
+			// CHECKME: outputScale?
+
 			ok &= m_pFBP->setFanGeometry(fanprojgeom->getProjectionAngleCount(),
-			                                     fanprojgeom->getDetectorCount(),
-			                                     fanprojgeom->getProjectionAngles(),
-			                                     fanprojgeom->getOriginSourceDistance(),
-			                                     fanprojgeom->getOriginDetectorDistance(),
-			                                     fanprojgeom->getDetectorWidth(),
-			                                     m_bShortScan);
+			                             fanprojgeom->getDetectorCount(),
+			                             projs,
+			                             fanprojgeom->getProjectionAngles(),
+			                             fanprojgeom->getOriginSourceDistance(),
+			                             fanprojgeom->getOriginDetectorDistance(),
+
+		                                     fanprojgeom->getDetectorWidth(),
+			                             m_bShortScan);
 
 			iDetectorCount = fanprojgeom->getDetectorCount();
+
+			delete[] projs;
 		} else {
 			assert(false);
 		}
 
 		ok &= m_pFBP->setPixelSuperSampling(m_iPixelSuperSampling);
 
-		ASTRA_ASSERT(ok);
-
-		const float *pfTOffsets = m_pSinogram->getGeometry()->getExtraDetectorOffset();
-		if (pfTOffsets)
-			ok &= m_pFBP->setTOffsets(pfTOffsets);
 		ASTRA_ASSERT(ok);
 
 		ok &= m_pFBP->init(m_iGPUIndex);

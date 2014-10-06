@@ -78,9 +78,10 @@ public:
 	// fDetSize indicates the size of a detector pixel compared to a
 	// volume pixel edge.
 	//
-	// pfAngles will only be read from during this call.
+	// pfAngles, fanProjs will only be read from during this call.
 	bool setFanGeometry(unsigned int iProjAngles,
 	                    unsigned int iProjDets,
+	                    const astraCUDA::SFanProjection *fanProjs,
 	                    const float *pfAngles,
 	                    float fOriginSourceDistance,
 	                    float fOriginDetectorDistance,

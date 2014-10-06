@@ -68,6 +68,7 @@ public:
 	SDimensions dims;
 	float* angles;
 	float* TOffsets;
+	astraCUDA::SFanProjection* fanProjections;
 
 	float fOriginSourceDistance;
 	float fOriginDetectorDistance;
@@ -94,6 +95,8 @@ AstraFBP::AstraFBP()
 	pData = new AstraFBP_internal();
 
 	pData->angles = 0;
+	pData->fanProjections = 0;
+	pData->TOffsets = 0;
 	pData->D_sinoData = 0;
 	pData->D_volumeData = 0;
 
@@ -116,6 +119,9 @@ AstraFBP::~AstraFBP()
 
 	delete[] pData->TOffsets;
 	pData->TOffsets = 0;
+
+	delete[] pData->fanProjections;
+	pData->fanProjections = 0;
 
 	cudaFree(pData->D_sinoData);
 	pData->D_sinoData = 0;
@@ -173,6 +179,7 @@ bool AstraFBP::setProjectionGeometry(unsigned int iProjAngles,
 
 bool AstraFBP::setFanGeometry(unsigned int iProjAngles,
                               unsigned int iProjDets,
+                              const astraCUDA::SFanProjection *fanProjs,
                               const float* pfAngles,
                               float fOriginSourceDistance,
                               float fOriginDetectorDistance,
@@ -185,6 +192,9 @@ bool AstraFBP::setFanGeometry(unsigned int iProjAngles,
 
 	pData->fOriginSourceDistance = fOriginSourceDistance;
 	pData->fOriginDetectorDistance = fOriginDetectorDistance;
+
+	pData->fanProjections = new astraCUDA::SFanProjection[iProjAngles];
+	memcpy(pData->fanProjections, fanProjs, iProjAngles * sizeof(fanProjs[0]));
 
 	pData->bFanBeam = true;
 	pData->bShortScan = bShortScan;
@@ -314,7 +324,7 @@ bool AstraFBP::run()
 		// Call FDK_PreWeight to handle fan beam geometry. We treat
 		// this as a cone beam setup of a single slice:
 
-		// TODO: TOffsets...
+		// TODO: TOffsets affects this preweighting...
 
 		// We create a fake cudaPitchedPtr
 		cudaPitchedPtr tmp;
@@ -358,29 +368,7 @@ bool AstraFBP::run()
 	}
 
 	if (pData->bFanBeam) {
-		// TODO: TOffsets?
-		// TODO: Remove this code duplication with CudaReconstructionAlgorithm
-		SFanProjection* projs;
-		projs = new SFanProjection[pData->dims.iProjAngles];
-
-		float fSrcX0 = 0.0f;
-		float fSrcY0 = -pData->fOriginSourceDistance / pData->fPixelSize;
-		float fDetUX0 = pData->dims.fDetScale;
-		float fDetUY0 = 0.0f;
-		float fDetSX0 = pData->dims.iProjDets * fDetUX0 / -2.0f;
-		float fDetSY0 = pData->fOriginDetectorDistance / pData->fPixelSize;
-
-#define ROTATE0(name,i,alpha) do { projs[i].f##name##X = f##name##X0 * cos(alpha) - f##name##Y0 * sin(alpha); projs[i].f##name##Y = f##name##X0 * sin(alpha) + f##name##Y0 * cos(alpha); } while(0)
-		for (unsigned int i = 0; i < pData->dims.iProjAngles; ++i) {
-			ROTATE0(Src, i, pData->angles[i]);
-			ROTATE0(DetS, i, pData->angles[i]);
-			ROTATE0(DetU, i, pData->angles[i]);
-		}
-
-#undef ROTATE0
-		ok = FanBP_FBPWeighted(pData->D_volumeData, pData->volumePitch, pData->D_sinoData, pData->sinoPitch, pData->dims, projs);
-
-		delete[] projs;
+		ok = FanBP_FBPWeighted(pData->D_volumeData, pData->volumePitch, pData->D_sinoData, pData->sinoPitch, pData->dims, pData->fanProjections);
 
 	} else {
 		ok = BP(pData->D_volumeData, pData->volumePitch, pData->D_sinoData, pData->sinoPitch, pData->dims, pData->angles, pData->TOffsets);
