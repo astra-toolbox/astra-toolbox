@@ -110,7 +110,7 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 	node = _cfg.self->getSingleNode("FilterSinogramId");
 	if(node != NULL)
 	{
-		int id = boost::lexical_cast<int>(node->getContent());
+		id = boost::lexical_cast<int>(node->getContent());
 		const CFloat32ProjectionData2D * pFilterData = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
 		m_iFilterWidth = pFilterData->getGeometry()->getDetectorCount();
 		int iFilterProjectionCount = pFilterData->getGeometry()->getProjectionAngleCount();
