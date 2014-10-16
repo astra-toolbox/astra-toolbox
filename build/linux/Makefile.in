@@ -46,8 +46,8 @@ LDFLAGS+=$(BOOST_LDFLAGS)
 
 
 MKDIR=mkdir -p
-CXX=g++
-LD=g++
+CXX=@CXX@
+LD=@CXX@
 SHELL=@SHELL@
 
 ifeq ($(matlab),yes)
