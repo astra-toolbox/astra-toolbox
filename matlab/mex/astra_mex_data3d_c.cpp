@@ -32,6 +32,8 @@ $Id$
  */
 #include <mex.h>
 #include "mexHelpFunctions.h"
+#include "mexCopyDataHelpFunctions.h"
+#include "mexDataManagerHelpFunctions.h"
 
 #include <list>
 
@@ -68,186 +70,38 @@ void astra_mex_data3d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 		return;
 	}
 
-	string sDataType = mex_util_get_string(prhs[1]);	
-	CFloat32Data3DMemory* pDataObject3D = NULL;
+	const mxArray * const geometry = prhs[2];
+	const mxArray * const data = nrhs > 3 ? prhs[3] : NULL;
 
-	if (nrhs >= 4 && !(mex_is_scalar(prhs[3]) || mxIsDouble(prhs[3]) || mxIsSingle(prhs[3]))) {
+	if (!checkStructs(geometry)) {
+		mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.\n");
+		return;
+	}
+
+	if (data && !checkDataType(data)) {
 		mexErrMsgTxt("Data must be single or double.");
 		return;
 	}
 
-	mwSize dims[3];
+	const string sDataType = mex_util_get_string(prhs[1]);
 
-	// SWITCH DataType
-	if (sDataType == "-vol") {
-
-		// Read geometry
-		if (!mxIsStruct(prhs[2])) {
-			mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.\n");
-		}
-		Config cfg;
-		XMLDocument* xml = struct2XML("VolumeGeometry", prhs[2]);
-		if (!xml)
-			return;
-		cfg.self = xml->getRootNode();
-		CVolumeGeometry3D* pGeometry = new CVolumeGeometry3D();
-		if (!pGeometry->initialize(cfg)) {
-			mexErrMsgTxt("Geometry class not initialized. \n");
-			delete pGeometry;
-			delete xml;
-			return;
-		}
-		delete xml;
-
-		// If data is specified, check dimensions
-		if (nrhs >= 4 && !mex_is_scalar(prhs[3])) {
-			get3DMatrixDims(prhs[3], dims);
-			if (pGeometry->getGridColCount() != dims[0] || pGeometry->getGridRowCount() != dims[1] || pGeometry->getGridSliceCount() != dims[2]) {
-				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
-				delete pGeometry;
-				return;
-			}
-		}
-
-		// Initialize data object
-		pDataObject3D = new CFloat32VolumeData3DMemory(pGeometry);		
-		delete pGeometry;
-	}
-
-	else if (sDataType == "-sino" || sDataType == "-proj3d") {
-
-		// Read geometry
-		if (!mxIsStruct(prhs[2])) {
-			mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.\n");
-		}
-		XMLDocument* xml = struct2XML("ProjectionGeometry", prhs[2]);
-		if (!xml)
-			return;
-		Config cfg;
-		cfg.self = xml->getRootNode();
-
-		// FIXME: Change how the base class is created. (This is duplicated
-		// in Projector2D.cpp.)
-		std::string type = cfg.self->getAttribute("type");
-		CProjectionGeometry3D* pGeometry = 0;
-		if (type == "parallel3d") {
-			pGeometry = new CParallelProjectionGeometry3D();
-		} else if (type == "parallel3d_vec") {
-			pGeometry = new CParallelVecProjectionGeometry3D();
-		} else if (type == "cone") {
-			pGeometry = new CConeProjectionGeometry3D();
-		} else if (type == "cone_vec") {
-			pGeometry = new CConeVecProjectionGeometry3D();
-		} else {
-			mexErrMsgTxt("Invalid geometry type.\n");
-			return;
-		}
-
-		if (!pGeometry->initialize(cfg)) {
-			mexErrMsgTxt("Geometry class not initialized. \n");
-			delete pGeometry;
-			delete xml;
-			return;
-		}
-		delete xml;
-
-		// If data is specified, check dimensions
-		if (nrhs >= 4 && !mex_is_scalar(prhs[3])) {
-			get3DMatrixDims(prhs[3], dims);
-			if (pGeometry->getDetectorColCount() != dims[0] || pGeometry->getProjectionCount() != dims[1] || pGeometry->getDetectorRowCount() != dims[2]) {
-				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
-				delete pGeometry;
-				return;
-			}
-		}
-
-		// Initialize data object
-		pDataObject3D = new CFloat32ProjectionData3DMemory(pGeometry);		
-		delete pGeometry;
-	}
-
-	else if (sDataType == "-sinocone") {
-		// Read geometry
-		if (!mxIsStruct(prhs[2])) {
-			mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.\n");
-		}
-		XMLDocument* xml = struct2XML("ProjectionGeometry", prhs[2]);
-		if (!xml)
-			return;
-		Config cfg;
-		cfg.self = xml->getRootNode();
-		CConeProjectionGeometry3D* pGeometry = new CConeProjectionGeometry3D();
-		if (!pGeometry->initialize(cfg)) {
-			mexErrMsgTxt("Geometry class not initialized. \n");
-			delete xml;
-			delete pGeometry;
-			return;
-		}
-		delete xml;
-		// If data is specified, check dimensions
-		if (nrhs >= 4 && !mex_is_scalar(prhs[3])) {
-			get3DMatrixDims(prhs[3], dims);
-			if (pGeometry->getDetectorRowCount() != dims[2] || pGeometry->getProjectionCount() != dims[1] || pGeometry->getDetectorColCount() != dims[0]) {
-				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
-				delete pGeometry;
-				return;
-			}
-		}
-		// Initialize data object
-		pDataObject3D = new CFloat32ProjectionData3DMemory(pGeometry);		
-		delete pGeometry;
-	}
-	else {
-		mexErrMsgTxt("Invalid datatype.  Please specify '-vol' or '-proj3d'. \n");
+	// step2: Allocate data
+	CFloat32Data3DMemory* pDataObject3D =
+			allocateDataObject(sDataType, geometry, data);
+	if (!pDataObject3D) {
+		// Error message was already set by the function
 		return;
 	}
 
-	// Check initialization
-	if (!pDataObject3D->isInitialized()) {
-		mexErrMsgTxt("Couldn't initialize data object.\n");
-		delete pDataObject3D;
-		return;
-	}
-
-	// Store data
-
-	// fill with scalar value
-	if (nrhs < 4 || mex_is_scalar(prhs[3])) {
-		float32 fValue = 0.0f;
-		if (nrhs >= 4)
-			fValue = (float32)mxGetScalar(prhs[3]);
-		for (int i = 0; i < pDataObject3D->getSize(); ++i) {
-			pDataObject3D->getData()[i] = fValue;
-		}
-	}
-	// fill with array value
-	else if (mxIsDouble(prhs[3])) {
-		double* pdMatlabData = mxGetPr(prhs[3]);
-		int i = 0;
-		int col, row, slice;
-		for (slice = 0; slice < dims[2]; ++slice) {
-			for (row = 0; row < dims[1]; ++row) {
-				for (col = 0; col < dims[0]; ++col) {
-					// TODO: Benchmark and remove triple indexing?
-					pDataObject3D->getData3D()[slice][row][col] = pdMatlabData[i];
-					++i;
-				}
-			}
-		}
-	}
-	else if (mxIsSingle(prhs[3])) {
-		const float* pfMatlabData = (const float*)mxGetData(prhs[3]);
-		int i = 0;
-		int col, row, slice;
-		for (slice = 0; slice < dims[2]; ++slice) {
-			for (row = 0; row < dims[1]; ++row) {
-				for (col = 0; col < dims[0]; ++col) {
-					// TODO: Benchmark and remove triple indexing?
-					pDataObject3D->getData3D()[slice][row][col] = pfMatlabData[i];
-					++i;
-				}
-			}
-		}
+	// step3: Initialize data
+	if (!data) {
+		mxArray * emptyArray = mxCreateDoubleMatrix(0, 0, mxREAL);
+		copyMexToCFloat32Array(emptyArray, pDataObject3D->getData(),
+				pDataObject3D->getSize());
+		mxDestroyArray(emptyArray);
+	} else {
+		copyMexToCFloat32Array(data, pDataObject3D->getData(),
+				pDataObject3D->getSize());
 	}
 	pDataObject3D->updateStatistics();
 
@@ -258,7 +112,6 @@ void astra_mex_data3d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 	if (1 <= nlhs) {
 		plhs[0] = mxCreateDoubleScalar(iIndex);
 	}
-
 }
 
 //-----------------------------------------------------------------------------------------
@@ -274,209 +127,38 @@ void astra_mex_data3d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
  */
 
 #ifdef USE_MATLAB_UNDOCUMENTED
-extern "C" {
-mxArray *mxCreateSharedDataCopy(const mxArray *pr);
-bool mxUnshareArray(const mxArray *pr, const bool noDeepCopy);
-mxArray *mxUnreference(const mxArray *pr);
-#if 0
-// Unsupported in Matlab R2014b
-bool mxIsSharedArray(const mxArray *pr);
-#endif
-}
-
-class CFloat32CustomMemoryMatlab3D : public CFloat32CustomMemory {
-public:
-	// offset allows linking the data object to a sub-volume (in the z direction)
-	// offset is measured in floats.
-	CFloat32CustomMemoryMatlab3D(const mxArray* _pArray, bool bUnshare, size_t iOffset) {
-		//fprintf(stderr, "Passed:\narray: %p\tdata: %p\n", (void*)_pArray, (void*)mxGetData(_pArray));
-		// First unshare the input array, so that we may modify it.
-		if (bUnshare) {
-#if 0
-			// Unsupported in Matlab R2014b
-			if (mxIsSharedArray(_pArray)) {
-				fprintf(stderr, "Performance note: unsharing shared array in link\n");
-			}
-#endif
-			mxUnshareArray(_pArray, false);
-			//fprintf(stderr, "Unshared:\narray: %p\tdata: %p\n", (void*)_pArray, (void*)mxGetData(_pArray));
-		}
-		// Then create a (persistent) copy so the data won't be deleted
-		// or changed.
-		m_pLink = mxCreateSharedDataCopy(_pArray);
-		//fprintf(stderr, "SharedDataCopy:\narray: %p\tdata: %p\n", (void*)m_pLink, (void*)mxGetData(m_pLink));
-		mexMakeArrayPersistent(m_pLink);
-		m_fPtr = (float *)mxGetData(m_pLink);
-		m_fPtr += iOffset;
-	}
-	virtual ~CFloat32CustomMemoryMatlab3D() {
-		// destroy the shared array
-		//fprintf(stderr, "Destroy:\narray: %p\tdata: %p\n", (void*)m_pLink, (void*)mxGetData(m_pLink));
-		mxDestroyArray(m_pLink);
-	}
-private:
-	mxArray* m_pLink;
-};
 
 void astra_mex_data3d_link(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray* prhs[])
 {
-	// TODO: Reduce code duplication with _create!
-	// TODO: Also allow empty argument to let this function create its own mxArray
+	// TODO: Allow empty argument to let this function create its own mxArray
 	// step1: get datatype
 	if (nrhs < 4) {
 		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
 		return;
 	}
 
-	if (!mxIsStruct(prhs[2])) {
+	const mxArray * const geometry = prhs[2];
+	const mxArray * const data = nrhs > 3 ? prhs[3] : NULL;
+	const mxArray * const unshare = nrhs > 4 ? prhs[4] : NULL;
+	const mxArray * const zIndex = nrhs > 5 ? prhs[5] : NULL;
+
+	if (!checkStructs(geometry)) {
 		mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.\n");
-	}
-
-	const mxArray* _pArray = prhs[3];
-
-	string sDataType = mex_util_get_string(prhs[1]);	
-	CFloat32Data3DMemory* pDataObject3D = NULL;
-
-	if (mex_is_scalar(_pArray) || !mxIsSingle(_pArray)) {
-		mexErrMsgTxt("Data must be a single array.");
 		return;
 	}
 
-	unsigned int iZ = 0;
-	bool bUnshare = true;
-	if (nrhs > 4) {
-		if (!mex_is_scalar(prhs[4])) {
-			mexErrMsgTxt("Argument 5 (read-only) must be scalar");
-			return;
-		}
-		// unshare the array if we're not linking read-only
-		bUnshare = !(bool)mxGetScalar(prhs[4]);
-	}
-	if (nrhs > 5) {
-		if (!mex_is_scalar(prhs[5])) {
-			mexErrMsgTxt("Argument 6 (Z) must be scalar");
-			return;
-		}
-		iZ = (unsigned int)mxGetScalar(prhs[5]);
-	}
-
-	mwSize dims[3];
-
-	// SWITCH DataType
-	if (sDataType == "-vol") {
-		// Read geometry
-		Config cfg;
-		XMLDocument* xml = struct2XML("VolumeGeometry", prhs[2]);
-		if (!xml)
-			return;
-		cfg.self = xml->getRootNode();
-		CVolumeGeometry3D* pGeometry = new CVolumeGeometry3D();
-		if (!pGeometry->initialize(cfg)) {
-			mexErrMsgTxt("Geometry class not initialized. \n");
-			delete pGeometry;
-			delete xml;
-			return;
-		}
-		delete xml;
-
-		// If data is specified, check dimensions
-		if (nrhs >= 4) {
-			get3DMatrixDims(prhs[3], dims);
-			bool ok = pGeometry->getGridColCount() == dims[0] && pGeometry->getGridRowCount() == dims[1];
-			if (nrhs == 4) {
-				ok &= pGeometry->getGridSliceCount() == dims[2];
-			} else if (nrhs > 4) {
-				// sub-volume in Z direction
-				ok &= iZ + pGeometry->getGridSliceCount() <= dims[2];
-			}
-			if (!ok) {
-				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
-				delete pGeometry;
-				return;
-			}
-		}
-
-		size_t iOffset = iZ;
-		iOffset *= dims[0];
-		iOffset *= dims[1];
-		CFloat32CustomMemoryMatlab3D* pHandle = new CFloat32CustomMemoryMatlab3D(_pArray, bUnshare, iOffset);
-
-		// Initialize data object
-		pDataObject3D = new CFloat32VolumeData3DMemory(pGeometry, pHandle);		
-		delete pGeometry;
-	}
-	else if (sDataType == "-sino" || sDataType == "-proj3d" || sDataType == "-sinocone") {
-
-		// Read geometry
-		if (!mxIsStruct(prhs[2])) {
-			mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.\n");
-		}
-		XMLDocument* xml = struct2XML("ProjectionGeometry", prhs[2]);
-		if (!xml)
-			return;
-		Config cfg;
-		cfg.self = xml->getRootNode();
-
-		// FIXME: Change how the base class is created. (This is duplicated
-		// in Projector2D.cpp.)
-		std::string type = cfg.self->getAttribute("type");
-		CProjectionGeometry3D* pGeometry = 0;
-		if (type == "parallel3d") {
-			pGeometry = new CParallelProjectionGeometry3D();
-		} else if (type == "parallel3d_vec") {
-			pGeometry = new CParallelVecProjectionGeometry3D();
-		} else if (type == "cone") {
-			pGeometry = new CConeProjectionGeometry3D();
-		} else if (type == "cone_vec") {
-			pGeometry = new CConeVecProjectionGeometry3D();
-		} else {
-			mexErrMsgTxt("Invalid geometry type.\n");
-			return;
-		}
-
-		if (!pGeometry->initialize(cfg)) {
-			mexErrMsgTxt("Geometry class not initialized. \n");
-			delete pGeometry;
-			delete xml;
-			return;
-		}
-		delete xml;
-
-		// If data is specified, check dimensions
-		if (nrhs >= 4) {
-			get3DMatrixDims(prhs[3], dims);
-			bool ok = pGeometry->getDetectorColCount() == dims[0] && pGeometry->getProjectionCount() == dims[1];
-			if (nrhs == 4) {
-				ok &= pGeometry->getDetectorRowCount() == dims[2];
-			} else if (nrhs > 4) {
-				// sub-volume in Z direction
-				ok &= iZ + pGeometry->getDetectorRowCount() <= dims[2];
-			}
-			if (!ok) {
-				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
-				delete pGeometry;
-				return;
-			}
-		}
-
-		size_t iOffset = iZ;
-		iOffset *= dims[0];
-		iOffset *= dims[1];
-		CFloat32CustomMemoryMatlab3D* pHandle = new CFloat32CustomMemoryMatlab3D(_pArray, bUnshare, iOffset);
-
-		// Initialize data object
-		pDataObject3D = new CFloat32ProjectionData3DMemory(pGeometry, pHandle);
-		delete pGeometry;
-	}
-	else {
-		mexErrMsgTxt("Invalid datatype.  Please specify '-vol' or '-proj3d'. \n");
+	if (data && !checkDataType(data)) {
+		mexErrMsgTxt("Data must be single or double.");
 		return;
 	}
 
-	// Check initialization
-	if (!pDataObject3D->isInitialized()) {
-		mexErrMsgTxt("Couldn't initialize data object.\n");
-		delete pDataObject3D;
+	string sDataType = mex_util_get_string(prhs[1]);
+
+	// step2: Allocate data
+	CFloat32Data3DMemory* pDataObject3D =
+			allocateDataObject(sDataType, geometry, data, unshare, zIndex);
+	if (!pDataObject3D) {
+		// Error message was already set by the function
 		return;
 	}
 
@@ -489,10 +171,7 @@ void astra_mex_data3d_link(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 	if (1 <= nlhs) {
 		plhs[0] = mxCreateDoubleScalar(iIndex);
 	}
-
 }
-
-
 #endif
 
 
@@ -547,43 +226,8 @@ void astra_mex_data3d_create_cache(int nlhs, mxArray* plhs[], int nrhs, const mx
 
  */
 void astra_mex_data3d_get(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
-{ 
-	// step1: input
-	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
-	}
-	int iDataID = (int)(mxGetScalar(prhs[1]));
-
-	// step2: get data object
-	CFloat32Data3DMemory* pDataObject = dynamic_cast<CFloat32Data3DMemory*>(astra::CData3DManager::getSingleton().get(iDataID));
-	if (!pDataObject || !pDataObject->isInitialized()) {
-		mexErrMsgTxt("Data object not found or not initialized properly.\n");
-		return;
-	}
-
-	// create output
-	if (1 <= nlhs) {
-		mwSize dims[3];
-		dims[0] = pDataObject->getWidth();
-		dims[1] = pDataObject->getHeight();
-		dims[2] = pDataObject->getDepth();
-
-		plhs[0] = mxCreateNumericArray(3, dims, mxDOUBLE_CLASS, mxREAL);
-		double* out = mxGetPr(plhs[0]);
-
-		int i = 0;
-		for (int slice = 0; slice < pDataObject->getDepth(); slice++) {
-			for (int row = 0; row < pDataObject->getHeight(); row++) {
-				for (int col = 0; col < pDataObject->getWidth(); col++) {
-					// TODO: Benchmark and remove triple indexing?
-					out[i] = pDataObject->getData3D()[slice][row][col];
-					++i;
-				}
-			}
-		}	
-	}
-	
+{
+	generic_astra_mex_data3d_get<mxDOUBLE_CLASS>(nlhs, plhs, nrhs, prhs);
 }
 
 //-----------------------------------------------------------------------------------------
@@ -596,43 +240,8 @@ void astra_mex_data3d_get(int nlhs, mxArray* plhs[], int nrhs, const mxArray* pr
 
  */
 void astra_mex_data3d_get_single(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
-{ 
-	// step1: input
-	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
-	}
-	int iDataID = (int)(mxGetScalar(prhs[1]));
-
-	// step2: get data object
-	CFloat32Data3DMemory* pDataObject = dynamic_cast<CFloat32Data3DMemory*>(astra::CData3DManager::getSingleton().get(iDataID));
-	if (!pDataObject || !pDataObject->isInitialized()) {
-		mexErrMsgTxt("Data object not found or not initialized properly.\n");
-		return;
-	}
-
-	// create output
-	if (1 <= nlhs) {
-		mwSize dims[3];
-		dims[0] = pDataObject->getWidth();
-		dims[1] = pDataObject->getHeight();
-		dims[2] = pDataObject->getDepth();
-
-		plhs[0] = mxCreateNumericArray(3, dims, mxSINGLE_CLASS, mxREAL);
-		float* out = (float *)mxGetData(plhs[0]);
-
-		int i = 0;
-		for (int slice = 0; slice < pDataObject->getDepth(); slice++) {
-			for (int row = 0; row < pDataObject->getHeight(); row++) {
-				for (int col = 0; col < pDataObject->getWidth(); col++) {
-					// TODO: Benchmark and remove triple indexing?
-					out[i] = pDataObject->getData3D()[slice][row][col];
-					++i;
-				}
-			}
-		}	
-	}
-	
+{
+	generic_astra_mex_data3d_get<mxSINGLE_CLASS>(nlhs, plhs, nrhs, prhs);
 }
 
 
@@ -652,70 +261,20 @@ void astra_mex_data3d_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
 		return;
 	}
-	int iDataID = (int)(mxGetScalar(prhs[1]));
 
-	// step2: get data object
-	CFloat32Data3DMemory* pDataObject = dynamic_cast<CFloat32Data3DMemory*>(astra::CData3DManager::getSingleton().get(iDataID));
-	if (!pDataObject || !pDataObject->isInitialized()) {
-		mexErrMsgTxt("Data object not found or not initialized properly.\n");
-		return;
-	}
-
-	if (!(mex_is_scalar(prhs[2]) || mxIsDouble(prhs[2]) || mxIsSingle(prhs[2]))) {
+	if (!checkDataType(prhs[2])) {
 		mexErrMsgTxt("Data must be single or double.");
 		return;
 	}
 
-	// fill with scalar value
-	if (mex_is_scalar(prhs[2])) {
-		float32 fValue = (float32)mxGetScalar(prhs[2]);
-		for (int i = 0; i < pDataObject->getSize(); ++i) {
-			pDataObject->getData()[i] = fValue;
-		}
+	// step2: get data object
+	CFloat32Data3DMemory* pDataObject = NULL;
+	if (!checkID(mxGetScalar(prhs[1]), pDataObject)) {
+		mexErrMsgTxt("Data object not found or not initialized properly.\n");
+		return;
 	}
-	// fill with array value
-	else if (mxIsDouble(prhs[2])) {
-		mwSize dims[3];
-		get3DMatrixDims(prhs[2], dims);
-		if (dims[0] != pDataObject->getWidth() || dims[1] != pDataObject->getHeight() || dims[2] != pDataObject->getDepth()) {
-			mexErrMsgTxt("Data object dimensions don't match.\n");
-			return;
 
-		}
-		double* pdMatlabData = mxGetPr(prhs[2]);
-		int i = 0;
-		int col, row, slice;
-		for (slice = 0; slice < dims[2]; ++slice) {
-			for (row = 0; row < dims[1]; ++row) {
-				for (col = 0; col < dims[0]; ++col) {
-					// TODO: Benchmark and remove triple indexing?
-					pDataObject->getData3D()[slice][row][col] = pdMatlabData[i];
-					++i;
-				}
-			}
-		}
-	}
-	else if (mxIsSingle(prhs[2])) {
-		mwSize dims[3];
-		get3DMatrixDims(prhs[2], dims);
-		if (dims[0] != pDataObject->getWidth() || dims[1] != pDataObject->getHeight() || dims[2] != pDataObject->getDepth()) {
-			mexErrMsgTxt("Data object dimensions don't match.\n");
-			return;
-
-		}
-		const float* pfMatlabData = (const float *)mxGetData(prhs[2]);
-		int i = 0;
-		int col, row, slice;
-		for (slice = 0; slice < dims[2]; ++slice) {
-			for (row = 0; row < dims[1]; ++row) {
-				for (col = 0; col < dims[0]; ++col) {
-					// TODO: Benchmark and remove triple indexing?
-					pDataObject->getData3D()[slice][row][col] = pfMatlabData[i];
-					++i;
-				}
-			}
-		}
-	}
+	copyMexToCFloat32Array(prhs[2], pDataObject->getData(), pDataObject->getSize());
 	pDataObject->updateStatistics();
 }
 
