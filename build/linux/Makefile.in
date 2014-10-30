@@ -35,6 +35,8 @@ endif
 
 ifeq ($(matlab),yes)
 CPPFLAGS+=-I$(MATLAB_ROOT)/extern/include -DMATLAB_MEX_FILE
+CXXFLAGS+=-fopenmp
+LDFLAGS+=-fopenmp
 endif
 
 BOOST_CPPFLAGS=
@@ -196,7 +198,9 @@ TEST_OBJECTS=\
 	tests/test_XMLDocument.o
 
 MATLAB_CXX_OBJECTS=\
-	matlab/mex/mexHelpFunctions.o
+	matlab/mex/mexHelpFunctions.o \
+	matlab/mex/mexCopyDataHelpFunctions.o \
+	matlab/mex/mexDataManagerHelpFunctions.o
 
 MATLAB_MEX=\
 	matlab/mex/astra_mex_algorithm_c.$(MEXSUFFIX) \
