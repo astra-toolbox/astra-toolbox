@@ -145,6 +145,7 @@ bool CReconstructionAlgorithm3D::initialize(const Config& _cfg)
 		id = boost::lexical_cast<int>(_cfg.self->getOption("SinogramMaskId"));
 		m_pSinogramMask = dynamic_cast<CFloat32ProjectionData3D*>(CData3DManager::getSingleton().get(id));
 	}
+	CC.markOptionParsed("SinogramMaskId");
 
 	// Constraints - NEW
 	if (_cfg.self->hasOption("MinConstraint")) {
