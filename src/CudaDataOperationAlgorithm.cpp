@@ -30,7 +30,6 @@ $Id$
 
 #include "astra/CudaDataOperationAlgorithm.h"
 
-#include "../cuda/2d/dataop.h"
 #include "../cuda/2d/algo.h"
 #include "../cuda/2d/darthelper.h"
 #include "../cuda/2d/arith.h"
