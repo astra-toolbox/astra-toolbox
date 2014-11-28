@@ -1,0 +1,441 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release_CUDA|Win32">
+      <Configuration>Release_CUDA</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release_CUDA|x64">
+      <Configuration>Release_CUDA</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{BE9F1326-527C-4284-AE2C-D1E25D539CEA}</ProjectGuid>
+    <RootNamespace>astra_vc11</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_CUDA|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_CUDA|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_CUDA|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_CUDA|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>$(CUDA_INC_PATH);$(IncludePath)</IncludePath>
+    <LibraryPath>$(CUDA_LIB_PATH);$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)bin\$(Platform)\Release_CUDA\</OutDir>
+    <IntDir>$(OutDir)obj\</IntDir>
+    <TargetExt>.dll</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_CUDA|x64'">
+    <IncludePath>$(CUDA_INC_PATH);$(IncludePath)</IncludePath>
+    <LibraryPath>$(CUDA_LIB_PATH);$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)bin\$(Platform)\Release_CUDA\</OutDir>
+    <IntDir>$(OutDir)\obj\</IntDir>
+    <TargetExt>.dll</TargetExt>
+    <GenerateManifest>true</GenerateManifest>
+    <TargetName>AstraCuda64</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_CUDA|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <CudaCompile>
+      <CodeGeneration>compute_20,sm_20;compute_30,sm_30;compute_30,sm_35;compute_30,compute_30</CodeGeneration>
+    </CudaCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+    </CudaCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_CUDA|x64'">
+    <ClCompile>
+      <WarningLevel>Level1</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>lib\include;lib\include\cuda;include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <PreprocessorDefinitions>ASTRA_CUDA;DLL_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <OutputFile>bin\x64\Release_CUDA\AstraCuda64.dll</OutputFile>
+      <AdditionalLibraryDirectories>lib\x64;$(CUDA_LIB_PATH);$(NVSDKCUDA_ROOT)\common\lib;$(NVSDKCOMPUTE_ROOT)/C/common/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cudart.lib;FreeImage.lib;cufft.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+    </Link>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+      <GenerateLineInfo>true</GenerateLineInfo>
+      <CodeGeneration>compute_20,sm_20;compute_30,sm_30;compute_30,sm_35</CodeGeneration>
+    </CudaCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Algorithm.cpp" />
+    <ClCompile Include="src\ArtAlgorithm.cpp" />
+    <ClCompile Include="src\AstraObjectFactory.cpp" />
+    <ClCompile Include="src\AstraObjectManager.cpp" />
+    <ClCompile Include="src\AsyncAlgorithm.cpp" />
+    <ClCompile Include="src\BackProjectionAlgorithm.cpp" />
+    <ClCompile Include="src\CglsAlgorithm.cpp" />
+    <ClCompile Include="src\ConeProjectionGeometry3D.cpp" />
+    <ClCompile Include="src\ConeVecProjectionGeometry3D.cpp" />
+    <ClCompile Include="src\Config.cpp" />
+    <ClCompile Include="src\CudaBackProjectionAlgorithm.cpp" />
+    <ClCompile Include="src\CudaBackProjectionAlgorithm3D.cpp" />
+    <ClCompile Include="src\CudaCglsAlgorithm.cpp" />
+    <ClCompile Include="src\CudaCglsAlgorithm3D.cpp" />
+    <ClCompile Include="src\CudaDartMaskAlgorithm.cpp" />
+    <ClCompile Include="src\CudaDartMaskAlgorithm3D.cpp" />
+    <ClCompile Include="src\CudaDartSmoothingAlgorithm.cpp" />
+    <ClCompile Include="src\CudaDartSmoothingAlgorithm3D.cpp" />
+    <ClCompile Include="src\CudaDataOperationAlgorithm.cpp" />
+    <ClCompile Include="src\CudaEMAlgorithm.cpp" />
+    <ClCompile Include="src\CudaFDKAlgorithm3D.cpp" />
+    <ClCompile Include="src\CudaFilteredBackProjectionAlgorithm.cpp" />
+    <ClCompile Include="src\CudaForwardProjectionAlgorithm.cpp" />
+    <ClCompile Include="src\CudaForwardProjectionAlgorithm3D.cpp" />
+    <ClCompile Include="src\CudaProjector2D.cpp" />
+    <ClCompile Include="src\CudaProjector3D.cpp" />
+    <ClCompile Include="src\CudaReconstructionAlgorithm2D.cpp" />
+    <ClCompile Include="src\CudaRoiSelectAlgorithm.cpp" />
+    <ClCompile Include="src\CudaSartAlgorithm.cpp" />
+    <ClCompile Include="src\CudaSirtAlgorithm.cpp" />
+    <ClCompile Include="src\CudaSirtAlgorithm3D.cpp" />
+    <ClCompile Include="src\DataProjector.cpp" />
+    <ClCompile Include="src\DataProjectorPolicies.cpp" />
+    <ClCompile Include="src\FanFlatBeamLineKernelProjector2D.cpp" />
+    <ClCompile Include="src\FanFlatBeamStripKernelProjector2D.cpp" />
+    <ClCompile Include="src\FanFlatProjectionGeometry2D.cpp" />
+    <ClCompile Include="src\FanFlatVecProjectionGeometry2D.cpp" />
+    <ClCompile Include="src\FilteredBackProjectionAlgorithm.cpp" />
+    <ClCompile Include="src\Float32Data.cpp" />
+    <ClCompile Include="src\Float32Data2D.cpp" />
+    <ClCompile Include="src\Float32Data3D.cpp" />
+    <ClCompile Include="src\Float32Data3DMemory.cpp" />
+    <ClCompile Include="src\Float32ProjectionData2D.cpp" />
+    <ClCompile Include="src\Float32ProjectionData3D.cpp" />
+    <ClCompile Include="src\Float32ProjectionData3DMemory.cpp" />
+    <ClCompile Include="src\Float32VolumeData2D.cpp" />
+    <ClCompile Include="src\Float32VolumeData3D.cpp" />
+    <ClCompile Include="src\Float32VolumeData3DMemory.cpp" />
+    <ClCompile Include="src\ForwardProjectionAlgorithm.cpp" />
+    <ClCompile Include="src\Fourier.cpp" />
+    <ClCompile Include="src\Globals.cpp" />
+    <ClCompile Include="src\Logger.cpp" />
+    <ClCompile Include="src\ParallelBeamBlobKernelProjector2D.cpp" />
+    <ClCompile Include="src\ParallelBeamLinearKernelProjector2D.cpp" />
+    <ClCompile Include="src\ParallelBeamLineKernelProjector2D.cpp" />
+    <ClCompile Include="src\ParallelBeamStripKernelProjector2D.cpp" />
+    <ClCompile Include="src\ParallelProjectionGeometry2D.cpp" />
+    <ClCompile Include="src\ParallelProjectionGeometry3D.cpp" />
+    <ClCompile Include="src\ParallelVecProjectionGeometry3D.cpp" />
+    <ClCompile Include="src\PlatformDepSystemCode.cpp" />
+    <ClCompile Include="src\ProjectionGeometry2D.cpp" />
+    <ClCompile Include="src\ProjectionGeometry3D.cpp" />
+    <ClCompile Include="src\Projector2D.cpp" />
+    <ClCompile Include="src\Projector3D.cpp" />
+    <ClCompile Include="src\ReconstructionAlgorithm2D.cpp" />
+    <ClCompile Include="src\ReconstructionAlgorithm3D.cpp" />
+    <ClCompile Include="src\SartAlgorithm.cpp" />
+    <ClCompile Include="src\SirtAlgorithm.cpp" />
+    <ClCompile Include="src\SparseMatrix.cpp" />
+    <ClCompile Include="src\SparseMatrixProjectionGeometry2D.cpp" />
+    <ClCompile Include="src\SparseMatrixProjector2D.cpp" />
+    <ClCompile Include="src\Utilities.cpp" />
+    <ClCompile Include="src\VolumeGeometry2D.cpp" />
+    <ClCompile Include="src\VolumeGeometry3D.cpp" />
+    <ClCompile Include="src\XMLDocument.cpp" />
+    <ClCompile Include="src\XMLNode.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="cuda\2d\algo.h" />
+    <ClInclude Include="cuda\2d\arith.h" />
+    <ClInclude Include="cuda\2d\astra.h" />
+    <ClInclude Include="cuda\2d\cgls.h" />
+    <ClInclude Include="cuda\2d\darthelper.h" />
+    <ClInclude Include="cuda\2d\dims.h" />
+    <ClInclude Include="cuda\2d\em.h" />
+    <ClInclude Include="cuda\2d\fan_bp.h" />
+    <ClInclude Include="cuda\2d\fan_fp.h" />
+    <ClInclude Include="cuda\2d\fbp_filters.h" />
+    <ClInclude Include="cuda\2d\fft.h" />
+    <ClInclude Include="cuda\2d\par_bp.h" />
+    <ClInclude Include="cuda\2d\par_fp.h" />
+    <ClInclude Include="cuda\2d\sart.h" />
+    <ClInclude Include="cuda\2d\sirt.h" />
+    <ClInclude Include="cuda\2d\util.h" />
+    <ClInclude Include="cuda\3d\algo3d.h" />
+    <ClInclude Include="cuda\3d\arith3d.h" />
+    <ClInclude Include="cuda\3d\astra3d.h" />
+    <ClInclude Include="cuda\3d\cgls3d.h" />
+    <ClInclude Include="cuda\3d\cone_bp.h" />
+    <ClInclude Include="cuda\3d\cone_fp.h" />
+    <ClInclude Include="cuda\3d\darthelper3d.h" />
+    <ClInclude Include="cuda\3d\dims3d.h" />
+    <ClInclude Include="cuda\3d\fdk.h" />
+    <ClInclude Include="cuda\3d\par3d_bp.h" />
+    <ClInclude Include="cuda\3d\par3d_fp.h" />
+    <ClInclude Include="cuda\3d\sirt3d.h" />
+    <ClInclude Include="cuda\3d\util3d.h" />
+    <ClInclude Include="include\astra\Algorithm.h" />
+    <ClInclude Include="include\astra\AlgorithmTypelist.h" />
+    <ClInclude Include="include\astra\ArtAlgorithm.h" />
+    <ClInclude Include="include\astra\AstraObjectFactory.h" />
+    <ClInclude Include="include\astra\AstraObjectManager.h" />
+    <ClInclude Include="include\astra\AsyncAlgorithm.h" />
+    <ClInclude Include="include\astra\BackProjectionAlgorithm.h" />
+    <ClInclude Include="include\astra\CglsAlgorithm.h" />
+    <ClInclude Include="include\astra\ConeProjectionGeometry3D.h" />
+    <ClInclude Include="include\astra\ConeVecProjectionGeometry3D.h" />
+    <ClInclude Include="include\astra\Config.h" />
+    <ClInclude Include="include\astra\CudaBackProjectionAlgorithm.h" />
+    <ClInclude Include="include\astra\CudaBackProjectionAlgorithm3D.h" />
+    <ClInclude Include="include\astra\CudaCglsAlgorithm.h" />
+    <ClInclude Include="include\astra\CudaCglsAlgorithm3D.h" />
+    <ClInclude Include="include\astra\CudaDartMaskAlgorithm.h" />
+    <ClInclude Include="include\astra\CudaDartMaskAlgorithm3D.h" />
+    <ClInclude Include="include\astra\CudaDartSmoothingAlgorithm.h" />
+    <ClInclude Include="include\astra\CudaDartSmoothingAlgorithm3D.h" />
+    <ClInclude Include="include\astra\CudaDataOperationAlgorithm.h" />
+    <ClInclude Include="include\astra\CudaEMAlgorithm.h" />
+    <ClInclude Include="include\astra\CudaFDKAlgorithm3D.h" />
+    <ClInclude Include="include\astra\CudaFilteredBackProjectionAlgorithm.h" />
+    <ClInclude Include="include\astra\CudaForwardProjectionAlgorithm.h" />
+    <ClInclude Include="include\astra\CudaForwardProjectionAlgorithm3D.h" />
+    <ClInclude Include="include\astra\CudaProjector2D.h" />
+    <ClInclude Include="include\astra\CudaProjector3D.h" />
+    <ClInclude Include="include\astra\CudaReconstructionAlgorithm2D.h" />
+    <ClInclude Include="include\astra\CudaRoiSelectAlgorithm.h" />
+    <ClInclude Include="include\astra\CudaSartAlgorithm.h" />
+    <ClInclude Include="include\astra\CudaSirtAlgorithm.h" />
+    <ClInclude Include="include\astra\CudaSirtAlgorithm3D.h" />
+    <ClInclude Include="include\astra\DartAlgorithm.h" />
+    <ClInclude Include="include\astra\DataProjector.h" />
+    <ClInclude Include="include\astra\DataProjectorPolicies.h" />
+    <ClInclude Include="include\astra\FanFlatBeamLineKernelProjector2D.h" />
+    <ClInclude Include="include\astra\FanFlatBeamStripKernelProjector2D.h" />
+    <ClInclude Include="include\astra\FanFlatProjectionGeometry2D.h" />
+    <ClInclude Include="include\astra\FanFlatVecProjectionGeometry2D.h" />
+    <ClInclude Include="include\astra\FilteredBackProjectionAlgorithm.h" />
+    <ClInclude Include="include\astra\Float32Data.h" />
+    <ClInclude Include="include\astra\Float32Data2D.h" />
+    <ClInclude Include="include\astra\Float32Data3D.h" />
+    <ClInclude Include="include\astra\Float32Data3DMemory.h" />
+    <ClInclude Include="include\astra\Float32ProjectionData2D.h" />
+    <ClInclude Include="include\astra\Float32ProjectionData3D.h" />
+    <ClInclude Include="include\astra\Float32ProjectionData3DMemory.h" />
+    <ClInclude Include="include\astra\Float32VolumeData2D.h" />
+    <ClInclude Include="include\astra\Float32VolumeData3D.h" />
+    <ClInclude Include="include\astra\Float32VolumeData3DMemory.h" />
+    <ClInclude Include="include\astra\ForwardProjectionAlgorithm.h" />
+    <ClInclude Include="include\astra\Fourier.h" />
+    <ClInclude Include="include\astra\Globals.h" />
+    <ClInclude Include="include\astra\Logger.h" />
+    <ClInclude Include="include\astra\ParallelBeamBlobKernelProjector2D.h" />
+    <ClInclude Include="include\astra\ParallelBeamLinearKernelProjector2D.h" />
+    <ClInclude Include="include\astra\ParallelBeamLineKernelProjector2D.h" />
+    <ClInclude Include="include\astra\ParallelBeamStripKernelProjector2D.h" />
+    <ClInclude Include="include\astra\ParallelProjectionGeometry2D.h" />
+    <ClInclude Include="include\astra\ParallelProjectionGeometry3D.h" />
+    <ClInclude Include="include\astra\ParallelVecProjectionGeometry3D.h" />
+    <ClInclude Include="include\astra\PlatformDepSystemCode.h" />
+    <ClInclude Include="include\astra\ProjectionGeometry2D.h" />
+    <ClInclude Include="include\astra\ProjectionGeometry3D.h" />
+    <ClInclude Include="include\astra\Projector2D.h" />
+    <ClInclude Include="include\astra\Projector3D.h" />
+    <ClInclude Include="include\astra\ProjectorTypelist.h" />
+    <ClInclude Include="include\astra\ReconstructionAlgorithm2D.h" />
+    <ClInclude Include="include\astra\ReconstructionAlgorithm3D.h" />
+    <ClInclude Include="include\astra\SartAlgorithm.h" />
+    <ClInclude Include="include\astra\Singleton.h" />
+    <ClInclude Include="include\astra\SirtAlgorithm.h" />
+    <ClInclude Include="include\astra\SparseMatrix.h" />
+    <ClInclude Include="include\astra\SparseMatrixProjectionGeometry2D.h" />
+    <ClInclude Include="include\astra\SparseMatrixProjector2D.h" />
+    <ClInclude Include="include\astra\TypeList.h" />
+    <ClInclude Include="include\astra\Vector3D.h" />
+    <ClInclude Include="include\astra\VolumeGeometry2D.h" />
+    <ClInclude Include="include\astra\VolumeGeometry3D.h" />
+    <ClInclude Include="include\astra\XMLDocument.h" />
+    <ClInclude Include="include\astra\XMLNode.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="cuda\2d\algo.cu" />
+    <CudaCompile Include="cuda\2d\arith.cu" />
+    <CudaCompile Include="cuda\2d\astra.cu" />
+    <CudaCompile Include="cuda\2d\cgls.cu" />
+    <CudaCompile Include="cuda\2d\darthelper.cu" />
+    <CudaCompile Include="cuda\2d\em.cu" />
+    <CudaCompile Include="cuda\2d\fan_bp.cu" />
+    <CudaCompile Include="cuda\2d\fan_fp.cu" />
+    <CudaCompile Include="cuda\2d\fft.cu" />
+    <CudaCompile Include="cuda\2d\par_bp.cu" />
+    <CudaCompile Include="cuda\2d\par_fp.cu" />
+    <CudaCompile Include="cuda\2d\sart.cu" />
+    <CudaCompile Include="cuda\2d\sirt.cu" />
+    <CudaCompile Include="cuda\2d\util.cu" />
+    <CudaCompile Include="cuda\3d\algo3d.cu" />
+    <CudaCompile Include="cuda\3d\arith3d.cu" />
+    <CudaCompile Include="cuda\3d\astra3d.cu" />
+    <CudaCompile Include="cuda\3d\cgls3d.cu" />
+    <CudaCompile Include="cuda\3d\cone_bp.cu" />
+    <CudaCompile Include="cuda\3d\cone_fp.cu" />
+    <CudaCompile Include="cuda\3d\darthelper3d.cu" />
+    <CudaCompile Include="cuda\3d\fdk.cu" />
+    <CudaCompile Include="cuda\3d\par3d_bp.cu" />
+    <CudaCompile Include="cuda\3d\par3d_fp.cu" />
+    <CudaCompile Include="cuda\3d\sirt3d.cu" />
+    <CudaCompile Include="cuda\3d\util3d.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="include\astra\DataProjectorPolicies.inl" />
+    <None Include="include\astra\FanFlatBeamLineKernelProjector2D.inl" />
+    <None Include="include\astra\FanFlatBeamStripKernelProjector2D.inl" />
+    <None Include="include\astra\ParallelBeamBlobKernelProjector2D.inl" />
+    <None Include="include\astra\ParallelBeamLinearKernelProjector2D.inl" />
+    <None Include="include\astra\ParallelBeamLineKernelProjector2D.inl" />
+    <None Include="include\astra\ParallelBeamStripKernelProjector2D.inl" />
+    <None Include="include\astra\SparseMatrixProjector2D.inl" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.targets" />
+  </ImportGroup>
+</Project>
