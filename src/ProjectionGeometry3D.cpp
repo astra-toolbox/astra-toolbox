@@ -72,9 +72,7 @@ CProjectionGeometry3D::CProjectionGeometry3D(int _iAngleCount,
 											 int _iDetectorColCount, 
 											 float32 _fDetectorSpacingX, 
 											 float32 _fDetectorSpacingY, 
-											 const float32 *_pfProjectionAngles,
-											 const float32 *_pfExtraDetectorOffsetsX,
-											 const float32 *_pfExtraDetectorOffsetsY) : configCheckData(0)
+											 const float32 *_pfProjectionAngles) : configCheckData(0)
 {
 	_clear();
 	_initialize(_iAngleCount, 
@@ -82,9 +80,7 @@ CProjectionGeometry3D::CProjectionGeometry3D(int _iAngleCount,
 			    _iDetectorColCount, 
 			    _fDetectorSpacingX, 
 			    _fDetectorSpacingY, 
-			    _pfProjectionAngles,
-				_pfExtraDetectorOffsetsX,
-				_pfExtraDetectorOffsetsY);
+			    _pfProjectionAngles);
 }
 
 //----------------------------------------------------------------------------------------
@@ -97,9 +93,7 @@ CProjectionGeometry3D::CProjectionGeometry3D(const CProjectionGeometry3D& _projG
 				_projGeom.m_iDetectorColCount, 
 				_projGeom.m_fDetectorSpacingX, 
 				_projGeom.m_fDetectorSpacingY, 
-				_projGeom.m_pfProjectionAngles,
-				_projGeom.m_pfExtraDetectorOffsetsX,
-				_projGeom.m_pfExtraDetectorOffsetsY);
+				_projGeom.m_pfProjectionAngles);
 }
 
 //----------------------------------------------------------------------------------------
@@ -122,8 +116,6 @@ void CProjectionGeometry3D::_clear()
 	m_fDetectorSpacingX = 0.0f;
 	m_fDetectorSpacingY = 0.0f;
 	m_pfProjectionAngles = NULL;
-	m_pfExtraDetectorOffsetsX = NULL;
-	m_pfExtraDetectorOffsetsY = NULL;
 	m_bInitialized = false;
 }
 
@@ -139,15 +131,7 @@ void CProjectionGeometry3D::clear()
 	if (m_pfProjectionAngles != NULL) {
 		delete [] m_pfProjectionAngles;
 	}
-	if (m_pfExtraDetectorOffsetsX != NULL) {
-		delete [] m_pfExtraDetectorOffsetsX;
-	}
-	if (m_pfExtraDetectorOffsetsY != NULL) {
-		delete [] m_pfExtraDetectorOffsetsY;
-	}
 	m_pfProjectionAngles = NULL;
-	m_pfExtraDetectorOffsetsX = NULL;
-	m_pfExtraDetectorOffsetsY = NULL;
 	m_bInitialized = false;
 }
 
@@ -206,58 +190,6 @@ bool CProjectionGeometry3D::initialize(const Config& _cfg)
 	CC.markNodeParsed("ProjectionAngles");
 	ASTRA_DELETE(node);
 
-	// Optional: ExtraDetectorOffsetX
-	node = _cfg.self->getSingleNode("ExtraDetectorOffsetsX");
-	m_pfExtraDetectorOffsetsX = new float32[m_iProjectionAngleCount];
-	if (node) {
-		vector<float32> translationsX = node->getContentNumericalArray();
-		if (translationsX.size() < m_iProjectionAngleCount){
-			cout << "Not enough ExtraDetectorOffsetsX components specified. " << endl;
-			for (int i = 0; i < m_iProjectionAngleCount; i++) {
-				m_pfExtraDetectorOffsetsX[i] = 0;
-			}
-		}
-		else {
-			for (int i = 0; i < m_iProjectionAngleCount; i++) {
-				m_pfExtraDetectorOffsetsX[i] = translationsX[i];
-			}
-		}
-	}
-	else {
-		//cout << "No ExtraDetectorOffsetsX tag specified." << endl;
-		for (int i = 0; i < m_iProjectionAngleCount; i++) {
-			m_pfExtraDetectorOffsetsX[i] = 0;
-		}
-	}
-	CC.markOptionParsed("ExtraDetectorOffsetsX");
-	ASTRA_DELETE(node);
-
-	// Optional: ExtraDetectorOffsetsY
-	node = _cfg.self->getSingleNode("ExtraDetectorOffsetsY");
-	m_pfExtraDetectorOffsetsY = new float32[m_iProjectionAngleCount];
-	if (node) {
-		vector<float32> translationsX = node->getContentNumericalArray();
-		if (translationsX.size() < m_iProjectionAngleCount){
-			cout << "Not enough ExtraDetectorOffsetsY components specified. " << endl;
-			for (int i = 0; i < m_iProjectionAngleCount; i++) {
-				m_pfExtraDetectorOffsetsY[i] = 0;
-			}
-		}
-		else {
-			for (int i = 0; i < m_iProjectionAngleCount; i++) {
-				m_pfExtraDetectorOffsetsY[i] = translationsX[i];
-			}
-		}
-	}
-	else {
-		//cout << "No ExtraDetectorOffsetsY tag specified." << endl;
-		for (int i = 0; i < m_iProjectionAngleCount; i++) {
-			m_pfExtraDetectorOffsetsY[i] = 0;
-		}
-	}	
-	CC.markOptionParsed("ExtraDetectorOffsetsY");
-	ASTRA_DELETE(node);
-
 	// Interface class, so don't return true
 	return false;
 }
@@ -269,9 +201,7 @@ bool CProjectionGeometry3D::_initialize(int _iProjectionAngleCount,
 										int _iDetectorColCount, 
 										float32 _fDetectorSpacingX, 
 										float32 _fDetectorSpacingY, 
-										const float32 *_pfProjectionAngles,
-										const float32 *_pfExtraDetectorOffsetsX,
-										const float32 *_pfExtraDetectorOffsetsY)
+										const float32 *_pfProjectionAngles)
 {
 	if (m_bInitialized) {
 		clear();
@@ -285,14 +215,8 @@ bool CProjectionGeometry3D::_initialize(int _iProjectionAngleCount,
 	m_fDetectorSpacingX = _fDetectorSpacingX;
 	m_fDetectorSpacingY = _fDetectorSpacingY;
 	m_pfProjectionAngles = new float32[m_iProjectionAngleCount];
-	m_pfExtraDetectorOffsetsX = new float32[m_iProjectionAngleCount];
-	m_pfExtraDetectorOffsetsY = new float32[m_iProjectionAngleCount];
 	for (int i = 0; i < m_iProjectionAngleCount; i++) {
 		m_pfProjectionAngles[i] = _pfProjectionAngles[i];
-		m_pfExtraDetectorOffsetsX[i] = _pfExtraDetectorOffsetsX ? _pfExtraDetectorOffsetsX[i]:0;
-		m_pfExtraDetectorOffsetsY[i] = _pfExtraDetectorOffsetsY ? _pfExtraDetectorOffsetsY[i]:0;
-		//m_pfExtraDetectorOffsetsX[i] = 0;
-		//m_pfExtraDetectorOffsetsY[i] = 0;
 	}
 
 	m_iDetectorTotCount = m_iProjectionAngleCount * m_iDetectorRowCount * m_iDetectorColCount;
@@ -301,29 +225,4 @@ bool CProjectionGeometry3D::_initialize(int _iProjectionAngleCount,
 	return false;
 }
 
-//---------------------------------------------------------------------------------------
-// 
-AstraError CProjectionGeometry3D::setExtraDetectorOffsetsX(float32* _pfExtraDetectorOffsetsX)
-{
-	if (!m_bInitialized)		
-		return ASTRA_ERROR_NOT_INITIALIZED;
-
-	for (int iAngle = 0; iAngle<m_iProjectionAngleCount; iAngle++)
-		m_pfExtraDetectorOffsetsX[iAngle] = _pfExtraDetectorOffsetsX[iAngle];
-
-	return ASTRA_SUCCESS;		
-}
-
-//---------------------------------------------------------------------------------------
-// 
-AstraError CProjectionGeometry3D::setExtraDetectorOffsetsY(float32* _pfExtraDetectorOffsetsY)
-{
-	if (!m_bInitialized)		
-		return ASTRA_ERROR_NOT_INITIALIZED;
-
-	for (int iAngle = 0; iAngle<m_iProjectionAngleCount; iAngle++)
-		m_pfExtraDetectorOffsetsY[iAngle] = _pfExtraDetectorOffsetsY[iAngle];
-
-	return ASTRA_SUCCESS;
-}
 } // namespace astra

@@ -92,12 +92,6 @@ protected:
 	 */
 	float32* m_pfProjectionAngles;
 	
-	/** Dynamically allocated array of vectors that represents the amount by which an image has been shifted after 
-	 * projection. Each projection image has a 2 shifts associated with it, one x-translation and y-translation
-	 */
-	float32* m_pfExtraDetectorOffsetsX;
-	float32* m_pfExtraDetectorOffsetsY;
-
 	/** Default constructor. Sets all numeric member variables to 0 and all pointer member variables to NULL.
 	 *
 	 * If an object is constructed using this default constructor, it must always be followed by a call 
@@ -122,9 +116,7 @@ protected:
 						  int _iDetectorColCount,
 						  float32 _fDetectorSpacingX, 
 						  float32 _fDetectorSpacingY, 
-						  const float32* _pfProjectionAngles,
-						  const float32* _pfExtraDetectorOffsetsX  = NULL,
-						  const float32* _pfExtraDetectorOffsetsY  = NULL);
+						  const float32* _pfProjectionAngles);
 
 	/** Copy constructor. 
 	 */
@@ -160,9 +152,7 @@ protected:
 					 int _iDetectorColCount,
 					 float32 _fDetectorSpacingX, 
 					 float32 _fDetectorSpacingY, 
-					 const float32* _pfProjectionAngles,
-					 const float32* _pfExtraDetectorOffsetsX = NULL,
-					 const float32* _pfExtraDetectorOffsetsY = NULL);
+					 const float32* _pfProjectionAngles);
 
 public:
 
@@ -253,18 +243,6 @@ public:
 	 * @return Pointer to buffer containing the angles.
 	 */
 	const float32* getProjectionAngles() const;
-
-	const float32* getExtraDetectorOffsetsX() const;
-	
-	const float32* getExtraDetectorOffsetsY() const;
-	
-	float32 getExtraDetectorOffsetX(int _iProjectionIndex) const;
-	
-	float32 getExtraDetectorOffsetY(int _iProjectionIndex) const;
-
-	AstraError setExtraDetectorOffsetsX(float32* _pfExtraDetectorOffsetsX);
-
-	AstraError setExtraDetectorOffsetsY(float32* _pfExtraDetectorOffsetsY);
 
 	/** Get the column index coordinate of a point on a detector array.
 	 *
@@ -444,44 +422,6 @@ inline const float32* CProjectionGeometry3D::getProjectionAngles() const
 }
 
 
-//----------------------------------------------------------------------------------------
-// Get pointer to buffer used to store x-translations of the projection images.
-inline const float32* CProjectionGeometry3D::getExtraDetectorOffsetsX() const
-{
-	// basic checks
-	ASTRA_ASSERT(m_bInitialized);
-
-	return m_pfExtraDetectorOffsetsX;
-}
-
-//----------------------------------------------------------------------------------------
-// Get pointer to buffer used to store y-translations of the projection images.
-inline const float32* CProjectionGeometry3D::getExtraDetectorOffsetsY() const
-{
-	// basic checks
-	ASTRA_ASSERT(m_bInitialized);
-
-	return m_pfExtraDetectorOffsetsY;
-}
-//----------------------------------------------------------------------------------------
-// Get the x-translation of a specific projection image.
-inline float32 CProjectionGeometry3D::getExtraDetectorOffsetX(int _iProjectionIndex) const
-{
-	// basic checks
-	ASTRA_ASSERT(m_bInitialized);
-
-	return m_pfExtraDetectorOffsetsX[_iProjectionIndex];
-}
-
-//----------------------------------------------------------------------------------------
-// Get the y-translation of a specific projection image.
-inline float32 CProjectionGeometry3D::getExtraDetectorOffsetY(int _iProjectionIndex) const
-{
-	// basic checks
-	ASTRA_ASSERT(m_bInitialized);
-
-	return m_pfExtraDetectorOffsetsX[_iProjectionIndex];
-}
 //----------------------------------------------------------------------------------------
 // detector offset X -> detector column index (float)
 inline float32 CProjectionGeometry3D::detectorOffsetXToColIndexFloat(float32 _fOffsetX) const
