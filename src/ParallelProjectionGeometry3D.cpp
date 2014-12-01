@@ -50,9 +50,7 @@ CParallelProjectionGeometry3D::CParallelProjectionGeometry3D(int _iProjectionAng
 															 int _iDetectorColCount, 
 															 float32 _fDetectorWidth, 
 															 float32 _fDetectorHeight, 
-															 const float32* _pfProjectionAngles,
-															 const float32* _pfExtraDetectorOffsetsX,
-															 const float32* _pfExtraDetectorOffsetsY) :
+															 const float32* _pfProjectionAngles) :
 	CProjectionGeometry3D() 
 {
 	initialize(_iProjectionAngleCount, 
@@ -60,9 +58,7 @@ CParallelProjectionGeometry3D::CParallelProjectionGeometry3D(int _iProjectionAng
 			   _iDetectorColCount, 
 			   _fDetectorWidth, 
 			   _fDetectorHeight, 
-			   _pfProjectionAngles,
-			   _pfExtraDetectorOffsetsX,
-			   _pfExtraDetectorOffsetsY);
+			   _pfProjectionAngles);
 }
 
 //----------------------------------------------------------------------------------------
@@ -95,18 +91,14 @@ bool CParallelProjectionGeometry3D::initialize(int _iProjectionAngleCount,
 											   int _iDetectorColCount, 
 											   float32 _fDetectorWidth, 
 											   float32 _fDetectorHeight, 
-											   const float32* _pfProjectionAngles,
-											   const float32* _pfExtraDetectorOffsetsX,
-											   const float32* _pfExtraDetectorOffsetsY)
+											   const float32* _pfProjectionAngles)
 {
 	_initialize(_iProjectionAngleCount, 
 			    _iDetectorRowCount, 
 			    _iDetectorColCount, 
 			    _fDetectorWidth, 
 			    _fDetectorHeight, 
-			    _pfProjectionAngles,
-				_pfExtraDetectorOffsetsX,
-				_pfExtraDetectorOffsetsY);
+			    _pfProjectionAngles);
 
 	// success
 	m_bInitialized = _check();
@@ -127,10 +119,6 @@ CProjectionGeometry3D* CParallelProjectionGeometry3D::clone() const
 	res->m_fDetectorSpacingY		= m_fDetectorSpacingY;
 	res->m_pfProjectionAngles		= new float32[m_iProjectionAngleCount];
 	memcpy(res->m_pfProjectionAngles, m_pfProjectionAngles, sizeof(float32)*m_iProjectionAngleCount);
-	res->m_pfExtraDetectorOffsetsX		= new float32[m_iProjectionAngleCount];
-	memcpy(res->m_pfExtraDetectorOffsetsX, m_pfExtraDetectorOffsetsX, sizeof(float32)*m_iProjectionAngleCount);
-	res->m_pfExtraDetectorOffsetsY		= new float32[m_iProjectionAngleCount];
-	memcpy(res->m_pfExtraDetectorOffsetsY, m_pfExtraDetectorOffsetsY, sizeof(float32)*m_iProjectionAngleCount);
 	return res;
 }
 
@@ -178,8 +166,6 @@ void CParallelProjectionGeometry3D::toXML(XMLNode* _sNode) const
 	_sNode->addChildNode("DetectorRowCount", m_iDetectorRowCount);
 	_sNode->addChildNode("DetectorColCount", m_iDetectorColCount);
 	_sNode->addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
-	_sNode->addChildNode("ExtraDetectorOffsetsX", m_pfExtraDetectorOffsetsX, m_iProjectionAngleCount);
-	_sNode->addChildNode("ExtraDetectorOffsetsY", m_pfExtraDetectorOffsetsY, m_iProjectionAngleCount);
 }
 
 CVector3D CParallelProjectionGeometry3D::getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex) const
@@ -199,7 +185,7 @@ CParallelProjectionGeometry2D * CParallelProjectionGeometry3D::createProjectionG
 	//getProjectionAngles(pfProjectionAngles);
 	
 	CParallelProjectionGeometry2D * pOutput = new CParallelProjectionGeometry2D(getProjectionCount(), 
-		getDetectorColCount(), getDetectorSpacingX(), pfProjectionAngles,getExtraDetectorOffsetsX());
+		getDetectorColCount(), getDetectorSpacingX(), pfProjectionAngles);
 
 	//delete [] pfProjectionAngles;
 
