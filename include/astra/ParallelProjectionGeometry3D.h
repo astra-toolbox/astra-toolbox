@@ -123,7 +123,7 @@ public:
 	*/
 	virtual CProjectionGeometry3D* clone() const;
 
-    /** Return true if this geometry instance is the same as the one specified.
+	/** Return true if this geometry instance is the same as the one specified.
 	 *
 	 * @return true if this geometry instance is the same as the one specified.
 	 */
