@@ -111,11 +111,11 @@ protected:
 	 *  @param _pfProjectionAngles Pointer to an array of projection angles. The angles will be copied from this array. All angles 
 	 *                             are represented in radians and lie in the [0,2pi[ interval.
 	 */
-	CProjectionGeometry3D(int _iProjectionAngleCount, 
-						  int _iDetectorRowCount, 
+	CProjectionGeometry3D(int _iProjectionAngleCount,
+						  int _iDetectorRowCount,
 						  int _iDetectorColCount,
-						  float32 _fDetectorSpacingX, 
-						  float32 _fDetectorSpacingY, 
+						  float32 _fDetectorSpacingX,
+						  float32 _fDetectorSpacingY,
 						  const float32* _pfProjectionAngles);
 
 	/** Copy constructor. 
@@ -147,11 +147,11 @@ protected:
 	 *  @param _pfProjectionAngles Pointer to an array of projection angles. The angles will be copied from this array. All angles 
 	 *                             are represented in radians and lie in the [0,2pi[ interval.
 	 */
-	bool _initialize(int _iProjectionAngleCount, 
-					 int _iDetectorRowCount, 
+	bool _initialize(int _iProjectionAngleCount,
+					 int _iDetectorRowCount,
 					 int _iDetectorColCount,
-					 float32 _fDetectorSpacingX, 
-					 float32 _fDetectorSpacingY, 
+					 float32 _fDetectorSpacingX,
+					 float32 _fDetectorSpacingY,
 					 const float32* _pfProjectionAngles);
 
 public:

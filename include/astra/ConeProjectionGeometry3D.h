@@ -93,13 +93,13 @@ public:
 	 *  @param _pfProjectionAngles Pointer to an array of projection angles. The angles will be copied from this array. All angles 
 	 *                             are represented in radians and lie in the [0,2pi[ interval.
 	 */
-	CConeProjectionGeometry3D(int _iProjectionAngleCount, 
-							  int _iDetectorRowCount, 
+	CConeProjectionGeometry3D(int _iProjectionAngleCount,
+							  int _iDetectorRowCount,
 							  int _iDetectorColCount,
-							  float32 _fDetectorWidth, 
-							  float32 _fDetectorHeight, 
+							  float32 _fDetectorWidth,
+							  float32 _fDetectorHeight,
 							  const float32* _pfProjectionAngles,
-							  float32 _fOriginSourceDistance, 
+							  float32 _fOriginSourceDistance,
 							  float32 _fOriginDetectorDistance);
 
 	/** Copy constructor. 
@@ -128,13 +128,13 @@ public:
 	 *  @param _pfProjectionAngles Pointer to an array of projection angles. The angles will be copied from this array. All angles 
 	 *                             are represented in radians and lie in the [0,2pi[ interval.
 	 */
-	bool initialize(int _iProjectionAngleCount, 
-					int _iDetectorRowCount, 
+	bool initialize(int _iProjectionAngleCount,
+					int _iDetectorRowCount,
 					int _iDetectorColCount,
-					float32 _fDetectorWidth, 
-					float32 _fDetectorHeight, 
-				    const float32* _pfProjectionAngles,
-					float32 _fOriginSourceDistance, 
+					float32 _fDetectorWidth,
+					float32 _fDetectorHeight,
+					const float32* _pfProjectionAngles,
+					float32 _fOriginSourceDistance,
 					float32 _fOriginDetectorDistance);
 
 
@@ -142,7 +142,7 @@ public:
 	*/
 	virtual CProjectionGeometry3D* clone() const;
 
-    /** Return true if this geometry instance is the same as the one specified.
+	/** Return true if this geometry instance is the same as the one specified.
 	 *
 	 * @return true if this geometry instance is the same as the one specified.
 	 */
@@ -153,38 +153,38 @@ public:
 	 * @param _sType geometry type to compare to.
 	 * @return true if _sType == "cone".
 	 */
-	 virtual bool isOfType(const std::string& _sType) const;
+	virtual bool isOfType(const std::string& _sType) const;
 
 	/** Turn this object into an XML object.
 	 *
 	 * @param _sNode The XML object to fill.
 	 */
-	 virtual void toXML(XMLNode* _sNode) const;
+	virtual void toXML(XMLNode* _sNode) const;
 
 	/** Returns the distance from the origin of the coordinate system to the source.
-     *
-     * @return Distance from the origin of the coordinate system to the source
-     */
+	 *
+	 * @return Distance from the origin of the coordinate system to the source
+	 */
 	float32 getOriginSourceDistance() const;
 	
 	/** Returns the distance from the origin of the coordinate system to the detector 
 	 * (i.e., the distance between the origin and its orthogonal projection onto the detector array).
-     *
-     * @return Distance from the origin of the coordinate system to the detector
-     */
+	 *
+	 * @return Distance from the origin of the coordinate system to the detector
+	 */
 	float32 getOriginDetectorDistance() const;
 
 	/** Returns the distance from the source to the detector
 	 * (i.e., the distance between the source and its orthogonal projection onto the detector array).
-     *
-     * @return Distance from the source to the detector
-     */
+	 *
+	 * @return Distance from the source to the detector
+	 */
 	float32 getSourceDetectorDistance() const;
 
-	 /**
-	  * Returns a vector giving the projection direction for a projection and detector index
-	  */
-	 virtual CVector3D getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex) const;
+	/**
+	 * Returns a vector giving the projection direction for a projection and detector index
+	 */
+	virtual CVector3D getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex) const;
 };
 
 // Returns the distance from the origin of the coordinate system to the source.
@@ -210,4 +210,4 @@ inline float32 CConeProjectionGeometry3D::getSourceDetectorDistance() const
 
 } // namespace astra
 
-#endif /* _INC_ASTRA_PARALLELPROJECTIONGEOMETRY3D */
+#endif /* _INC_ASTRA_CONEPROJECTIONGEOMETRY3D */

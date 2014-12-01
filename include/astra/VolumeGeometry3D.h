@@ -104,7 +104,7 @@ protected:
 	float32 m_fPixelLengthZ;    ///< Depth of a single pixel, in unit lengths.
 	float32 m_fPixelArea;       ///< Area of a single pixel, in unit lengths squared.
 
-    float32 m_fDivPixelLengthX; ///< 1/m_fPixelLengthX, used for fast division.
+	float32 m_fDivPixelLengthX; ///< 1/m_fPixelLengthX, used for fast division.
 	float32 m_fDivPixelLengthY; ///< 1/m_fPixelLengthY, used for fast division.
 	float32 m_fDivPixelLengthZ; ///< 1/m_fPixelLengthZ, used for fast division.
 
@@ -127,7 +127,7 @@ protected:
 
 public:
 
-    /** Default constructor. Sets all numeric member variables to 0 and all pointer member variables to NULL.
+	/** Default constructor. Sets all numeric member variables to 0 and all pointer member variables to NULL.
 	 *
 	 * If an object is constructed using this default constructor, it must always be followed by a call 
 	 * to one of the init() methods before the object can be used. Any use before calling init() is not allowed,
@@ -240,7 +240,7 @@ public:
 	 */
 	bool isInitialized() const;
 
-    /** Return true if this geometry instance is the same as the one specified.
+	/** Return true if this geometry instance is the same as the one specified.
 	 *
 	 * @return true if this geometry instance is the same as the one specified.
 	 */
@@ -318,37 +318,37 @@ public:
 	 */
 	float32 getPixelArea() const;
 
-    /** Get the minimal X-coordinate in the volume window.
+	/** Get the minimal X-coordinate in the volume window.
 	 *
 	 * @return Minimal X-coordinate in the volume window.
 	 */
 	float32 getWindowMinX() const;
 
-    /** Get the minimal Y-coordinate in the volume window.
+	/** Get the minimal Y-coordinate in the volume window.
 	 *
 	 * @return Minimal Y-coordinate in the volume window.
 	 */
 	float32 getWindowMinY() const;
 
-    /** Get the minimal Z-coordinate in the volume window.
+	/** Get the minimal Z-coordinate in the volume window.
 	 *
 	 * @return Minimal Z-coordinate in the volume window.
 	 */
 	float32 getWindowMinZ() const;
 
-    /** Get the maximal X-coordinate in the volume window.
+	/** Get the maximal X-coordinate in the volume window.
 	 *
 	 * @return Maximal X-coordinate in the volume window.
 	 */
 	float32 getWindowMaxX() const;
 
-    /** Get the maximal Y-coordinate in the volume window.
+	/** Get the maximal Y-coordinate in the volume window.
 	 *
 	 * @return Maximal Y-coordinate in the volume window.
 	 */
 	float32 getWindowMaxY() const;
 
-    /** Get the maximal Z-coordinate in the volume window.
+	/** Get the maximal Z-coordinate in the volume window.
 	 *
 	 * @return Maximal Z-coordinate in the volume window.
 	 */
@@ -360,7 +360,7 @@ public:
 	 * @param _iPixelCol Column index of the pixel, in the interval [0..getGridColCount()-1].
 	 * @param _iPixelSlice Slice index of the pixel, in the interval [0..getGridSliceCount()-1].
 	 * @return Computed index of the pixel, in the interval [0..getGridTotCount()-1].
-     */
+	 */
 	int pixelRowColSliceToIndex(int _iPixelRow, int _iPixelCol, int _iPixelSlice) const;
 
 	/** Convert a pixel index (from the interval [0..getGridTotCount()-1] to row, column and slice index.
@@ -440,7 +440,7 @@ public:
 	 * @param _fCoordX X-coordinate.
 	 * @return If the X-coordinate falls within a column of the volume grid, the column index is returned. 
 	 * Otherwise, a value of -1 is returned.
-     */
+	 */
 	int coordXToCol(float32 _fCoordX) const;
 
 	/** Convert a Y-coordinate to a row index in the volume grid.
@@ -448,7 +448,7 @@ public:
 	 * @param _fCoordY Y-coordinate 
 	 * @return If the Y-coordinate falls within a row of the volume grid, the row index is returned. 
 	 * Otherwise, a value of -1 is returned.
-     */
+	 */
 	int coordYToRow(float32 _fCoordY) const;
 
 	/** Convert a Z-coordinate to a slice index in the volume grid.
@@ -456,7 +456,7 @@ public:
 	 * @param _fCoordZ Z-coordinate 
 	 * @return If the Z-coordinate falls within a slice of the volume grid, the slice index is returned. 
 	 * Otherwise, a value of -1 is returned.
-     */
+	 */
 	int coordZToSlice(float32 _fCoordZ) const;
 
 	/** Convert an X-coordinate to a column index in the volume grid.
@@ -464,7 +464,7 @@ public:
 	 * @param _fCoordX X-coordinate.
 	 * @return If the X-coordinate falls within a column of the volume grid, the column index is returned. 
 	 * Otherwise, a value of -1 is returned.
-     */
+	 */
 	float32 coordXToColFloat(float32 _fCoordX) const;
 
 	/** Convert a Y-coordinate to a row index in the volume grid.
@@ -472,7 +472,7 @@ public:
 	 * @param _fCoordY Y-coordinate 
 	 * @return If the Y-coordinate falls within a row of the volume grid, the row index is returned. 
 	 * Otherwise, a value of -1 is returned.
-     */
+	 */
 	float32 coordYToRowFloat(float32 _fCoordY) const;
 
 	/** Convert a Z-coordinate to a slice index in the volume grid.
@@ -480,7 +480,7 @@ public:
 	 * @param _fCoordZ Z-coordinate 
 	 * @return If the Z-coordinate falls within a slice of the volume grid, the slice index is returned. 
 	 * Otherwise, a value of -1 is returned.
-     */
+	 */
 	float32 coordZToSliceFloat(float32 _fCoordZ) const;
 
 	CVolumeGeometry2D * createVolumeGeometry2D() const;
