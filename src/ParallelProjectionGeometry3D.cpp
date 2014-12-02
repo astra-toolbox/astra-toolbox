@@ -179,6 +179,22 @@ CVector3D CParallelProjectionGeometry3D::getProjectionDirection(int _iProjection
 	return CVector3D(fDirX, fDirY, fDirZ);
 }
 
+void CParallelProjectionGeometry3D::projectPoint(float32 fX, float32 fY, float32 fZ,
+                                                 int iAngleIndex,
+                                                 float32 &fU, float32 &fV) const
+{
+	ASTRA_ASSERT(iAngleIndex >= 0);
+	ASTRA_ASSERT(iAngleIndex < m_iProjectionAngleCount);
+
+	// V (detector row)
+	fV = detectorOffsetYToRowIndexFloat(fZ);
+
+	// U (detector column)
+	float alpha = m_pfProjectionAngles[iAngleIndex];
+	// projector direction is (cos(alpha), sin(alpha))
+	fU = detectorOffsetXToColIndexFloat(cos(alpha) * fX + sin(alpha) * fY);
+}
+
 CParallelProjectionGeometry2D * CParallelProjectionGeometry3D::createProjectionGeometry2D() const
 {
 	const float32 * pfProjectionAngles = getProjectionAngles(); //new float32[getProjectionCount()];

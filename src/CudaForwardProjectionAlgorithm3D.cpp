@@ -251,6 +251,25 @@ void CCudaForwardProjectionAlgorithm3D::run(int)
 		projKernel = projector->getProjectionKernel();
 	}
 
+#if 0
+	// Debugging code that gives the coordinates of the corners of the volume
+	// projected on the detector.
+	{
+		float fX[] = { volgeom.getWindowMinX(), volgeom.getWindowMaxX() };
+		float fY[] = { volgeom.getWindowMinY(), volgeom.getWindowMaxY() };
+		float fZ[] = { volgeom.getWindowMinZ(), volgeom.getWindowMaxZ() };
+
+		for (int a = 0; a < projgeom->getProjectionCount(); ++a)
+		for (int i = 0; i < 2; ++i)
+		for (int j = 0; j < 2; ++j)
+		for (int k = 0; k < 2; ++k) {
+			float fU, fV;
+			projgeom->projectPoint(fX[i], fY[j], fZ[k], a, fU, fV);
+			fprintf(stderr, "%3d %c1,%c1,%c1 -> %12f %12f\n", a, i ? ' ' : '-', j ? ' ' : '-', k ? ' ' : '-', fU, fV);
+		}
+	}
+#endif
+
 	if (conegeom) {
 		astraCudaConeFP(m_pVolume->getDataConst(), m_pProjections->getData(),
 		                volgeom.getGridColCount(),

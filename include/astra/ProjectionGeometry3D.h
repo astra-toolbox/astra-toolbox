@@ -298,9 +298,22 @@ public:
 	 *
 	 * @param _iIndex	the index of the detector.
 	 * @param _iAngleIndex	output: index of angle
-	 * @param _iDetectorIndex output: index of dectecor
+	 * @param _iDetectorIndex output: index of detector
 	 */
 	virtual void indexToAngleDetectorIndex(int _iIndex, int& _iAngleIndex, int& _iDetectorIndex) const;
+
+	/** Project a point onto the detector. The 3D point coordinates
+	 * are in units. The output fU,fV are the (unrounded) indices of the
+	 * detector column and row.
+	 * This may fall outside of the actual detector.
+	 *
+	 * @param fX,fY,fZ	coordinates of the point to project
+	 * @param iAngleIndex	the index of the angle to use
+	 * @param fU,fV		the projected point.
+	 */
+	virtual void projectPoint(float32 fX, float32 fY, float32 fZ,
+	                          int iAngleIndex,
+	                          float32 &fU, float32 &fV) const = 0;
 
 	/** Returns true if the type of geometry defined in this class is the one specified in _sType.
 	 *

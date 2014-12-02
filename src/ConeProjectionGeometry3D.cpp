@@ -225,4 +225,36 @@ CVector3D CConeProjectionGeometry3D::getProjectionDirection(int _iProjectionInde
 	return ret;
 }
 
+void CConeProjectionGeometry3D::projectPoint(float32 fX, float32 fY, float32 fZ,
+                                                 int iAngleIndex,
+                                                 float32 &fU, float32 &fV) const
+{
+	ASTRA_ASSERT(iAngleIndex >= 0);
+	ASTRA_ASSERT(iAngleIndex < m_iProjectionAngleCount);
+
+	float alpha = m_pfProjectionAngles[iAngleIndex];
+
+	// Project point onto optical axis
+
+	// Projector direction is (cos(alpha), sin(alpha))
+	// Vector source->origin is (-sin(alpha), cos(alpha))
+
+	// Distance from source, projected on optical axis
+	float fD = -sin(alpha) * fX + cos(alpha) * fY + m_fOriginSourceDistance;
+
+	// Scale fZ to detector plane
+	fV = detectorOffsetYToRowIndexFloat( (fZ * (m_fOriginSourceDistance + m_fOriginDetectorDistance)) / fD );
+
+
+	// Orthogonal distance in XY-plane to optical axis
+	float fS = cos(alpha) * fX + sin(alpha) * fY;
+
+	// Scale fS to detector plane
+	fU = detectorOffsetXToColIndexFloat( (fS * (m_fOriginSourceDistance + m_fOriginDetectorDistance)) / fD );
+
+	fprintf(stderr, "alpha: %f, D: %f, V: %f, S: %f, U: %f\n", alpha, fD, fV, fS, fU);
+
+}
+
+
 } // end namespace astra

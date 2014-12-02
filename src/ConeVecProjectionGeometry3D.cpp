@@ -220,6 +220,15 @@ CVector3D CConeVecProjectionGeometry3D::getProjectionDirection(int _iProjectionI
 	return CVector3D(p.fDetSX + (u+0.5)*p.fDetUX + (v+0.5)*p.fDetVX - p.fSrcX, p.fDetSY + (u+0.5)*p.fDetUY + (v+0.5)*p.fDetVY - p.fSrcY, p.fDetSZ + (u+0.5)*p.fDetUZ + (v+0.5)*p.fDetVZ - p.fSrcZ);
 }
 
+void CConeVecProjectionGeometry3D::projectPoint(float32 fX, float32 fY, float32 fZ,
+                                                 int iAngleIndex,
+                                                 float32 &fU, float32 &fV) const
+{
+#warning implementme
+	fU = 0.0f/0.0f;
+	fV = 0.0f/0.0f;
+}
+
 
 //----------------------------------------------------------------------------------------
 

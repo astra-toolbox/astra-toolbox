@@ -185,6 +185,11 @@ public:
 	 * Returns a vector giving the projection direction for a projection and detector index
 	 */
 	virtual CVector3D getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex) const;
+
+	virtual void projectPoint(float32 fX, float32 fY, float32 fZ,
+	                          int iAngleIndex,
+	                          float32 &fU, float32 &fV) const;
+
 };
 
 // Returns the distance from the origin of the coordinate system to the source.

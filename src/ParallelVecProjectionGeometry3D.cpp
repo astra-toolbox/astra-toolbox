@@ -218,6 +218,14 @@ CVector3D CParallelVecProjectionGeometry3D::getProjectionDirection(int _iProject
 	return CVector3D(p.fRayX, p.fRayY, p.fRayZ);
 }
 
+void CParallelVecProjectionGeometry3D::projectPoint(float32 fX, float32 fY, float32 fZ,
+                                                 int iAngleIndex,
+                                                 float32 &fU, float32 &fV) const
+{
+#warning implementme
+	fU = 0.0f/0.0f;
+	fV = 0.0f/0.0f;
+}
 
 //----------------------------------------------------------------------------------------
 

@@ -149,7 +149,9 @@ public:
 
 	const SPar3DProjection* getProjectionVectors() const { return m_pProjectionAngles; }
 
-
+	virtual void projectPoint(float32 fX, float32 fY, float32 fZ,
+	                          int iAngleIndex,
+	                          float32 &fU, float32 &fV) const;
 };
 
 } // namespace astra

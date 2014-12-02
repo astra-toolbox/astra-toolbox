@@ -147,6 +147,10 @@ public:
 	  */
 	virtual CVector3D getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex) const;
 
+	virtual void projectPoint(float32 fX, float32 fY, float32 fZ,
+	                          int iAngleIndex,
+	                          float32 &fU, float32 &fV) const;
+
 	 /**
 	  * Creates (= allocates) a 2D projection geometry used when projecting one slice using a 2D projector
 	  *
