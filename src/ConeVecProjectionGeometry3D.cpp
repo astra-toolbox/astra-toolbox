@@ -224,9 +224,20 @@ void CConeVecProjectionGeometry3D::projectPoint(float32 fX, float32 fY, float32 
                                                  int iAngleIndex,
                                                  float32 &fU, float32 &fV) const
 {
-#warning implementme
-	fU = 0.0f/0.0f;
-	fV = 0.0f/0.0f;
+	ASTRA_ASSERT(iAngleIndex >= 0);
+	ASTRA_ASSERT(iAngleIndex < m_iProjectionAngleCount);
+
+	double fUX, fUY, fUZ, fUC;
+	double fVX, fVY, fVZ, fVC;
+	double fDX, fDY, fDZ, fDC;
+
+	computeBP_UV_Coeffs(m_pProjectionAngles[iAngleIndex],
+	                    fUX, fUY, fUZ, fUC, fVX, fVY, fVZ, fVC, fDX, fDY, fDZ, fDC);
+
+	// The -0.5f shifts from corner to center of detector pixels
+	double fD = fDX*fX + fDY*fY + fDZ*fZ + fDC;
+	fU = (fUX*fX + fUY*fY + fUZ*fZ + fUC) / fD - 0.5f;
+	fV = (fVX*fX + fVY*fY + fVZ*fZ + fVC) / fD - 0.5f;
 }
 
 

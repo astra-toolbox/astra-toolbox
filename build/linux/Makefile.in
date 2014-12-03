@@ -168,6 +168,7 @@ CUDA_OBJECTS=\
 	cuda/3d/cgls3d.lo \
 	cuda/3d/cone_fp.lo \
 	cuda/3d/cone_bp.lo \
+	cuda/3d/dims3d.lo \
 	cuda/3d/fdk.lo \
 	cuda/3d/par3d_fp.lo \
 	cuda/3d/par3d_bp.lo \

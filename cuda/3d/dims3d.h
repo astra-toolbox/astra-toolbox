@@ -59,7 +59,16 @@ struct SPar3DProjection {
 	double fDetVX, fDetVY, fDetVZ;
 };
 
+void computeBP_UV_Coeffs(const SPar3DProjection& proj, double &fUX, double &fUY, double &fUZ, double &fUC,
+                                                       double &fVX, double &fVY, double &fVZ, double &fVC);
+
+void computeBP_UV_Coeffs(const SConeProjection& proj, double &fUX, double &fUY, double &fUZ, double &fUC,
+                                                      double &fVX, double &fVY, double &fVZ, double &fVC,
+                                                      double &fDX, double &fDY, double &fDZ, double &fDC);
+
 }
+
+
 
 
 namespace astraCUDA3d {

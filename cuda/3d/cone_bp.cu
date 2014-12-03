@@ -267,6 +267,9 @@ bool ConeBP_Array(cudaPitchedPtr D_volumeData,
 
 		// NB: We increment angles at the end of the loop body.
 
+
+		// TODO: Use functions from dims3d.cu for this:
+
 #define TRANSFER_TO_CONSTANT(expr,name) do { for (unsigned int i = 0; i < angleCount; ++i) tmp[i] = (expr) ; cudaMemcpyToSymbol(gC_##name, tmp, angleCount*sizeof(float), 0, cudaMemcpyHostToDevice); } while (0)
 
 		TRANSFER_TO_CONSTANT( (angles[i].fDetSZ - angles[i].fSrcZ)*angles[i].fDetVY - (angles[i].fDetSY - angles[i].fSrcY)*angles[i].fDetVZ , Cux );
