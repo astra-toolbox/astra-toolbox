@@ -177,47 +177,6 @@ void astra_mex_data3d_link(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 
 //-----------------------------------------------------------------------------------------
 /**
- * [id] = astra_mex_io_data('create_cache', config);
- */
-void astra_mex_data3d_create_cache(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
-{
-//	if (nrhs < 2) {
-//		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-//		return;
-//	}
-//
-//	if (!mxIsStruct(prhs[1])) {
-//		mexErrMsgTxt("Argument 1 not a valid MATLAB struct. \n");
-//	}
-//
-//	// turn MATLAB struct to an XML-based Config object
-//	XMLDocument* xml = struct2XML("Data3D", prhs[1]);
-//	Config cfg;
-//	cfg.self = xml->getRootNode();
-//
-//	// create dataobject
-//	string sType = cfg.self->getAttribute("type");
-//	int iIndex;
-//	if (sType == "ProjectionCached") {
-//		CFloat32ProjectionData3DCached* pData = new CFloat32ProjectionData3DCached(cfg);
-//		iIndex = CData3DManager::getSingleton().store(pData);
-//	}
-////	else if (sType == "VolumeCached") {
-////		CFloat32VolumeData3DCached* pData = new CFloat32VolumeData3DCached(cfg);
-////		pData->initialize(cfg);
-////		iIndex = CData3DManager::getSingleton().store(pData);
-////	}
-//
-//	// step4: set output
-//	if (1 <= nlhs) {
-//		plhs[0] = mxCreateDoubleScalar(iIndex);
-//	}
-
-}
-
-
-//-----------------------------------------------------------------------------------------
-/**
  * data = astra_mex_data3d('get', id);
  * 
  * Fetch data from the astra-library to a MATLAB matrix.
@@ -278,326 +237,6 @@ void astra_mex_data3d_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 	pDataObject->updateStatistics();
 }
 
-
-//-----------------------------------------------------------------------------------------
-/**
- * [id] = astra_mex_io_data('fetch_slice', id, slicenr);
- */
-void astra_mex_data3d_fetch_slice_z(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
-{
-//	// step1: get input
-//	if (nrhs < 3) {
-//		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-//		return;
-//	}
-//	int iDid = (int)(mxGetScalar(prhs[1]));
-//	int iSliceNr = (int)(mxGetScalar(prhs[2]));
-//
-//	// Get data object
-//	CFloat32Data3D* pData = CData3DManager::getSingleton().get(iDid);
-//	if (!pData) {
-//		mexErrMsgTxt("DataObject not valid. \n");
-//		return;
-//	}
-//
-//	CFloat32Data2D* res = NULL;
-//	// Projection Data
-//	if (pData->getType() == CFloat32Data3D::PROJECTION) {
-//		CFloat32ProjectionData3D* pData2 = dynamic_cast<CFloat32ProjectionData3D*>(pData);
-////		res = pData2->fetchSlice(iSliceNr);
-//	} 
-//	// Volume Data
-//	else if (pData->getType() == CFloat32Data3D::VOLUME) {
-//		CFloat32VolumeData3D* pData2 = dynamic_cast<CFloat32VolumeData3D*>(pData);
-////		res = pData2->fetchSliceZ(iSliceNr);
-//	} 
-//	// Error
-//	else {
-//		mexErrMsgTxt("DataObject not valid. \n");
-//		return;	
-//	}
-//	
-//	// store data
-//	int iIndex = CData2DManager::getSingleton().store(res);
-//
-//	// step4: set output
-//	if (1 <= nlhs) {
-//		plhs[0] = mxCreateDoubleScalar(iIndex);
-//	}
-}
-
-//-----------------------------------------------------------------------------------------
-/**
- * astra_mex_io_data('returnSlice', id, slicenr);
- */
-void astra_mex_data3d_return_slice_z(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
-{
-//	// step1: get input
-//	if (nrhs < 3) {
-//		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-//		return;
-//	}
-//	int iDid = (int)(mxGetScalar(prhs[1]));
-//	int iSliceNr = (int)(mxGetScalar(prhs[2]));
-//
-//	// Get data object
-//	CFloat32Data3D* pData = CData3DManager::getSingleton().get(iDid);
-//	if (!pData) {
-//		mexErrMsgTxt("DataObject not valid. \n");
-//		return;
-//	}
-//
-//	// Projection Data
-//	if (pData->getType() == CFloat32Data3D::PROJECTION) {
-//		CFloat32ProjectionData3D* pData2 = dynamic_cast<CFloat32ProjectionData3D*>(pData);
-//// TODO: think about returning slices
-////		pData2->returnSlice(iSliceNr);
-//	} 
-//	// Volume Data
-//	else if (pData->getType() == CFloat32Data3D::VOLUME) {
-//		CFloat32VolumeData3D* pData2 = dynamic_cast<CFloat32VolumeData3D*>(pData);
-//// TODO: think about returning slices
-////      	pData2->returnSliceZ(iSliceNr);
-//	} 
-//	// Error
-//	else {
-//		mexErrMsgTxt("DataObject not valid. \n");
-//		return;	
-//	}
-}
-
-//-----------------------------------------------------------------------------------------
-/**
- * [id] = astra_mex_io_data('fetch_projection', id, slicenr);
- */
-void astra_mex_data3d_fetch_projection(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
-{
-	//// step1: get input
-	//if (nrhs < 3) {
-	//	mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-	//	return;
-	//}
-	//int iDid = (int)(mxGetScalar(prhs[1]));
-	//int iProjectionNr = (int)(mxGetScalar(prhs[2]));
-
-	//// Get data object
-	//CFloat32Data3D* pData = CData3DManager::getSingleton().get(iDid);
-	//if (!pData) {
-	//	mexErrMsgTxt("DataObject not valid. \n");
-	//	return;
-	//}
-
-	//CFloat32Data2D* res = NULL;
-	//// Projection Data
-	//if (pData->getType() == CFloat32Data3D::PROJECTION) {
-	//	CFloat32ProjectionData3D* pData2 = dynamic_cast<CFloat32ProjectionData3D*>(pData);
-	//	res = pData2->fetchProjection(iProjectionNr);
-	//} 
-	//// Error
-	//else {
-	//	mexErrMsgTxt("DataObject not valid. \n");
-	//	return;	
-	//}
-	//
-	//// store data
-	//int iIndex = CData2DManager::getSingleton().store(res);
-
-	//// step4: set output
-	//if (1 <= nlhs) {
-	//	plhs[0] = mxCreateDoubleScalar(iIndex);
-	//}
-}
-
-//-----------------------------------------------------------------------------------------
-/**
- * astra_mex_io_data('return_projection', id, slicenr);
- */
-void astra_mex_data3d_return_projection(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
-{
-	//// step1: get input
-	//if (nrhs < 3) {
-	//	mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-	//	return;
-	//}
-	//int iDid = (int)(mxGetScalar(prhs[1]));
-	//int iProjectionNr = (int)(mxGetScalar(prhs[2]));
-
-	//// Get data object
-	//CFloat32Data3D* pData = CData3DManager::getSingleton().get(iDid);
-	//if (!pData) {
-	//	mexErrMsgTxt("DataObject not valid. \n");
-	//	return;
-	//}
-
-	//// Projection Data
-	//if (pData->getType() == CFloat32Data3D::PROJECTION) {
-	//	CFloat32ProjectionData3D* pData2 = dynamic_cast<CFloat32ProjectionData3D*>(pData);
-	////	pData2->returnProjection(iProjectionNr);
-	//} 
-	//// Error
-	//else {
-	//	mexErrMsgTxt("DataObject not valid. \n");
-	//	return;	
-	//}
-}
-
-//-----------------------------------------------------------------------------------------
-/**
- * [id] = astra_mex_io_data('fetch_projection', id, slicenr);
- */
-void astra_mex_data3d_fetch_slice_x(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
-{
-	//// step1: get input
-	//if (nrhs < 3) {
-	//	mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-	//	return;
-	//}
-	//int iDid = (int)(mxGetScalar(prhs[1]));
-	//int iSliceNr = (int)(mxGetScalar(prhs[2]));
-
-	//// Get data object
-	//CFloat32Data3D* pData = CData3DManager::getSingleton().get(iDid);
-	//if (!pData) {
-	//	mexErrMsgTxt("DataObject not valid. \n");
-	//	return;
-	//}
-
-	//CFloat32Data2D* res = NULL;
-	//// Projection Data
-	//if (pData->getType() == CFloat32Data3D::VOLUME) {
-	//	CFloat32VolumeData3D* pData2 = dynamic_cast<CFloat32VolumeData3D*>(pData);
-	//	res = pData2->fetchSliceX(iSliceNr);
-	//} 
-	//// Error
-	//else {
-	//	mexErrMsgTxt("DataObject not valid. \n");
-	//	return;	
-	//}
-	//
-	//// store data
-	//int iIndex = CData2DManager::getSingleton().store(res);
-
-	//// step4: set output
-	//if (1 <= nlhs) {
-	//	plhs[0] = mxCreateDoubleScalar(iIndex);
-	//}
-}
-
-//-----------------------------------------------------------------------------------------
-/**
- * astra_mex_io_data('return_slice_x', id, slicenr);
- */
-void astra_mex_data3d_return_slice_x(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
-{
-//	// step1: get input
-//	if (nrhs < 3) {
-//		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-//		return;
-//	}
-//	int iDid = (int)(mxGetScalar(prhs[1]));
-//	int iSliceNr = (int)(mxGetScalar(prhs[2]));
-//
-//	// Get data object
-//	CFloat32Data3D* pData = CData3DManager::getSingleton().get(iDid);
-//	if (!pData) {
-//		mexErrMsgTxt("DataObject not valid. \n");
-//		return;
-//	}
-//
-//	// Projection Data
-//	if (pData->getType() == CFloat32Data3D::VOLUME) {
-//		CFloat32VolumeData3D* pData2 = dynamic_cast<CFloat32VolumeData3D*>(pData);
-//// TODO: think about returning slices
-////		pData2->returnSliceX(iSliceNr);
-//	} 
-//	// Error
-//	else {
-//		mexErrMsgTxt("DataObject not valid. \n");
-//		return;	
-//	}
-}
-
-
-//-----------------------------------------------------------------------------------------
-/**
- * [id] = astra_mex_io_data('fetch_slice_y', id, slicenr);
- */
-void astra_mex_data3d_fetch_slice_y(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
-{
-	//// step1: get input
-	//if (nrhs < 3) {
-	//	mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-	//	return;
-	//}
-	//int iDid = (int)(mxGetScalar(prhs[1]));
-	//int iSliceNr = (int)(mxGetScalar(prhs[2]));
-
-	//// Get data object
-	//CFloat32Data3D* pData = CData3DManager::getSingleton().get(iDid);
-	//if (!pData) {
-	//	mexErrMsgTxt("DataObject not valid. \n");
-	//	return;
-	//}
-
-	//CFloat32Data2D* res = NULL;
-	//// Projection Data
-	//if (pData->getType() == CFloat32Data3D::VOLUME) {
-	//	CFloat32VolumeData3D* pData2 = dynamic_cast<CFloat32VolumeData3D*>(pData);
-	//	res = pData2->fetchSliceY(iSliceNr);
-	//} 
-	//// Error
-	//else {
-	//	mexErrMsgTxt("DataObject not valid. \n");
-	//	return;	
-	//}
-	//
-	//// store data
-	//int iIndex = CData2DManager::getSingleton().store(res);
-
-	//// step4: set output
-	//if (1 <= nlhs) {
-	//	plhs[0] = mxCreateDoubleScalar(iIndex);
-	//}
-}
-
-//-----------------------------------------------------------------------------------------
-/**
- * astra_mex_io_data('return_slice_y', id, slicenr);
- */
-void astra_mex_data3d_return_slice_y(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
-{
-//	// step1: get input
-//	if (nrhs < 3) {
-//		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-//		return;
-//	}
-//	int iDid = (int)(mxGetScalar(prhs[1]));
-//	int iSliceNr = (int)(mxGetScalar(prhs[2]));
-//
-//	// Get data object
-//	CFloat32Data3D* pData = CData3DManager::getSingleton().get(iDid);
-//	if (!pData) {
-//		mexErrMsgTxt("DataObject not valid. \n");
-//		return;
-//	}
-//
-//	// Projection Data
-//	if (pData->getType() == CFloat32Data3D::VOLUME) {
-//		CFloat32VolumeData3D* pData2 = dynamic_cast<CFloat32VolumeData3D*>(pData);
-//// TODO: think about returning slices
-////		pData2->returnSliceY(iSliceNr);
-//	} 
-//	// Error
-//	else {
-//		mexErrMsgTxt("DataObject not valid. \n");
-//		return;	
-//	}
-}
-
-//-----------------------------------------------------------------------------------------
-/**
- * [dim_x dim_y dim_z] = astra_mex_io_data('dimensions', id);
- */
 void astra_mex_data3d_dimensions(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 	// step1: get input
@@ -673,50 +312,6 @@ void astra_mex_data3d_geometry(int nlhs, mxArray* plhs[], int nrhs, const mxArra
 
 //-----------------------------------------------------------------------------------------
 /**
- * [geom_xml] = astra_mex_data3d('geometry_xml', id);
- */
-void astra_mex_data3d_geometry_xml(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
-{ 
-	//// Get input
-	//if (nrhs < 2) {
-	//	mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-	//	return;
-	//}
-	//int iDid = (int)(mxGetScalar(prhs[1]));
-
-	//// Get data object
-	//CFloat32Data3D* pData = CData3DManager::getSingleton().get(iDid);
-	//if (!pData) {
-	//	mexErrMsgTxt("DataObject not valid. \n");
-	//	return;
-	//}
-
-	//// Projection Data
-	//if (pData->getType() == CFloat32Data3D::PROJECTION) {
-	//	CFloat32ProjectionData3D* pData2 = dynamic_cast<CFloat32ProjectionData3D*>(pData);
-	//	CProjectionGeometry3D* pProjGeom = pData2->getGeometry();
-	//	XMLDocument* config = pProjGeom->toXML();
-
-	//	if (1 <= nlhs) {
-	//		plhs[0] = mxCreateString(config->getRootNode()->toString().c_str());
-	//	}
-	//} 
-	//// Volume Data
-	//else if (pData->getType() == CFloat32Data3D::VOLUME) {
-	////	CFloat32VolumeData3D* pData2 = dynamic_cast<CFloat32VolumeData3D*>(pData);
-	////	CVolumeGeometry2D* pVolGeom = pData2->getGeometry2D(iSliceNr);
-	////	if (1 <= nlhs) {
-	////		plhs[0] = createVolumeGeometryStruct(pVolGeom);
-	////	}
-	//} 
-	//// Error
-	//else {
-	//	mexErrMsgTxt("Type not valid. \n");
-	//	return;	
-	//}
-}
-//-----------------------------------------------------------------------------------------
-/**
  * astra_mex_data3d('delete', did1, did2, ...);
  */
 void astra_mex_data3d_delete(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
@@ -756,11 +351,8 @@ void astra_mex_data3d_info(int nlhs, mxArray* plhs[], int nrhs, const mxArray* p
 static void printHelp()
 {
 	mexPrintf("Please specify a mode of operation.\n");
-	mexPrintf("Valid modes: create, create_cache, get, get_single, delete, clear, info\n");
-	mexPrintf("             fetch_projection, return_projection, fetch_slice[_z],\n");
-	mexPrintf("             return_slice[_z], fetch_slice_x, return slice_x\n");
-	mexPrintf("             fetch_slice_y, return slice_y, dimensions, geometry\n");
-	mexPrintf("             geometry_xml\n");
+	mexPrintf("Valid modes: create, get, get_single, delete, clear, info\n");
+	mexPrintf("             dimensions\n");
 }
 
 
@@ -788,8 +380,6 @@ void mexFunction(int nlhs, mxArray* plhs[],
 	} else if (sMode == "link") {
 		astra_mex_data3d_link(nlhs, plhs, nrhs, prhs);
 #endif
-	} else if (sMode ==  std::string("create_cache")) { 
-		astra_mex_data3d_create_cache(nlhs, plhs, nrhs, prhs); 
 	} else if (sMode ==  std::string("get")) { 
 		astra_mex_data3d_get(nlhs, plhs, nrhs, prhs); 
 	} else if (sMode ==  std::string("get_single")) { 
@@ -803,28 +393,10 @@ void mexFunction(int nlhs, mxArray* plhs[],
 		astra_mex_data3d_clear(nlhs, plhs, nrhs, prhs);
 	} else if (sMode == "info") {
 		astra_mex_data3d_info(nlhs, plhs, nrhs, prhs);
-	} else if (sMode ==  std::string("fetch_projection")) { 
-		astra_mex_data3d_fetch_projection(nlhs, plhs, nrhs, prhs); 
-	} else if (sMode ==  std::string("return_projection")) { 
-		astra_mex_data3d_return_projection(nlhs, plhs, nrhs, prhs); 
-	} else if (sMode ==  std::string("fetch_slice") || sMode ==  std::string("fetch_slice_z")) { 
-		astra_mex_data3d_fetch_slice_z(nlhs, plhs, nrhs, prhs); 
-	} else if (sMode ==  std::string("return_slice")  || sMode ==  std::string("return_slice_z")) { 
-		astra_mex_data3d_return_slice_z(nlhs, plhs, nrhs, prhs);
-	} else if (sMode ==  std::string("fetch_slice_x")) { 
-		astra_mex_data3d_fetch_slice_x(nlhs, plhs, nrhs, prhs); 
-	} else if (sMode ==  std::string("return_slice_x")) { 
-		astra_mex_data3d_return_slice_x(nlhs, plhs, nrhs, prhs); 
-	} else if (sMode ==  std::string("fetch_slice_y")) { 
-		astra_mex_data3d_fetch_slice_y(nlhs, plhs, nrhs, prhs); 
-	} else if (sMode ==  std::string("return_slice_y")) { 
-		astra_mex_data3d_return_slice_y(nlhs, plhs, nrhs, prhs); 
 	} else if (sMode ==  std::string("dimensions")) { 
 		astra_mex_data3d_dimensions(nlhs, plhs, nrhs, prhs); 
 	} else if (sMode == std::string("geometry")) {
 		astra_mex_data3d_geometry(nlhs, plhs, nrhs, prhs);
-	} else if (sMode == std::string("geometry_xml")) {
-		astra_mex_data3d_geometry_xml(nlhs, plhs, nrhs, prhs);
 	} else {
 		printHelp();
 	}
