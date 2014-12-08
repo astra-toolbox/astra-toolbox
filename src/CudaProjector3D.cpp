@@ -28,6 +28,9 @@ $Id$
 
 #include "astra/CudaProjector3D.h"
 
+#include "astra/VolumeGeometry3D.h"
+#include "astra/ProjectionGeometry3D.h"
+
 
 namespace astra
 {
@@ -102,21 +105,7 @@ bool CCudaProjector3D::initialize(const Config& _cfg)
 		return false;
 	}
 
-	// TODO: These should go to the parent.
-
-	// ProjectionGeometry
-	XMLNode* node = _cfg.self->getSingleNode("ProjectionGeometry");
-	// TODO: Implement
-	ASTRA_DELETE(node);
-	CC.markNodeParsed("ProjectionGeometry");
-
-	// ReconstructionGeometry
-	node = _cfg.self->getSingleNode("VolumeGeometry");
-	// TODO: Implement
-	ASTRA_DELETE(node);
-	CC.markNodeParsed("VolumeGeometry");
-
-	node = _cfg.self->getSingleNode("ProjectionKernel");
+	XMLNode* node = _cfg.self->getSingleNode("ProjectionKernel");
 	m_projectionKernel = ker3d_default;
 	if (node) {
 		std::string sProjKernel = node->getContent();

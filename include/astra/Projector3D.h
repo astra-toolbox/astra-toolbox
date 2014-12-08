@@ -34,13 +34,13 @@ $Id$
 
 #include "Globals.h"
 #include "Config.h"
-#include "ProjectionGeometry3D.h"
-#include "VolumeGeometry3D.h"
 
 namespace astra
 {
 
 class CSparseMatrix;
+class CProjectionGeometry3D;
+class CVolumeGeometry3D;
 
 
 /** This is a base interface class for a three-dimensional projector.  Each subclass should at least 

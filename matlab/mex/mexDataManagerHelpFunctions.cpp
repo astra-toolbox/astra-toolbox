@@ -296,7 +296,7 @@ allocateDataObject(const std::string & sDataType,
 		cfg.self = xml->getRootNode();
 
 		// FIXME: Change how the base class is created. (This is duplicated
-		// in Projector2D.cpp.)
+		// in Projector3D.cpp.)
 		std::string type = cfg.self->getAttribute("type");
 		astra::CProjectionGeometry3D* pGeometry = 0;
 		if (type == "parallel3d") {
