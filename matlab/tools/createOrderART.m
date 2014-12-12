@@ -14,13 +14,13 @@ function rayOrder = createOrderART(proj_geom, mode)
 % the index of the ray.
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
-% This file is part of the
-% All Scale Tomographic Reconstruction Antwerp Toolbox ("ASTRA-Toolbox")
-%
-% Copyright: iMinds-Vision Lab, University of Antwerp
+% This file is part of the ASTRA Toolbox
+% 
+% Copyright: 2010-2014, iMinds-Vision Lab, University of Antwerp
+%                 2014, CWI, Amsterdam
 % License: Open Source under GPLv3
-% Contact: mailto:astra@ua.ac.be
-% Website: http://astra.ua.ac.be
+% Contact: astra@uantwerpen.be
+% Website: http://sf.net/projects/astra-toolbox
 %------------------------------------------------------------------------
 % $Id$
 

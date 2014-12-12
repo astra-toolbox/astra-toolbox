@@ -1,12 +1,12 @@
 dnl -----------------------------------------------------------------------
-dnl Copyright 2012 iMinds-Vision Lab, University of Antwerp
+dnl Copyright: 2010-2014, iMinds-Vision Lab, University of Antwerp
+dnl                 2014, CWI, Amsterdam
 dnl 
-dnl Contact: astra@ua.ac.be
-dnl Website: http://astra.ua.ac.be
+dnl Contact: astra@uantwerpen.be
+dnl Website: http://sf.net/projects/astra-toolbox
 dnl 
+dnl This file is part of the ASTRA Toolbox.
 dnl 
-dnl This file is part of the
-dnl All Scale Tomographic Reconstruction Antwerp Toolbox ("ASTRA Toolbox").
 dnl 
 dnl The ASTRA Toolbox is free software: you can redistribute it and/or modify
 dnl it under the terms of the GNU General Public License as published by

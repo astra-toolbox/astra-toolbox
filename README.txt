@@ -1,12 +1,12 @@
 -----------------------------------------------------------------------
-This file is part of the
-All Scale Tomographic Reconstruction Antwerp Toolbox ("ASTRA Toolbox")
+This file is part of the ASTRA Toolbox
 
-Copyright: iMinds-Vision Lab, University of Antwerp
+Copyright: 2010-2014, iMinds-Vision Lab, University of Antwerp
+                2014, CWI, Amsterdam
+           http://visielab.uantwerpen.be/ and http://www.cwi.nl/
 License: Open Source under GPLv3
-Contact: astra@ua.ac.be
-Website: http://astra.ua.ac.be
-         http://sf.net/projects/astra-toolbox
+Contact: astra@uantwerpen.be
+Website: http://sf.net/projects/astra-toolbox
 -----------------------------------------------------------------------
 
 
