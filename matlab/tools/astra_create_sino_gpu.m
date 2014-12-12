@@ -13,15 +13,15 @@ function [sino_id, sino] = astra_create_sino_gpu(data, proj_geom, vol_geom, gpu_
 % the astra-library. 
 % sino: MATLAB data version of the sinogram.
 %--------------------------------------------------------------------------
-%------------------------------------------------------------------------
-% This file is part of the
-% All Scale Tomographic Reconstruction Antwerp Toolbox ("ASTRA-Toolbox")
-%
-% Copyright: iMinds-Vision Lab, University of Antwerp
+%--------------------------------------------------------------------------
+% This file is part of the ASTRA Toolbox
+% 
+% Copyright: 2010-2014, iMinds-Vision Lab, University of Antwerp
+%                 2014, CWI, Amsterdam
 % License: Open Source under GPLv3
-% Contact: mailto:astra@ua.ac.be
-% Website: http://astra.ua.ac.be
-%------------------------------------------------------------------------
+% Contact: astra@uantwerpen.be
+% Website: http://sf.net/projects/astra-toolbox
+%--------------------------------------------------------------------------
 % $Id$
 
 

@@ -18,15 +18,15 @@ function [recon_id, recon] = astra_create_reconstruction(rec_type, proj_id, sino
 % recon_id: identifier of the reconstruction data object as it is now stored in the astra-library
 % recon: MATLAB data version of the reconstruction
 %--------------------------------------------------------------------------
-%------------------------------------------------------------------------
-% This file is part of the
-% All Scale Tomographic Reconstruction Antwerp Toolbox ("ASTRA-Toolbox")
-%
-% Copyright: iMinds-Vision Lab, University of Antwerp
+%--------------------------------------------------------------------------
+% This file is part of the ASTRA Toolbox
+% 
+% Copyright: 2010-2014, iMinds-Vision Lab, University of Antwerp
+%                 2014, CWI, Amsterdam
 % License: Open Source under GPLv3
-% Contact: mailto:astra@ua.ac.be
-% Website: http://astra.ua.ac.be
-%------------------------------------------------------------------------
+% Contact: astra@uantwerpen.be
+% Website: http://sf.net/projects/astra-toolbox
+%--------------------------------------------------------------------------
 % $Id$
 
 

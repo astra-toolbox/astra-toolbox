@@ -1,18 +1,19 @@
 -----------------------------------------------------------------------
-This file is part of the
-All Scale Tomographic Reconstruction Antwerp Toolbox ("ASTRA Toolbox")
+This file is part of the ASTRA Toolbox
 
-Copyright: iMinds-Vision Lab, University of Antwerp
+Copyright: 2010-2014, iMinds-Vision Lab, University of Antwerp
+                2014, CWI, Amsterdam
+           http://visielab.uantwerpen.be/ and http://www.cwi.nl/
 License: Open Source under GPLv3
-Contact: astra@ua.ac.be
-Website: http://astra.ua.ac.be
-         http://sf.net/projects/astra-toolbox
+Contact: astra@uantwerpen.be
+Website: http://sf.net/projects/astra-toolbox
 -----------------------------------------------------------------------
 
-1.5 (2014-05-??)
+1.5 (2014-??-??)
   * various consistency and bug fixes
   * add support for fan beam FBP
   * add astra_mex_data3d_c('link') command
+  * build fixes for newer platforms
 
 1.4 (2014-04-07)
   * various consistency and bug fixes

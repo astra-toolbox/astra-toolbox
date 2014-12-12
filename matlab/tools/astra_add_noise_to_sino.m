@@ -12,15 +12,15 @@ function sinogram_out = astra_add_noise_to_sino(sinogram_in,I0)
 % noise
 % sinogram_out: output sinogram in MATLAB-data.
 %--------------------------------------------------------------------------
-%------------------------------------------------------------------------
-% This file is part of the
-% All Scale Tomographic Reconstruction Antwerp Toolbox ("ASTRA-Toolbox")
-%
-% Copyright: iMinds-Vision Lab, University of Antwerp
+%--------------------------------------------------------------------------
+% This file is part of the ASTRA Toolbox
+% 
+% Copyright: 2010-2014, iMinds-Vision Lab, University of Antwerp
+%                 2014, CWI, Amsterdam
 % License: Open Source under GPLv3
-% Contact: mailto:astra@ua.ac.be
-% Website: http://astra.ua.ac.be
-%------------------------------------------------------------------------
+% Contact: astra@uantwerpen.be
+% Website: http://sf.net/projects/astra-toolbox
+%--------------------------------------------------------------------------
 % $Id$
 
 if numel(sinogram_in) == 1
