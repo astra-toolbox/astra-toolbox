@@ -1,22 +1,21 @@
-% This file is part of the
-% All Scale Tomographic Reconstruction Antwerp Toolbox ("ASTRA-Toolbox")
+%--------------------------------------------------------------------------
+% This file is part of the ASTRA Toolbox
 %
-% Copyright: iMinds-Vision Lab, University of Antwerp
+% Copyright: 2010-2014, iMinds-Vision Lab, University of Antwerp
+%                 2014, CWI, Amsterdam
 % License: Open Source under GPLv3
-% Contact: mailto:astra@ua.ac.be
-% Website: http://astra.ua.ac.be
-%
-% Author of this DART Algorithm: Wim van Aarle
-
+% Contact: astra@uantwerpen.be
+% Website: http://sf.net/projects/astra-toolbox
+%--------------------------------------------------------------------------
 
 classdef StatisticsDefault < matlab.mixin.Copyable
 	
 	% Default policy class for statistics for DART.	
 	
 	properties (Access=public)
-		pixel_error		= 'yes';		% SETTING: Store pixel error? {'yes','no'}
-		proj_diff		= 'yes';		% SETTING: Store projection difference? {'yes','no'}
-		timing			= 'yes';		% SETTING: Store timings? {'yes','no'}
+		pixel_error		= 'no';		% SETTING: Store pixel error? {'yes','no'}
+		proj_diff		= 'no';		% SETTING: Store projection difference? {'yes','no'}
+		timing			= 'no';		% SETTING: Store timings? {'yes','no'}
 	end
 
 	

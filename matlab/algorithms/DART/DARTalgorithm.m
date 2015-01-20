@@ -1,13 +1,12 @@
-% This file is part of the
-% All Scale Tomographic Reconstruction Antwerp Toolbox ("ASTRA-Toolbox")
+%--------------------------------------------------------------------------
+% This file is part of the ASTRA Toolbox
 %
-% Copyright: iMinds-Vision Lab, University of Antwerp
+% Copyright: 2010-2014, iMinds-Vision Lab, University of Antwerp
+%                 2014, CWI, Amsterdam
 % License: Open Source under GPLv3
-% Contact: mailto:astra@ua.ac.be
-% Website: http://astra.ua.ac.be
-%
-% Author of this DART Algorithm: Wim van Aarle
-
+% Contact: astra@uantwerpen.be
+% Website: http://sf.net/projects/astra-toolbox
+%--------------------------------------------------------------------------
 
 classdef DARTalgorithm < matlab.mixin.Copyable
 
@@ -20,7 +19,7 @@ classdef DARTalgorithm < matlab.mixin.Copyable
 	%----------------------------------------------------------------------
 	properties (GetAccess=public, SetAccess=public)
 	
-		tomography		= TomographyDefault();		% POLICY: Tomography object. 
+		tomography		= IterativeTomography();	% POLICY: Tomography object. 
 		segmentation	= SegmentationDefault();	% POLICY: Segmentation object. 
 		smoothing		= SmoothingDefault();		% POLICY: Smoothing object.
 		masking			= MaskingDefault();			% POLICY: Masking object.
@@ -29,10 +28,11 @@ classdef DARTalgorithm < matlab.mixin.Copyable
 
 		base			= struct();					% DATA(set): base structure, should contain: 'sinogram', 'proj_geom', 'phantom' (optional).
 		
-		memory			= 'yes';					% SETTING: reduce memory usage? (disables some features)
-		
-		testdata = struct();
-		
+		memory			= 'no';						% SETTING: reduce memory usage? (disables some features)
+	
+		implementation  = 'linear';					% SETTING: which type of projector is used ('linear', 'nonlinear')
+		t				= 5;						% SETTING: # ARMiterations, each DART iteration.
+		t0				= 100;						% SETTING: # ARM iterations at DART initialization.
 	end
 	%----------------------------------------------------------------------
 	properties (GetAccess=public, SetAccess=private)
@@ -57,15 +57,25 @@ classdef DARTalgorithm < matlab.mixin.Copyable
 	methods
 		
 		%------------------------------------------------------------------
-		function this = DARTalgorithm(base)
+		function this = DARTalgorithm(varargin)
 			% Constructor
-			% >> D = DARTalgorithm(base); base is a matlab struct (or the path towards one) 
-			%					          that should contain 'sinogram', 'proj_geom'.
-
-			if ischar(base)
-				this.base = load(base);
+			% >> D = DARTalgorithm(base);  [base is a matlab struct that
+			%                               should contain 'sinogram' and
+			%                               'proj_geom']
+			% >> D = DARTalgorithm('base_path'); [path to base struct file]
+			% >> D = DARTalgorithm(sinogram, proj_geom)
+			% 
+			narginchk(1, 2)
+			if nargin == 1 && ischar(varargin{1})
+				this.base = load(varargin{1});
+			elseif nargin == 1 && isstruct(varargin{1})
+				this.base = varargin{1};
+			elseif nargin == 2
+				this.base = struct();
+				this.base.sinogram = varargin{1};
+				this.base.proj_geom = varargin{2};
 			else
-				this.base = base;
+				error('invalid arguments')
 			end
 		end	
 	
@@ -74,7 +84,6 @@ classdef DARTalgorithm < matlab.mixin.Copyable
 		function D = deepcopy(this)
 			% Create a deep copy of this object.
 			% >> D2 = D.deepcopy();
-			
 			D = copy(this);
 			props = properties(this);
 			for i = 1:length(props)
@@ -82,7 +91,6 @@ classdef DARTalgorithm < matlab.mixin.Copyable
 					D.(props{i}) = copy(this.(props{i}));
 				end
 			end			
-	
 		end
 		
 		%------------------------------------------------------------------
@@ -91,14 +99,18 @@ classdef DARTalgorithm < matlab.mixin.Copyable
 			% >> D.initialize();
 			
 			% Initialize tomography part
-			this.tomography.initialize(this);
+			if ~this.tomography.initialized
+				this.tomography.sinogram = this.base.sinogram;
+				this.tomography.proj_geom = this.base.proj_geom;	
+				this.tomography.initialize();
+			end
 
 			% Create an Initial Reconstruction
 			if isfield(this.base, 'V0')
 				this.V0 = this.base.V0;
 			else
 				this.output.pre_initial_iteration(this);
-				this.V0 = this.tomography.createInitialReconstruction(this, this.base.sinogram);
+				this.V0 = this.tomography.reconstruct2(this.base.sinogram, [], this.t0);
 				this.output.post_initial_iteration(this);
 			end
 			this.V = this.V0;
@@ -113,85 +125,98 @@ classdef DARTalgorithm < matlab.mixin.Copyable
 		% iterate
 		function this = iterate(this, iters)
 			% Perform several iterations of the DART algorithm.
-			% >> D.iterate(iterations);			
+			% >> D.iterate(iterations);		
+			if strcmp(this.implementation,'linear')
+				this.iterate_linear(iters);
+			elseif strcmp(this.implementation,'nonlinear')
+				this.iterate_nonlinear(iters);
+			end
+		end
+		
+		
+		%------------------------------------------------------------------
+		% iterate - linear projector implementation
+		function this = iterate_linear(this, iters)
+	
+			this.start_tic = tic;
+			
+			for iteration = 1:iters
+				this.iterationcount = this.iterationcount + 1;				
+
+				% initial output
+				this.output.pre_iteration(this);
+
+				% update adaptive parameters
+				this.update_adaptiveparameter(this.iterationcount);
+
+				% segmentation
+				this.segmentation.estimate_grey_levels(this, this.V);
+				this.S = this.segmentation.apply(this, this.V);
+
+				% select update and fixed pixels
+				this.Mask = this.masking.apply(this, this.S);
+				this.V = (this.V .* this.Mask) + (this.S .* (1 - this.Mask));
+				F = this.V;
+				F(this.Mask == 1) = 0;
+
+				% compute residual projection difference
+				this.R = this.base.sinogram - this.tomography.project(F);
+				
+				% ART update part
+				this.V = this.tomography.reconstruct2_mask(this.R, this.V, this.Mask, this.t);
+
+				% blur
+				this.V = this.smoothing.apply(this, this.V);
+
+				%calculate statistics
+				this.stats = this.statistics.apply(this);
+			
+				% output
+				this.output.post_iteration(this);
+			end
+		
+		end				
+
+		%------------------------------------------------------------------
+		% iterate - nonlinear projector implementation
+		function this = iterate_nonlinear(this, iters)
 			
 			this.start_tic = tic;
 			
 			for iteration = 1:iters
-				
 				this.iterationcount = this.iterationcount + 1;				
 		
-				%----------------------------------------------------------
-				% Initial Output
+				% Output
 				this.output.pre_iteration(this);
 
-				%----------------------------------------------------------
-				% Update Adaptive Parameters
-				for i = 1:numel(this.adaptparam_name)
-					
-					for j = 1:numel(this.adaptparam_iters{i})
-						if this.iterationcount == this.adaptparam_iters{i}(j)
-							new_value = this.adaptparam_values{i}(j);
-							eval(['this.' this.adaptparam_name{i} ' = ' num2str(new_value) ';']);
-							disp(['value ' this.adaptparam_name{i} ' changed to ' num2str(new_value) ]);
-						end						
-					end
-				
-				end
+				% update adaptive parameters
+				this.update_adaptiveparameter(this.iterationcount)
 
-				%----------------------------------------------------------
 				% Segmentation
 				this.segmentation.estimate_grey_levels(this, this.V);
 				this.S = this.segmentation.apply(this, this.V);
 
-				%----------------------------------------------------------
 				% Select Update and Fixed Pixels
 				this.Mask = this.masking.apply(this, this.S);
-
 				this.V = (this.V .* this.Mask) + (this.S .* (1 - this.Mask));
-				%this.V(this.Mask == 0) = this.S(this.Mask == 0); 
 
-				F = this.V;
-				F(this.Mask == 1) = 0;
-
-				%----------------------------------------------------------
-				% Create Residual Projection Difference
-				%this.testdata.F{iteration} = F;
-				this.R = this.base.sinogram - this.tomography.createForwardProjection(this, F);
-				%this.testdata.R{iteration} = this.R;
+				% ART update part
+				this.V = this.tomography.reconstruct2_mask(this.base.sinogram, this.V, this.Mask, this.t);
 				
-				%----------------------------------------------------------
-				% ART Loose Part
-				%this.testdata.V1{iteration} = this.V;
-				%this.testdata.Mask{iteration} = this.Mask;
-				
-				%X = zeros(size(this.V));
-				%Y = this.tomography.createReconstruction(this, this.R, X, this.Mask);
-				%this.V(this.Mask) = Y(this.Mask);
-				this.V = this.tomography.createReconstruction(this, this.R, this.V, this.Mask);
-				
-				%this.testdata.V2{iteration} = this.V;
-				
-				%----------------------------------------------------------
-				% Blur
+				% blur
 				this.V = this.smoothing.apply(this, this.V);
-				%this.testdata.V3{iteration} = this.V;
 				
-				%----------------------------------------------------------
-				% Calculate Statistics
+				% calculate statistics
 				this.stats = this.statistics.apply(this);
 
-				%----------------------------------------------------------
-				% Output
+				% output
 				this.output.post_iteration(this);
 			
-			end % end iteration loop
-			
-			%test = this.testdata;
-			%save('testdata.mat','test');
+			end
 		
-		end				
-
+		end						
+		
+		
 		%------------------------------------------------------------------
 		% get data		
 		function data = getdata(this, string)
@@ -208,8 +233,21 @@ classdef DARTalgorithm < matlab.mixin.Copyable
 			this.adaptparam_name{end+1} = name;
 			this.adaptparam_values{end+1} = values;
 			this.adaptparam_iters{end+1} = iterations;
-		end	
+		end
 		
+		%------------------------------------------------------------------
+		% update adaptive parameter
+		function this = update_adaptiveparameter(this, iteration)
+			for i = 1:numel(this.adaptparam_name)
+				for j = 1:numel(this.adaptparam_iters{i})
+					if iteration == this.adaptparam_iters{i}(j)
+						new_value = this.adaptparam_values{i}(j);
+						eval(['this.' this.adaptparam_name{i} ' = ' num2str(new_value) ';']);
+					end						
+				end
+			end		
+		end
+			
 		%------------------------------------------------------------------
 		function settings = getsettings(this)
 			% Returns a structure containing all settings of this object.
