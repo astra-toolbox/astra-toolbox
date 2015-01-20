@@ -1,13 +1,12 @@
-% This file is part of the
-% All Scale Tomographic Reconstruction Antwerp Toolbox ("ASTRA-Toolbox")
+%--------------------------------------------------------------------------
+% This file is part of the ASTRA Toolbox
 %
-% Copyright: iMinds-Vision Lab, University of Antwerp
+% Copyright: 2010-2014, iMinds-Vision Lab, University of Antwerp
+%                 2014, CWI, Amsterdam
 % License: Open Source under GPLv3
-% Contact: mailto:astra@ua.ac.be
-% Website: http://astra.ua.ac.be
-%
-% Author of this DART Algorithm: Wim van Aarle
-
+% Contact: astra@uantwerpen.be
+% Website: http://sf.net/projects/astra-toolbox
+%--------------------------------------------------------------------------
 
 classdef SmoothingDefault < matlab.mixin.Copyable
 	 
@@ -153,7 +152,7 @@ classdef SmoothingDefault < matlab.mixin.Copyable
 		%------------------------------------------------------------------
 		function V_out = apply_3D_gpu(this, V_in)
 
-			vol_geom = astra_create_vol_geom(size(V_in));
+			vol_geom = astra_create_vol_geom(size(V_in,2),size(V_in,1),size(V_in,3));
 			data_id = astra_mex_data3d('create', '-vol', vol_geom, V_in);
 
 			cfg = astra_struct('DARTSMOOTHING3D_CUDA');

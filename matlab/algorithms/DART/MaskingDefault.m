@@ -1,13 +1,12 @@
-% This file is part of the
-% All Scale Tomographic Reconstruction Antwerp Toolbox ("ASTRA-Toolbox")
+%--------------------------------------------------------------------------
+% This file is part of the ASTRA Toolbox
 %
-% Copyright: iMinds-Vision Lab, University of Antwerp
+% Copyright: 2010-2014, iMinds-Vision Lab, University of Antwerp
+%                 2014, CWI, Amsterdam
 % License: Open Source under GPLv3
-% Contact: mailto:astra@ua.ac.be
-% Website: http://astra.ua.ac.be
-%
-% Author of this DART Algorithm: Wim van Aarle
-
+% Contact: astra@uantwerpen.be
+% Website: http://sf.net/projects/astra-toolbox
+%--------------------------------------------------------------------------
 
 classdef MaskingDefault < matlab.mixin.Copyable
 
@@ -179,7 +178,7 @@ classdef MaskingDefault < matlab.mixin.Copyable
 		%------------------------------------------------------------------
 		function Mask = apply_3D_gpu(this, S)
 	
-			vol_geom = astra_create_vol_geom(size(S));
+			vol_geom = astra_create_vol_geom(size(S,2), size(S,1), size(S,3));
 			data_id = astra_mex_data3d('create', '-vol', vol_geom, S);
 
 			cfg = astra_struct('DARTMASK3D_CUDA');
