@@ -49,6 +49,22 @@ done
 rm -f conftest.cc conftest.o
 ])
 
+
+dnl ASTRA_RUN_STOREOUTPUT(command, output)
+AC_DEFUN([ASTRA_RUN_STOREOUTPUT],[{
+  AS_ECHO(["$as_me:${as_lineno-$LINENO}: $1"]) >&AS_MESSAGE_LOG_FD
+  ( $1 ) >$2 2>&1
+  ac_status=$?
+  cat $2 >&AS_MESSAGE_LOG_FD
+  AS_ECHO(["$as_me:${as_lineno-$LINENO}: \$? = $ac_status"]) >&AS_MESSAGE_LOG_FD
+  test $ac_status = 0;
+ }])
+
+dnl ASTRA_RUN(command)
+AC_DEFUN([ASTRA_RUN],[ASTRA_RUN_STOREOUTPUT($1,/dev/null)])
+
+
+
 dnl ASTRA_CHECK_NVCC(variable-to-set,cppflags-to-set)
 AC_DEFUN([ASTRA_CHECK_NVCC],[
 cat >conftest.cu <<_ACEOF
@@ -59,17 +75,22 @@ int main() {
 }
 _ACEOF
 $1="yes"
-$NVCC -c -o conftest.o conftest.cu $$2 >conftest.nvcc.out 2>&1 || {
+ASTRA_RUN_STOREOUTPUT([$NVCC -c -o conftest.o conftest.cu $$2],conftest.nvcc.out) || {
   $1="no"
   # Check if hack for gcc 4.4 helps
   if grep -q __builtin_stdarg_start conftest.nvcc.out; then
     NVCC_OPT="-Xcompiler -D__builtin_stdarg_start=__builtin_va_start"
-    $NVCC -c -o conftest.o conftest.cu $$2 $NVCC_OPT >/dev/null 2>&1 && {
+
+    ASTRA_RUN([$NVCC -c -o conftest.o conftest.cu $$2 $NVCC_OPT]) && {
       $1="yes"
       $2="$$2 $NVCC_OPT"
     }
   fi
 }
+if test x$$1 = xno; then
+  AS_ECHO(["$as_me: failed program was:"]) >&AS_MESSAGE_LOG_FD
+  sed 's/^/| /' conftest.cu >&AS_MESSAGE_LOG_FD
+fi
 rm -f conftest.cu conftest.o conftest.nvcc.out
 ])
 
