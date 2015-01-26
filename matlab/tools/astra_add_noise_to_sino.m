@@ -15,8 +15,8 @@ function sinogram_out = astra_add_noise_to_sino(sinogram_in,I0)
 %--------------------------------------------------------------------------
 % This file is part of the ASTRA Toolbox
 % 
-% Copyright: 2010-2014, iMinds-Vision Lab, University of Antwerp
-%                 2014, CWI, Amsterdam
+% Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
+%            2014-2015, CWI, Amsterdam
 % License: Open Source under GPLv3
 % Contact: astra@uantwerpen.be
 % Website: http://sf.net/projects/astra-toolbox
