@@ -47,22 +47,16 @@ static texture3D gT_par3DProjTexture;
 
 namespace astraCUDA3d {
 
-static const unsigned int g_volBlockZ = 16;
+#define ZSIZE 6
+static const unsigned int g_volBlockZ = ZSIZE;
 
-static const unsigned int g_anglesPerBlock = 64;
-static const unsigned int g_volBlockX = 32;
-static const unsigned int g_volBlockY = 16;
+static const unsigned int g_anglesPerBlock = 32;
+static const unsigned int g_volBlockX = 16;
+static const unsigned int g_volBlockY = 32;
 
 static const unsigned g_MaxAngles = 1024;
 
-__constant__ float gC_Cux[g_MaxAngles];
-__constant__ float gC_Cuy[g_MaxAngles];
-__constant__ float gC_Cuz[g_MaxAngles];
-__constant__ float gC_Cuc[g_MaxAngles];
-__constant__ float gC_Cvx[g_MaxAngles];
-__constant__ float gC_Cvy[g_MaxAngles];
-__constant__ float gC_Cvz[g_MaxAngles];
-__constant__ float gC_Cvc[g_MaxAngles];
+__constant__ float gC_C[8*g_MaxAngles];
 
 
 static bool bindProjDataTexture(const cudaArray* array)
@@ -95,11 +89,8 @@ __global__ void dev_par3D_BP(void* D_volData, unsigned int volPitch, int startAn
 	//            y = rel y
 
 	// blockIdx:  x = x + y
-    //            y = z
+	//            y = z
 
-
-	// TO TRY: precompute part of detector intersection formulas in shared mem?
-	// TO TRY: inner loop over z, gather ray values in shared mem
 
 	const int X = blockIdx.x % ((dims.iVolX+g_volBlockX-1)/g_volBlockX) * g_volBlockX + threadIdx.x;
 	const int Y = blockIdx.x / ((dims.iVolX+g_volBlockX-1)/g_volBlockX) * g_volBlockY + threadIdx.y;
@@ -110,42 +101,45 @@ __global__ void dev_par3D_BP(void* D_volData, unsigned int volPitch, int startAn
 		return;
 
 	const int startZ = blockIdx.y * g_volBlockZ;
-	int endZ = startZ + g_volBlockZ;
-	if (endZ > dims.iVolZ)
-		endZ = dims.iVolZ;
 
 	float fX = X - 0.5f*dims.iVolX + 0.5f;
 	float fY = Y - 0.5f*dims.iVolY + 0.5f;
 	float fZ = startZ - 0.5f*dims.iVolZ + 0.5f;
 
-	for (int Z = startZ; Z < endZ; ++Z, fZ += 1.0f)
-	{
+	float Z[ZSIZE];
+	for(int i=0; i < ZSIZE; i++)
+		Z[i] = 0.0f;
 
-		float fVal = 0.0f;
+	{
 		float fAngle = startAngle + angleOffset + 0.5f;
 
 		for (int angle = startAngle; angle < endAngle; ++angle, fAngle += 1.0f)
 		{
 
-			const float fCux = gC_Cux[angle];
-			const float fCuy = gC_Cuy[angle];
-			const float fCuz = gC_Cuz[angle];
-			const float fCuc = gC_Cuc[angle];
-			const float fCvx = gC_Cvx[angle];
-			const float fCvy = gC_Cvy[angle];
-			const float fCvz = gC_Cvz[angle];
-			const float fCvc = gC_Cvc[angle];
+			float4 fCu = make_float4(gC_C[8*angle+0], gC_C[8*angle+1], gC_C[8*angle+2], gC_C[8*angle+3]);
+			float4 fCv = make_float4(gC_C[8*angle+4], gC_C[8*angle+5], gC_C[8*angle+6], gC_C[8*angle+7]);
 
-			const float fU = fCuc + fX * fCux + fY * fCuy + fZ * fCuz;
-			const float fV = fCvc + fX * fCvx + fY * fCvy + fZ * fCvz;
+			float fU = fCu.w + fX * fCu.x + fY * fCu.y + fZ * fCu.z;
+			float fV = fCv.w + fX * fCv.x + fY * fCv.y + fZ * fCv.z;
 
-			fVal += tex3D(gT_par3DProjTexture, fU, fAngle, fV);
+			for (int idx = 0; idx < ZSIZE; ++idx) {
+
+				float fVal = tex3D(gT_par3DProjTexture, fU, fAngle, fV);
+				Z[idx] += fVal;
+
+				fU += fCu.z;
+				fV += fCv.z;
+			}
 
 		}
-
-		volData[(Z*dims.iVolY+Y)*volPitch+X] += fVal;
 	}
 
+	int endZ = ZSIZE;
+	if (endZ > dims.iVolZ - startZ)
+		endZ = dims.iVolZ - startZ;
+
+	for(int i=0; i < endZ; i++)
+		volData[((startZ+i)*dims.iVolY+Y)*volPitch+X] += Z[i];
 }
 
 // supersampling version
@@ -194,14 +188,14 @@ __global__ void dev_par3D_BP_SS(void* D_volData, unsigned int volPitch, int star
 
 		for (int angle = startAngle; angle < endAngle; ++angle, fAngle += 1.0f)
 		{
-			const float fCux = gC_Cux[angle];
-			const float fCuy = gC_Cuy[angle];
-			const float fCuz = gC_Cuz[angle];
-			const float fCuc = gC_Cuc[angle];
-			const float fCvx = gC_Cvx[angle];
-			const float fCvy = gC_Cvy[angle];
-			const float fCvz = gC_Cvz[angle];
-			const float fCvc = gC_Cvc[angle];
+			const float fCux = gC_C[8*angle+0];
+			const float fCuy = gC_C[8*angle+1];
+			const float fCuz = gC_C[8*angle+2];
+			const float fCuc = gC_C[8*angle+3];
+			const float fCvx = gC_C[8*angle+4];
+			const float fCvy = gC_C[8*angle+5];
+			const float fCvz = gC_C[8*angle+6];
+			const float fCvc = gC_C[8*angle+7];
 
 			float fXs = fX;
 			for (int iSubX = 0; iSubX < dims.iRaysPerVoxelDim; ++iSubX) {
@@ -240,29 +234,30 @@ bool Par3DBP_Array(cudaPitchedPtr D_volumeData,
 			angleCount = dims.iProjAngles - th;
 
 		// transfer angles to constant memory
-		float* tmp = new float[dims.iProjAngles];
+		float* tmp = new float[8*dims.iProjAngles];
 
 		// NB: We increment angles at the end of the loop body.
 
 
 		// TODO: Use functions from dims3d.cu for this:
 
-#define TRANSFER_TO_CONSTANT(expr,name) do { for (unsigned int i = 0; i < angleCount; ++i) tmp[i] = (expr) ; cudaMemcpyToSymbol(gC_##name, tmp, angleCount*sizeof(float), 0, cudaMemcpyHostToDevice); } while (0)
+#define TRANSFER_TO_CONSTANT(expr,name) do { for (unsigned int i = 0; i < angleCount; ++i) tmp[8*i + name] = (expr) ; } while (0)
 
 #define DENOM (angles[i].fRayX*angles[i].fDetUY*angles[i].fDetVZ - angles[i].fRayX*angles[i].fDetUZ*angles[i].fDetVY - angles[i].fRayY*angles[i].fDetUX*angles[i].fDetVZ + angles[i].fRayY*angles[i].fDetUZ*angles[i].fDetVX + angles[i].fRayZ*angles[i].fDetUX*angles[i].fDetVY - angles[i].fRayZ*angles[i].fDetUY*angles[i].fDetVX)
 
-		TRANSFER_TO_CONSTANT( ( - (angles[i].fRayY*angles[i].fDetVZ - angles[i].fRayZ*angles[i].fDetVY)) / DENOM , Cux );
-		TRANSFER_TO_CONSTANT( ( (angles[i].fRayX*angles[i].fDetVZ - angles[i].fRayZ*angles[i].fDetVX)) / DENOM , Cuy );
-		TRANSFER_TO_CONSTANT( (- (angles[i].fRayX*angles[i].fDetVY - angles[i].fRayY*angles[i].fDetVX) ) / DENOM , Cuz );
-		TRANSFER_TO_CONSTANT( (-(angles[i].fDetSY*angles[i].fDetVZ - angles[i].fDetSZ*angles[i].fDetVY)*angles[i].fRayX + (angles[i].fRayY*angles[i].fDetVZ - angles[i].fRayZ*angles[i].fDetVY)*angles[i].fDetSX - (angles[i].fRayY*angles[i].fDetSZ - angles[i].fRayZ*angles[i].fDetSY)*angles[i].fDetVX) / DENOM , Cuc );
+		TRANSFER_TO_CONSTANT( ( - (angles[i].fRayY*angles[i].fDetVZ - angles[i].fRayZ*angles[i].fDetVY)) / DENOM , 0 );
+		TRANSFER_TO_CONSTANT( ( (angles[i].fRayX*angles[i].fDetVZ - angles[i].fRayZ*angles[i].fDetVX)) / DENOM , 1 );
+		TRANSFER_TO_CONSTANT( (- (angles[i].fRayX*angles[i].fDetVY - angles[i].fRayY*angles[i].fDetVX) ) / DENOM , 2 );
+		TRANSFER_TO_CONSTANT( (-(angles[i].fDetSY*angles[i].fDetVZ - angles[i].fDetSZ*angles[i].fDetVY)*angles[i].fRayX + (angles[i].fRayY*angles[i].fDetVZ - angles[i].fRayZ*angles[i].fDetVY)*angles[i].fDetSX - (angles[i].fRayY*angles[i].fDetSZ - angles[i].fRayZ*angles[i].fDetSY)*angles[i].fDetVX) / DENOM , 3 );
 
-		TRANSFER_TO_CONSTANT( ((angles[i].fRayY*angles[i].fDetUZ - angles[i].fRayZ*angles[i].fDetUY) ) / DENOM , Cvx );
-		TRANSFER_TO_CONSTANT( (- (angles[i].fRayX*angles[i].fDetUZ - angles[i].fRayZ*angles[i].fDetUX) ) / DENOM , Cvy );
-		TRANSFER_TO_CONSTANT( ((angles[i].fRayX*angles[i].fDetUY - angles[i].fRayY*angles[i].fDetUX) ) / DENOM , Cvz );
-		TRANSFER_TO_CONSTANT( ((angles[i].fDetSY*angles[i].fDetUZ - angles[i].fDetSZ*angles[i].fDetUY)*angles[i].fRayX - (angles[i].fRayY*angles[i].fDetUZ - angles[i].fRayZ*angles[i].fDetUY)*angles[i].fDetSX + (angles[i].fRayY*angles[i].fDetSZ - angles[i].fRayZ*angles[i].fDetSY)*angles[i].fDetUX ) / DENOM , Cvc );
+		TRANSFER_TO_CONSTANT( ((angles[i].fRayY*angles[i].fDetUZ - angles[i].fRayZ*angles[i].fDetUY) ) / DENOM , 4 );
+		TRANSFER_TO_CONSTANT( (- (angles[i].fRayX*angles[i].fDetUZ - angles[i].fRayZ*angles[i].fDetUX) ) / DENOM , 5 );
+		TRANSFER_TO_CONSTANT( ((angles[i].fRayX*angles[i].fDetUY - angles[i].fRayY*angles[i].fDetUX) ) / DENOM , 6 );
+		TRANSFER_TO_CONSTANT( ((angles[i].fDetSY*angles[i].fDetUZ - angles[i].fDetSZ*angles[i].fDetUY)*angles[i].fRayX - (angles[i].fRayY*angles[i].fDetUZ - angles[i].fRayZ*angles[i].fDetUY)*angles[i].fDetSX + (angles[i].fRayY*angles[i].fDetSZ - angles[i].fRayZ*angles[i].fDetSY)*angles[i].fDetUX ) / DENOM , 7 );
 
 #undef TRANSFER_TO_CONSTANT
 #undef DENOM
+		cudaMemcpyToSymbol(gC_C, tmp, angleCount*8*sizeof(float), 0, cudaMemcpyHostToDevice); 
 
 		delete[] tmp;
 
