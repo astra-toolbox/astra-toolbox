@@ -24,7 +24,7 @@ dnl
 dnl -----------------------------------------------------------------------
 dnl $Id$
 
-AC_INIT(astra_toolbox, 1.3.0)
+AC_INIT(astra_toolbox, 1.5.0)
 AC_CONFIG_SRCDIR([Makefile.in])
 LT_INIT([disable-static])
 
