@@ -9,11 +9,13 @@ Contact: astra@uantwerpen.be
 Website: http://sf.net/projects/astra-toolbox
 -----------------------------------------------------------------------
 
-1.5 (2014-??-??)
-  * various consistency and bug fixes
+1.5 (2015-01-30)
   * add support for fan beam FBP
-  * add astra_mex_data3d_c('link') command
+  * remove limits on number of angles in GPU code
+    (They are still limited by available memory, however)
+  * update the included version of the DART algorithm
   * build fixes for newer platforms
+  * various consistency and bug fixes
 
 1.4 (2014-04-07)
   * various consistency and bug fixes
