@@ -31,6 +31,7 @@ LT_INIT([disable-static])
 SAVED_CPPFLAGS="$CPPFLAGS"
 SAVED_CXXFLAGS="$CXXFLAGS"
 SAVED_LDFLAGS="$LDFLAGS"
+SAVED_LIBS="$LIBS"
 
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
@@ -45,6 +46,32 @@ AC_LANG([C++])
 
 dnl Use iostream to check if the C++ compiler works
 AC_CHECK_HEADER(iostream, , AC_MSG_ERROR([No working c++ compiler found]))
+
+
+# clock_gettime
+
+AC_MSG_CHECKING([for clock_gettime])
+AC_TRY_LINK([
+#include <ctime>
+],[
+struct timespec t; clock_gettime(CLOCK_REALTIME, &t);
+],astra_clock_gettime_ok=yes,astra_clock_gettime_ok=no)
+AC_MSG_RESULT($astra_clock_gettime_ok)
+if test x$astra_clock_gettime_ok = xno; then
+  AC_MSG_CHECKING([for clock_gettime in librt])
+  LIBS="$LIBS -lrt"
+  AC_TRY_LINK([
+  #include <ctime>
+  ],[
+  struct timespec t; clock_gettime(CLOCK_REALTIME, &t);
+  ],astra_clock_gettime_ok=yes,astra_clock_gettime_ok=no)
+  AC_MSG_RESULT($astra_clock_gettime_ok)
+  if test x$astra_clock_gettime_ok = xno; then
+    AC_MSG_ERROR([No clock_gettime found])
+  else
+    SAVED_LIBS="$SAVED_LIBS -lrt"
+  fi
+fi
 
 
 # boost-unit-test-framework
@@ -179,6 +206,7 @@ AC_SUBST(HAVEMATLAB)
 AC_SUBST(SAVED_CPPFLAGS)
 AC_SUBST(SAVED_CXXFLAGS)
 AC_SUBST(SAVED_LDFLAGS)
+AC_SUBST(SAVED_LIBS)
 
 
 AC_CONFIG_FILES([Makefile])
