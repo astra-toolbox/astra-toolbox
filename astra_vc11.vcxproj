@@ -194,7 +194,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <OutputFile>bin\x64\Release_CUDA\AstraCuda64.dll</OutputFile>
       <AdditionalLibraryDirectories>lib\x64;$(CUDA_LIB_PATH);$(NVSDKCUDA_ROOT)\common\lib;$(NVSDKCOMPUTE_ROOT)/C/common/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>cudart.lib;FreeImage.lib;cufft.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>cudart.lib;cufft.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
     <CudaCompile>
