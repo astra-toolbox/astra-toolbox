@@ -198,13 +198,13 @@ bool CConeVecProjectionGeometry3D::isEqual(const CProjectionGeometry3D * _pGeom2
 // is of type
 bool CConeVecProjectionGeometry3D::isOfType(const std::string& _sType) const
 {
-	 return (_sType == "cone3d_vec");
+	 return (_sType == "cone3d_vec" || _sType == "cone_vec");
 }
 
 //----------------------------------------------------------------------------------------
 void CConeVecProjectionGeometry3D::toXML(XMLNode* _sNode) const
 {
-	_sNode->addAttribute("type","cone3d_vec");
+	_sNode->addAttribute("type","cone_vec");
 	_sNode->addChildNode("DetectorRowCount", m_iDetectorRowCount);
 	_sNode->addChildNode("DetectorColCount", m_iDetectorColCount);
 	// TODO:

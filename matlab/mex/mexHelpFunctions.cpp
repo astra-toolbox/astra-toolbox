@@ -207,7 +207,7 @@ astra::CProjectionGeometry2D* parseProjectionGeometryStruct(const mxArray* prhs)
 }
 
 //-----------------------------------------------------------------------------------------
-// create projection geometry data
+// create 2D projection geometry struct
 mxArray* createProjectionGeometryStruct(astra::CProjectionGeometry2D* _pProjGeom)
 {
 	// temporary map to store the data for the MATLAB struct
@@ -224,7 +224,7 @@ mxArray* createProjectionGeometryStruct(astra::CProjectionGeometry2D* _pProjGeom
 		for (int i = 0; i < _pProjGeom->getProjectionAngleCount(); i++) {
 			out[i] = _pProjGeom->getProjectionAngle(i);
 		}
-		mGeometryInfo["ProjectionAngles"] = pAngles;	
+		mGeometryInfo["ProjectionAngles"] = pAngles;
 	}
 
 	// fanflat
@@ -242,7 +242,7 @@ mxArray* createProjectionGeometryStruct(astra::CProjectionGeometry2D* _pProjGeom
 		for (int i = 0; i < pFanFlatGeom->getProjectionAngleCount(); i++) {
 			out[i] = pFanFlatGeom->getProjectionAngle(i);
 		}
-		mGeometryInfo["ProjectionAngles"] = pAngles;	
+		mGeometryInfo["ProjectionAngles"] = pAngles;
 	}
 
 	// fanflat_vec
@@ -263,7 +263,7 @@ mxArray* createProjectionGeometryStruct(astra::CProjectionGeometry2D* _pProjGeom
 			out[2*iAngleCount + i] = p->fDetSX + 0.5f*iDetCount*p->fDetUX;
 			out[3*iAngleCount + i] = p->fDetSY + 0.5f*iDetCount*p->fDetUY;
 			out[4*iAngleCount + i] = p->fDetUX;
-			out[5*iAngleCount + i] = p->fDetUY;			
+			out[5*iAngleCount + i] = p->fDetUY;
 		}
 		mGeometryInfo["Vectors"] = pVectors;
 	}
@@ -273,6 +273,115 @@ mxArray* createProjectionGeometryStruct(astra::CProjectionGeometry2D* _pProjGeom
 		astra::CSparseMatrixProjectionGeometry2D* pSparseMatrixGeom = dynamic_cast<astra::CSparseMatrixProjectionGeometry2D*>(_pProjGeom);
 		mGeometryInfo["type"] = mxCreateString("sparse_matrix");
 		mGeometryInfo["MatrixID"] = mxCreateDoubleScalar(CMatrixManager::getSingleton().getIndex(pSparseMatrixGeom->getMatrix()));
+	}
+
+	// build and return the MATLAB struct
+	return buildStruct(mGeometryInfo);
+}
+
+//-----------------------------------------------------------------------------------------
+// create 3D projection geometry struct
+mxArray* createProjectionGeometryStruct(astra::CProjectionGeometry3D* _pProjGeom)
+{
+	// temporary map to store the data for the MATLAB struct
+	std::map<std::string, mxArray*> mGeometryInfo;
+
+	// parallel beam
+	if (_pProjGeom->isOfType("parallel3d")) {
+		mGeometryInfo["type"] = mxCreateString("parallel3d");
+		mGeometryInfo["DetectorRowCount"] = mxCreateDoubleScalar(_pProjGeom->getDetectorRowCount());
+		mGeometryInfo["DetectorColCount"] = mxCreateDoubleScalar(_pProjGeom->getDetectorColCount());
+		mGeometryInfo["DetectorSpacingX"] = mxCreateDoubleScalar(_pProjGeom->getDetectorSpacingX());
+		mGeometryInfo["DetectorSpacingY"] = mxCreateDoubleScalar(_pProjGeom->getDetectorSpacingY());
+
+		mxArray* pAngles = mxCreateDoubleMatrix(1, _pProjGeom->getProjectionCount(), mxREAL);
+		double* out = mxGetPr(pAngles);
+		for (int i = 0; i < _pProjGeom->getProjectionCount(); i++) {
+			out[i] = _pProjGeom->getProjectionAngle(i);
+		}
+		mGeometryInfo["ProjectionAngles"] = pAngles;
+	}
+
+	// parallel beam vector
+	if (_pProjGeom->isOfType("parallel3d_vec")) {
+		astra::CParallelVecProjectionGeometry3D* pVecGeom = dynamic_cast<astra::CParallelVecProjectionGeometry3D*>(_pProjGeom);
+
+		mGeometryInfo["type"] = mxCreateString("parallel3d_vec");
+		mGeometryInfo["DetectorRowCount"] = mxCreateDoubleScalar(pVecGeom->getDetectorRowCount());
+		mGeometryInfo["DetectorColCount"] = mxCreateDoubleScalar(pVecGeom->getDetectorColCount());
+
+		mxArray* pVectors = mxCreateDoubleMatrix(pVecGeom->getProjectionCount(), 12, mxREAL);
+		double* out = mxGetPr(pVectors);
+		int iDetRowCount = pVecGeom->getDetectorRowCount();
+		int iDetColCount = pVecGeom->getDetectorColCount();
+		int iAngleCount = pVecGeom->getProjectionCount();
+		for (int i = 0; i < pVecGeom->getProjectionCount(); i++) {
+			const SPar3DProjection* p = &pVecGeom->getProjectionVectors()[i];
+			out[ 0*iAngleCount + i] = p->fRayX;
+			out[ 1*iAngleCount + i] = p->fRayY;
+			out[ 2*iAngleCount + i] = p->fRayZ;
+			out[ 3*iAngleCount + i] = p->fDetSX + 0.5f*iDetRowCount*p->fDetUX + 0.5f*iDetColCount*p->fDetVX;
+			out[ 4*iAngleCount + i] = p->fDetSY + 0.5f*iDetRowCount*p->fDetUY + 0.5f*iDetColCount*p->fDetVY;
+			out[ 5*iAngleCount + i] = p->fDetSZ + 0.5f*iDetRowCount*p->fDetUZ + 0.5f*iDetColCount*p->fDetVZ;
+			out[ 6*iAngleCount + i] = p->fDetUX;
+			out[ 7*iAngleCount + i] = p->fDetUY;
+			out[ 8*iAngleCount + i] = p->fDetUZ;
+			out[ 9*iAngleCount + i] = p->fDetVX;
+			out[10*iAngleCount + i] = p->fDetVY;
+			out[11*iAngleCount + i] = p->fDetVZ;
+		}
+		mGeometryInfo["Vectors"] = pVectors;
+	}
+
+	// cone beam
+	else if (_pProjGeom->isOfType("cone")) {
+		astra::CConeProjectionGeometry3D* pConeGeom = dynamic_cast<astra::CConeProjectionGeometry3D*>(_pProjGeom);
+
+		mGeometryInfo["type"] = mxCreateString("cone");
+		mGeometryInfo["DetectorRowCount"] = mxCreateDoubleScalar(pConeGeom->getDetectorRowCount());
+		mGeometryInfo["DetectorColCount"] = mxCreateDoubleScalar(pConeGeom->getDetectorColCount());
+		mGeometryInfo["DetectorSpacingX"] = mxCreateDoubleScalar(pConeGeom->getDetectorSpacingX());
+		mGeometryInfo["DetectorSpacingY"] = mxCreateDoubleScalar(pConeGeom->getDetectorSpacingY());
+		mGeometryInfo["DistanceOriginSource"] = mxCreateDoubleScalar(pConeGeom->getOriginSourceDistance());
+		mGeometryInfo["DistanceOriginDetector"] = mxCreateDoubleScalar(pConeGeom->getOriginDetectorDistance());	
+
+		mxArray* pAngles = mxCreateDoubleMatrix(1, pConeGeom->getProjectionCount(), mxREAL);
+		double* out = mxGetPr(pAngles);
+		for (int i = 0; i < pConeGeom->getProjectionCount(); i++) {
+			out[i] = pConeGeom->getProjectionAngle(i);
+		}
+		mGeometryInfo["ProjectionAngles"] = pAngles;
+	}
+
+	// cone beam vector
+	else if (_pProjGeom->isOfType("cone_vec")) {
+		astra::CConeVecProjectionGeometry3D* pConeVecGeom = dynamic_cast<astra::CConeVecProjectionGeometry3D*>(_pProjGeom);
+
+		mGeometryInfo["type"] = mxCreateString("cone_vec");
+		mGeometryInfo["DetectorRowCount"] = mxCreateDoubleScalar(pConeVecGeom->getDetectorRowCount());
+		mGeometryInfo["DetectorColCount"] = mxCreateDoubleScalar(pConeVecGeom->getDetectorColCount());
+
+		mxArray* pVectors = mxCreateDoubleMatrix(pConeVecGeom->getProjectionCount(), 12, mxREAL);
+		double* out = mxGetPr(pVectors);
+		int iDetRowCount = pConeVecGeom->getDetectorRowCount();
+		int iDetColCount = pConeVecGeom->getDetectorColCount();
+		int iAngleCount = pConeVecGeom->getProjectionCount();
+		for (int i = 0; i < pConeVecGeom->getProjectionCount(); i++) {
+			const SConeProjection* p = &pConeVecGeom->getProjectionVectors()[i];
+			out[ 0*iAngleCount + i] = p->fSrcX;
+			out[ 1*iAngleCount + i] = p->fSrcY;
+			out[ 2*iAngleCount + i] = p->fSrcZ;
+			out[ 3*iAngleCount + i] = p->fDetSX + 0.5f*iDetRowCount*p->fDetUX + 0.5f*iDetColCount*p->fDetVX;
+			out[ 4*iAngleCount + i] = p->fDetSY + 0.5f*iDetRowCount*p->fDetUY + 0.5f*iDetColCount*p->fDetVY;
+			out[ 5*iAngleCount + i] = p->fDetSZ + 0.5f*iDetRowCount*p->fDetUZ + 0.5f*iDetColCount*p->fDetVZ;
+			out[ 6*iAngleCount + i] = p->fDetUX;
+			out[ 7*iAngleCount + i] = p->fDetUY;
+			out[ 8*iAngleCount + i] = p->fDetUZ;
+			out[ 9*iAngleCount + i] = p->fDetVX;
+			out[10*iAngleCount + i] = p->fDetVY;
+			out[11*iAngleCount + i] = p->fDetVZ;
+		}
+		mGeometryInfo["Vectors"] = pVectors;
 	}
 
 	// build and return the MATLAB struct

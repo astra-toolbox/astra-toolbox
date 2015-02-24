@@ -295,9 +295,8 @@ void astra_mex_data3d_get_geometry(int nlhs, mxArray* plhs[], int nrhs, const mx
 	// create output
 	if (1 <= nlhs) {
 		if (pDataObject->getType() == CFloat32Data3D::PROJECTION) {
-			// CFloat32ProjectionData2D* pDataObject2 = dynamic_cast<CFloat32ProjectionData2D*>(pDataObject);
-			// plhs[0] = createProjectionGeometryStruct(pDataObject2->getGeometry());
-			mexErrMsgTxt("Not implemented yet. \n");
+			CFloat32ProjectionData3DMemory* pDataObject2 = dynamic_cast<CFloat32ProjectionData3DMemory*>(pDataObject);
+			plhs[0] = createProjectionGeometryStruct(pDataObject2->getGeometry());
 		}
 		else if (pDataObject->getType() == CFloat32Data3D::VOLUME) {
 			CFloat32VolumeData3DMemory* pDataObject2 = dynamic_cast<CFloat32VolumeData3DMemory*>(pDataObject);

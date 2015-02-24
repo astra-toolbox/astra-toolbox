@@ -45,8 +45,12 @@ $Id$
 
 #include "astra/ParallelProjectionGeometry2D.h"
 #include "astra/FanFlatProjectionGeometry2D.h"
-#include "astra/VolumeGeometry2D.h"
+#include "astra/ParallelProjectionGeometry3D.h"
+#include "astra/ParallelVecProjectionGeometry3D.h"
+#include "astra/ConeProjectionGeometry3D.h"
+#include "astra/ConeVecProjectionGeometry3D.h"
 
+#include "astra/VolumeGeometry2D.h"
 #include "astra/VolumeGeometry3D.h"
 
 
@@ -65,9 +69,10 @@ mxArray* vectorToMxArray(std::vector<astra::float32> mInput);
 mxArray* anyToMxArray(boost::any _any);
 
 astra::CProjectionGeometry2D* parseProjectionGeometryStruct(const mxArray*);
-mxArray* createProjectionGeometryStruct(astra::CProjectionGeometry2D*);
-
 astra::CVolumeGeometry2D* parseVolumeGeometryStruct(const mxArray*);
+
+mxArray* createProjectionGeometryStruct(astra::CProjectionGeometry2D*);
+mxArray* createProjectionGeometryStruct(astra::CProjectionGeometry3D*);
 
 mxArray* createVolumeGeometryStruct(astra::CVolumeGeometry2D* _pReconGeom);
 mxArray* createVolumeGeometryStruct(astra::CVolumeGeometry3D* _pReconGeom);
