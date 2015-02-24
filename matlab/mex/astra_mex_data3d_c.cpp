@@ -266,48 +266,46 @@ void astra_mex_data3d_dimensions(int nlhs, mxArray* plhs[], int nrhs, const mxAr
 }
 
 //-----------------------------------------------------------------------------------------
-/**
- * [geom] = astra_mex_data3d('geometry', id);
+/** geom = astra_mex_data3d('get_geometry', id);
+ * 
+ * Fetch the geometry of a 3d data object stored in the astra-library.
+ * id: identifier of the 3d data object as stored in the astra-library.
+ * geom: MATLAB-struct containing information about the used geometry.
  */
-void astra_mex_data3d_geometry(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
+void astra_mex_data3d_get_geometry(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 { 
-	//// Get input
-	//if (nrhs < 2) {
-	//	mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-	//	return;
-	//}
-	//int iDid = (int)(mxGetScalar(prhs[1]));
+	// parse input
+	if (nrhs < 2) {
+		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
+		return;
+	}
+	if (!mxIsDouble(prhs[1])) {
+		mexErrMsgTxt("Identifier should be a scalar value. \n");
+		return;
+	}
+	int iDataID = (int)(mxGetScalar(prhs[1]));
 
-	//// Get data object
-	//CFloat32Data3D* pData = CData3DManager::getSingleton().get(iDid);
-	//if (!pData) {
-	//	mexErrMsgTxt("DataObject not valid. \n");
-	//	return;
-	//}
+	// fetch data object
+	CFloat32Data3D* pDataObject = astra::CData3DManager::getSingleton().get(iDataID);
+	if (!pDataObject || !pDataObject->isInitialized()) {
+		mexErrMsgTxt("Data object not found or not initialized properly.\n");
+		return;
+	}
 
-	//// Projection Data
-	//if (pData->getType() == CFloat32Data3D::PROJECTION) {
-	//	CFloat32ProjectionData3D* pData2 = dynamic_cast<CFloat32ProjectionData3D*>(pData);
-	//	CProjectionGeometry3D* pProjGeom = pData2->getGeometry();
-	//	XMLDocument* config = pProjGeom->toXML();
+	// create output
+	if (1 <= nlhs) {
+		if (pDataObject->getType() == CFloat32Data3D::PROJECTION) {
+			// CFloat32ProjectionData2D* pDataObject2 = dynamic_cast<CFloat32ProjectionData2D*>(pDataObject);
+			// plhs[0] = createProjectionGeometryStruct(pDataObject2->getGeometry());
+			mexErrMsgTxt("Not implemented yet. \n");
+		}
+		else if (pDataObject->getType() == CFloat32Data3D::VOLUME) {
+			CFloat32VolumeData3DMemory* pDataObject2 = dynamic_cast<CFloat32VolumeData3DMemory*>(pDataObject);
+			plhs[0] = createVolumeGeometryStruct(pDataObject2->getGeometry());
+		}
+	}
 
-	//	if (1 <= nlhs) {
-	//		plhs[0] = XML2struct(config);
-	//	}
-	//} 
-	//// Volume Data
-	//else if (pData->getType() == CFloat32Data3D::VOLUME) {
-	////	CFloat32VolumeData3D* pData2 = dynamic_cast<CFloat32VolumeData3D*>(pData);
-	////	CVolumeGeometry2D* pVolGeom = pData2->getGeometry2D(iSliceNr);
-	////	if (1 <= nlhs) {
-	////		plhs[0] = createVolumeGeometryStruct(pVolGeom);
-	////	}
-	//} 
-	//// Error
-	//else {
-	//	mexErrMsgTxt("Type not valid. \n");
-	//	return;	
-	//}
+
 }
 
 //-----------------------------------------------------------------------------------------
@@ -395,8 +393,8 @@ void mexFunction(int nlhs, mxArray* plhs[],
 		astra_mex_data3d_info(nlhs, plhs, nrhs, prhs);
 	} else if (sMode ==  std::string("dimensions")) { 
 		astra_mex_data3d_dimensions(nlhs, plhs, nrhs, prhs); 
-	} else if (sMode == std::string("geometry")) {
-		astra_mex_data3d_geometry(nlhs, plhs, nrhs, prhs);
+	} else if (sMode == std::string("get_geometry")) {
+		astra_mex_data3d_get_geometry(nlhs, plhs, nrhs, prhs);
 	} else {
 		printHelp();
 	}

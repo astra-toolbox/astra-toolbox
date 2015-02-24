@@ -331,28 +331,47 @@ astra::CVolumeGeometry2D* parseVolumeGeometryStruct(const mxArray* prhs)
 }
 
 //-----------------------------------------------------------------------------------------
-// create reconstruction geometry data
-mxArray* createVolumeGeometryStruct(astra::CVolumeGeometry2D* _pReconGeom)
+// create 2D volume geometry struct
+mxArray* createVolumeGeometryStruct(astra::CVolumeGeometry2D* _pVolGeom)
 {
-	// temporary map to store the data for the MATLAB struct
 	std::map<std::string, mxArray*> mGeometryInfo;
 
-	// fill up map
-	mGeometryInfo["GridColCount"] = mxCreateDoubleScalar(_pReconGeom->getGridColCount());
-	mGeometryInfo["GridRowCount"] = mxCreateDoubleScalar(_pReconGeom->getGridRowCount());
+	mGeometryInfo["GridColCount"] = mxCreateDoubleScalar(_pVolGeom->getGridColCount());
+	mGeometryInfo["GridRowCount"] = mxCreateDoubleScalar(_pVolGeom->getGridRowCount());
 
 	std::map<std::string, mxArray*> mGeometryOptions;
-	mGeometryOptions["WindowMinX"] = mxCreateDoubleScalar(_pReconGeom->getWindowMinX());
-	mGeometryOptions["WindowMaxX"] = mxCreateDoubleScalar(_pReconGeom->getWindowMaxX());
-	mGeometryOptions["WindowMinY"] = mxCreateDoubleScalar(_pReconGeom->getWindowMinY());
-	mGeometryOptions["WindowMaxY"] = mxCreateDoubleScalar(_pReconGeom->getWindowMaxY());
+	mGeometryOptions["WindowMinX"] = mxCreateDoubleScalar(_pVolGeom->getWindowMinX());
+	mGeometryOptions["WindowMaxX"] = mxCreateDoubleScalar(_pVolGeom->getWindowMaxX());
+	mGeometryOptions["WindowMinY"] = mxCreateDoubleScalar(_pVolGeom->getWindowMinY());
+	mGeometryOptions["WindowMaxY"] = mxCreateDoubleScalar(_pVolGeom->getWindowMaxY());
 
 	mGeometryInfo["option"] = buildStruct(mGeometryOptions);
 
-	// build and return the MATLAB struct
 	return buildStruct(mGeometryInfo);
 }
 
+//-----------------------------------------------------------------------------------------
+// create 3D volume geometry struct
+mxArray* createVolumeGeometryStruct(astra::CVolumeGeometry3D* _pVolGeom)
+{
+	std::map<std::string, mxArray*> mGeometryInfo;
+
+	mGeometryInfo["GridColCount"] = mxCreateDoubleScalar(_pVolGeom->getGridColCount());
+	mGeometryInfo["GridRowCount"] = mxCreateDoubleScalar(_pVolGeom->getGridRowCount());
+	mGeometryInfo["GridSliceCount"] = mxCreateDoubleScalar(_pVolGeom->getGridRowCount());
+
+	std::map<std::string, mxArray*> mGeometryOptions;
+	mGeometryOptions["WindowMinX"] = mxCreateDoubleScalar(_pVolGeom->getWindowMinX());
+	mGeometryOptions["WindowMaxX"] = mxCreateDoubleScalar(_pVolGeom->getWindowMaxX());
+	mGeometryOptions["WindowMinY"] = mxCreateDoubleScalar(_pVolGeom->getWindowMinY());
+	mGeometryOptions["WindowMaxY"] = mxCreateDoubleScalar(_pVolGeom->getWindowMaxY());
+	mGeometryOptions["WindowMinZ"] = mxCreateDoubleScalar(_pVolGeom->getWindowMinZ());
+	mGeometryOptions["WindowMaxZ"] = mxCreateDoubleScalar(_pVolGeom->getWindowMaxZ());
+
+	mGeometryInfo["option"] = buildStruct(mGeometryOptions);
+
+	return buildStruct(mGeometryInfo);
+}
 
 //-----------------------------------------------------------------------------------------
 string matlab2string(const mxArray* pField)
