@@ -1,26 +1,26 @@
 dnl -----------------------------------------------------------------------
 dnl Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
 dnl            2014-2015, CWI, Amsterdam
-dnl 
+dnl
 dnl Contact: astra@uantwerpen.be
 dnl Website: http://sf.net/projects/astra-toolbox
-dnl 
+dnl
 dnl This file is part of the ASTRA Toolbox.
-dnl 
-dnl 
+dnl
+dnl
 dnl The ASTRA Toolbox is free software: you can redistribute it and/or modify
 dnl it under the terms of the GNU General Public License as published by
 dnl the Free Software Foundation, either version 3 of the License, or
 dnl (at your option) any later version.
-dnl 
+dnl
 dnl The ASTRA Toolbox is distributed in the hope that it will be useful,
 dnl but WITHOUT ANY WARRANTY; without even the implied warranty of
 dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 dnl GNU General Public License for more details.
-dnl 
+dnl
 dnl You should have received a copy of the GNU General Public License
 dnl along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
-dnl 
+dnl
 dnl -----------------------------------------------------------------------
 dnl $Id$
 
@@ -165,6 +165,23 @@ if test x"$with_matlab" != x; then
 fi
 
 AC_SUBST(HAVEMATLAB)
+
+# python
+
+AC_ARG_WITH(python, [[  --with-python=path      path of Python (optional)]],,)
+
+PY_PATH=$PATH
+HAVEPYTHON=no
+if test x"$with_python" != x; then
+  PY_PATH="$with_python:$PY_PATH"
+  AC_PATH_PROG([PYTHON], [python], [no], [$PY_PATH])
+  if test x"$PYTHON" != xno; then
+    HAVEPYTHON=yes
+    AC_SUBST(PYTHON)
+  fi
+fi
+
+AC_SUBST(HAVEPYTHON)
 
 
 # TODO:
