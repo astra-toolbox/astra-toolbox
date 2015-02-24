@@ -79,7 +79,7 @@ void astra_mex_data3d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 	}
 
 	if (data && !checkDataType(data)) {
-		mexErrMsgTxt("Data must be single or double.");
+		mexErrMsgTxt("Data must be single, double or logical.");
 		return;
 	}
 
