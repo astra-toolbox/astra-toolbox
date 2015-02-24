@@ -213,60 +213,66 @@ mxArray* createProjectionGeometryStruct(astra::CProjectionGeometry2D* _pProjGeom
 	// temporary map to store the data for the MATLAB struct
 	std::map<std::string, mxArray*> mGeometryInfo;
 
-	// detectorCount
-	mGeometryInfo["DetectorCount"] = mxCreateDoubleScalar(_pProjGeom->getDetectorCount());
-	
-	if (!_pProjGeom->isOfType("fanflat_vec")) {
-		// detectorWidth
+	// parallel beam
+	if (_pProjGeom->isOfType("parallel")) {
+		mGeometryInfo["type"] = mxCreateString("parallel");
+		mGeometryInfo["DetectorCount"] = mxCreateDoubleScalar(_pProjGeom->getDetectorCount());
 		mGeometryInfo["DetectorWidth"] = mxCreateDoubleScalar(_pProjGeom->getDetectorWidth());
 
-		// pfProjectionAngles
 		mxArray* pAngles = mxCreateDoubleMatrix(1, _pProjGeom->getProjectionAngleCount(), mxREAL);
 		double* out = mxGetPr(pAngles);
 		for (int i = 0; i < _pProjGeom->getProjectionAngleCount(); i++) {
 			out[i] = _pProjGeom->getProjectionAngle(i);
 		}
-		mGeometryInfo["ProjectionAngles"] = pAngles;
+		mGeometryInfo["ProjectionAngles"] = pAngles;	
 	}
-	else {
+
+	// fanflat
+	else if (_pProjGeom->isOfType("fanflat")) {
+		astra::CFanFlatProjectionGeometry2D* pFanFlatGeom = dynamic_cast<astra::CFanFlatProjectionGeometry2D*>(_pProjGeom);
+
+		mGeometryInfo["type"] = mxCreateString("fanflat");
+		mGeometryInfo["DetectorCount"] = mxCreateDoubleScalar(_pProjGeom->getDetectorCount());
+		mGeometryInfo["DetectorWidth"] = mxCreateDoubleScalar(_pProjGeom->getDetectorWidth());
+		mGeometryInfo["DistanceOriginSource"] = mxCreateDoubleScalar(pFanFlatGeom->getOriginSourceDistance());
+		mGeometryInfo["DistanceOriginDetector"] = mxCreateDoubleScalar(pFanFlatGeom->getOriginDetectorDistance());		
+
+		mxArray* pAngles = mxCreateDoubleMatrix(1, pFanFlatGeom->getProjectionAngleCount(), mxREAL);
+		double* out = mxGetPr(pAngles);
+		for (int i = 0; i < pFanFlatGeom->getProjectionAngleCount(); i++) {
+			out[i] = pFanFlatGeom->getProjectionAngle(i);
+		}
+		mGeometryInfo["ProjectionAngles"] = pAngles;	
+	}
+
+	// fanflat_vec
+	else if (_pProjGeom->isOfType("fanflat_vec")) {
 		astra::CFanFlatVecProjectionGeometry2D* pVecGeom = dynamic_cast<astra::CFanFlatVecProjectionGeometry2D*>(_pProjGeom);
-		mxArray* pVectors = mxCreateDoubleMatrix(1, pVecGeom->getProjectionAngleCount()*6, mxREAL);
+
+		mGeometryInfo["type"] = mxCreateString("fanflat_vec");
+		mGeometryInfo["DetectorCount"] = mxCreateDoubleScalar(pVecGeom->getDetectorCount());
+
+		mxArray* pVectors = mxCreateDoubleMatrix(pVecGeom->getProjectionAngleCount(), 6, mxREAL);
 		double* out = mxGetPr(pVectors);
 		int iDetCount = pVecGeom->getDetectorCount();
+		int iAngleCount = pVecGeom->getProjectionAngleCount();
 		for (int i = 0; i < pVecGeom->getProjectionAngleCount(); i++) {
 			const SFanProjection* p = &pVecGeom->getProjectionVectors()[i];
-			out[6*i + 0] = p->fSrcX;
-			out[6*i + 1] = p->fSrcY;
-			out[6*i + 2] = p->fDetSX + 0.5f*iDetCount*p->fDetUX;
-			out[6*i + 3] = p->fDetSY + 0.5f*iDetCount*p->fDetUY;
-			out[6*i + 4] = p->fDetUX;
-			out[6*i + 5] = p->fDetUY;
+			out[0*iAngleCount + i] = p->fSrcX;
+			out[1*iAngleCount + i] = p->fSrcY;
+			out[2*iAngleCount + i] = p->fDetSX + 0.5f*iDetCount*p->fDetUX;
+			out[3*iAngleCount + i] = p->fDetSY + 0.5f*iDetCount*p->fDetUY;
+			out[4*iAngleCount + i] = p->fDetUX;
+			out[5*iAngleCount + i] = p->fDetUY;			
 		}
 		mGeometryInfo["Vectors"] = pVectors;
 	}
 
-	// parallel specific options
-	if (_pProjGeom->isOfType("parallel")) {
-		// type
-		mGeometryInfo["type"] = mxCreateString("parallel");
-	}
-	// fanflat specific options
-	else if (_pProjGeom->isOfType("fanflat")) {
-		astra::CFanFlatProjectionGeometry2D* pFanFlatGeom = dynamic_cast<astra::CFanFlatProjectionGeometry2D*>(_pProjGeom);
-		// detectorCount
-		mGeometryInfo["DistanceOriginSource"] = mxCreateDoubleScalar(pFanFlatGeom->getOriginSourceDistance());
-		// detectorWidth
-		mGeometryInfo["DistanceOriginDetector"] = mxCreateDoubleScalar(pFanFlatGeom->getOriginDetectorDistance());
-		// type
-		mGeometryInfo["type"] = mxCreateString("fanflat");
-	}
+	// sparse_matrix
 	else if (_pProjGeom->isOfType("sparse_matrix")) {
 		astra::CSparseMatrixProjectionGeometry2D* pSparseMatrixGeom = dynamic_cast<astra::CSparseMatrixProjectionGeometry2D*>(_pProjGeom);
 		mGeometryInfo["type"] = mxCreateString("sparse_matrix");
 		mGeometryInfo["MatrixID"] = mxCreateDoubleScalar(CMatrixManager::getSingleton().getIndex(pSparseMatrixGeom->getMatrix()));
-	}
-	else if(_pProjGeom->isOfType("fanflat_vec")) {
-		mGeometryInfo["type"] = mxCreateString("fanflat_vec");
 	}
 
 	// build and return the MATLAB struct

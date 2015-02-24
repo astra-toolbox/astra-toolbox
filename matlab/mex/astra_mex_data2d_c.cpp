@@ -373,7 +373,7 @@ void astra_mex_data2d_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
  */
 void astra_mex_data2d_get_geometry(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 { 
-	// step1: input
+	// parse input
 	if (nrhs < 2) {
 		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
 		return;
@@ -384,7 +384,7 @@ void astra_mex_data2d_get_geometry(int nlhs, mxArray* plhs[], int nrhs, const mx
 	}
 	int iDataID = (int)(mxGetScalar(prhs[1]));
 
-	// step2: get data object
+	// fetch data object
 	CFloat32Data2D* pDataObject = astra::CData2DManager::getSingleton().get(iDataID);
 	if (!pDataObject || !pDataObject->isInitialized()) {
 		mexErrMsgTxt("Data object not found or not initialized properly.\n");
