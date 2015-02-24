@@ -1,13 +1,13 @@
 /*
 -----------------------------------------------------------------------
-Copyright 2013 iMinds-Vision Lab, University of Antwerp
+Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
+           2014-2015, CWI, Amsterdam
 
-Contact: astra@ua.ac.be
-Website: http://astra.ua.ac.be
+Contact: astra@uantwerpen.be
+Website: http://sf.net/projects/astra-toolbox
 
+This file is part of the ASTRA Toolbox.
 
-This file is part of the
-All Scale Tomographic Reconstruction Antwerp Toolbox ("ASTRA Toolbox").
 
 The ASTRA Toolbox is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -40,7 +40,6 @@ $Id$
 
 #if defined(__SSE2__)
 # include <emmintrin.h>
-
 # define STORE_32F_64F_CORE8(in, out, count, base) \
 		{\
 			const __m128 inV0 = *((const __m128 *) &in[count + 0 + base]);\
@@ -108,6 +107,17 @@ $Id$
 			out[count + 7 + base] = in[count + 7 + base];\
 		}
 #endif
+#define STORE_8F_32F_CORE8(in, out, count, base) \
+		{\
+			out[count + 0 + base] = (float)in[count + 0 + base];\
+			out[count + 1 + base] = (float)in[count + 1 + base];\
+			out[count + 2 + base] = (float)in[count + 2 + base];\
+			out[count + 3 + base] = (float)in[count + 3 + base];\
+			out[count + 4 + base] = (float)in[count + 4 + base];\
+			out[count + 5 + base] = (float)in[count + 5 + base];\
+			out[count + 6 + base] = (float)in[count + 6 + base];\
+			out[count + 7 + base] = (float)in[count + 7 + base];\
+		}
 
 const char * warnDataTypeNotSupported = "Data type not supported: nothing was copied";
 
@@ -118,6 +128,7 @@ _copyMexToCFloat32Array(const mxArray * const inArray, astra::float32 * const ou
 	const long long block = 32;
 	const long long totRoundedPixels = ROUND_DOWN(tot_size, block);
 
+	// Array of doubles
 	if (mxIsDouble(inArray)) {
 		const double * const pdMatlabData = mxGetPr(inArray);
 
@@ -133,6 +144,8 @@ _copyMexToCFloat32Array(const mxArray * const inArray, astra::float32 * const ou
 			out[count] = pdMatlabData[count];
 		}
 	}
+
+	// Array of floats
 	else if (mxIsSingle(inArray)) {
 		const float * const pfMatlabData = (const float *)mxGetData(inArray);
 
@@ -142,6 +155,23 @@ _copyMexToCFloat32Array(const mxArray * const inArray, astra::float32 * const ou
 			STORE_32F_32F_CORE8(pfMatlabData, out, count,  8);
 			STORE_32F_32F_CORE8(pfMatlabData, out, count, 16);
 			STORE_32F_32F_CORE8(pfMatlabData, out, count, 24);
+		}
+#pragma omp for nowait
+		for (long long count = totRoundedPixels; count < tot_size; count++) {
+			out[count] = pfMatlabData[count];
+		}
+	}
+
+	// Array of logicals
+	else if (mxIsLogical(inArray)) {
+		const mxLogical * const pfMatlabData = (const mxLogical *)mxGetLogicals(inArray);
+
+#pragma omp for nowait
+		for (long long count = 0; count < totRoundedPixels; count += block) {
+			STORE_8F_32F_CORE8(pfMatlabData, out, count,  0);
+			STORE_8F_32F_CORE8(pfMatlabData, out, count,  8);
+			STORE_8F_32F_CORE8(pfMatlabData, out, count, 16);
+			STORE_8F_32F_CORE8(pfMatlabData, out, count, 24);
 		}
 #pragma omp for nowait
 		for (long long count = totRoundedPixels; count < tot_size; count++) {
