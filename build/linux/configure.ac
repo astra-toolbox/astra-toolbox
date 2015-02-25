@@ -200,13 +200,13 @@ AC_SUBST(SAVED_CPPFLAGS)
 AC_SUBST(SAVED_CXXFLAGS)
 AC_SUBST(SAVED_LDFLAGS)
 AC_SUBST(SAVED_LIBS)
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT
 
 echo
 echo "Summary of ASTRA Toolbox build options:"
 echo "  CUDA   : $HAVECUDA"
 echo "  Matlab : $HAVEMATLAB"
 echo
-
-
-AC_CONFIG_FILES([Makefile])
-AC_OUTPUT
+echo "  prefix : $prefix"
+echo
