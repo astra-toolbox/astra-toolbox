@@ -60,8 +60,14 @@ AC_DEFUN([ASTRA_RUN_STOREOUTPUT],[{
   test $ac_status = 0;
  }])
 
-dnl ASTRA_RUN(command)
-AC_DEFUN([ASTRA_RUN],[ASTRA_RUN_STOREOUTPUT($1,/dev/null)])
+dnl ASTRA_RUN_LOGOUTPUT(command)
+AC_DEFUN([ASTRA_RUN_LOGOUTPUT],[{
+  AS_ECHO(["$as_me:${as_lineno-$LINENO}: $1"]) >&AS_MESSAGE_LOG_FD
+  ( $1 ) >&AS_MESSAGE_LOG_FD 2>&1
+  ac_status=$?
+  AS_ECHO(["$as_me:${as_lineno-$LINENO}: \$? = $ac_status"]) >&AS_MESSAGE_LOG_FD
+  test $ac_status = 0;
+ }])
 
 
 
@@ -79,9 +85,9 @@ ASTRA_RUN_STOREOUTPUT([$NVCC -c -o conftest.o conftest.cu $$2],conftest.nvcc.out
   $1="no"
   # Check if hack for gcc 4.4 helps
   if grep -q __builtin_stdarg_start conftest.nvcc.out; then
+    AS_ECHO(["$as_me:${as_lineno-$LINENO}: Trying CUDA hack for gcc 4.4"]) >&AS_MESSAGE_LOG_FD
     NVCC_OPT="-Xcompiler -D__builtin_stdarg_start=__builtin_va_start"
-
-    ASTRA_RUN([$NVCC -c -o conftest.o conftest.cu $$2 $NVCC_OPT]) && {
+    ASTRA_RUN_LOGOUTPUT([$NVCC -c -o conftest.o conftest.cu $$2 $NVCC_OPT]) && {
       $1="yes"
       $2="$$2 $NVCC_OPT"
     }
@@ -93,6 +99,7 @@ if test x$$1 = xno; then
 fi
 rm -f conftest.cu conftest.o conftest.nvcc.out
 ])
+
 
 dnl ASTRA_FIND_NVCC_ARCHS(archs-to-try,cppflags-to-extend,output-list)
 dnl Architectures should be of the form 10,20,30,35,

@@ -55,7 +55,7 @@ AC_MSG_CHECKING([for boost-unit-test-framework])
 ASTRA_CHECK_BOOST_UNIT_TEST_FRAMEWORK(-lboost_unit_test_framework-mt, BOOSTUTF=yes_mt, BOOSTUTF=no)
 if test x$BOOSTUTF = xno; then
   ASTRA_CHECK_BOOST_UNIT_TEST_FRAMEWORK(-lboost_unit_test_framework, BOOSTUTF=yes, BOOSTUTF=no)
-  if test x$BOOSTTHREAD = xno; then
+  if test x$BOOSTUTF = xno; then
     AC_MSG_RESULT(no)
     AC_MSG_ERROR([No boost-unit-test-framework library found])
   else
@@ -66,47 +66,40 @@ else
   AC_MSG_RESULT([yes, libboost_unit_test_framework-mt])
   LIBS_BOOSTUTF="-lboost_unit_test_framework-mt"
 fi
-# TODO: do something with the result
 
 
 # nvcc, cuda
 
 AC_ARG_WITH(cuda, [[  --with-cuda=path        path of CUDA SDK (optional)]],,)
 
-NVCC_PATH=$PATH
-if test x"$with_cuda" != x; then
-  NVCC_PATH="$with_cuda/bin:$NVCC_PATH"
+if test x"$with_cuda" != xno; then
+  NVCC_PATH=$PATH
+  if test x"$with_cuda" != x -a x"$with_cuda" != xyes; then
+    NVCC_PATH="$with_cuda/bin:$NVCC_PATH"
+  fi
+  AC_PATH_PROG([NVCC], [nvcc], [no], [$NVCC_PATH])
+else
+  NVCC=no
 fi
-AC_PATH_PROG([NVCC], [nvcc], [no], [$NVCC_PATH])
-# TODO: do something with the result
 
 HAVECUDA=no
 if test x"$NVCC" != xno; then
   HAVECUDA=yes
   BACKUP_CUDA_LDFLAGS="$LDFLAGS"
-  if test x"$with_cuda" != x; then
-    LDFLAGS_CUDA="-L$with_cuda/lib"
+  if test x"$with_cuda" != x -a x"$with_cuda" != xyes; then
+    case $host_cpu in
+    x86_64)
+      LDFLAGS_CUDA="-L$with_cuda/lib64"
+      ;;
+    *)
+      LDFLAGS_CUDA="-L$with_cuda/lib"
+      ;;
+    esac
     CPPFLAGS_CUDA="-I$with_cuda/include"
     LDFLAGS="$LDFLAGS $LDFLAGS_CUDA"
   fi
   AC_CHECK_LIB(cudart,cudaMalloc, ,HAVECUDA=no)
   AC_CHECK_LIB(cufft,cufftPlan1d, ,HAVECUDA=no)
-
-  if test x"$HAVECUDA" = xno; then
-    # try lib64 instead of lib
-
-    HAVECUDA=yes
-    LDFLAGS="$BACKUP_CUDA_LDFLAGS"
-
-    # prevent cached values from being used
-    unset ac_cv_lib_cudart_cudaMalloc
-    unset ac_cv_lib_cufft_cufftPlan1d
-
-    LDFLAGS_CUDA="-L$with_cuda/lib64"
-    LDFLAGS="$LDFLAGS $LDFLAGS_CUDA"
-    AC_CHECK_LIB(cudart,cudaMalloc, ,HAVECUDA=no)
-    AC_CHECK_LIB(cufft,cufftPlan1d, ,HAVECUDA=no)
-  fi
 
   LDFLAGS="$BACKUP_CUDA_LDFLAGS"
   unset BACKUP_CUDA_LDFLAGS
@@ -116,11 +109,11 @@ if test x"$NVCC" != xno; then
 fi
 
 NVCCFLAGS=""
-AC_MSG_CHECKING([if nvcc works])
 if test x"$HAVECUDA" = xyes; then
+  AC_MSG_CHECKING([if nvcc works])
   ASTRA_CHECK_NVCC(HAVECUDA,NVCCFLAGS)
+  AC_MSG_RESULT($HAVECUDA)
 fi
-AC_MSG_RESULT($HAVECUDA)
 
 AC_ARG_WITH(cuda_compute, [[  --with-cuda-compute=archs  comma separated list of CUDA compute models (optional)]],,)
 if test x"$HAVECUDA" = xyes; then
@@ -155,7 +148,7 @@ if test x"$with_matlab" != x; then
     AC_SUBST(MEX)
     MATLAB_ROOT="$with_matlab"
     AC_SUBST(MATLAB_ROOT)
-
+    # TODO: maybe catch mex warnings
     ASTRA_CHECK_MEX_SUFFIX([mexa64 mexglx mexmaci64 mexmaci],[MEXSUFFIX])
     if test x$MEXSUFFIX = x; then
       AC_MSG_FAILURE([Unable to determine matlab mex suffix])
@@ -181,7 +174,13 @@ AC_SUBST(SAVED_CPPFLAGS)
 AC_SUBST(SAVED_CXXFLAGS)
 AC_SUBST(SAVED_LDFLAGS)
 AC_SUBST(SAVED_LIBS)
-
-
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
+
+echo
+echo "Summary of ASTRA Toolbox build options:"
+echo "  CUDA   : $HAVECUDA"
+echo "  Matlab : $HAVEMATLAB"
+echo
+echo "  prefix : $prefix"
+echo
