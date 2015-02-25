@@ -165,8 +165,18 @@ AC_SUBST(HAVEMATLAB)
 AC_ARG_WITH(python, [[  --with-python=path      path of Python binary (optional)]],,)
 
 HAVEPYTHON=no
-if test x"$with_python" != x; then
-  AC_CHECK_FILE([$with_python],[PYTHON=$with_python],[AC_PATH_PROG([PYTHON], [$with_python], [AC_MSG_ERROR(Python binary not found)], [$PATH])])
+if test x"$with_python" != x -a x"$with_python" != xno; then
+  if test x"$with_python" = xyes; then
+    PYTHON=python
+  else
+    PYTHON="$with_python"
+  fi
+  AC_MSG_CHECKING(for python)
+  ASTRA_RUN_LOGOUTPUT(echo 'import sys' | $PYTHON -)
+  if test $? -ne 0; then
+    AC_MSG_ERROR(Python binary not found)]
+  fi
+  AC_MSG_RESULT([$PYTHON])
   HAVEPYTHON=yes
   AC_SUBST(PYTHON)
   AC_MSG_CHECKING(for numpy module)
@@ -215,6 +225,7 @@ echo
 echo "Summary of ASTRA Toolbox build options:"
 echo "  CUDA   : $HAVECUDA"
 echo "  Matlab : $HAVEMATLAB"
+echo "  Python : $HAVEPYTHON"
 echo
 echo "  prefix : $prefix"
 echo
