@@ -32,13 +32,11 @@ $Id$
 #include "Config.h"
 #include "Algorithm.h"
 
-#ifdef __linux__
-#define USE_PTHREADS
+#ifdef USE_PTHREADS
 #include <pthread.h>
 #else
 #include <boost/thread.hpp>
 #endif
-
 
 namespace astra {
 	
