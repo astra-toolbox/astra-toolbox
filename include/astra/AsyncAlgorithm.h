@@ -75,10 +75,6 @@ public:
 	 */
 	virtual void run(int _iNrIterations = 0);
 
-	/** Wait for thread to complete and delete thread. 
-	 */
-	virtual void timedJoin(int _milliseconds);
-
 	/** Return pointer to the wrapped algorithm. 
 	 */
 	CAlgorithm* getWrappedAlgorithm() { return m_pAlg; }
