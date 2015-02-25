@@ -81,7 +81,7 @@ AC_MSG_CHECKING([for boost-unit-test-framework])
 ASTRA_CHECK_BOOST_UNIT_TEST_FRAMEWORK(-lboost_unit_test_framework-mt, BOOSTUTF=yes_mt, BOOSTUTF=no)
 if test x$BOOSTUTF = xno; then
   ASTRA_CHECK_BOOST_UNIT_TEST_FRAMEWORK(-lboost_unit_test_framework, BOOSTUTF=yes, BOOSTUTF=no)
-  if test x$BOOSTTHREAD = xno; then
+  if test x$BOOSTUTF = xno; then
     AC_MSG_RESULT(no)
     AC_MSG_ERROR([No boost-unit-test-framework library found])
   else
