@@ -180,26 +180,30 @@ if test x"$with_python" != x -a x"$with_python" != xno; then
   HAVEPYTHON=yes
   AC_SUBST(PYTHON)
   AC_MSG_CHECKING(for numpy module)
-  echo "import numpy" | $PYTHON -
-  if test $? -ne 0 ; then
-    AC_MSG_RESULT(not found)
+  ASTRA_TRY_PYTHON([import numpy],,HAVEPYTHON=no)
+  if test x$HAVEPYTHON = xno; then
+    AC_MSG_RESULT(no)
     AC_MSG_ERROR(You need the numpy module to use the ASTRA toolbox in Python)
   fi
-  AC_MSG_RESULT(found)
+  AC_MSG_RESULT(yes)
   AC_MSG_CHECKING(for Cython module)
-  echo "import Cython;from distutils.version import LooseVersion;assert(LooseVersion(Cython.__version__)>=LooseVersion('0.13'))" | $PYTHON -
-  if test $? -ne 0 ; then
-    AC_MSG_RESULT(not found)
+  ASTRA_TRY_PYTHON([
+import Cython
+from distutils.version import LooseVersion
+assert(LooseVersion(Cython.__version__)>=LooseVersion("0.13"))
+],,HAVEPYTHON=no)
+  if test x$HAVEPYTHON = xno; then
+    AC_MSG_RESULT(no)
     AC_MSG_ERROR(You need the Cython module (version >=0.13) to use the ASTRA toolbox in Python)
   fi
-  AC_MSG_RESULT(found)
+  AC_MSG_RESULT(yes)
   AC_MSG_CHECKING(for six module)
-  echo "import six" | $PYTHON -
-  if test $? -ne 0 ; then
-    AC_MSG_RESULT(not found)
+  ASTRA_TRY_PYTHON([import six])
+  if test x$HAVEPYTHON = xno; then
+    AC_MSG_RESULT(no)
     AC_MSG_ERROR(You need the six module to use the ASTRA toolbox in Python)
   fi
-  AC_MSG_RESULT(found)
+  AC_MSG_RESULT(yes)
 fi
 
 AC_SUBST(HAVEPYTHON)

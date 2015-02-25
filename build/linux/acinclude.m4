@@ -70,6 +70,18 @@ AC_DEFUN([ASTRA_RUN_LOGOUTPUT],[{
  }])
 
 
+dnl ASTRA_TRY_PYTHON(code, action-if-ok, action-if-not-ok)
+AC_DEFUN([ASTRA_TRY_PYTHON],[
+cat >conftest.py <<_ACEOF
+$1
+_ACEOF
+ASTRA_RUN_LOGOUTPUT($PYTHON conftest.py)
+AS_IF([test $? = 0],[$2],[
+  AS_ECHO(["$as_me: failed program was:"]) >&AS_MESSAGE_LOG_FD
+  sed 's/^/| /' conftest.py >&AS_MESSAGE_LOG_FD
+  $3])
+])
+
 
 dnl ASTRA_CHECK_NVCC(variable-to-set,cppflags-to-set)
 AC_DEFUN([ASTRA_CHECK_NVCC],[
