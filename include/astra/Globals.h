@@ -306,4 +306,11 @@ _AstraExport inline bool cudaEnabled() { return false; }
 
 #endif
 
+//----------------------------------------------------------------------------------------
+// use pthreads on Linux and OSX
+#if defined(__linux__) || defined(__MACH__)
+#define USE_PTHREADS
+#endif
+
+
 #endif
