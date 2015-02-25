@@ -174,7 +174,7 @@ if test x"$with_matlab" != x; then
     AC_SUBST(MEX)
     MATLAB_ROOT="$with_matlab"
     AC_SUBST(MATLAB_ROOT)
-
+    # TODO: maybe catch mex warnings
     ASTRA_CHECK_MEX_SUFFIX([mexa64 mexglx mexmaci64 mexmaci],[MEXSUFFIX])
     if test x$MEXSUFFIX = x; then
       AC_MSG_FAILURE([Unable to determine matlab mex suffix])
@@ -200,6 +200,12 @@ AC_SUBST(SAVED_CPPFLAGS)
 AC_SUBST(SAVED_CXXFLAGS)
 AC_SUBST(SAVED_LDFLAGS)
 AC_SUBST(SAVED_LIBS)
+
+echo
+echo "Summary of ASTRA Toolbox build options:"
+echo "  CUDA   : $HAVECUDA"
+echo "  Matlab : $HAVEMATLAB"
+echo
 
 
 AC_CONFIG_FILES([Makefile])
