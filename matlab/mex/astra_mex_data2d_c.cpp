@@ -399,7 +399,9 @@ void astra_mex_data2d_get_geometry(int nlhs, mxArray* plhs[], int nrhs, const mx
 		}
 		else if (pDataObject->getType() == CFloat32Data2D::VOLUME) {
 			CFloat32VolumeData2D* pDataObject2 = dynamic_cast<CFloat32VolumeData2D*>(pDataObject);
-			plhs[0] = createVolumeGeometryStruct(pDataObject2->getGeometry());
+			plhs[0] = config2struct(pDataObject2->getGeometry()->getConfiguration());
+			// mexErrMsgTxt(pDataObject2->getGeometry()->getConfiguration()->self->toString().c_str());
+			// plhs[0] = createVolumeGeometryStruct(pDataObject2->getGeometry());
 		}
 	}
 }

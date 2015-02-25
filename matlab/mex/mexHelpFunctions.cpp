@@ -447,46 +447,46 @@ astra::CVolumeGeometry2D* parseVolumeGeometryStruct(const mxArray* prhs)
 
 //-----------------------------------------------------------------------------------------
 // create 2D volume geometry struct
-mxArray* createVolumeGeometryStruct(astra::CVolumeGeometry2D* _pVolGeom)
-{
-	std::map<std::string, mxArray*> mGeometryInfo;
+// mxArray* createVolumeGeometryStruct(astra::CVolumeGeometry2D* _pVolGeom)
+// {
+// 	std::map<std::string, mxArray*> mGeometryInfo;
 
-	mGeometryInfo["GridColCount"] = mxCreateDoubleScalar(_pVolGeom->getGridColCount());
-	mGeometryInfo["GridRowCount"] = mxCreateDoubleScalar(_pVolGeom->getGridRowCount());
+// 	mGeometryInfo["GridColCount"] = mxCreateDoubleScalar(_pVolGeom->getGridColCount());
+// 	mGeometryInfo["GridRowCount"] = mxCreateDoubleScalar(_pVolGeom->getGridRowCount());
 
-	std::map<std::string, mxArray*> mGeometryOptions;
-	mGeometryOptions["WindowMinX"] = mxCreateDoubleScalar(_pVolGeom->getWindowMinX());
-	mGeometryOptions["WindowMaxX"] = mxCreateDoubleScalar(_pVolGeom->getWindowMaxX());
-	mGeometryOptions["WindowMinY"] = mxCreateDoubleScalar(_pVolGeom->getWindowMinY());
-	mGeometryOptions["WindowMaxY"] = mxCreateDoubleScalar(_pVolGeom->getWindowMaxY());
+// 	std::map<std::string, mxArray*> mGeometryOptions;
+// 	mGeometryOptions["WindowMinX"] = mxCreateDoubleScalar(_pVolGeom->getWindowMinX());
+// 	mGeometryOptions["WindowMaxX"] = mxCreateDoubleScalar(_pVolGeom->getWindowMaxX());
+// 	mGeometryOptions["WindowMinY"] = mxCreateDoubleScalar(_pVolGeom->getWindowMinY());
+// 	mGeometryOptions["WindowMaxY"] = mxCreateDoubleScalar(_pVolGeom->getWindowMaxY());
 
-	mGeometryInfo["option"] = buildStruct(mGeometryOptions);
+// 	mGeometryInfo["option"] = buildStruct(mGeometryOptions);
 
-	return buildStruct(mGeometryInfo);
-}
+// 	return buildStruct(mGeometryInfo);
+// }
 
 //-----------------------------------------------------------------------------------------
 // create 3D volume geometry struct
-mxArray* createVolumeGeometryStruct(astra::CVolumeGeometry3D* _pVolGeom)
-{
-	std::map<std::string, mxArray*> mGeometryInfo;
+// mxArray* createVolumeGeometryStruct(astra::CVolumeGeometry3D* _pVolGeom)
+// {
+// 	std::map<std::string, mxArray*> mGeometryInfo;
 
-	mGeometryInfo["GridColCount"] = mxCreateDoubleScalar(_pVolGeom->getGridColCount());
-	mGeometryInfo["GridRowCount"] = mxCreateDoubleScalar(_pVolGeom->getGridRowCount());
-	mGeometryInfo["GridSliceCount"] = mxCreateDoubleScalar(_pVolGeom->getGridRowCount());
+// 	mGeometryInfo["GridColCount"] = mxCreateDoubleScalar(_pVolGeom->getGridColCount());
+// 	mGeometryInfo["GridRowCount"] = mxCreateDoubleScalar(_pVolGeom->getGridRowCount());
+// 	mGeometryInfo["GridSliceCount"] = mxCreateDoubleScalar(_pVolGeom->getGridRowCount());
 
-	std::map<std::string, mxArray*> mGeometryOptions;
-	mGeometryOptions["WindowMinX"] = mxCreateDoubleScalar(_pVolGeom->getWindowMinX());
-	mGeometryOptions["WindowMaxX"] = mxCreateDoubleScalar(_pVolGeom->getWindowMaxX());
-	mGeometryOptions["WindowMinY"] = mxCreateDoubleScalar(_pVolGeom->getWindowMinY());
-	mGeometryOptions["WindowMaxY"] = mxCreateDoubleScalar(_pVolGeom->getWindowMaxY());
-	mGeometryOptions["WindowMinZ"] = mxCreateDoubleScalar(_pVolGeom->getWindowMinZ());
-	mGeometryOptions["WindowMaxZ"] = mxCreateDoubleScalar(_pVolGeom->getWindowMaxZ());
+// 	std::map<std::string, mxArray*> mGeometryOptions;
+// 	mGeometryOptions["WindowMinX"] = mxCreateDoubleScalar(_pVolGeom->getWindowMinX());
+// 	mGeometryOptions["WindowMaxX"] = mxCreateDoubleScalar(_pVolGeom->getWindowMaxX());
+// 	mGeometryOptions["WindowMinY"] = mxCreateDoubleScalar(_pVolGeom->getWindowMinY());
+// 	mGeometryOptions["WindowMaxY"] = mxCreateDoubleScalar(_pVolGeom->getWindowMaxY());
+// 	mGeometryOptions["WindowMinZ"] = mxCreateDoubleScalar(_pVolGeom->getWindowMinZ());
+// 	mGeometryOptions["WindowMaxZ"] = mxCreateDoubleScalar(_pVolGeom->getWindowMaxZ());
 
-	mGeometryInfo["option"] = buildStruct(mGeometryOptions);
+// 	mGeometryInfo["option"] = buildStruct(mGeometryOptions);
 
-	return buildStruct(mGeometryInfo);
-}
+// 	return buildStruct(mGeometryInfo);
+// }
 
 //-----------------------------------------------------------------------------------------
 string matlab2string(const mxArray* pField)
@@ -715,6 +715,12 @@ bool mex_is_scalar(const mxArray* pInput)
 }
 
 //-----------------------------------------------------------------------------------------
+mxArray* config2struct(astra::Config* cfg)
+{
+	return XMLNode2struct(cfg->self);
+}
+
+//-----------------------------------------------------------------------------------------
 mxArray* XML2struct(astra::XMLDocument* xml)
 {
 	XMLNode* node = xml->getRootNode();
@@ -724,9 +730,26 @@ mxArray* XML2struct(astra::XMLDocument* xml)
 }
 
 //-----------------------------------------------------------------------------------------
+mxArray* XMLNode2option(astra::XMLNode* node)
+{
+	char* end;
+	double content = ::strtod(node->getAttribute("value").c_str(), &end);
+	bool isnumber = !*end;
+
+	// float
+	if (isnumber) {
+		return mxCreateDoubleScalar(content);
+	}
+	// string
+	else {
+		return mxCreateString(node->getAttribute("value").c_str());
+	}
+}
+
 mxArray* XMLNode2struct(astra::XMLNode* node)
 {
-	std::map<std::string, mxArray*> mList; 
+	std::map<std::string, mxArray*> mList;
+	std::map<std::string, mxArray*> mOptions;
 
 	// type_attribute
 	if (node->hasAttribute("type")) {
@@ -736,11 +759,22 @@ mxArray* XMLNode2struct(astra::XMLNode* node)
 	list<XMLNode*> nodes = node->getNodes();
 	for (list<XMLNode*>::iterator it = nodes.begin(); it != nodes.end(); it++) {
 		XMLNode* subnode = (*it);
+
+		char* end;
+		double content = ::strtod(subnode->getContent().c_str(), &end);
+		bool isnumber = !*end;
+
+		// option
+		if (subnode->getName() == "Option") {
+			mOptions[subnode->getAttribute("key")] = XMLNode2option(subnode);
+		}
 		// list
-		if (subnode->hasAttribute("listsize")) {
-			cout << "lkmdsqldqsjkl" << endl;
-			cout << " " << node->getContentNumericalArray().size() << endl;
-			mList[subnode->getName()] = vectorToMxArray(node->getContentNumericalArray());
+		// else if (subnode->hasAttribute("listsize")) {
+		// 	mList[subnode->getName()] = vectorToMxArray(node->getContentNumericalArray());
+		// }
+		// float
+		else if (isnumber) {
+			mList[subnode->getName()] =  mxCreateDoubleScalar(content);
 		}
 		// string
 		else {
@@ -749,8 +783,13 @@ mxArray* XMLNode2struct(astra::XMLNode* node)
 		delete subnode;
 	}
 
+	mList["options"] = buildStruct(mOptions);
 	return buildStruct(mList);
 }
+
+
+
+
 
 void get3DMatrixDims(const mxArray* x, mwSize *dims)
 {

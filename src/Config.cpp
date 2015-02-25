@@ -54,12 +54,24 @@ Config::Config(XMLNode* _self)
 	self = _self;
 }
 
+//-----------------------------------------------------------------------------
 Config::~Config()
 {
 	delete self;
 	self = 0;
 }
 
+//-----------------------------------------------------------------------------
+void Config::initialize(std::string rootname)
+{
+	if (self == 0) {
+		XMLDocument* doc = XMLDocument::createDocument(rootname);
+		self = doc->getRootNode();		
+	}
+}
+
+
+//-----------------------------------------------------------------------------
 template <class T>
 ConfigStackCheck<T>::ConfigStackCheck(const char *_name, T* _obj, const Config& _cfg)
 	: object(_obj), cfg(&_cfg), name(_name)

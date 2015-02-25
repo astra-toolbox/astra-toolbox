@@ -205,6 +205,12 @@ public:
 	 */
 	virtual bool isEqual(CVolumeGeometry2D*) const;
 
+	/** Get all settings in a Config object.
+	 *
+	 * @return Configuration Object.
+	 */
+	virtual Config* getConfiguration() const;
+
 	/** Get the number of columns in the volume grid.
 	 *
 	 * @return Number of columns in the volume grid.

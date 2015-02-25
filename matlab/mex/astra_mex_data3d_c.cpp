@@ -300,7 +300,7 @@ void astra_mex_data3d_get_geometry(int nlhs, mxArray* plhs[], int nrhs, const mx
 		}
 		else if (pDataObject->getType() == CFloat32Data3D::VOLUME) {
 			CFloat32VolumeData3DMemory* pDataObject2 = dynamic_cast<CFloat32VolumeData3DMemory*>(pDataObject);
-			plhs[0] = createVolumeGeometryStruct(pDataObject2->getGeometry());
+			plhs[0] = config2struct(pDataObject2->getGeometry()->getConfiguration());
 		}
 	}
 

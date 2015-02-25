@@ -31,6 +31,7 @@ $Id$
 
 #include "Globals.h"
 #include "XMLNode.h"
+#include "XMLDocument.h"
 
 #include <set>
 
@@ -45,6 +46,8 @@ struct _AstraExport Config {
 	Config();
 	Config(XMLNode* _self);
 	~Config();
+
+	void initialize(std::string rootname);
 
 	XMLNode* self;
 	XMLNode* global;

@@ -86,6 +86,9 @@ public:
 	 */
 	void saveToFile(string sFilename);
 
+	/** convert and XML DOM tree to a string
+	 */
+	std::string toString();
 
 private:
 	
