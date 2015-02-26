@@ -65,16 +65,16 @@ void astra_mex_projector3d_create(int nlhs, mxArray* plhs[], int nrhs, const mxA
 	}
 
 	// turn MATLAB struct to an XML-based Config object
-	XMLDocument* xml = struct2XML("Projector3D", prhs[1]);
-	Config cfg;
-	cfg.self = xml->getRootNode();
+	Config* cfg = structToConfig("Projector3D", prhs[1]);
 
 	// create algorithm
-	CProjector3D* pProj = CProjector3DFactory::getSingleton().create(cfg);
+	CProjector3D* pProj = CProjector3DFactory::getSingleton().create(*cfg);
 	if (pProj == NULL) {
+		delete cfg;
 		mexErrMsgTxt("Error creating Projector3D. \n");
 		return;
 	}
+	delete cfg;
 
 	// store projector
 	int iIndex = CProjector3DManager::getSingleton().store(pProj);
@@ -397,7 +397,7 @@ void mexFunction(int nlhs, mxArray* plhs[],
 	// INPUT: Mode
 	string sMode = "";
 	if (1 <= nrhs) {
-		sMode = mex_util_get_string(prhs[0]);	
+		sMode = mexToString(prhs[0]);	
 	} else {
 		printHelp();
 		return;

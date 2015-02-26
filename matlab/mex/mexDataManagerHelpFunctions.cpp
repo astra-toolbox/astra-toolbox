@@ -105,7 +105,7 @@ checkID(const astra::int32 & id, astra::CFloat32Data3DMemory *& pDataObj)
 bool
 checkDataType(const mxArray * const in)
 {
-	return (mex_is_scalar(in) || mxIsDouble(in) || mxIsSingle(in) || mxIsLogical(in));
+	return (mexIsScalar(in) || mxIsDouble(in) || mxIsSingle(in) || mxIsLogical(in));
 }
 
 //-----------------------------------------------------------------------------------------
@@ -213,7 +213,7 @@ allocateDataObject(const std::string & sDataType,
 	bool bUnshare = true;
 	if (unshare)
 	{
-		if (!mex_is_scalar(unshare))
+		if (!mexIsScalar(unshare))
 		{
 			mexErrMsgTxt("Argument 5 (read-only) must be scalar");
 			return NULL;
@@ -225,7 +225,7 @@ allocateDataObject(const std::string & sDataType,
 	mwIndex iZ = 0;
 	if (zIndex)
 	{
-		if (!mex_is_scalar(zIndex))
+		if (!mexIsScalar(zIndex))
 		{
 			mexErrMsgTxt("Argument 6 (Z) must be scalar");
 			return NULL;
@@ -237,25 +237,19 @@ allocateDataObject(const std::string & sDataType,
 	if (sDataType == "-vol")
 	{
 		// Read geometry
-		astra::XMLDocument* xml = struct2XML("VolumeGeometry", geometry);
-		if (!xml) {
-			return NULL;
-		}
-		astra::Config cfg;
-		cfg.self = xml->getRootNode();
-
+		astra::Config* cfg = structToConfig("VolumeGeometry3D", geometry);
 		astra::CVolumeGeometry3D* pGeometry = new astra::CVolumeGeometry3D();
-		if (!pGeometry->initialize(cfg))
+		if (!pGeometry->initialize(*cfg))
 		{
 			mexErrMsgTxt("Geometry class not initialized. \n");
 			delete pGeometry;
-			delete xml;
+			delete cfg;
 			return NULL;
 		}
-		delete xml;
+		delete cfg;
 
 		// If data is specified, check dimensions
-		if (data && !mex_is_scalar(data))
+		if (data && !mexIsScalar(data))
 		{
 			if (! (zIndex
 					? checkDataSize(data, pGeometry, iZ)
@@ -288,16 +282,10 @@ allocateDataObject(const std::string & sDataType,
 	else if (sDataType == "-sino" || sDataType == "-proj3d" || sDataType == "-sinocone")
 	{
 		// Read geometry
-		astra::XMLDocument* xml = struct2XML("ProjectionGeometry", geometry);
-		if (!xml) {
-			return NULL;
-		}
-		astra::Config cfg;
-		cfg.self = xml->getRootNode();
-
+		astra::Config* cfg = structToConfig("ProjectionGeometry3D", geometry);
 		// FIXME: Change how the base class is created. (This is duplicated
 		// in Projector3D.cpp.)
-		std::string type = cfg.self->getAttribute("type");
+		std::string type = cfg->self->getAttribute("type");
 		astra::CProjectionGeometry3D* pGeometry = 0;
 		if (type == "parallel3d") {
 			pGeometry = new astra::CParallelProjectionGeometry3D();
@@ -312,16 +300,16 @@ allocateDataObject(const std::string & sDataType,
 			return NULL;
 		}
 
-		if (!pGeometry->initialize(cfg)) {
+		if (!pGeometry->initialize(*cfg)) {
 			mexErrMsgTxt("Geometry class not initialized. \n");
 			delete pGeometry;
-			delete xml;
+			delete cfg;
 			return NULL;
 		}
-		delete xml;
+		delete cfg;
 
 		// If data is specified, check dimensions
-		if (data && !mex_is_scalar(data))
+		if (data && !mexIsScalar(data))
 		{
 			if (! (zIndex
 					? checkDataSize(data, pGeometry, iZ)

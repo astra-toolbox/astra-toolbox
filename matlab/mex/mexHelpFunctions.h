@@ -43,42 +43,31 @@ $Id$
 #include "astra/Globals.h"
 #include "astra/Utilities.h"
 
-#include "astra/ParallelProjectionGeometry2D.h"
-#include "astra/FanFlatProjectionGeometry2D.h"
-#include "astra/ParallelProjectionGeometry3D.h"
-#include "astra/ParallelVecProjectionGeometry3D.h"
-#include "astra/ConeProjectionGeometry3D.h"
-#include "astra/ConeVecProjectionGeometry3D.h"
-
-#include "astra/VolumeGeometry2D.h"
-#include "astra/VolumeGeometry3D.h"
-
-
+#include "astra/Config.h"
 #include "astra/XMLDocument.h"
 #include "astra/XMLNode.h"
 
-std::string mex_util_get_string(const mxArray* pInput);
-bool isOption(std::list<std::string> lOptions, std::string sOption);
+// utility functions
+string mexToString(const mxArray* pInput);
+bool mexIsScalar(const mxArray* pInput);
+void get3DMatrixDims(const mxArray* x, mwSize *dims);
 
-bool mex_is_scalar(const mxArray* pInput);
-
-std::map<std::string, mxArray*> parseStruct(const mxArray* pInput);
-mxArray* buildStruct(std::map<std::string, mxArray*> mInput);
+// convert boost::any into a MALTAB object
 mxArray* vectorToMxArray(std::vector<astra::float32> mInput);
-
 mxArray* anyToMxArray(boost::any _any);
 
-astra::CProjectionGeometry2D* parseProjectionGeometryStruct(const mxArray*);
-astra::CVolumeGeometry2D* parseVolumeGeometryStruct(const mxArray*);
+// turn a MATLAB struct into a Config object
+astra::Config* structToConfig(string rootname, const mxArray* pStruct);
+bool structToXMLNode(astra::XMLNode* node, const mxArray* pStruct);
+bool optionsToXMLNode(astra::XMLNode* node, const mxArray* pOptionStruct);
+std::map<std::string, mxArray*> parseStruct(const mxArray* pInput);
 
-astra::XMLDocument* struct2XML(string rootname, const mxArray* pStruct);
-
+// turn a Config object into a MATLAB struct
 mxArray* configToStruct(astra::Config* cfg);
-mxArray* XML2struct(astra::XMLDocument* xml);
-mxArray* XMLNode2struct(astra::XMLNode* xml);
+mxArray* XMLNodeToStruct(astra::XMLNode* xml);
 mxArray* stringToMxArray(std::string input);
+mxArray* buildStruct(std::map<std::string, mxArray*> mInput);
 
 
-void get3DMatrixDims(const mxArray* x, mwSize *dims);
 
 #endif

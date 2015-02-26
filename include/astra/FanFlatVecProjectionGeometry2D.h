@@ -62,7 +62,6 @@ namespace astra
  *      d  : the centre of the detector array
  *      u  : the vector from detector 0 to detector 1
  */
- */
 class _AstraExport CFanFlatVecProjectionGeometry2D : public CProjectionGeometry2D
 {
 protected:

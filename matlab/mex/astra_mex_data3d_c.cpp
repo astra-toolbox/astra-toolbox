@@ -83,7 +83,7 @@ void astra_mex_data3d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 		return;
 	}
 
-	const string sDataType = mex_util_get_string(prhs[1]);
+	const string sDataType = mexToString(prhs[1]);
 
 	// step2: Allocate data
 	CFloat32Data3DMemory* pDataObject3D =
@@ -152,7 +152,7 @@ void astra_mex_data3d_link(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 		return;
 	}
 
-	string sDataType = mex_util_get_string(prhs[1]);
+	string sDataType = mexToString(prhs[1]);
 
 	// step2: Allocate data
 	CFloat32Data3DMemory* pDataObject3D =
@@ -365,7 +365,7 @@ void mexFunction(int nlhs, mxArray* plhs[],
 	// INPUT: Mode
 	string sMode = "";
 	if (1 <= nrhs) {
-		sMode = mex_util_get_string(prhs[0]);	
+		sMode = mexToString(prhs[0]);	
 	} else {
 		printHelp();
 		return;
