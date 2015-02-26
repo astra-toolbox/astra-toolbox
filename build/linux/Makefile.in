@@ -1,5 +1,7 @@
 cuda=@HAVECUDA@
 matlab=@HAVEMATLAB@
+python=@HAVEPYTHON@
+
 
 MATLAB_ROOT=@MATLAB_ROOT@
 
@@ -7,6 +9,10 @@ TARGETS=libastra.la
 
 ifeq ($(matlab),yes)
 TARGETS+=mex
+endif
+
+ifeq ($(python),yes)
+TARGETS+=py
 endif
 
 all: $(TARGETS)
@@ -40,6 +46,14 @@ CXXFLAGS+=-fopenmp
 LDFLAGS+=-fopenmp
 endif
 
+ifeq ($(python),yes)
+PYCPPFLAGS  = ${CPPFLAGS}
+PYCPPFLAGS  += -I../include
+PYLDFLAGS = ${LDFLAGS}
+PYLDFLAGS   += -L../build/linux/.libs
+PYTHON      = @PYTHON@
+endif
+
 BOOST_CPPFLAGS=
 BOOST_LDFLAGS=
 
@@ -54,7 +68,7 @@ LD=@CXX@
 SHELL=@SHELL@
 
 ifeq ($(matlab),yes)
-MEXFLAGS  = -cxx 
+MEXFLAGS  = -cxx
 MEXLDFLAGS='$$LDFLAGS $(LDFLAGS)'
 MEXLIBS   = -L.libs -lut
 MEXSUFFIX = @MEXSUFFIX@
@@ -227,6 +241,14 @@ mex: $(MATLAB_MEX)
 	$(MEX) LDFLAGS=$(MEXLDFLAGS) $(MEXFLAGS) $(LIBS) $(MEXLIBS) -lastra -output $* $*.o $(MATLAB_CXX_OBJECTS)
 endif
 
+ifeq ($(python),yes)
+py: libastra.la
+	cd ../../python; CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" $(PYTHON) builder.py install \
+	--install-base=./finalbuild --install-headers=./finalbuild --install-purelib=./finalbuild \
+	--install-platlib=./finalbuild --install-scripts=./finalbuild --install-data=./finalbuild
+endif
+
+
 libastra.la: $(ALL_OBJECTS)
 	./libtool --mode=link --tag=CXX $(LD) -rpath $(LIBDIR) -o $@ $(LDFLAGS) $(LIBS) $+
 
@@ -279,6 +301,8 @@ clean:
 	rm -f $(addsuffix /*.d,$(DEPDIRS))
 	rm -f $(addsuffix /*,$(LIBDIRS))
 	rm -f $(TEST_OBJECTS) test.bin
+	rm -fr ../../python/finalbuild/
+	rm -fr ../../python/build/
 
 distclean: clean
 	rm -f config.guess config.sub ltmain.sh libtool install-sh
@@ -287,7 +311,7 @@ distclean: clean
 	rm -rf autom4te.cache
 	rm -f configure Makefile
 
-install: install-libraries install-matlab
+install: install-libraries install-matlab install-python
 
 install-libraries: libastra.la
 	./install-sh -m 755 -d @libdir@
@@ -305,6 +329,23 @@ install-matlab: $(MATLAB_MEX)
 # TODO: docs
 else
 install-matlab:
+endif
+
+ifeq ($(python),yes)
+# TODO: This install location doesn't work well for /usr or /usr/local
+install-python: py
+	./install-sh -m 755 -d @prefix@/python
+	./install-sh -m 755 -d @prefix@/python/astra
+	./install-sh -m 644 ../../python/finalbuild/astra/*.so @prefix@/python/astra
+	./install-sh -m 644 ../../python/finalbuild/astra/*.py @prefix@/python/astra
+	./install-sh -m 644 ../../python/finalbuild/*.egg-info @prefix@/python/
+	@echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+	@echo "To use ASTRA in Python, add @prefix@/python/ to your PYTHONPATH"
+	@echo "and @libdir@ to your LD_LIBRARY_PATH."
+	@echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+# TODO: docs
+else
+install-python:
 endif
 
 

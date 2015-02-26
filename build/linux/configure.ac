@@ -1,26 +1,26 @@
 dnl -----------------------------------------------------------------------
 dnl Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
 dnl            2014-2015, CWI, Amsterdam
-dnl 
+dnl
 dnl Contact: astra@uantwerpen.be
 dnl Website: http://sf.net/projects/astra-toolbox
-dnl 
+dnl
 dnl This file is part of the ASTRA Toolbox.
-dnl 
-dnl 
+dnl
+dnl
 dnl The ASTRA Toolbox is free software: you can redistribute it and/or modify
 dnl it under the terms of the GNU General Public License as published by
 dnl the Free Software Foundation, either version 3 of the License, or
 dnl (at your option) any later version.
-dnl 
+dnl
 dnl The ASTRA Toolbox is distributed in the hope that it will be useful,
 dnl but WITHOUT ANY WARRANTY; without even the implied warranty of
 dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 dnl GNU General Public License for more details.
-dnl 
+dnl
 dnl You should have received a copy of the GNU General Public License
 dnl along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
-dnl 
+dnl
 dnl -----------------------------------------------------------------------
 dnl $Id$
 
@@ -160,6 +160,54 @@ fi
 
 AC_SUBST(HAVEMATLAB)
 
+# python
+
+AC_ARG_WITH(python, [[  --with-python=path      path of Python binary (optional)]],,)
+
+HAVEPYTHON=no
+if test x"$with_python" != x -a x"$with_python" != xno; then
+  if test x"$with_python" = xyes; then
+    PYTHON=python
+  else
+    PYTHON="$with_python"
+  fi
+  AC_MSG_CHECKING(for python)
+  ASTRA_RUN_LOGOUTPUT(echo 'import sys' | $PYTHON -)
+  if test $? -ne 0; then
+    AC_MSG_ERROR(Python binary not found)]
+  fi
+  AC_MSG_RESULT([$PYTHON])
+  HAVEPYTHON=yes
+  AC_SUBST(PYTHON)
+  AC_MSG_CHECKING(for numpy module)
+  ASTRA_TRY_PYTHON([import numpy],,HAVEPYTHON=no)
+  if test x$HAVEPYTHON = xno; then
+    AC_MSG_RESULT(no)
+    AC_MSG_ERROR(You need the numpy module to use the ASTRA toolbox in Python)
+  fi
+  AC_MSG_RESULT(yes)
+  AC_MSG_CHECKING(for Cython module)
+  ASTRA_TRY_PYTHON([
+import Cython
+from distutils.version import LooseVersion
+assert(LooseVersion(Cython.__version__)>=LooseVersion("0.13"))
+],,HAVEPYTHON=no)
+  if test x$HAVEPYTHON = xno; then
+    AC_MSG_RESULT(no)
+    AC_MSG_ERROR(You need the Cython module (version >=0.13) to use the ASTRA toolbox in Python)
+  fi
+  AC_MSG_RESULT(yes)
+  AC_MSG_CHECKING(for six module)
+  ASTRA_TRY_PYTHON([import six])
+  if test x$HAVEPYTHON = xno; then
+    AC_MSG_RESULT(no)
+    AC_MSG_ERROR(You need the six module to use the ASTRA toolbox in Python)
+  fi
+  AC_MSG_RESULT(yes)
+fi
+
+AC_SUBST(HAVEPYTHON)
+
 
 # TODO:
 
@@ -181,6 +229,7 @@ echo
 echo "Summary of ASTRA Toolbox build options:"
 echo "  CUDA   : $HAVECUDA"
 echo "  Matlab : $HAVEMATLAB"
+echo "  Python : $HAVEPYTHON"
 echo
 echo "  prefix : $prefix"
 echo
