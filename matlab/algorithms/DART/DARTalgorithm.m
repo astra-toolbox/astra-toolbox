@@ -9,13 +9,8 @@
 %--------------------------------------------------------------------------
 
 classdef DARTalgorithm < matlab.mixin.Copyable
-
 	% Algorithm class for Discrete Algebraic Reconstruction Technique (DART).
 	
-	% todo: reset()
-	% todo: fixed random seed
-	% todo: initialize from settings (?)
-
 	%----------------------------------------------------------------------
 	properties (GetAccess=public, SetAccess=public)
 	
@@ -78,7 +73,6 @@ classdef DARTalgorithm < matlab.mixin.Copyable
 				error('invalid arguments')
 			end
 		end	
-	
 		
 		%------------------------------------------------------------------
 		function D = deepcopy(this)
@@ -100,7 +94,6 @@ classdef DARTalgorithm < matlab.mixin.Copyable
 			
 			% Initialize tomography part
 			if ~this.tomography.initialized
-				this.tomography.sinogram = this.base.sinogram;
 				this.tomography.proj_geom = this.base.proj_geom;	
 				this.tomography.initialize();
 			end
@@ -110,7 +103,7 @@ classdef DARTalgorithm < matlab.mixin.Copyable
 				this.V0 = this.base.V0;
 			else
 				this.output.pre_initial_iteration(this);
-				this.V0 = this.tomography.reconstruct2(this.base.sinogram, [], this.t0);
+				this.V0 = this.tomography.reconstruct(this.base.sinogram, this.t0);
 				this.output.post_initial_iteration(this);
 			end
 			this.V = this.V0;
@@ -163,7 +156,7 @@ classdef DARTalgorithm < matlab.mixin.Copyable
 				this.R = this.base.sinogram - this.tomography.project(F);
 				
 				% ART update part
-				this.V = this.tomography.reconstruct2_mask(this.R, this.V, this.Mask, this.t);
+				this.V = this.tomography.reconstruct_mask(this.R, this.V, this.Mask, this.t);
 
 				% blur
 				this.V = this.smoothing.apply(this, this.V);

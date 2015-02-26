@@ -12,9 +12,12 @@ if test $? -ne 0; then
   exit 1
 fi
 
-libtoolize --install --force > /dev/null 2>&1
+case `uname` in Darwin*) LIBTOOLIZEBIN=glibtoolize ;;
+  *) LIBTOOLIZEBIN=libtoolize ;; esac
+
+$LIBTOOLIZEBIN --install --force > /dev/null 2>&1
 if test $? -ne 0; then
-  libtoolize --force
+  $LIBTOOLIZEBIN --force
   if test $? -ne 0; then
     echo "Error running libtoolize"
     exit 1

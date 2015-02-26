@@ -25,10 +25,11 @@ VPATH=../..
 CPPFLAGS=@SAVED_CPPFLAGS@
 CXXFLAGS=@SAVED_CXXFLAGS@
 LDFLAGS=@SAVED_LDFLAGS@
+LIBS=@SAVED_LIBS@
 
 CPPFLAGS+=-I../.. -I../../include -I../../lib/include/rapidxml
 CXXFLAGS+=-g -O3 -Wall -Wshadow
-LIBS=-lpthread -lrt
+LIBS+=-lpthread
 LDFLAGS+=-g
 
 ifeq ($(cuda),yes)

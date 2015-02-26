@@ -32,13 +32,11 @@ $Id$
 #include "Config.h"
 #include "Algorithm.h"
 
-#ifdef __linux__
-#define USE_PTHREADS
+#ifdef USE_PTHREADS
 #include <pthread.h>
 #else
 #include <boost/thread.hpp>
 #endif
-
 
 namespace astra {
 	
@@ -74,10 +72,6 @@ public:
 	/** Run the algorithm. 
 	 */
 	virtual void run(int _iNrIterations = 0);
-
-	/** Wait for thread to complete and delete thread. 
-	 */
-	virtual void timedJoin(int _milliseconds);
 
 	/** Return pointer to the wrapped algorithm. 
 	 */

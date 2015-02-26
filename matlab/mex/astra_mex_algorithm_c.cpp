@@ -32,13 +32,14 @@ $Id$
  */
 #include <mex.h>
 #include "mexHelpFunctions.h"
+#include "astra/Globals.h"
 
 #define USE_MATLAB_UNDOCUMENTED
 
 #ifdef USE_MATLAB_UNDOCUMENTED
 extern "C" { bool utIsInterruptPending(); }
 
-#ifdef __linux__
+#ifdef USE_PTHREADS
 #define USE_PTHREADS_CTRLC
 #include <pthread.h>
 #else
@@ -49,7 +50,6 @@ extern "C" { bool utIsInterruptPending(); }
 
 
 
-#include "astra/Globals.h"
 
 #include "astra/AstraObjectManager.h"
 #include "astra/AstraObjectFactory.h"

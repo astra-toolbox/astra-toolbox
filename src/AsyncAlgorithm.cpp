@@ -160,32 +160,6 @@ void CAsyncAlgorithm::runWrapped(int _iNrIterations)
 	m_bDone = true;
 }
 
-void CAsyncAlgorithm::timedJoin(int _milliseconds)
-{
-#ifndef USE_PTHREADS
-	if (m_pThread) {
-		boost::posix_time::milliseconds rel(_milliseconds);
-		bool res = m_pThread->timed_join(rel);
-		if (res) {
-			delete m_pThread;
-			m_pThread = 0;
-			m_bThreadStarted = false;
-		}
-	}
-#else
-	if (m_bThreadStarted) {
-		struct timespec abstime;
-		clock_gettime(CLOCK_REALTIME, &abstime);
-		abstime.tv_sec += _milliseconds / 1000;
-		abstime.tv_nsec += (_milliseconds % 1000) * 1000000L;
-		int err = pthread_timedjoin_np(m_thread, 0, &abstime);
-		if (err == 0) {
-			m_bThreadStarted = false;
-		}
-	}
-#endif
-}
-
 void CAsyncAlgorithm::signalAbort()
 {
 	if (m_pAlg)
