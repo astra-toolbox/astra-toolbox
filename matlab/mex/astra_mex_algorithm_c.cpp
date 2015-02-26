@@ -32,6 +32,7 @@ $Id$
  */
 #include <mex.h>
 #include "mexHelpFunctions.h"
+#include "astra/Globals.h"
 
 #define USE_MATLAB_UNDOCUMENTED
 
@@ -49,7 +50,6 @@ extern "C" { bool utIsInterruptPending(); }
 
 
 
-#include "astra/Globals.h"
 
 #include "astra/AstraObjectManager.h"
 #include "astra/AstraObjectFactory.h"
