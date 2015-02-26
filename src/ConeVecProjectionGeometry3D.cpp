@@ -202,15 +202,6 @@ bool CConeVecProjectionGeometry3D::isOfType(const std::string& _sType) const
 }
 
 //----------------------------------------------------------------------------------------
-void CConeVecProjectionGeometry3D::toXML(XMLNode* _sNode) const
-{
-	_sNode->addAttribute("type","cone_vec");
-	_sNode->addChildNode("DetectorRowCount", m_iDetectorRowCount);
-	_sNode->addChildNode("DetectorColCount", m_iDetectorColCount);
-	// TODO:
-	//_sNode->addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
-}
-//----------------------------------------------------------------------------------------
 // Get the configuration object
 Config* CConeVecProjectionGeometry3D::getConfiguration() const 
 {

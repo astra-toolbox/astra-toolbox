@@ -53,6 +53,15 @@ namespace astra
  *		proj_geom.DetectorCount = 512;\n
  *		proj_geom.Vectors = V;\n
  * }
+ *
+ * \par Vectors
+ * Vectors is a matrix containing the actual geometry. Each row corresponds
+ * to a single projection, and consists of:
+ * ( srcX, srcY, srcZ, dX, dY uX, uY)
+ *      src: the ray source
+ *      d  : the centre of the detector array
+ *      u  : the vector from detector 0 to detector 1
+ */
  */
 class _AstraExport CFanFlatVecProjectionGeometry2D : public CProjectionGeometry2D
 {

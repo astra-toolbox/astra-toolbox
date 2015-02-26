@@ -202,16 +202,6 @@ bool CParallelVecProjectionGeometry3D::isOfType(const std::string& _sType) const
 }
 
 //----------------------------------------------------------------------------------------
-void CParallelVecProjectionGeometry3D::toXML(XMLNode* _sNode) const
-{
-	_sNode->addAttribute("type","parallel3d_vec");
-	_sNode->addChildNode("DetectorRowCount", m_iDetectorRowCount);
-	_sNode->addChildNode("DetectorColCount", m_iDetectorColCount);
-	// TODO:
-	//_sNode->addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
-}
-
-//----------------------------------------------------------------------------------------
 // Get the configuration object
 Config* CParallelVecProjectionGeometry3D::getConfiguration() const 
 {

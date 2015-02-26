@@ -328,12 +328,6 @@ public:
 	 */
 	 virtual bool isOfType(const std::string& _sType) const = 0;
 
-	/** Turn this object into an XML object.
-	 *
-	 * @param _sNode The XML object to fill.
-	 */
-	 virtual void toXML(XMLNode* _sNode) const = 0;
-
 	 /**
 	  * Returns a vector giving the projection direction for a projection and detector index
 	  */

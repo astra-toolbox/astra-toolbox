@@ -159,17 +159,6 @@ bool CParallelProjectionGeometry3D::isOfType(const std::string& _sType) const
 }
 
 //----------------------------------------------------------------------------------------
-void CParallelProjectionGeometry3D::toXML(XMLNode* _sNode) const
-{
-	_sNode->addAttribute("type","parallel3d");
-	_sNode->addChildNode("DetectorSpacingX", m_fDetectorSpacingX);
-	_sNode->addChildNode("DetectorSpacingY", m_fDetectorSpacingY);
-	_sNode->addChildNode("DetectorRowCount", m_iDetectorRowCount);
-	_sNode->addChildNode("DetectorColCount", m_iDetectorColCount);
-	_sNode->addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
-}
-
-//----------------------------------------------------------------------------------------
 // Get the configuration object
 Config* CParallelProjectionGeometry3D::getConfiguration() const 
 {
