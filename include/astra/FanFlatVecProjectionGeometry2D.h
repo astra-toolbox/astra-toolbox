@@ -126,6 +126,13 @@ public:
 	 */
 	virtual bool isEqual(CProjectionGeometry2D*) const;
 
+	/** Get all settings in a Config object.
+	 *
+	 * @return Configuration Object.
+	 */
+	virtual Config* getConfiguration() const;
+
+
 	/** Get the value for t and theta, based upon the row and column index.
 	 *
 	 * @param _iRow		row index 

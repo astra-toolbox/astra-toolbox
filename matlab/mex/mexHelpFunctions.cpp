@@ -32,6 +32,12 @@ $Id$
  */
 #include "mexHelpFunctions.h"
 
+#include <algorithm>
+#include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
+
 #include "astra/SparseMatrixProjectionGeometry2D.h"
 #include "astra/FanFlatVecProjectionGeometry2D.h"
 #include "astra/AstraObjectManager.h"
@@ -207,188 +213,6 @@ astra::CProjectionGeometry2D* parseProjectionGeometryStruct(const mxArray* prhs)
 }
 
 //-----------------------------------------------------------------------------------------
-// create 2D projection geometry struct
-mxArray* createProjectionGeometryStruct(astra::CProjectionGeometry2D* _pProjGeom)
-{
-	// temporary map to store the data for the MATLAB struct
-	std::map<std::string, mxArray*> mGeometryInfo;
-
-	// parallel beam
-	if (_pProjGeom->isOfType("parallel")) {
-		mGeometryInfo["type"] = mxCreateString("parallel");
-		mGeometryInfo["DetectorCount"] = mxCreateDoubleScalar(_pProjGeom->getDetectorCount());
-		mGeometryInfo["DetectorWidth"] = mxCreateDoubleScalar(_pProjGeom->getDetectorWidth());
-
-		mxArray* pAngles = mxCreateDoubleMatrix(1, _pProjGeom->getProjectionAngleCount(), mxREAL);
-		double* out = mxGetPr(pAngles);
-		for (int i = 0; i < _pProjGeom->getProjectionAngleCount(); i++) {
-			out[i] = _pProjGeom->getProjectionAngle(i);
-		}
-		mGeometryInfo["ProjectionAngles"] = pAngles;
-	}
-
-	// fanflat
-	else if (_pProjGeom->isOfType("fanflat")) {
-		astra::CFanFlatProjectionGeometry2D* pFanFlatGeom = dynamic_cast<astra::CFanFlatProjectionGeometry2D*>(_pProjGeom);
-
-		mGeometryInfo["type"] = mxCreateString("fanflat");
-		mGeometryInfo["DetectorCount"] = mxCreateDoubleScalar(_pProjGeom->getDetectorCount());
-		mGeometryInfo["DetectorWidth"] = mxCreateDoubleScalar(_pProjGeom->getDetectorWidth());
-		mGeometryInfo["DistanceOriginSource"] = mxCreateDoubleScalar(pFanFlatGeom->getOriginSourceDistance());
-		mGeometryInfo["DistanceOriginDetector"] = mxCreateDoubleScalar(pFanFlatGeom->getOriginDetectorDistance());		
-
-		mxArray* pAngles = mxCreateDoubleMatrix(1, pFanFlatGeom->getProjectionAngleCount(), mxREAL);
-		double* out = mxGetPr(pAngles);
-		for (int i = 0; i < pFanFlatGeom->getProjectionAngleCount(); i++) {
-			out[i] = pFanFlatGeom->getProjectionAngle(i);
-		}
-		mGeometryInfo["ProjectionAngles"] = pAngles;
-	}
-
-	// fanflat_vec
-	else if (_pProjGeom->isOfType("fanflat_vec")) {
-		astra::CFanFlatVecProjectionGeometry2D* pVecGeom = dynamic_cast<astra::CFanFlatVecProjectionGeometry2D*>(_pProjGeom);
-
-		mGeometryInfo["type"] = mxCreateString("fanflat_vec");
-		mGeometryInfo["DetectorCount"] = mxCreateDoubleScalar(pVecGeom->getDetectorCount());
-
-		mxArray* pVectors = mxCreateDoubleMatrix(pVecGeom->getProjectionAngleCount(), 6, mxREAL);
-		double* out = mxGetPr(pVectors);
-		int iDetCount = pVecGeom->getDetectorCount();
-		int iAngleCount = pVecGeom->getProjectionAngleCount();
-		for (int i = 0; i < pVecGeom->getProjectionAngleCount(); i++) {
-			const SFanProjection* p = &pVecGeom->getProjectionVectors()[i];
-			out[0*iAngleCount + i] = p->fSrcX;
-			out[1*iAngleCount + i] = p->fSrcY;
-			out[2*iAngleCount + i] = p->fDetSX + 0.5f*iDetCount*p->fDetUX;
-			out[3*iAngleCount + i] = p->fDetSY + 0.5f*iDetCount*p->fDetUY;
-			out[4*iAngleCount + i] = p->fDetUX;
-			out[5*iAngleCount + i] = p->fDetUY;
-		}
-		mGeometryInfo["Vectors"] = pVectors;
-	}
-
-	// sparse_matrix
-	else if (_pProjGeom->isOfType("sparse_matrix")) {
-		astra::CSparseMatrixProjectionGeometry2D* pSparseMatrixGeom = dynamic_cast<astra::CSparseMatrixProjectionGeometry2D*>(_pProjGeom);
-		mGeometryInfo["type"] = mxCreateString("sparse_matrix");
-		mGeometryInfo["MatrixID"] = mxCreateDoubleScalar(CMatrixManager::getSingleton().getIndex(pSparseMatrixGeom->getMatrix()));
-	}
-
-	// build and return the MATLAB struct
-	return buildStruct(mGeometryInfo);
-}
-
-//-----------------------------------------------------------------------------------------
-// create 3D projection geometry struct
-mxArray* createProjectionGeometryStruct(astra::CProjectionGeometry3D* _pProjGeom)
-{
-	// temporary map to store the data for the MATLAB struct
-	std::map<std::string, mxArray*> mGeometryInfo;
-
-	// parallel beam
-	if (_pProjGeom->isOfType("parallel3d")) {
-		mGeometryInfo["type"] = mxCreateString("parallel3d");
-		mGeometryInfo["DetectorRowCount"] = mxCreateDoubleScalar(_pProjGeom->getDetectorRowCount());
-		mGeometryInfo["DetectorColCount"] = mxCreateDoubleScalar(_pProjGeom->getDetectorColCount());
-		mGeometryInfo["DetectorSpacingX"] = mxCreateDoubleScalar(_pProjGeom->getDetectorSpacingX());
-		mGeometryInfo["DetectorSpacingY"] = mxCreateDoubleScalar(_pProjGeom->getDetectorSpacingY());
-
-		mxArray* pAngles = mxCreateDoubleMatrix(1, _pProjGeom->getProjectionCount(), mxREAL);
-		double* out = mxGetPr(pAngles);
-		for (int i = 0; i < _pProjGeom->getProjectionCount(); i++) {
-			out[i] = _pProjGeom->getProjectionAngle(i);
-		}
-		mGeometryInfo["ProjectionAngles"] = pAngles;
-	}
-
-	// parallel beam vector
-	if (_pProjGeom->isOfType("parallel3d_vec")) {
-		astra::CParallelVecProjectionGeometry3D* pVecGeom = dynamic_cast<astra::CParallelVecProjectionGeometry3D*>(_pProjGeom);
-
-		mGeometryInfo["type"] = mxCreateString("parallel3d_vec");
-		mGeometryInfo["DetectorRowCount"] = mxCreateDoubleScalar(pVecGeom->getDetectorRowCount());
-		mGeometryInfo["DetectorColCount"] = mxCreateDoubleScalar(pVecGeom->getDetectorColCount());
-
-		mxArray* pVectors = mxCreateDoubleMatrix(pVecGeom->getProjectionCount(), 12, mxREAL);
-		double* out = mxGetPr(pVectors);
-		int iDetRowCount = pVecGeom->getDetectorRowCount();
-		int iDetColCount = pVecGeom->getDetectorColCount();
-		int iAngleCount = pVecGeom->getProjectionCount();
-		for (int i = 0; i < pVecGeom->getProjectionCount(); i++) {
-			const SPar3DProjection* p = &pVecGeom->getProjectionVectors()[i];
-			out[ 0*iAngleCount + i] = p->fRayX;
-			out[ 1*iAngleCount + i] = p->fRayY;
-			out[ 2*iAngleCount + i] = p->fRayZ;
-			out[ 3*iAngleCount + i] = p->fDetSX + 0.5f*iDetRowCount*p->fDetUX + 0.5f*iDetColCount*p->fDetVX;
-			out[ 4*iAngleCount + i] = p->fDetSY + 0.5f*iDetRowCount*p->fDetUY + 0.5f*iDetColCount*p->fDetVY;
-			out[ 5*iAngleCount + i] = p->fDetSZ + 0.5f*iDetRowCount*p->fDetUZ + 0.5f*iDetColCount*p->fDetVZ;
-			out[ 6*iAngleCount + i] = p->fDetUX;
-			out[ 7*iAngleCount + i] = p->fDetUY;
-			out[ 8*iAngleCount + i] = p->fDetUZ;
-			out[ 9*iAngleCount + i] = p->fDetVX;
-			out[10*iAngleCount + i] = p->fDetVY;
-			out[11*iAngleCount + i] = p->fDetVZ;
-		}
-		mGeometryInfo["Vectors"] = pVectors;
-	}
-
-	// cone beam
-	else if (_pProjGeom->isOfType("cone")) {
-		astra::CConeProjectionGeometry3D* pConeGeom = dynamic_cast<astra::CConeProjectionGeometry3D*>(_pProjGeom);
-
-		mGeometryInfo["type"] = mxCreateString("cone");
-		mGeometryInfo["DetectorRowCount"] = mxCreateDoubleScalar(pConeGeom->getDetectorRowCount());
-		mGeometryInfo["DetectorColCount"] = mxCreateDoubleScalar(pConeGeom->getDetectorColCount());
-		mGeometryInfo["DetectorSpacingX"] = mxCreateDoubleScalar(pConeGeom->getDetectorSpacingX());
-		mGeometryInfo["DetectorSpacingY"] = mxCreateDoubleScalar(pConeGeom->getDetectorSpacingY());
-		mGeometryInfo["DistanceOriginSource"] = mxCreateDoubleScalar(pConeGeom->getOriginSourceDistance());
-		mGeometryInfo["DistanceOriginDetector"] = mxCreateDoubleScalar(pConeGeom->getOriginDetectorDistance());	
-
-		mxArray* pAngles = mxCreateDoubleMatrix(1, pConeGeom->getProjectionCount(), mxREAL);
-		double* out = mxGetPr(pAngles);
-		for (int i = 0; i < pConeGeom->getProjectionCount(); i++) {
-			out[i] = pConeGeom->getProjectionAngle(i);
-		}
-		mGeometryInfo["ProjectionAngles"] = pAngles;
-	}
-
-	// cone beam vector
-	else if (_pProjGeom->isOfType("cone_vec")) {
-		astra::CConeVecProjectionGeometry3D* pConeVecGeom = dynamic_cast<astra::CConeVecProjectionGeometry3D*>(_pProjGeom);
-
-		mGeometryInfo["type"] = mxCreateString("cone_vec");
-		mGeometryInfo["DetectorRowCount"] = mxCreateDoubleScalar(pConeVecGeom->getDetectorRowCount());
-		mGeometryInfo["DetectorColCount"] = mxCreateDoubleScalar(pConeVecGeom->getDetectorColCount());
-
-		mxArray* pVectors = mxCreateDoubleMatrix(pConeVecGeom->getProjectionCount(), 12, mxREAL);
-		double* out = mxGetPr(pVectors);
-		int iDetRowCount = pConeVecGeom->getDetectorRowCount();
-		int iDetColCount = pConeVecGeom->getDetectorColCount();
-		int iAngleCount = pConeVecGeom->getProjectionCount();
-		for (int i = 0; i < pConeVecGeom->getProjectionCount(); i++) {
-			const SConeProjection* p = &pConeVecGeom->getProjectionVectors()[i];
-			out[ 0*iAngleCount + i] = p->fSrcX;
-			out[ 1*iAngleCount + i] = p->fSrcY;
-			out[ 2*iAngleCount + i] = p->fSrcZ;
-			out[ 3*iAngleCount + i] = p->fDetSX + 0.5f*iDetRowCount*p->fDetUX + 0.5f*iDetColCount*p->fDetVX;
-			out[ 4*iAngleCount + i] = p->fDetSY + 0.5f*iDetRowCount*p->fDetUY + 0.5f*iDetColCount*p->fDetVY;
-			out[ 5*iAngleCount + i] = p->fDetSZ + 0.5f*iDetRowCount*p->fDetUZ + 0.5f*iDetColCount*p->fDetVZ;
-			out[ 6*iAngleCount + i] = p->fDetUX;
-			out[ 7*iAngleCount + i] = p->fDetUY;
-			out[ 8*iAngleCount + i] = p->fDetUZ;
-			out[ 9*iAngleCount + i] = p->fDetVX;
-			out[10*iAngleCount + i] = p->fDetVY;
-			out[11*iAngleCount + i] = p->fDetVZ;
-		}
-		mGeometryInfo["Vectors"] = pVectors;
-	}
-
-	// build and return the MATLAB struct
-	return buildStruct(mGeometryInfo);
-}
-
-//-----------------------------------------------------------------------------------------
 // parse reconstruction geometry data
 astra::CVolumeGeometry2D* parseVolumeGeometryStruct(const mxArray* prhs)
 {
@@ -445,48 +269,6 @@ astra::CVolumeGeometry2D* parseVolumeGeometryStruct(const mxArray* prhs)
 										fWindowMaxX, fWindowMaxY);
 }
 
-//-----------------------------------------------------------------------------------------
-// create 2D volume geometry struct
-// mxArray* createVolumeGeometryStruct(astra::CVolumeGeometry2D* _pVolGeom)
-// {
-// 	std::map<std::string, mxArray*> mGeometryInfo;
-
-// 	mGeometryInfo["GridColCount"] = mxCreateDoubleScalar(_pVolGeom->getGridColCount());
-// 	mGeometryInfo["GridRowCount"] = mxCreateDoubleScalar(_pVolGeom->getGridRowCount());
-
-// 	std::map<std::string, mxArray*> mGeometryOptions;
-// 	mGeometryOptions["WindowMinX"] = mxCreateDoubleScalar(_pVolGeom->getWindowMinX());
-// 	mGeometryOptions["WindowMaxX"] = mxCreateDoubleScalar(_pVolGeom->getWindowMaxX());
-// 	mGeometryOptions["WindowMinY"] = mxCreateDoubleScalar(_pVolGeom->getWindowMinY());
-// 	mGeometryOptions["WindowMaxY"] = mxCreateDoubleScalar(_pVolGeom->getWindowMaxY());
-
-// 	mGeometryInfo["option"] = buildStruct(mGeometryOptions);
-
-// 	return buildStruct(mGeometryInfo);
-// }
-
-//-----------------------------------------------------------------------------------------
-// create 3D volume geometry struct
-// mxArray* createVolumeGeometryStruct(astra::CVolumeGeometry3D* _pVolGeom)
-// {
-// 	std::map<std::string, mxArray*> mGeometryInfo;
-
-// 	mGeometryInfo["GridColCount"] = mxCreateDoubleScalar(_pVolGeom->getGridColCount());
-// 	mGeometryInfo["GridRowCount"] = mxCreateDoubleScalar(_pVolGeom->getGridRowCount());
-// 	mGeometryInfo["GridSliceCount"] = mxCreateDoubleScalar(_pVolGeom->getGridRowCount());
-
-// 	std::map<std::string, mxArray*> mGeometryOptions;
-// 	mGeometryOptions["WindowMinX"] = mxCreateDoubleScalar(_pVolGeom->getWindowMinX());
-// 	mGeometryOptions["WindowMaxX"] = mxCreateDoubleScalar(_pVolGeom->getWindowMaxX());
-// 	mGeometryOptions["WindowMinY"] = mxCreateDoubleScalar(_pVolGeom->getWindowMinY());
-// 	mGeometryOptions["WindowMaxY"] = mxCreateDoubleScalar(_pVolGeom->getWindowMaxY());
-// 	mGeometryOptions["WindowMinZ"] = mxCreateDoubleScalar(_pVolGeom->getWindowMinZ());
-// 	mGeometryOptions["WindowMaxZ"] = mxCreateDoubleScalar(_pVolGeom->getWindowMaxZ());
-
-// 	mGeometryInfo["option"] = buildStruct(mGeometryOptions);
-
-// 	return buildStruct(mGeometryInfo);
-// }
 
 //-----------------------------------------------------------------------------------------
 string matlab2string(const mxArray* pField)
@@ -640,7 +422,6 @@ XMLDocument* struct2XML(string rootname, const mxArray* pStruct)
 
 	// read the struct
 	bool ret = readStruct(rootnode, pStruct);
-	//doc->getRootNode()->print();
 	delete rootnode;
 
 	if (!ret) {
@@ -714,8 +495,21 @@ bool mex_is_scalar(const mxArray* pInput)
 	return (mxIsNumeric(pInput) && mxGetM(pInput)*mxGetN(pInput) == 1);
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 //-----------------------------------------------------------------------------------------
-mxArray* config2struct(astra::Config* cfg)
+mxArray* configToStruct(astra::Config* cfg)
 {
 	return XMLNode2struct(cfg->self);
 }
@@ -730,22 +524,67 @@ mxArray* XML2struct(astra::XMLDocument* xml)
 }
 
 //-----------------------------------------------------------------------------------------
-mxArray* XMLNode2option(astra::XMLNode* node)
+mxArray* stringToMxArray(std::string input) 
 {
-	char* end;
-	double content = ::strtod(node->getAttribute("value").c_str(), &end);
-	bool isnumber = !*end;
+	// matrix
+	if (input.find(';') != std::string::npos) {
 
-	// float
+		// split rows
+		std::vector<std::string> row_strings;
+		std::vector<std::string> col_strings;
+		boost::split(row_strings, input, boost::is_any_of(";"));
+		boost::split(col_strings, row_strings[0], boost::is_any_of(","));
+
+		// get dimensions
+		int rows = row_strings.size();
+		int cols = col_strings.size();
+
+		// init matrix
+		mxArray* pMatrix = mxCreateDoubleMatrix(rows, cols, mxREAL);
+		double* out = mxGetPr(pMatrix);
+
+		// loop elements
+		for (unsigned int row = 0; row < rows; row++) {
+			boost::split(col_strings, row_strings[row], boost::is_any_of(","));
+			// check size
+			for (unsigned int col = 0; col < col_strings.size(); col++) {
+				out[col*rows + row] = boost::lexical_cast<float32>(col_strings[col]);
+			}
+		}
+		return pMatrix;
+	}
+	
+	// vector
+	if (input.find(',') != std::string::npos) {
+
+		// split
+		std::vector<std::string> items;
+		boost::split(items, input, boost::is_any_of(","));
+
+		// init matrix
+		mxArray* pVector = mxCreateDoubleMatrix(1, items.size(), mxREAL);
+		double* out = mxGetPr(pVector);
+
+		// loop elements
+		for (unsigned int i = 0; i < items.size(); i++) {
+			out[i] = boost::lexical_cast<float32>(items[i]);
+		}
+		return pVector;
+	}
+	
+	// number
+	char* end;
+	double content = ::strtod(input.c_str(), &end);
+	bool isnumber = !*end;
 	if (isnumber) {
 		return mxCreateDoubleScalar(content);
 	}
+	
 	// string
-	else {
-		return mxCreateString(node->getAttribute("value").c_str());
-	}
+	return mxCreateString(input.c_str());
 }
 
+//-----------------------------------------------------------------------------------------
 mxArray* XMLNode2struct(astra::XMLNode* node)
 {
 	std::map<std::string, mxArray*> mList;
@@ -760,30 +599,19 @@ mxArray* XMLNode2struct(astra::XMLNode* node)
 	for (list<XMLNode*>::iterator it = nodes.begin(); it != nodes.end(); it++) {
 		XMLNode* subnode = (*it);
 
-		char* end;
-		double content = ::strtod(subnode->getContent().c_str(), &end);
-		bool isnumber = !*end;
-
 		// option
 		if (subnode->getName() == "Option") {
-			mOptions[subnode->getAttribute("key")] = XMLNode2option(subnode);
+			mOptions[subnode->getAttribute("key")] = stringToMxArray(subnode->getAttribute("value"));
 		}
-		// list
-		// else if (subnode->hasAttribute("listsize")) {
-		// 	mList[subnode->getName()] = vectorToMxArray(node->getContentNumericalArray());
-		// }
-		// float
-		else if (isnumber) {
-			mList[subnode->getName()] =  mxCreateDoubleScalar(content);
-		}
-		// string
+
+		// regular content
 		else {
-			mList[subnode->getName()] =  mxCreateString(subnode->getContent().c_str());
+			mList[subnode->getName()] = stringToMxArray(subnode->getContent());
 		}
 		delete subnode;
 	}
 
-	mList["options"] = buildStruct(mOptions);
+	if (mOptions.size() > 0) mList["options"] = buildStruct(mOptions);
 	return buildStruct(mList);
 }
 
@@ -791,6 +619,12 @@ mxArray* XMLNode2struct(astra::XMLNode* node)
 
 
 
+
+
+
+
+
+//-----------------------------------------------------------------------------------------
 void get3DMatrixDims(const mxArray* x, mwSize *dims)
 {
 	const mwSize* mdims = mxGetDimensions(x);

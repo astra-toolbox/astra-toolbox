@@ -194,7 +194,7 @@ bool CFanFlatVecProjectionGeometry2D::isEqual(CProjectionGeometry2D* _pGeom2) co
 // Is of type
 bool CFanFlatVecProjectionGeometry2D::isOfType(const std::string& _sType)
 {
-	 return (_sType == "fanflat_vec");
+	return (_sType == "fanflat_vec");
 }
 
 //----------------------------------------------------------------------------------------
@@ -226,6 +226,28 @@ bool CFanFlatVecProjectionGeometry2D::_check()
 }
 
 
+//----------------------------------------------------------------------------------------
+// Get the configuration object
+Config* CFanFlatVecProjectionGeometry2D::getConfiguration() const 
+{
+	Config* cfg = new Config();
+	cfg->initialize("ProjectionGeometry2D");
+	cfg->self->addAttribute("type", "fanflat_vec");
+	cfg->self->addChildNode("DetectorCount", getDetectorCount());
+	std::string vectors = "";
+	for (int i = 0; i < m_iProjectionAngleCount; ++i) {
+		SFanProjection& p = m_pProjectionAngles[i];
+		vectors += boost::lexical_cast<string>(p.fSrcX) + ",";
+		vectors += boost::lexical_cast<string>(p.fSrcY) + ",";
+		vectors += boost::lexical_cast<string>(p.fDetSX + 0.5f * m_iDetectorCount * p.fDetUX) + ",";
+		vectors += boost::lexical_cast<string>(p.fDetSY + 0.5f * m_iDetectorCount * p.fDetUY) + ",";
+		vectors += boost::lexical_cast<string>(p.fDetUX) + ",";
+		vectors += boost::lexical_cast<string>(p.fDetUY);
+		if (i < m_iProjectionAngleCount-1) vectors += ';';
+	}
+	cfg->self->addChildNode("Vectors", vectors);
+	return cfg;
+}
 //----------------------------------------------------------------------------------------
 
 

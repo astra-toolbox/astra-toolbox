@@ -71,17 +71,13 @@ mxArray* anyToMxArray(boost::any _any);
 astra::CProjectionGeometry2D* parseProjectionGeometryStruct(const mxArray*);
 astra::CVolumeGeometry2D* parseVolumeGeometryStruct(const mxArray*);
 
-mxArray* createProjectionGeometryStruct(astra::CProjectionGeometry2D*);
-mxArray* createProjectionGeometryStruct(astra::CProjectionGeometry3D*);
-
-// mxArray* createVolumeGeometryStruct(astra::CVolumeGeometry2D* _pReconGeom);
-// mxArray* createVolumeGeometryStruct(astra::CVolumeGeometry3D* _pReconGeom);
-
 astra::XMLDocument* struct2XML(string rootname, const mxArray* pStruct);
 
-mxArray* config2struct(astra::Config* cfg);
+mxArray* configToStruct(astra::Config* cfg);
 mxArray* XML2struct(astra::XMLDocument* xml);
 mxArray* XMLNode2struct(astra::XMLNode* xml);
+mxArray* stringToMxArray(std::string input);
+
 
 void get3DMatrixDims(const mxArray* x, mwSize *dims);
 

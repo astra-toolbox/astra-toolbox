@@ -27,6 +27,7 @@ $Id$
 */
 
 #include "astra/ParallelProjectionGeometry2D.h"
+#include <boost/lexical_cast.hpp>
 
 #include <cstring>
 
@@ -167,6 +168,19 @@ bool CParallelProjectionGeometry2D::isEqual(CProjectionGeometry2D* _pGeom2) cons
 bool CParallelProjectionGeometry2D::isOfType(const std::string& _sType)
 {
 	 return (_sType == "parallel");
+}
+
+//----------------------------------------------------------------------------------------
+// Get the configuration object
+Config* CParallelProjectionGeometry2D::getConfiguration() const 
+{
+	Config* cfg = new Config();
+	cfg->initialize("ProjectionGeometry2D");
+	cfg->self->addAttribute("type", "parallel");
+	cfg->self->addChildNode("DetectorCount", getDetectorCount());
+	cfg->self->addChildNode("DetectorWidth", getDetectorWidth());
+	cfg->self->addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
+	return cfg;
 }
 //----------------------------------------------------------------------------------------
 

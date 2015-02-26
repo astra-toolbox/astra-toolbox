@@ -162,7 +162,7 @@ void astra_mex_projector_projection_geometry(int nlhs, mxArray* plhs[], int nrhs
 
 	// step3: get projection_geometry and turn it into a MATLAB struct
 	if (1 <= nlhs) {
-		plhs[0] = createProjectionGeometryStruct(pProjector->getProjectionGeometry());
+		plhs[0] = configToStruct(pProjector->getProjectionGeometry()->getConfiguration());
 	}
 }
 
@@ -191,7 +191,8 @@ void astra_mex_projector_volume_geometry(int nlhs, mxArray* plhs[], int nrhs, co
 
 	// step3: get projection_geometry and turn it into a MATLAB struct
 	if (1 <= nlhs) {
-		plhs[0] = createVolumeGeometryStruct(pProjector->getVolumeGeometry());
+		plhs[0] = configToStruct(pProjector->getVolumeGeometry()->getConfiguration());
+
 	}
 }
 

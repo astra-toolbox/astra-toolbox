@@ -27,6 +27,7 @@ $Id$
 */
 
 #include "astra/ParallelProjectionGeometry3D.h"
+#include <boost/lexical_cast.hpp>
 
 #include <cstring>
 
@@ -167,6 +168,22 @@ void CParallelProjectionGeometry3D::toXML(XMLNode* _sNode) const
 	_sNode->addChildNode("DetectorColCount", m_iDetectorColCount);
 	_sNode->addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
 }
+
+//----------------------------------------------------------------------------------------
+// Get the configuration object
+Config* CParallelProjectionGeometry3D::getConfiguration() const 
+{
+	Config* cfg = new Config();
+	cfg->initialize("ProjectionGeometry3D");
+	cfg->self->addAttribute("type", "parallel3d");
+	cfg->self->addChildNode("DetectorRowCount", m_iDetectorRowCount);
+	cfg->self->addChildNode("DetectorColCount", m_iDetectorColCount);
+	cfg->self->addChildNode("DetectorSpacingX", m_fDetectorSpacingX);
+	cfg->self->addChildNode("DetectorSpacingY", m_fDetectorSpacingY);
+	cfg->self->addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
+	return cfg;
+}
+//----------------------------------------------------------------------------------------
 
 CVector3D CParallelProjectionGeometry3D::getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex) const
 {

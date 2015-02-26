@@ -157,6 +157,12 @@ public:
 	 */
 	virtual bool isEqual(CProjectionGeometry2D*) const = 0;
 
+	/** Get all settings in a Config object.
+	 *
+	 * @return Configuration Object.
+	 */
+	virtual Config* getConfiguration() const = 0;
+
 	/** Get the number of projection angles.
 	 *
 	 * @return Number of projection angles

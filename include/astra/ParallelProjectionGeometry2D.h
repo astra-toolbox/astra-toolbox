@@ -136,6 +136,12 @@ public:
 	 */
 	 virtual bool isOfType(const std::string& _sType);
 
+	/** Get all settings in a Config object.
+	 *
+	 * @return Configuration Object.
+	 */
+	virtual Config* getConfiguration() const;
+
  	/**
 	 * Returns a vector describing the direction of a ray belonging to a certain detector,
 	 *   the direction is the same for all detectors in one projection 

@@ -129,6 +129,12 @@ public:
 	 */
 	virtual bool isEqual(const CProjectionGeometry3D*) const;
 
+	/** Get all settings in a Config object.
+	 *
+	 * @return Configuration Object.
+	 */
+	virtual Config* getConfiguration() const;
+
 	/** Returns true if the type of geometry defined in this class is the one specified in _sType.
 	 *
 	 * @param _sType geometry type to compare to.

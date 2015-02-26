@@ -210,6 +210,39 @@ void CConeVecProjectionGeometry3D::toXML(XMLNode* _sNode) const
 	// TODO:
 	//_sNode->addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
 }
+//----------------------------------------------------------------------------------------
+// Get the configuration object
+Config* CConeVecProjectionGeometry3D::getConfiguration() const 
+{
+	Config* cfg = new Config();
+	cfg->initialize("ProjectionGeometry3D");
+
+	cfg->self->addAttribute("type", "cone");
+	cfg->self->addChildNode("DetectorRowCount", m_iDetectorRowCount);
+	cfg->self->addChildNode("DetectorColCount", m_iDetectorColCount);
+
+	std::string vectors = "";
+	for (int i = 0; i < m_iProjectionAngleCount; ++i) {
+		SConeProjection& p = m_pProjectionAngles[i];
+		vectors += boost::lexical_cast<string>(p.fSrcX) + ",";
+		vectors += boost::lexical_cast<string>(p.fSrcY) + ",";
+		vectors += boost::lexical_cast<string>(p.fSrcZ) + ",";
+		vectors += boost::lexical_cast<string>(p.fDetSX + 0.5f*m_iDetectorRowCount*p.fDetUX + 0.5f*m_iDetectorColCount*p.fDetVX) + ",";
+		vectors += boost::lexical_cast<string>(p.fDetSY + 0.5f*m_iDetectorRowCount*p.fDetUY + 0.5f*m_iDetectorColCount*p.fDetVY) + ",";
+		vectors += boost::lexical_cast<string>(p.fDetSZ + 0.5f*m_iDetectorRowCount*p.fDetUZ + 0.5f*m_iDetectorColCount*p.fDetVZ) + ",";
+		vectors += boost::lexical_cast<string>(p.fDetUX) + ",";
+		vectors += boost::lexical_cast<string>(p.fDetUY) + ",";
+		vectors += boost::lexical_cast<string>(p.fDetUZ) + ",";
+		vectors += boost::lexical_cast<string>(p.fDetVX) + ",";
+		vectors += boost::lexical_cast<string>(p.fDetVY) + ",";
+		vectors += boost::lexical_cast<string>(p.fDetVZ);
+		if (i < m_iProjectionAngleCount-1) vectors += ';';
+	}
+	cfg->self->addChildNode("Vectors", vectors);
+
+	return cfg;
+}
+//----------------------------------------------------------------------------------------
 
 CVector3D CConeVecProjectionGeometry3D::getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex) const
 {

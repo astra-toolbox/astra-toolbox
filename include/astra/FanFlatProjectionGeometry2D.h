@@ -140,6 +140,12 @@ public:
 	 */
 	 virtual bool isOfType(const std::string& _sType);
 
+	/** Get all settings in a Config object.
+	 *
+	 * @return Configuration Object.
+	 */
+	virtual Config* getConfiguration() const;
+
     /** Return true if this geometry instance is the same as the one specified.
 	 *
 	 * @return true if this geometry instance is the same as the one specified.

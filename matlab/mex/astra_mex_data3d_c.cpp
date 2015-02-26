@@ -296,11 +296,12 @@ void astra_mex_data3d_get_geometry(int nlhs, mxArray* plhs[], int nrhs, const mx
 	if (1 <= nlhs) {
 		if (pDataObject->getType() == CFloat32Data3D::PROJECTION) {
 			CFloat32ProjectionData3DMemory* pDataObject2 = dynamic_cast<CFloat32ProjectionData3DMemory*>(pDataObject);
-			plhs[0] = createProjectionGeometryStruct(pDataObject2->getGeometry());
+			plhs[0] = configToStruct(pDataObject2->getGeometry()->getConfiguration());
+			
 		}
 		else if (pDataObject->getType() == CFloat32Data3D::VOLUME) {
 			CFloat32VolumeData3DMemory* pDataObject2 = dynamic_cast<CFloat32VolumeData3DMemory*>(pDataObject);
-			plhs[0] = config2struct(pDataObject2->getGeometry()->getConfiguration());
+			plhs[0] = configToStruct(pDataObject2->getGeometry()->getConfiguration());
 		}
 	}
 
