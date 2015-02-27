@@ -109,4 +109,12 @@ void XMLDocument::saveToFile(string sFilename)
 }
 
 //-----------------------------------------------------------------------------
+std::string XMLDocument::toString()
+{
+	std::stringstream ss;
+	ss << *fDOMDocument->first_node();
+	return ss.str();
+}
+
+//-----------------------------------------------------------------------------
 

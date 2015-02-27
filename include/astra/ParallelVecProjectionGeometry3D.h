@@ -55,7 +55,7 @@ namespace astra
  * to a single projection, and consists of:
  * ( rayX, rayY, rayZ, dX, dY, dZ, uX, uY, uZ, vX, vY, vZ )
  *      ray: the ray direction
- *      d  : the corner of the detector
+ *      d  : the centre of the detector plane
  *      u  : the vector from detector pixel (0,0) to (0,1)
  *      v  : the vector from detector pixel (0,0) to (1,0)
  */
@@ -128,18 +128,18 @@ public:
 	 */
 	virtual bool isEqual(const CProjectionGeometry3D*) const;
 
+	/** Get all settings in a Config object.
+	 *
+	 * @return Configuration Object.
+	 */
+	virtual Config* getConfiguration() const;
+
 	/** Returns true if the type of geometry defined in this class is the one specified in _sType.
 	 *
 	 * @param _sType geometry type to compare to.
 	 * @return true if _sType == "parallel3d_vec".
 	 */
 	 virtual bool isOfType(const std::string& _sType) const;
-
-	/** Turn this object into an XML object.
-	 *
-	 * @param _sNode The XML object to fill.
-	 */
-	 virtual void toXML(XMLNode* _sNode) const;
 
 	 /**
 	  * Returns a vector giving the projection direction for a projection and detector index

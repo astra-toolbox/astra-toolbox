@@ -103,7 +103,6 @@ public:
 	 * @param _pMatrix Pointer to a CSparseMatrix. The caller is responsible for keeping this matrix valid until it is no longer required.
 	 * @return initialization successful?
 	 */
-
 	bool setMatrix(CSparseMatrix* _pMatrix);
 
 	/** Get a pointer to the associated sparse matrix.
@@ -127,6 +126,13 @@ public:
 	 * @return true if _sType == "parallel".
 	 */
 	 virtual bool isOfType(const std::string& _sType);
+
+	/** Get all settings in a Config object.
+	 *
+	 * @return Configuration Object.
+	 */
+	virtual Config* getConfiguration() const;
+
 
 	/**
 	 * Returns a vector describing the direction of a ray belonging to a certain detector

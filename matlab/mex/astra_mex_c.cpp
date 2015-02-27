@@ -122,7 +122,7 @@ void mexFunction(int nlhs, mxArray* plhs[],
 	// INPUT0: Mode
 	string sMode = "";
 	if (1 <= nrhs) {
-		sMode = mex_util_get_string(prhs[0]);	
+		sMode = mexToString(prhs[0]);	
 	} else {
 		printHelp();
 		return;

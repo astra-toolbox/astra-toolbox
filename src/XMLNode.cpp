@@ -448,13 +448,11 @@ void XMLNode::setContent(float32 _fValue)
 // Set content - LIST
 void XMLNode::setContent(float32* pfList, int _iSize) 
 {
-	addAttribute("listsize", _iSize);
-	for (int i = 0; i < _iSize; i++) {
-		XMLNode* item = addChildNode("ListItem");
-		item->addAttribute("index", i);
-		item->addAttribute("value",pfList[i]);
-		delete item;
+	std::string str = (_iSize > 0) ? boost::lexical_cast<std::string>(pfList[0]) : "";
+	for (int i = 1; i < _iSize; i++) {
+		str += "," + boost::lexical_cast<std::string>(pfList[i]);
 	}
+	setContent(str);
 }
 
 //-----------------------------------------------------------------------------	

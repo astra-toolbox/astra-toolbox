@@ -186,17 +186,22 @@ bool CConeProjectionGeometry3D::isOfType(const std::string& _sType) const
 }
 
 //----------------------------------------------------------------------------------------
-void CConeProjectionGeometry3D::toXML(XMLNode* _sNode) const
+// Get the configuration object
+Config* CConeProjectionGeometry3D::getConfiguration() const 
 {
-	_sNode->addAttribute("type", "cone");
-	_sNode->addChildNode("DetectorSpacingX", m_fDetectorSpacingX);
-	_sNode->addChildNode("DetectorSpacingY", m_fDetectorSpacingY);
-	_sNode->addChildNode("DetectorRowCount", m_iDetectorRowCount);
-	_sNode->addChildNode("DetectorColCount", m_iDetectorColCount);
-	_sNode->addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
-	_sNode->addChildNode("DistanceOriginDetector", m_fOriginDetectorDistance);
-	_sNode->addChildNode("DistanceOriginSource", m_fOriginSourceDistance);
+	Config* cfg = new Config();
+	cfg->initialize("ProjectionGeometry3D");
+	cfg->self->addAttribute("type", "cone");
+	cfg->self->addChildNode("DetectorSpacingX", m_fDetectorSpacingX);
+	cfg->self->addChildNode("DetectorSpacingY", m_fDetectorSpacingY);
+	cfg->self->addChildNode("DetectorRowCount", m_iDetectorRowCount);
+	cfg->self->addChildNode("DetectorColCount", m_iDetectorColCount);
+	cfg->self->addChildNode("DistanceOriginDetector", m_fOriginDetectorDistance);
+	cfg->self->addChildNode("DistanceOriginSource", m_fOriginSourceDistance);
+	cfg->self->addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
+	return cfg;
 }
+
 //----------------------------------------------------------------------------------------
 
 CVector3D CConeProjectionGeometry3D::getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex) const

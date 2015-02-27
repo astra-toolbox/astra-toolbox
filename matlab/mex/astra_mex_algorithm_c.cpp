@@ -78,26 +78,23 @@ void astra_mex_algorithm_create(int nlhs, mxArray* plhs[], int nrhs, const mxArr
 	}
 
 	// turn MATLAB struct to an XML-based Config object
-	XMLDocument* xml = struct2XML("Algorithm", prhs[1]);
-	Config cfg;
-	cfg.self = xml->getRootNode();
+	Config* cfg = structToConfig("Algorithm", prhs[1]);
 
-	CAlgorithm* pAlg = CAlgorithmFactory::getSingleton().create(cfg.self->getAttribute("type"));
+	CAlgorithm* pAlg = CAlgorithmFactory::getSingleton().create(cfg->self->getAttribute("type"));
 	if (!pAlg) {
-		delete xml;
+		delete cfg;
 		mexErrMsgTxt("Unknown algorithm. \n");
 		return;
 	}
 
 	// create algorithm
-	if (!pAlg->initialize(cfg)) {
-		delete xml;
+	if (!pAlg->initialize(*cfg)) {
+		delete cfg;
 		delete pAlg;
 		mexErrMsgTxt("Algorithm not initialized. \n");
 		return;
 	}
-
-	delete xml;
+	delete cfg;
 
 	// store algorithm
 	int iIndex = CAlgorithmManager::getSingleton().store(pAlg);
@@ -322,7 +319,7 @@ void mexFunction(int nlhs, mxArray* plhs[],
 	// INPUT: Mode
 	string sMode = "";
 	if (1 <= nrhs) {
-		sMode = mex_util_get_string(prhs[0]);	
+		sMode = mexToString(prhs[0]);	
 	} else {
 		printHelp();
 		return;

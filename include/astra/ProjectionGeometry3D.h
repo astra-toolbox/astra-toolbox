@@ -187,6 +187,12 @@ public:
 	 */
 	virtual bool isEqual(const CProjectionGeometry3D *) const = 0;
 
+	/** Get all settings in a Config object.
+	 *
+	 * @return Configuration Object.
+	 */
+	virtual Config* getConfiguration() const = 0;
+
 	/** Get the number of projections.
 	 *
 	 * @return Number of projections
@@ -321,12 +327,6 @@ public:
 	 * @return true if the type of geometry defined in this class is the one specified in _sType. 
 	 */
 	 virtual bool isOfType(const std::string& _sType) const = 0;
-
-	/** Turn this object into an XML object.
-	 *
-	 * @param _sNode The XML object to fill.
-	 */
-	 virtual void toXML(XMLNode* _sNode) const = 0;
 
 	 /**
 	  * Returns a vector giving the projection direction for a projection and detector index

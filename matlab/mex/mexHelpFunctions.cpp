@@ -32,9 +32,11 @@ $Id$
  */
 #include "mexHelpFunctions.h"
 
-#include "astra/SparseMatrixProjectionGeometry2D.h"
-#include "astra/FanFlatVecProjectionGeometry2D.h"
-#include "astra/AstraObjectManager.h"
+#include <algorithm>
+#include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
 
 using namespace std;
 using namespace astra;
@@ -42,480 +44,57 @@ using namespace astra;
 
 //-----------------------------------------------------------------------------------------
 // get string from matlab 
-std::string mex_util_get_string(const mxArray* pInput)
-{
-	if (!mxIsChar(pInput)) {
-		return "";
-	}
-	mwSize iLength = mxGetNumberOfElements(pInput) + 1;
-	char* buf = new char[iLength]; 
-	mxGetString(pInput, buf, iLength);
-	std::string res = std::string(buf);
-	delete[] buf;
-	return res;
-}
-
-//-----------------------------------------------------------------------------------------
-// is option
-bool isOption(std::list<std::string> lOptions, std::string sOption) 
-{
-	return std::find(lOptions.begin(), lOptions.end(), sOption) != lOptions.end();
-}
-
-//-----------------------------------------------------------------------------------------
-// turn a matlab struct into a c++ map
-std::map<std::string, mxArray*> parseStruct(const mxArray* pInput) 
-{
-	std::map<std::string, mxArray*> res;
-
-	// check type
-	if (!mxIsStruct(pInput)) {
-      mexErrMsgTxt("Input must be a struct.");
-	  return res;
-	}
-
-	// get field names
-	int nfields = mxGetNumberOfFields(pInput);
-	for (int i = 0; i < nfields; i++) {
-		std::string sFieldName = std::string(mxGetFieldNameByNumber(pInput, i));
-		res[sFieldName] = mxGetFieldByNumber(pInput,0,i);
-	}
-	return res;
-}
-
-//-----------------------------------------------------------------------------------------
-// turn a c++ map into a matlab struct
-mxArray* buildStruct(std::map<std::string, mxArray*> mInput) 
-{
-	mwSize dims[2] = {1, 1};
-	mxArray* res = mxCreateStructArray(2,dims,0,0);
-	
-	for (std::map<std::string, mxArray*>::iterator it = mInput.begin(); it != mInput.end(); it++) {
-		mxAddField(res, (*it).first.c_str());
-		mxSetField(res, 0, (*it).first.c_str(), (*it).second);
-	}
-	return res;
-}
-
-//-----------------------------------------------------------------------------------------
-// parse projection geometry data
-astra::CProjectionGeometry2D* parseProjectionGeometryStruct(const mxArray* prhs)
-{
-	// parse struct	
-	std::map<string, mxArray*> mStruct = parseStruct(prhs);
-
-	// create projection geometry object
-	string type = mex_util_get_string(mStruct["type"]);
-	if (type == "parallel") {
-
-		// detector_width
-		float32 fDetWidth = 1.0f;
-		mxArray* tmp = mStruct["detector_width"];
-		if (tmp != NULL) {
-			fDetWidth = (float32)(mxGetScalar(tmp));
-		}
-
-		// detector_count
-		int iDetCount = 100;
-		tmp = mStruct["detector_count"];
-		if (tmp != NULL) {
-			iDetCount = (int)(mxGetScalar(tmp));
-		}
-
-		// angles
-		float32* pfAngles;
-		int iAngleCount;
-		tmp = mStruct["projection_angles"];
-		if (tmp != NULL) {
-			double* angleValues = mxGetPr(tmp);
-			iAngleCount = mxGetN(tmp) * mxGetM(tmp);
-			pfAngles = new float32[iAngleCount];
-			for (int i = 0; i < iAngleCount; i++) {
-				pfAngles[i] = angleValues[i];
-			}
-		} else {
-			mexErrMsgTxt("'angles' not specified, error.");
-			return NULL;
-		}
-
-		// create projection geometry
-		return new astra::CParallelProjectionGeometry2D(iAngleCount,	// number of projections
-														iDetCount,		// number of detectors
-														fDetWidth,		// width of the detectors
-														pfAngles);		// angles array
-	} 
-	
-	else if (type == "fanflat") {
-
-		// detector_width
-		float32 fDetWidth = 1.0f;
-		mxArray* tmp = mStruct["detector_width"];
-		if (tmp != NULL) {
-			fDetWidth = (float32)(mxGetScalar(tmp));
-		}
-
-		// detector_count
-		int iDetCount = 100;
-		tmp = mStruct["detector_count"];
-		if (tmp != NULL) {
-			iDetCount = (int)(mxGetScalar(tmp));
-		}
-
-		// angles
-		float32* pfAngles;
-		int iAngleCount;
-		tmp = mStruct["projection_angles"];
-		if (tmp != NULL) {
-			double* angleValues = mxGetPr(tmp);
-			iAngleCount = mxGetN(tmp) * mxGetM(tmp);
-			pfAngles = new float32[iAngleCount];
-			for (int i = 0; i < iAngleCount; i++) {
-				pfAngles[i] = angleValues[i];
-			}
-		} else {
-			mexErrMsgTxt("'angles' not specified, error.");
-			return NULL;
-		}
-
-		// origin_source_dist
-		int iDistOriginSource = 100;
-		tmp = mStruct["origin_source_dist"];
-		if (tmp != NULL) {
-			iDistOriginSource = (int)(mxGetScalar(tmp));
-		}
-
-		// origin_det_dist
-		int iDistOriginDet = 100;
-		tmp = mStruct["origin_det_dist"];
-		if (tmp != NULL) {
-			iDistOriginDet = (int)(mxGetScalar(tmp));
-		}
-
-		// create projection geometry
-		return new astra::CFanFlatProjectionGeometry2D(iAngleCount,			// number of projections
-													   iDetCount,			// number of detectors
-													   fDetWidth,			// width of the detectors
-													   pfAngles,			// angles array
-													   iDistOriginSource,	// distance origin source
-													   iDistOriginDet);		// distance origin detector
-	}
-
-	else {
-		mexPrintf("Only parallel and fanflat projection geometry implemented.");
-		return NULL;
-	}
-}
-
-//-----------------------------------------------------------------------------------------
-// create projection geometry data
-mxArray* createProjectionGeometryStruct(astra::CProjectionGeometry2D* _pProjGeom)
-{
-	// temporary map to store the data for the MATLAB struct
-	std::map<std::string, mxArray*> mGeometryInfo;
-
-	// detectorCount
-	mGeometryInfo["DetectorCount"] = mxCreateDoubleScalar(_pProjGeom->getDetectorCount());
-	
-	if (!_pProjGeom->isOfType("fanflat_vec")) {
-		// detectorWidth
-		mGeometryInfo["DetectorWidth"] = mxCreateDoubleScalar(_pProjGeom->getDetectorWidth());
-
-		// pfProjectionAngles
-		mxArray* pAngles = mxCreateDoubleMatrix(1, _pProjGeom->getProjectionAngleCount(), mxREAL);
-		double* out = mxGetPr(pAngles);
-		for (int i = 0; i < _pProjGeom->getProjectionAngleCount(); i++) {
-			out[i] = _pProjGeom->getProjectionAngle(i);
-		}
-		mGeometryInfo["ProjectionAngles"] = pAngles;
-	}
-	else {
-		astra::CFanFlatVecProjectionGeometry2D* pVecGeom = dynamic_cast<astra::CFanFlatVecProjectionGeometry2D*>(_pProjGeom);
-		mxArray* pVectors = mxCreateDoubleMatrix(1, pVecGeom->getProjectionAngleCount()*6, mxREAL);
-		double* out = mxGetPr(pVectors);
-		int iDetCount = pVecGeom->getDetectorCount();
-		for (int i = 0; i < pVecGeom->getProjectionAngleCount(); i++) {
-			const SFanProjection* p = &pVecGeom->getProjectionVectors()[i];
-			out[6*i + 0] = p->fSrcX;
-			out[6*i + 1] = p->fSrcY;
-			out[6*i + 2] = p->fDetSX + 0.5f*iDetCount*p->fDetUX;
-			out[6*i + 3] = p->fDetSY + 0.5f*iDetCount*p->fDetUY;
-			out[6*i + 4] = p->fDetUX;
-			out[6*i + 5] = p->fDetUY;
-		}
-		mGeometryInfo["Vectors"] = pVectors;
-	}
-
-	// parallel specific options
-	if (_pProjGeom->isOfType("parallel")) {
-		// type
-		mGeometryInfo["type"] = mxCreateString("parallel");
-	}
-	// fanflat specific options
-	else if (_pProjGeom->isOfType("fanflat")) {
-		astra::CFanFlatProjectionGeometry2D* pFanFlatGeom = dynamic_cast<astra::CFanFlatProjectionGeometry2D*>(_pProjGeom);
-		// detectorCount
-		mGeometryInfo["DistanceOriginSource"] = mxCreateDoubleScalar(pFanFlatGeom->getOriginSourceDistance());
-		// detectorWidth
-		mGeometryInfo["DistanceOriginDetector"] = mxCreateDoubleScalar(pFanFlatGeom->getOriginDetectorDistance());
-		// type
-		mGeometryInfo["type"] = mxCreateString("fanflat");
-	}
-	else if (_pProjGeom->isOfType("sparse_matrix")) {
-		astra::CSparseMatrixProjectionGeometry2D* pSparseMatrixGeom = dynamic_cast<astra::CSparseMatrixProjectionGeometry2D*>(_pProjGeom);
-		mGeometryInfo["type"] = mxCreateString("sparse_matrix");
-		mGeometryInfo["MatrixID"] = mxCreateDoubleScalar(CMatrixManager::getSingleton().getIndex(pSparseMatrixGeom->getMatrix()));
-	}
-	else if(_pProjGeom->isOfType("fanflat_vec")) {
-		mGeometryInfo["type"] = mxCreateString("fanflat_vec");
-	}
-
-	// build and return the MATLAB struct
-	return buildStruct(mGeometryInfo);
-}
-
-//-----------------------------------------------------------------------------------------
-// parse reconstruction geometry data
-astra::CVolumeGeometry2D* parseVolumeGeometryStruct(const mxArray* prhs)
-{
-	// parse struct	
-	std::map<string, mxArray*> mStruct = parseStruct(prhs);
-
-	std::map<string, mxArray*> mOptions = parseStruct(mStruct["option"]);
-
-	// GridColCount
-	int iWindowColCount = 128;
-	mxArray* tmp = mStruct["GridColCount"];
-	if (tmp != NULL) {
-		iWindowColCount = (int)(mxGetScalar(tmp));
-	} 
-
-	// GridRowCount
-	int iWindowRowCount = 128;
-	tmp = mStruct["GridRowCount"];
-	if (tmp != NULL) {
-		iWindowRowCount = (int)(mxGetScalar(tmp));
-	}
-
-	// WindowMinX
-	float32 fWindowMinX = - iWindowColCount / 2;
-	tmp = mOptions["WindowMinX"];
-	if (tmp != NULL) {
-		fWindowMinX = (float32)(mxGetScalar(tmp));
-	} 
-
-	// WindowMaxX
-	float32 fWindowMaxX = iWindowColCount / 2;
-	tmp = mOptions["WindowMaxX"];
-	if (tmp != NULL) {
-		fWindowMaxX = (float32)(mxGetScalar(tmp));
-	} 
-
-	// WindowMinY
-	float32 fWindowMinY = - iWindowRowCount / 2;
-	tmp = mOptions["WindowMinY"];
-	if (tmp != NULL) {
-		fWindowMinY = (float32)(mxGetScalar(tmp));
-	} 
-
-	// WindowMaxX
-	float32 fWindowMaxY = iWindowRowCount / 2;
-	tmp = mOptions["WindowMaxY"];
-	if (tmp != NULL) {
-		fWindowMaxY = (float32)(mxGetScalar(tmp));
-	} 
-	
-	// create and return reconstruction geometry
-	return new astra::CVolumeGeometry2D(iWindowColCount, iWindowRowCount, 
-										fWindowMinX, fWindowMinY, 
-										fWindowMaxX, fWindowMaxY);
-}
-
-//-----------------------------------------------------------------------------------------
-// create reconstruction geometry data
-mxArray* createVolumeGeometryStruct(astra::CVolumeGeometry2D* _pReconGeom)
-{
-	// temporary map to store the data for the MATLAB struct
-	std::map<std::string, mxArray*> mGeometryInfo;
-
-	// fill up map
-	mGeometryInfo["GridColCount"] = mxCreateDoubleScalar(_pReconGeom->getGridColCount());
-	mGeometryInfo["GridRowCount"] = mxCreateDoubleScalar(_pReconGeom->getGridRowCount());
-
-	std::map<std::string, mxArray*> mGeometryOptions;
-	mGeometryOptions["WindowMinX"] = mxCreateDoubleScalar(_pReconGeom->getWindowMinX());
-	mGeometryOptions["WindowMaxX"] = mxCreateDoubleScalar(_pReconGeom->getWindowMaxX());
-	mGeometryOptions["WindowMinY"] = mxCreateDoubleScalar(_pReconGeom->getWindowMinY());
-	mGeometryOptions["WindowMaxY"] = mxCreateDoubleScalar(_pReconGeom->getWindowMaxY());
-
-	mGeometryInfo["option"] = buildStruct(mGeometryOptions);
-
-	// build and return the MATLAB struct
-	return buildStruct(mGeometryInfo);
-}
-
-
-//-----------------------------------------------------------------------------------------
-string matlab2string(const mxArray* pField)
+string mexToString(const mxArray* pInput)
 {
 	// is string?
-	if (mxIsChar(pField)) {
-		return mex_util_get_string(pField);
+	if (mxIsChar(pInput)) {
+		mwSize iLength = mxGetNumberOfElements(pInput) + 1;
+		char* buf = new char[iLength]; 
+		mxGetString(pInput, buf, iLength);
+		std::string res = std::string(buf);
+		delete[] buf;
+		return res;
 	}
 
 	// is scalar?
-	if (mxIsNumeric(pField) && mxGetM(pField)*mxGetN(pField) == 1) {
-		return boost::lexical_cast<string>(mxGetScalar(pField));
+	if (mxIsNumeric(pInput) && mxGetM(pInput)*mxGetN(pInput) == 1) {
+		return boost::lexical_cast<string>(mxGetScalar(pInput));
 	}
 
 	return "";
 }
 
 //-----------------------------------------------------------------------------------------
-// Options struct to xml node
-bool readOptions(XMLNode* node, const mxArray* pOptionStruct)
+// return true if the argument is a scalar
+bool mexIsScalar(const mxArray* pInput)
 {
-	// loop all fields
-	int nfields = mxGetNumberOfFields(pOptionStruct);
-	for (int i = 0; i < nfields; i++) {
-		std::string sFieldName = std::string(mxGetFieldNameByNumber(pOptionStruct, i));
-		const mxArray* pField = mxGetFieldByNumber(pOptionStruct, 0, i);
-
-		if (node->hasOption(sFieldName)) {
-			mexErrMsgTxt("Duplicate option");
-			return false;
-		}
-	
-		// string or scalar
-		if (mxIsChar(pField) || mex_is_scalar(pField)) {
-			string sValue = matlab2string(pField);
-			node->addOption(sFieldName, sValue);
-		} else
-		// numerical array
-		if (mxIsNumeric(pField) && mxGetM(pField)*mxGetN(pField) > 1) {
-			if (!mxIsDouble(pField)) {
-				mexErrMsgTxt("Numeric input must be double.");
-				return false;
-			}
-
-			XMLNode* listbase = node->addChildNode("Option");
-			listbase->addAttribute("key", sFieldName);
-			listbase->addAttribute("listsize", mxGetM(pField)*mxGetN(pField));
-			double* pdValues = mxGetPr(pField);
-			int index = 0;
-			for (unsigned int row = 0; row < mxGetM(pField); row++) {
-				for (unsigned int col = 0; col < mxGetN(pField); col++) {
-					XMLNode* item = listbase->addChildNode("ListItem");
-					item->addAttribute("index", index);
-					item->addAttribute("value", pdValues[col*mxGetM(pField)+row]);
-					index++;
-					delete item;
-				}
-			}
-			delete listbase;
-		} else {
-			mexErrMsgTxt("Unsupported option type");
-			return false;
-		}
-	}
-	return true;
+	return (mxIsNumeric(pInput) && mxGetM(pInput)*mxGetN(pInput) == 1);
 }
 
 //-----------------------------------------------------------------------------------------
-// struct to xml node
-bool readStruct(XMLNode* root, const mxArray* pStruct)
+void get3DMatrixDims(const mxArray* x, mwSize *dims)
 {
-	// loop all fields
-	int nfields = mxGetNumberOfFields(pStruct);
-	for (int i = 0; i < nfields; i++) {
-
-		// field and fieldname
-		std::string sFieldName = std::string(mxGetFieldNameByNumber(pStruct, i));
-		const mxArray* pField = mxGetFieldByNumber(pStruct, 0, i);
-
-		// string
-		if (mxIsChar(pField)) {
-			string sValue = matlab2string(pField);
-			if (sFieldName == "type") {
-				root->addAttribute("type", sValue);
-			} else {
-				delete root->addChildNode(sFieldName, sValue);
-			}
-		}
-
-		// scalar
-		if (mex_is_scalar(pField)) {
-			string sValue = matlab2string(pField);
-			delete root->addChildNode(sFieldName, sValue);
-		}
-
-		// numerical array
-		if (mxIsNumeric(pField) && mxGetM(pField)*mxGetN(pField) > 1) {
-			if (!mxIsDouble(pField)) {
-				mexErrMsgTxt("Numeric input must be double.");
-				return false;
-			}
-			XMLNode* listbase = root->addChildNode(sFieldName);
-			listbase->addAttribute("listsize", mxGetM(pField)*mxGetN(pField));
-			double* pdValues = mxGetPr(pField);
-			int index = 0;
-			for (unsigned int row = 0; row < mxGetM(pField); row++) {
-				for (unsigned int col = 0; col < mxGetN(pField); col++) {
-					XMLNode* item = listbase->addChildNode("ListItem");
-					item->addAttribute("index", index);
-					item->addAttribute("value", pdValues[col*mxGetM(pField)+row]);
-					index++;
-					delete item;
-				}
-			}
-			delete listbase;
-		}
-
-
-		// not castable to a single string
-		if (mxIsStruct(pField)) {
-			if (sFieldName == "options" || sFieldName == "option" || sFieldName == "Options" || sFieldName == "Option") {
-				bool ret = readOptions(root, pField);
-				if (!ret)
-					return false;
-			} else {
-				XMLNode* newNode = root->addChildNode(sFieldName);
-				bool ret = readStruct(newNode, pField);
-				delete newNode;
-				if (!ret)
-					return false;
-			}
-		}
-
+	const mwSize* mdims = mxGetDimensions(x);
+	mwSize dimCount = mxGetNumberOfDimensions(x);
+	if (dimCount == 1) {
+		dims[0] = mdims[0];
+		dims[1] = 1;
+		dims[2] = 1;
+	} else if (dimCount == 2) {
+		dims[0] = mdims[0];
+		dims[1] = mdims[1];
+		dims[2] = 1;
+	} else if (dimCount == 3) {
+		dims[0] = mdims[0];
+		dims[1] = mdims[1];
+		dims[2] = mdims[2];
+	} else {
+		dims[0] = 0;
+		dims[1] = 0;
+		dims[2] = 0;
 	}
+} 
 
-	return true;
-}
-
-//-----------------------------------------------------------------------------------------
-// turn a MATLAB struct into an XML Document
-XMLDocument* struct2XML(string rootname, const mxArray* pStruct)
-{
-	if (!mxIsStruct(pStruct)) {
-      mexErrMsgTxt("Input must be a struct.");
-	  return NULL;
-	}
-
-	// create the document
-	XMLDocument* doc = XMLDocument::createDocument(rootname);
-	XMLNode* rootnode = doc->getRootNode();
-
-	// read the struct
-	bool ret = readStruct(rootnode, pStruct);
-	//doc->getRootNode()->print();
-	delete rootnode;
-
-	if (!ret) {
-		delete doc;
-		doc = 0;
-	}
-
-	return doc;
-}
 
 
 
@@ -573,26 +152,201 @@ mxArray* anyToMxArray(boost::any _any)
 	}
 	return NULL;
 }
+
+
+
+
+
+
+
+
+
 //-----------------------------------------------------------------------------------------
-// return true ig the argument is a scalar
-bool mex_is_scalar(const mxArray* pInput)
+// turn a MATLAB struct into a Config object
+Config* structToConfig(string rootname, const mxArray* pStruct)
 {
-	return (mxIsNumeric(pInput) && mxGetM(pInput)*mxGetN(pInput) == 1);
+	if (!mxIsStruct(pStruct)) {
+		mexErrMsgTxt("Input must be a struct.");
+		return NULL;
+	}
+
+	// create the document
+	Config* cfg = new Config();
+	cfg->initialize(rootname);
+
+	// read the struct
+	bool ret = structToXMLNode(cfg->self, pStruct);
+	if (!ret) {
+		delete cfg;
+		mexErrMsgTxt("Error parsing struct.");
+		return NULL;		
+	}
+	return cfg;
 }
 
 //-----------------------------------------------------------------------------------------
-mxArray* XML2struct(astra::XMLDocument* xml)
+bool structToXMLNode(XMLNode* node, const mxArray* pStruct) 
 {
-	XMLNode* node = xml->getRootNode();
-	mxArray* str = XMLNode2struct(xml->getRootNode());
-	delete node;
-	return str;
+	// loop all fields
+	int nfields = mxGetNumberOfFields(pStruct);
+	for (int i = 0; i < nfields; i++) {
+
+		// field and fieldname
+		std::string sFieldName = std::string(mxGetFieldNameByNumber(pStruct, i));
+		const mxArray* pField = mxGetFieldByNumber(pStruct, 0, i);
+
+		// string
+		if (mxIsChar(pField)) {
+			string sValue = mexToString(pField);
+			if (sFieldName == "type") {
+				node->addAttribute("type", sValue);
+			} else {
+				delete node->addChildNode(sFieldName, sValue);
+			}
+		}
+
+		// scalar
+		else if (mxIsNumeric(pField) && mxGetM(pField)*mxGetN(pField) == 1) {
+			string sValue = mexToString(pField);
+			delete node->addChildNode(sFieldName, sValue);
+		}
+
+		// numerical array
+		else if (mxIsNumeric(pField) && mxGetM(pField)*mxGetN(pField) > 1) {
+			if (!mxIsDouble(pField)) {
+				mexErrMsgTxt("Numeric input must be double.");
+				return false;
+			}
+			XMLNode* listbase = node->addChildNode(sFieldName);
+			listbase->addAttribute("listsize", mxGetM(pField)*mxGetN(pField));
+			double* pdValues = mxGetPr(pField);
+			int index = 0;
+			for (unsigned int row = 0; row < mxGetM(pField); row++) {
+				for (unsigned int col = 0; col < mxGetN(pField); col++) {
+					XMLNode* item = listbase->addChildNode("ListItem");
+					item->addAttribute("index", index);
+					item->addAttribute("value", pdValues[col*mxGetM(pField)+row]);
+					index++;
+					delete item;
+				}
+			}
+			delete listbase;
+		}
+
+		// not castable to a single string
+		else if (mxIsStruct(pField)) {
+			if (sFieldName == "options" || sFieldName == "option" || sFieldName == "Options" || sFieldName == "Option") {
+				bool ret = optionsToXMLNode(node, pField);
+				if (!ret)
+					return false;
+			} else {
+				XMLNode* newNode = node->addChildNode(sFieldName);
+				bool ret = structToXMLNode(newNode, pField);
+				delete newNode;
+				if (!ret)
+					return false;
+			}
+		}
+
+	}
+
+	return true;
+}
+//-----------------------------------------------------------------------------------------
+// Options struct to xml node
+bool optionsToXMLNode(XMLNode* node, const mxArray* pOptionStruct)
+{
+	// loop all fields
+	int nfields = mxGetNumberOfFields(pOptionStruct);
+	for (int i = 0; i < nfields; i++) {
+		std::string sFieldName = std::string(mxGetFieldNameByNumber(pOptionStruct, i));
+		const mxArray* pField = mxGetFieldByNumber(pOptionStruct, 0, i);
+
+		if (node->hasOption(sFieldName)) {
+			mexErrMsgTxt("Duplicate option");
+			return false;
+		}
+	
+		// string or scalar
+		if (mxIsChar(pField) || mexIsScalar(pField)) {
+			string sValue = mexToString(pField);
+			node->addOption(sFieldName, sValue);
+		}
+		// numerical array
+		else if (mxIsNumeric(pField) && mxGetM(pField)*mxGetN(pField) > 1) {
+			if (!mxIsDouble(pField)) {
+				mexErrMsgTxt("Numeric input must be double.");
+				return false;
+			}
+
+			XMLNode* listbase = node->addChildNode("Option");
+			listbase->addAttribute("key", sFieldName);
+			listbase->addAttribute("listsize", mxGetM(pField)*mxGetN(pField));
+			double* pdValues = mxGetPr(pField);
+			int index = 0;
+			for (unsigned int row = 0; row < mxGetM(pField); row++) {
+				for (unsigned int col = 0; col < mxGetN(pField); col++) {
+					XMLNode* item = listbase->addChildNode("ListItem");
+					item->addAttribute("index", index);
+					item->addAttribute("value", pdValues[col*mxGetM(pField)+row]);
+					index++;
+					delete item;
+				}
+			}
+			delete listbase;
+		} else {
+			mexErrMsgTxt("Unsupported option type");
+			return false;
+		}
+	}
+	return true;
+}
+//-----------------------------------------------------------------------------------------
+// turn a matlab struct into a c++ map
+std::map<std::string, mxArray*> parseStruct(const mxArray* pInput) 
+{
+	std::map<std::string, mxArray*> res;
+
+	// check type
+	if (!mxIsStruct(pInput)) {
+      mexErrMsgTxt("Input must be a struct.");
+	  return res;
+	}
+
+	// get field names
+	int nfields = mxGetNumberOfFields(pInput);
+	for (int i = 0; i < nfields; i++) {
+		std::string sFieldName = std::string(mxGetFieldNameByNumber(pInput, i));
+		res[sFieldName] = mxGetFieldByNumber(pInput,0,i);
+	}
+	return res;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//-----------------------------------------------------------------------------------------
+// turn a Config object into a MATLAB struct
+mxArray* configToStruct(astra::Config* cfg)
+{
+	return XMLNodeToStruct(cfg->self);
 }
 
 //-----------------------------------------------------------------------------------------
-mxArray* XMLNode2struct(astra::XMLNode* node)
+mxArray* XMLNodeToStruct(astra::XMLNode* node)
 {
-	std::map<std::string, mxArray*> mList; 
+	std::map<std::string, mxArray*> mList;
+	std::map<std::string, mxArray*> mOptions;
 
 	// type_attribute
 	if (node->hasAttribute("type")) {
@@ -602,41 +356,103 @@ mxArray* XMLNode2struct(astra::XMLNode* node)
 	list<XMLNode*> nodes = node->getNodes();
 	for (list<XMLNode*>::iterator it = nodes.begin(); it != nodes.end(); it++) {
 		XMLNode* subnode = (*it);
-		// list
-		if (subnode->hasAttribute("listsize")) {
-			cout << "lkmdsqldqsjkl" << endl;
-			cout << " " << node->getContentNumericalArray().size() << endl;
-			mList[subnode->getName()] = vectorToMxArray(node->getContentNumericalArray());
+
+		// option
+		if (subnode->getName() == "Option") {
+			mOptions[subnode->getAttribute("key")] = stringToMxArray(subnode->getAttribute("value"));
 		}
-		// string
+
+		// regular content
 		else {
-			mList[subnode->getName()] =  mxCreateString(subnode->getContent().c_str());
+			mList[subnode->getName()] = stringToMxArray(subnode->getContent());
 		}
 		delete subnode;
 	}
 
+	if (mOptions.size() > 0) mList["options"] = buildStruct(mOptions);
 	return buildStruct(mList);
 }
 
-void get3DMatrixDims(const mxArray* x, mwSize *dims)
+//-----------------------------------------------------------------------------------------
+mxArray* stringToMxArray(std::string input) 
 {
-	const mwSize* mdims = mxGetDimensions(x);
-	mwSize dimCount = mxGetNumberOfDimensions(x);
-	if (dimCount == 1) {
-		dims[0] = mdims[0];
-		dims[1] = 1;
-		dims[2] = 1;
-	} else if (dimCount == 2) {
-		dims[0] = mdims[0];
-		dims[1] = mdims[1];
-		dims[2] = 1;
-	} else if (dimCount == 3) {
-		dims[0] = mdims[0];
-		dims[1] = mdims[1];
-		dims[2] = mdims[2];
-	} else {
-		dims[0] = 0;
-		dims[1] = 0;
-		dims[2] = 0;
+	// matrix
+	if (input.find(';') != std::string::npos) {
+
+		// split rows
+		std::vector<std::string> row_strings;
+		std::vector<std::string> col_strings;
+		boost::split(row_strings, input, boost::is_any_of(";"));
+		boost::split(col_strings, row_strings[0], boost::is_any_of(","));
+
+		// get dimensions
+		int rows = row_strings.size();
+		int cols = col_strings.size();
+
+		// init matrix
+		mxArray* pMatrix = mxCreateDoubleMatrix(rows, cols, mxREAL);
+		double* out = mxGetPr(pMatrix);
+
+		// loop elements
+		for (unsigned int row = 0; row < rows; row++) {
+			boost::split(col_strings, row_strings[row], boost::is_any_of(","));
+			// check size
+			for (unsigned int col = 0; col < col_strings.size(); col++) {
+				out[col*rows + row] = boost::lexical_cast<float32>(col_strings[col]);
+			}
+		}
+		return pMatrix;
 	}
-} 
+	
+	// vector
+	if (input.find(',') != std::string::npos) {
+
+		// split
+		std::vector<std::string> items;
+		boost::split(items, input, boost::is_any_of(","));
+
+		// init matrix
+		mxArray* pVector = mxCreateDoubleMatrix(1, items.size(), mxREAL);
+		double* out = mxGetPr(pVector);
+
+		// loop elements
+		for (unsigned int i = 0; i < items.size(); i++) {
+			out[i] = boost::lexical_cast<float32>(items[i]);
+		}
+		return pVector;
+	}
+	
+	// number
+	char* end;
+	double content = ::strtod(input.c_str(), &end);
+	bool isnumber = !*end;
+	if (isnumber) {
+		return mxCreateDoubleScalar(content);
+	}
+	
+	// string
+	return mxCreateString(input.c_str());
+}
+//-----------------------------------------------------------------------------------------
+// turn a c++ map into a matlab struct
+mxArray* buildStruct(std::map<std::string, mxArray*> mInput) 
+{
+	mwSize dims[2] = {1, 1};
+	mxArray* res = mxCreateStructArray(2,dims,0,0);
+	
+	for (std::map<std::string, mxArray*>::iterator it = mInput.begin(); it != mInput.end(); it++) {
+		mxAddField(res, (*it).first.c_str());
+		mxSetField(res, 0, (*it).first.c_str(), (*it).second);
+	}
+	return res;
+}
+
+
+
+
+
+
+
+
+
+

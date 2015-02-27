@@ -380,5 +380,28 @@ CVolumeGeometry2D * CVolumeGeometry3D::createVolumeGeometry2D() const
 }
 
 //----------------------------------------------------------------------------------------
+// Get the configuration object
+Config* CVolumeGeometry3D::getConfiguration() const 
+{
+	Config* cfg = new Config();
+	cfg->initialize("VolumeGeometry3D");
+
+	cfg->self->addChildNode("GridColCount", m_iGridColCount);
+	cfg->self->addChildNode("GridRowCount", m_iGridRowCount);
+	cfg->self->addChildNode("GridSliceCount", m_iGridSliceCount);
+
+	cfg->self->addOption("WindowMinX", m_fWindowMinX);
+	cfg->self->addOption("WindowMaxX", m_fWindowMaxX);
+	cfg->self->addOption("WindowMinY", m_fWindowMinY);
+	cfg->self->addOption("WindowMaxY", m_fWindowMaxY);
+	cfg->self->addOption("WindowMinZ", m_fWindowMinZ);
+	cfg->self->addOption("WindowMaxZ", m_fWindowMaxZ);
+
+	return cfg;
+}
+//----------------------------------------------------------------------------------------
+
+
+//----------------------------------------------------------------------------------------
 
 } // namespace astra

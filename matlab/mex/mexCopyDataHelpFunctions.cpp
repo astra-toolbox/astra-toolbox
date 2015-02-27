@@ -263,7 +263,7 @@ copyMexToCFloat32Array(const mxArray * const in,
 #pragma omp parallel
 	{
 		// fill with scalar value
-		if (mex_is_scalar(in)) {
+		if (mexIsScalar(in)) {
 			astra::float32 fValue = 0.f;
 			if (!mxIsEmpty(in)) {
 				fValue = (astra::float32)mxGetScalar(in);

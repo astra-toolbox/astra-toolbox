@@ -204,6 +204,20 @@ CVector3D CFanFlatProjectionGeometry2D::getProjectionDirection(int _iProjectionI
 }
 
 //----------------------------------------------------------------------------------------
+// Get the configuration object
+Config* CFanFlatProjectionGeometry2D::getConfiguration() const 
+{
+	Config* cfg = new Config();
+	cfg->initialize("ProjectionGeometry2D");
+	cfg->self->addAttribute("type", "fanflat");
+	cfg->self->addChildNode("DetectorCount", getDetectorCount());
+	cfg->self->addChildNode("DetectorWidth", getDetectorWidth());
+	cfg->self->addChildNode("DistanceOriginSource", getOriginSourceDistance());
+	cfg->self->addChildNode("DistanceOriginDetector", getOriginDetectorDistance());
+	cfg->self->addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
+	return cfg;
+}
+//----------------------------------------------------------------------------------------
 
 
 } // namespace astra

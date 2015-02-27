@@ -65,16 +65,16 @@ void astra_mex_projector3d_create(int nlhs, mxArray* plhs[], int nrhs, const mxA
 	}
 
 	// turn MATLAB struct to an XML-based Config object
-	XMLDocument* xml = struct2XML("Projector3D", prhs[1]);
-	Config cfg;
-	cfg.self = xml->getRootNode();
+	Config* cfg = structToConfig("Projector3D", prhs[1]);
 
 	// create algorithm
-	CProjector3D* pProj = CProjector3DFactory::getSingleton().create(cfg);
+	CProjector3D* pProj = CProjector3DFactory::getSingleton().create(*cfg);
 	if (pProj == NULL) {
+		delete cfg;
 		mexErrMsgTxt("Error creating Projector3D. \n");
 		return;
 	}
+	delete cfg;
 
 	// store projector
 	int iIndex = CProjector3DManager::getSingleton().store(pProj);
@@ -135,16 +135,16 @@ void astra_mex_projector3d_get_projection_geometry(int nlhs, mxArray* plhs[], in
 	}
 
 	// step3: get projection_geometry and turn it into a MATLAB struct
-	//if (1 <= nlhs) {
-	//	plhs[0] = createProjectionGeometryStruct(pProjector->getProjectionGeometry());
-	//}
+	if (1 <= nlhs) {
+		plhs[0] = configToStruct(pProjector->getProjectionGeometry()->getConfiguration());
+	}
 }
 
 //-----------------------------------------------------------------------------------------
 /**
 * [recon_geom] = astra_mex_projector3d('get_volume_geometry', pid);
 */
-void astra_mex_projector3d_get_reconstruction_geometry(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
+void astra_mex_projector3d_get_volume_geometry(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 	// step1: read input
 	if (nrhs < 2) {
@@ -161,9 +161,9 @@ void astra_mex_projector3d_get_reconstruction_geometry(int nlhs, mxArray* plhs[]
 	}
 
 	// step3: get projection_geometry and turn it into a MATLAB struct
-	//if (1 <= nlhs) {
-	//	plhs[0] = createVolumeGeometryStruct(pProjector->getVolumeGeometry());
-	//}
+	if (1 <= nlhs) {
+		plhs[0] = configToStruct(pProjector->getVolumeGeometry()->getConfiguration());
+	}
 }
 
 //-----------------------------------------------------------------------------------------
@@ -397,7 +397,7 @@ void mexFunction(int nlhs, mxArray* plhs[],
 	// INPUT: Mode
 	string sMode = "";
 	if (1 <= nrhs) {
-		sMode = mex_util_get_string(prhs[0]);	
+		sMode = mexToString(prhs[0]);	
 	} else {
 		printHelp();
 		return;
@@ -413,7 +413,7 @@ void mexFunction(int nlhs, mxArray* plhs[],
 	} else if (sMode == "get_projection_geometry") {
 		astra_mex_projector3d_get_projection_geometry(nlhs, plhs, nrhs, prhs);
 	} else if (sMode == "get_volume_geometry") {
-		astra_mex_projector3d_get_reconstruction_geometry(nlhs, plhs, nrhs, prhs);
+		astra_mex_projector3d_get_volume_geometry(nlhs, plhs, nrhs, prhs);
 	} else if (sMode == "weights_single_ray") {
 		astra_mex_projector_weights_single_ray(nlhs, plhs, nrhs, prhs);
 	//} else if (sMode == "weights_projection") {

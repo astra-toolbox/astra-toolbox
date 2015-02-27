@@ -27,6 +27,7 @@ $Id$
 */
 
 #include "astra/ParallelProjectionGeometry3D.h"
+#include <boost/lexical_cast.hpp>
 
 #include <cstring>
 
@@ -154,19 +155,24 @@ bool CParallelProjectionGeometry3D::isEqual(const CProjectionGeometry3D * _pGeom
 // is of type
 bool CParallelProjectionGeometry3D::isOfType(const std::string& _sType) const
 {
-	 return (_sType == "parallel");
+	 return (_sType == "parallel3d");
 }
 
 //----------------------------------------------------------------------------------------
-void CParallelProjectionGeometry3D::toXML(XMLNode* _sNode) const
+// Get the configuration object
+Config* CParallelProjectionGeometry3D::getConfiguration() const 
 {
-	_sNode->addAttribute("type","parallel3d");
-	_sNode->addChildNode("DetectorSpacingX", m_fDetectorSpacingX);
-	_sNode->addChildNode("DetectorSpacingY", m_fDetectorSpacingY);
-	_sNode->addChildNode("DetectorRowCount", m_iDetectorRowCount);
-	_sNode->addChildNode("DetectorColCount", m_iDetectorColCount);
-	_sNode->addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
+	Config* cfg = new Config();
+	cfg->initialize("ProjectionGeometry3D");
+	cfg->self->addAttribute("type", "parallel3d");
+	cfg->self->addChildNode("DetectorRowCount", m_iDetectorRowCount);
+	cfg->self->addChildNode("DetectorColCount", m_iDetectorColCount);
+	cfg->self->addChildNode("DetectorSpacingX", m_fDetectorSpacingX);
+	cfg->self->addChildNode("DetectorSpacingY", m_fDetectorSpacingY);
+	cfg->self->addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
+	return cfg;
 }
+//----------------------------------------------------------------------------------------
 
 CVector3D CParallelProjectionGeometry3D::getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex) const
 {

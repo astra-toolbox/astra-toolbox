@@ -40,8 +40,8 @@ namespace astra
  * \par XML Configuration
  * \astra_xml_item{DetectorRowCount, int, Number of detectors for each projection.}
  * \astra_xml_item{DetectorColCount, int, Number of detectors for each projection.}
- * \astra_xml_item{DetectorWidth, float, Width of each detector.}
- * \astra_xml_item{DetectorHeight, float, Width of each detector.}
+ * \astra_xml_item{DetectorSpacingX, float, Width of each detector.}
+ * \astra_xml_item{DetectorSpacingY, float, Width of each detector.}
  * \astra_xml_item{ProjectionAngles, vector of float, projection angles in radians.}
  * \astra_xml_item{DistanceOriginDetector, float, Distance between the center of rotation and the detectorarray.}
  * \astra_xml_item{DistanceOriginSource, float, Distance between the center of rotation the the x-ray source.}
@@ -51,8 +51,8 @@ namespace astra
  *		proj_geom = astra_struct('cone');\n
  *		proj_geom.DetectorRowCount = 512;\n
  *		proj_geom.DetectorColCount = 512;\n
- *		proj_geom.DetectorWidth = 1.0;\n
- *		proj_geom.DetectorHeight = 1.0;\n
+ *		proj_geom.DetectorSpacingX = 1.0;\n
+ *		proj_geom.DetectorSpacingY = 1.0;\n
  *		proj_geom.ProjectionAngles = linspace(0,pi,100);\n
  *		proj_geom.DistanceOriginDetector = 10000;\n
  *		proj_geom.DistanceOriginSource = 10000;\n
@@ -148,18 +148,18 @@ public:
 	 */
 	virtual bool isEqual(const CProjectionGeometry3D*) const;
 
+	/** Get all settings in a Config object.
+	 *
+	 * @return Configuration Object.
+	 */
+	virtual Config* getConfiguration() const;
+
 	/** Returns true if the type of geometry defined in this class is the one specified in _sType.
 	 *
 	 * @param _sType geometry type to compare to.
 	 * @return true if _sType == "cone".
 	 */
 	virtual bool isOfType(const std::string& _sType) const;
-
-	/** Turn this object into an XML object.
-	 *
-	 * @param _sNode The XML object to fill.
-	 */
-	virtual void toXML(XMLNode* _sNode) const;
 
 	/** Returns the distance from the origin of the coordinate system to the source.
 	 *
