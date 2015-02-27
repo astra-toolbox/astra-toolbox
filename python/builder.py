@@ -48,8 +48,7 @@ cfg.close()
 cmdclass = { }
 ext_modules = [ ]
 
-language_level = 3 if int(sys.version[0]) > 2 else 2
-ext_modules = cythonize("astra/*.pyx", language_level=language_level)
+ext_modules = cythonize("astra/*.pyx", language_level=2)
 cmdclass = { 'build_ext': build_ext }
 
 setup (name = 'PyASTRAToolbox',
