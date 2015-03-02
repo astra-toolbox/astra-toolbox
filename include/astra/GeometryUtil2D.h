@@ -26,29 +26,22 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 $Id$
 */
 
-#ifndef _CUDA_CONE_DIMS_H
-#define _CUDA_CONE_DIMS_H
+#ifndef _INC_ASTRA_GEOMETRYUTIL2D
+#define _INC_ASTRA_GEOMETRYUTIL2D
 
-#include "astra/GeometryUtil3D.h"
+namespace astra {
 
+struct SFanProjection {
+        // the source
+        float fSrcX, fSrcY;
 
-namespace astraCUDA3d {
+        // the start of the (linear) detector
+        float fDetSX, fDetSY;
 
-using astra::SConeProjection;
-using astra::SPar3DProjection;
-
-struct SDimensions3D {
-	unsigned int iVolX;
-	unsigned int iVolY;
-	unsigned int iVolZ;
-	unsigned int iProjAngles;
-	unsigned int iProjU; // number of detectors in the U direction
-	unsigned int iProjV; // number of detectors in the V direction
-	unsigned int iRaysPerDetDim;
-	unsigned int iRaysPerVoxelDim;
+        // the length of a single detector pixel
+        float fDetUX, fDetUY;
 };
 
 }
 
 #endif
-

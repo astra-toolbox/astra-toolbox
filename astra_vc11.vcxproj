@@ -255,6 +255,7 @@
     <ClCompile Include="src\ForwardProjectionAlgorithm.cpp" />
     <ClCompile Include="src\Fourier.cpp" />
     <ClCompile Include="src\Globals.cpp" />
+    <ClCompile Include="src\GeometryUtil3D.cpp" />
     <ClCompile Include="src\Logger.cpp" />
     <ClCompile Include="src\ParallelBeamBlobKernelProjector2D.cpp" />
     <ClCompile Include="src\ParallelBeamLinearKernelProjector2D.cpp" />
@@ -364,6 +365,8 @@
     <ClInclude Include="include\astra\ForwardProjectionAlgorithm.h" />
     <ClInclude Include="include\astra\Fourier.h" />
     <ClInclude Include="include\astra\Globals.h" />
+    <ClInclude Include="include\astra\GeometryUtil2D.h" />
+    <ClInclude Include="include\astra\GeometryUtil3D.h" />
     <ClInclude Include="include\astra\Logger.h" />
     <ClInclude Include="include\astra\ParallelBeamBlobKernelProjector2D.h" />
     <ClInclude Include="include\astra\ParallelBeamLinearKernelProjector2D.h" />
@@ -415,7 +418,6 @@
     <CudaCompile Include="cuda\3d\cone_bp.cu" />
     <CudaCompile Include="cuda\3d\cone_fp.cu" />
     <CudaCompile Include="cuda\3d\darthelper3d.cu" />
-    <CudaCompile Include="cuda\3d\dims3d.cu" />
     <CudaCompile Include="cuda\3d\fdk.cu" />
     <CudaCompile Include="cuda\3d\par3d_bp.cu" />
     <CudaCompile Include="cuda\3d\par3d_fp.cu" />

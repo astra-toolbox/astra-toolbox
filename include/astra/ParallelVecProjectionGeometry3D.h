@@ -30,7 +30,7 @@ $Id$
 #define _INC_ASTRA_PARALLELVECPROJECTIONGEOMETRY3D
 
 #include "ProjectionGeometry3D.h"
-#include "../cuda/3d/dims3d.h"
+#include "GeometryUtil3D.h"
 
 namespace astra
 {

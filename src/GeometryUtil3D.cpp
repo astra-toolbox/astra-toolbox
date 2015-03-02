@@ -1,13 +1,13 @@
 /*
 -----------------------------------------------------------------------
-Copyright 2012 iMinds-Vision Lab, University of Antwerp
+Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
+           2014-2015, CWI, Amsterdam
 
-Contact: astra@ua.ac.be
-Website: http://astra.ua.ac.be
+Contact: astra@uantwerpen.be
+Website: http://sf.net/projects/astra-toolbox
 
+This file is part of the ASTRA Toolbox.
 
-This file is part of the
-All Scale Tomographic Reconstruction Antwerp Toolbox ("ASTRA Toolbox").
 
 The ASTRA Toolbox is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 $Id$
 */
 
-#include "dims3d.h"
+#include "astra/GeometryUtil3D.h"
 
 namespace astra {
 
@@ -70,5 +70,6 @@ void computeBP_UV_Coeffs(const SConeProjection& proj, double &fUX, double &fUY, 
 	fDZ = proj.fDetUX*proj.fDetVY - proj.fDetUY*proj.fDetVX;
 	fDC = -proj.fSrcX * (proj.fDetUY*proj.fDetVZ - proj.fDetUZ*proj.fDetVY) - proj.fSrcY * (proj.fDetUZ*proj.fDetVX - proj.fDetUX*proj.fDetVZ) - proj.fSrcZ * (proj.fDetUX*proj.fDetVY - proj.fDetUY*proj.fDetVX);
 }
+
 
 }

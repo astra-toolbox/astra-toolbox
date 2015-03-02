@@ -29,18 +29,12 @@ $Id$
 #ifndef _CUDA_DIMS_H
 #define _CUDA_DIMS_H
 
+#include "astra/GeometryUtil2D.h"
+
+
 namespace astraCUDA {
 
-struct SFanProjection {
-        // the source
-        float fSrcX, fSrcY;
-
-        // the start of the (linear) detector
-        float fDetSX, fDetSY;
-
-        // the length of a single detector pixel
-        float fDetUX, fDetUY;
-};
+using astra::SFanProjection;
 
 
 struct SDimensions {
