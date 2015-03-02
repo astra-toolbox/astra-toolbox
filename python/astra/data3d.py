@@ -27,7 +27,7 @@ from . import data3d_c as d
 
 def create(datatype,geometry,data=None):
     """Create a 3D object.
-        
+
     :param datatype: Data object type, '-vol' or '-sino'.
     :type datatype: :class:`string`
     :param geometry: Volume or projection geometry.
@@ -35,67 +35,77 @@ def create(datatype,geometry,data=None):
     :param data: Data to fill the constructed object with, either a scalar or array.
     :type data: :class:`float` or :class:`numpy.ndarray`
     :returns: :class:`int` -- the ID of the constructed object.
-    
+
     """
     return d.create(datatype,geometry,data)
 
 def get(i):
     """Get a 3D object.
-    
+
     :param i: ID of object to get.
     :type i: :class:`int`
     :returns: :class:`numpy.ndarray` -- The object data.
-    
+
     """
     return d.get(i)
 
 def get_shared(i):
     """Get a 3D object with memory shared between the ASTRA toolbox and numpy array.
-    
+
     :param i: ID of object to get.
     :type i: :class:`int`
     :returns: :class:`numpy.ndarray` -- The object data.
-    
+
     """
     return d.get_shared(i)
 
 def get_single(i):
     """Get a 3D object in single precision.
-    
+
     :param i: ID of object to get.
     :type i: :class:`int`
     :returns: :class:`numpy.ndarray` -- The object data.
-    
+
     """
     return g.get_single(i)
 
 def store(i,data):
     """Fill existing 3D object with data.
-    
+
     :param i: ID of object to fill.
     :type i: :class:`int`
     :param data: Data to fill the object with, either a scalar or array.
     :type data: :class:`float` or :class:`numpy.ndarray`
-    
+
     """
     return d.store(i,data)
 
+def get_geometry(i):
+    """Get the geometry of a 3D object.
+
+    :param i: ID of object.
+    :type i: :class:`int`
+    :returns: :class:`dict` -- The geometry of object with ID ``i``.
+
+    """
+    return d.get_geometry(i)
+
 def dimensions(i):
     """Get dimensions of a 3D object.
-    
+
     :param i: ID of object.
     :type i: :class:`int`
     :returns: :class:`tuple` -- dimensions of object with ID ``i``.
-    
+
     """
     return d.dimensions(i)
 
 def delete(ids):
     """Delete a 2D object.
-    
+
     :param ids: ID or list of ID's to delete.
     :type ids: :class:`int` or :class:`list`
-    
+
     """
     return d.delete(ids)
 
