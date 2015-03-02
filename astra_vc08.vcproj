@@ -967,6 +967,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\GeometryUtil3D.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\src\Logger.cpp"
 					>
 				</File>
@@ -1004,6 +1008,14 @@
 				</File>
 				<File
 					RelativePath=".\include\astra\Globals.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\astra\GeometryUtil2D.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\astra\GeometryUtil3D.h"
 					>
 				</File>
 				<File

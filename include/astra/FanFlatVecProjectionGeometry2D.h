@@ -30,12 +30,9 @@ $Id$
 #define _INC_ASTRA_FANFLATVECPROJECTIONGEOMETRY2D
 
 #include "ProjectionGeometry2D.h"
-#include "../cuda/2d/dims.h"
+#include "GeometryUtil2D.h"
 
 #include <cmath>
-
-// FIXME: Avoid using
-using astraCUDA::SFanProjection;
 
 namespace astra
 {
