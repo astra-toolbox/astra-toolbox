@@ -208,7 +208,7 @@ Config* CParallelVecProjectionGeometry3D::getConfiguration() const
 	Config* cfg = new Config();
 	cfg->initialize("ProjectionGeometry3D");
 
-	cfg->self->addAttribute("type", "parallel3d");
+	cfg->self->addAttribute("type", "parallel3d_vec");
 	cfg->self->addChildNode("DetectorRowCount", m_iDetectorRowCount);
 	cfg->self->addChildNode("DetectorColCount", m_iDetectorColCount);
 

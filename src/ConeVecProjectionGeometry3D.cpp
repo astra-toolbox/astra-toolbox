@@ -208,7 +208,7 @@ Config* CConeVecProjectionGeometry3D::getConfiguration() const
 	Config* cfg = new Config();
 	cfg->initialize("ProjectionGeometry3D");
 
-	cfg->self->addAttribute("type", "cone");
+	cfg->self->addAttribute("type", "cone_vec");
 	cfg->self->addChildNode("DetectorRowCount", m_iDetectorRowCount);
 	cfg->self->addChildNode("DetectorColCount", m_iDetectorColCount);
 
