@@ -31,6 +31,18 @@ $Id$
 
 namespace astra {
 
+struct SParProjection {
+    // the ray direction
+    float fRayX, fRayY;
+
+    // the start of the (linear) detector
+    float fDetSX, fDetSY;
+
+    // the length of a single detector pixel
+    float fDetUX, fDetUY;
+};
+
+
 struct SFanProjection {
         // the source
         float fSrcX, fSrcY;

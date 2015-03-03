@@ -37,9 +37,6 @@
     <CudaCompile Include="cuda\3d\darthelper3d.cu">
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>
-    <CudaCompile Include="cuda\3d\dims3d.cu">
-      <Filter>CUDA\cuda source</Filter>
-    </CudaCompile>
     <CudaCompile Include="cuda\2d\em.cu">
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>
@@ -311,6 +308,10 @@
     </ClCompile>
     <ClCompile Include="src\CudaSirtAlgorithm3D.cpp">
       <Filter>CUDA\astra source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GeometryUtil3D.cpp" />
+    <ClCompile Include="src\ParallelVecProjectionGeometry2D.cpp">
+      <Filter>Geometries\source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -643,6 +644,11 @@
     </ClInclude>
     <ClInclude Include="cuda\3d\util3d.h">
       <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\GeometryUtil2D.h" />
+    <ClInclude Include="include\astra\GeometryUtil3D.h" />
+    <ClInclude Include="include\astra\ParallelVecProjectionGeometry2D.h">
+      <Filter>Geometries\headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

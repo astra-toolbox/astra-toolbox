@@ -263,6 +263,7 @@
     <ClCompile Include="src\ParallelBeamStripKernelProjector2D.cpp" />
     <ClCompile Include="src\ParallelProjectionGeometry2D.cpp" />
     <ClCompile Include="src\ParallelProjectionGeometry3D.cpp" />
+    <ClCompile Include="src\ParallelVecProjectionGeometry2D.cpp" />
     <ClCompile Include="src\ParallelVecProjectionGeometry3D.cpp" />
     <ClCompile Include="src\PlatformDepSystemCode.cpp" />
     <ClCompile Include="src\ProjectionGeometry2D.cpp" />
@@ -375,6 +376,7 @@
     <ClInclude Include="include\astra\ParallelProjectionGeometry2D.h" />
     <ClInclude Include="include\astra\ParallelProjectionGeometry3D.h" />
     <ClInclude Include="include\astra\ParallelVecProjectionGeometry3D.h" />
+    <ClInclude Include="include\astra\ParallelVecProjectionGeometry2D.h" />
     <ClInclude Include="include\astra\PlatformDepSystemCode.h" />
     <ClInclude Include="include\astra\ProjectionGeometry2D.h" />
     <ClInclude Include="include\astra\ProjectionGeometry3D.h" />

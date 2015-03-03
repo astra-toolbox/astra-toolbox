@@ -1,7 +1,29 @@
 function proj_geom_out = astra_geom_2vec(proj_geom)
 
+	% PARALLEL 2D
+	if strcmp(proj_geom.type,'parallel')	
+
+		vectors = zeros(numel(proj_geom.ProjectionAngles), 6);
+		for i = 1:numel(proj_geom.ProjectionAngles)
+
+			% ray direction
+			vectors(i,1) = sin(proj_geom.ProjectionAngles(i));
+			vectors(i,2) = -cos(proj_geom.ProjectionAngles(i));
+
+			% center of detector
+			vectors(i,3) = 0;
+			vectors(i,4) = 0;
+
+			% vector from detector pixel 0 to 1
+			vectors(i,5) = cos(proj_geom.ProjectionAngles(i)) * proj_geom.DetectorWidth;
+			vectors(i,6) = sin(proj_geom.ProjectionAngles(i)) * proj_geom.DetectorWidth;
+	
+		end
+
+		proj_geom_out = astra_create_proj_geom('parallel_vec', proj_geom.DetectorCount, vectors);		
+
 	% FANFLAT
-	if strcmp(proj_geom.type,'fanflat')
+	elseif strcmp(proj_geom.type,'fanflat')
 
 		vectors = zeros(numel(proj_geom.ProjectionAngles), 6);
 		for i = 1:numel(proj_geom.ProjectionAngles)
@@ -50,7 +72,7 @@ function proj_geom_out = astra_geom_2vec(proj_geom)
 
 		proj_geom_out = astra_create_proj_geom('cone_vec', proj_geom.DetectorRowCount, proj_geom.DetectorColCount, vectors);	
 
-	% PARALLEL
+	% PARALLEL 3D
 	elseif strcmp(proj_geom.type,'parallel3d')	
 
 		vectors = zeros(numel(proj_geom.ProjectionAngles), 12);

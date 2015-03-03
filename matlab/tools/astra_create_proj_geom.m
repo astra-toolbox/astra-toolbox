@@ -107,6 +107,19 @@ if strcmp(type,'parallel')
 		'ProjectionAngles',		varargin{3}  ...
 	);
 
+elseif strcmp(type,'parallel_vec')
+	if numel(varargin) < 2
+		error('not enough variables: astra_create_proj_geom(parallel_vec, det_count, V')
+	end
+	if size(varargin{2}, 2) ~= 6
+		error('V should be a Nx6 matrix, with N the number of projections')
+	end
+	proj_geom = struct( ...
+		'type',					'parallel_vec',  ...
+		'DetectorCount',		varargin{1}, ...
+		'Vectors',				varargin{2}  ...
+	);
+
 elseif strcmp(type,'fanflat')
 	if numel(varargin) < 5
 		error('not enough variables: astra_create_proj_geom(fanflat, det_width, det_count, angles, source_origin, source_det)');
