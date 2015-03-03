@@ -49,19 +49,17 @@ cdef extern from *:
 
 
 def create(config):
-    cdef XMLDocument * xml = utils.dict2XML(six.b('Algorithm'), config)
-    cdef Config cfg
+    cdef Config * cfg = utils.dictToConfig(six.b('Algorithm'), config)
     cdef CAlgorithm * alg
-    cfg.self = xml.getRootNode()
     alg = PyAlgorithmFactory.getSingletonPtr().create(cfg.self.getAttribute(six.b('type')))
     if alg == NULL:
-        del xml
+        del cfg
         raise Exception("Unknown algorithm.")
-    if not alg.initialize(cfg):
-        del xml
+    if not alg.initialize(cfg[0]):
+        del cfg
         del alg
         raise Exception("Algorithm not initialized.")
-    del xml
+    del cfg
     return manAlg.store(alg)
 
 cdef CAlgorithm * getAlg(i) except NULL:
