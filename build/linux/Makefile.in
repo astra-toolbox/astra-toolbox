@@ -303,6 +303,8 @@ clean:
 	rm -f $(TEST_OBJECTS) test.bin
 	rm -fr ../../python/finalbuild/
 	rm -fr ../../python/build/
+	rm -f ../../python/astra/*.cpp
+	rm -f ../../python/astra/*.c
 
 distclean: clean
 	rm -f config.guess config.sub ltmain.sh libtool install-sh
