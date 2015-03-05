@@ -208,6 +208,19 @@ fi
 
 AC_SUBST(HAVEPYTHON)
 
+#OS specific setup
+AC_CANONICAL_HOST
+case $host_os in
+  darwin* )
+        CPPFLAGS_OS="-stdlib=libstdc++ -mmacosx-version-min=10.6"
+        ;;
+    *)
+        CPPFLAGS_OS=""
+        ;;
+esac
+
+AC_SUBST(CPPFLAGS_OS)
+
 
 # TODO:
 

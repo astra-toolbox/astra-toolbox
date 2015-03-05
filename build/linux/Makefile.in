@@ -32,6 +32,8 @@ CXXFLAGS+=-g -O3 -Wall -Wshadow
 LIBS+=-lpthread
 LDFLAGS+=-g
 
+CPPFLAGS+=@CPPFLAGS_OS@
+
 ifeq ($(cuda),yes)
 CPPFLAGS  += @CPPFLAGS_CUDA@ -DASTRA_CUDA
 NVCCFLAGS  = @NVCCFLAGS@ @CPPFLAGS_CUDA@ -I../.. -I../../include -DASTRA_CUDA
