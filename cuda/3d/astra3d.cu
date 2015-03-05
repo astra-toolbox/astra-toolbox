@@ -40,6 +40,12 @@ $Id$
 #include "arith3d.h"
 #include "astra3d.h"
 
+#include "astra/ParallelProjectionGeometry3D.h"
+#include "astra/ParallelVecProjectionGeometry3D.h"
+#include "astra/ConeProjectionGeometry3D.h"
+#include "astra/ConeVecProjectionGeometry3D.h"
+#include "astra/VolumeGeometry3D.h"
+
 #include <iostream>
 
 using namespace astraCUDA3d;
@@ -133,6 +139,150 @@ static SPar3DProjection* genPar3DProjections(unsigned int iProjAngles,
 
 	return p;
 }
+
+
+
+
+
+// adjust pProjs to normalize volume geometry
+template<typename ProjectionT>
+static bool convertAstraGeometry_internal(const CVolumeGeometry3D* pVolGeom,
+                          unsigned int iProjectionAngleCount,
+                          ProjectionT*& pProjs,
+                          float& fOutputScale)
+{
+	assert(pVolGeom);
+	assert(pProjs);
+
+	// TODO: Relative instead of absolute
+	const float EPS = 0.00001f;
+	if (abs(pVolGeom->getPixelLengthX() - pVolGeom->getPixelLengthY()) > EPS)
+		return false;
+	if (abs(pVolGeom->getPixelLengthX() - pVolGeom->getPixelLengthZ()) > EPS)
+		return false;
+
+
+	// Translate
+	float dx = -(pVolGeom->getWindowMinX() + pVolGeom->getWindowMaxX()) / 2;
+	float dy = -(pVolGeom->getWindowMinY() + pVolGeom->getWindowMaxY()) / 2;
+	float dz = -(pVolGeom->getWindowMinZ() + pVolGeom->getWindowMaxZ()) / 2;
+
+	float factor = 1.0f / pVolGeom->getPixelLengthX();
+
+	for (int i = 0; i < iProjectionAngleCount; ++i) {
+		// CHECKME: Order of scaling and translation
+		pProjs[i].translate(dx, dy, dz);
+		pProjs[i].scale(factor);
+	}
+
+	// CHECKME: Check factor
+	fOutputScale *= pVolGeom->getPixelLengthX();
+
+	return true;
+}
+
+
+
+bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
+                          const CParallelProjectionGeometry3D* pProjGeom,
+                          SPar3DProjection*& pProjs, float& fOutputScale)
+{
+	assert(pVolGeom);
+	assert(pProjGeom);
+	assert(pProjGeom->getProjectionAngles());
+
+	int nth = pProjGeom->getProjectionCount();
+
+	pProjs = genPar3DProjections(nth,
+	                             pProjGeom->getDetectorColCount(),
+	                             pProjGeom->getDetectorRowCount(),
+	                             pProjGeom->getDetectorSpacingX(),
+	                             pProjGeom->getDetectorSpacingY(),
+	                             pProjGeom->getProjectionAngles());
+
+	bool ok;
+
+	fOutputScale = 1.0f;
+
+	ok = convertAstraGeometry_internal(pVolGeom, nth, pProjs, fOutputScale);
+
+	return ok;
+}
+
+bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
+                          const CParallelVecProjectionGeometry3D* pProjGeom,
+                          SPar3DProjection*& pProjs, float& fOutputScale)
+{
+	assert(pVolGeom);
+	assert(pProjGeom);
+	assert(pProjGeom->getProjectionVectors());
+
+	int nth = pProjGeom->getProjectionCount();
+
+	pProjs = new SPar3DProjection[nth];
+	for (int i = 0; i < nth; ++i)
+		pProjs[i] = pProjGeom->getProjectionVectors()[i];
+
+	bool ok;
+
+	fOutputScale = 1.0f;
+
+	ok = convertAstraGeometry_internal(pVolGeom, nth, pProjs, fOutputScale);
+
+	return ok;
+}
+
+bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
+                          const CConeProjectionGeometry3D* pProjGeom,
+                          SConeProjection*& pProjs, float& fOutputScale)
+{
+	assert(pVolGeom);
+	assert(pProjGeom);
+	assert(pProjGeom->getProjectionAngles());
+
+	int nth = pProjGeom->getProjectionCount();
+
+	pProjs = genConeProjections(nth,
+	                            pProjGeom->getDetectorColCount(),
+	                            pProjGeom->getDetectorRowCount(),
+	                            pProjGeom->getOriginSourceDistance(),
+	                            pProjGeom->getOriginDetectorDistance(),
+	                            pProjGeom->getDetectorSpacingX(),
+	                            pProjGeom->getDetectorSpacingY(),
+	                            pProjGeom->getProjectionAngles());
+
+	bool ok;
+
+	fOutputScale = 1.0f;
+
+	ok = convertAstraGeometry_internal(pVolGeom, nth, pProjs, fOutputScale);
+
+	return ok;
+}
+
+bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
+                          const CConeVecProjectionGeometry3D* pProjGeom,
+                          SConeProjection*& pProjs, float& fOutputScale)
+{
+	assert(pVolGeom);
+	assert(pProjGeom);
+	assert(pProjGeom->getProjectionAngles());
+
+	int nth = pProjGeom->getProjectionCount();
+
+	pProjs = new SConeProjection[nth];
+	for (int i = 0; i < nth; ++i)
+		pProjs[i] = pProjGeom->getProjectionVectors()[i];
+
+	bool ok;
+
+	fOutputScale = 1.0f;
+
+	ok = convertAstraGeometry_internal(pVolGeom, nth, pProjs, fOutputScale);
+
+	return ok;
+}
+
 
 
 

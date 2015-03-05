@@ -466,6 +466,22 @@ _AstraExport bool astraCudaFDK(float* pfVolume, const float* pfProjections,
                   bool bShortScan,
                   int iGPUIndex, int iVoxelSuperSampling);
 
+_AstraExport bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
+                          const CParallelProjectionGeometry3D* pProjGeom,
+                          SPar3DProjection*& pProjs, float& fOutputScale);
+
+_AstraExport bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
+                          const CParallelVecProjectionGeometry3D* pProjGeom,
+                          SPar3DProjection*& pProjs, float& fOutputScale);
+
+_AstraExport bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
+                          const CConeProjectionGeometry3D* pProjGeom,
+                          SConeProjection*& pProjs, float& fOutputScale);
+
+_AstraExport bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
+                          const CConeVecProjectionGeometry3D* pProjGeom,
+                          SConeProjection*& pProjs, float& fOutputScale);
+
 }
 
 
