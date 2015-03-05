@@ -29,8 +29,13 @@ $Id$
 template <typename Policy>
 void CParallelBeamLineKernelProjector2D::project(Policy& p)
 {
-	projectBlock_internal(0, m_pProjectionGeometry->getProjectionAngleCount(),
-	                      0, m_pProjectionGeometry->getDetectorCount(), p);
+	if (dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry)) {
+		projectBlock_internal(0, m_pProjectionGeometry->getProjectionAngleCount(),
+		                      0, m_pProjectionGeometry->getDetectorCount(), p);
+	} else if (dynamic_cast<CParallelVecProjectionGeometry2D*>(m_pProjectionGeometry)) {
+		projectBlock_internal_vector(0, m_pProjectionGeometry->getProjectionAngleCount(),
+		                             0, m_pProjectionGeometry->getDetectorCount(), p);		
+	}
 }
 
 template <typename Policy>
@@ -49,7 +54,7 @@ void CParallelBeamLineKernelProjector2D::projectSingleRay(int _iProjection, int 
 
 
 //----------------------------------------------------------------------------------------
-// PROJECT BLOCK
+// PROJECT BLOCK - default projection geometry
 template <typename Policy>
 void CParallelBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, int _iProjTo, int _iDetFrom, int _iDetTo, Policy& p)
 {
@@ -58,6 +63,11 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 	float32 lengthPerRow, updatePerRow, inv_pixelLengthX, lengthPerCol, updatePerCol, inv_pixelLengthY;
 	int iVolumeIndex, iRayIndex, row, col, iAngle, iDetector, x1;
 	bool switch_t;
+
+	float32 old_theta;
+	const SParProjection * proj = 0;
+
+	const CParallelProjectionGeometry2D* pProjectionGeometry = dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry);
 
 	// loop angles
 	for (iAngle = _iProjFrom; iAngle < _iProjTo; ++iAngle) {
@@ -287,3 +297,189 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 
 }
 
+//----------------------------------------------------------------------------------------
+// PROJECT BLOCK - vector projection geometry
+template <typename Policy>
+void CParallelBeamLineKernelProjector2D::projectBlock_internal_vector(int _iProjFrom, int _iProjTo, int _iDetFrom, int _iDetTo, Policy& p)
+{
+	// variables
+	float32 detX, detY, S, T, I, x, y, c, r, update_c, update_r, offset;
+	float32 lengthPerRow, lengthPerCol, inv_pixelLengthX, inv_pixelLengthY, invTminSTimesLengthPerRow, invTminSTimesLengthPerCol;
+	int iVolumeIndex, iRayIndex, row, col, iAngle, iDetector;
+
+	const SParProjection * proj = 0;
+	const CParallelVecProjectionGeometry2D* pVecProjectionGeometry = dynamic_cast<CParallelVecProjectionGeometry2D*>(m_pProjectionGeometry);
+
+	inv_pixelLengthX = 1.0f / m_pVolumeGeometry->getPixelLengthX();
+	inv_pixelLengthY = 1.0f / m_pVolumeGeometry->getPixelLengthY();
+
+	// loop angles
+	for (iAngle = _iProjFrom; iAngle < _iProjTo; ++iAngle) {
+
+		proj = &pVecProjectionGeometry->getProjectionVectors()[iAngle];
+
+		bool vertical = fabs(proj->fRayX) < fabs(proj->fRayY);
+		if (vertical) {
+			S = abs(0.5f * (1.0f - proj->fRayY/proj->fRayX));
+			T = abs(0.5f * (1.0f + proj->fRayY/proj->fRayX));
+			lengthPerRow = m_pVolumeGeometry->getPixelLengthX() * sqrt(proj->fRayY*proj->fRayY + proj->fRayX*proj->fRayX) / abs(proj->fRayY);
+			invTminSTimesLengthPerRow = lengthPerRow / (T - S);
+		} else {
+			S = abs(0.5f * (1.0f - proj->fRayX/proj->fRayY));
+			T = abs(0.5f * (1.0f + proj->fRayX/proj->fRayY));
+			lengthPerCol = m_pVolumeGeometry->getPixelLengthY() * sqrt(proj->fRayY*proj->fRayY + proj->fRayX*proj->fRayX) / abs(proj->fRayX);
+			invTminSTimesLengthPerCol = lengthPerCol / (T - S);
+		}
+
+		// loop detectors
+		for (iDetector = _iDetFrom; iDetector < _iDetTo; ++iDetector) {
+			
+			iRayIndex = iAngle * m_pProjectionGeometry->getDetectorCount() + iDetector;
+
+			// POLICY: RAY PRIOR
+			if (!p.rayPrior(iRayIndex)) continue;
+	
+			detX = proj->fDetSX + (iDetector+0.5f) * proj->fDetUX;
+			detY = proj->fDetSY + (iDetector+0.5f) * proj->fDetUY;
+
+			// vertically
+			if (vertical) {
+
+				// calculate x for row 0
+				float32 x = detX + (proj->fRayX/proj->fRayY)*(m_pVolumeGeometry->pixelRowToCenterY(0)-detY);
+				float32 c = (x - m_pVolumeGeometry->getWindowMinX()) * inv_pixelLengthX - 0.5f;
+				float32 update_c = -m_pVolumeGeometry->getPixelLengthY() * (proj->fRayX/proj->fRayY) * inv_pixelLengthX;
+
+				// for each row
+				for (row = 0; row < m_pVolumeGeometry->getGridRowCount(); ++row, c += update_c) {
+
+					col = int(c+0.5f);
+					offset = c - float32(col);
+
+					if (col <= 0 || col >= m_pVolumeGeometry->getGridColCount()-1) continue;
+
+					// left
+					if (offset < -S) {
+						I = (offset + T) * invTminSTimesLengthPerRow;
+
+						iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row, col-1);
+						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
+						if (p.pixelPrior(iVolumeIndex)) {
+							p.addWeight(iRayIndex, iVolumeIndex, lengthPerRow-I);
+							p.pixelPosterior(iVolumeIndex);
+						}
+
+						iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row, col);
+						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
+						if (p.pixelPrior(iVolumeIndex)) {
+							p.addWeight(iRayIndex, iVolumeIndex, I);
+							p.pixelPosterior(iVolumeIndex);
+						}
+					}
+
+					// right
+					else if (S < offset) {
+						I = (offset - S) * invTminSTimesLengthPerRow;
+
+						iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row, col);
+						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
+						if (p.pixelPrior(iVolumeIndex)) {
+							p.addWeight(iRayIndex, iVolumeIndex, lengthPerRow-I);
+							p.pixelPosterior(iVolumeIndex);
+						}
+
+						iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row, col+1);
+						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
+						if (p.pixelPrior(iVolumeIndex)) {
+							p.addWeight(iRayIndex, iVolumeIndex, I);
+							p.pixelPosterior(iVolumeIndex);
+						}
+					}
+
+					// centre
+					else {
+						iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row, col);
+						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
+						if (p.pixelPrior(iVolumeIndex)) {
+							p.addWeight(iRayIndex, iVolumeIndex, lengthPerRow);
+							p.pixelPosterior(iVolumeIndex);
+						}
+					}
+		
+				}
+			}
+
+			// horizontally
+			else {
+
+				// calculate y for col 0
+				float32 y = detY + (proj->fRayY/proj->fRayX)*(m_pVolumeGeometry->pixelColToCenterX(0)-detX);
+				float32 r = (m_pVolumeGeometry->getWindowMaxY() - y) * inv_pixelLengthY - 0.5f;
+				float32 update_r = -m_pVolumeGeometry->getPixelLengthX() * (proj->fRayY/proj->fRayX) * inv_pixelLengthY;
+
+				// for each col
+				for (col = 0; col < m_pVolumeGeometry->getGridColCount(); ++col, r += update_r) {
+
+					int row = int(r+0.5f);
+					float32 offset = r - float32(row);
+
+					if (row <= 0 || row >= m_pVolumeGeometry->getGridRowCount()-1) continue;
+
+					// up
+					if (offset < -S) {
+						I = (offset + T) * invTminSTimesLengthPerCol;
+
+						iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row-1, col);
+						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
+						if (p.pixelPrior(iVolumeIndex)) {
+							p.addWeight(iRayIndex, iVolumeIndex, lengthPerCol-I);
+							p.pixelPosterior(iVolumeIndex);
+						}
+
+						iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row, col);
+						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
+						if (p.pixelPrior(iVolumeIndex)) {
+							p.addWeight(iRayIndex, iVolumeIndex, I);
+							p.pixelPosterior(iVolumeIndex);
+						}
+					}
+
+					// down
+					else if (S < offset) {
+						I = (offset - S) * invTminSTimesLengthPerCol;
+
+						iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row, col);
+						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
+						if (p.pixelPrior(iVolumeIndex)) {
+							p.addWeight(iRayIndex, iVolumeIndex, lengthPerCol-I);
+							p.pixelPosterior(iVolumeIndex);
+						}
+
+						iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row+1, col);
+						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
+						if (p.pixelPrior(iVolumeIndex)) {
+							p.addWeight(iRayIndex, iVolumeIndex, I);
+							p.pixelPosterior(iVolumeIndex);
+						}
+					}
+
+					// centre
+					else {
+						iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row, col);
+						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
+						if (p.pixelPrior(iVolumeIndex)) {
+							p.addWeight(iRayIndex, iVolumeIndex, lengthPerCol);
+							p.pixelPosterior(iVolumeIndex);
+						}
+					}
+
+				}
+			} // end loop col
+	
+			// POLICY: RAY POSTERIOR
+			p.rayPosterior(iRayIndex);
+	
+		} // end loop detector
+	} // end loop angles
+
+}
