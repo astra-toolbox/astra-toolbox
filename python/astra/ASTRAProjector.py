@@ -70,11 +70,9 @@ class ASTRAProjector2D(object):
     :type vol_geom: :class:`dict`
     :param proj_type: Projector type, such as ``'line'``, ``'linear'``, ...
     :type proj_type: :class:`string`
-    :param useCUDA: If ``True``, use CUDA for calculations, when possible.
-    :type useCUDA: :class:`bool`
     """
 
-    def __init__(self, proj_geom, vol_geom, proj_type, useCUDA=False):
+    def __init__(self, proj_geom, vol_geom, proj_type):
         self.vol_geom = vol_geom
         self.recSize = vol_geom['GridColCount']
         self.angles = proj_geom['ProjectionAngles']
@@ -84,7 +82,6 @@ class ASTRAProjector2D(object):
         self.nProj = self.angles.shape[0]
         self.proj_geom = proj_geom
         self.proj_id = ac.create_projector(proj_type, proj_geom, vol_geom)
-        self.useCUDA = useCUDA
         self.T = ASTRAProjector2DTranspose(self)
 
     def backProject(self, data):
@@ -96,7 +93,7 @@ class ASTRAProjector2D(object):
 
         """
         vol_id, vol = ac.create_backprojection(
-            data, self.proj_id, useCUDA=self.useCUDA, returnData=True)
+            data, self.proj_id, returnData=True)
         data2d.delete(vol_id)
         return vol
 
@@ -108,7 +105,7 @@ class ASTRAProjector2D(object):
         :returns: :class:`numpy.ndarray` -- The forward projection.
 
         """
-        sin_id, sino = ac.create_sino(data, self.proj_id, useCUDA=self.useCUDA, returnData=True)
+        sin_id, sino = ac.create_sino(data, self.proj_id, returnData=True)
         data2d.delete(sin_id)
         return sino
 

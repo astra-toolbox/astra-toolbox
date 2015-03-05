@@ -30,15 +30,16 @@ import math
 from . import data2d
 from . import data3d
 from . import projector
+from . import projector3d
 from . import algorithm
 
 def astra_dict(intype):
     """Creates a dict to use with the ASTRA Toolbox.
-    
+
     :param intype: Type of the ASTRA object.
     :type intype: :class:`string`
     :returns: :class:`dict` -- An ASTRA dict of type ``intype``.
-    
+
     """
     if intype == 'SIRT_CUDA2':
         intype = 'SIRT_CUDA'
@@ -255,25 +256,23 @@ This method can be called in a number of ways:
             raise Exception('not enough variables: astra_create_proj_geom(parallel3d_vec, det_row_count, det_col_count, V)')
         if not args[2].shape[1] == 12:
             raise Exception('V should be a Nx12 matrix, with N the number of projections')
-        return {'type': 'parallel3d_vec','DetectorRowCount':args[0],'DetectorColCount':args[1],'Vectors':args[2]}    
+        return {'type': 'parallel3d_vec','DetectorRowCount':args[0],'DetectorColCount':args[1],'Vectors':args[2]}
     elif intype == 'sparse_matrix':
         if len(args) < 4:
             raise Exception(
                 'not enough variables: astra_create_proj_geom(sparse_matrix, det_width, det_count, angles, matrix_id)')
         return {'type': 'sparse_matrix', 'DetectorWidth': args[0], 'DetectorCount': args[1], 'ProjectionAngles': args[2], 'MatrixID': args[3]}
     else:
-        raise Exception('Error: unknown type ' + intype) 
+        raise Exception('Error: unknown type ' + intype)
 
 
-def create_backprojection(data, proj_id, useCUDA=False, returnData=True):
+def create_backprojection(data, proj_id, returnData=True):
     """Create a backprojection of a sinogram (2D).
 
 :param data: Sinogram data or ID.
 :type data: :class:`numpy.ndarray` or :class:`int`
 :param proj_id: ID of the projector to use.
 :type proj_id: :class:`int`
-:param useCUDA: If ``True``, use CUDA for the calculation.
-:type useCUDA: :class:`bool`
 :param returnData: If False, only return the ID of the backprojection.
 :type returnData: :class:`bool`
 :returns: :class:`int` or (:class:`int`, :class:`numpy.ndarray`) -- If ``returnData=False``, returns the ID of the backprojection. Otherwise, returns a tuple containing the ID of the backprojection and the backprojection itself, in that order.
@@ -287,13 +286,13 @@ def create_backprojection(data, proj_id, useCUDA=False, returnData=True):
         sino_id = data
     vol_id = data2d.create('-vol', vol_geom, 0)
 
-    algString = 'BP'
-    if useCUDA:
-        algString = algString + '_CUDA'
+    if projector.is_cuda(proj_id):
+        algString = 'BP_CUDA'
+    else:
+        algString = 'BP'
 
     cfg = astra_dict(algString)
-    if not useCUDA:
-        cfg['ProjectorId'] = proj_id
+    cfg['ProjectorId'] = proj_id
     cfg['ProjectionDataId'] = sino_id
     cfg['ReconstructionDataId'] = vol_id
     alg_id = algorithm.create(cfg)
@@ -345,20 +344,13 @@ def create_backprojection3d_gpu(data, proj_geom, vol_geom, returnData=True):
         return vol_id
 
 
-def create_sino(data, proj_id=None, proj_geom=None, vol_geom=None,
-                useCUDA=False, returnData=True, gpuIndex=None):
+def create_sino(data, proj_id, returnData=True, gpuIndex=None):
     """Create a forward projection of an image (2D).
 
     :param data: Image data or ID.
     :type data: :class:`numpy.ndarray` or :class:`int`
     :param proj_id: ID of the projector to use.
     :type proj_id: :class:`int`
-    :param proj_geom: Projection geometry.
-    :type proj_geom: :class:`dict`
-    :param vol_geom: Volume geometry.
-    :type vol_geom: :class:`dict`
-    :param useCUDA: If ``True``, use CUDA for the calculation.
-    :type useCUDA: :class:`bool`
     :param returnData: If False, only return the ID of the forward projection.
     :type returnData: :class:`bool`
     :param gpuIndex: Optional GPU index.
@@ -374,31 +366,20 @@ def create_sino(data, proj_id=None, proj_geom=None, vol_geom=None,
     ``proj_geom`` and ``vol_geom``. If ``proj_id`` is given, then
     ``proj_geom`` and ``vol_geom`` must be None and vice versa.
 """
-    if proj_id is not None:
-        proj_geom = projector.projection_geometry(proj_id)
-        vol_geom = projector.volume_geometry(proj_id)
-    elif proj_geom is not None and vol_geom is not None:
-        if not useCUDA:
-            # We need more parameters to create projector.
-            raise ValueError(
-                """A ``proj_id`` is needed when CUDA is not used.""")
-    else:
-        raise Exception("""The geometry setup is not defined.
-        The geometry of setup is defined by ``proj_id`` or with
-        ``proj_geom`` and ``vol_geom``. If ``proj_id`` is given, then
-        ``proj_geom`` and ``vol_geom`` must be None and vice versa.""")
+    proj_geom = projector.projection_geometry(proj_id)
+    vol_geom = projector.volume_geometry(proj_id)
 
     if isinstance(data, np.ndarray):
         volume_id = data2d.create('-vol', vol_geom, data)
     else:
         volume_id = data
     sino_id = data2d.create('-sino', proj_geom, 0)
-    algString = 'FP'
-    if useCUDA:
-        algString = algString + '_CUDA'
+    if projector.is_cuda(proj_id):
+        algString = 'FP_CUDA'
+    else:
+        algString = 'FP'
     cfg = astra_dict(algString)
-    if not useCUDA:
-        cfg['ProjectorId'] = proj_id
+    cfg['ProjectorId'] = proj_id
     if gpuIndex is not None:
         cfg['option'] = {'GPUindex': gpuIndex}
     cfg['ProjectionDataId'] = sino_id
@@ -496,8 +477,7 @@ def create_reconstruction(rec_type, proj_id, sinogram, iterations=1, use_mask='n
     vol_geom = projector.volume_geometry(proj_id)
     recon_id = data2d.create('-vol', vol_geom, 0)
     cfg = astra_dict(rec_type)
-    if not 'CUDA' in rec_type:
-        cfg['ProjectorId'] = proj_id
+    cfg['ProjectorId'] = proj_id
     cfg['ProjectionDataId'] = sino_id
     cfg['ReconstructionDataId'] = recon_id
     cfg['options'] = {}
@@ -560,4 +540,8 @@ def create_projector(proj_type, proj_geom, vol_geom):
     cfg = astra_dict(proj_type)
     cfg['ProjectionGeometry'] = proj_geom
     cfg['VolumeGeometry'] = vol_geom
-    return projector.create(cfg)
+    types3d = ['linear3d', 'linearcone', 'cuda3d']
+    if proj_type in types3d:
+        return projector3d.create(cfg)
+    else:
+        return projector.create(cfg)
