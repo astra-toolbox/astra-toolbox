@@ -41,9 +41,22 @@ try:
         usecuda=True
 except KeyError:
     pass
-cfg = open('astra/config.pxi','w')
-cfg.write('DEF HAVE_CUDA=' + str(usecuda) + "\n")
-cfg.close()
+
+cfgToWrite = 'DEF HAVE_CUDA=' + str(usecuda) + "\n"
+cfgHasToBeUpdated = True
+try:
+    cfg = open('astra/config.pxi','r')
+    cfgIn = cfg.read()
+    cfg.close()
+    if cfgIn==cfgToWrite:
+        cfgHasToBeUpdated = False
+except IOError:
+    pass
+
+if cfgHasToBeUpdated:
+    cfg = open('astra/config.pxi','w')
+    cfg.write(cfgToWrite)
+    cfg.close()
 
 cmdclass = { }
 ext_modules = [ ]
