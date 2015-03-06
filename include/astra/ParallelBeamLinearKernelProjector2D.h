@@ -30,6 +30,7 @@ $Id$
 #define _INC_ASTRA_PARALLELLINEARKERNELPROJECTOR
 
 #include "ParallelProjectionGeometry2D.h"
+#include "ParallelVecProjectionGeometry2D.h"
 #include "Float32Data2D.h"
 #include "Projector2D.h"
 
@@ -185,6 +186,9 @@ protected:
 	void projectBlock_internal(int _iProjFrom, int _iProjTo,
 	                           int _iDetFrom, int _iDetTo, Policy& _policy);
 
+	template <typename Policy>
+	void projectBlock_internal_vector(int _iProjFrom, int _iProjTo,
+	                                  int _iDetFrom, int _iDetTo, Policy& _policy);
 
 };
 
