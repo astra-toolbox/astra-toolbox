@@ -34,22 +34,32 @@ void CParallelBeamLineKernelProjector2D::project(Policy& p)
 		                      0, m_pProjectionGeometry->getDetectorCount(), p);
 	} else if (dynamic_cast<CParallelVecProjectionGeometry2D*>(m_pProjectionGeometry)) {
 		projectBlock_internal_vector(0, m_pProjectionGeometry->getProjectionAngleCount(),
-		                             0, m_pProjectionGeometry->getDetectorCount(), p);		
+		                             0, m_pProjectionGeometry->getDetectorCount(), p);
 	}
 }
 
 template <typename Policy>
 void CParallelBeamLineKernelProjector2D::projectSingleProjection(int _iProjection, Policy& p)
 {
-	projectBlock_internal(_iProjection, _iProjection + 1,
-	                      0, m_pProjectionGeometry->getDetectorCount(), p);
+	if (dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry)) {
+		projectBlock_internal(_iProjection, _iProjection + 1,
+	                          0, m_pProjectionGeometry->getDetectorCount(), p);
+	} else if (dynamic_cast<CParallelVecProjectionGeometry2D*>(m_pProjectionGeometry)) {
+		projectBlock_internal_vector(_iProjection, _iProjection + 1,
+	                                 0, m_pProjectionGeometry->getDetectorCount(), p);
+	}
 }
 
 template <typename Policy>
 void CParallelBeamLineKernelProjector2D::projectSingleRay(int _iProjection, int _iDetector, Policy& p)
 {
-	projectBlock_internal(_iProjection, _iProjection + 1,
+	if (dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry)) {
+		projectBlock_internal(_iProjection, _iProjection + 1,
 	                      _iDetector, _iDetector + 1, p);
+	} else if (dynamic_cast<CParallelVecProjectionGeometry2D*>(m_pProjectionGeometry)) {
+		projectBlock_internal_vector(_iProjection, _iProjection + 1,
+	                      _iDetector, _iDetector + 1, p);
+	}
 }
 
 
@@ -313,6 +323,9 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal_vector(int _iProj
 	inv_pixelLengthX = 1.0f / m_pVolumeGeometry->getPixelLengthX();
 	inv_pixelLengthY = 1.0f / m_pVolumeGeometry->getPixelLengthY();
 
+	int colCount = m_pVolumeGeometry->getGridColCount();
+	int rowCount = m_pVolumeGeometry->getGridRowCount();
+
 	// loop angles
 	for (iAngle = _iProjFrom; iAngle < _iProjTo; ++iAngle) {
 
@@ -320,15 +333,17 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal_vector(int _iProj
 
 		bool vertical = fabs(proj->fRayX) < fabs(proj->fRayY);
 		if (vertical) {
-			S = abs(0.5f * (1.0f - proj->fRayY/proj->fRayX));
-			T = abs(0.5f * (1.0f + proj->fRayY/proj->fRayX));
+			S = fabs(0.5f * (1.0f - proj->fRayY/proj->fRayX));
+			T = fabs(0.5f * (1.0f + proj->fRayY/proj->fRayX));
 			lengthPerRow = m_pVolumeGeometry->getPixelLengthX() * sqrt(proj->fRayY*proj->fRayY + proj->fRayX*proj->fRayX) / abs(proj->fRayY);
 			invTminSTimesLengthPerRow = lengthPerRow / (T - S);
+			update_c = -m_pVolumeGeometry->getPixelLengthY() * (proj->fRayX/proj->fRayY) * inv_pixelLengthX;
 		} else {
-			S = abs(0.5f * (1.0f - proj->fRayX/proj->fRayY));
-			T = abs(0.5f * (1.0f + proj->fRayX/proj->fRayY));
+			S = fabs(0.5f * (1.0f - proj->fRayX/proj->fRayY));
+			T = fabs(0.5f * (1.0f + proj->fRayX/proj->fRayY));
 			lengthPerCol = m_pVolumeGeometry->getPixelLengthY() * sqrt(proj->fRayY*proj->fRayY + proj->fRayX*proj->fRayX) / abs(proj->fRayX);
 			invTminSTimesLengthPerCol = lengthPerCol / (T - S);
+			update_r = -m_pVolumeGeometry->getPixelLengthX() * (proj->fRayY/proj->fRayX) * inv_pixelLengthY;
 		}
 
 		// loop detectors
@@ -346,30 +361,29 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal_vector(int _iProj
 			if (vertical) {
 
 				// calculate x for row 0
-				float32 x = detX + (proj->fRayX/proj->fRayY)*(m_pVolumeGeometry->pixelRowToCenterY(0)-detY);
-				float32 c = (x - m_pVolumeGeometry->getWindowMinX()) * inv_pixelLengthX - 0.5f;
-				float32 update_c = -m_pVolumeGeometry->getPixelLengthY() * (proj->fRayX/proj->fRayY) * inv_pixelLengthX;
+				x = detX + (proj->fRayX/proj->fRayY)*(m_pVolumeGeometry->pixelRowToCenterY(0)-detY);
+				c = (x - m_pVolumeGeometry->getWindowMinX()) * inv_pixelLengthX - 0.5f;
 
 				// for each row
-				for (row = 0; row < m_pVolumeGeometry->getGridRowCount(); ++row, c += update_c) {
+				for (row = 0; row < rowCount; ++row, c += update_c) {
 
 					col = int(c+0.5f);
 					offset = c - float32(col);
 
-					if (col <= 0 || col >= m_pVolumeGeometry->getGridColCount()-1) continue;
+					if (col <= 0 || col >= colCount-1) continue;
 
 					// left
 					if (offset < -S) {
 						I = (offset + T) * invTminSTimesLengthPerRow;
 
-						iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row, col-1);
+						iVolumeIndex = row * colCount + col - 1;
 						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
 						if (p.pixelPrior(iVolumeIndex)) {
 							p.addWeight(iRayIndex, iVolumeIndex, lengthPerRow-I);
 							p.pixelPosterior(iVolumeIndex);
 						}
 
-						iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row, col);
+						iVolumeIndex++;
 						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
 						if (p.pixelPrior(iVolumeIndex)) {
 							p.addWeight(iRayIndex, iVolumeIndex, I);
@@ -381,14 +395,14 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal_vector(int _iProj
 					else if (S < offset) {
 						I = (offset - S) * invTminSTimesLengthPerRow;
 
-						iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row, col);
+						iVolumeIndex = row * colCount + col;
 						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
 						if (p.pixelPrior(iVolumeIndex)) {
 							p.addWeight(iRayIndex, iVolumeIndex, lengthPerRow-I);
 							p.pixelPosterior(iVolumeIndex);
 						}
 
-						iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row, col+1);
+						iVolumeIndex++;
 						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
 						if (p.pixelPrior(iVolumeIndex)) {
 							p.addWeight(iRayIndex, iVolumeIndex, I);
@@ -398,7 +412,7 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal_vector(int _iProj
 
 					// centre
 					else {
-						iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row, col);
+						iVolumeIndex = row * colCount + col;
 						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
 						if (p.pixelPrior(iVolumeIndex)) {
 							p.addWeight(iRayIndex, iVolumeIndex, lengthPerRow);
@@ -413,30 +427,29 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal_vector(int _iProj
 			else {
 
 				// calculate y for col 0
-				float32 y = detY + (proj->fRayY/proj->fRayX)*(m_pVolumeGeometry->pixelColToCenterX(0)-detX);
-				float32 r = (m_pVolumeGeometry->getWindowMaxY() - y) * inv_pixelLengthY - 0.5f;
-				float32 update_r = -m_pVolumeGeometry->getPixelLengthX() * (proj->fRayY/proj->fRayX) * inv_pixelLengthY;
+				y = detY + (proj->fRayY/proj->fRayX)*(m_pVolumeGeometry->pixelColToCenterX(0)-detX);
+				r = (m_pVolumeGeometry->getWindowMaxY() - y) * inv_pixelLengthY - 0.5f;
 
 				// for each col
-				for (col = 0; col < m_pVolumeGeometry->getGridColCount(); ++col, r += update_r) {
+				for (col = 0; col < colCount; ++col, r += update_r) {
 
 					int row = int(r+0.5f);
-					float32 offset = r - float32(row);
+					offset = r - float32(row);
 
-					if (row <= 0 || row >= m_pVolumeGeometry->getGridRowCount()-1) continue;
+					if (row <= 0 || row >= rowCount-1) continue;
 
 					// up
 					if (offset < -S) {
 						I = (offset + T) * invTminSTimesLengthPerCol;
 
-						iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row-1, col);
+						iVolumeIndex = (row-1) * colCount + col;
 						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
 						if (p.pixelPrior(iVolumeIndex)) {
 							p.addWeight(iRayIndex, iVolumeIndex, lengthPerCol-I);
 							p.pixelPosterior(iVolumeIndex);
 						}
 
-						iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row, col);
+						iVolumeIndex += colCount;
 						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
 						if (p.pixelPrior(iVolumeIndex)) {
 							p.addWeight(iRayIndex, iVolumeIndex, I);
@@ -448,14 +461,14 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal_vector(int _iProj
 					else if (S < offset) {
 						I = (offset - S) * invTminSTimesLengthPerCol;
 
-						iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row, col);
+						iVolumeIndex = row * colCount + col;
 						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
 						if (p.pixelPrior(iVolumeIndex)) {
 							p.addWeight(iRayIndex, iVolumeIndex, lengthPerCol-I);
 							p.pixelPosterior(iVolumeIndex);
 						}
 
-						iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row+1, col);
+						iVolumeIndex += colCount;
 						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
 						if (p.pixelPrior(iVolumeIndex)) {
 							p.addWeight(iRayIndex, iVolumeIndex, I);
@@ -465,7 +478,7 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal_vector(int _iProj
 
 					// centre
 					else {
-						iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row, col);
+						iVolumeIndex = row * colCount + col;
 						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
 						if (p.pixelPrior(iVolumeIndex)) {
 							p.addWeight(iRayIndex, iVolumeIndex, lengthPerCol);
@@ -474,7 +487,7 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal_vector(int _iProj
 					}
 
 				}
-			} // end loop col
+			}
 	
 			// POLICY: RAY POSTERIOR
 			p.rayPosterior(iRayIndex);
