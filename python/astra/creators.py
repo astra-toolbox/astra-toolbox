@@ -361,10 +361,6 @@ def create_sino(data, proj_id, returnData=True, gpuIndex=None):
     projection. Otherwise, returns a tuple containing the ID of the
     forward projection and the forward projection itself, in that
     order.
-
-    The geometry of setup is defined by ``proj_id`` or with
-    ``proj_geom`` and ``vol_geom``. If ``proj_id`` is given, then
-    ``proj_geom`` and ``vol_geom`` must be None and vice versa.
 """
     proj_geom = projector.projection_geometry(proj_id)
     vol_geom = projector.volume_geometry(proj_id)
