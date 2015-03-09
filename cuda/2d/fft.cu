@@ -34,7 +34,6 @@ $Id$
 #include <cuda.h>
 #include <fstream>
 
-#include "../../include/astra/Logger.h"
 
 using namespace astra;
 
@@ -45,7 +44,6 @@ using namespace astra;
   if( cudaSuccess != err) {                                                \
       fprintf(stderr, "Cuda error: %s in file '%s' in line %i : %s.\n",    \
               errorMessage, __FILE__, __LINE__, cudaGetErrorString( err) );\
-			  CLogger::writeTerminalCUDAError(__FILE__, __LINE__, cudaGetErrorString( err)); \
       exit(EXIT_FAILURE);                                                  \
   } } while (0)
 
@@ -54,14 +52,12 @@ using namespace astra;
   if( cudaSuccess != err) {                                                \
       fprintf(stderr, "Cuda error in file '%s' in line %i : %s.\n",        \
               __FILE__, __LINE__, cudaGetErrorString( err) );              \
-	  CLogger::writeTerminalCUDAError(__FILE__, __LINE__, cudaGetErrorString( err)); \
       exit(EXIT_FAILURE);                                                  \
   }                                                                        \
   err = cudaThreadSynchronize();                                           \
   if( cudaSuccess != err) {                                                \
       fprintf(stderr, "Cuda error in file '%s' in line %i : %s.\n",        \
               __FILE__, __LINE__, cudaGetErrorString( err) );              \
-	  CLogger::writeTerminalCUDAError(__FILE__, __LINE__, cudaGetErrorString( err)); \
       exit(EXIT_FAILURE);                                                  \
   } } while (0)
 
@@ -460,7 +456,7 @@ void genFilter(E_FBPFILTER _eFilter, float _fD, int _iProjectionCount,
 			const float fA1 = 0.48f;
 			const float fA2 = 0.38f;
 			float fNMinusOne = (float)(_iFFTFourierDetectorCount) - 1.0f;
-			
+
 			for(int iDetectorIndex = 1; iDetectorIndex < _iFFTFourierDetectorCount; iDetectorIndex++)
 			{
 				float fSmallN = (float)iDetectorIndex;
@@ -746,7 +742,7 @@ void testCudaFFT()
 	{
 		for(int iDetectorIndex = 0; iDetectorIndex < iDetectorCount; iDetectorIndex++)
 		{
-//			int 
+//			int
 
 //			pfHostProj[iIndex] = (float)rand() / (float)RAND_MAX;
 		}
@@ -787,7 +783,7 @@ void testCudaFFT()
 	float * pfHostFourProjImaginary = new float[iTotalElementCount];
 
 	convertComplexToRealImg(pHostFourProj, iTotalElementCount, pfHostFourProjReal, pfHostFourProjImaginary);
-	
+
 	writeToMatlabFile("proj_four_real.mat", pfHostFourProjReal, iProjectionCount, iDetectorCount);
 	writeToMatlabFile("proj_four_imaginary.mat", pfHostFourProjImaginary, iProjectionCount, iDetectorCount);
 

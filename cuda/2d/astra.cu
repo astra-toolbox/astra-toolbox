@@ -42,7 +42,6 @@ $Id$
 #include <fstream>
 #include <cuda.h>
 
-#include "../../include/astra/Logger.h"
 #include "../../include/astra/VolumeGeometry2D.h"
 #include "../../include/astra/ParallelProjectionGeometry2D.h"
 #include "../../include/astra/FanFlatProjectionGeometry2D.h"
@@ -538,7 +537,7 @@ bool AstraFBP::setFilter(E_FBPFILTER _eFilter, const float * _pfHostFilter /* = 
 			int iMaxFilterIndex = iStartFilterIndex + iUsedFilterWidth;
 
 			int iFilterShiftSize = _iFilterWidth / 2;
-			
+
 			for(int iDetectorIndex = iStartFilterIndex; iDetectorIndex < iMaxFilterIndex; iDetectorIndex++)
 			{
 				int iFFTInFilterIndex = (iDetectorIndex + iFFTRealDetCount - iFilterShiftSize) % iFFTRealDetCount;
