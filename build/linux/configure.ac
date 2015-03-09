@@ -72,6 +72,17 @@ fi
 AC_SUBST(HAVEBOOSTUTF)
 AC_SUBST(LIBS_BOOSTUTF)
 
+BOOSTok=yes
+AC_CHECK_HEADER([boost/lexical_cast.hpp],[],[BOOSTok=no],[])
+AC_CHECK_HEADER([boost/any.hpp],[],[BOOSTok=no],[])
+dnl AC_CHECK_HEADER([boost/thread.hpp],[],[BOOSTok=no],[])
+dnl AC_CHECK_HEADER([boost/bind.hpp],[],[BOOSTok=no],[])
+AC_CHECK_HEADER([boost/static_assert.hpp],[],[BOOSTok=no],[])
+AC_CHECK_HEADER([boost/throw_exception.hpp],[],[BOOSTok=no],[])
+
+if test x$BOOSTok = xno; then
+  AC_MSG_ERROR([boost not found])
+fi
 
 # nvcc, cuda
 
