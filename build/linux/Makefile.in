@@ -118,6 +118,7 @@ BASE_OBJECTS=\
 	src/Fourier.lo \
 	src/GeometryUtil3D.lo \
 	src/Globals.lo \
+	src/Logging.lo \
 	src/ParallelBeamBlobKernelProjector2D.lo \
 	src/ParallelBeamLinearKernelProjector2D.lo \
 	src/ParallelBeamLineKernelProjector2D.lo \
