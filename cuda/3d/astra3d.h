@@ -42,7 +42,12 @@ enum Cuda3DProjectionKernel {
 	ker3d_sum_square_weights
 };
 
-
+class CProjectionGeometry3D;
+class CParallelProjectionGeometry3D;
+class CParallelVecProjectionGeometry3D;
+class CConeProjectionGeometry3D;
+class CConeVecProjectionGeometry3D;
+class CVolumeGeometry3D;
 class AstraSIRT3d_internal;
 
 
@@ -52,37 +57,9 @@ public:
 	AstraSIRT3d();
 	~AstraSIRT3d();
 
-	// Set the number of pixels in the reconstruction rectangle,
-	// and the length of the edge of a pixel.
-	// Volume pixels are assumed to be square.
-	// This must be called before setting the projection geometry.
-	bool setReconstructionGeometry(unsigned int iVolX,
-	                               unsigned int iVolY,
-	                               unsigned int iVolZ/*,
-	                               float fPixelSize = 1.0f*/);
-
-	bool setConeGeometry(unsigned int iProjAngles,
-	                     unsigned int iProjU,
-	                     unsigned int iProjV,
-	                     const SConeProjection* projs);
-	bool setConeGeometry(unsigned int iProjAngles,
-	                     unsigned int iProjU,
-	                     unsigned int iProjV,
-	                     float fOriginSourceDistance,
-	                     float fOriginDetectorDistance,
-	                     float fSourceZ,
-	                     float fDetSize,
-	                     const float *pfAngles);
-	bool setPar3DGeometry(unsigned int iProjAngles,
-	                      unsigned int iProjU,
-	                      unsigned int iProjV,
-	                      const SPar3DProjection* projs);
-	bool setPar3DGeometry(unsigned int iProjAngles,
-	                      unsigned int iProjU,
-	                      unsigned int iProjV,
-	                      float fSourceZ,
-	                      float fDetSize,
-	                      const float *pfAngles);
+	// Set the volume and projection geometry
+	bool setGeometry(const CVolumeGeometry3D* pVolGeom,
+	                 const CProjectionGeometry3D* pProjGeom);
 
 	// Enable supersampling.
 	//
@@ -197,37 +174,9 @@ public:
 	AstraCGLS3d();
 	~AstraCGLS3d();
 
-	// Set the number of pixels in the reconstruction rectangle,
-	// and the length of the edge of a pixel.
-	// Volume pixels are assumed to be square.
-	// This must be called before setting the projection geometry.
-	bool setReconstructionGeometry(unsigned int iVolX,
-	                               unsigned int iVolY,
-	                               unsigned int iVolZ/*,
-	                               float fPixelSize = 1.0f*/);
-
-	bool setConeGeometry(unsigned int iProjAngles,
-	                     unsigned int iProjU,
-	                     unsigned int iProjV,
-	                     const SConeProjection* projs);
-	bool setConeGeometry(unsigned int iProjAngles,
-	                     unsigned int iProjU,
-	                     unsigned int iProjV,
-	                     float fOriginSourceDistance,
-	                     float fOriginDetectorDistance,
-	                     float fSourceZ,
-	                     float fDetSize,
-	                     const float *pfAngles);
-	bool setPar3DGeometry(unsigned int iProjAngles,
-	                      unsigned int iProjU,
-	                      unsigned int iProjV,
-	                      const SPar3DProjection* projs);
-	bool setPar3DGeometry(unsigned int iProjAngles,
-	                      unsigned int iProjU,
-	                      unsigned int iProjV,
-	                      float fSourceZ,
-	                      float fDetSize,
-	                      const float *pfAngles);
+	// Set the volume and projection geometry
+	bool setGeometry(const CVolumeGeometry3D* pVolGeom,
+	                 const CProjectionGeometry3D* pProjGeom);
 
 	// Enable supersampling.
 	//
@@ -466,21 +415,6 @@ _AstraExport bool astraCudaFDK(float* pfVolume, const float* pfProjections,
                   bool bShortScan,
                   int iGPUIndex, int iVoxelSuperSampling);
 
-_AstraExport bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
-                          const CParallelProjectionGeometry3D* pProjGeom,
-                          SPar3DProjection*& pProjs, float& fOutputScale);
-
-_AstraExport bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
-                          const CParallelVecProjectionGeometry3D* pProjGeom,
-                          SPar3DProjection*& pProjs, float& fOutputScale);
-
-_AstraExport bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
-                          const CConeProjectionGeometry3D* pProjGeom,
-                          SConeProjection*& pProjs, float& fOutputScale);
-
-_AstraExport bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
-                          const CConeVecProjectionGeometry3D* pProjGeom,
-                          SConeProjection*& pProjs, float& fOutputScale);
 
 }
 

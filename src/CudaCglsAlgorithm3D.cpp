@@ -171,9 +171,6 @@ void CCudaCglsAlgorithm3D::run(int _iNrIterations)
 	ASTRA_ASSERT(m_bIsInitialized);
 
 	const CProjectionGeometry3D* projgeom = m_pSinogram->getGeometry();
-	const CConeProjectionGeometry3D* conegeom = dynamic_cast<const CConeProjectionGeometry3D*>(projgeom);
-	const CParallelVecProjectionGeometry3D* parvec3dgeom = dynamic_cast<const CParallelVecProjectionGeometry3D*>(projgeom);
-	const CConeVecProjectionGeometry3D* conevec3dgeom = dynamic_cast<const CConeVecProjectionGeometry3D*>(projgeom);
 	const CVolumeGeometry3D& volgeom = *m_pReconstruction->getGeometry();
 
 	bool ok = true;
@@ -182,41 +179,7 @@ void CCudaCglsAlgorithm3D::run(int _iNrIterations)
 
 		ok &= m_pCgls->setGPUIndex(m_iGPUIndex);
 
-		ok &= m_pCgls->setReconstructionGeometry(volgeom.getGridColCount(),
-		                                         volgeom.getGridRowCount(),
-		                                         volgeom.getGridSliceCount());
-/*
-                                  unsigned int iProjAngles,
-                                  unsigned int iProjU,
-                                  unsigned int iProjV,
-                                  float fOriginSourceDistance,
-                                  float fOriginDetectorDistance,
-                                  float fDetUSize,
-                                  float fDetVSize,
-                                  const float *pfAngles)
-*/
-		if (conegeom) {
-			ok &= m_pCgls->setConeGeometry(conegeom->getProjectionCount(),
-			                               conegeom->getDetectorColCount(),
-			                               conegeom->getDetectorRowCount(),
-			                               conegeom->getOriginSourceDistance(),
-			                               conegeom->getOriginDetectorDistance(),
-			                               conegeom->getDetectorSpacingX(),
-			                               conegeom->getDetectorSpacingY(),
-			                               conegeom->getProjectionAngles());
-		} else if (parvec3dgeom) {
-			ok &= m_pCgls->setPar3DGeometry(parvec3dgeom->getProjectionCount(),
-			                                parvec3dgeom->getDetectorColCount(),
-			                                parvec3dgeom->getDetectorRowCount(),
-			                                parvec3dgeom->getProjectionVectors());
-		} else if (conevec3dgeom) {
-			ok &= m_pCgls->setConeGeometry(conevec3dgeom->getProjectionCount(),
-			                               conevec3dgeom->getDetectorColCount(),
-			                               conevec3dgeom->getDetectorRowCount(),
-			                               conevec3dgeom->getProjectionVectors());
-		} else {
-			ASTRA_ASSERT(false);
-		}
+		ok &= m_pCgls->setGeometry(&volgeom, projgeom);
 
 		ok &= m_pCgls->enableSuperSampling(m_iVoxelSuperSampling, m_iDetectorSuperSampling);
 
