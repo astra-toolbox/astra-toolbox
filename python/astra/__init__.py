@@ -34,6 +34,7 @@ from . import data3d
 from . import algorithm
 from . import projector
 from . import matrix
+from . import log
 
 import os
 try:
