@@ -1,6 +1,7 @@
 cuda=@HAVECUDA@
 matlab=@HAVEMATLAB@
 python=@HAVEPYTHON@
+boostutf=@HAVEBOOSTUTF@
 
 
 MATLAB_ROOT=@MATLAB_ROOT@
@@ -58,6 +59,8 @@ endif
 
 BOOST_CPPFLAGS=
 BOOST_LDFLAGS=
+
+BOOSTUTF_LIBS=@LIBS_BOOSTUTF@
 
 
 CPPFLAGS+=$(BOOST_CPPFLAGS)
@@ -290,11 +293,16 @@ ifeq ($(cuda),yes)
 	@rm -f $(*F).linkinfo
 endif
 
+ifeq ($(boostutf),yes)
 test.bin: $(ALL_OBJECTS) $(TEST_OBJECTS)
-	./libtool --mode=link $(LD) -o $@ $(LDFLAGS) $(LIBS) $+ -lboost_unit_test_framework
+	./libtool --mode=link $(LD) -o $@ $(LDFLAGS) $+ $(LIBS) $(BOOSTUTF_LIBS)
 
 test: test.bin
 	./test.bin
+else
+test:
+	@echo "Tests have been disabled by configure"
+endif
 
 clean:
 	rm -f $(MATLAB_MEX) libastra.la

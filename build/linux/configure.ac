@@ -53,20 +53,36 @@ AC_CHECK_HEADER(iostream, , AC_MSG_ERROR([No working c++ compiler found]))
 AC_MSG_CHECKING([for boost-unit-test-framework])
 
 ASTRA_CHECK_BOOST_UNIT_TEST_FRAMEWORK(-lboost_unit_test_framework-mt, BOOSTUTF=yes_mt, BOOSTUTF=no)
+HAVEBOOSTUTF=no
 if test x$BOOSTUTF = xno; then
   ASTRA_CHECK_BOOST_UNIT_TEST_FRAMEWORK(-lboost_unit_test_framework, BOOSTUTF=yes, BOOSTUTF=no)
   if test x$BOOSTUTF = xno; then
     AC_MSG_RESULT(no)
-    AC_MSG_ERROR([No boost-unit-test-framework library found])
   else
     AC_MSG_RESULT([yes, libboost_unit_test_framework])
     LIBS_BOOSTUTF="-lboost_unit_test_framework"
+    HAVEBOOSTUTF=yes
   fi
 else
   AC_MSG_RESULT([yes, libboost_unit_test_framework-mt])
   LIBS_BOOSTUTF="-lboost_unit_test_framework-mt"
+  HAVEBOOSTUTF=yes
 fi
 
+AC_SUBST(HAVEBOOSTUTF)
+AC_SUBST(LIBS_BOOSTUTF)
+
+BOOSTok=yes
+AC_CHECK_HEADER([boost/lexical_cast.hpp],[],[BOOSTok=no],[])
+AC_CHECK_HEADER([boost/any.hpp],[],[BOOSTok=no],[])
+dnl AC_CHECK_HEADER([boost/thread.hpp],[],[BOOSTok=no],[])
+dnl AC_CHECK_HEADER([boost/bind.hpp],[],[BOOSTok=no],[])
+AC_CHECK_HEADER([boost/static_assert.hpp],[],[BOOSTok=no],[])
+AC_CHECK_HEADER([boost/throw_exception.hpp],[],[BOOSTok=no],[])
+
+if test x$BOOSTok = xno; then
+  AC_MSG_ERROR([boost not found])
+fi
 
 # nvcc, cuda
 
