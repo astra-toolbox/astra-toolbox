@@ -30,6 +30,8 @@ $Id$
 #include <cassert>
 #include "util.h"
 
+#include "../../include/astra/Logging.h"
+
 namespace astraCUDA {
 
 bool copyVolumeToDevice(const float* in_data, unsigned int in_pitch,
@@ -91,7 +93,7 @@ bool allocateVolume(float*& ptr, unsigned int width, unsigned int height, unsign
 	cudaError_t ret = cudaMallocPitch((void**)&ptr, &p, sizeof(float)*width, height);
 	if (ret != cudaSuccess) {
 		reportCudaError(ret);
-		fprintf(stderr, "Failed to allocate %dx%d GPU buffer\n", width, height);
+		astra::CLogger::error(__FILE__,__LINE__,"Failed to allocate %dx%d GPU buffer", width, height);
 		return false;
 	}
 
@@ -259,7 +261,7 @@ bool cudaTextForceKernelsCompletion()
 	cudaError_t returnedCudaError = cudaThreadSynchronize();
 
 	if(returnedCudaError != cudaSuccess) {
-		fprintf(stderr, "Failed to force completion of cuda kernels: %d: %s.\n", returnedCudaError, cudaGetErrorString(returnedCudaError));
+		astra::CLogger::error(__FILE__,__LINE__,"Failed to force completion of cuda kernels: %d: %s.", returnedCudaError, cudaGetErrorString(returnedCudaError));
 		return false;
 	}
 
@@ -269,7 +271,7 @@ bool cudaTextForceKernelsCompletion()
 void reportCudaError(cudaError_t err)
 {
 	if(err != cudaSuccess)
-		fprintf(stderr, "CUDA error %d: %s.\n", err, cudaGetErrorString(err));
+		astra::CLogger::error(__FILE__,__LINE__,"CUDA error %d: %s.", err, cudaGetErrorString(err));
 }
 
 

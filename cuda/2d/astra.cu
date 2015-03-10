@@ -47,6 +47,8 @@ $Id$
 #include "../../include/astra/FanFlatProjectionGeometry2D.h"
 #include "../../include/astra/FanFlatVecProjectionGeometry2D.h"
 
+#include "../../include/astra/Logging.h"
+
 // For fan beam FBP weighting
 #include "../3d/fdk.h"
 
@@ -562,7 +564,7 @@ bool AstraFBP::setFilter(E_FBPFILTER _eFilter, const float * _pfHostFilter /* = 
 		}
 		default:
 		{
-			fprintf(stderr, "AstraFBP::setFilter: Unknown filter type requested");
+			astra::CLogger::error(__FILE__,__LINE__,"AstraFBP::setFilter: Unknown filter type requested");
 			delete [] pHostFilter;
 			return false;
 		}

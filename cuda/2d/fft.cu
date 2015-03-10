@@ -34,6 +34,7 @@ $Id$
 #include <cuda.h>
 #include <fstream>
 
+#include "../../include/astra/Logging.h"
 
 using namespace astra;
 
@@ -42,22 +43,22 @@ using namespace astra;
 #define CHECK_ERROR(errorMessage) do {                                     \
   cudaError_t err = cudaThreadSynchronize();                               \
   if( cudaSuccess != err) {                                                \
-      fprintf(stderr, "Cuda error: %s in file '%s' in line %i : %s.\n",    \
-              errorMessage, __FILE__, __LINE__, cudaGetErrorString( err) );\
+      astra::CLogger::error(__FILE__,__LINE__,"Cuda error %s : %s",        \
+              errorMessage,cudaGetErrorString( err));                      \
       exit(EXIT_FAILURE);                                                  \
   } } while (0)
 
 #define SAFE_CALL( call) do {                                              \
   cudaError err = call;                                                    \
   if( cudaSuccess != err) {                                                \
-      fprintf(stderr, "Cuda error in file '%s' in line %i : %s.\n",        \
-              __FILE__, __LINE__, cudaGetErrorString( err) );              \
+      astra::CLogger::error(__FILE__,__LINE__,"Cuda error: %s ",           \
+              cudaGetErrorString( err));                                   \
       exit(EXIT_FAILURE);                                                  \
   }                                                                        \
   err = cudaThreadSynchronize();                                           \
   if( cudaSuccess != err) {                                                \
-      fprintf(stderr, "Cuda error in file '%s' in line %i : %s.\n",        \
-              __FILE__, __LINE__, cudaGetErrorString( err) );              \
+      astra::CLogger::error(__FILE__,__LINE__,"Cuda error: %s : ",         \
+              cudaGetErrorString( err));                                   \
       exit(EXIT_FAILURE);                                                  \
   } } while (0)
 
@@ -136,7 +137,7 @@ static bool invokeCudaFFT(int _iProjectionCount, int _iDetectorCount,
 	result = cufftPlan1d(&plan, _iDetectorCount, CUFFT_R2C, _iProjectionCount);
 	if(result != CUFFT_SUCCESS)
 	{
-		std::cerr << "Failed to plan 1d r2c fft" << std::endl;
+    astra::CLogger::error(__FILE__,__LINE__,"Failed to plan 1d r2c fft");
 		return false;
 	}
 
@@ -145,7 +146,7 @@ static bool invokeCudaFFT(int _iProjectionCount, int _iDetectorCount,
 
 	if(result != CUFFT_SUCCESS)
 	{
-		std::cerr << "Failed to exec 1d r2c fft" << std::endl;
+    astra::CLogger::error(__FILE__,__LINE__,"Failed to exec 1d r2c fft");
 		return false;
 	}
 
@@ -162,7 +163,7 @@ static bool invokeCudaIFFT(int _iProjectionCount, int _iDetectorCount,
 	result = cufftPlan1d(&plan, _iDetectorCount, CUFFT_C2R, _iProjectionCount);
 	if(result != CUFFT_SUCCESS)
 	{
-		std::cerr << "Failed to plan 1d c2r fft" << std::endl;
+    astra::CLogger::error(__FILE__,__LINE__,"Failed to plan 1d c2r fft");
 		return false;
 	}
 
@@ -173,7 +174,7 @@ static bool invokeCudaIFFT(int _iProjectionCount, int _iDetectorCount,
 
 	if(result != CUFFT_SUCCESS)
 	{
-		std::cerr << "Failed to exec 1d c2r fft" << std::endl;
+    astra::CLogger::error(__FILE__,__LINE__,"Failed to exec 1d c2r fft");
 		return false;
 	}
 
@@ -629,7 +630,7 @@ void genFilter(E_FBPFILTER _eFilter, float _fD, int _iProjectionCount,
 		}
 		default:
 		{
-			std::cerr << "Cannot serve requested filter" << std::endl;
+      astra::CLogger::error(__FILE__,__LINE__,"Cannot serve requested filter");
 		}
 	}
 
@@ -763,13 +764,13 @@ void testCudaFFT()
 	result = cufftPlan1d(&plan, iDetectorCount, CUFFT_R2C, iProjectionCount);
 	if(result != CUFFT_SUCCESS)
 	{
-		cerr << "Failed to plan 1d r2c fft" << endl;
+    astra::CLogger::error(__FILE__,__LINE__,"Failed to plan 1d r2c fft");
 	}
 
 	result = cufftExecR2C(plan, pfDevProj, pDevFourProj);
 	if(result != CUFFT_SUCCESS)
 	{
-		cerr << "Failed to exec 1d r2c fft" << endl;
+    astra::CLogger::error(__FILE__,__LINE__,"Failed to exec 1d r2c fft");
 	}
 
 	cufftDestroy(plan);
@@ -793,13 +794,13 @@ void testCudaFFT()
 	result = cufftPlan1d(&plan, iDetectorCount, CUFFT_C2R, iProjectionCount);
 	if(result != CUFFT_SUCCESS)
 	{
-		cerr << "Failed to plan 1d c2r fft" << endl;
+    astra::CLogger::error(__FILE__,__LINE__,"Failed to plan 1d c2r fft");
 	}
 
 	result = cufftExecC2R(plan, pDevFourProj, pfDevInFourProj);
 	if(result != CUFFT_SUCCESS)
 	{
-		cerr << "Failed to exec 1d c2r fft" << endl;
+    astra::CLogger::error(__FILE__,__LINE__,"Failed to exec 1d c2r fft");
 	}
 
 	cufftDestroy(plan);

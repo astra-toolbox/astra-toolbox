@@ -39,6 +39,8 @@ $Id$
 #include "astra/Fourier.h"
 #include "astra/DataProjector.h"
 
+#include "astra/Logging.h"
+
 using namespace std;
 
 namespace astra {
@@ -133,7 +135,7 @@ bool CFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 		for (int i = 0; i < angleCount; i ++) {
 			if (projectionIndex[i] > m_pProjector->getProjectionGeometry()->getProjectionAngleCount() -1 )
 			{
-				cout << "Invalid Projection Index" << endl;
+				astra::CLogger::error(__FILE__,__LINE__,"Invalid Projection Index");
 				return false;
 			} else {
 				int orgIndex = (int)projectionIndex[i];

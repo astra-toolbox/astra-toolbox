@@ -37,6 +37,8 @@ $Id$
 #include "astra/FanFlatVecProjectionGeometry2D.h"
 #include "astra/CudaProjector2D.h"
 
+#include "astra/Logging.h"
+
 #include "../cuda/2d/algo.h"
 
 #include <ctime>
@@ -176,7 +178,7 @@ bool CCudaReconstructionAlgorithm2D::initialize(const Config& _cfg)
 		id = boost::lexical_cast<int>(node->getContent());
 		CProjector2D *projector = CProjector2DManager::getSingleton().get(id);
 		if (!dynamic_cast<CCudaProjector2D*>(projector)) {
-			cout << "Warning: non-CUDA Projector2D passed" << std::endl;
+			astra::CLogger::warn(__FILE__,__LINE__,"Warning: non-CUDA Projector2D passed");
 		}
 		delete node;
 	}

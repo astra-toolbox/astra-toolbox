@@ -42,6 +42,8 @@ $Id$
 #include "astra/FanFlatVecProjectionGeometry2D.h"
 #include "astra/CudaProjector2D.h"
 
+#include "astra/Logging.h"
+
 using namespace std;
 
 namespace astra {
@@ -104,7 +106,7 @@ bool CCudaForwardProjectionAlgorithm::initialize(const Config& _cfg)
 		id = boost::lexical_cast<int>(node->getContent());
 		CProjector2D *projector = CProjector2DManager::getSingleton().get(id);
 		if (!dynamic_cast<CCudaProjector2D*>(projector)) {
-			cout << "Warning: non-CUDA Projector2D passed to FP_CUDA" << std::endl;
+			astra::CLogger::warn(__FILE__,__LINE__,"Warning: non-CUDA Projector2D passed to FP_CUDA");
 		}
 		delete node;
 	}

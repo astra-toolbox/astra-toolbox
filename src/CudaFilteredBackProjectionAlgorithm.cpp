@@ -34,6 +34,8 @@ $Id$
 #include "astra/AstraObjectManager.h"
 #include "../cuda/2d/astra.h"
 
+#include "astra/Logging.h"
+
 using namespace std;
 using namespace astra;
 
@@ -483,7 +485,7 @@ E_FBPFILTER CCudaFilteredBackProjectionAlgorithm::_convertStringToFilter(const c
 	}
 	else
 	{
-		cerr << "Failed to convert \"" << _filterType << "\" into a filter." << endl;
+		astra::CLogger::error(__FILE__,__LINE__,"Failed to convert \"%s\" into a filter.",_filterType);
 	}
 
 	return output;

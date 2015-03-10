@@ -28,6 +28,8 @@ $Id$
 
 #include "astra/ConeProjectionGeometry3D.h"
 
+#include "astra/Logging.h"
+
 #include <boost/lexical_cast.hpp>
 #include <cstring>
 
@@ -257,7 +259,7 @@ void CConeProjectionGeometry3D::projectPoint(float32 fX, float32 fY, float32 fZ,
 	// Scale fS to detector plane
 	fU = detectorOffsetXToColIndexFloat( (fS * (m_fOriginSourceDistance + m_fOriginDetectorDistance)) / fD );
 
-	fprintf(stderr, "alpha: %f, D: %f, V: %f, S: %f, U: %f\n", alpha, fD, fV, fS, fU);
+	astra::CLogger::debug(__FILE__,__LINE__,"alpha: %f, D: %f, V: %f, S: %f, U: %f", alpha, fD, fV, fS, fU);
 
 }
 
