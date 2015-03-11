@@ -306,7 +306,7 @@ bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
 
 
 bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
-                          const CConeVecProjectionGeometry3D* pProjGeom,
+                          const CProjectionGeometry3D* pProjGeom,
                           SPar3DProjection*& pParProjs,
                           SConeProjection*& pConeProjs,
                           float& fOutputScale)
@@ -322,13 +322,13 @@ bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
 	bool ok;
 
 	if (conegeom) {
-		ok = convertAstraGeometry(pVolGeom, conegeom, pConeProjs, outputScale);
+		ok = convertAstraGeometry(pVolGeom, conegeom, pConeProjs, fOutputScale);
 	} else if (conevec3dgeom) {
-		ok = convertAstraGeometry(pVolGeom, conevec3dgeom, pConeProjs, outputScale);
+		ok = convertAstraGeometry(pVolGeom, conevec3dgeom, pConeProjs, fOutputScale);
 	} else if (par3dgeom) {
-		ok = convertAstraGeometry(pVolGeom, par3dgeom, pParProjs, outputScale);
+		ok = convertAstraGeometry(pVolGeom, par3dgeom, pParProjs, fOutputScale);
 	} else if (parvec3dgeom) {
-		ok = convertAstraGeometry(pVolGeom, parvec3dgeom, pParProjs, outputScale);
+		ok = convertAstraGeometry(pVolGeom, parvec3dgeom, pParProjs, fOutputScale);
 	} else {
 		ok = false;
 	}
@@ -1471,40 +1471,6 @@ bool astraCudaPar3DBP(float* pfVolume, const float* pfProjections,
 	return ok;
 }
 
-// This computes the column weights, divides by them, and adds the
-// result to the current volume. This is both more expensive and more
-// GPU memory intensive than the regular BP, but allows saving system RAM.
-bool astraCudaPar3DBP_SIRTWeighted(float* pfVolume, const float* pfProjections,
-                      unsigned int iVolX,
-                      unsigned int iVolY,
-                      unsigned int iVolZ,
-                      unsigned int iProjAngles,
-                      unsigned int iProjU,
-                      unsigned int iProjV,
-                      float fDetUSize,
-                      float fDetVSize,
-                      const float *pfAngles,
-                      int iGPUIndex, int iVoxelSuperSampling)
-{
-	if (iVolX == 0 || iVolY == 0 || iVolZ == 0)
-		return false;
-	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || pfAngles == 0)
-		return false;
-
-	SPar3DProjection* p = genPar3DProjections(iProjAngles,
-                                             iProjU, iProjV,
-                                             fDetUSize, fDetVSize,
-                                             pfAngles);
-
-	bool ok;
-	ok = astraCudaPar3DBP_SIRTWeighted(pfVolume, pfProjections, iVolX, iVolY, iVolZ,
-	                      iProjAngles, iProjU, iProjV, p, iGPUIndex, iVoxelSuperSampling);
-
-	delete[] p;
-
-	return ok;
-}
-
 
 bool astraCudaPar3DBP(float* pfVolume, const float* pfProjections,
                       unsigned int iVolX,
@@ -1582,33 +1548,30 @@ bool astraCudaPar3DBP(float* pfVolume, const float* pfProjections,
 // This computes the column weights, divides by them, and adds the
 // result to the current volume. This is both more expensive and more
 // GPU memory intensive than the regular BP, but allows saving system RAM.
-bool astraCudaPar3DBP_SIRTWeighted(float* pfVolume,
+bool astraCudaBP_SIRTWeighted(float* pfVolume,
                       const float* pfProjections,
-                      unsigned int iVolX,
-                      unsigned int iVolY,
-                      unsigned int iVolZ,
-                      unsigned int iProjAngles,
-                      unsigned int iProjU,
-                      unsigned int iProjV,
-                      const SPar3DProjection *pfAngles,
+                      const CVolumeGeometry3D* pVolGeom,
+                      const CProjectionGeometry3D* pProjGeom,
                       int iGPUIndex, int iVoxelSuperSampling)
 {
 	SDimensions3D dims;
 
-	dims.iVolX = iVolX;
-	dims.iVolY = iVolY;
-	dims.iVolZ = iVolZ;
-	if (iVolX == 0 || iVolY == 0 || iVolZ == 0)
-		return false;
-
-	dims.iProjAngles = iProjAngles;
-	dims.iProjU = iProjU;
-	dims.iProjV = iProjV;
-
-	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || pfAngles == 0)
+	bool ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
+	if (!ok)
 		return false;
 
 	dims.iRaysPerVoxelDim = iVoxelSuperSampling;
+
+	SPar3DProjection* pParProjs;
+	SConeProjection* pConeProjs;
+
+	float outputScale;
+
+	ok = convertAstraGeometry(pVolGeom, pProjGeom,
+	                          pParProjs, pConeProjs,
+	                          outputScale);
+
+	// TODO: OutputScale
 
 	if (iGPUIndex != -1) {
 		cudaSetDevice(iGPUIndex);
@@ -1621,7 +1584,7 @@ bool astraCudaPar3DBP_SIRTWeighted(float* pfVolume,
 
 
 	cudaPitchedPtr D_pixelWeight = allocateVolumeData(dims);
-	bool ok = D_pixelWeight.ptr;
+	ok = D_pixelWeight.ptr;
 	if (!ok)
 		return false;
 
@@ -1643,7 +1606,12 @@ bool astraCudaPar3DBP_SIRTWeighted(float* pfVolume,
 	// Compute weights
 	ok &= zeroVolumeData(D_pixelWeight, dims);
 	processSino3D<opSet>(D_projData, 1.0f, dims);
-	ok &= Par3DBP(D_pixelWeight, D_projData, dims, pfAngles);
+
+	if (pParProjs)
+		ok &= Par3DBP(D_pixelWeight, D_projData, dims, pParProjs);
+	else
+		ok &= ConeBP(D_pixelWeight, D_projData, dims, pConeProjs);
+
 	processVol3D<opInvert>(D_pixelWeight, dims);
 	if (!ok) {
 		cudaFree(D_pixelWeight.ptr);
@@ -1656,7 +1624,11 @@ bool astraCudaPar3DBP_SIRTWeighted(float* pfVolume,
 	                              dims, dims.iProjU);
 	ok &= zeroVolumeData(D_volumeData, dims);
 	// Do BP into D_volumeData
-	ok &= Par3DBP(D_volumeData, D_projData, dims, pfAngles);
+	if (pParProjs)
+		ok &= Par3DBP(D_volumeData, D_projData, dims, pParProjs);
+	else
+		ok &= ConeBP(D_volumeData, D_projData, dims, pConeProjs);
+
 	// Multiply with weights
 	processVol3D<opMul>(D_volumeData, D_pixelWeight, dims);
 
@@ -1678,6 +1650,9 @@ bool astraCudaPar3DBP_SIRTWeighted(float* pfVolume,
 	cudaFree(D_pixelWeight.ptr);
 	cudaFree(D_volumeData.ptr);
 	cudaFree(D_projData.ptr);
+
+	delete[] pParProjs;
+	delete[] pConeProjs;
 
 	return ok;
 
