@@ -182,7 +182,7 @@ static bool convertAstraGeometry_internal(const CVolumeGeometry3D* pVolGeom,
 }
 
 
-void convertAstraGeometry_dims(const CVolumeGeometry3D* pVolGeom,
+bool convertAstraGeometry_dims(const CVolumeGeometry3D* pVolGeom,
                                const CProjectionGeometry3D* pProjGeom,
                                SDimensions3D& dims)
 {
@@ -194,6 +194,13 @@ void convertAstraGeometry_dims(const CVolumeGeometry3D* pVolGeom,
 	dims.iProjV = pProjGeom->getDetectorRowCount(),
 	dims.iRaysPerDetDim = 1;
 	dims.iRaysPerVoxelDim = 1;
+
+	if (dims.iVolX <= 0 || dims.iVolX <= 0 || dims.iVolX <= 0)
+		return false;
+	if (dims.iProjAngles <= 0 || dims.iProjU <= 0 || dims.iProjV <= 0)
+		return false;
+
+	return true;
 }
 
 
@@ -390,11 +397,9 @@ bool AstraSIRT3d::setGeometry(const CVolumeGeometry3D* pVolGeom,
 	if (pData->initialized)
 		return false;
 
-	convertAstraGeometry_dims(pVolGeom, pProjGeom, pData->dims);
+	bool ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, pData->dims);
 
-	if (pData->dims.iVolX <= 0 || pData->dims.iVolX <= 0 || pData->dims.iVolX <= 0)
-		return false;
-	if (pData->dims.iProjAngles <= 0 || pData->dims.iProjU <= 0 || pData->dims.iProjV <= 0)
+	if (!ok)
 		return false;
 
 	const CConeProjectionGeometry3D* conegeom = dynamic_cast<const CConeProjectionGeometry3D*>(pProjGeom);
@@ -403,7 +408,6 @@ bool AstraSIRT3d::setGeometry(const CVolumeGeometry3D* pVolGeom,
 	const CConeVecProjectionGeometry3D* conevec3dgeom = dynamic_cast<const CConeVecProjectionGeometry3D*>(pProjGeom);
 
 	float outputScale;
-	bool ok;
 
 	pData->projs = 0;
 	pData->parprojs = 0;
@@ -785,11 +789,9 @@ bool AstraCGLS3d::setGeometry(const CVolumeGeometry3D* pVolGeom,
 	if (pData->initialized)
 		return false;
 
-	convertAstraGeometry_dims(pVolGeom, pProjGeom, pData->dims);
+	bool ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, pData->dims);
 
-	if (pData->dims.iVolX <= 0 || pData->dims.iVolX <= 0 || pData->dims.iVolX <= 0)
-		return false;
-	if (pData->dims.iProjAngles <= 0 || pData->dims.iProjU <= 0 || pData->dims.iProjV <= 0)
+	if (!ok)
 		return false;
 
 	const CConeProjectionGeometry3D* conegeom = dynamic_cast<const CConeProjectionGeometry3D*>(pProjGeom);
@@ -798,7 +800,6 @@ bool AstraCGLS3d::setGeometry(const CVolumeGeometry3D* pVolGeom,
 	const CConeVecProjectionGeometry3D* conevec3dgeom = dynamic_cast<const CConeVecProjectionGeometry3D*>(pProjGeom);
 
 	float outputScale;
-	bool ok;
 
 	pData->projs = 0;
 	pData->parprojs = 0;
