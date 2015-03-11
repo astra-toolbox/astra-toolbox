@@ -29,24 +29,38 @@ $Id$
 template <typename Policy>
 void CParallelBeamStripKernelProjector2D::project(Policy& p)
 {
-	projectBlock_internal(0, m_pProjectionGeometry->getProjectionAngleCount(),
-	                      0, m_pProjectionGeometry->getDetectorCount(), p);
+	if (dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry)) {
+		projectBlock_internal(0, m_pProjectionGeometry->getProjectionAngleCount(),
+		                      0, m_pProjectionGeometry->getDetectorCount(), p);
+	} else if (dynamic_cast<CParallelVecProjectionGeometry2D*>(m_pProjectionGeometry)) {
+		projectBlock_internal_vector(0, m_pProjectionGeometry->getProjectionAngleCount(),
+		                             0, m_pProjectionGeometry->getDetectorCount(), p);
+	}
 }
 
 template <typename Policy>
 void CParallelBeamStripKernelProjector2D::projectSingleProjection(int _iProjection, Policy& p)
 {
-	projectBlock_internal(_iProjection, _iProjection + 1,
-	                      0, m_pProjectionGeometry->getDetectorCount(), p);
+	if (dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry)) {
+		projectBlock_internal(_iProjection, _iProjection + 1,
+	                          0, m_pProjectionGeometry->getDetectorCount(), p);
+	} else if (dynamic_cast<CParallelVecProjectionGeometry2D*>(m_pProjectionGeometry)) {
+		projectBlock_internal_vector(_iProjection, _iProjection + 1,
+	                                 0, m_pProjectionGeometry->getDetectorCount(), p);
+	}
 }
 
 template <typename Policy>
 void CParallelBeamStripKernelProjector2D::projectSingleRay(int _iProjection, int _iDetector, Policy& p)
 {
-	projectBlock_internal(_iProjection, _iProjection + 1,
+	if (dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry)) {
+		projectBlock_internal(_iProjection, _iProjection + 1,
 	                      _iDetector, _iDetector + 1, p);
+	} else if (dynamic_cast<CParallelVecProjectionGeometry2D*>(m_pProjectionGeometry)) {
+		projectBlock_internal_vector(_iProjection, _iProjection + 1,
+	                      _iDetector, _iDetector + 1, p);
+	}
 }
-
 //----------------------------------------------------------------------------------------
 // PROJECT BLOCK
 template <typename Policy>
@@ -277,7 +291,7 @@ void CParallelBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, 
 						// POLICY: PIXEL POSTERIOR
 						p.pixelPosterior(iVolumeIndex);
 
-						x2L -= 1.0f;		
+						x2L -= 1.0f;
 						x2R -= 1.0f;
 
 					} // end row loop
@@ -295,4 +309,173 @@ void CParallelBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, 
 	} // end angle loop
 }
 
+//----------------------------------------------------------------------------------------
+// PROJECT BLOCK - vector projection geometry
+template <typename Policy>
+void CParallelBeamStripKernelProjector2D::projectBlock_internal_vector(int _iProjFrom, int _iProjTo, int _iDetFrom, int _iDetTo, Policy& p)
+{
+	// variables
+	float32 detX, detY, detLX, detLY, detRX, detRY, S, T, update_c, update_r, offsetL, offsetR, invTminS;
+	float32 lengthPerRow, lengthPerCol, inv_pixelLengthX, inv_pixelLengthY, pixelArea;
+	int iVolumeIndex, iRayIndex, iRayIndexL, iRayIndexR, row, row_top, row_bottom, col, col_left, col_right, iAngle, iDetector, colCount, rowCount;
 
+	const SParProjection * proj = 0;
+	const CParallelVecProjectionGeometry2D* pVecProjectionGeometry = dynamic_cast<CParallelVecProjectionGeometry2D*>(m_pProjectionGeometry);
+
+	inv_pixelLengthX = 1.0f / m_pVolumeGeometry->getPixelLengthX();
+	inv_pixelLengthY = 1.0f / m_pVolumeGeometry->getPixelLengthY();
+	pixelArea = m_pVolumeGeometry->getPixelLengthX() * m_pVolumeGeometry->getPixelLengthY();
+
+	colCount = m_pVolumeGeometry->getGridColCount();
+	rowCount = m_pVolumeGeometry->getGridRowCount();
+
+	// loop angles
+	for (iAngle = _iProjFrom; iAngle < _iProjTo; ++iAngle) {
+
+		proj = &pVecProjectionGeometry->getProjectionVectors()[iAngle];
+
+		bool vertical = fabs(proj->fRayX) < fabs(proj->fRayY);
+		if (vertical) {
+			S = 0.5f - 0.5f*fabs(proj->fRayX/proj->fRayY);
+			T = 0.5f + 0.5f*fabs(proj->fRayX/proj->fRayY);
+			update_c = -m_pVolumeGeometry->getPixelLengthY() * (proj->fRayX/proj->fRayY) * inv_pixelLengthX;
+			invTminS = 1.0f / (T-S);
+		} else {
+			S = 0.5f - 0.5f*fabs(proj->fRayY/proj->fRayX);
+			T = 0.5f + 0.5f*fabs(proj->fRayY/proj->fRayX);
+			update_r = -m_pVolumeGeometry->getPixelLengthX() * (proj->fRayY/proj->fRayX) * inv_pixelLengthY;
+			invTminS = 1.0f / (T-S);
+		}
+
+		// loop detectors
+		for (iDetector = _iDetFrom; iDetector < _iDetTo; ++iDetector) {
+			
+			iRayIndex = iAngle * m_pProjectionGeometry->getDetectorCount() + iDetector;
+
+			// POLICY: RAY PRIOR
+			if (!p.rayPrior(iRayIndex)) continue;
+	
+			detLX = proj->fDetSX + (iDetector+0.0f) * proj->fDetUX;
+			detLY = proj->fDetSY + (iDetector+0.0f) * proj->fDetUY;
+			detRX = detLX + proj->fDetUX;
+			detRY = detLY + proj->fDetUY;
+
+			// vertically
+			if (vertical) {
+
+				// calculate cL and cR for row 0
+				float32 xL = detLX + (proj->fRayX/proj->fRayY)*(m_pVolumeGeometry->pixelRowToCenterY(0)-detLY);
+				float32 cL = (xL - m_pVolumeGeometry->getWindowMinX()) * inv_pixelLengthX - 0.5f;
+				float32 xR = detRX + (proj->fRayX/proj->fRayY)*(m_pVolumeGeometry->pixelRowToCenterY(0)-detRY);
+				float32 cR = (xR - m_pVolumeGeometry->getWindowMinX()) * inv_pixelLengthX - 0.5f;
+
+				if (cR < cL) {
+					float32 tmp = cL;
+					cL = cR;
+					cR = tmp;
+				}
+
+				// for each row
+				for (row = 0; row < rowCount; ++row, cL += update_c, cR += update_c) {
+
+					col_left = int(cL-0.5f+S);
+					col_right = int(cR+1.5-S);
+
+					if (col_left < 0) col_left = 0; 
+					if (col_right > colCount-1) col_right = colCount-1; 
+
+					// for each column
+					for (col = col_left; col <= col_right; ++col) {
+
+						iVolumeIndex = row * colCount + col;
+
+						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
+						if (p.pixelPrior(iVolumeIndex)) {
+
+							offsetL = cL - float32(col);
+							offsetR = cR - float32(col);
+
+							// right ray edge
+							float32 res = 0.0f;
+							if (T <= offsetR) 		res = 1.0f;
+							else if (S < offsetR) 	res = 1.0f - 0.5f*(T-offsetR)*(T-offsetR)*invTminS;
+							else if (-S < offsetR) 	res = 0.5f + offsetR;
+							else if (-T < offsetR) 	res = 0.5f*(offsetR+T)*(offsetR+T)*invTminS;
+
+							// left ray edge
+							if (T <= offsetL) 		res -= 1.0f;
+							else if (S < offsetL) 	res -= 1.0f - 0.5f*(T-offsetL)*(T-offsetL)*invTminS;
+							else if (-S < offsetL)  res -= 0.5f + offsetL;
+							else if (-T < offsetL)  res -= 0.5f*(offsetL+T)*(offsetL+T)*invTminS;
+
+
+							p.addWeight(iRayIndex, iVolumeIndex, pixelArea*res);
+							p.pixelPosterior(iVolumeIndex);
+						}
+					}
+				}
+			}
+
+			// horizontally
+			else {
+
+				// calculate rL and rR for row 0
+				float32 yL = detLY + (proj->fRayY/proj->fRayX)*(m_pVolumeGeometry->pixelColToCenterX(0)-detLX);
+				float32 rL = (m_pVolumeGeometry->getWindowMaxY() - yL) * inv_pixelLengthY - 0.5f;
+				float32 yR = detRY + (proj->fRayY/proj->fRayX)*(m_pVolumeGeometry->pixelColToCenterX(0)-detRX);
+				float32 rR = (m_pVolumeGeometry->getWindowMaxY() - yR) * inv_pixelLengthY - 0.5f;
+
+				if (rR < rL) {
+					float32 tmp = rL;
+					rL = rR;
+					rR = tmp;
+				}
+
+				// for each column
+				for (col = 0; col < colCount; ++col, rL += update_r, rR += update_r) {
+
+					row_top = int(rL-0.5f+S);
+					row_bottom = int(rR+1.5-S);
+
+					if (row_top < 0) row_top = 0; 
+					if (row_bottom > rowCount-1) row_bottom = rowCount-1; 
+
+					// for each row
+					for (row = row_top; row <= row_bottom; ++row) {
+
+						iVolumeIndex = row * colCount + col;
+
+						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
+						if (p.pixelPrior(iVolumeIndex)) {
+
+							offsetL = rL - float32(row);
+							offsetR = rR - float32(row);
+
+							// right ray edge
+							float32 res = 0.0f;
+							if (T <= offsetR) 		res = 1.0f;
+							else if (S < offsetR) 	res = 1.0f - 0.5f*(T-offsetR)*(T-offsetR)*invTminS;
+							else if (-S < offsetR) 	res = 0.5f + offsetR;
+							else if (-T < offsetR) 	res = 0.5f*(offsetR+T)*(offsetR+T)*invTminS;
+
+							// left ray edge
+							if (T <= offsetL) 		res -= 1.0f;
+							else if (S < offsetL) 	res -= 1.0f - 0.5f*(T-offsetL)*(T-offsetL)*invTminS;
+							else if (-S < offsetL)  res -= 0.5f + offsetL;
+							else if (-T < offsetL)  res -= 0.5f*(offsetL+T)*(offsetL+T)*invTminS;
+
+
+							p.addWeight(iRayIndex, iVolumeIndex, pixelArea*res);
+							p.pixelPosterior(iVolumeIndex);
+						}
+					}
+				}
+			}
+	
+			// POLICY: RAY POSTERIOR
+			p.rayPosterior(iRayIndex);
+	
+		} // end loop detector
+	} // end loop angles
+
+}
