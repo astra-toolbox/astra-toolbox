@@ -305,6 +305,37 @@ bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
 }
 
 
+bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
+                          const CConeVecProjectionGeometry3D* pProjGeom,
+                          SPar3DProjection*& pParProjs,
+                          SConeProjection*& pConeProjs,
+                          float& fOutputScale)
+{
+	const CConeProjectionGeometry3D* conegeom = dynamic_cast<const CConeProjectionGeometry3D*>(pProjGeom);
+	const CParallelProjectionGeometry3D* par3dgeom = dynamic_cast<const CParallelProjectionGeometry3D*>(pProjGeom);
+	const CParallelVecProjectionGeometry3D* parvec3dgeom = dynamic_cast<const CParallelVecProjectionGeometry3D*>(pProjGeom);
+	const CConeVecProjectionGeometry3D* conevec3dgeom = dynamic_cast<const CConeVecProjectionGeometry3D*>(pProjGeom);
+
+	pConeProjs = 0;
+	pParProjs = 0;
+
+	bool ok;
+
+	if (conegeom) {
+		ok = convertAstraGeometry(pVolGeom, conegeom, pConeProjs, outputScale);
+	} else if (conevec3dgeom) {
+		ok = convertAstraGeometry(pVolGeom, conevec3dgeom, pConeProjs, outputScale);
+	} else if (par3dgeom) {
+		ok = convertAstraGeometry(pVolGeom, par3dgeom, pParProjs, outputScale);
+	} else if (parvec3dgeom) {
+		ok = convertAstraGeometry(pVolGeom, parvec3dgeom, pParProjs, outputScale);
+	} else {
+		ok = false;
+	}
+
+	return ok;
+}
+
 
 
 
@@ -402,35 +433,23 @@ bool AstraSIRT3d::setGeometry(const CVolumeGeometry3D* pVolGeom,
 	if (!ok)
 		return false;
 
-	const CConeProjectionGeometry3D* conegeom = dynamic_cast<const CConeProjectionGeometry3D*>(pProjGeom);
-	const CParallelProjectionGeometry3D* par3dgeom = dynamic_cast<const CParallelProjectionGeometry3D*>(pProjGeom);
-	const CParallelVecProjectionGeometry3D* parvec3dgeom = dynamic_cast<const CParallelVecProjectionGeometry3D*>(pProjGeom);
-	const CConeVecProjectionGeometry3D* conevec3dgeom = dynamic_cast<const CConeVecProjectionGeometry3D*>(pProjGeom);
-
-	float outputScale;
-
 	pData->projs = 0;
 	pData->parprojs = 0;
+	float outputScale;
 
-	if (conegeom) {
-		ok = convertAstraGeometry(pVolGeom, conegeom, pData->projs, outputScale);
-		pData->projType = PROJ_PARALLEL;
-	} else if (conevec3dgeom) {
-		ok = convertAstraGeometry(pVolGeom, conevec3dgeom, pData->projs, outputScale);
-		pData->projType = PROJ_PARALLEL;
-	} else if (par3dgeom) {
-		ok = convertAstraGeometry(pVolGeom, par3dgeom, pData->parprojs, outputScale);
-		pData->projType = PROJ_CONE;
-	} else if (parvec3dgeom) {
-		ok = convertAstraGeometry(pVolGeom, parvec3dgeom, pData->parprojs, outputScale);
-		pData->projType = PROJ_CONE;
-	} else {
-		ok = false;
-	}
-
+	ok = convertAstraGeometry(pVolGeom, pProjGeom,
+	                          pData->parprojs, pData->projs,
+	                          outputScale);
 	if (!ok)
 		return false;
 
+	if (pData->projs) {
+		assert(pData->parprojs == 0);
+		pData->projType = PROJ_CONE;
+	} else {
+		assert(pData->parprojs != 0);
+		pData->projType = PROJ_PARALLEL;
+	}
 
 	// TODO: Handle outputScale
 
@@ -794,35 +813,23 @@ bool AstraCGLS3d::setGeometry(const CVolumeGeometry3D* pVolGeom,
 	if (!ok)
 		return false;
 
-	const CConeProjectionGeometry3D* conegeom = dynamic_cast<const CConeProjectionGeometry3D*>(pProjGeom);
-	const CParallelProjectionGeometry3D* par3dgeom = dynamic_cast<const CParallelProjectionGeometry3D*>(pProjGeom);
-	const CParallelVecProjectionGeometry3D* parvec3dgeom = dynamic_cast<const CParallelVecProjectionGeometry3D*>(pProjGeom);
-	const CConeVecProjectionGeometry3D* conevec3dgeom = dynamic_cast<const CConeVecProjectionGeometry3D*>(pProjGeom);
-
-	float outputScale;
-
 	pData->projs = 0;
 	pData->parprojs = 0;
+	float outputScale;
 
-	if (conegeom) {
-		ok = convertAstraGeometry(pVolGeom, conegeom, pData->projs, outputScale);
-		pData->projType = PROJ_PARALLEL;
-	} else if (conevec3dgeom) {
-		ok = convertAstraGeometry(pVolGeom, conevec3dgeom, pData->projs, outputScale);
-		pData->projType = PROJ_PARALLEL;
-	} else if (par3dgeom) {
-		ok = convertAstraGeometry(pVolGeom, par3dgeom, pData->parprojs, outputScale);
-		pData->projType = PROJ_CONE;
-	} else if (parvec3dgeom) {
-		ok = convertAstraGeometry(pVolGeom, parvec3dgeom, pData->parprojs, outputScale);
-		pData->projType = PROJ_CONE;
-	} else {
-		ok = false;
-	}
-
+	ok = convertAstraGeometry(pVolGeom, pProjGeom,
+	                          pData->parprojs, pData->projs,
+	                          outputScale);
 	if (!ok)
 		return false;
 
+	if (pData->projs) {
+		assert(pData->parprojs == 0);
+		pData->projType = PROJ_CONE;
+	} else {
+		assert(pData->parprojs != 0);
+		pData->projType = PROJ_PARALLEL;
+	}
 
 	// TODO: Handle outputScale
 
