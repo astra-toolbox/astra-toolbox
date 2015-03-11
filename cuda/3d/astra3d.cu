@@ -1679,33 +1679,19 @@ bool astraCudaPar3DBP_SIRTWeighted(float* pfVolume,
 
 
 bool astraCudaFDK(float* pfVolume, const float* pfProjections,
-                  unsigned int iVolX,
-                  unsigned int iVolY,
-                  unsigned int iVolZ,
-                  unsigned int iProjAngles,
-                  unsigned int iProjU,
-                  unsigned int iProjV,
-                  float fOriginSourceDistance,
-                  float fOriginDetectorDistance,
-                  float fDetUSize,
-                  float fDetVSize,
-                  const float *pfAngles,
+                  const CVolumeGeometry3D* pVolGeom,
+                  const CConeProjectionGeometry3D* pProjGeom,
                   bool bShortScan,
                   int iGPUIndex, int iVoxelSuperSampling)
 {
 	SDimensions3D dims;
 
-	dims.iVolX = iVolX;
-	dims.iVolY = iVolY;
-	dims.iVolZ = iVolZ;
-	if (iVolX == 0 || iVolY == 0 || iVolZ == 0)
-		return false;
+	bool ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
 
-	dims.iProjAngles = iProjAngles;
-	dims.iProjU = iProjU;
-	dims.iProjV = iProjV;
+	// TODO: Check that pVolGeom is normalized, since we don't support
+	// other volume geometries yet
 
-	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || pfAngles == 0)
+	if (!ok)
 		return false;
 
 	dims.iRaysPerVoxelDim = iVoxelSuperSampling;
@@ -1722,9 +1708,8 @@ bool astraCudaFDK(float* pfVolume, const float* pfProjections,
 			return false;
 	}
 
-
 	cudaPitchedPtr D_volumeData = allocateVolumeData(dims);
-	bool ok = D_volumeData.ptr;
+	ok = D_volumeData.ptr;
 	if (!ok)
 		return false;
 
@@ -1744,6 +1729,13 @@ bool astraCudaFDK(float* pfVolume, const float* pfProjections,
 		cudaFree(D_projData.ptr);
 		return false;
 	}
+
+	float fOriginSourceDistance = pProjGeom->getOriginSourceDistance();
+	float fOriginDetectorDistance = pProjGeom->getOriginDetectorDistance();
+	float fDetUSize = pProjGeom->getDetectorSpacingX();
+	float fDetVSize = pProjGeom->getDetectorSpacingY();
+	const float *pfAngles = pProjGeom->getProjectionAngles();
+
 
 	// TODO: Offer interface for SrcZ, DetZ
 	ok &= FDK(D_volumeData, D_projData, fOriginSourceDistance,

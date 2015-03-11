@@ -171,17 +171,7 @@ void CCudaFDKAlgorithm3D::run(int _iNrIterations)
 	bool ok = true;
 
 	ok = astraCudaFDK(pReconMem->getData(), pSinoMem->getDataConst(),
-	                  volgeom.getGridColCount(),
-	                  volgeom.getGridRowCount(),
-	                  volgeom.getGridSliceCount(),
-	                  conegeom->getProjectionCount(),
-	                  conegeom->getDetectorColCount(),
-	                  conegeom->getDetectorRowCount(),
-	                  conegeom->getOriginSourceDistance(),
-	                  conegeom->getOriginDetectorDistance(),
-	                  conegeom->getDetectorSpacingX(),
-	                  conegeom->getDetectorSpacingY(),
-	                  conegeom->getProjectionAngles(),
+	                  &volgeom, conegeom,
 	                  m_bShortScan, m_iGPUIndex, m_iVoxelSuperSampling);
 
 	ASTRA_ASSERT(ok);
