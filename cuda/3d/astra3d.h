@@ -332,50 +332,9 @@ _AstraExport bool astraCudaPar3DFP(const float* pfVolume, float* pfProjections,
                       Cuda3DProjectionKernel projKernel);
 
 
-_AstraExport bool astraCudaConeBP(float* pfVolume, const float* pfProjections,
-                     unsigned int iVolX,
-                     unsigned int iVolY,
-                     unsigned int iVolZ,
-                     unsigned int iProjAngles,
-                     unsigned int iProjU,
-                     unsigned int iProjV,
-                     float fOriginSourceDistance,
-                     float fOriginDetectorDistance,
-                     float fDetUSize,
-                     float fDetVSize,
-                     const float *pfAngles,
-                     int iGPUIndex, int iVoxelSuperSampling);
-
-_AstraExport bool astraCudaConeBP(float* pfVolume, const float* pfProjections,
-                     unsigned int iVolX,
-                     unsigned int iVolY,
-                     unsigned int iVolZ,
-                     unsigned int iProjAngles,
-                     unsigned int iProjU,
-                     unsigned int iProjV,
-                     const SConeProjection *pfAngles,
-                     int iGPUIndex, int iVoxelSuperSampling);
-
-_AstraExport bool astraCudaPar3DBP(float* pfVolume, const float* pfProjections,
-                      unsigned int iVolX,
-                      unsigned int iVolY,
-                      unsigned int iVolZ,
-                      unsigned int iProjAngles,
-                      unsigned int iProjU,
-                      unsigned int iProjV,
-                      float fDetUSize,
-                      float fDetVSize,
-                      const float *pfAngles,
-                      int iGPUIndex, int iVoxelSuperSampling);
-
-_AstraExport bool astraCudaPar3DBP(float* pfVolume, const float* pfProjections,
-                      unsigned int iVolX,
-                      unsigned int iVolY,
-                      unsigned int iVolZ,
-                      unsigned int iProjAngles,
-                      unsigned int iProjU,
-                      unsigned int iProjV,
-                      const SPar3DProjection *pfAngles,
+_AstraExport bool astraCudaBP(float* pfVolume, const float* pfProjections,
+                      const CVolumeGeometry3D* pVolGeom,
+                      const CProjectionGeometry3D* pProjGeom,
                       int iGPUIndex, int iVoxelSuperSampling);
 
 _AstraExport bool astraCudaBP_SIRTWeighted(float* pfVolume, const float* pfProjections,
