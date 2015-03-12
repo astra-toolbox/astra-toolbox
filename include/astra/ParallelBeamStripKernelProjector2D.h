@@ -184,12 +184,6 @@ protected:
 	void projectBlock_internal(int _iProjFrom, int _iProjTo,
 	                           int _iDetFrom, int _iDetTo, Policy& _policy);
 
-	/** Internal policy-based projection of a range of angles and range.
- 	 * (_i*From is inclusive, _i*To exclusive) */
-	template <typename Policy>
-	void projectBlock_internal_vector(int _iProjFrom, int _iProjTo,
-	                                  int _iDetFrom, int _iDetTo, Policy& _policy);
-
 };
 
 //----------------------------------------------------------------------------------------

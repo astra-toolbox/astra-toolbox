@@ -30,6 +30,7 @@ $Id$
 #define _INC_ASTRA_PARALLELPROJECTIONGEOMETRY2D
 
 #include "ProjectionGeometry2D.h"
+#include "ParallelVecProjectionGeometry2D.h"
 
 namespace astra
 {
@@ -134,7 +135,7 @@ public:
 	 * @param _sType geometry type to compare to.
 	 * @return true if _sType == "parallel".
 	 */
-	 virtual bool isOfType(const std::string& _sType);
+	virtual bool isOfType(const std::string& _sType);
 
 	/** Get all settings in a Config object.
 	 *
@@ -151,7 +152,12 @@ public:
 	 *
 	 * @return a unit vector describing the direction
 	 */
-	 virtual CVector3D getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex = 0);
+	virtual CVector3D getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex = 0);
+
+	/** Create a vector geom
+	*/
+	CParallelVecProjectionGeometry2D* toVectorGeometry();
+
 };
 
 } // namespace astra

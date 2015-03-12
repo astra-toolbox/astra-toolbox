@@ -26,195 +26,54 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 $Id$
 */
 
-
 template <typename Policy>
 void CParallelBeamLinearKernelProjector2D::project(Policy& p)
 {
-	if (dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry)) {
-		projectBlock_internal(0, m_pProjectionGeometry->getProjectionAngleCount(),
-		                      0, m_pProjectionGeometry->getDetectorCount(), p);
-	} else if (dynamic_cast<CParallelVecProjectionGeometry2D*>(m_pProjectionGeometry)) {
-		projectBlock_internal_vector(0, m_pProjectionGeometry->getProjectionAngleCount(),
-		                             0, m_pProjectionGeometry->getDetectorCount(), p);
-	}
+	projectBlock_internal(0, m_pProjectionGeometry->getProjectionAngleCount(),
+		                  0, m_pProjectionGeometry->getDetectorCount(), p);
 }
 
 template <typename Policy>
 void CParallelBeamLinearKernelProjector2D::projectSingleProjection(int _iProjection, Policy& p)
 {
-	if (dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry)) {
-		projectBlock_internal(_iProjection, _iProjection + 1,
-	                          0, m_pProjectionGeometry->getDetectorCount(), p);
-	} else if (dynamic_cast<CParallelVecProjectionGeometry2D*>(m_pProjectionGeometry)) {
-		projectBlock_internal_vector(_iProjection, _iProjection + 1,
-	                                 0, m_pProjectionGeometry->getDetectorCount(), p);
-	}
+	projectBlock_internal(_iProjection, _iProjection + 1,
+	                      0, m_pProjectionGeometry->getDetectorCount(), p);
 }
 
 template <typename Policy>
 void CParallelBeamLinearKernelProjector2D::projectSingleRay(int _iProjection, int _iDetector, Policy& p)
 {
-	if (dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry)) {
-		projectBlock_internal(_iProjection, _iProjection + 1,
+	projectBlock_internal(_iProjection, _iProjection + 1,
 	                      _iDetector, _iDetector + 1, p);
-	} else if (dynamic_cast<CParallelVecProjectionGeometry2D*>(m_pProjectionGeometry)) {
-		projectBlock_internal_vector(_iProjection, _iProjection + 1,
-	                      _iDetector, _iDetector + 1, p);
-	}
 }
 
-//----------------------------------------------------------------------------------------
-// PROJECT BLOCK
-template <typename Policy>
-void CParallelBeamLinearKernelProjector2D::projectBlock_internal(int _iProjFrom, int _iProjTo, int _iDetFrom, int _iDetTo, Policy& p)
-{
-	// variables
-	float32 theta, sin_theta, cos_theta, inv_sin_theta, inv_cos_theta, t;
-	float32 lengthPerRow, updatePerRow, inv_pixelLengthX;
-	float32 lengthPerCol, updatePerCol, inv_pixelLengthY;
-	bool switch_t;
-	int iAngle, iDetector, iVolumeIndex, iRayIndex;
-	int row, col, x1;
-	float32 P,x,x2;
 
-	// loop angles
-	for (iAngle = _iProjFrom; iAngle < _iProjTo; ++iAngle) {
-
-		// get theta
-		theta = m_pProjectionGeometry->getProjectionAngle(iAngle);
-		switch_t = false;
-		if (theta >= 7*PIdiv4) theta -= 2*PI;
-		if (theta >= 3*PIdiv4) {
-			theta -= PI;
-			switch_t = true;
-		}
-
-		// precalculate sin, cos, 1/cos
-		sin_theta = sin(theta);
-		cos_theta = cos(theta);
-		inv_cos_theta = 1.0f / cos_theta; 
-		inv_sin_theta = 1.0f / sin_theta; 
-
-		// precalculate kernel limits
-		lengthPerRow = m_pVolumeGeometry->getPixelLengthY() * inv_cos_theta;
-		updatePerRow = sin_theta * inv_cos_theta;
-		inv_pixelLengthX = 1.0f / m_pVolumeGeometry->getPixelLengthX();
-
-		// precalculate kernel limits
-		lengthPerCol = m_pVolumeGeometry->getPixelLengthX() * inv_sin_theta;
-		updatePerCol = cos_theta * inv_sin_theta;
-		inv_pixelLengthY = 1.0f / m_pVolumeGeometry->getPixelLengthY();
-
-		// loop detectors
-		for (iDetector = _iDetFrom; iDetector < _iDetTo; ++iDetector) {
-			
-			iRayIndex = iAngle * m_pProjectionGeometry->getDetectorCount() + iDetector;
-
-			// POLICY: RAY PRIOR
-			if (!p.rayPrior(iRayIndex)) continue;
-	
-			// get t
-			t = m_pProjectionGeometry->indexToDetectorOffset(iDetector);
-			if (switch_t) {
-				t = -t;
-			}
-
-			// vertically
-			if (theta <= PIdiv4) {
-			
-				// calculate x for row 0
-				P = (t - sin_theta * m_pVolumeGeometry->pixelRowToCenterY(0)) * inv_cos_theta;
-				x = m_pVolumeGeometry->coordXToColF(P) - 0.5f;
-
-				// for each row
-				for (row = 0; row < m_pVolumeGeometry->getGridRowCount(); ++row) {
-					
-					// get coords
-					x1 = int((x > 0.0f) ? x : x-1.0f);
-					x2 = x - x1; 
-					x += updatePerRow;
-
-					// add weights
-					if (x1 >= 0 && x1 < m_pVolumeGeometry->getGridColCount()) {
-						iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row, x1);
-						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-						if (p.pixelPrior(iVolumeIndex)) {
-							p.addWeight(iRayIndex, iVolumeIndex, (1.0f - x2) * lengthPerRow);
-							p.pixelPosterior(iVolumeIndex);
-						}
-					}
-					if (x1+1 >= 0 && x1+1 < m_pVolumeGeometry->getGridColCount()) {
-						iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row, x1+1);
-						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-						if (p.pixelPrior(iVolumeIndex)) {
-							p.addWeight(iRayIndex, iVolumeIndex, (x2) * lengthPerRow);
-							p.pixelPosterior(iVolumeIndex);
-						}
-					}
-				}
-			}
-
-			// horizontally
-			else if (PIdiv4 <= theta && theta <= 3*PIdiv4) {
-
-				// calculate point P
-				P = (t - cos_theta * m_pVolumeGeometry->pixelColToCenterX(0)) * inv_sin_theta;
-				x = m_pVolumeGeometry->coordYToRowF(P) - 0.5f;
-
-				// for each row
-				for (col = 0; col < m_pVolumeGeometry->getGridColCount(); ++col) {
-
-					// get coords
-					x1 = int((x > 0.0f) ? x : x-1.0f);
-					x2 = x - x1; 
-					x += updatePerCol;
-
-					// add weights
-					if (x1 >= 0 && x1 < m_pVolumeGeometry->getGridRowCount()) {
-						iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(x1, col);
-						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-						if (p.pixelPrior(iVolumeIndex)) {
-							p.addWeight(iRayIndex, iVolumeIndex, (1.0f - x2) * lengthPerCol);
-							p.pixelPosterior(iVolumeIndex);		
-						}
-					}
-					if (x1+1 >= 0 && x1+1 < m_pVolumeGeometry->getGridRowCount()) {
-						iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(x1+1, col);
-						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-						if (p.pixelPrior(iVolumeIndex)) {
-							p.addWeight(iRayIndex, iVolumeIndex, x2 * lengthPerCol);
-							p.pixelPosterior(iVolumeIndex);
-						}
-					}
-				}
-			}
-	
-			// POLICY: RAY POSTERIOR
-			p.rayPosterior(iRayIndex);
-	
-		} // end loop detector
-	} // end loop angles
-
-}
 
 //----------------------------------------------------------------------------------------
 // PROJECT BLOCK - vector projection geometry
 template <typename Policy>
-void CParallelBeamLinearKernelProjector2D::projectBlock_internal_vector(int _iProjFrom, int _iProjTo, int _iDetFrom, int _iDetTo, Policy& p)
+void CParallelBeamLinearKernelProjector2D::projectBlock_internal(int _iProjFrom, int _iProjTo, int _iDetFrom, int _iDetTo, Policy& p)
 {
 	// variables
 	float32 detX, detY, x, y, c, r, update_c, update_r, offset;
 	float32 lengthPerRow, lengthPerCol, inv_pixelLengthX, inv_pixelLengthY;
-	int iVolumeIndex, iRayIndex, row, col, iAngle, iDetector;
-
+	int iVolumeIndex, iRayIndex, row, col, iAngle, iDetector, colCount, rowCount, detCount;
 	const SParProjection * proj = 0;
-	const CParallelVecProjectionGeometry2D* pVecProjectionGeometry = dynamic_cast<CParallelVecProjectionGeometry2D*>(m_pProjectionGeometry);
 
+	// get vector geometry
+	const CParallelVecProjectionGeometry2D* pVecProjectionGeometry;
+	if (dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry)) {
+		pVecProjectionGeometry = dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry)->toVectorGeometry();
+	} else {
+		pVecProjectionGeometry = dynamic_cast<CParallelVecProjectionGeometry2D*>(m_pProjectionGeometry);
+	}
+
+	// precomputations
 	inv_pixelLengthX = 1.0f / m_pVolumeGeometry->getPixelLengthX();
 	inv_pixelLengthY = 1.0f / m_pVolumeGeometry->getPixelLengthY();
-
-	int colCount = m_pVolumeGeometry->getGridColCount();
-	int rowCount = m_pVolumeGeometry->getGridRowCount();
+	colCount = m_pVolumeGeometry->getGridColCount();
+	rowCount = m_pVolumeGeometry->getGridRowCount();
+	detCount = pVecProjectionGeometry->getDetectorCount();
 
 	// loop angles
 	for (iAngle = _iProjFrom; iAngle < _iProjTo; ++iAngle) {

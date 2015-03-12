@@ -182,8 +182,8 @@ Config* CParallelProjectionGeometry2D::getConfiguration() const
 	cfg->self->addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
 	return cfg;
 }
-//----------------------------------------------------------------------------------------
 
+//----------------------------------------------------------------------------------------
 CVector3D CParallelProjectionGeometry2D::getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex /* = 0 */)
 {
 	CVector3D vOutput;
@@ -195,6 +195,26 @@ CVector3D CParallelProjectionGeometry2D::getProjectionDirection(int _iProjection
 	vOutput.setZ(0.0f);
 
 	return vOutput;
+}
+
+//----------------------------------------------------------------------------------------
+CParallelVecProjectionGeometry2D* CParallelProjectionGeometry2D::toVectorGeometry()
+{
+	SParProjection* vectors = new SParProjection[m_iProjectionAngleCount];
+	for (int i = 0; i < m_iProjectionAngleCount; ++i)
+	{
+		vectors[i].fRayX = sinf(m_pfProjectionAngles[i]);
+		vectors[i].fRayY = -cosf(m_pfProjectionAngles[i]);
+		vectors[i].fDetUX = cosf(m_pfProjectionAngles[i]) * m_fDetectorWidth;
+		vectors[i].fDetUY = sinf(m_pfProjectionAngles[i]) * m_fDetectorWidth;		
+		vectors[i].fDetSX = -0.5f * m_iDetectorCount * vectors[i].fDetUX;
+		vectors[i].fDetSY = -0.5f * m_iDetectorCount * vectors[i].fDetUY;
+	}
+
+	CParallelVecProjectionGeometry2D* vecGeom = new CParallelVecProjectionGeometry2D();
+	vecGeom->initialize(m_iProjectionAngleCount, m_iDetectorCount, vectors);
+	delete[] vectors;
+	return vecGeom;
 }
 
 } // end namespace astra
