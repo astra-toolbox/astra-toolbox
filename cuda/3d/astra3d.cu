@@ -353,7 +353,7 @@ public:
 	SConeProjection* projs;
 	SPar3DProjection* parprojs;
 
-	float fPixelSize;
+	float fOutputScale;
 
 	bool initialized;
 	bool setStartReconstruction;
@@ -390,6 +390,8 @@ AstraSIRT3d::AstraSIRT3d()
 	pData->dims.iRaysPerVoxelDim = 1;
 
 	pData->projs = 0;
+	pData->parprojs = 0;
+	pData->fOutputScale = 1.0f;
 
 	pData->initialized = false;
 	pData->setStartReconstruction = false;
@@ -435,11 +437,10 @@ bool AstraSIRT3d::setGeometry(const CVolumeGeometry3D* pVolGeom,
 
 	pData->projs = 0;
 	pData->parprojs = 0;
-	float outputScale;
 
 	ok = convertAstraGeometry(pVolGeom, pProjGeom,
 	                          pData->parprojs, pData->projs,
-	                          outputScale);
+	                          pData->fOutputScale);
 	if (!ok)
 		return false;
 
@@ -450,8 +451,6 @@ bool AstraSIRT3d::setGeometry(const CVolumeGeometry3D* pVolGeom,
 		assert(pData->parprojs != 0);
 		pData->projType = PROJ_PARALLEL;
 	}
-
-	// TODO: Handle outputScale
 
 	return true;
 }
@@ -519,9 +518,9 @@ bool AstraSIRT3d::init()
 	bool ok;
 
 	if (pData->projType == PROJ_PARALLEL) {
-		ok = pData->sirt.setPar3DGeometry(pData->dims, pData->parprojs);
+		ok = pData->sirt.setPar3DGeometry(pData->dims, pData->parprojs, pData->fOutputScale);
 	} else {
-		ok = pData->sirt.setConeGeometry(pData->dims, pData->projs);
+		ok = pData->sirt.setConeGeometry(pData->dims, pData->projs, pData->fOutputScale);
 	}
 
 	if (!ok)
@@ -733,7 +732,7 @@ public:
 	SConeProjection* projs;
 	SPar3DProjection* parprojs;
 
-	float fPixelSize;
+	float fOutputScale;
 
 	bool initialized;
 	bool setStartReconstruction;
@@ -770,6 +769,8 @@ AstraCGLS3d::AstraCGLS3d()
 	pData->dims.iRaysPerVoxelDim = 1;
 
 	pData->projs = 0;
+	pData->parprojs = 0;
+	pData->fOutputScale = 1.0f;
 
 	pData->initialized = false;
 	pData->setStartReconstruction = false;
@@ -815,11 +816,10 @@ bool AstraCGLS3d::setGeometry(const CVolumeGeometry3D* pVolGeom,
 
 	pData->projs = 0;
 	pData->parprojs = 0;
-	float outputScale;
 
 	ok = convertAstraGeometry(pVolGeom, pProjGeom,
 	                          pData->parprojs, pData->projs,
-	                          outputScale);
+	                          pData->fOutputScale);
 	if (!ok)
 		return false;
 
@@ -830,8 +830,6 @@ bool AstraCGLS3d::setGeometry(const CVolumeGeometry3D* pVolGeom,
 		assert(pData->parprojs != 0);
 		pData->projType = PROJ_PARALLEL;
 	}
-
-	// TODO: Handle outputScale
 
 	return true;
 }
@@ -900,9 +898,9 @@ bool AstraCGLS3d::init()
 	bool ok;
 
 	if (pData->projType == PROJ_PARALLEL) {
-		ok = pData->cgls.setPar3DGeometry(pData->dims, pData->parprojs);
+		ok = pData->cgls.setPar3DGeometry(pData->dims, pData->parprojs, pData->fOutputScale);
 	} else {
-		ok = pData->cgls.setConeGeometry(pData->dims, pData->projs);
+		ok = pData->cgls.setConeGeometry(pData->dims, pData->projs, pData->fOutputScale);
 	}
 
 	if (!ok)
@@ -1164,10 +1162,10 @@ bool astraCudaFP(const float* pfVolume, float* pfProjections,
 	if (pParProjs) {
 		switch (projKernel) {
 		case ker3d_default:
-			ok &= Par3DFP(D_volumeData, D_projData, dims, pParProjs, 1.0f);
+			ok &= Par3DFP(D_volumeData, D_projData, dims, pParProjs, outputScale);
 			break;
 		case ker3d_sum_square_weights:
-			ok &= Par3DFP_SumSqW(D_volumeData, D_projData, dims, pParProjs, 1.0f);
+			ok &= Par3DFP_SumSqW(D_volumeData, D_projData, dims, pParProjs, outputScale*outputScale);
 			break;
 		default:
 			assert(false);
@@ -1175,7 +1173,7 @@ bool astraCudaFP(const float* pfVolume, float* pfProjections,
 	} else {
 		switch (projKernel) {
 		case ker3d_default:
-			ok &= ConeFP(D_volumeData, D_projData, dims, pConeProjs, 1.0f);
+			ok &= ConeFP(D_volumeData, D_projData, dims, pConeProjs, outputScale);
 			break;
 		default:
 			assert(false);
@@ -1216,8 +1214,6 @@ bool astraCudaBP(float* pfVolume, const float* pfProjections,
 	                          pParProjs, pConeProjs,
 	                          outputScale);
 
-	// TODO: OutputScale
-
 	if (iGPUIndex != -1) {
 		cudaSetDevice(iGPUIndex);
 		cudaError_t err = cudaGetLastError();
@@ -1252,9 +1248,9 @@ bool astraCudaBP(float* pfVolume, const float* pfProjections,
 	}
 
 	if (pParProjs)
-		ok &= Par3DBP(D_volumeData, D_projData, dims, pParProjs, 1.0f);
+		ok &= Par3DBP(D_volumeData, D_projData, dims, pParProjs, outputScale);
 	else
-		ok &= ConeBP(D_volumeData, D_projData, dims, pConeProjs, 1.0f);
+		ok &= ConeBP(D_volumeData, D_projData, dims, pConeProjs, outputScale);
 
 	ok &= copyVolumeFromDevice(pfVolume, D_volumeData, dims, dims.iVolX);
 
@@ -1293,8 +1289,6 @@ bool astraCudaBP_SIRTWeighted(float* pfVolume,
 	                          pParProjs, pConeProjs,
 	                          outputScale);
 
-	// TODO: OutputScale
-
 	if (iGPUIndex != -1) {
 		cudaSetDevice(iGPUIndex);
 		cudaError_t err = cudaGetLastError();
@@ -1330,9 +1324,9 @@ bool astraCudaBP_SIRTWeighted(float* pfVolume,
 	processSino3D<opSet>(D_projData, 1.0f, dims);
 
 	if (pParProjs)
-		ok &= Par3DBP(D_pixelWeight, D_projData, dims, pParProjs, 1.0f);
+		ok &= Par3DBP(D_pixelWeight, D_projData, dims, pParProjs, outputScale);
 	else
-		ok &= ConeBP(D_pixelWeight, D_projData, dims, pConeProjs, 1.0f);
+		ok &= ConeBP(D_pixelWeight, D_projData, dims, pConeProjs, outputScale);
 
 	processVol3D<opInvert>(D_pixelWeight, dims);
 	if (!ok) {
@@ -1347,9 +1341,9 @@ bool astraCudaBP_SIRTWeighted(float* pfVolume,
 	ok &= zeroVolumeData(D_volumeData, dims);
 	// Do BP into D_volumeData
 	if (pParProjs)
-		ok &= Par3DBP(D_volumeData, D_projData, dims, pParProjs, 1.0f);
+		ok &= Par3DBP(D_volumeData, D_projData, dims, pParProjs, outputScale);
 	else
-		ok &= ConeBP(D_volumeData, D_projData, dims, pConeProjs, 1.0f);
+		ok &= ConeBP(D_volumeData, D_projData, dims, pConeProjs, outputScale);
 
 	// Multiply with weights
 	processVol3D<opMul>(D_volumeData, D_pixelWeight, dims);

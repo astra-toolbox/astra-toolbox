@@ -242,7 +242,7 @@ bool doCGLS(cudaPitchedPtr& D_volumeData,
 	CGLS cgls;
 	bool ok = true;
 
-	ok &= cgls.setConeGeometry(dims, angles);
+	ok &= cgls.setConeGeometry(dims, angles, 1.0f);
 	if (D_maskData.ptr)
 		ok &= cgls.enableVolumeMask();
 

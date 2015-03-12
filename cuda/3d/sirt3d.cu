@@ -347,7 +347,7 @@ bool doSIRT(cudaPitchedPtr& D_volumeData,
 	SIRT sirt;
 	bool ok = true;
 
-	ok &= sirt.setConeGeometry(dims, angles);
+	ok &= sirt.setConeGeometry(dims, angles, 1.0f);
 	if (D_maskData.ptr)
 		ok &= sirt.enableVolumeMask();
 
