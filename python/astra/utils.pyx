@@ -227,6 +227,8 @@ cdef createProjectionGeometryStruct(CProjectionGeometry2D * geom):
         # dct['Vectors'] = vecs
     if (geom.isOfType(< string > six.b('parallel'))):
         dct["type"] = "parallel"
+    if (geom.isOfType(< string > six.b('parallel_vec'))):
+        dct["type"] = "parallel_vec"        
     elif (geom.isOfType(< string > six.b('fanflat'))):
         raise Exception("Not yet implemented")
         # astra::CFanFlatProjectionGeometry2D* pFanFlatGeom = dynamic_cast<astra::CFanFlatProjectionGeometry2D*>(_pProjGeom)

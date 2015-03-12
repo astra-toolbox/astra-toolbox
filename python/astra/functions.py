@@ -189,7 +189,27 @@ def geom_2vec(proj_geom):
     :param proj_geom: Projection geometry to convert
     :type proj_geom: :class:`dict`
     """
-    if proj_geom['type'] == 'fanflat':
+
+    if proj_geom['type'] == 'parallel':
+        angles = proj_geom['ProjectionAngles']
+        vectors = np.zeros((len(angles), 6))
+        for i in range(len(angles)):
+
+            # source
+            vectors[i, 0] = np.sin(angles[i])
+            vectors[i, 1] = -np.cos(angles[i])
+
+            # center of detector
+            vectors[i, 2] = 0
+            vectors[i, 3] = 0
+
+            # vector from detector pixel 0 to 1
+            vectors[i, 4] = np.cos(angles[i]) * proj_geom['DetectorWidth']
+            vectors[i, 5] = np.sin(angles[i]) * proj_geom['DetectorWidth']
+        proj_geom_out = ac.create_proj_geom(
+        'parallel_vec', proj_geom['DetectorCount'], vectors)
+
+    elif proj_geom['type'] == 'fanflat':
         angles = proj_geom['ProjectionAngles']
         vectors = np.zeros((len(angles), 6))
         for i in range(len(angles)):
