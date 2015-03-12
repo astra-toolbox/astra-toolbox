@@ -217,7 +217,25 @@ Config* CFanFlatProjectionGeometry2D::getConfiguration() const
 	cfg->self->addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
 	return cfg;
 }
-//----------------------------------------------------------------------------------------
 
+//----------------------------------------------------------------------------------------
+CFanFlatVecProjectionGeometry2D* CFanFlatProjectionGeometry2D::toVectorGeometry()
+{
+	SFanProjection* vectors = new SFanProjection[m_iProjectionAngleCount];
+	for (int i = 0; i < m_iProjectionAngleCount; ++i)
+	{
+		vectors[i].fSrcX =  sinf(m_pfProjectionAngles[i]) * m_fOriginSourceDistance;
+		vectors[i].fSrcY = -cosf(m_pfProjectionAngles[i]) * m_fOriginSourceDistance;
+		vectors[i].fDetUX = cosf(m_pfProjectionAngles[i]) * m_fDetectorWidth;
+		vectors[i].fDetUY = sinf(m_pfProjectionAngles[i]) * m_fDetectorWidth;
+		vectors[i].fDetSX = -sinf(m_pfProjectionAngles[i]) * m_fOriginDetectorDistance - 0.5f * m_iDetectorCount * vectors[i].fDetUX;
+		vectors[i].fDetSY =  cosf(m_pfProjectionAngles[i]) * m_fOriginDetectorDistance - 0.5f * m_iDetectorCount * vectors[i].fDetUY;
+	}
+
+	CFanFlatVecProjectionGeometry2D* vecGeom = new CFanFlatVecProjectionGeometry2D();
+	vecGeom->initialize(m_iProjectionAngleCount, m_iDetectorCount, vectors);
+	delete[] vectors;
+	return vecGeom;
+}
 
 } // namespace astra

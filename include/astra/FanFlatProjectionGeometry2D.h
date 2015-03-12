@@ -30,6 +30,7 @@ $Id$
 #define _INC_ASTRA_FANFLATPROJECTIONGEOMETRY2D
 
 #include "ProjectionGeometry2D.h"
+#include "FanFlatVecProjectionGeometry2D.h"
 
 #include <cmath>
 
@@ -190,6 +191,10 @@ public:
 	 * @return a unit vector describing the direction
 	 */
 	virtual CVector3D getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex);
+
+	/** Create a vector geom
+	*/
+	CFanFlatVecProjectionGeometry2D* toVectorGeometry();	
 };
 
 
