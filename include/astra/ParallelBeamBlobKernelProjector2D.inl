@@ -27,186 +27,151 @@ $Id$
 */
 
 
-
-//----------------------------------------------------------------------------------------
-// PROJECT ALL 
 template <typename Policy>
 void CParallelBeamBlobKernelProjector2D::project(Policy& p)
 {
-	for (int iAngle = 0; iAngle < m_pProjectionGeometry->getProjectionAngleCount(); ++iAngle) {
-		for (int iDetector = 0; iDetector < m_pProjectionGeometry->getDetectorCount(); ++iDetector) {
-			projectSingleRay(iAngle, iDetector, p);
-		}
-	}
+	projectBlock_internal(0, m_pProjectionGeometry->getProjectionAngleCount(),
+		                  0, m_pProjectionGeometry->getDetectorCount(), p);
 }
 
-
-//----------------------------------------------------------------------------------------
-// PROJECT SINGLE PROJECTION
 template <typename Policy>
 void CParallelBeamBlobKernelProjector2D::projectSingleProjection(int _iProjection, Policy& p)
 {
-	for (int iDetector = 0; iDetector < m_pProjectionGeometry->getDetectorCount(); ++iDetector) {
-		projectSingleRay(_iProjection, iDetector, p);
-	}
+	projectBlock_internal(_iProjection, _iProjection + 1,
+	                      0, m_pProjectionGeometry->getDetectorCount(), p);
 }
 
-
-
-//----------------------------------------------------------------------------------------
-// PROJECT SINGLE RAY
 template <typename Policy>
 void CParallelBeamBlobKernelProjector2D::projectSingleRay(int _iProjection, int _iDetector, Policy& p)
 {
-	ASTRA_ASSERT(m_bIsInitialized);
+	projectBlock_internal(_iProjection, _iProjection + 1,
+	                      _iDetector, _iDetector + 1, p);
+}
 
-	int iRayIndex = _iProjection * m_pProjectionGeometry->getDetectorCount() + _iDetector;
+//----------------------------------------------------------------------------------------
+// PROJECT BLOCK - vector projection geometry
+template <typename Policy>
+void CParallelBeamBlobKernelProjector2D::projectBlock_internal(int _iProjFrom, int _iProjTo, int _iDetFrom, int _iDetTo, Policy& p)
+{
+	// variables
+	float32 detX, detY, x, y, c, r, update_c, update_r, offset, invBlobExtent, inv_pixelLengthX, inv_pixelLengthY, weight, d;
+	int iVolumeIndex, iRayIndex, row, col, iAngle, iDetector, colCount, rowCount, detCount;
+	int col_left, col_right, row_top, row_bottom, index;
+	const SParProjection * proj = 0;
 
-	// POLICY: RAY PRIOR
-	if (!p.rayPrior(iRayIndex)) return;
-
-	// get values
-	float32 t = m_pProjectionGeometry->indexToDetectorOffset(_iDetector);
-	float32 theta = m_pProjectionGeometry->getProjectionAngle(_iProjection);
-	if (theta >= 7*PIdiv4) theta -= 2*PI;
-
-	bool flip = false;
-
-	if (theta >= 3*PIdiv4) {
-		theta -= PI;
-		t = -t;
-		flip = true;
+	// get vector geometry
+	const CParallelVecProjectionGeometry2D* pVecProjectionGeometry;
+	if (dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry)) {
+		pVecProjectionGeometry = dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry)->toVectorGeometry();
+	} else {
+		pVecProjectionGeometry = dynamic_cast<CParallelVecProjectionGeometry2D*>(m_pProjectionGeometry);
 	}
 
+	// precomputations
+	inv_pixelLengthX = 1.0f / m_pVolumeGeometry->getPixelLengthX();
+	inv_pixelLengthY = 1.0f / m_pVolumeGeometry->getPixelLengthY();
+	colCount = m_pVolumeGeometry->getGridColCount();
+	rowCount = m_pVolumeGeometry->getGridRowCount();
+	detCount = pVecProjectionGeometry->getDetectorCount();
 
-	if (theta <= PIdiv4) { // -pi/4 <= theta <= pi/4
+	// loop angles
+	for (iAngle = _iProjFrom; iAngle < _iProjTo; ++iAngle) {
 
-		// precalculate sin, cos, 1/cos
-		float32 sin_theta = sin(theta);
-		float32 cos_theta = cos(theta);
-		float32 inv_cos_theta = 1.0f / cos_theta; 
+		proj = &pVecProjectionGeometry->getProjectionVectors()[iAngle];
 
-		// precalculate other stuff
-		float32 lengthPerRow = m_pVolumeGeometry->getPixelLengthY() * inv_cos_theta;
-		float32 updatePerRow = sin_theta * lengthPerRow;
-		float32 inv_pixelLengthX = 1.0f / m_pVolumeGeometry->getPixelLengthX();
-		float32 pixelLengthX_over_blobSize = m_pVolumeGeometry->getPixelLengthX() / m_fBlobSize;
-		
-		// some variables
-		int row, col, xmin, xmax;
-		float32 P, x, d;
+		bool vertical = fabs(proj->fRayX) < fabs(proj->fRayY);
+		if (vertical) {
+			update_c = -m_pVolumeGeometry->getPixelLengthY() * (proj->fRayX/proj->fRayY) * inv_pixelLengthX;
+			float32 normR = sqrt(proj->fRayY*proj->fRayY + proj->fRayX*proj->fRayX);
+			invBlobExtent = m_pVolumeGeometry->getPixelLengthY() / abs(m_fBlobSize * normR / proj->fRayY);
+		} else {
+			update_r = -m_pVolumeGeometry->getPixelLengthX() * (proj->fRayY/proj->fRayX) * inv_pixelLengthY;
+			float32 normR = sqrt(proj->fRayY*proj->fRayY + proj->fRayX*proj->fRayX);
+			invBlobExtent = m_pVolumeGeometry->getPixelLengthX() / abs(m_fBlobSize * normR / proj->fRayX);
+		}
 
-		// calculate P and x for row 0
-		P = (t - sin_theta * m_pVolumeGeometry->pixelRowToCenterY(0)) * inv_cos_theta;
-		x = (P - m_pVolumeGeometry->getWindowMinX()) * inv_pixelLengthX - 0.5f;
-
-		// for each row
-		for (row = 0; row < m_pVolumeGeometry->getGridRowCount(); ++row) {
+		// loop detectors
+		for (iDetector = _iDetFrom; iDetector < _iDetTo; ++iDetector) {
 			
-			// calculate extent
-			xmin = (int)ceil((P - m_fBlobSize - m_pVolumeGeometry->getWindowMinX()) * inv_pixelLengthX - 0.5f);
-			xmax = (int)floor((P + m_fBlobSize - m_pVolumeGeometry->getWindowMinX()) * inv_pixelLengthX - 0.5f);
+			iRayIndex = iAngle * m_pProjectionGeometry->getDetectorCount() + iDetector;
+
+			// POLICY: RAY PRIOR
+			if (!p.rayPrior(iRayIndex)) continue;
 	
-			// add pixels
-			for (col = xmin; col <= xmax; col++) {
-				if (col >= 0 && col < m_pVolumeGeometry->getGridColCount()) {
-					//d = abs(x - col) * pixelLengthX_over_blobSize;
-					//index = (int)(d*m_iBlobSampleCount+0.5f);
-					//float32 fWeight = m_pfBlobValues[min(index,m_iBlobSampleCount-1)] * lengthPerRow;
+			detX = proj->fDetSX + (iDetector+0.5f) * proj->fDetUX;
+			detY = proj->fDetSY + (iDetector+0.5f) * proj->fDetUY;
 
-					float32 fWeight;
-					int index;
-					if ((x >= col) ^ flip) {
-						d = abs(x - col) * pixelLengthX_over_blobSize * cos_theta;
-						index = (int)(d*m_iBlobSampleCount+0.5f);
-						fWeight = m_pfBlobValues[min(index,m_iBlobSampleCount-1)];
-					} else {
-						d = abs(x - col) * pixelLengthX_over_blobSize * cos_theta;
-						index = (int)(d*m_iBlobSampleCount+0.5f);
-						fWeight = m_pfBlobValuesNeg[min(index,m_iBlobSampleCount-1)];
-					}
+			// vertically
+			if (vertical) {
 
-					int iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row, col);
-					// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-					if (p.pixelPrior(iVolumeIndex)) {
-						p.addWeight(iRayIndex, iVolumeIndex, fWeight);
-						p.pixelPosterior(iVolumeIndex);
-					}
-				}
-			}
+				// calculate x for row 0
+				x = detX + (proj->fRayX/proj->fRayY)*(m_pVolumeGeometry->pixelRowToCenterY(0)-detY);
+				c = (x - m_pVolumeGeometry->getWindowMinX()) * inv_pixelLengthX - 0.5f;
 
-			// update P and x
-			P += updatePerRow;
-			x += updatePerRow * inv_pixelLengthX;
-		}
+				// for each row
+				for (row = 0; row < rowCount; ++row, c += update_c) {
 
-	} else { // pi/4 < theta < 3pi/4
+					col_left = int(c - 0.5f - m_fBlobSize);
+					col_right = int(c + 0.5f + m_fBlobSize);
 
-		// precalculate sin cos
-		float32 sin_90_theta = sin(PIdiv2-theta);
-		float32 cos_90_theta = cos(PIdiv2-theta);
-		float32 inv_cos_90_theta = 1.0f / cos_90_theta; 
+					if (col_left < 0) col_left = 0; 
+					if (col_right > colCount-1) col_right = colCount-1; 
 
-		// precalculate other stuff
-		float32 lengthPerCol = m_pVolumeGeometry->getPixelLengthX() * inv_cos_90_theta;
-		float32 updatePerCol = sin_90_theta * lengthPerCol;
-		float32 inv_pixelLengthY = 1.0f / m_pVolumeGeometry->getPixelLengthY();
-		float32 pixelLengthY_over_blobSize = m_pVolumeGeometry->getPixelLengthY() / m_fBlobSize;
+					// for each column
+					for (col = col_left; col <= col_right; ++col) {
 
-		// some variables
-		int row, col, xmin, xmax;
-		float32 P,x, d;
-
-		// calculate P and x for col 0
-		P = (sin_90_theta * m_pVolumeGeometry->pixelColToCenterX(0) - t) * inv_cos_90_theta;
-		x = (P - m_pVolumeGeometry->getWindowMinY()) * inv_pixelLengthY - 0.5f;
-
-		// for each col
-		for (col = 0; col < m_pVolumeGeometry->getGridColCount(); ++col) {
-
-			// calculate extent
-			xmin = (int)ceil((P - m_fBlobSize - m_pVolumeGeometry->getWindowMinY()) * inv_pixelLengthY - 0.5f);
-			xmax = (int)floor((P + m_fBlobSize - m_pVolumeGeometry->getWindowMinY()) * inv_pixelLengthY - 0.5f);
-
-			// add pixels
-			for (row = xmin; row <= xmax; row++) {
-				if (row >= 0 && row < m_pVolumeGeometry->getGridRowCount()) {
-					//d = abs(x - row) * pixelLengthY_over_blobSize;
-					//int index = (int)(d*m_iBlobSampleCount+0.5f);
-					//float32 fWeight = m_pfBlobValues[min(index,m_iBlobSampleCount-1)] * lengthPerCol;
-
-					float32 fWeight;
-					int index;
-					if ((x <= row) ^ flip) {
-						d = abs(x - row) * pixelLengthY_over_blobSize * cos_90_theta;
-						index = (int)(d*m_iBlobSampleCount+0.5f);
-						fWeight = m_pfBlobValues[min(index,m_iBlobSampleCount-1)];
-					} else {
-						d = abs(x - row) * pixelLengthY_over_blobSize * cos_90_theta;
-						index = (int)(d*m_iBlobSampleCount+0.5f);
-						fWeight = m_pfBlobValuesNeg[min(index,m_iBlobSampleCount-1)];
-					}
-
-
-					int iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row, col);
-					// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-					if (p.pixelPrior(iVolumeIndex)) {
-						p.addWeight(iRayIndex, iVolumeIndex, fWeight);
-						p.pixelPosterior(iVolumeIndex);
+						offset = abs(c - float32(col)) * invBlobExtent;
+						index = (int)(offset*m_iBlobSampleCount+0.5f);
+						weight = m_pfBlobValues[min(index,m_iBlobSampleCount-1)];
+				
+						iVolumeIndex = row * colCount + col;
+						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
+						if (p.pixelPrior(iVolumeIndex)) {
+							p.addWeight(iRayIndex, iVolumeIndex, weight);
+							p.pixelPosterior(iVolumeIndex);
+						}
 					}
 				}
 			}
 
-			// update P and x
-			P += updatePerCol;
-			x += updatePerCol * inv_pixelLengthY;
-		}
+			// horizontally
+			else {
 
-	}
+				// calculate y for col 0
+				y = detY + (proj->fRayY/proj->fRayX)*(m_pVolumeGeometry->pixelColToCenterX(0)-detX);
+				r = (m_pVolumeGeometry->getWindowMaxY() - y) * inv_pixelLengthY - 0.5f;
 
-	// POLICY: RAY POSTERIOR
-	p.rayPosterior(iRayIndex);
+				// for each col
+				for (col = 0; col < colCount; ++col, r += update_r) {
 
+					row_top = int(r - 0.5f - m_fBlobSize);
+					row_bottom = int(r + 0.5f + m_fBlobSize);
 
+					if (row_top < 0) row_top = 0; 
+					if (row_bottom > rowCount-1) row_bottom = rowCount-1; 
+
+					// for each column
+					for (row = row_top; row <= row_bottom; ++row) {
+
+						offset = abs(r - float32(row)) * invBlobExtent;
+						index = (int)(offset*m_iBlobSampleCount+0.5f);
+						weight = m_pfBlobValues[min(index,m_iBlobSampleCount-1)];
+				
+						iVolumeIndex = row * colCount + col;
+						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
+						if (p.pixelPrior(iVolumeIndex)) {
+							p.addWeight(iRayIndex, iVolumeIndex, weight);
+							p.pixelPosterior(iVolumeIndex);
+						}
+					}
+
+				}
+			}
+	
+			// POLICY: RAY POSTERIOR
+			p.rayPosterior(iRayIndex);
+	
+		} // end loop detector
+	} // end loop angles
 
 }
