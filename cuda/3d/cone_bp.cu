@@ -479,7 +479,7 @@ int main()
 	}
 #endif
 
-	astraCUDA3d::ConeBP(volData, projData, dims, angle);
+	astraCUDA3d::ConeBP(volData, projData, dims, angle, 1.0f);
 #if 0
 	float* buf = new float[256*256];
 

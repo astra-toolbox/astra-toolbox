@@ -450,7 +450,7 @@ int main()
 		cudaMemcpy3D(&p);
 	}
 
-	astraCUDA3d::Par3DBP(volData, projData, dims, angle);
+	astraCUDA3d::Par3DBP(volData, projData, dims, angle, 1.0f);
 #if 1
 	float* buf = new float[256*256];
 
