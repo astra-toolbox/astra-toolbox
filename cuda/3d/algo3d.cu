@@ -94,12 +94,13 @@ bool ReconAlgo3D::callFP(cudaPitchedPtr& D_volumeData,
 }
 
 bool ReconAlgo3D::callBP(cudaPitchedPtr& D_volumeData,
-                       cudaPitchedPtr& D_projData)
+                       cudaPitchedPtr& D_projData,
+                       float outputScale)
 {
 	if (coneProjs) {
-		return ConeBP(D_volumeData, D_projData, dims, coneProjs);
+		return ConeBP(D_volumeData, D_projData, dims, coneProjs, outputScale);
 	} else {
-		return Par3DBP(D_volumeData, D_projData, dims, par3DProjs);
+		return Par3DBP(D_volumeData, D_projData, dims, par3DProjs, outputScale);
 	}
 }
 

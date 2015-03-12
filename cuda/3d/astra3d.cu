@@ -1252,9 +1252,9 @@ bool astraCudaBP(float* pfVolume, const float* pfProjections,
 	}
 
 	if (pParProjs)
-		ok &= Par3DBP(D_volumeData, D_projData, dims, pParProjs);
+		ok &= Par3DBP(D_volumeData, D_projData, dims, pParProjs, 1.0f);
 	else
-		ok &= ConeBP(D_volumeData, D_projData, dims, pConeProjs);
+		ok &= ConeBP(D_volumeData, D_projData, dims, pConeProjs, 1.0f);
 
 	ok &= copyVolumeFromDevice(pfVolume, D_volumeData, dims, dims.iVolX);
 
@@ -1330,9 +1330,9 @@ bool astraCudaBP_SIRTWeighted(float* pfVolume,
 	processSino3D<opSet>(D_projData, 1.0f, dims);
 
 	if (pParProjs)
-		ok &= Par3DBP(D_pixelWeight, D_projData, dims, pParProjs);
+		ok &= Par3DBP(D_pixelWeight, D_projData, dims, pParProjs, 1.0f);
 	else
-		ok &= ConeBP(D_pixelWeight, D_projData, dims, pConeProjs);
+		ok &= ConeBP(D_pixelWeight, D_projData, dims, pConeProjs, 1.0f);
 
 	processVol3D<opInvert>(D_pixelWeight, dims);
 	if (!ok) {
@@ -1347,9 +1347,9 @@ bool astraCudaBP_SIRTWeighted(float* pfVolume,
 	ok &= zeroVolumeData(D_volumeData, dims);
 	// Do BP into D_volumeData
 	if (pParProjs)
-		ok &= Par3DBP(D_volumeData, D_projData, dims, pParProjs);
+		ok &= Par3DBP(D_volumeData, D_projData, dims, pParProjs, 1.0f);
 	else
-		ok &= ConeBP(D_volumeData, D_projData, dims, pConeProjs);
+		ok &= ConeBP(D_volumeData, D_projData, dims, pConeProjs, 1.0f);
 
 	// Multiply with weights
 	processVol3D<opMul>(D_volumeData, D_pixelWeight, dims);

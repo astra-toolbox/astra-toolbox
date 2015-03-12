@@ -51,7 +51,8 @@ protected:
 	            cudaPitchedPtr& D_projData, 
 	            float outputScale);
 	bool callBP(cudaPitchedPtr& D_volumeData, 
-	            cudaPitchedPtr& D_projData);
+	            cudaPitchedPtr& D_projData,
+	            float outputScale);
 
 	SDimensions3D dims;
 	SConeProjection* coneProjs;

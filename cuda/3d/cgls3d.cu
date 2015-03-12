@@ -165,7 +165,7 @@ bool CGLS::iterate(unsigned int iterations)
 
 		// p = A'*r
 		zeroVolumeData(D_p, dims);
-		callBP(D_p, D_r);
+		callBP(D_p, D_r, 1.0f);
 		if (useVolumeMask)
 			processVol3D<opMul>(D_p, D_maskData, dims);
 
@@ -195,7 +195,7 @@ bool CGLS::iterate(unsigned int iterations)
 
 		// z = A'*r
 		zeroVolumeData(D_z, dims);
-		callBP(D_z, D_r);
+		callBP(D_z, D_r, 1.0f);
 		if (useVolumeMask)
 			processVol3D<opMul>(D_z, D_maskData, dims);
 
