@@ -127,10 +127,10 @@ bool SIRT::precomputeWeights()
 
 	zeroVolumeData(D_pixelWeight, pixelPitch, dims);
 	if (useSinogramMask) {
-		callBP(D_pixelWeight, pixelPitch, D_smaskData, smaskPitch);
+		callBP(D_pixelWeight, pixelPitch, D_smaskData, smaskPitch, 1.0f);
 	} else {
 		processSino<opSet>(D_projData, 1.0f, projPitch, dims);
-		callBP(D_pixelWeight, pixelPitch, D_projData, projPitch);
+		callBP(D_pixelWeight, pixelPitch, D_projData, projPitch, 1.0f);
 	}
 	processVol<opInvert>(D_pixelWeight, pixelPitch, dims);
 
@@ -251,7 +251,7 @@ bool SIRT::iterate(unsigned int iterations)
 
 		zeroVolumeData(D_tmpData, tmpPitch, dims);
 
-		callBP(D_tmpData, tmpPitch, D_projData, projPitch);
+		callBP(D_tmpData, tmpPitch, D_projData, projPitch, 1.0f);
 
 		processVol<opAddMul>(D_volumeData, D_pixelWeight, D_tmpData, volumePitch, dims);
 

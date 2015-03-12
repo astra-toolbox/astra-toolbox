@@ -200,10 +200,10 @@ bool SART::iterate(unsigned int iterations)
 			// BP, mask, and add back
 			// TODO: Try putting the masking directly in the BP
 			zeroVolumeData(D_tmpData, tmpPitch, dims);
-			callBP_SART(D_tmpData, tmpPitch, D_projData, projPitch, angle);
+			callBP_SART(D_tmpData, tmpPitch, D_projData, projPitch, angle, 1.0f);
 			processVol<opAddMul>(D_volumeData, D_maskData, D_tmpData, volumePitch, dims);
 		} else {
-			callBP_SART(D_volumeData, volumePitch, D_projData, projPitch, angle);
+			callBP_SART(D_volumeData, volumePitch, D_projData, projPitch, angle, 1.0f);
 		}
 
 		if (useMinConstraint)
@@ -264,16 +264,16 @@ bool SART::callFP_SART(float* D_volumeData, unsigned int volumePitch,
 
 bool SART::callBP_SART(float* D_volumeData, unsigned int volumePitch,
                        float* D_projData, unsigned int projPitch,
-                       unsigned int angle)
+                       unsigned int angle, float outputScale)
 {
 	if (angles) {
 		assert(!fanProjs);
 		return BP_SART(D_volumeData, volumePitch, D_projData, projPitch,
-		               angle, dims, angles, TOffsets);
+		               angle, dims, angles, TOffsets, outputScale);
 	} else {
 		assert(fanProjs);
 		return FanBP_SART(D_volumeData, volumePitch, D_projData, projPitch,
-		                  angle, dims, fanProjs);
+		                  angle, dims, fanProjs, outputScale);
 	}
 
 }

@@ -336,16 +336,17 @@ bool ReconAlgo::callFP(float* D_volumeData, unsigned int volumePitch,
 }
 
 bool ReconAlgo::callBP(float* D_volumeData, unsigned int volumePitch,
-                       float* D_projData, unsigned int projPitch)
+                       float* D_projData, unsigned int projPitch,
+                       float outputScale)
 {
 	if (angles) {
 		assert(!fanProjs);
 		return BP(D_volumeData, volumePitch, D_projData, projPitch,
-		          dims, angles, TOffsets);
+		          dims, angles, TOffsets, outputScale);
 	} else {
 		assert(fanProjs);
 		return FanBP(D_volumeData, volumePitch, D_projData, projPitch,
-		             dims, fanProjs);
+		             dims, fanProjs, outputScale);
 	}
 
 }

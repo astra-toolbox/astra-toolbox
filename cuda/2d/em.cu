@@ -102,7 +102,7 @@ bool EM::precomputeWeights()
 #endif
 	{
 		processSino<opSet>(D_projData, 1.0f, projPitch, dims);
-		callBP(D_pixelWeight, pixelPitch, D_projData, projPitch);
+		callBP(D_pixelWeight, pixelPitch, D_projData, projPitch, 1.0f);
 	}
 	processVol<opInvert>(D_pixelWeight, pixelPitch, dims);
 
@@ -137,7 +137,7 @@ bool EM::iterate(unsigned int iterations)
 
 		// Do BP of projData into tmpData
 		zeroVolumeData(D_tmpData, tmpPitch, dims);
-		callBP(D_tmpData, tmpPitch, D_projData, projPitch);
+		callBP(D_tmpData, tmpPitch, D_projData, projPitch, 1.0f);
 
 		// Multiply volumeData with tmpData divided by pixel weights
 		processVol<opMul2>(D_volumeData, D_tmpData, D_pixelWeight, pixelPitch, dims);
