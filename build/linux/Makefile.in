@@ -225,6 +225,7 @@ MATLAB_MEX=\
 	matlab/mex/astra_mex_matrix_c.$(MEXSUFFIX) \
 	matlab/mex/astra_mex_projector_c.$(MEXSUFFIX) \
 	matlab/mex/astra_mex_projector3d_c.$(MEXSUFFIX) \
+	matlab/mex/astra_mex_log_c.$(MEXSUFFIX) \
 	matlab/mex/astra_mex_data3d_c.$(MEXSUFFIX)
 
 
