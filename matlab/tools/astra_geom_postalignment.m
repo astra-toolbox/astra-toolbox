@@ -1,11 +1,36 @@
 function proj_geom = astra_geom_postalignment(proj_geom, factor)
+%--------------------------------------------------------------------------
+% proj_geom = astra_geom_postalignment(proj_geom, factorU)
+% proj_geom = astra_geom_postalignment(proj_geom, [factorU factorV])
+%
+% Apply a postalignment to a vector-based projection geometry.  Can be used to model the rotation axis offset.
+%
+% proj_geom: input projection geometry (vector-based only, use astra_geom_2vec to convert conventional projection geometries)
+% dim (optional): which dimension
+% s: output
+%--------------------------------------------------------------------------
+% This file is part of the ASTRA Toolbox
+%
+% Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
+%            2014-2015, CWI, Amsterdam
+% License: Open Source under GPLv3
+% Contact: astra@uantwerpen.be
+% Website: http://sf.net/projects/astra-toolbox
+%--------------------------------------------------------------------------
+% $Id$
 
-	if strcmp(proj_geom.type,'fanflat_vec')
-		proj_geom.Vectors(:,3:4) = proj_geom.Vectors(:,3:4) + factor * proj_geom.Vectors(:,5:6);
-		
+	if strcmp(proj_geom.type,'fanflat_vec') || strcmp(proj_geom.type,'parallel_vec')
+		proj_geom.Vectors(:,3:4) = proj_geom.Vectors(:,3:4) + factor(1) * proj_geom.Vectors(:,5:6);
+
 	elseif strcmp(proj_geom.type,'cone_vec') || strcmp(proj_geom.type,'parallel3d_vec')
-		proj_geom.Vectors(:,4:6) = proj_geom.Vectors(:,4:6) + factor * proj_geom.Vectors(:,7:9);
+		if numel(factor) == 1
+			proj_geom.Vectors(:,4:6) = proj_geom.Vectors(:,4:6) + factor * proj_geom.Vectors(:,7:9);
+		elseif numel(factor) > 1
+			proj_geom.Vectors(:,4:6) = proj_geom.Vectors(:,4:6) + factor(1) * proj_geom.Vectors(:,7:9) + factor(2) * proj_geom.Vectors(:,10:12);
+		end
 
 	else
 		error('Projection geometry not suited for postalignment correction.')
 	end
+
+end

@@ -1,4 +1,22 @@
 function s = astra_geom_size(geom, dim)
+%--------------------------------------------------------------------------
+% s = astra_geom_size(geom, dim)
+%
+% Get the size of a volume or projection geometry.
+%
+% geom: volume or projection geometry
+% dim (optional): which dimension
+% s: output
+%--------------------------------------------------------------------------
+% This file is part of the ASTRA Toolbox
+%
+% Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
+%            2014-2015, CWI, Amsterdam
+% License: Open Source under GPLv3
+% Contact: astra@uantwerpen.be
+% Website: http://sf.net/projects/astra-toolbox
+%--------------------------------------------------------------------------
+% $Id$
 
 	if isfield(geom, 'GridSliceCount')
 		% 3D Volume geometry?
@@ -6,23 +24,23 @@ function s = astra_geom_size(geom, dim)
 	elseif isfield(geom, 'GridColCount')
 		% 2D Volume geometry?
 		s = [ geom.GridRowCount, geom.GridColCount ];
-	elseif strcmp(geom.type,'parallel') || strcmp(geom.type,'fanflat') 
+	elseif strcmp(geom.type,'parallel') || strcmp(geom.type,'fanflat')
 		s = [numel(geom.ProjectionAngles), geom.DetectorCount];
-		
-	elseif strcmp(geom.type,'parallel3d') || strcmp(geom.type,'cone') 
+
+	elseif strcmp(geom.type,'parallel3d') || strcmp(geom.type,'cone')
 		s =  [geom.DetectorColCount, numel(geom.ProjectionAngles), geom.DetectorRowCount];
-		
-	elseif strcmp(geom.type,'fanflat_vec')
+
+	elseif strcmp(geom.type,'fanflat_vec') || strcmp(geom.type,'parallel_vec')
 		s = [size(geom.Vectors,1), geom.DetectorCount];
-		
-	elseif strcmp(geom.type,'parallel3d_vec') || strcmp(geom.type,'cone_vec') 		
+
+	elseif strcmp(geom.type,'parallel3d_vec') || strcmp(geom.type,'cone_vec')
 		s = [geom.DetectorColCount, size(geom.Vectors,1), geom.DetectorRowCount];
-		
+
 	end
 
 	if nargin == 2
 		s = s(dim);
 	end
-	
+
 end
 
