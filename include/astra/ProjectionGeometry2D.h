@@ -65,10 +65,6 @@ protected:
 	 */
 	float32 m_fDetectorWidth;
 
-	/** An array of m_iProjectionAngleCount elements containing an extra detector offset for each projection.
-	 */
-	float32* m_pfExtraDetectorOffset;
-
 	/** Dynamically allocated array of projection angles. All angles are represented in radians and lie in 
 	 * the [0,2pi[ interval.
 	 */
@@ -202,9 +198,6 @@ public:
 	 */
 	float32 getProjectionAngleDegrees(int _iProjectionIndex) const;
 
-	float32 getExtraDetectorOffset(int iAngle) const;
-	const float32* getExtraDetectorOffset() const { return m_pfExtraDetectorOffset; }
-
 	/** Get the index coordinate of a point on a detector array.
 	 *
 	 * @param _fOffset	distance between the center of the detector array and a certain point
@@ -271,12 +264,6 @@ public:
 //----------------------------------------------------------------------------------------
 // Inline member functions
 //----------------------------------------------------------------------------------------
-
-
-inline float32 CProjectionGeometry2D::getExtraDetectorOffset(int _iAngle) const
-{
-	return m_pfExtraDetectorOffset ? m_pfExtraDetectorOffset[_iAngle] : 0.0f;
-}
 
 
 // Get the initialization state.

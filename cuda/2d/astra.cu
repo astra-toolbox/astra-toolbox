@@ -827,17 +827,12 @@ bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
 
 	// If there are existing detector offsets, or if we need to translate,
 	// we need to return offsets
-	if (pProjGeom->getExtraDetectorOffset() || offCenter)
+	if (offCenter)
 	{
 		float* offset = new float[nth];
 
-		if (pProjGeom->getExtraDetectorOffset()) {
-			for (int i = 0; i < nth; ++i)
-				offset[i] = pProjGeom->getExtraDetectorOffset()[i];
-		} else {
-			for (int i = 0; i < nth; ++i)
-				offset[i] = 0.0f;
-		}
+		for (int i = 0; i < nth; ++i)
+			offset[i] = 0.0f;
 
 		if (offCenter) {
 			float dx = (pVolGeom->getWindowMinX() + pVolGeom->getWindowMaxX()) / 2;

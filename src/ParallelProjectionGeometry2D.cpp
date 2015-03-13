@@ -67,8 +67,7 @@ CParallelProjectionGeometry2D::CParallelProjectionGeometry2D(const CParallelProj
 	initialize(_projGeom.m_iProjectionAngleCount,
 				_projGeom.m_iDetectorCount, 
 				_projGeom.m_fDetectorWidth, 
-				_projGeom.m_pfProjectionAngles,
-				_projGeom.m_pfExtraDetectorOffset);
+				_projGeom.m_pfProjectionAngles);
 }
 
 //----------------------------------------------------------------------------------------
