@@ -485,7 +485,7 @@ E_FBPFILTER CCudaFilteredBackProjectionAlgorithm::_convertStringToFilter(const c
 	}
 	else
 	{
-		astra::CLogger::error(__FILE__,__LINE__,"Failed to convert \"%s\" into a filter.",_filterType);
+		ASTRA_ERROR("Failed to convert \"%s\" into a filter.",_filterType);
 	}
 
 	return output;

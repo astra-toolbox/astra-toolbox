@@ -29,7 +29,10 @@ $Id$
 #ifndef _INC_ASTRA_LOGGING
 #define _INC_ASTRA_LOGGING
 
-#define ASTRA_LOG(id) __FILE__, __LINE__, id
+#define ASTRA_DEBUG(...) astra::CLogger::debug(__FILE__,__LINE__, __VA_ARGS__)
+#define ASTRA_INFO(...) astra::CLogger::info(__FILE__,__LINE__, __VA_ARGS__)
+#define ASTRA_WARN(...) astra::CLogger::warn(__FILE__,__LINE__, __VA_ARGS__)
+#define ASTRA_ERROR(...) astra::CLogger::error(__FILE__,__LINE__, __VA_ARGS__)
 
 namespace astra
 {

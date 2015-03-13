@@ -43,7 +43,7 @@ using namespace astra;
 #define CHECK_ERROR(errorMessage) do {                                     \
   cudaError_t err = cudaThreadSynchronize();                               \
   if( cudaSuccess != err) {                                                \
-      astra::CLogger::error(__FILE__,__LINE__,"Cuda error %s : %s",        \
+      ASTRA_ERROR("Cuda error %s : %s",                                    \
               errorMessage,cudaGetErrorString( err));                      \
       exit(EXIT_FAILURE);                                                  \
   } } while (0)
@@ -51,13 +51,13 @@ using namespace astra;
 #define SAFE_CALL( call) do {                                              \
   cudaError err = call;                                                    \
   if( cudaSuccess != err) {                                                \
-      astra::CLogger::error(__FILE__,__LINE__,"Cuda error: %s ",           \
+      ASTRA_ERROR("Cuda error: %s ",                                       \
               cudaGetErrorString( err));                                   \
       exit(EXIT_FAILURE);                                                  \
   }                                                                        \
   err = cudaThreadSynchronize();                                           \
   if( cudaSuccess != err) {                                                \
-      astra::CLogger::error(__FILE__,__LINE__,"Cuda error: %s : ",         \
+      ASTRA_ERROR("Cuda error: %s : ",                                     \
               cudaGetErrorString( err));                                   \
       exit(EXIT_FAILURE);                                                  \
   } } while (0)
@@ -137,7 +137,7 @@ static bool invokeCudaFFT(int _iProjectionCount, int _iDetectorCount,
 	result = cufftPlan1d(&plan, _iDetectorCount, CUFFT_R2C, _iProjectionCount);
 	if(result != CUFFT_SUCCESS)
 	{
-    astra::CLogger::error(__FILE__,__LINE__,"Failed to plan 1d r2c fft");
+        ASTRA_ERROR("Failed to plan 1d r2c fft");
 		return false;
 	}
 
@@ -146,7 +146,7 @@ static bool invokeCudaFFT(int _iProjectionCount, int _iDetectorCount,
 
 	if(result != CUFFT_SUCCESS)
 	{
-    astra::CLogger::error(__FILE__,__LINE__,"Failed to exec 1d r2c fft");
+        ASTRA_ERROR("Failed to exec 1d r2c fft");
 		return false;
 	}
 
@@ -163,7 +163,7 @@ static bool invokeCudaIFFT(int _iProjectionCount, int _iDetectorCount,
 	result = cufftPlan1d(&plan, _iDetectorCount, CUFFT_C2R, _iProjectionCount);
 	if(result != CUFFT_SUCCESS)
 	{
-    astra::CLogger::error(__FILE__,__LINE__,"Failed to plan 1d c2r fft");
+        ASTRA_ERROR("Failed to plan 1d c2r fft");
 		return false;
 	}
 
@@ -174,7 +174,7 @@ static bool invokeCudaIFFT(int _iProjectionCount, int _iDetectorCount,
 
 	if(result != CUFFT_SUCCESS)
 	{
-    astra::CLogger::error(__FILE__,__LINE__,"Failed to exec 1d c2r fft");
+        ASTRA_ERROR("Failed to exec 1d c2r fft");
 		return false;
 	}
 
@@ -630,7 +630,7 @@ void genFilter(E_FBPFILTER _eFilter, float _fD, int _iProjectionCount,
 		}
 		default:
 		{
-      astra::CLogger::error(__FILE__,__LINE__,"Cannot serve requested filter");
+            ASTRA_ERROR("Cannot serve requested filter");
 		}
 	}
 
@@ -764,13 +764,13 @@ void testCudaFFT()
 	result = cufftPlan1d(&plan, iDetectorCount, CUFFT_R2C, iProjectionCount);
 	if(result != CUFFT_SUCCESS)
 	{
-    astra::CLogger::error(__FILE__,__LINE__,"Failed to plan 1d r2c fft");
+        ASTRA_ERROR("Failed to plan 1d r2c fft");
 	}
 
 	result = cufftExecR2C(plan, pfDevProj, pDevFourProj);
 	if(result != CUFFT_SUCCESS)
 	{
-    astra::CLogger::error(__FILE__,__LINE__,"Failed to exec 1d r2c fft");
+        ASTRA_ERROR("Failed to exec 1d r2c fft");
 	}
 
 	cufftDestroy(plan);
@@ -794,13 +794,13 @@ void testCudaFFT()
 	result = cufftPlan1d(&plan, iDetectorCount, CUFFT_C2R, iProjectionCount);
 	if(result != CUFFT_SUCCESS)
 	{
-    astra::CLogger::error(__FILE__,__LINE__,"Failed to plan 1d c2r fft");
+        ASTRA_ERROR("Failed to plan 1d c2r fft");
 	}
 
 	result = cufftExecC2R(plan, pDevFourProj, pfDevInFourProj);
 	if(result != CUFFT_SUCCESS)
 	{
-    astra::CLogger::error(__FILE__,__LINE__,"Failed to exec 1d c2r fft");
+        ASTRA_ERROR("Failed to exec 1d c2r fft");
 	}
 
 	cufftDestroy(plan);

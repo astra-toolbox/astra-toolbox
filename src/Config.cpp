@@ -149,7 +149,7 @@ bool ConfigStackCheck<T>::stopParsing()
 	if (!errors.empty()) {
 		ostringstream os;
 		os << "Warning: " << name << ": unused configuration options: " << errors;
-		astra::CLogger::warn(__FILE__,__LINE__,os.str().c_str());
+		ASTRA_WARN(os.str().c_str());
 		return false;
 	}
 

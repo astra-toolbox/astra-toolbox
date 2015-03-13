@@ -178,7 +178,7 @@ bool CCudaReconstructionAlgorithm2D::initialize(const Config& _cfg)
 		id = boost::lexical_cast<int>(node->getContent());
 		CProjector2D *projector = CProjector2DManager::getSingleton().get(id);
 		if (!dynamic_cast<CCudaProjector2D*>(projector)) {
-			astra::CLogger::warn(__FILE__,__LINE__,"Warning: non-CUDA Projector2D passed");
+			ASTRA_WARN("Warning: non-CUDA Projector2D passed");
 		}
 		delete node;
 	}

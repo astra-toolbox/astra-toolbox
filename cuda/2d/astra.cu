@@ -564,7 +564,7 @@ bool AstraFBP::setFilter(E_FBPFILTER _eFilter, const float * _pfHostFilter /* = 
 		}
 		default:
 		{
-			astra::CLogger::error(__FILE__,__LINE__,"AstraFBP::setFilter: Unknown filter type requested");
+			ASTRA_ERROR("AstraFBP::setFilter: Unknown filter type requested");
 			delete [] pHostFilter;
 			return false;
 		}
