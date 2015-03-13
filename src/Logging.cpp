@@ -124,7 +124,11 @@ void CLogger::_setLevel(int id, log_level m_eLevel)
 void CLogger::setOutputScreen(int fd, log_level m_eLevel)
 {
 	_assureIsInitialized();
-	clog_set_fd(0, fd);
+	if(fd==1||fd==2){
+		clog_set_fd(0, fd);
+	}else{
+		error(__FILE__,__LINE__,"Invalid file descriptor");
+	}
 	_setLevel(0,m_eLevel);
 }
 
