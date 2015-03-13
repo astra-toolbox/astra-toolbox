@@ -216,6 +216,7 @@ TEST_OBJECTS=\
 MATLAB_CXX_OBJECTS=\
 	matlab/mex/mexHelpFunctions.o \
 	matlab/mex/mexCopyDataHelpFunctions.o \
+	matlab/mex/mexInitFunctions.o \
 	matlab/mex/mexDataManagerHelpFunctions.o
 
 MATLAB_MEX=\

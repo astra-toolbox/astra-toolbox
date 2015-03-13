@@ -124,8 +124,7 @@ void CLogger::_setLevel(int id, log_level m_eLevel)
 void CLogger::setOutputScreen(int fd, log_level m_eLevel)
 {
 	_assureIsInitialized();
-	clog_free(0);
-	clog_init_fd(0, fd);
+	clog_set_fd(0, fd);
 	_setLevel(0,m_eLevel);
 }
 
@@ -167,6 +166,11 @@ void CLogger::setFormatScreen(const char *fmt)
 CLogger::CLogger()
 {
 	;
+}
+
+bool CLogger::setCallbackScreen(void (*cb)(const char *msg, size_t len)){
+	_assureIsInitialized();
+	return clog_set_cb(0,cb)==0;
 }
 
 bool CLogger::m_bEnabledScreen = true;

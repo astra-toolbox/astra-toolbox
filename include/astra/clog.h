@@ -231,6 +231,32 @@ int clog_set_date_fmt(int id, const char *fmt);
  */
 int clog_set_fmt(int id, const char *fmt);
 
+/**
+ * Set the callback function.
+ *
+ * @param cb
+ * The new callback function.
+ *
+ * @return
+ * Zero on success, non-zero on failure.
+ */
+int clog_set_cb(int id, void (*cb)(const char *msg, size_t len));
+
+/**
+ * Set the file descriptor.
+ *
+ * @param id
+ * The identifier of the logger.
+ *
+ * @param fd
+ * The new file descriptor.
+ *
+ * @return
+ * Zero on success, non-zero on failure.
+ */
+int clog_set_fd(int id, int fd);
+
+
 /*
  * No need to read below this point.
  */
@@ -257,6 +283,9 @@ struct clog {
 
     /* Tracks whether the fd needs to be closed eventually. */
     int opened;
+
+    /* Callback function for each log message. */
+    void (*cb)(const char *msg, size_t len);
 };
 
 void _clog_err(const char *fmt, ...);
@@ -314,6 +343,7 @@ clog_init_fd(int id, int fd)
     strcpy(logger->fmt, CLOG_DEFAULT_FORMAT);
     strcpy(logger->date_fmt, CLOG_DEFAULT_DATE_FORMAT);
     strcpy(logger->time_fmt, CLOG_DEFAULT_TIME_FORMAT);
+    logger->cb = NULL;
 
     _clog_loggers[id] = logger;
     return 0;
@@ -341,6 +371,16 @@ clog_set_level(int id, enum clog_level level)
         return 1;
     }
     _clog_loggers[id]->level = level;
+    return 0;
+}
+
+int
+clog_set_fd(int id, int fd)
+{
+    if (_clog_loggers[id] == NULL) {
+        return 1;
+    }
+    _clog_loggers[id]->fd = fd;
     return 0;
 }
 
@@ -389,6 +429,18 @@ clog_set_fmt(int id, const char *fmt)
         return 1;
     }
     strcpy(logger->fmt, fmt);
+    return 0;
+}
+
+int
+clog_set_cb(int id, void (*cb)(const char *msg, size_t len))
+{
+    struct clog *logger = _clog_loggers[id];
+    if (logger == NULL) {
+        _clog_err("clog_set_cb: No such logger: %d\n", id);
+        return 1;
+    }
+    logger->cb = cb;
     return 0;
 }
 
@@ -563,6 +615,7 @@ _clog_log(const char *sfile, int sline, enum clog_level level,
             return;
         }
         result = write(logger->fd, message, strlen(message));
+        if (logger->cb) logger->cb(message,strlen(message));
         if (result == -1) {
             _clog_err("Unable to write to log file: %s\n", strerror(errno));
         }

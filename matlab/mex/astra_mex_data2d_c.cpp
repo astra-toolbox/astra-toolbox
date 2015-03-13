@@ -32,6 +32,7 @@ $Id$
  */
 #include <mex.h>
 #include "mexHelpFunctions.h"
+#include "mexInitFunctions.h"
 
 #include <list>
 
@@ -634,6 +635,8 @@ void mexFunction(int nlhs, mxArray* plhs[],
 		printHelp();
 		return;
 	}
+
+	initASTRAMex();
 
 	// SWITCH (MODE)
 	if (sMode ==  std::string("get")) { 

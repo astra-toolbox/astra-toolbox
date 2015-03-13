@@ -32,6 +32,7 @@ $Id$
  */
 #include <mex.h>
 #include "mexHelpFunctions.h"
+#include "mexInitFunctions.h"
 #include "mexCopyDataHelpFunctions.h"
 #include "mexDataManagerHelpFunctions.h"
 
@@ -370,6 +371,8 @@ void mexFunction(int nlhs, mxArray* plhs[],
 		printHelp();
 		return;
 	}
+
+	initASTRAMex();
 
 	// 3D data
 	if (sMode ==  std::string("create")) { 

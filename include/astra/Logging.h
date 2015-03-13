@@ -75,7 +75,7 @@ public:
    * @param ...
    * Any additional format arguments.
 	 */
-	static void debug(const char *sfile, int sline, const char *fmt, ...);
+  static void debug(const char *sfile, int sline, const char *fmt, ...);
   static void info(const char *sfile, int sline, const char *fmt, ...);
   static void warn(const char *sfile, int sline, const char *fmt, ...);
   static void error(const char *sfile, int sline, const char *fmt, ...);
@@ -142,6 +142,13 @@ public:
   static void disable();
   static void disableScreen();
   static void disableFile();
+
+  /**
+   * Set callback function for logging to screen.
+   * @return whether callback was set succesfully.
+   *
+   */
+  static bool setCallbackScreen(void (*cb)(const char *msg, size_t len));
 
 };
 
