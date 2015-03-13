@@ -299,10 +299,10 @@ extern struct clog *_clog_loggers[CLOG_MAX_LOGGERS];
 #ifdef CLOG_MAIN
 
 const char *const CLOG_LEVEL_NAMES[] = {
-    "DEBUG",
-    "INFO",
-    "WARN",
-    "ERROR",
+    "Debug",
+    "Info",
+    "Warning",
+    "Error",
 };
 
 int

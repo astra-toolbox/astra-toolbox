@@ -106,7 +106,7 @@ bool CCudaForwardProjectionAlgorithm::initialize(const Config& _cfg)
 		id = boost::lexical_cast<int>(node->getContent());
 		CProjector2D *projector = CProjector2DManager::getSingleton().get(id);
 		if (!dynamic_cast<CCudaProjector2D*>(projector)) {
-			ASTRA_WARN("Warning: non-CUDA Projector2D passed to FP_CUDA");
+			ASTRA_WARN("non-CUDA Projector2D passed to FP_CUDA");
 		}
 		delete node;
 	}
