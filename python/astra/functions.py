@@ -171,7 +171,7 @@ def geom_size(geom, dim=None):
     elif geom['type'] == 'parallel3d' or geom['type'] == 'cone':
         s = (geom['DetectorRowCount'], len(
             geom['ProjectionAngles']), geom['DetectorColCount'])
-    elif geom['type'] == 'fanflat_vec':
+    elif geom['type'] == 'parallel_vec' or geom['type'] == 'fanflat_vec':
         s = (geom['Vectors'].shape[0], geom['DetectorCount'])
     elif geom['type'] == 'parallel3d_vec' or geom['type'] == 'cone_vec':
         s = (geom['DetectorRowCount'], geom[
@@ -288,3 +288,37 @@ def geom_2vec(proj_geom):
         raise ValueError(
         'No suitable vector geometry found for type: ' + proj_geom['type'])
     return proj_geom_out
+
+
+def geom_postalignment(proj_geom, factor):
+    """Returns the size of a volume or sinogram, based on the projection or volume geometry.
+
+    :param proj_geom: input projection geometry (vector-based only, use astra.geom_2vec to convert conventional projection geometries)
+    :type proj_geom: :class:`dict`
+    :param factor: Optional axis index to return
+    :type factor: :class:`float`
+    """
+
+    if proj_geom['type'] == 'parallel_vec' or proj_geom['type'] == 'fanflat_vec':
+        for i in range(proj_geom['Vectors'].shape[0]):
+            proj_geom['Vectors'][i,2] = proj_geom['Vectors'][i,2] + factor * proj_geom['Vectors'][i,4];
+            proj_geom['Vectors'][i,3] = proj_geom['Vectors'][i,3] + factor * proj_geom['Vectors'][i,5];
+
+    elif proj_geom['type'] == 'parallel3d_vec' or proj_geom['type'] == 'cone_vec':
+
+        if len(factor) == 1:
+            for i in range(proj_geom['Vectors'].shape[0]):
+                proj_geom['Vectors'][i,3] = proj_geom['Vectors'][i,3] + factor * proj_geom['Vectors'][i,6];
+                proj_geom['Vectors'][i,4] = proj_geom['Vectors'][i,4] + factor * proj_geom['Vectors'][i,7];
+                proj_geom['Vectors'][i,5] = proj_geom['Vectors'][i,5] + factor * proj_geom['Vectors'][i,8];
+
+        elif len(factor) > 1:
+            for i in range(proj_geom['Vectors'].shape[0]):
+                proj_geom['Vectors'][i,3] = proj_geom['Vectors'][i,3] + factor[0] * proj_geom['Vectors'][i,6] + factor[1] * proj_geom['Vectors'][i, 9];
+                proj_geom['Vectors'][i,4] = proj_geom['Vectors'][i,4] + factor[0] * proj_geom['Vectors'][i,7] + factor[1] * proj_geom['Vectors'][i,10];
+                proj_geom['Vectors'][i,5] = proj_geom['Vectors'][i,5] + factor[0] * proj_geom['Vectors'][i,8] + factor[1] * proj_geom['Vectors'][i,11];
+    else:
+        raise ValueError('No suitable geometry for postalignment: ' + proj_geom['type'])
+
+    return proj_geom
+
