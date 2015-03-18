@@ -208,7 +208,7 @@ Config* CParallelVecProjectionGeometry3D::getConfiguration() const
 	Config* cfg = new Config();
 	cfg->initialize("ProjectionGeometry3D");
 
-	cfg->self->addAttribute("type", "parallel3d");
+	cfg->self->addAttribute("type", "parallel3d_vec");
 	cfg->self->addChildNode("DetectorRowCount", m_iDetectorRowCount);
 	cfg->self->addChildNode("DetectorColCount", m_iDetectorColCount);
 
@@ -218,9 +218,9 @@ Config* CParallelVecProjectionGeometry3D::getConfiguration() const
 		vectors += boost::lexical_cast<string>(p.fRayX) + ",";
 		vectors += boost::lexical_cast<string>(p.fRayY) + ",";
 		vectors += boost::lexical_cast<string>(p.fRayZ) + ",";
-		vectors += boost::lexical_cast<string>(p.fDetSX + 0.5f*m_iDetectorRowCount*p.fDetUX + 0.5f*m_iDetectorColCount*p.fDetVX) + ",";
-		vectors += boost::lexical_cast<string>(p.fDetSY + 0.5f*m_iDetectorRowCount*p.fDetUY + 0.5f*m_iDetectorColCount*p.fDetVY) + ",";
-		vectors += boost::lexical_cast<string>(p.fDetSZ + 0.5f*m_iDetectorRowCount*p.fDetUZ + 0.5f*m_iDetectorColCount*p.fDetVZ) + ",";
+		vectors += boost::lexical_cast<string>(p.fDetSX + 0.5f*m_iDetectorRowCount*p.fDetVX + 0.5f*m_iDetectorColCount*p.fDetUX) + ",";
+		vectors += boost::lexical_cast<string>(p.fDetSY + 0.5f*m_iDetectorRowCount*p.fDetVY + 0.5f*m_iDetectorColCount*p.fDetUY) + ",";
+		vectors += boost::lexical_cast<string>(p.fDetSZ + 0.5f*m_iDetectorRowCount*p.fDetVZ + 0.5f*m_iDetectorColCount*p.fDetUZ) + ",";
 		vectors += boost::lexical_cast<string>(p.fDetUX) + ",";
 		vectors += boost::lexical_cast<string>(p.fDetUY) + ",";
 		vectors += boost::lexical_cast<string>(p.fDetUZ) + ",";
