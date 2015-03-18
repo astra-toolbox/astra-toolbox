@@ -48,8 +48,8 @@ proj_geom = astra.create_proj_geom('parallel', 1.0, 384, np.linspace(0,np.pi,50,
 # As before, create a sinogram from a phantom
 import scipy.io
 P = scipy.io.loadmat('phantom.mat')['phantom256']
-proj_id = astra.create_projector('line',proj_geom,vol_geom)
-sinogram_id, sinogram = astra.create_sino(P, proj_id,useCUDA=True)
+proj_id = astra.create_projector('cuda',proj_geom,vol_geom)
+sinogram_id, sinogram = astra.create_sino(P, proj_id)
 
 pylab.figure(2)
 pylab.imshow(P)

@@ -32,10 +32,10 @@ proj_geom = astra.create_proj_geom('parallel', 1.0, 384, np.linspace(0,np.pi,180
 import scipy.io
 P = scipy.io.loadmat('phantom.mat')['phantom256']
 
-proj_id = astra.create_projector('line',proj_geom,vol_geom)
+proj_id = astra.create_projector('cuda',proj_geom,vol_geom)
 
 # Create a sinogram from a phantom, using GPU #1. (The default is #0)
-sinogram_id, sinogram = astra.create_sino(P, proj_id, useCUDA=True, gpuIndex=1)
+sinogram_id, sinogram = astra.create_sino(P, proj_id, gpuIndex=1)
 
 
 # Set up the parameters for a reconstruction algorithm using the GPU

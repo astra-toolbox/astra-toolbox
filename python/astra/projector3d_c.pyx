@@ -32,35 +32,31 @@ from .PyIncludes cimport *
 cimport utils
 from .utils import wrap_from_bytes
 
-cimport PyProjector2DFactory
-from .PyProjector2DFactory cimport CProjector2DFactory
+cimport PyProjector3DFactory
+from .PyProjector3DFactory cimport CProjector3DFactory
 
-cimport PyProjector2DManager
-from .PyProjector2DManager cimport CProjector2DManager
+cimport PyProjector3DManager
+from .PyProjector3DManager cimport CProjector3DManager
 
 cimport PyXMLDocument
 from .PyXMLDocument cimport XMLDocument
 
-cimport PyMatrixManager
-from .PyMatrixManager cimport CMatrixManager
-
-cdef CProjector2DManager * manProj = <CProjector2DManager * >PyProjector2DManager.getSingletonPtr()
-cdef CMatrixManager * manM = <CMatrixManager * >PyMatrixManager.getSingletonPtr()
+cdef CProjector3DManager * manProj = <CProjector3DManager * >PyProjector3DManager.getSingletonPtr()
 
 include "config.pxi"
 
 IF HAVE_CUDA:
   cdef extern from *:
-      CCudaProjector2D* dynamic_cast_cuda_projector "dynamic_cast<astra::CCudaProjector2D*>" (CProjector2D*)
+      CCudaProjector3D* dynamic_cast_cuda_projector "dynamic_cast<astra::CCudaProjector3D*>" (CProjector3D*)
 
 
 def create(config):
-    cdef Config * cfg = utils.dictToConfig(six.b('Projector2D'), config)
-    cdef CProjector2D * proj
-    proj = PyProjector2DFactory.getSingletonPtr().create(cfg[0])
+    cdef Config * cfg = utils.dictToConfig(six.b('Projector3D'), config)
+    cdef CProjector3D * proj
+    proj = PyProjector3DFactory.getSingletonPtr().create(cfg[0])
     if proj == NULL:
         del cfg
-        raise Exception("Error creating projector.")
+        raise Exception("Error creating Projector3D.")
     del cfg
     return manProj.store(proj)
 
@@ -80,8 +76,8 @@ def clear():
 def info():
     six.print_(wrap_from_bytes(manProj.info()))
 
-cdef CProjector2D * getObject(i) except NULL:
-    cdef CProjector2D * proj = manProj.get(i)
+cdef CProjector3D * getObject(i) except NULL:
+    cdef CProjector3D * proj = manProj.get(i)
     if proj == NULL:
         raise Exception("Projector not initialized.")
     if not proj.isInitialized():
@@ -90,12 +86,12 @@ cdef CProjector2D * getObject(i) except NULL:
 
 
 def projection_geometry(i):
-    cdef CProjector2D * proj = getObject(i)
+    cdef CProjector3D * proj = getObject(i)
     return utils.configToDict(proj.getProjectionGeometry().getConfiguration())
 
 
 def volume_geometry(i):
-    cdef CProjector2D * proj = getObject(i)
+    cdef CProjector3D * proj = getObject(i)
     return utils.configToDict(proj.getVolumeGeometry().getConfiguration())
 
 
@@ -111,9 +107,9 @@ def splat(i, row, col):
     raise Exception("Not yet implemented")
 
 def is_cuda(i):
-    cdef CProjector2D * proj = getObject(i)
+    cdef CProjector3D * proj = getObject(i)
     IF HAVE_CUDA==True:
-      cdef CCudaProjector2D * cudaproj = NULL
+      cdef CCudaProjector3D * cudaproj = NULL
       cudaproj = dynamic_cast_cuda_projector(proj)
       if cudaproj==NULL:
           return False
@@ -121,14 +117,3 @@ def is_cuda(i):
           return True
     ELSE:
         return False
-
-def matrix(i):
-    cdef CProjector2D * proj = getObject(i)
-    cdef CSparseMatrix * mat = proj.getMatrix()
-    if mat == NULL:
-        del mat
-        raise Exception("Data object not found")
-    if not mat.isInitialized():
-        del mat
-        raise Exception("Data object not initialized properly.")
-    return manM.store(mat)

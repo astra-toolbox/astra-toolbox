@@ -27,6 +27,8 @@ from libcpp cimport bool
 from libcpp.string cimport string
 from .PyXMLDocument cimport XMLNode
 
+include "config.pxi"
+
 cdef extern from "astra/Globals.h" namespace "astra":
 	ctypedef float float32
 	ctypedef double float64
@@ -149,6 +151,20 @@ cdef extern from "astra/Projector2D.h" namespace "astra":
 		CProjectionGeometry2D* getProjectionGeometry()
 		CVolumeGeometry2D* getVolumeGeometry()
 		CSparseMatrix* getMatrix()
+
+cdef extern from "astra/Projector3D.h" namespace "astra":
+	cdef cppclass CProjector3D:
+		bool isInitialized()
+		CProjectionGeometry3D* getProjectionGeometry()
+		CVolumeGeometry3D* getVolumeGeometry()
+
+IF HAVE_CUDA==True:
+	cdef extern from "astra/CudaProjector3D.h" namespace "astra":
+		cdef cppclass CCudaProjector3D
+
+	cdef extern from "astra/CudaProjector2D.h" namespace "astra":
+		cdef cppclass CCudaProjector2D
+
 
 cdef extern from "astra/SparseMatrix.h" namespace "astra":
 	cdef cppclass CSparseMatrix:

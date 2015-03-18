@@ -33,6 +33,7 @@ from . import astra
 from . import data3d
 from . import algorithm
 from . import projector
+from . import projector3d
 from . import matrix
 
 import os
