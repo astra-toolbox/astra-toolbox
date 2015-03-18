@@ -31,7 +31,5 @@ from .PyXMLDocument cimport XMLNode
 
 from .PyIncludes cimport *
 
-cdef XMLDocument *dict2XML(string rootname, dc)
-cdef XML2dict(XMLDocument *)
-cdef createVolumeGeometryStruct(CVolumeGeometry2D* geom)
-cdef createProjectionGeometryStruct(CProjectionGeometry2D* geom)
+cdef configToDict(Config *)
+cdef Config * dictToConfig(string rootname, dc)

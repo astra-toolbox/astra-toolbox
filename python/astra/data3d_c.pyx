@@ -51,26 +51,23 @@ cdef extern from *:
     CFloat32Data3DMemory * dynamic_cast_mem "dynamic_cast<astra::CFloat32Data3DMemory*>" (CFloat32Data3D * ) except NULL
 
 def create(datatype,geometry,data=None):
-    cdef XMLDocument * xml
-    cdef Config cfg
+    cdef Config *cfg
     cdef CVolumeGeometry3D * pGeometry
     cdef CProjectionGeometry3D * ppGeometry
     cdef CFloat32Data3DMemory * pDataObject3D
     cdef CConeProjectionGeometry3D* pppGeometry
     if datatype == '-vol':
-        xml = utils.dict2XML(six.b('VolumeGeometry'), geometry)
-        cfg.self = xml.getRootNode()
+        cfg = utils.dictToConfig(six.b('VolumeGeometry'), geometry)
         pGeometry = new CVolumeGeometry3D()
-        if not pGeometry.initialize(cfg):
-            del xml
+        if not pGeometry.initialize(cfg[0]):
+            del cfg
             del pGeometry
             raise Exception('Geometry class not initialized.')
         pDataObject3D = <CFloat32Data3DMemory * > new CFloat32VolumeData3DMemory(pGeometry)
-        del xml
+        del cfg
         del pGeometry
     elif datatype == '-sino' or datatype == '-proj3d':
-        xml = utils.dict2XML(six.b('ProjectionGeometry'), geometry)
-        cfg.self = xml.getRootNode()
+        cfg = utils.dictToConfig(six.b('ProjectionGeometry'), geometry)
         tpe = wrap_from_bytes(cfg.self.getAttribute(six.b('type')))
         if (tpe == "parallel3d"):
             ppGeometry = <CProjectionGeometry3D*> new CParallelProjectionGeometry3D();
@@ -83,19 +80,18 @@ def create(datatype,geometry,data=None):
         else:
             raise Exception("Invalid geometry type.")
 
-        if not ppGeometry.initialize(cfg):
-            del xml
+        if not ppGeometry.initialize(cfg[0]):
+            del cfg
             del ppGeometry
             raise Exception('Geometry class not initialized.')
         pDataObject3D = <CFloat32Data3DMemory * > new CFloat32ProjectionData3DMemory(ppGeometry)
         del ppGeometry
-        del xml
+        del cfg
     elif datatype == "-sinocone":
-        xml = utils.dict2XML(six.b('ProjectionGeometry'), geometry)
-        cfg.self = xml.getRootNode()
+        cfg = utils.dictToConfig(six.b('ProjectionGeometry'), geometry)
         pppGeometry = new CConeProjectionGeometry3D()
-        if not pppGeometry.initialize(cfg):
-            del xml
+        if not pppGeometry.initialize(cfg[0]):
+            del cfg
             del pppGeometry
             raise Exception('Geometry class not initialized.')
         pDataObject3D = <CFloat32Data3DMemory * > new CFloat32ProjectionData3DMemory(pppGeometry)
@@ -112,6 +108,19 @@ def create(datatype,geometry,data=None):
 
     return man3d.store(<CFloat32Data3D*>pDataObject3D)
 
+def get_geometry(i):
+    cdef CFloat32Data3DMemory * pDataObject = dynamic_cast_mem(getObject(i))
+    cdef CFloat32ProjectionData3DMemory * pDataObject2
+    cdef CFloat32VolumeData3DMemory * pDataObject3
+    if pDataObject.getType() == THREEPROJECTION:
+        pDataObject2 = <CFloat32ProjectionData3DMemory * >pDataObject
+        geom = utils.configToDict(pDataObject2.getGeometry().getConfiguration())
+    elif pDataObject.getType() == THREEVOLUME:
+        pDataObject3 = <CFloat32VolumeData3DMemory * >pDataObject
+        geom = utils.configToDict(pDataObject3.getGeometry().getConfiguration())
+    else:
+        raise Exception("Not a known data object")
+    return geom
 
 cdef fillDataObject(CFloat32Data3DMemory * obj, data):
     if data is None:

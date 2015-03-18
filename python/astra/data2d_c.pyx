@@ -47,9 +47,7 @@ from .PyIncludes cimport *
 cimport utils
 from .utils import wrap_from_bytes
 
-
 cdef CData2DManager * man2d = <CData2DManager * >PyData2DManager.getSingletonPtr()
-
 
 def clear():
     man2d.clear()
@@ -64,25 +62,22 @@ def delete(ids):
 
 
 def create(datatype, geometry, data=None):
-    cdef XMLDocument * xml
-    cdef Config cfg
+    cdef Config *cfg
     cdef CVolumeGeometry2D * pGeometry
     cdef CProjectionGeometry2D * ppGeometry
     cdef CFloat32Data2D * pDataObject2D
     if datatype == '-vol':
-        xml = utils.dict2XML(six.b('VolumeGeometry'), geometry)
-        cfg.self = xml.getRootNode()
+        cfg = utils.dictToConfig(six.b('VolumeGeometry'), geometry)
         pGeometry = new CVolumeGeometry2D()
-        if not pGeometry.initialize(cfg):
-            del xml
+        if not pGeometry.initialize(cfg[0]):
+            del cfg
             del pGeometry
             raise Exception('Geometry class not initialized.')
         pDataObject2D = <CFloat32Data2D * > new CFloat32VolumeData2D(pGeometry)
-        del xml
+        del cfg
         del pGeometry
     elif datatype == '-sino':
-        xml = utils.dict2XML(six.b('ProjectionGeometry'), geometry)
-        cfg.self = xml.getRootNode()
+        cfg = utils.dictToConfig(six.b('ProjectionGeometry'), geometry)
         tpe = wrap_from_bytes(cfg.self.getAttribute(six.b('type')))
         if (tpe == 'sparse_matrix'):
             ppGeometry = <CProjectionGeometry2D * >new CSparseMatrixProjectionGeometry2D()
@@ -94,13 +89,13 @@ def create(datatype, geometry, data=None):
             ppGeometry = <CProjectionGeometry2D * >new CParallelVecProjectionGeometry2D()
         else:
             ppGeometry = <CProjectionGeometry2D * >new CParallelProjectionGeometry2D()
-        if not ppGeometry.initialize(cfg):
-            del xml
+        if not ppGeometry.initialize(cfg[0]):
+            del cfg
             del ppGeometry
             raise Exception('Geometry class not initialized.')
         pDataObject2D = <CFloat32Data2D * > new CFloat32ProjectionData2D(ppGeometry)
         del ppGeometry
-        del xml
+        del cfg
     else:
         raise Exception("Invalid datatype.  Please specify '-vol' or '-sino'.")
 
@@ -153,29 +148,27 @@ def get_geometry(i):
     cdef CFloat32Data2D * pDataObject = getObject(i)
     cdef CFloat32ProjectionData2D * pDataObject2
     cdef CFloat32VolumeData2D * pDataObject3
-    if pDataObject.getType() == PROJECTION:
+    if pDataObject.getType() == TWOPROJECTION:
         pDataObject2 = <CFloat32ProjectionData2D * >pDataObject
-        geom = utils.createProjectionGeometryStruct(pDataObject2.getGeometry())
-    elif pDataObject.getType() == VOLUME:
+        geom = utils.configToDict(pDataObject2.getGeometry().getConfiguration())
+    elif pDataObject.getType() == TWOVOLUME:
         pDataObject3 = <CFloat32VolumeData2D * >pDataObject
-        geom = utils.createVolumeGeometryStruct(pDataObject3.getGeometry())
+        geom = utils.configToDict(pDataObject3.getGeometry().getConfiguration())
     else:
         raise Exception("Not a known data object")
     return geom
 
 
 def change_geometry(i, geom):
-    cdef XMLDocument * xml
-    cdef Config cfg
+    cdef Config *cfg
     cdef CVolumeGeometry2D * pGeometry
     cdef CProjectionGeometry2D * ppGeometry
     cdef CFloat32Data2D * pDataObject = getObject(i)
     cdef CFloat32ProjectionData2D * pDataObject2
     cdef CFloat32VolumeData2D * pDataObject3
-    if pDataObject.getType() == PROJECTION:
+    if pDataObject.getType() == TWOPROJECTION:
         pDataObject2 = <CFloat32ProjectionData2D * >pDataObject
-        xml = utils.dict2XML(six.b('ProjectionGeometry'), geom)
-        cfg.self = xml.getRootNode()
+        cfg = utils.dictToConfig(six.b('ProjectionGeometry'), geom)
         tpe = wrap_from_bytes(cfg.self.getAttribute(six.b('type')))
         if (tpe == 'sparse_matrix'):
             ppGeometry = <CProjectionGeometry2D * >new CSparseMatrixProjectionGeometry2D()
@@ -187,34 +180,33 @@ def change_geometry(i, geom):
             ppGeometry = <CProjectionGeometry2D * >new CParallelVecProjectionGeometry2D()
         else:
             ppGeometry = <CProjectionGeometry2D * >new CParallelProjectionGeometry2D()
-        if not ppGeometry.initialize(cfg):
-            del xml
+        if not ppGeometry.initialize(cfg[0]):
+            del cfg
             del ppGeometry
             raise Exception('Geometry class not initialized.')
         if (ppGeometry.getDetectorCount() != pDataObject2.getDetectorCount() or ppGeometry.getProjectionAngleCount() != pDataObject2.getAngleCount()):
             del ppGeometry
-            del xml
+            del cfg
             raise Exception(
                 "The dimensions of the data do not match those specified in the geometry.")
         pDataObject2.changeGeometry(ppGeometry)
         del ppGeometry
-        del xml
-    elif pDataObject.getType() == VOLUME:
+        del cfg
+    elif pDataObject.getType() == TWOVOLUME:
         pDataObject3 = <CFloat32VolumeData2D * >pDataObject
-        xml = utils.dict2XML(six.b('VolumeGeometry'), geom)
-        cfg.self = xml.getRootNode()
+        cfg = utils.dictToConfig(six.b('VolumeGeometry'), geom)
         pGeometry = new CVolumeGeometry2D()
-        if not pGeometry.initialize(cfg):
-            del xml
+        if not pGeometry.initialize(cfg[0]):
+            del cfg
             del pGeometry
             raise Exception('Geometry class not initialized.')
         if (pGeometry.getGridColCount() != pDataObject3.getWidth() or pGeometry.getGridRowCount() != pDataObject3.getHeight()):
-            del xml
+            del cfg
             del pGeometry
             raise Exception(
                 'The dimensions of the data do not match those specified in the geometry.')
         pDataObject3.changeGeometry(pGeometry)
-        del xml
+        del cfg
         del pGeometry
     else:
         raise Exception("Not a known data object")

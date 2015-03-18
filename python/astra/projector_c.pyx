@@ -49,15 +49,13 @@ cdef CMatrixManager * manM = <CMatrixManager * >PyMatrixManager.getSingletonPtr(
 
 
 def create(config):
-    cdef XMLDocument * xml = utils.dict2XML(six.b('Projector2D'), config)
-    cdef Config cfg
+    cdef Config * cfg = utils.dictToConfig(six.b('Projector2D'), config)
     cdef CProjector2D * proj
-    cfg.self = xml.getRootNode()
-    proj = PyProjector2DFactory.getSingletonPtr().create(cfg)
+    proj = PyProjector2DFactory.getSingletonPtr().create(cfg[0])
     if proj == NULL:
-        del xml
+        del cfg
         raise Exception("Error creating projector.")
-    del xml
+    del cfg
     return manProj.store(proj)
 
 
@@ -87,12 +85,12 @@ cdef CProjector2D * getObject(i) except NULL:
 
 def projection_geometry(i):
     cdef CProjector2D * proj = getObject(i)
-    return utils.createProjectionGeometryStruct(proj.getProjectionGeometry())
+    return utils.configToDict(proj.getProjectionGeometry().getConfiguration())
 
 
 def volume_geometry(i):
     cdef CProjector2D * proj = getObject(i)
-    return utils.createVolumeGeometryStruct(proj.getVolumeGeometry())
+    return utils.configToDict(proj.getVolumeGeometry().getConfiguration())
 
 
 def weights_single_ray(i, projection_index, detector_index):

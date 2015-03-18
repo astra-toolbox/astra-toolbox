@@ -31,7 +31,7 @@ import six
 from libcpp.string cimport string
 from libcpp.list cimport list
 from libcpp.vector cimport vector
-from cython.operator cimport dereference as deref
+from cython.operator cimport dereference as deref, preincrement as inc
 from cpython.version cimport PY_MAJOR_VERSION
 
 cimport PyXMLDocument
@@ -40,18 +40,16 @@ from .PyXMLDocument cimport XMLNode
 from .PyIncludes cimport *
 
 
-cdef XMLDocument * dict2XML(string rootname, dc):
-    cdef XMLDocument * doc = PyXMLDocument.createDocument(rootname)
-    cdef XMLNode * node = doc.getRootNode()
+cdef Config * dictToConfig(string rootname, dc):
+    cdef Config * cfg = new Config()
+    cfg.initialize(rootname)
     try:
-        readDict(node, dc)
-    except:
-        six.print_('Error reading XML')
-        del doc
-        doc = NULL
-    finally:
-        del node
-    return doc
+        readDict(cfg.self, dc)
+    except Exception as e:
+        del cfg
+        six.print_(e.strerror)
+        return NULL
+    return cfg
 
 def convert_item(item):
     if isinstance(item, six.string_types):
@@ -166,97 +164,73 @@ cdef void readOptions(XMLNode * node, dc):
         else:
             node.addOption(item, wrap_to_bytes(val))
 
-cdef vectorToNumpy(vector[float32] inp):
-    cdef int i
-    cdef int sz = inp.size()
-    ret = np.empty(sz)
-    for i in range(sz):
-        ret[i] = inp[i]
-    return ret
+cdef configToDict(Config *cfg):
+    return XMLNode2dict(cfg.self)
+
+def castString3(input):
+    return input.decode('utf-8')
+
+def castString2(input):
+    return input
+
+if six.PY3:
+    castString = castString3
+else:
+    castString = castString2
+
+def stringToPythonValue(inputIn):
+    input = castString(inputIn)
+    # matrix
+    if ';' in input:
+        row_strings = input.split(';')
+        col_strings = row_strings[0].split(',')
+        nRows = len(row_strings)
+        nCols = len(col_strings)
+
+        out = np.empty((nRows,nCols))
+        for ridx, row in enumerate(row_strings):
+            col_strings = row.split(',')
+            for cidx, col in enumerate(col_strings):
+                out[ridx,cidx] = float(col)
+        return out
+
+    # vector
+    if ',' in input:
+        items = input.split(',')
+        out = np.empty(len(items))
+        for idx,item in enumerate(items):
+            out[idx] = float(item)
+        return out
+
+    try:
+        # integer
+        return int(input)
+    except ValueError:
+        try:
+            #float
+            return float(input)
+        except ValueError:
+            # string
+            return str(input)
+
 
 cdef XMLNode2dict(XMLNode * node):
     cdef XMLNode * subnode
     cdef list[XMLNode * ] nodes
     cdef list[XMLNode * ].iterator it
     dct = {}
+    opts = {}
     if node.hasAttribute(six.b('type')):
-        dct['type'] = node.getAttribute(six.b('type'))
+        dct['type'] = castString(node.getAttribute(six.b('type')))
     nodes = node.getNodes()
     it = nodes.begin()
     while it != nodes.end():
         subnode = deref(it)
-        if subnode.hasAttribute(six.b('listsize')):
-            dct[subnode.getName(
-                )] = vectorToNumpy(subnode.getContentNumericalArray())
+        if castString(subnode.getName())=="Option":
+            opts[castString(subnode.getAttribute('key'))] = stringToPythonValue(subnode.getAttribute('value'))
         else:
-            dct[subnode.getName()] = subnode.getContent()
+            dct[castString(subnode.getName())] = stringToPythonValue(subnode.getContent())
         del subnode
+        inc(it)
+    if len(opts)>0: dct['options'] = opts
     return dct
-
-cdef XML2dict(XMLDocument * xml):
-    cdef XMLNode * node = xml.getRootNode()
-    dct = XMLNode2dict(node)
-    del node;
-    return dct;
-
-cdef createProjectionGeometryStruct(CProjectionGeometry2D * geom):
-    cdef int i
-    cdef CFanFlatVecProjectionGeometry2D * fanvecGeom
-    # cdef SFanProjection* p
-    dct = {}
-    dct['DetectorCount'] = geom.getDetectorCount()
-    if not geom.isOfType(< string > six.b('fanflat_vec')):
-        dct['DetectorWidth'] = geom.getDetectorWidth()
-        angles = np.empty(geom.getProjectionAngleCount())
-        for i in range(geom.getProjectionAngleCount()):
-            angles[i] = geom.getProjectionAngle(i)
-        dct['ProjectionAngles'] = angles
-    else:
-        raise Exception("Not yet implemented")
-        # fanvecGeom = <CFanFlatVecProjectionGeometry2D*> geom
-        # vecs = np.empty(fanvecGeom.getProjectionAngleCount()*6)
-        # iDetCount = pVecGeom.getDetectorCount()
-        # for i in range(fanvecGeom.getProjectionAngleCount()):
-        #	p = &fanvecGeom.getProjectionVectors()[i];
-        #	out[6*i + 0] = p.fSrcX
-        #	out[6*i + 1] = p.fSrcY
-        #	out[6*i + 2] = p.fDetSX + 0.5f*iDetCount*p.fDetUX
-        #	out[6*i + 3] = p.fDetSY + 0.5f*iDetCount*p.fDetUY
-        #	out[6*i + 4] = p.fDetUX
-        #	out[6*i + 5] = p.fDetUY
-        # dct['Vectors'] = vecs
-    if (geom.isOfType(< string > six.b('parallel'))):
-        dct["type"] = "parallel"
-    if (geom.isOfType(< string > six.b('parallel_vec'))):
-        dct["type"] = "parallel_vec"        
-    elif (geom.isOfType(< string > six.b('fanflat'))):
-        raise Exception("Not yet implemented")
-        # astra::CFanFlatProjectionGeometry2D* pFanFlatGeom = dynamic_cast<astra::CFanFlatProjectionGeometry2D*>(_pProjGeom)
-        # mGeometryInfo["DistanceOriginSource"] = mxCreateDoubleScalar(pFanFlatGeom->getOriginSourceDistance())
-        # mGeometryInfo["DistanceOriginDetector"] =
-        # mxCreateDoubleScalar(pFanFlatGeom->getOriginDetectorDistance())
-        dct["type"] = "fanflat"
-    elif (geom.isOfType(< string > six.b('sparse_matrix'))):
-        raise Exception("Not yet implemented")
-        # astra::CSparseMatrixProjectionGeometry2D* pSparseMatrixGeom =
-        # dynamic_cast<astra::CSparseMatrixProjectionGeometry2D*>(_pProjGeom);
-        dct["type"] = "sparse_matrix"
-        # dct["MatrixID"] =
-        # mxCreateDoubleScalar(CMatrixManager::getSingleton().getIndex(pSparseMatrixGeom->getMatrix()))
-    elif(geom.isOfType(< string > six.b('fanflat_vec'))):
-        dct["type"] = "fanflat_vec"
-    return dct
-
-cdef createVolumeGeometryStruct(CVolumeGeometry2D * geom):
-    mGeometryInfo = {}
-    mGeometryInfo["GridColCount"] = geom.getGridColCount()
-    mGeometryInfo["GridRowCount"] = geom.getGridRowCount()
-
-    mGeometryOptions = {}
-    mGeometryOptions["WindowMinX"] = geom.getWindowMinX()
-    mGeometryOptions["WindowMaxX"] = geom.getWindowMaxX()
-    mGeometryOptions["WindowMinY"] = geom.getWindowMinY()
-    mGeometryOptions["WindowMaxY"] = geom.getWindowMaxY()
-
-    mGeometryInfo["option"] = mGeometryOptions
-    return mGeometryInfo
