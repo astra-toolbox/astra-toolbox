@@ -29,6 +29,8 @@ $Id$
 #ifndef _INC_ASTRA_LOGGING
 #define _INC_ASTRA_LOGGING
 
+#include "astra/Globals.h"
+
 #define ASTRA_DEBUG(...) astra::CLogger::debug(__FILE__,__LINE__, __VA_ARGS__)
 #define ASTRA_INFO(...) astra::CLogger::info(__FILE__,__LINE__, __VA_ARGS__)
 #define ASTRA_WARN(...) astra::CLogger::warn(__FILE__,__LINE__, __VA_ARGS__)
@@ -44,7 +46,7 @@ enum log_level {
     LOG_ERROR
 };
 
-class CLogger
+class _AstraExport CLogger
 {
 	CLogger();
   ~CLogger();

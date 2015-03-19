@@ -71,7 +71,15 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#ifndef _MSC_VER
 #include <unistd.h>
+#else
+#include <io.h>
+#define open _open
+#define close _close
+#define write _write
+#define snprintf _snprintf
+#endif
 
 /* Number of loggers that can be defined. */
 #define CLOG_MAX_LOGGERS 16
@@ -625,7 +633,10 @@ _clog_log(const char *sfile, int sline, enum clog_level level,
         if (dynbuf != buf) {
             free(dynbuf);
         }
+#ifndef _MSC_VER
+        // FIXME
         fsync(logger->fd);
+#endif
     }
 }
 
