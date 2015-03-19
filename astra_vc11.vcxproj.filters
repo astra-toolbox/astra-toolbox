@@ -4,40 +4,16 @@
     <CudaCompile Include="cuda\2d\algo.cu">
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>
-    <CudaCompile Include="cuda\3d\algo3d.cu">
-      <Filter>CUDA\cuda source</Filter>
-    </CudaCompile>
     <CudaCompile Include="cuda\2d\arith.cu">
-      <Filter>CUDA\cuda source</Filter>
-    </CudaCompile>
-    <CudaCompile Include="cuda\3d\arith3d.cu">
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>
     <CudaCompile Include="cuda\2d\astra.cu">
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>
-    <CudaCompile Include="cuda\3d\astra3d.cu">
-      <Filter>CUDA\cuda source</Filter>
-    </CudaCompile>
     <CudaCompile Include="cuda\2d\cgls.cu">
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>
-    <CudaCompile Include="cuda\3d\cgls3d.cu">
-      <Filter>CUDA\cuda source</Filter>
-    </CudaCompile>
-    <CudaCompile Include="cuda\3d\cone_bp.cu">
-      <Filter>CUDA\cuda source</Filter>
-    </CudaCompile>
-    <CudaCompile Include="cuda\3d\cone_fp.cu">
-      <Filter>CUDA\cuda source</Filter>
-    </CudaCompile>
     <CudaCompile Include="cuda\2d\darthelper.cu">
-      <Filter>CUDA\cuda source</Filter>
-    </CudaCompile>
-    <CudaCompile Include="cuda\3d\darthelper3d.cu">
-      <Filter>CUDA\cuda source</Filter>
-    </CudaCompile>
-    <CudaCompile Include="cuda\3d\dims3d.cu">
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>
     <CudaCompile Include="cuda\2d\em.cu">
@@ -49,16 +25,7 @@
     <CudaCompile Include="cuda\2d\fan_fp.cu">
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>
-    <CudaCompile Include="cuda\3d\fdk.cu">
-      <Filter>CUDA\cuda source</Filter>
-    </CudaCompile>
     <CudaCompile Include="cuda\2d\fft.cu">
-      <Filter>CUDA\cuda source</Filter>
-    </CudaCompile>
-    <CudaCompile Include="cuda\3d\par3d_bp.cu">
-      <Filter>CUDA\cuda source</Filter>
-    </CudaCompile>
-    <CudaCompile Include="cuda\3d\par3d_fp.cu">
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>
     <CudaCompile Include="cuda\2d\par_bp.cu">
@@ -73,10 +40,40 @@
     <CudaCompile Include="cuda\2d\sirt.cu">
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>
-    <CudaCompile Include="cuda\3d\sirt3d.cu">
+    <CudaCompile Include="cuda\2d\util.cu">
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>
-    <CudaCompile Include="cuda\2d\util.cu">
+    <CudaCompile Include="cuda\3d\algo3d.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\3d\arith3d.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\3d\astra3d.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\3d\cgls3d.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\3d\cone_bp.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\3d\cone_fp.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\3d\darthelper3d.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\3d\fdk.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\3d\par3d_bp.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\3d\par3d_fp.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\3d\sirt3d.cu">
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>
     <CudaCompile Include="cuda\3d\util3d.cu">
@@ -190,6 +187,9 @@
       <Filter>Geometries\source</Filter>
     </ClCompile>
     <ClCompile Include="src\FanFlatVecProjectionGeometry2D.cpp">
+      <Filter>Geometries\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GeometryUtil3D.cpp">
       <Filter>Geometries\source</Filter>
     </ClCompile>
     <ClCompile Include="src\ParallelProjectionGeometry2D.cpp">
@@ -332,7 +332,10 @@
     <ClInclude Include="include\astra\CglsAlgorithm.h">
       <Filter>Algorithms\headers</Filter>
     </ClInclude>
-    <ClInclude Include="include\astra\DartAlgorithm.h">
+    <ClInclude Include="include\astra\CudaBackProjectionAlgorithm.h">
+      <Filter>Algorithms\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\CudaBackProjectionAlgorithm3D.h">
       <Filter>Algorithms\headers</Filter>
     </ClInclude>
     <ClInclude Include="include\astra\FilteredBackProjectionAlgorithm.h">
@@ -413,6 +416,9 @@
     <ClInclude Include="include\astra\TypeList.h">
       <Filter>Global &amp; Other\headers</Filter>
     </ClInclude>
+    <ClInclude Include="include\astra\Utilities.h">
+      <Filter>Global &amp; Other\headers</Filter>
+    </ClInclude>
     <ClInclude Include="include\astra\Vector3D.h">
       <Filter>Global &amp; Other\headers</Filter>
     </ClInclude>
@@ -432,6 +438,12 @@
       <Filter>Geometries\headers</Filter>
     </ClInclude>
     <ClInclude Include="include\astra\FanFlatVecProjectionGeometry2D.h">
+      <Filter>Geometries\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\GeometryUtil2D.h">
+      <Filter>Geometries\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\GeometryUtil3D.h">
       <Filter>Geometries\headers</Filter>
     </ClInclude>
     <ClInclude Include="include\astra\ParallelProjectionGeometry2D.h">
@@ -494,96 +506,6 @@
     <ClInclude Include="include\astra\SparseMatrixProjector2D.h">
       <Filter>Projectors\headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\2d\algo.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\3d\algo3d.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\2d\arith.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\3d\arith3d.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\2d\astra.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\3d\astra3d.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\2d\cgls.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\3d\cgls3d.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\3d\cone_bp.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\3d\cone_fp.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\2d\darthelper.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\3d\darthelper3d.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\2d\dims.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\3d\dims3d.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\2d\em.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\2d\fan_bp.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\2d\fan_fp.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\2d\fbp_filters.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\3d\fdk.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\2d\fft.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\3d\par3d_bp.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\3d\par3d_fp.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\2d\par_bp.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\2d\par_fp.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\2d\sart.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\2d\sirt.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\3d\sirt3d.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cuda\2d\util.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="include\astra\CudaBackProjectionAlgorithm.h">
-      <Filter>CUDA\astra headers</Filter>
-    </ClInclude>
-    <ClInclude Include="include\astra\CudaBackProjectionAlgorithm3D.h">
-      <Filter>CUDA\astra headers</Filter>
-    </ClInclude>
     <ClInclude Include="include\astra\CudaCglsAlgorithm.h">
       <Filter>CUDA\astra headers</Filter>
     </ClInclude>
@@ -640,6 +562,90 @@
     </ClInclude>
     <ClInclude Include="include\astra\CudaSirtAlgorithm3D.h">
       <Filter>CUDA\astra headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\algo.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\arith.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\astra.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\cgls.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\darthelper.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\dims.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\em.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\fan_bp.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\fan_fp.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\fbp_filters.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\fft.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\par_bp.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\par_fp.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\sart.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\sirt.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\util.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\algo3d.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\arith3d.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\astra3d.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\cgls3d.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\cone_bp.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\cone_fp.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\darthelper3d.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\dims3d.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\fdk.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\par3d_bp.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\par3d_fp.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\sirt3d.h">
+      <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
     <ClInclude Include="cuda\3d\util3d.h">
       <Filter>CUDA\cuda headers</Filter>
