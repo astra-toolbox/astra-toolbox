@@ -294,9 +294,11 @@
   <ItemGroup>
     <ClCompile Include="astra_mex_algorithm_c.cpp" />
     <ClCompile Include="mexHelpFunctions.cpp" />
+    <ClCompile Include="mexInitFunctions.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mexHelpFunctions.h" />
+    <ClInclude Include="mexInitFunctions.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

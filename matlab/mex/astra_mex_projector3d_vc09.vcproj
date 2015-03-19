@@ -598,6 +598,14 @@
 			RelativePath=".\mexHelpFunctions.h"
 			>
 		</File>
+		<File
+			RelativePath=".\mexInitFunctions.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\mexInitFunctions.h"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

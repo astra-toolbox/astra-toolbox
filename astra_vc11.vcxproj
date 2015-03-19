@@ -530,7 +530,7 @@
     <ClCompile Include="src\Fourier.cpp" />
     <ClCompile Include="src\GeometryUtil3D.cpp" />
     <ClCompile Include="src\Globals.cpp" />
-    <ClCompile Include="src\Logger.cpp" />
+    <ClCompile Include="src\Logging.cpp" />
     <ClCompile Include="src\ParallelBeamBlobKernelProjector2D.cpp" />
     <ClCompile Include="src\ParallelBeamLineKernelProjector2D.cpp" />
     <ClCompile Include="src\ParallelBeamLinearKernelProjector2D.cpp" />
@@ -640,7 +640,7 @@
     <ClInclude Include="include\astra\GeometryUtil2D.h" />
     <ClInclude Include="include\astra\GeometryUtil3D.h" />
     <ClInclude Include="include\astra\Globals.h" />
-    <ClInclude Include="include\astra\Logger.h" />
+    <ClInclude Include="include\astra\Logging.h" />
     <ClInclude Include="include\astra\ParallelBeamBlobKernelProjector2D.h" />
     <ClInclude Include="include\astra\ParallelBeamLineKernelProjector2D.h" />
     <ClInclude Include="include\astra\ParallelBeamLinearKernelProjector2D.h" />
@@ -669,6 +669,7 @@
     <ClInclude Include="include\astra\VolumeGeometry3D.h" />
     <ClInclude Include="include\astra\XMLDocument.h" />
     <ClInclude Include="include\astra\XMLNode.h" />
+    <ClInclude Include="include\astra\clog.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="cuda\2d\algo.cu">

@@ -921,6 +921,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\include\astra\clog.h"
+					>
+				</File>
+				<File
 					RelativePath=".\include\astra\Config.h"
 					>
 				</File>
@@ -933,7 +937,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\include\astra\Logger.h"
+					RelativePath=".\include\astra\Logging.h"
 					>
 				</File>
 				<File
@@ -989,7 +993,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\src\Logger.cpp"
+					RelativePath=".\src\Logging.cpp"
 					>
 				</File>
 				<File

@@ -5,6 +5,10 @@ import os
 vcppguid = "8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942" # C++ project
 siguid = "2150E333-8FDC-42A3-9474-1A3956D46DE8" # project group 
 
+# to generate a new uuid:
+#
+# import uuid
+# uuid.uuid4().__str__().upper()
 
 def create_mex_project(name, uuid11, uuid09):
   return { "type": vcppguid, "name": name, "file11": "matlab\\mex\\" + name + "_vc11.vcxproj", "file09": "matlab\\mex\\" + name + "_vc09.vcproj", "uuid11": uuid11, "uuid09": uuid09, "files": [] }
@@ -19,6 +23,7 @@ P3 = create_mex_project("astra_mex_data3d", "0BEC029B-0929-4BF9-BD8B-9C9806A5206
 P4 = create_mex_project("astra_mex_matrix", "9D041710-2119-4230-BCF2-5FBE753FDE49", "9D041710-2119-4230-BCF2-5FBE753FDE49")
 P5 = create_mex_project("astra_mex_projector", "4DD6056F-8EEE-4C9A-B2A9-923F01A32E97", "4DD6056F-8EEE-4C9A-B2A9-923F01A32E97")
 P6 = create_mex_project("astra_mex_projector3d", "F94CCD79-AA11-42DF-AC8A-6C9D2238A883", "F94CCD79-AA11-42DF-AC8A-6C9D2238A883")
+P7 = create_mex_project("astra_mex_log", "03B833F5-4FD6-4FBE-AAF4-E3305CD56D2E", "CA2840B3-DA68-41B5-AC57-F5DFD20ED8F8")
 
 F_astra_mex = { "type": siguid,
                 "name": "astra_mex",
@@ -26,18 +31,22 @@ F_astra_mex = { "type": siguid,
                 "file09": "astra_mex",
                 "uuid11": "5E99A109-374E-4102-BE9B-99BA1FA8AA30",
                 "uuid09": "33EF0AC5-B475-40BF-BAE5-67075B204D10",
-                "entries": [ P0, P1, P2, P3, P4, P5, P6 ] }
+                "entries": [ P0, P1, P2, P3, P4, P5, P6, P7 ] }
 
 
 P0["files"] = [
 "astra_mex_c.cpp",
 "mexHelpFunctions.cpp",
 "mexHelpFunctions.h",
+"mexInitFunctions.cpp",
+"mexInitFunctions.h",
 ]
 P1["files"] = [
 "astra_mex_algorithm_c.cpp",
 "mexHelpFunctions.cpp",
 "mexHelpFunctions.h",
+"mexInitFunctions.cpp",
+"mexInitFunctions.h",
 ]
 P2["files"] = [
 "astra_mex_data2d_c.cpp",
@@ -47,6 +56,8 @@ P2["files"] = [
 "mexCopyDataHelpFunctions.h",
 "mexDataManagerHelpFunctions.cpp",
 "mexDataManagerHelpFunctions.h",
+"mexInitFunctions.cpp",
+"mexInitFunctions.h",
 ]
 P3["files"] = [
 "astra_mex_data3d_c.cpp",
@@ -56,22 +67,38 @@ P3["files"] = [
 "mexCopyDataHelpFunctions.h",
 "mexDataManagerHelpFunctions.cpp",
 "mexDataManagerHelpFunctions.h",
+"mexInitFunctions.cpp",
+"mexInitFunctions.h",
 ]
 P4["files"] = [
 "astra_mex_matrix_c.cpp",
 "mexHelpFunctions.cpp",
 "mexHelpFunctions.h",
+"mexInitFunctions.cpp",
+"mexInitFunctions.h",
 ]
 P5["files"] = [
 "astra_mex_projector_c.cpp",
 "mexHelpFunctions.cpp",
 "mexHelpFunctions.h",
+"mexInitFunctions.cpp",
+"mexInitFunctions.h",
 ]
 P6["files"] = [
 "astra_mex_projector3d_c.cpp",
 "mexHelpFunctions.cpp",
 "mexHelpFunctions.h",
+"mexInitFunctions.cpp",
+"mexInitFunctions.h",
 ]
+P7["files"] = [
+"astra_mex_log_c.cpp",
+"mexHelpFunctions.cpp",
+"mexHelpFunctions.h",
+"mexInitFunctions.cpp",
+"mexInitFunctions.h",
+]
+
 
 
 P_astra["filter_names"] = [
@@ -168,7 +195,7 @@ P_astra["filters"]["Global &amp; Other\\source"] = [
 "src\\Config.cpp",
 "src\\Fourier.cpp",
 "src\\Globals.cpp",
-"src\\Logger.cpp",
+"src\\Logging.cpp",
 "src\\PlatformDepSystemCode.cpp",
 "src\\Utilities.cpp",
 "src\\XMLDocument.cpp",
@@ -295,10 +322,11 @@ P_astra["filters"]["Global &amp; Other\\headers"] = [
 "1c52efc8-a77e-4c72-b9be-f6429a87e6d7",
 "include\\astra\\AstraObjectFactory.h",
 "include\\astra\\AstraObjectManager.h",
+"include\\astra\\clog.h",
 "include\\astra\\Config.h",
 "include\\astra\\Fourier.h",
 "include\\astra\\Globals.h",
-"include\\astra\\Logger.h",
+"include\\astra\\Logging.h",
 "include\\astra\\PlatformDepSystemCode.h",
 "include\\astra\\Singleton.h",
 "include\\astra\\TypeList.h",
@@ -379,7 +407,7 @@ for f in P_astra["filters"]:
   P_astra["files"].extend(P_astra["filters"][f][1:])
 P_astra["files"].sort()
 
-projects = [ P_astra, F_astra_mex, P0, P1, P2, P3, P4, P5, P6 ]
+projects = [ P_astra, F_astra_mex, P0, P1, P2, P3, P4, P5, P6, P7 ]
 
 bom = "\xef\xbb\xbf"
 
@@ -1081,6 +1109,7 @@ if sys.argv[1] in ["vc11", "all"]:
   write_mex_project11(P4)
   write_mex_project11(P5)
   write_mex_project11(P6)
+  write_mex_project11(P7)
 
 if sys.argv[1] in ["vc09", "all"]:
   # HACK
@@ -1095,3 +1124,4 @@ if sys.argv[1] in ["vc09", "all"]:
   write_mex_project09(P4)
   write_mex_project09(P5)
   write_mex_project09(P6)
+  write_mex_project09(P7)
