@@ -137,7 +137,7 @@ static bool invokeCudaFFT(int _iProjectionCount, int _iDetectorCount,
 	result = cufftPlan1d(&plan, _iDetectorCount, CUFFT_R2C, _iProjectionCount);
 	if(result != CUFFT_SUCCESS)
 	{
-        ASTRA_ERROR("Failed to plan 1d r2c fft");
+		ASTRA_ERROR("Failed to plan 1d r2c fft");
 		return false;
 	}
 
@@ -146,7 +146,7 @@ static bool invokeCudaFFT(int _iProjectionCount, int _iDetectorCount,
 
 	if(result != CUFFT_SUCCESS)
 	{
-        ASTRA_ERROR("Failed to exec 1d r2c fft");
+		ASTRA_ERROR("Failed to exec 1d r2c fft");
 		return false;
 	}
 
@@ -163,18 +163,18 @@ static bool invokeCudaIFFT(int _iProjectionCount, int _iDetectorCount,
 	result = cufftPlan1d(&plan, _iDetectorCount, CUFFT_C2R, _iProjectionCount);
 	if(result != CUFFT_SUCCESS)
 	{
-        ASTRA_ERROR("Failed to plan 1d c2r fft");
+		ASTRA_ERROR("Failed to plan 1d c2r fft");
 		return false;
 	}
 
 	// todo: why do we have to get rid of the const qualifier?
 	result = cufftExecC2R(plan, (cufftComplex *)_pDevSourceComplex,
-                          (cufftReal *)_pfDevTarget);
+	                      (cufftReal *)_pfDevTarget);
 	cufftDestroy(plan);
 
 	if(result != CUFFT_SUCCESS)
 	{
-        ASTRA_ERROR("Failed to exec 1d c2r fft");
+		ASTRA_ERROR("Failed to exec 1d c2r fft");
 		return false;
 	}
 
@@ -254,7 +254,7 @@ bool runCudaIFFT(int _iProjectionCount, const cufftComplex* _pDevSourceComplex,
 	}
 
 	rescaleInverseFourier(_iProjectionCount, _iFFTRealDetectorCount,
-                          pfDevRealFFTTarget);
+	                      pfDevRealFFTTarget);
 
 	SAFE_CALL(cudaMemset(_pfRealTarget, 0, sizeof(float) * _iProjectionCount * _iTargetPitch));
 
@@ -630,7 +630,7 @@ void genFilter(E_FBPFILTER _eFilter, float _fD, int _iProjectionCount,
 		}
 		default:
 		{
-            ASTRA_ERROR("Cannot serve requested filter");
+			ASTRA_ERROR("Cannot serve requested filter");
 		}
 	}
 
@@ -764,13 +764,13 @@ void testCudaFFT()
 	result = cufftPlan1d(&plan, iDetectorCount, CUFFT_R2C, iProjectionCount);
 	if(result != CUFFT_SUCCESS)
 	{
-        ASTRA_ERROR("Failed to plan 1d r2c fft");
+		ASTRA_ERROR("Failed to plan 1d r2c fft");
 	}
 
 	result = cufftExecR2C(plan, pfDevProj, pDevFourProj);
 	if(result != CUFFT_SUCCESS)
 	{
-        ASTRA_ERROR("Failed to exec 1d r2c fft");
+		ASTRA_ERROR("Failed to exec 1d r2c fft");
 	}
 
 	cufftDestroy(plan);
@@ -794,13 +794,13 @@ void testCudaFFT()
 	result = cufftPlan1d(&plan, iDetectorCount, CUFFT_C2R, iProjectionCount);
 	if(result != CUFFT_SUCCESS)
 	{
-        ASTRA_ERROR("Failed to plan 1d c2r fft");
+		ASTRA_ERROR("Failed to plan 1d c2r fft");
 	}
 
 	result = cufftExecC2R(plan, pDevFourProj, pfDevInFourProj);
 	if(result != CUFFT_SUCCESS)
 	{
-        ASTRA_ERROR("Failed to exec 1d c2r fft");
+		ASTRA_ERROR("Failed to exec 1d c2r fft");
 	}
 
 	cufftDestroy(plan);
