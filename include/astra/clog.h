@@ -74,6 +74,8 @@
 #ifndef _MSC_VER
 #include <unistd.h>
 #else
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #include <io.h>
 #define open _open
 #define close _close
@@ -634,8 +636,13 @@ _clog_log(const char *sfile, int sline, enum clog_level level,
             free(dynbuf);
         }
 #ifndef _MSC_VER
-        // FIXME
         fsync(logger->fd);
+#else
+        HANDLE h = (HANDLE) _get_osfhandle(logger->fd);
+        if (h != INVALID_HANDLE_VALUE) {
+            // This call will fail on a console fd, but that's ok.
+            FlushFileBuffers(h);
+        }
 #endif
     }
 }
