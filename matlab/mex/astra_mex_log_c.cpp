@@ -26,9 +26,9 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 $Id$
 */
 
-/** \file astra_mex_algorithm_c.cpp
+/** \file astra_mex_log_c.cpp
  *
- *  \brief Creates and manages algorithms (reconstruction,projection,...).
+ *  \brief Manages astra logging
  */
 #include <mex.h>
 #include "mexHelpFunctions.h"
