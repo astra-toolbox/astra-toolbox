@@ -296,11 +296,13 @@
     <ClCompile Include="mexHelpFunctions.cpp" />
     <ClCompile Include="mexCopyDataHelpFunctions.cpp" />
     <ClCompile Include="mexDataManagerHelpFunctions.cpp" />
+    <ClCompile Include="mexInitFunctions.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mexHelpFunctions.h" />
     <ClInclude Include="mexCopyDataHelpFunctions.h" />
     <ClInclude Include="mexDataManagerHelpFunctions.h" />
+    <ClInclude Include="mexInitFunctions.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

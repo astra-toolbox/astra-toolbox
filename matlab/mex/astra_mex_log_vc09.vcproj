@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="astra_mex_projector"
-	ProjectGUID="{4DD6056F-8EEE-4C9A-B2A9-923F01A32E97}"
+	Name="astra_mex_log"
+	ProjectGUID="{CA2840B3-DA68-41B5-AC57-F5DFD20ED8F8}"
 	RootNamespace="astraMatlab"
 	TargetFrameworkVersion="131072"
 	>
@@ -587,7 +587,7 @@
 	</References>
 	<Files>
 		<File
-			RelativePath=".\astra_mex_projector_c.cpp"
+			RelativePath=".\astra_mex_log_c.cpp"
 			>
 		</File>
 		<File

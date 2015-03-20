@@ -34,7 +34,7 @@ $Id$
 #include "astra/AstraObjectManager.h"
 #include "../cuda/2d/astra.h"
 
-#include <astra/Logger.h>
+#include "astra/Logging.h"
 
 using namespace std;
 using namespace astra;
@@ -105,7 +105,7 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 	}
 	CC.markNodeParsed("FilterType");
 	ASTRA_DELETE(node);
-	
+
 	// filter
 	node = _cfg.self->getSingleNode("FilterSinogramId");
 	if(node != NULL)
@@ -168,7 +168,7 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 		CC.markOptionParsed("ShortScan");
 	}
 
-	
+
 
 
 	m_pFBP = new AstraFBP;
@@ -186,7 +186,7 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(CFloat32ProjectionData2D *
 	{
 		clear();
 	}
-	
+
 	// required classes
 	m_pSinogram = _pSinogram;
 	m_pReconstruction = _pReconstruction;
@@ -326,7 +326,7 @@ void CCudaFilteredBackProjectionAlgorithm::run(int _iNrIterations /* = 0 */)
 
 	const CVolumeGeometry2D& volgeom = *m_pReconstruction->getGeometry();
 	ok &= m_pFBP->getReconstruction(m_pReconstruction->getData(), volgeom.getGridColCount());
-	
+
 	ASTRA_ASSERT(ok);
 }
 
@@ -335,7 +335,7 @@ bool CCudaFilteredBackProjectionAlgorithm::check()
 	// check pointers
 	ASTRA_CONFIG_CHECK(m_pSinogram, "FBP_CUDA", "Invalid Projection Data Object.");
 	ASTRA_CONFIG_CHECK(m_pReconstruction, "FBP_CUDA", "Invalid Reconstruction Data Object.");
-	
+
 	if((m_eFilter == FILTER_PROJECTION) || (m_eFilter == FILTER_SINOGRAM) || (m_eFilter == FILTER_RPROJECTION) || (m_eFilter == FILTER_RSINOGRAM))
 	{
 		ASTRA_CONFIG_CHECK(m_pfFilter, "FBP_CUDA", "Invalid filter pointer.");
@@ -387,7 +387,7 @@ static bool stringCompareLowerCase(const char * _stringA, const char * _stringB)
 #else
 	iCmpReturn = strcasecmp(_stringA, _stringB);
 #endif
-	
+
 	return (iCmpReturn == 0);
 }
 
@@ -485,7 +485,7 @@ E_FBPFILTER CCudaFilteredBackProjectionAlgorithm::_convertStringToFilter(const c
 	}
 	else
 	{
-		cerr << "Failed to convert \"" << _filterType << "\" into a filter." << endl;
+		ASTRA_ERROR("Failed to convert \"%s\" into a filter.",_filterType);
 	}
 
 	return output;

@@ -40,6 +40,8 @@ $Id$
 #include "astra/ParallelVecProjectionGeometry3D.h"
 #include "astra/ConeVecProjectionGeometry3D.h"
 
+#include "astra/Logging.h"
+
 #include "../cuda/3d/astra3d.h"
 
 using namespace std;
@@ -265,7 +267,7 @@ void CCudaForwardProjectionAlgorithm3D::run(int)
 		for (int k = 0; k < 2; ++k) {
 			float fU, fV;
 			projgeom->projectPoint(fX[i], fY[j], fZ[k], a, fU, fV);
-			fprintf(stderr, "%3d %c1,%c1,%c1 -> %12f %12f\n", a, i ? ' ' : '-', j ? ' ' : '-', k ? ' ' : '-', fU, fV);
+			ASTRA_DEBUG("%3d %c1,%c1,%c1 -> %12f %12f", a, i ? ' ' : '-', j ? ' ' : '-', k ? ' ' : '-', fU, fV);
 		}
 	}
 #endif

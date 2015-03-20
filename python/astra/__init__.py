@@ -35,6 +35,7 @@ from . import algorithm
 from . import projector
 from . import projector3d
 from . import matrix
+from . import log
 
 import os
 try:
