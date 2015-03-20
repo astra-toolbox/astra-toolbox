@@ -43,8 +43,8 @@ P = scipy.io.loadmat('phantom.mat')['phantom256']
 # Create a sinogram using the GPU.
 # Note that the first time the GPU is accessed, there may be a delay
 # of up to 10 seconds for initialization.
-proj_id = astra.create_projector('line',proj_geom,vol_geom)
-sinogram_id, sinogram = astra.create_sino(P, proj_id,useCUDA=True)
+proj_id = astra.create_projector('cuda',proj_geom,vol_geom)
+sinogram_id, sinogram = astra.create_sino(P, proj_id)
 
 import pylab
 pylab.gray()

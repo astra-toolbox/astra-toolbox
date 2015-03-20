@@ -23,7 +23,7 @@
 #along with the Python interface to the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #
 #-----------------------------------------------------------------------
-from . import projector_c as p
+from . import projector3d_c as p
 
 def create(config):
     """Create projector object.
@@ -88,6 +88,7 @@ def weights_projection(i, projection_index):
 def splat(i, row, col):
     return p.splat(i, row, col)
 
+
 def is_cuda(i):
     """Check whether a projector is a CUDA projector.
 
@@ -97,14 +98,3 @@ def is_cuda(i):
 
     """
     return p.is_cuda(i)
-
-
-def matrix(i):
-    """Get sparse matrix of a projector.
-
-    :param i: ID of projector.
-    :type i: :class:`int`
-    :returns: :class:`int` -- ID of sparse matrix.
-
-    """
-    return p.matrix(i)
