@@ -1051,6 +1051,14 @@ def write_mex_project09(P):
   print('\t</Globals>', file=F)
   print('</VisualStudioProject>', file=F)
 
+
+
+if (len(sys.argv) != 2) or (sys.argv[1] not in ["vc09", "vc11", "all"]):
+  print("Usage: python gen.py [vc09|vc11|all]", file=sys.stderr)
+  sys.exit(1)
+
+
+
 try:
   open("../../src/AstraObjectManager.cpp", "r")
 except IOError:
@@ -1060,29 +1068,30 @@ except IOError:
 # Change directory to main dir
 os.chdir("../..")
 
+if sys.argv[1] in ["vc11", "all"]:
+  # HACK
+  P_astra["name"] = "astra_vc11"
+  write_sln(11)
+  write_main_project11()
+  write_main_filters11()
+  write_mex_project11(P0)
+  write_mex_project11(P1)
+  write_mex_project11(P2)
+  write_mex_project11(P3)
+  write_mex_project11(P4)
+  write_mex_project11(P5)
+  write_mex_project11(P6)
 
-# HACK
-P_astra["name"] = "astra_vc11"
-write_sln(11)
-write_main_project11()
-write_main_filters11()
-write_mex_project11(P0)
-write_mex_project11(P1)
-write_mex_project11(P2)
-write_mex_project11(P3)
-write_mex_project11(P4)
-write_mex_project11(P5)
-write_mex_project11(P6)
+if sys.argv[1] in ["vc09", "all"]:
+  # HACK
+  P_astra["name"] = "astra"
 
-# HACK
-P_astra["name"] = "astra"
-
-write_sln(9)
-write_main_project09()
-write_mex_project09(P0)
-write_mex_project09(P1)
-write_mex_project09(P2)
-write_mex_project09(P3)
-write_mex_project09(P4)
-write_mex_project09(P5)
-write_mex_project09(P6)
+  write_sln(9)
+  write_main_project09()
+  write_mex_project09(P0)
+  write_mex_project09(P1)
+  write_mex_project09(P2)
+  write_mex_project09(P3)
+  write_mex_project09(P4)
+  write_mex_project09(P5)
+  write_mex_project09(P6)
