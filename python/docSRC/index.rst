@@ -18,7 +18,7 @@ Contents:
    matrix
    creators
    functions
-   ASTRAProjector
+   operator
    matlab
    astra
 .. astra
