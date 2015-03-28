@@ -44,6 +44,10 @@ BOOST_AUTO_TEST_CASE( testXMLDocument_Constructor1 )
 
 	BOOST_CHECK(root->getName() == "test");
 	BOOST_CHECK(root->getContent().empty());
+
+	delete root;
+	delete doc;
+
 }
 
 BOOST_AUTO_TEST_CASE( testXMLDocument_FileIO )
@@ -59,6 +63,10 @@ BOOST_AUTO_TEST_CASE( testXMLDocument_FileIO )
 
 	BOOST_CHECK(root->getName() == "test");
 	BOOST_CHECK(root->getContent().empty());
+
+ 	delete root;
+        delete doc2;
+        delete doc;
 
 }
 
@@ -111,6 +119,9 @@ BOOST_AUTO_TEST_CASE( testXMLDocument_Options )
 	BOOST_CHECK(root->hasOption("opt"));
 
 	BOOST_CHECK(root->getOption("opt") == "val");
+
+ 	delete root;
+        delete doc;
 
 }
 
