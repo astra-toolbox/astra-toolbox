@@ -487,7 +487,7 @@ bool FP_simple_internal(float* D_volumeData, unsigned int volumePitch,
 	unsigned int blockEnd = 0;
 	bool blockVertical = false;
 	for (unsigned int a = 0; a <= dims.iProjAngles; ++a) {
-		bool vertical;
+		bool vertical = false;
 		// TODO: Having <= instead of < below causes a 5% speedup.
 		// Maybe we should detect corner cases and put them in the optimal
 		// group of angles.
