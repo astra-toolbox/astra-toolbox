@@ -120,7 +120,7 @@ bool CProjector3D::initialize(const Config& _cfg)
 	CVolumeGeometry3D* pVolGeometry = new CVolumeGeometry3D();
 	pVolGeometry->initialize(Config(node)); // this deletes node
 	m_pVolumeGeometry = pVolGeometry;
-	ASTRA_CONFIG_CHECK(m_pVolumeGeometry->isInitialized(), "Projector2D", "VolumeGeometry not initialized.");
+	ASTRA_CONFIG_CHECK(m_pVolumeGeometry->isInitialized(), "Projector3D", "VolumeGeometry not initialized.");
 	CC.markNodeParsed("VolumeGeometry");
 
 	return true;
