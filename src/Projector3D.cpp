@@ -108,6 +108,7 @@ bool CProjector3D::initialize(const Config& _cfg)
 		pProjGeometry = new CConeVecProjectionGeometry3D();
 	} else {
 		// Invalid geometry type
+		ASTRA_CONFIG_CHECK(false, "Projector3D", "Invalid projection geometry type specified.");
 	}
 	pProjGeometry->initialize(Config(node)); // this deletes node
 	m_pProjectionGeometry = pProjGeometry;
