@@ -105,8 +105,8 @@ BOOST_AUTO_TEST_CASE( testFourier_FFT_1D_1 )
 {
 	astra::float32 inR[8] = { 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f };
 	astra::float32 inI[8] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
-	astra::float32 outR[5];
-	astra::float32 outI[5];
+	astra::float32 outR[8];
+	astra::float32 outI[8];
 
 	astra::fastTwoPowerFourierTransform1D(8, inR, inI, outR, outI, 1, 1, false);
 
