@@ -135,7 +135,15 @@ void astra_mex_direct_fp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 		dims[0] = pProjGeom->getDetectorColCount();
 		dims[1] = pProjGeom->getProjectionCount();
 		dims[2] = pProjGeom->getDetectorRowCount();
-		pOutputMx = mxCreateNumericArray(3, dims, mxSINGLE_CLASS, mxREAL);
+
+		// Allocate uninitialized mxArray of size dims.
+		// (It will be zeroed by CudaForwardProjectionAlgorithm3D)
+		const mwSize zero_dims[2] = {0, 0};
+		pOutputMx = mxCreateNumericArray(2, zero_dims, mxSINGLE_CLASS, mxREAL);
+		mxSetDimensions(pOutputMx, dims, 3);
+		const mwSize num_elems = mxGetNumberOfElements(pOutputMx);
+		const mwSize elem_size = mxGetElementSize(pOutputMx);
+		mxSetData(pOutputMx, mxMalloc(elem_size * num_elems));
 
 		astra::CFloat32CustomMemory* m = new CFloat32CustomMemory_simple((float *)mxGetData(pOutputMx));
 		pOutput = new astra::CFloat32ProjectionData3DMemory(pProjGeom, m);
@@ -243,7 +251,15 @@ void astra_mex_direct_bp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 		dims[0] = pVolGeom->getGridColCount();
 		dims[1] = pVolGeom->getGridRowCount();
 		dims[2] = pVolGeom->getGridSliceCount();
-		pOutputMx = mxCreateNumericArray(3, dims, mxSINGLE_CLASS, mxREAL);
+
+		// Allocate uninitialized mxArray of size dims.
+		// (It will be zeroed by CudaBackProjectionAlgorithm3D)
+		const mwSize zero_dims[2] = {0, 0};
+		pOutputMx = mxCreateNumericArray(2, zero_dims, mxSINGLE_CLASS, mxREAL);
+		mxSetDimensions(pOutputMx, dims, 3);
+		const mwSize num_elems = mxGetNumberOfElements(pOutputMx);
+		const mwSize elem_size = mxGetElementSize(pOutputMx);
+		mxSetData(pOutputMx, mxMalloc(elem_size * num_elems));
 
 		astra::CFloat32CustomMemory* m = new CFloat32CustomMemory_simple((float *)mxGetData(pOutputMx));
 		pOutput = new astra::CFloat32VolumeData3DMemory(pVolGeom, m);
