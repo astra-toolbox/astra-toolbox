@@ -51,6 +51,8 @@ struct _AstraExport Config {
 
 	XMLNode* self;
 	XMLNode* global;
+
+	XMLDocument *_doc;
 };
 
 struct ConfigCheckData {

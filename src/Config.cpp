@@ -48,6 +48,7 @@ using namespace std;
 Config::Config()
 {
 	self = 0;
+	_doc = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -55,6 +56,7 @@ Config::Config()
 Config::Config(XMLNode* _self) 
 {
 	self = _self;
+	_doc = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -62,6 +64,8 @@ Config::~Config()
 {
 	delete self;
 	self = 0;
+	delete _doc;
+	_doc = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -70,6 +74,7 @@ void Config::initialize(std::string rootname)
 	if (self == 0) {
 		XMLDocument* doc = XMLDocument::createDocument(rootname);
 		self = doc->getRootNode();		
+		_doc = doc;
 	}
 }
 
