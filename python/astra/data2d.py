@@ -24,6 +24,7 @@
 #
 #-----------------------------------------------------------------------
 from . import data2d_c as d
+import numpy as np
 
 def clear():
     """Clear all 2D data objects."""
@@ -51,6 +52,26 @@ def create(datatype, geometry, data=None):
     
     """
     return d.create(datatype,geometry,data)
+
+def link(datatype, geometry, data):
+    """Link a 2D numpy array with the toolbox.
+        
+    :param datatype: Data object type, '-vol' or '-sino'.
+    :type datatype: :class:`string`
+    :param geometry: Volume or projection geometry.
+    :type geometry: :class:`dict`
+    :param data: Numpy array to link
+    :type data: :class:`numpy.ndarray`
+    :returns: :class:`int` -- the ID of the constructed object.
+    
+    """
+    if not isinstance(data,np.ndarray):
+        raise ValueError("Input should be a numpy array")
+    if not data.dtype==np.float32:
+        raise ValueError("Numpy array should be float32")
+    if not (data.flags['C_CONTIGUOUS'] and data.flags['ALIGNED']):
+        raise ValueError("Numpy array should be C_CONTIGUOUS and ALIGNED")
+    return d.create(datatype,geometry,data,True)
 
 def store(i, data):
     """Fill existing 2D object with data.
