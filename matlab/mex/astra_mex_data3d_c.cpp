@@ -148,8 +148,8 @@ void astra_mex_data3d_link(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 		return;
 	}
 
-	if (data && !checkDataType(data)) {
-		mexErrMsgTxt("Data must be single or double.");
+	if (data && !mxIsSingle(data)) {
+		mexErrMsgTxt("Data must be single.");
 		return;
 	}
 
