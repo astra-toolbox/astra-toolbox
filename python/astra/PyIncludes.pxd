@@ -196,18 +196,29 @@ cdef extern from "astra/VolumeGeometry3D.h" namespace "astra":
 		CVolumeGeometry3D()
 		bool initialize(Config)
 		Config * getConfiguration()
+		int getGridColCount()
+		int getGridRowCount()
+		int getGridSliceCount()
 
 cdef extern from "astra/ProjectionGeometry3D.h" namespace "astra":
 	cdef cppclass CProjectionGeometry3D:
 		CProjectionGeometry3D()
 		bool initialize(Config)
 		Config * getConfiguration()
+		int getProjectionCount()
+		int getDetectorColCount()
+		int getDetectorRowCount()
 
 
 cdef extern from "astra/Float32VolumeData3DMemory.h" namespace "astra":
 	cdef cppclass CFloat32VolumeData3DMemory:
 		CFloat32VolumeData3DMemory(CVolumeGeometry3D*)
 		CVolumeGeometry3D* getGeometry()
+		void changeGeometry(CVolumeGeometry3D*)
+		int getRowCount()
+		int getColCount()
+		int getSliceCount()
+
 
 
 cdef extern from "astra/ParallelProjectionGeometry3D.h" namespace "astra":
@@ -232,6 +243,10 @@ cdef extern from "astra/Float32ProjectionData3DMemory.h" namespace "astra":
 		CFloat32ProjectionData3DMemory(CProjectionGeometry3D*)
 		CFloat32ProjectionData3DMemory(CConeProjectionGeometry3D*)
 		CProjectionGeometry3D* getGeometry()
+		void changeGeometry(CProjectionGeometry3D*)
+		int getDetectorColCount()
+		int getDetectorRowCount()
+		int getAngleCount()
 
 cdef extern from "astra/Float32Data3D.h" namespace "astra":
 	cdef cppclass CFloat32Data3D:
