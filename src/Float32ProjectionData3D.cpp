@@ -270,4 +270,13 @@ CFloat32ProjectionData3D& CFloat32ProjectionData3D::operator-=(const float32& _f
 	return *this;
 }
 
+void CFloat32ProjectionData3D::changeGeometry(CProjectionGeometry3D* _pGeometry)
+{
+	if (!m_bInitialized) return;
+
+	delete m_pGeometry;
+	m_pGeometry = _pGeometry->clone();
+}
+
+
 } // end namespace astra

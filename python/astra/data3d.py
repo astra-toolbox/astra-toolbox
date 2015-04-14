@@ -112,6 +112,17 @@ def get_geometry(i):
     """
     return d.get_geometry(i)
 
+def change_geometry(i, geometry):
+    """Change the geometry of a 3D object.
+
+    :param i: ID of object.
+    :type i: :class:`int`
+    :param geometry: Volume or projection geometry.
+    :type geometry: :class:`dict`
+
+    """
+    return d.change_geometry(i, geometry)
+
 def dimensions(i):
     """Get dimensions of a 3D object.
 

@@ -310,6 +310,112 @@ void astra_mex_data3d_get_geometry(int nlhs, mxArray* plhs[], int nrhs, const mx
 }
 
 //-----------------------------------------------------------------------------------------
+/** astra_mex_data3d('change_geometry', id, geom);
+ *
+ * Change the geometry of a 3d data object.
+ * id: identifier of the 3d data object as stored in the astra-library.
+ * geom: the new geometry struct, as created by astra_create_vol/proj_geom
+ */
+void astra_mex_data3d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
+{
+	// parse input
+	if (nrhs < 3) {
+		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
+		return;
+	}
+
+	// get data object
+	CFloat32Data3DMemory* pDataObject = NULL;
+	if (!checkID(mxGetScalar(prhs[1]), pDataObject)) {
+		mexErrMsgTxt("Data object not found or not initialized properly.\n");
+		return;
+	}
+
+	const mxArray * const geometry = prhs[2];
+
+	if (!checkStructs(geometry)) {
+		mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.\n");
+		return;
+	}
+
+	CFloat32ProjectionData3D* pProjData = dynamic_cast<CFloat32ProjectionData3D*>(pDataObject);
+	if (pProjData) {
+		// Projection data
+
+		// Read geometry
+		astra::Config* cfg = structToConfig("ProjectionGeometry3D", geometry);
+		// FIXME: Change how the base class is created. (This is duplicated
+		// in Projector3D.cpp.)
+		std::string type = cfg->self->getAttribute("type");
+		astra::CProjectionGeometry3D* pGeometry = 0;
+		if (type == "parallel3d") {
+			pGeometry = new astra::CParallelProjectionGeometry3D();
+		} else if (type == "parallel3d_vec") {
+			pGeometry = new astra::CParallelVecProjectionGeometry3D();
+		} else if (type == "cone") {
+			pGeometry = new astra::CConeProjectionGeometry3D();
+		} else if (type == "cone_vec") {
+			pGeometry = new astra::CConeVecProjectionGeometry3D();
+		} else {
+			mexErrMsgTxt("Invalid geometry type.\n");
+			return;
+		}
+
+		if (!pGeometry->initialize(*cfg)) {
+			mexErrMsgTxt("Geometry class not initialized. \n");
+			delete pGeometry;
+			delete cfg;
+			return;
+		}
+		delete cfg;
+
+		// Check dimensions
+		if (pGeometry->getDetectorColCount() != pProjData->getDetectorColCount() ||
+		    pGeometry->getProjectionCount() != pProjData->getAngleCount() ||
+		    pGeometry->getDetectorRowCount() != pProjData->getDetectorRowCount())
+		{
+			mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
+			delete pGeometry;
+			return;
+		}
+
+		// If ok, change geometry
+		pProjData->changeGeometry(pGeometry);
+		delete pGeometry;
+	} else {
+		// Volume data
+		CFloat32VolumeData3D* pVolData = dynamic_cast<CFloat32VolumeData3D*>(pDataObject);
+		assert(pVolData);
+
+		// Read geometry
+		astra::Config* cfg = structToConfig("VolumeGeometry3D", geometry);
+		astra::CVolumeGeometry3D* pGeometry = new astra::CVolumeGeometry3D();
+		if (!pGeometry->initialize(*cfg))
+		{
+			mexErrMsgTxt("Geometry class not initialized. \n");
+			delete pGeometry;
+			delete cfg;
+			return;
+		}
+		delete cfg;
+
+				// Check dimensions
+		if (pGeometry->getGridColCount() != pVolData->getColCount() ||
+		    pGeometry->getGridRowCount() != pVolData->getRowCount() ||
+		    pGeometry->getGridSliceCount() != pVolData->getSliceCount())
+		{
+			mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
+			delete pGeometry;
+			return;
+		}
+
+		// If ok, change geometry
+		pVolData->changeGeometry(pGeometry);
+		delete pGeometry;
+	}
+}
+
+//-----------------------------------------------------------------------------------------
 /**
  * astra_mex_data3d('delete', did1, did2, ...);
  */
@@ -351,7 +457,7 @@ static void printHelp()
 {
 	mexPrintf("Please specify a mode of operation.\n");
 	mexPrintf("Valid modes: create, get, get_single, delete, clear, info\n");
-	mexPrintf("             dimensions\n");
+	mexPrintf("             dimensions, get_geometry, change_geometry\n");
 }
 
 
@@ -398,6 +504,8 @@ void mexFunction(int nlhs, mxArray* plhs[],
 		astra_mex_data3d_dimensions(nlhs, plhs, nrhs, prhs); 
 	} else if (sMode == std::string("get_geometry")) {
 		astra_mex_data3d_get_geometry(nlhs, plhs, nrhs, prhs);
+	} else if (sMode == std::string("change_geometry")) {
+		astra_mex_data3d_change_geometry(nlhs, plhs, nrhs, prhs);
 	} else {
 		printHelp();
 	}
