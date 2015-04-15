@@ -31,6 +31,8 @@ $Id$
 #include "util3d.h"
 #include "../2d/util.h"
 
+#include "../../include/astra/Logging.h"
+
 namespace astraCUDA3d {
 
 
@@ -46,7 +48,7 @@ cudaPitchedPtr allocateVolumeData(const SDimensions3D& dims)
 	cudaError err = cudaMalloc3D(&volData, extentV);
 	if (err != cudaSuccess) {
 		astraCUDA::reportCudaError(err);
-		fprintf(stderr, "Failed to allocate %dx%dx%d GPU buffer\n", dims.iVolX, dims.iVolY, dims.iVolZ);
+		ASTRA_ERROR("Failed to allocate %dx%dx%d GPU buffer", dims.iVolX, dims.iVolY, dims.iVolZ);
 		volData.ptr = 0;
 		// TODO: return 0 somehow?
 	}
@@ -65,7 +67,7 @@ cudaPitchedPtr allocateProjectionData(const SDimensions3D& dims)
 	cudaError err = cudaMalloc3D(&projData, extentP);
 	if (err != cudaSuccess) {
 		astraCUDA::reportCudaError(err);
-		fprintf(stderr, "Failed to allocate %dx%dx%d GPU buffer\n", dims.iProjU, dims.iProjAngles, dims.iProjV);
+		ASTRA_ERROR("Failed to allocate %dx%dx%d GPU buffer", dims.iProjU, dims.iProjAngles, dims.iProjV);
 		projData.ptr = 0;
 		// TODO: return 0 somehow?
 	}
@@ -303,7 +305,7 @@ cudaArray* allocateVolumeArray(const SDimensions3D& dims)
 	cudaError err = cudaMalloc3DArray(&cuArray, &channelDesc, extentA);
 	if (err != cudaSuccess) {
 		astraCUDA::reportCudaError(err);
-		fprintf(stderr, "Failed to allocate %dx%dx%d GPU array\n", dims.iVolX, dims.iVolY, dims.iVolZ);
+		ASTRA_ERROR("Failed to allocate %dx%dx%d GPU array", dims.iVolX, dims.iVolY, dims.iVolZ);
 		return 0;
 	}
 
@@ -321,7 +323,7 @@ cudaArray* allocateProjectionArray(const SDimensions3D& dims)
 
 	if (err != cudaSuccess) {
 		astraCUDA::reportCudaError(err);
-		fprintf(stderr, "Failed to allocate %dx%dx%d GPU array\n", dims.iProjU, dims.iProjAngles, dims.iProjV);
+		ASTRA_ERROR("Failed to allocate %dx%dx%d GPU array", dims.iProjU, dims.iProjAngles, dims.iProjV);
 		return 0;
 	}
 
@@ -397,7 +399,7 @@ bool cudaTextForceKernelsCompletion()
 	cudaError_t returnedCudaError = cudaThreadSynchronize();
 
 	if(returnedCudaError != cudaSuccess) {
-		fprintf(stderr, "Failed to force completion of cuda kernels: %d: %s.\n", returnedCudaError, cudaGetErrorString(returnedCudaError));
+		ASTRA_ERROR("Failed to force completion of cuda kernels: %d: %s.", returnedCudaError, cudaGetErrorString(returnedCudaError));
 		return false;
 	}
 

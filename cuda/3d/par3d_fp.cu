@@ -440,7 +440,7 @@ bool Par3DFP_Array_internal(cudaPitchedPtr D_projData,
 	// tic(t);
 
 	for (unsigned int a = 0; a <= angleCount; ++a) {
-		int dir;
+		int dir = -1;
 		if (a != dims.iProjAngles) {
 			float dX = fabsf(angles[a].fRayX);
 			float dY = fabsf(angles[a].fRayY);

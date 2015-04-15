@@ -26,8 +26,8 @@
 
 
 # This example demonstrates using the FP and BP primitives with Matlab's lsqr
-# solver. Calls to FP (astra_create_sino_cuda) and
-# BP (astra_create_backprojection_cuda) are wrapped in a function astra_wrap,
+# solver. Calls to FP (astra.create_sino) and
+# BP (astra.create_backprojection) are wrapped in a function astra_wrap,
 # and a handle to this function is passed to lsqr.
 
 # Because in this case the inputs/outputs of FP and BP have to be vectors
@@ -39,17 +39,17 @@ import numpy as np
 # FP/BP wrapper class
 class astra_wrap(object):
     def __init__(self,proj_geom,vol_geom):
-        self.proj_id = astra.create_projector('line',proj_geom,vol_geom)
+        self.proj_id = astra.create_projector('cuda',proj_geom,vol_geom)
         self.shape = (proj_geom['DetectorCount']*len(proj_geom['ProjectionAngles']),vol_geom['GridColCount']*vol_geom['GridRowCount'])
         self.dtype = np.float
     
     def matvec(self,v):
-        sid, s = astra.create_sino(np.reshape(v,(vol_geom['GridRowCount'],vol_geom['GridColCount'])),self.proj_id,useCUDA=True)
+        sid, s = astra.create_sino(np.reshape(v,(vol_geom['GridRowCount'],vol_geom['GridColCount'])),self.proj_id)
         astra.data2d.delete(sid)
         return s.flatten()
     
     def rmatvec(self,v):
-        bid, b = astra.create_backprojection(np.reshape(v,(len(proj_geom['ProjectionAngles']),proj_geom['DetectorCount'],)),self.proj_id,useCUDA=True)
+        bid, b = astra.create_backprojection(np.reshape(v,(len(proj_geom['ProjectionAngles']),proj_geom['DetectorCount'],)),self.proj_id)
         astra.data2d.delete(bid)
         return b.flatten()
 
@@ -61,8 +61,8 @@ import scipy.io
 P = scipy.io.loadmat('phantom.mat')['phantom256']
 
 # Create a sinogram using the GPU.
-proj_id = astra.create_projector('line',proj_geom,vol_geom)
-sinogram_id, sinogram = astra.create_sino(P, proj_id,useCUDA=True)
+proj_id = astra.create_projector('cuda',proj_geom,vol_geom)
+sinogram_id, sinogram = astra.create_sino(P, proj_id)
 
 # Reshape the sinogram into a vector
 b = sinogram.flatten()

@@ -75,6 +75,16 @@ CFloat32ProjectionData2D::CFloat32ProjectionData2D(const CFloat32ProjectionData2
 	m_bInitialized = true;
 }
 
+//----------------------------------------------------------------------------------------
+// Create an instance of the CFloat32ProjectionData2D class with pre-allocated data
+CFloat32ProjectionData2D::CFloat32ProjectionData2D(CProjectionGeometry2D* _pGeometry, CFloat32CustomMemory* _pCustomMemory)
+{
+	m_bInitialized = false;
+	m_bInitialized = initialize(_pGeometry, _pCustomMemory);
+}
+ 
+
+
 // Assignment operator
 
 CFloat32ProjectionData2D& CFloat32ProjectionData2D::operator=(const CFloat32ProjectionData2D& _other)
@@ -115,6 +125,15 @@ bool CFloat32ProjectionData2D::initialize(CProjectionGeometry2D* _pGeometry, flo
 {
 	m_pGeometry = _pGeometry->clone();
 	m_bInitialized = _initialize(m_pGeometry->getDetectorCount(), m_pGeometry->getProjectionAngleCount(), _fScalar);
+	return m_bInitialized;
+}
+
+//----------------------------------------------------------------------------------------
+// Initialization
+bool CFloat32ProjectionData2D::initialize(CProjectionGeometry2D* _pGeometry, CFloat32CustomMemory* _pCustomMemory) 
+{
+	m_pGeometry = _pGeometry->clone();
+	m_bInitialized = _initialize(m_pGeometry->getDetectorCount(), m_pGeometry->getProjectionAngleCount(), _pCustomMemory);
 	return m_bInitialized;
 }
 

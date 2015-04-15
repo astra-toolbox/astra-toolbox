@@ -57,7 +57,7 @@ void roiSelect(float* out, float radius, unsigned int width, unsigned int height
 	// We abuse dims here...
 	SDimensions dims;
 	dims.iVolWidth = width;
-	dims.iVolHeight = width;
+	dims.iVolHeight = height;
 
 	allocateVolumeData(D_data, pitch, dims);
 	copyVolumeToDevice(out, width, dims, D_data, pitch);
@@ -245,7 +245,7 @@ void dartMask(float* mask, const float* segmentation, unsigned int conn, unsigne
 	// We abuse dims here...
 	SDimensions dims;
 	dims.iVolWidth = width;
-	dims.iVolHeight = width;
+	dims.iVolHeight = height;
 
 	allocateVolumeData(D_segmentationData, pitch, dims);
 	copyVolumeToDevice(segmentation, width, dims, D_segmentationData, pitch);
@@ -278,7 +278,7 @@ __global__ void devDartSmoothingRadius(float* out, const float* in, float b, uns
 	unsigned int x = threadIdx.x + 16*blockIdx.x;
 	unsigned int y = threadIdx.y + 16*blockIdx.y;
 
-	// Sacrifice the border pixels to simplify the implementation. 
+	// Sacrifice the border pixels to simplify the implementation.
 	if (x > radius-1 && x < width - radius && y > radius-1 && y < height - radius)
 	{
 		float* d = (float*)in;
@@ -286,9 +286,10 @@ __global__ void devDartSmoothingRadius(float* out, const float* in, float b, uns
 
 		unsigned int o2 = y*pitch+x;
 		int r = radius;
+                float count = 4*r*(r+1);
 		float res = -d[o2];
 
-		for (int row = -r; row < r; row++) 
+		for (int row = -r; row <= r; row++) 
 		{
 			unsigned int o1 = (y+row)*pitch+x; 
 			for (int col = -r; col <= r; col++) 
@@ -297,7 +298,7 @@ __global__ void devDartSmoothingRadius(float* out, const float* in, float b, uns
 			}
 		}
 
-		res *= b / 4*r*(r+1);
+		res *= b / count;
 		res += (1.0f-b) * d[o2];
 
 		m[o2] = res;
@@ -333,7 +334,7 @@ void dartSmoothing(float* out, const float* in, float b, unsigned int radius, un
 	// We abuse dims here...
 	SDimensions dims;
 	dims.iVolWidth = width;
-	dims.iVolHeight = width;
+	dims.iVolHeight = height;
 
 	allocateVolumeData(D_inData, pitch, dims);
 	copyVolumeToDevice(in, width, dims, D_inData, pitch);

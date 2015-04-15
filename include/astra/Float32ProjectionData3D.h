@@ -196,6 +196,11 @@ public:
 	 * @return pointer to projection geometry.
 	 */
 	virtual CProjectionGeometry3D* getGeometry() const;
+
+	/** Change the projection geometry.
+	 *  Note that this can't change the dimensions of the data.
+	 */
+	virtual void changeGeometry(CProjectionGeometry3D* pGeometry);
 };
 
 

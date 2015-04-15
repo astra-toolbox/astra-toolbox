@@ -49,6 +49,10 @@ from .utils import wrap_from_bytes
 
 cdef CData2DManager * man2d = <CData2DManager * >PyData2DManager.getSingletonPtr()
 
+cdef extern from "CFloat32CustomPython.h":
+    cdef cppclass CFloat32CustomPython:
+        CFloat32CustomPython(arrIn)
+
 def clear():
     man2d.clear()
 
@@ -61,11 +65,12 @@ def delete(ids):
         man2d.remove(ids)
 
 
-def create(datatype, geometry, data=None):
+def create(datatype, geometry, data=None, link=False):
     cdef Config *cfg
     cdef CVolumeGeometry2D * pGeometry
     cdef CProjectionGeometry2D * ppGeometry
     cdef CFloat32Data2D * pDataObject2D
+    cdef CFloat32CustomMemory * pCustom
     if datatype == '-vol':
         cfg = utils.dictToConfig(six.b('VolumeGeometry'), geometry)
         pGeometry = new CVolumeGeometry2D()
@@ -73,7 +78,11 @@ def create(datatype, geometry, data=None):
             del cfg
             del pGeometry
             raise Exception('Geometry class not initialized.')
-        pDataObject2D = <CFloat32Data2D * > new CFloat32VolumeData2D(pGeometry)
+        if link:
+            pCustom = <CFloat32CustomMemory*> new CFloat32CustomPython(data)
+            pDataObject2D = <CFloat32Data2D * > new CFloat32VolumeData2D(pGeometry, pCustom)
+        else:
+            pDataObject2D = <CFloat32Data2D * > new CFloat32VolumeData2D(pGeometry)
         del cfg
         del pGeometry
     elif datatype == '-sino':
@@ -91,7 +100,11 @@ def create(datatype, geometry, data=None):
             del cfg
             del ppGeometry
             raise Exception('Geometry class not initialized.')
-        pDataObject2D = <CFloat32Data2D * > new CFloat32ProjectionData2D(ppGeometry)
+        if link:
+            pCustom = <CFloat32CustomMemory*> new CFloat32CustomPython(data)
+            pDataObject2D = <CFloat32Data2D * > new CFloat32ProjectionData2D(ppGeometry, pCustom)
+        else:
+            pDataObject2D = <CFloat32Data2D * > new CFloat32ProjectionData2D(ppGeometry)
         del ppGeometry
         del cfg
     else:
@@ -101,7 +114,7 @@ def create(datatype, geometry, data=None):
         del pDataObject2D
         raise Exception("Couldn't initialize data object.")
 
-    fillDataObject(pDataObject2D, data)
+    if not link: fillDataObject(pDataObject2D, data)
 
     return man2d.store(pDataObject2D)
 

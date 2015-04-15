@@ -47,6 +47,12 @@ from .PyMatrixManager cimport CMatrixManager
 cdef CProjector2DManager * manProj = <CProjector2DManager * >PyProjector2DManager.getSingletonPtr()
 cdef CMatrixManager * manM = <CMatrixManager * >PyMatrixManager.getSingletonPtr()
 
+include "config.pxi"
+
+IF HAVE_CUDA:
+  cdef extern from *:
+      CCudaProjector2D* dynamic_cast_cuda_projector "dynamic_cast<astra::CCudaProjector2D*>" (CProjector2D*)
+
 
 def create(config):
     cdef Config * cfg = utils.dictToConfig(six.b('Projector2D'), config)
@@ -104,6 +110,17 @@ def weights_projection(i, projection_index):
 def splat(i, row, col):
     raise Exception("Not yet implemented")
 
+def is_cuda(i):
+    cdef CProjector2D * proj = getObject(i)
+    IF HAVE_CUDA==True:
+      cdef CCudaProjector2D * cudaproj = NULL
+      cudaproj = dynamic_cast_cuda_projector(proj)
+      if cudaproj==NULL:
+          return False
+      else:
+          return True
+    ELSE:
+        return False
 
 def matrix(i):
     cdef CProjector2D * proj = getObject(i)

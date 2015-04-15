@@ -42,11 +42,12 @@ $Id$
 #include <fstream>
 #include <cuda.h>
 
-#include "../../include/astra/Logger.h"
 #include "../../include/astra/VolumeGeometry2D.h"
 #include "../../include/astra/ParallelProjectionGeometry2D.h"
 #include "../../include/astra/FanFlatProjectionGeometry2D.h"
 #include "../../include/astra/FanFlatVecProjectionGeometry2D.h"
+
+#include "../../include/astra/Logging.h"
 
 // For fan beam FBP weighting
 #include "../3d/fdk.h"
@@ -536,7 +537,7 @@ bool AstraFBP::setFilter(E_FBPFILTER _eFilter, const float * _pfHostFilter /* = 
 			int iMaxFilterIndex = iStartFilterIndex + iUsedFilterWidth;
 
 			int iFilterShiftSize = _iFilterWidth / 2;
-			
+
 			for(int iDetectorIndex = iStartFilterIndex; iDetectorIndex < iMaxFilterIndex; iDetectorIndex++)
 			{
 				int iFFTInFilterIndex = (iDetectorIndex + iFFTRealDetCount - iFilterShiftSize) % iFFTRealDetCount;
@@ -561,7 +562,7 @@ bool AstraFBP::setFilter(E_FBPFILTER _eFilter, const float * _pfHostFilter /* = 
 		}
 		default:
 		{
-			fprintf(stderr, "AstraFBP::setFilter: Unknown filter type requested");
+			ASTRA_ERROR("AstraFBP::setFilter: Unknown filter type requested");
 			delete [] pHostFilter;
 			return false;
 		}
