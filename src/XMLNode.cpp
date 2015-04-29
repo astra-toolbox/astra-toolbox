@@ -28,13 +28,8 @@ $Id$
 
 #include "astra/XMLNode.h"
 
-#ifdef _MSC_VER
 #include "rapidxml/rapidxml.hpp"
 #include "rapidxml/rapidxml_print.hpp"
-#else
-#include "rapidxml.hpp"
-#include "rapidxml_print.hpp"
-#endif
 
 #include <boost/lexical_cast.hpp>
 
