@@ -45,6 +45,13 @@ from .PyXMLDocument cimport XMLDocument
 cimport utils
 from .utils import wrap_from_bytes
 
+from .pythonutils import geom_size
+
+import operator
+
+from six.moves import reduce
+
+
 cdef CData3DManager * man3d = <CData3DManager * >PyData3DManager.getSingletonPtr()
 
 cdef extern from *:
@@ -61,6 +68,16 @@ def create(datatype,geometry,data=None, link=False):
     cdef CFloat32Data3DMemory * pDataObject3D
     cdef CConeProjectionGeometry3D* pppGeometry
     cdef CFloat32CustomMemory * pCustom
+
+    if link:
+        geomSize = geom_size(geometry)
+        if len(data.shape)==1:
+            if data.size!=reduce(operator.mul,geomSize):
+                raise Exception("The dimensions of the data do not match those specified in the geometry.")
+        else:
+            if data.shape!=geomSize:
+                raise Exception("The dimensions of the data do not match those specified in the geometry.")
+
     if datatype == '-vol':
         cfg = utils.dictToConfig(six.b('VolumeGeometry'), geometry)
         pGeometry = new CVolumeGeometry3D()
