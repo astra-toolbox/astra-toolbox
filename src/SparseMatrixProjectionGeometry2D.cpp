@@ -98,11 +98,10 @@ bool CSparseMatrixProjectionGeometry2D::initialize(const Config& _cfg)
 	CProjectionGeometry2D::initialize(_cfg);
 
 	// get matrix
-	XMLNode* node = _cfg.self->getSingleNode("MatrixID");
+	XMLNode node = _cfg.self.getSingleNode("MatrixID");
 	ASTRA_CONFIG_CHECK(node, "SparseMatrixProjectionGeometry2D", "No MatrixID tag specified.");
-	int id = boost::lexical_cast<int>(node->getContent());
+	int id = boost::lexical_cast<int>(node.getContent());
 	m_pMatrix = CMatrixManager::getSingleton().get(id);
-	ASTRA_DELETE(node);
 	CC.markNodeParsed("MatrixID");
 
 	// success
@@ -194,11 +193,11 @@ Config* CSparseMatrixProjectionGeometry2D::getConfiguration() const
 {
 	Config* cfg = new Config();
 	cfg->initialize("ProjectionGeometry2D");
-	cfg->self->addAttribute("type", "sparse matrix");
-	cfg->self->addChildNode("DetectorCount", getDetectorCount());
-	cfg->self->addChildNode("DetectorWidth", getDetectorWidth());
-	cfg->self->addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
-	cfg->self->addChildNode("MatrixID", CMatrixManager::getSingleton().getIndex(m_pMatrix));
+	cfg->self.addAttribute("type", "sparse matrix");
+	cfg->self.addChildNode("DetectorCount", getDetectorCount());
+	cfg->self.addChildNode("DetectorWidth", getDetectorWidth());
+	cfg->self.addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
+	cfg->self.addChildNode("MatrixID", CMatrixManager::getSingleton().getIndex(m_pMatrix));
 	return cfg;
 }
 

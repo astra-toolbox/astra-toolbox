@@ -44,13 +44,12 @@ namespace astra {
 struct _AstraExport Config {
 
 	Config();
-	Config(XMLNode* _self);
+	Config(XMLNode _self);
 	~Config();
 
 	void initialize(std::string rootname);
 
-	XMLNode* self;
-	XMLNode* global;
+	XMLNode self;
 
 	XMLDocument *_doc;
 };

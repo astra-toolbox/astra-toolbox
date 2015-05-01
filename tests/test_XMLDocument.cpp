@@ -38,12 +38,12 @@ BOOST_AUTO_TEST_CASE( testXMLDocument_Constructor1 )
 	astra::XMLDocument *doc = astra::XMLDocument::createDocument("test");
 	BOOST_REQUIRE(doc);
 
-	astra::XMLNode *root = doc->getRootNode();
+	astra::XMLNode root = doc->getRootNode();
 
 	BOOST_REQUIRE(root);
 
-	BOOST_CHECK(root->getName() == "test");
-	BOOST_CHECK(root->getContent().empty());
+	BOOST_CHECK(root.getName() == "test");
+	BOOST_CHECK(root.getContent().empty());
 }
 
 BOOST_AUTO_TEST_CASE( testXMLDocument_FileIO )
@@ -53,12 +53,12 @@ BOOST_AUTO_TEST_CASE( testXMLDocument_FileIO )
 	doc->saveToFile("test.xml");
 
 	astra::XMLDocument *doc2 = astra::XMLDocument::readFromFile("test.xml");
-	astra::XMLNode *root = doc2->getRootNode();
+	astra::XMLNode root = doc2->getRootNode();
 
 	BOOST_REQUIRE(root);
 
-	BOOST_CHECK(root->getName() == "test");
-	BOOST_CHECK(root->getContent().empty());
+	BOOST_CHECK(root.getName() == "test");
+	BOOST_CHECK(root.getContent().empty());
 
 }
 
@@ -67,32 +67,28 @@ BOOST_AUTO_TEST_CASE( testXMLDocument_CreateNodes )
 	astra::XMLDocument *doc = astra::XMLDocument::createDocument("test");
 	BOOST_REQUIRE(doc);
 
-	astra::XMLNode *root = doc->getRootNode();
+	astra::XMLNode root = doc->getRootNode();
 	BOOST_REQUIRE(root);
 
-	astra::XMLNode *node = root->addChildNode("child");
+	astra::XMLNode node = root.addChildNode("child");
 	BOOST_REQUIRE(node);
 
-	node->addAttribute("attr", "val");
+	node.addAttribute("attr", "val");
 
 	doc->saveToFile("test2.xml");
 
-	delete node;
-	delete root;
 	delete doc;
 
 	doc = astra::XMLDocument::readFromFile("test2.xml");
 	BOOST_REQUIRE(doc);
 	root = doc->getRootNode();
 	BOOST_REQUIRE(node);
-	node = root->getSingleNode("child");
+	node = root.getSingleNode("child");
 	BOOST_REQUIRE(node);
 
-	BOOST_CHECK(node->hasAttribute("attr"));
-	BOOST_CHECK(node->getAttribute("attr") == "val");
+	BOOST_CHECK(node.hasAttribute("attr"));
+	BOOST_CHECK(node.getAttribute("attr") == "val");
 
-	delete node;
-	delete root;
 	delete doc;
 }
 
@@ -101,16 +97,16 @@ BOOST_AUTO_TEST_CASE( testXMLDocument_Options )
 	astra::XMLDocument *doc = astra::XMLDocument::createDocument("test");
 	BOOST_REQUIRE(doc);
 
-	astra::XMLNode *root = doc->getRootNode();
+	astra::XMLNode root = doc->getRootNode();
 	BOOST_REQUIRE(root);
 
-	BOOST_CHECK(!root->hasOption("opt"));
+	BOOST_CHECK(!root.hasOption("opt"));
 
-	root->addOption("opt", "val");
+	root.addOption("opt", "val");
 
-	BOOST_CHECK(root->hasOption("opt"));
+	BOOST_CHECK(root.hasOption("opt"));
 
-	BOOST_CHECK(root->getOption("opt") == "val");
+	BOOST_CHECK(root.getOption("opt") == "val");
 
 }
 
@@ -119,39 +115,35 @@ BOOST_AUTO_TEST_CASE( testXMLDocument_List )
 	astra::XMLDocument *doc = astra::XMLDocument::createDocument("test");
 	BOOST_REQUIRE(doc);
 
-	astra::XMLNode *root = doc->getRootNode();
+	astra::XMLNode root = doc->getRootNode();
 	BOOST_REQUIRE(root);
 
-	astra::XMLNode *node = root->addChildNode("child");
+	astra::XMLNode node = root.addChildNode("child");
 	BOOST_REQUIRE(node);
 
 
 	float fl[] = { 1.0, 3.5, 2.0, 4.75 };
 
-	node->setContent(fl, sizeof(fl)/sizeof(fl[0]));
+	node.setContent(fl, sizeof(fl)/sizeof(fl[0]));
 
 	doc->saveToFile("test3.xml");
 
-	delete node;
-	delete root;
 	delete doc;
 
 	doc = astra::XMLDocument::readFromFile("test3.xml");
 	BOOST_REQUIRE(doc);
 	root = doc->getRootNode();
 	BOOST_REQUIRE(root);
-	node = root->getSingleNode("child");
+	node = root.getSingleNode("child");
 	BOOST_REQUIRE(node);
 
-	std::vector<astra::float32> f = node->getContentNumericalArray();
+	std::vector<astra::float32> f = node.getContentNumericalArray();
 
 	BOOST_CHECK(f[0] == fl[0]);
 	BOOST_CHECK(f[1] == fl[1]);
 	BOOST_CHECK(f[2] == fl[2]);
 	BOOST_CHECK(f[3] == fl[3]);
 
-	delete node;
-	delete root;
 	delete doc;
 
 }

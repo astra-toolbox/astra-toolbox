@@ -94,30 +94,27 @@ bool CFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 	ASTRA_ASSERT(_cfg.self);
 	
 	// projector
-	XMLNode* node = _cfg.self->getSingleNode("ProjectorId");
+	XMLNode node = _cfg.self.getSingleNode("ProjectorId");
 	ASTRA_CONFIG_CHECK(node, "FilteredBackProjection", "No ProjectorId tag specified.");
-	int id = boost::lexical_cast<int>(node->getContent());
+	int id = boost::lexical_cast<int>(node.getContent());
 	m_pProjector = CProjector2DManager::getSingleton().get(id);
-	ASTRA_DELETE(node);
 
 	// sinogram data
-	node = _cfg.self->getSingleNode("ProjectionDataId");
+	node = _cfg.self.getSingleNode("ProjectionDataId");
 	ASTRA_CONFIG_CHECK(node, "FilteredBackProjection", "No ProjectionDataId tag specified.");
-	id = boost::lexical_cast<int>(node->getContent());
+	id = boost::lexical_cast<int>(node.getContent());
 	m_pSinogram = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
-	ASTRA_DELETE(node);
 
 	// volume data
-	node = _cfg.self->getSingleNode("ReconstructionDataId");
+	node = _cfg.self.getSingleNode("ReconstructionDataId");
 	ASTRA_CONFIG_CHECK(node, "FilteredBackProjection", "No ReconstructionDataId tag specified.");
-	id = boost::lexical_cast<int>(node->getContent());
+	id = boost::lexical_cast<int>(node.getContent());
 	m_pReconstruction = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
-	ASTRA_DELETE(node);
 
-	node = _cfg.self->getSingleNode("ProjectionIndex");
+	node = _cfg.self.getSingleNode("ProjectionIndex");
 	if (node) 
 	{
-		vector<float32> projectionIndex = node->getContentNumericalArray();
+		vector<float32> projectionIndex = node.getContentNumericalArray();
 
 		int angleCount = projectionIndex.size();
 		int detectorCount = m_pProjector->getProjectionGeometry()->getDetectorCount();
@@ -154,7 +151,6 @@ bool CFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 		m_pProjector = new CParallelBeamLineKernelProjector2D(pg,m_pReconstruction->getGeometry());
 		m_pSinogram = new CFloat32ProjectionData2D(pg, sinogramData2D);
 	}
-	ASTRA_DELETE(node);
 
 	// TODO: check that the angles are linearly spaced between 0 and pi
 

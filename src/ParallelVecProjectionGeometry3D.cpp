@@ -73,33 +73,30 @@ bool CParallelVecProjectionGeometry3D::initialize(const Config& _cfg)
 	ASTRA_ASSERT(_cfg.self);
 	ConfigStackCheck<CProjectionGeometry3D> CC("ParallelVecProjectionGeometry3D", this, _cfg);	
 
-	XMLNode* node;
+	XMLNode node;
 
 	// TODO: Fix up class hierarchy... this class doesn't fit very well.
 	// initialization of parent class
 	//CProjectionGeometry3D::initialize(_cfg);
 
 	// Required: DetectorRowCount
-	node = _cfg.self->getSingleNode("DetectorRowCount");
+	node = _cfg.self.getSingleNode("DetectorRowCount");
 	ASTRA_CONFIG_CHECK(node, "ParallelVecProjectionGeometry3D", "No DetectorRowCount tag specified.");
-	m_iDetectorRowCount = boost::lexical_cast<int>(node->getContent());
-	ASTRA_DELETE(node);
+	m_iDetectorRowCount = boost::lexical_cast<int>(node.getContent());
 	CC.markNodeParsed("DetectorRowCount");
 
 	// Required: DetectorCount
-	node = _cfg.self->getSingleNode("DetectorColCount");
+	node = _cfg.self.getSingleNode("DetectorColCount");
 	ASTRA_CONFIG_CHECK(node, "", "No DetectorColCount tag specified.");
-	m_iDetectorColCount = boost::lexical_cast<int>(node->getContent());
+	m_iDetectorColCount = boost::lexical_cast<int>(node.getContent());
 	m_iDetectorTotCount = m_iDetectorRowCount * m_iDetectorColCount;
-	ASTRA_DELETE(node);
 	CC.markNodeParsed("DetectorColCount");
 
 	// Required: Vectors
-	node = _cfg.self->getSingleNode("Vectors");
+	node = _cfg.self.getSingleNode("Vectors");
 	ASTRA_CONFIG_CHECK(node, "ParallelVecProjectionGeometry3D", "No Vectors tag specified.");
-	vector<double> data = node->getContentNumericalArrayDouble();
+	vector<double> data = node.getContentNumericalArrayDouble();
 	CC.markNodeParsed("Vectors");
-	ASTRA_DELETE(node);
 	ASTRA_CONFIG_CHECK(data.size() % 12 == 0, "ParallelVecProjectionGeometry3D", "Vectors doesn't consist of 12-tuples.");
 	m_iProjectionAngleCount = data.size() / 12;
 	m_pProjectionAngles = new SPar3DProjection[m_iProjectionAngleCount];
@@ -208,9 +205,9 @@ Config* CParallelVecProjectionGeometry3D::getConfiguration() const
 	Config* cfg = new Config();
 	cfg->initialize("ProjectionGeometry3D");
 
-	cfg->self->addAttribute("type", "parallel3d_vec");
-	cfg->self->addChildNode("DetectorRowCount", m_iDetectorRowCount);
-	cfg->self->addChildNode("DetectorColCount", m_iDetectorColCount);
+	cfg->self.addAttribute("type", "parallel3d_vec");
+	cfg->self.addChildNode("DetectorRowCount", m_iDetectorRowCount);
+	cfg->self.addChildNode("DetectorColCount", m_iDetectorColCount);
 
 	std::string vectors = "";
 	for (int i = 0; i < m_iProjectionAngleCount; ++i) {
@@ -229,7 +226,7 @@ Config* CParallelVecProjectionGeometry3D::getConfiguration() const
 		vectors += boost::lexical_cast<string>(p.fDetVZ);
 		if (i < m_iProjectionAngleCount-1) vectors += ';';
 	}
-	cfg->self->addChildNode("Vectors", vectors);
+	cfg->self.addChildNode("Vectors", vectors);
 
 	return cfg;
 }

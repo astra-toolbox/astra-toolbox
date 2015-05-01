@@ -65,34 +65,32 @@ bool CCudaDartSmoothingAlgorithm3D::initialize(const Config& _cfg)
 	ConfigStackCheck<CAlgorithm> CC("CudaDartSmoothingAlgorithm", this, _cfg);
 
 	// reconstruction data
-	XMLNode* node = _cfg.self->getSingleNode("InDataId");
+	XMLNode node = _cfg.self.getSingleNode("InDataId");
 	ASTRA_CONFIG_CHECK(node, "CudaDartMask", "No InDataId tag specified.");
-	int id = boost::lexical_cast<int>(node->getContent());
+	int id = boost::lexical_cast<int>(node.getContent());
 	m_pIn = dynamic_cast<CFloat32VolumeData3DMemory*>(CData3DManager::getSingleton().get(id));
-	ASTRA_DELETE(node);
 	CC.markNodeParsed("InDataId");
 
 	// reconstruction data
-	node = _cfg.self->getSingleNode("OutDataId");
+	node = _cfg.self.getSingleNode("OutDataId");
 	ASTRA_CONFIG_CHECK(node, "CudaDartMask", "No OutDataId tag specified.");
-	id = boost::lexical_cast<int>(node->getContent());
+	id = boost::lexical_cast<int>(node.getContent());
 	m_pOut = dynamic_cast<CFloat32VolumeData3DMemory*>(CData3DManager::getSingleton().get(id));
-	ASTRA_DELETE(node);
 	CC.markNodeParsed("OutDataId");
 
 	// Option: GPU number
-	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUindex", -1);
-	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUIndex", m_iGPUIndex);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
 	CC.markOptionParsed("GPUindex");
-	if (!_cfg.self->hasOption("GPUindex"))
+	if (!_cfg.self.hasOption("GPUindex"))
 		CC.markOptionParsed("GPUIndex");
 
 	// Option: Intensity
-	m_fB = (float)_cfg.self->getOptionNumerical("Intensity", 0.3f);
+	m_fB = (float)_cfg.self.getOptionNumerical("Intensity", 0.3f);
 	CC.markOptionParsed("Intensity");
 
 	// Option: Radius
-	m_iRadius = (unsigned int)_cfg.self->getOptionNumerical("Radius", 1);
+	m_iRadius = (unsigned int)_cfg.self.getOptionNumerical("Radius", 1);
 	CC.markOptionParsed("Radius");
 
 	_check();

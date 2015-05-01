@@ -126,37 +126,34 @@ bool CForwardProjectionAlgorithm::initialize(const Config& _cfg)
 	}
 
 	// projector
-	XMLNode* node = _cfg.self->getSingleNode("ProjectorId");
+	XMLNode node = _cfg.self.getSingleNode("ProjectorId");
 	ASTRA_CONFIG_CHECK(node, "ForwardProjection", "No ProjectorId tag specified.");
-	int id = boost::lexical_cast<int>(node->getContent());
+	int id = boost::lexical_cast<int>(node.getContent());
 	m_pProjector = CProjector2DManager::getSingleton().get(id);
-	ASTRA_DELETE(node);
 
 	// sinogram data
-	node = _cfg.self->getSingleNode("ProjectionDataId");
+	node = _cfg.self.getSingleNode("ProjectionDataId");
 	ASTRA_CONFIG_CHECK(node, "ForwardProjection", "No ProjectionDataId tag specified.");
-	id = boost::lexical_cast<int>(node->getContent());
+	id = boost::lexical_cast<int>(node.getContent());
 	m_pSinogram = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
-	ASTRA_DELETE(node);
 
 	// volume data
-	node = _cfg.self->getSingleNode("VolumeDataId");
+	node = _cfg.self.getSingleNode("VolumeDataId");
 	ASTRA_CONFIG_CHECK(node, "ForwardProjection", "No VolumeDataId tag specified.");
-	id = boost::lexical_cast<int>(node->getContent());
+	id = boost::lexical_cast<int>(node.getContent());
 	m_pVolume = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
-	ASTRA_DELETE(node);
 	
 	// volume mask
-	if (_cfg.self->hasOption("VolumeMaskId")) {
+	if (_cfg.self.hasOption("VolumeMaskId")) {
 		m_bUseVolumeMask = true;
-		id = boost::lexical_cast<int>(_cfg.self->getOption("VolumeMaskId"));
+		id = boost::lexical_cast<int>(_cfg.self.getOption("VolumeMaskId"));
 		m_pVolumeMask = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 	}
 
 	// sino mask
-	if (_cfg.self->hasOption("SinogramMaskId")) {
+	if (_cfg.self.hasOption("SinogramMaskId")) {
 		m_bUseSinogramMask = true;
-		id = boost::lexical_cast<int>(_cfg.self->getOption("SinogramMaskId"));
+		id = boost::lexical_cast<int>(_cfg.self.getOption("SinogramMaskId"));
 		m_pSinogramMask = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
 	}
 
