@@ -32,6 +32,7 @@ $Id$
 #include <boost/test/auto_unit_test.hpp>
 
 #include "astra/XMLDocument.h"
+#include "astra/Config.h"
 
 BOOST_AUTO_TEST_CASE( testXMLDocument_Constructor1 )
 {
@@ -148,3 +149,18 @@ BOOST_AUTO_TEST_CASE( testXMLDocument_List )
 
 }
 
+BOOST_AUTO_TEST_CASE( testXMLDocument_Config )
+{
+	astra::Config* cfg = new astra::Config();
+	cfg->initialize("VolumeGeometry2D");
+
+	cfg->self.addChildNode("GridColCount", 1);
+	cfg->self.addChildNode("GridRowCount", 2);
+
+	cfg->self.addOption("WindowMinX", 3);
+	cfg->self.addOption("WindowMaxX", 4);
+	cfg->self.addOption("WindowMinY", 5);
+	cfg->self.addOption("WindowMaxY", 6);
+
+	delete cfg;
+}
