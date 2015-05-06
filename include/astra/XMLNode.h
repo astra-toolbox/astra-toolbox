@@ -119,14 +119,8 @@ public:
 	 */ 
 	vector<string> getContentArray() const;
 
-	/** Get the content of the XML node as a c-array of float32 data.
-	 *
-	 * @param _pfData data array, shouldn't be initialized already.
-	 * @param _iSize number of elements stored in _pfData
-	 */ 
-	void getContentNumericalArray(float32*& _pfData, int& _iSize) const;
-
 	/** Get the content of the XML node as a stl container of float32 data.
+	 *  NB: A 2D matrix is returned as a linear list
 	 *
 	 * @return node content
 	 */ 
@@ -259,12 +253,37 @@ public:
 	 */ 
 	void setContent(float32 _fValue);
 
-	/** Add a list of numerical data to the node: &lt;...&gt;_sText&lt;/...&gt;
+	/** Add a list of numerical data to the node
 	 *
 	 * @param _pfList data
 	 * @param _iSize number of elements in the list
 	 */ 
 	void setContent(float32* _pfList, int _iSize);
+
+	/** Add a list of numerical data to the node
+	 *
+	 * @param _pfList data
+	 * @param _iSize number of elements in the list
+	 */
+	void setContent(double* _pfList, int _iSize);
+
+	/** Add a (2D) matrix of numerical data to the node
+	 *
+	 * @param _pfMatrix data
+	 * @param _iWidth width of the matrix
+	 * @param _iHeight height of the matrix
+	 * @param transposed true is C order, false is Fortran order
+	 */
+	void setContent(float32* _pfMatrix, int _iWidth, int _iHeight, bool transposed);
+
+	/** Add a (2D) matrix of numerical data to the node
+	 *
+	 * @param _pfMatrix data
+	 * @param _iWidth width of the matrix
+	 * @param _iHeight height of the matrix
+	 * @param transposed true is C order, false is Fortran order
+	 */
+	void setContent(double* _pfMatrix, int _iWidth, int _iHeight, bool transposed);
 
 	/** Add an attribute to this node: &lt;... _sName="_sValue"&gt;
 	 *

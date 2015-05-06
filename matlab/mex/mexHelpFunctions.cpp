@@ -218,17 +218,8 @@ bool structToXMLNode(XMLNode node, const mxArray* pStruct)
 				return false;
 			}
 			XMLNode listbase = node.addChildNode(sFieldName);
-			listbase.addAttribute("listsize", mxGetM(pField)*mxGetN(pField));
 			double* pdValues = mxGetPr(pField);
-			int index = 0;
-			for (unsigned int row = 0; row < mxGetM(pField); row++) {
-				for (unsigned int col = 0; col < mxGetN(pField); col++) {
-					XMLNode item = listbase.addChildNode("ListItem");
-					item.addAttribute("index", index);
-					item.addAttribute("value", pdValues[col*mxGetM(pField)+row]);
-					index++;
-				}
-			}
+			listbase.setContent(pdValues, mxGetN(pField), mxGetM(pField), true);
 		}
 
 		// not castable to a single string
@@ -278,17 +269,8 @@ bool optionsToXMLNode(XMLNode node, const mxArray* pOptionStruct)
 
 			XMLNode listbase = node.addChildNode("Option");
 			listbase.addAttribute("key", sFieldName);
-			listbase.addAttribute("listsize", mxGetM(pField)*mxGetN(pField));
 			double* pdValues = mxGetPr(pField);
-			int index = 0;
-			for (unsigned int row = 0; row < mxGetM(pField); row++) {
-				for (unsigned int col = 0; col < mxGetN(pField); col++) {
-					XMLNode item = listbase.addChildNode("ListItem");
-					item.addAttribute("index", index);
-					item.addAttribute("value", pdValues[col*mxGetM(pField)+row]);
-					index++;
-				}
-			}
+			listbase.setContent(pdValues, mxGetN(pField), mxGetM(pField), true);
 		} else {
 			mexErrMsgTxt("Unsupported option type");
 			return false;

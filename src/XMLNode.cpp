@@ -32,6 +32,11 @@ $Id$
 #include "rapidxml/rapidxml_print.hpp"
 
 #include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
+
+
 
 using namespace rapidxml;
 using namespace astra;
@@ -167,77 +172,43 @@ vector<string> XMLNode::getContentArray() const
 
 //-----------------------------------------------------------------------------	
 // Get node content - NUMERICAL LIST
+// NB: A 2D matrix is returned as a linear list
 vector<float32> XMLNode::getContentNumericalArray() const
 {
-	// is scalar
-	if (!hasAttribute("listsize")) {
-		vector<float32> res(1);
-		res[0] = getContentNumerical();
-		return res;
-	}
+	string input = getContent();
 
-	int iSize = boost::lexical_cast<int>(getAttribute("listsize"));
-	// create result array
-	vector<float32> res(iSize);
-	// loop all list item nodes
-	list<XMLNode> nodes = getNodes("ListItem");
-	for (list<XMLNode>::iterator it = nodes.begin(); it != nodes.end(); it++) {
-		int iIndex = it->getAttributeNumerical("index");
-		float32 fValue = it->getAttributeNumerical("value");
-		ASTRA_ASSERT(iIndex < iSize);
-		res[iIndex] = fValue;
+	// split
+	std::vector<std::string> items;
+	boost::split(items, input, boost::is_any_of(",;"));
+
+	// init list
+	vector<float32> out;
+	out.resize(items.size());
+
+	// loop elements
+	for (unsigned int i = 0; i < items.size(); i++) {
+		out[i] = boost::lexical_cast<float32>(items[i]);
 	}
-	// return 
-	return res;
+	return out;
 }
 
 vector<double> XMLNode::getContentNumericalArrayDouble() const
 {
-	// is scalar
-	if (!hasAttribute("listsize")) {
-		vector<double> res(1);
-		res[0] = getContentNumerical();
-		return res;
-	}
+	string input = getContent();
 
-	int iSize = boost::lexical_cast<int>(getAttribute("listsize"));
-	// create result array
-	vector<double> res(iSize);
-	// loop all list item nodes
-	list<XMLNode> nodes = getNodes("ListItem");
-	for (list<XMLNode>::iterator it = nodes.begin(); it != nodes.end(); it++) {
-		int iIndex = it->getAttributeNumerical("index");
-		double fValue = it->getAttributeNumericalDouble("value");
-		ASTRA_ASSERT(iIndex < iSize);
-		res[iIndex] = fValue;
-	}
-	// return 
-	return res;
-}
+	// split
+	std::vector<std::string> items;
+	boost::split(items, input, boost::is_any_of(",;"));
 
-//-----------------------------------------------------------------------------	
-// Get node content - NUMERICAL LIST 2
-void XMLNode::getContentNumericalArray(float32*& _pfData, int& _iSize) const
-{
-	// is scalar
-	if (!hasAttribute("listsize")) {
-		_iSize = 1;
-		_pfData = new float32[_iSize];
-		_pfData[0] = getContentNumerical();
-		return;
+	// init list
+	vector<double> out;
+	out.resize(items.size());
+
+	// loop elements
+	for (unsigned int i = 0; i < items.size(); i++) {
+		out[i] = boost::lexical_cast<double>(items[i]);
 	}
-	// get listsize
-	_iSize = boost::lexical_cast<int>(getAttribute("listsize"));
-	// create result array
-	_pfData = new float32[_iSize];
-	// loop all list item nodes
-	list<XMLNode> nodes = getNodes("ListItem");
-	for (list<XMLNode>::iterator it = nodes.begin(); it != nodes.end(); it++) {
-		int iIndex = it->getAttributeNumerical("index");
-		float32 fValue = it->getAttributeNumerical("value");
-		ASTRA_ASSERT(iIndex < _iSize);
-		_pfData[iIndex] = fValue;
-	}
+	return out;
 }
 
 //-----------------------------------------------------------------------------	
@@ -420,14 +391,67 @@ void XMLNode::setContent(float32 _fValue)
 
 //-----------------------------------------------------------------------------	
 // Set content - LIST
-void XMLNode::setContent(float32* pfList, int _iSize) 
-{
+
+template<typename T>
+static std::string setContentList_internal(T* pfList, int _iSize) {
 	std::string str = (_iSize > 0) ? boost::lexical_cast<std::string>(pfList[0]) : "";
 	for (int i = 1; i < _iSize; i++) {
 		str += "," + boost::lexical_cast<std::string>(pfList[i]);
 	}
-	setContent(str);
+	return str;
 }
+
+void XMLNode::setContent(float32* pfList, int _iSize)
+{
+	setContent(setContentList_internal<float32>(pfList, _iSize));
+}
+
+void XMLNode::setContent(double* pfList, int _iSize)
+{
+	setContent(setContentList_internal<double>(pfList, _iSize));
+}
+
+//-----------------------------------------------------------------------------	
+// Set content - MATRIX
+
+template<typename T>
+static std::string setContentMatrix_internal(T* _pfMatrix, int _iWidth, int _iHeight, bool transposed)
+{
+	std::string str = "";
+
+	int s1,s2;
+
+	if (!transposed) {
+		s1 = 1;
+		s2 = _iWidth;
+	} else {
+		s1 = _iHeight;
+		s2 = 1;
+	}
+
+	for (int y = 0; y < _iHeight; ++y) {
+		if (_iWidth > 0)
+			str += boost::lexical_cast<std::string>(_pfMatrix[0*s1 + y*s2]);
+			for (int x = 1; x < _iWidth; x++)
+				str += "," + boost::lexical_cast<std::string>(_pfMatrix[x*s1 + y*s2]);
+
+		if (y != _iHeight-1)
+			str += ";";
+	}
+
+	return str;
+}
+
+void XMLNode::setContent(float32* _pfMatrix, int _iWidth, int _iHeight, bool transposed)
+{
+	setContent(setContentMatrix_internal<float32>(_pfMatrix, _iWidth, _iHeight, transposed));
+}
+
+void XMLNode::setContent(double* _pfMatrix, int _iWidth, int _iHeight, bool transposed)
+{
+	setContent(setContentMatrix_internal<double>(_pfMatrix, _iWidth, _iHeight, transposed));
+}
+
 
 //-----------------------------------------------------------------------------	
 // Add attribute - STRING

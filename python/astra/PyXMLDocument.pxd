@@ -53,6 +53,8 @@ cdef extern from "astra/XMLNode.h" namespace "astra":
         string getAttribute(string)
         list[XMLNode] getNodes()
         vector[float32] getContentNumericalArray()
+        void setContent(double*, int, int, bool)
+        void setContent(double*, int)
         string getContent()
         bool hasAttribute(string)
 
