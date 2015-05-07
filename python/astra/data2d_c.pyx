@@ -78,14 +78,8 @@ def create(datatype, geometry, data=None, link=False):
     cdef CFloat32Data2D * pDataObject2D
     cdef CFloat32CustomMemory * pCustom
 
-    if link:
-        geomSize = geom_size(geometry)
-        if len(data.shape)==1:
-            if data.size!=reduce(operator.mul,geomSize):
-                raise Exception("The dimensions of the data do not match those specified in the geometry.")
-        else:
-            if data.shape!=geomSize:
-                raise Exception("The dimensions of the data do not match those specified in the geometry.")
+    if link and data.shape!=geom_size(geometry):
+        raise Exception("The dimensions of the data do not match those specified in the geometry.")
 
     if datatype == '-vol':
         cfg = utils.dictToConfig(six.b('VolumeGeometry'), geometry)
