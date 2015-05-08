@@ -35,7 +35,7 @@ from . import projector
 from . import projector3d
 from . import matrix
 from . import log
-from .operator import OpTomo
+from .optomo import OpTomo
 
 import os
 try:
