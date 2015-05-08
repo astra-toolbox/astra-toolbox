@@ -164,12 +164,12 @@ Config* CParallelProjectionGeometry3D::getConfiguration() const
 {
 	Config* cfg = new Config();
 	cfg->initialize("ProjectionGeometry3D");
-	cfg->self->addAttribute("type", "parallel3d");
-	cfg->self->addChildNode("DetectorRowCount", m_iDetectorRowCount);
-	cfg->self->addChildNode("DetectorColCount", m_iDetectorColCount);
-	cfg->self->addChildNode("DetectorSpacingX", m_fDetectorSpacingX);
-	cfg->self->addChildNode("DetectorSpacingY", m_fDetectorSpacingY);
-	cfg->self->addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
+	cfg->self.addAttribute("type", "parallel3d");
+	cfg->self.addChildNode("DetectorRowCount", m_iDetectorRowCount);
+	cfg->self.addChildNode("DetectorColCount", m_iDetectorColCount);
+	cfg->self.addChildNode("DetectorSpacingX", m_fDetectorSpacingX);
+	cfg->self.addChildNode("DetectorSpacingY", m_fDetectorSpacingY);
+	cfg->self.addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
 	return cfg;
 }
 //----------------------------------------------------------------------------------------

@@ -100,12 +100,12 @@ bool CCudaFDKAlgorithm3D::initialize(const Config& _cfg)
 		return false;
 	}
 
-	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUindex", -1);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
 	CC.markOptionParsed("GPUindex");
-	m_iVoxelSuperSampling = (int)_cfg.self->getOptionNumerical("VoxelSuperSampling", 1);
+	m_iVoxelSuperSampling = (int)_cfg.self.getOptionNumerical("VoxelSuperSampling", 1);
 	CC.markOptionParsed("VoxelSuperSampling");
 
-	m_bShortScan = _cfg.self->getOptionBool("ShortScan", false);
+	m_bShortScan = _cfg.self.getOptionBool("ShortScan", false);
 	CC.markOptionParsed("ShortScan");
 
 	// success

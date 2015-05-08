@@ -78,40 +78,37 @@ bool CCudaForwardProjectionAlgorithm3D::initialize(const Config& _cfg)
 	ASTRA_ASSERT(_cfg.self);
 	ConfigStackCheck<CAlgorithm> CC("CudaForwardProjectionAlgorithm3D", this, _cfg);	
 
-	XMLNode* node;
+	XMLNode node;
 	int id;
 
 	// sinogram data
-	node = _cfg.self->getSingleNode("ProjectionDataId");
+	node = _cfg.self.getSingleNode("ProjectionDataId");
 	ASTRA_CONFIG_CHECK(node, "CudaForwardProjection3D", "No ProjectionDataId tag specified.");
-	id = boost::lexical_cast<int>(node->getContent());
+	id = boost::lexical_cast<int>(node.getContent());
 	m_pProjections = dynamic_cast<CFloat32ProjectionData3DMemory*>(CData3DManager::getSingleton().get(id));
-	ASTRA_DELETE(node);
 	CC.markNodeParsed("ProjectionDataId");
 
 	// reconstruction data
-	node = _cfg.self->getSingleNode("VolumeDataId");
+	node = _cfg.self.getSingleNode("VolumeDataId");
 	ASTRA_CONFIG_CHECK(node, "CudaForwardProjection3D", "No VolumeDataId tag specified.");
-	id = boost::lexical_cast<int>(node->getContent());
+	id = boost::lexical_cast<int>(node.getContent());
 	m_pVolume = dynamic_cast<CFloat32VolumeData3DMemory*>(CData3DManager::getSingleton().get(id));
-	ASTRA_DELETE(node);
 	CC.markNodeParsed("VolumeDataId");
 
 	// optional: projector
-	node = _cfg.self->getSingleNode("ProjectorId");
+	node = _cfg.self.getSingleNode("ProjectorId");
 	if (node) {
-		id = boost::lexical_cast<int>(node->getContent());
+		id = boost::lexical_cast<int>(node.getContent());
 		m_pProjector = CProjector3DManager::getSingleton().get(id);
-		ASTRA_DELETE(node);
 	} else {
 		m_pProjector = 0; // TODO: or manually construct default projector?
 	}
 	CC.markNodeParsed("ProjectorId");
 
 	// GPU number
-	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUindex", -1);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
 	CC.markOptionParsed("GPUindex");
-	m_iDetectorSuperSampling = (int)_cfg.self->getOptionNumerical("DetectorSuperSampling", 1);
+	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", 1);
 	CC.markOptionParsed("DetectorSuperSampling");
 
 	// success

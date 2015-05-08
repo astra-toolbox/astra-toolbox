@@ -132,7 +132,7 @@ bool CArtAlgorithm::initialize(const Config& _cfg)
 	}
 
 	// ray order
-	string projOrder = _cfg.self->getOption("RayOrder", "sequential");
+	string projOrder = _cfg.self.getOption("RayOrder", "sequential");
 	CC.markOptionParsed("RayOrder");
 	m_iCurrentRay = 0;
 	m_iRayCount = m_pProjector->getProjectionGeometry()->getProjectionAngleCount() * 
@@ -145,7 +145,7 @@ bool CArtAlgorithm::initialize(const Config& _cfg)
 			m_piDetectorOrder[i] = i % m_pProjector->getProjectionGeometry()->getDetectorCount();
 		}
 	} else if (projOrder == "custom") {
-		vector<float32> rayOrderList = _cfg.self->getOptionNumericalArray("RayOrderList");
+		vector<float32> rayOrderList = _cfg.self.getOptionNumericalArray("RayOrderList");
 		m_iRayCount = rayOrderList.size() / 2;
 		m_piProjectionOrder = new int[m_iRayCount];
 		m_piDetectorOrder = new int[m_iRayCount];
@@ -158,7 +158,7 @@ bool CArtAlgorithm::initialize(const Config& _cfg)
 		return false;
 	}
 
-	m_fLambda = _cfg.self->getOptionNumerical("Lambda", 1.0f);
+	m_fLambda = _cfg.self.getOptionNumerical("Lambda", 1.0f);
 	CC.markOptionParsed("Lambda");
 
 	// success

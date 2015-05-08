@@ -110,7 +110,7 @@ template <typename T, typename TypeList>
 T* CAstraObjectFactory<T, TypeList>::create(const Config& _cfg)
 {
 	functor_find<T> finder = functor_find<T>();
-	finder.tofind = _cfg.self->getAttribute("type");
+	finder.tofind = _cfg.self.getAttribute("type");
 	CreateObject<TypeList>::find(finder);
 	if (finder.res == NULL) return NULL;
 	if (finder.res->initialize(_cfg))
