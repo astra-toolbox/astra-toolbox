@@ -27,7 +27,6 @@ from . import matlab as m
 from .creators import astra_dict,create_vol_geom, create_proj_geom, create_backprojection, create_sino, create_reconstruction, create_projector,create_sino3d_gpu, create_backprojection3d_gpu
 from .functions import data_op, add_noise_to_sino, clear, move_vol_geom
 from .extrautils import clipCircle
-from .ASTRAProjector import ASTRAProjector2D
 from . import data2d
 from . import astra
 from . import data3d
@@ -36,6 +35,7 @@ from . import projector
 from . import projector3d
 from . import matrix
 from . import log
+from .optomo import OpTomo
 
 import os
 try:
