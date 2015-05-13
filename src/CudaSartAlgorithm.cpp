@@ -74,7 +74,7 @@ bool CCudaSartAlgorithm::initialize(const Config& _cfg)
 	// projection order
 	int projectionCount = m_pSinogram->getGeometry()->getProjectionAngleCount();
 	int* projectionOrder = NULL;
-	string projOrder = _cfg.self->getOption("ProjectionOrder", "random");
+	string projOrder = _cfg.self.getOption("ProjectionOrder", "random");
 	CC.markOptionParsed("ProjectionOrder");
 	if (projOrder == "sequential") {
 		projectionOrder = new int[projectionCount];
@@ -97,7 +97,7 @@ bool CCudaSartAlgorithm::initialize(const Config& _cfg)
 		sart->setProjectionOrder(projectionOrder, projectionCount);
 		delete[] projectionOrder;
 	} else if (projOrder == "custom") {
-		vector<float32> projOrderList = _cfg.self->getOptionNumericalArray("ProjectionOrderList");
+		vector<float32> projOrderList = _cfg.self.getOptionNumericalArray("ProjectionOrderList");
 		projectionOrder = new int[projOrderList.size()];
 		for (int i = 0; i < projOrderList.size(); i++) {
 			projectionOrder[i] = static_cast<int>(projOrderList[i]);

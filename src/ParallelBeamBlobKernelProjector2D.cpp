@@ -128,28 +128,28 @@ bool CParallelBeamBlobKernelProjector2D::initialize(const Config& _cfg)
 	}
 
 	// required: Kernel
-	XMLNode* node = _cfg.self->getSingleNode("Kernel");
+	XMLNode node = _cfg.self.getSingleNode("Kernel");
 	ASTRA_CONFIG_CHECK(node, "BlobProjector", "No Kernel tag specified.");
 	{
 		// Required: KernelSize
-		XMLNode* node2 = node->getSingleNode("KernelSize");
+		XMLNode node2 = node.getSingleNode("KernelSize");
 		ASTRA_CONFIG_CHECK(node2, "BlobProjector", "No Kernel/KernelSize tag specified.");
-		m_fBlobSize = boost::lexical_cast<float32>(node2->getContent());
+		m_fBlobSize = boost::lexical_cast<float32>(node2.getContent());
 
 		// Required: SampleRate
-		node2 = node->getSingleNode("SampleRate");
+		node2 = node.getSingleNode("SampleRate");
 		ASTRA_CONFIG_CHECK(node2, "BlobProjector", "No Kernel/SampleRate tag specified.");
-		m_fBlobSampleRate = boost::lexical_cast<float32>(node2->getContent());
+		m_fBlobSampleRate = boost::lexical_cast<float32>(node2.getContent());
 	
 		// Required: SampleCount
-		node2 = node->getSingleNode("SampleCount");
+		node2 = node.getSingleNode("SampleCount");
 		ASTRA_CONFIG_CHECK(node2, "BlobProjector", "No Kernel/SampleCount tag specified.");
-		m_iBlobSampleCount = boost::lexical_cast<int>(node2->getContent());
+		m_iBlobSampleCount = boost::lexical_cast<int>(node2.getContent());
 	
 		// Required: KernelValues
-		node2 = node->getSingleNode("KernelValues");
+		node2 = node.getSingleNode("KernelValues");
 		ASTRA_CONFIG_CHECK(node2, "BlobProjector", "No Kernel/KernelValues tag specified.");
-		vector<float32> values = node2->getContentNumericalArray();
+		vector<float32> values = node2.getContentNumericalArray();
 		ASTRA_CONFIG_CHECK(values.size() == (unsigned int)m_iBlobSampleCount, "BlobProjector", "Number of specified values doesn't match SampleCount.");
 		m_pfBlobValues = new float32[m_iBlobSampleCount];
 		for (int i = 0; i < m_iBlobSampleCount; i++) {
@@ -157,9 +157,9 @@ bool CParallelBeamBlobKernelProjector2D::initialize(const Config& _cfg)
 		}
 
 		// Required: KernelValues
-		node2 = node->getSingleNode("KernelValuesNeg");
+		node2 = node.getSingleNode("KernelValuesNeg");
 		ASTRA_CONFIG_CHECK(node2, "BlobProjector", "No Kernel/KernelValuesNeg tag specified.");
-		vector<float32> values2 = node2->getContentNumericalArray();
+		vector<float32> values2 = node2.getContentNumericalArray();
 		ASTRA_CONFIG_CHECK(values2.size() == (unsigned int)m_iBlobSampleCount, "BlobProjector", "Number of specified values doesn't match SampleCount.");
 		m_pfBlobValuesNeg = new float32[m_iBlobSampleCount];
 		for (int i = 0; i < m_iBlobSampleCount; i++) {

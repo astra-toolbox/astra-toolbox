@@ -38,6 +38,7 @@ from . import data2d
 from . import data3d
 from . import projector
 from . import algorithm
+from . import pythonutils
 
 
 
@@ -158,29 +159,7 @@ def geom_size(geom, dim=None):
     :param dim: Optional axis index to return
     :type dim: :class:`int`
     """
-
-    if 'GridSliceCount' in geom:
-        # 3D Volume geometry?
-        s = (geom['GridSliceCount'], geom[
-             'GridRowCount'], geom['GridColCount'])
-    elif 'GridColCount' in geom:
-        # 2D Volume geometry?
-        s = (geom['GridRowCount'], geom['GridColCount'])
-    elif geom['type'] == 'parallel' or geom['type'] == 'fanflat':
-        s = (len(geom['ProjectionAngles']), geom['DetectorCount'])
-    elif geom['type'] == 'parallel3d' or geom['type'] == 'cone':
-        s = (geom['DetectorRowCount'], len(
-            geom['ProjectionAngles']), geom['DetectorColCount'])
-    elif geom['type'] == 'fanflat_vec':
-        s = (geom['Vectors'].shape[0], geom['DetectorCount'])
-    elif geom['type'] == 'parallel3d_vec' or geom['type'] == 'cone_vec':
-        s = (geom['DetectorRowCount'], geom[
-             'Vectors'].shape[0], geom['DetectorColCount'])
-
-    if dim != None:
-        s = s[dim]
-
-    return s
+    return pythonutils.geom_size(geom,dim)
 
 
 def geom_2vec(proj_geom):

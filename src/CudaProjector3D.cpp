@@ -105,10 +105,10 @@ bool CCudaProjector3D::initialize(const Config& _cfg)
 		return false;
 	}
 
-	XMLNode* node = _cfg.self->getSingleNode("ProjectionKernel");
+	XMLNode node = _cfg.self.getSingleNode("ProjectionKernel");
 	m_projectionKernel = ker3d_default;
 	if (node) {
-		std::string sProjKernel = node->getContent();
+		std::string sProjKernel = node.getContent();
 
 		if (sProjKernel == "default") {
 
@@ -118,7 +118,6 @@ bool CCudaProjector3D::initialize(const Config& _cfg)
 			return false;
 		}
 	}
-	ASTRA_DELETE(node);
 	CC.markNodeParsed("ProjectionKernel");
 
 	m_bIsInitialized = _check();

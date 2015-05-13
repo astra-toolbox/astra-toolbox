@@ -340,7 +340,7 @@ bool ConeFP_Array_internal(cudaPitchedPtr D_projData,
 	// tic(t);
 
 	for (unsigned int a = 0; a <= angleCount; ++a) {
-		int dir;
+		int dir = -1;
 		if (a != angleCount) {
 			float dX = fabsf(angles[a].fSrcX - (angles[a].fDetSX + dims.iProjU*angles[a].fDetUX*0.5f + dims.iProjV*angles[a].fDetVX*0.5f));
 			float dY = fabsf(angles[a].fSrcY - (angles[a].fDetSY + dims.iProjU*angles[a].fDetUY*0.5f + dims.iProjV*angles[a].fDetVY*0.5f));

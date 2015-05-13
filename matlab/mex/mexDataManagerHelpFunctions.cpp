@@ -285,7 +285,7 @@ allocateDataObject(const std::string & sDataType,
 		astra::Config* cfg = structToConfig("ProjectionGeometry3D", geometry);
 		// FIXME: Change how the base class is created. (This is duplicated
 		// in Projector3D.cpp.)
-		std::string type = cfg->self->getAttribute("type");
+		std::string type = cfg->self.getAttribute("type");
 		astra::CProjectionGeometry3D* pGeometry = 0;
 		if (type == "parallel3d") {
 			pGeometry = new astra::CParallelProjectionGeometry3D();

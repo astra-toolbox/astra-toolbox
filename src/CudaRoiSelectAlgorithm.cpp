@@ -66,22 +66,21 @@ bool CCudaRoiSelectAlgorithm::initialize(const Config& _cfg)
 	ConfigStackCheck<CAlgorithm> CC("CudaDartMaskAlgorithm", this, _cfg);
 
 	// reconstruction data
-	XMLNode* node = _cfg.self->getSingleNode("DataId");
+	XMLNode node = _cfg.self.getSingleNode("DataId");
 	ASTRA_CONFIG_CHECK(node, "CudaRoiSelect", "No DataId tag specified.");
-	int id = boost::lexical_cast<int>(node->getContent());
+	int id = boost::lexical_cast<int>(node.getContent());
 	m_pData = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
-	ASTRA_DELETE(node);
 	CC.markNodeParsed("DataId");
 
 	// Option: GPU number
-	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUindex", -1);
-	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUIndex", m_iGPUIndex);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
 	CC.markOptionParsed("GPUindex");
-	if (!_cfg.self->hasOption("GPUindex"))
+	if (!_cfg.self.hasOption("GPUindex"))
 		CC.markOptionParsed("GPUIndex");
 
 	// Option: Radius
-	m_fRadius = (unsigned int)_cfg.self->getOptionNumerical("Radius", 0.0f);
+	m_fRadius = (unsigned int)_cfg.self.getOptionNumerical("Radius", 0.0f);
 	CC.markOptionParsed("Radius");
 
 	_check();

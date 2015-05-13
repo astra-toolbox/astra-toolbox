@@ -134,17 +134,15 @@ bool CFanFlatProjectionGeometry2D::initialize(const Config& _cfg)
 	CProjectionGeometry2D::initialize(_cfg);
 
 	// Required: DistanceOriginDetector
-	XMLNode* node = _cfg.self->getSingleNode("DistanceOriginDetector");
+	XMLNode node = _cfg.self.getSingleNode("DistanceOriginDetector");
 	ASTRA_CONFIG_CHECK(node, "FanFlatProjectionGeometry2D", "No DistanceOriginDetector tag specified.");
-	m_fOriginDetectorDistance = boost::lexical_cast<float32>(node->getContent());
-	ASTRA_DELETE(node);
+	m_fOriginDetectorDistance = boost::lexical_cast<float32>(node.getContent());
 	CC.markNodeParsed("DistanceOriginDetector");
 
 	// Required: DetectorOriginSource
-	node = _cfg.self->getSingleNode("DistanceOriginSource");
+	node = _cfg.self.getSingleNode("DistanceOriginSource");
 	ASTRA_CONFIG_CHECK(node, "FanFlatProjectionGeometry2D", "No DistanceOriginSource tag specified.");
-	m_fOriginSourceDistance = boost::lexical_cast<float32>(node->getContent());
-	ASTRA_DELETE(node);
+	m_fOriginSourceDistance = boost::lexical_cast<float32>(node.getContent());
 	CC.markNodeParsed("DistanceOriginSource");
 
 	// success
@@ -209,12 +207,12 @@ Config* CFanFlatProjectionGeometry2D::getConfiguration() const
 {
 	Config* cfg = new Config();
 	cfg->initialize("ProjectionGeometry2D");
-	cfg->self->addAttribute("type", "fanflat");
-	cfg->self->addChildNode("DetectorCount", getDetectorCount());
-	cfg->self->addChildNode("DetectorWidth", getDetectorWidth());
-	cfg->self->addChildNode("DistanceOriginSource", getOriginSourceDistance());
-	cfg->self->addChildNode("DistanceOriginDetector", getOriginDetectorDistance());
-	cfg->self->addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
+	cfg->self.addAttribute("type", "fanflat");
+	cfg->self.addChildNode("DetectorCount", getDetectorCount());
+	cfg->self.addChildNode("DetectorWidth", getDetectorWidth());
+	cfg->self.addChildNode("DistanceOriginSource", getOriginSourceDistance());
+	cfg->self.addChildNode("DistanceOriginDetector", getOriginDetectorDistance());
+	cfg->self.addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
 	return cfg;
 }
 //----------------------------------------------------------------------------------------

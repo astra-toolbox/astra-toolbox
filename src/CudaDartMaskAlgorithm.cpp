@@ -65,38 +65,36 @@ bool CCudaDartMaskAlgorithm::initialize(const Config& _cfg)
 	ConfigStackCheck<CAlgorithm> CC("CudaDartMaskAlgorithm", this, _cfg);
 
 	// reconstruction data
-	XMLNode* node = _cfg.self->getSingleNode("SegmentationDataId");
+	XMLNode node = _cfg.self.getSingleNode("SegmentationDataId");
 	ASTRA_CONFIG_CHECK(node, "CudaDartMask", "No SegmentationDataId tag specified.");
-	int id = boost::lexical_cast<int>(node->getContent());
+	int id = boost::lexical_cast<int>(node.getContent());
 	m_pSegmentation = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
-	ASTRA_DELETE(node);
 	CC.markNodeParsed("SegmentationDataId");
 
 	// reconstruction data
-	node = _cfg.self->getSingleNode("MaskDataId");
+	node = _cfg.self.getSingleNode("MaskDataId");
 	ASTRA_CONFIG_CHECK(node, "CudaDartMask", "No MaskDataId tag specified.");
-	id = boost::lexical_cast<int>(node->getContent());
+	id = boost::lexical_cast<int>(node.getContent());
 	m_pMask = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
-	ASTRA_DELETE(node);
 	CC.markNodeParsed("MaskDataId");
 
 	// Option: GPU number
-	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUindex", -1);
-	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUIndex", m_iGPUIndex);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
 	CC.markOptionParsed("GPUindex");
-	if (!_cfg.self->hasOption("GPUindex"))
+	if (!_cfg.self.hasOption("GPUindex"))
 		CC.markOptionParsed("GPUIndex");
 
     // Option: Connectivity
-	m_iConn = (unsigned int)_cfg.self->getOptionNumerical("Connectivity", 8);
+	m_iConn = (unsigned int)_cfg.self.getOptionNumerical("Connectivity", 8);
 	CC.markOptionParsed("Connectivity");
 
 	// Option: Threshold
-	m_iThreshold = (unsigned int)_cfg.self->getOptionNumerical("Threshold", 1);
+	m_iThreshold = (unsigned int)_cfg.self.getOptionNumerical("Threshold", 1);
 	CC.markOptionParsed("Threshold");
 
 	// Option: Radius
-	m_iRadius = (unsigned int)_cfg.self->getOptionNumerical("Radius", 1);
+	m_iRadius = (unsigned int)_cfg.self.getOptionNumerical("Radius", 1);
 	CC.markOptionParsed("Radius");
 
 	_check();

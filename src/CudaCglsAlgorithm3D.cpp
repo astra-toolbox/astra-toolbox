@@ -106,11 +106,11 @@ bool CCudaCglsAlgorithm3D::initialize(const Config& _cfg)
 		return false;
 	}
 
-	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUindex", -1);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
 	CC.markOptionParsed("GPUindex");
-	m_iDetectorSuperSampling = (int)_cfg.self->getOptionNumerical("DetectorSuperSampling", 1);
+	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", 1);
 	CC.markOptionParsed("DetectorSuperSampling");
-	m_iVoxelSuperSampling = (int)_cfg.self->getOptionNumerical("VoxelSuperSampling", 1);
+	m_iVoxelSuperSampling = (int)_cfg.self.getOptionNumerical("VoxelSuperSampling", 1);
 	CC.markOptionParsed("VoxelSuperSampling");
 
 	m_pCgls = new AstraCGLS3d();

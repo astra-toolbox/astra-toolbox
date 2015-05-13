@@ -28,7 +28,7 @@ CXXFLAGS=@SAVED_CXXFLAGS@
 LDFLAGS=@SAVED_LDFLAGS@
 LIBS=@SAVED_LIBS@
 
-CPPFLAGS+=-I../.. -I../../include -I../../lib/include/rapidxml
+CPPFLAGS+=-I../.. -I../../include -I../../lib/include
 CXXFLAGS+=-g -O3 -Wall -Wshadow
 LIBS+=-lpthread
 LDFLAGS+=-g

@@ -64,9 +64,14 @@ Install by copying AstraCuda32.dll or AstraCuda64.dll from bin/ and
 
 ## References
 
-If you use parallel beam GPU code for your research, we would appreciate it if you would refer to the following paper:
+If you use the ASTRA Toolbox for your research, we would appreciate it if you would refer to the following paper:
 
-W. J. Palenstijn, K J. Batenburg, and J. Sijbers, "Performance improvements for iterative electron tomography reconstruction using graphics processing units (GPUs)", Journal of Structural Biology, vol. 176, issue 2, pp. 250-253, 2011.
+W. van Aarle, W. J. Palenstijn, J. De Beenhouwer, T. Altantzis, S. Bals,  K J. Batenburg, and J. Sijbers, "The ASTRA Toolbox: A platform for advanced algorithm development in electron tomography", Ultramicroscopy (2015), http://dx.doi.org/10.1016/j.ultramic.2015.05.002
+
+Additionally, if you use parallel beam GPU code, we would appreciate it if you would refer to the following paper:
+
+W. J. Palenstijn, K J. Batenburg, and J. Sijbers, "Performance improvements for iterative electron tomography reconstruction using graphics processing units (GPUs)", Journal of Structural Biology, vol. 176, issue 2, pp. 250-253, 2011, http://dx.doi.org/10.1016/j.jsb.2011.07.017
+
 
 ## License
 

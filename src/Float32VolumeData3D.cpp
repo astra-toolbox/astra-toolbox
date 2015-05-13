@@ -266,4 +266,13 @@ CFloat32VolumeData3D& CFloat32VolumeData3D::operator-=(const float32& _fScalar)
 	return *this;
 }
 
+void CFloat32VolumeData3D::changeGeometry(CVolumeGeometry3D* _pGeometry)
+{
+	if (!m_bInitialized) return;
+
+	delete m_pGeometry;
+	m_pGeometry = _pGeometry->clone();
+}
+
+
 } // end namespace astra

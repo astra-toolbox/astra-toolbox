@@ -44,22 +44,24 @@ cdef extern from "astra/Globals.h" namespace "astra":
 cdef extern from "astra/XMLNode.h" namespace "astra":
     cdef cppclass XMLNode:
         string getName()
-        XMLNode *addChildNode(string name)
-        XMLNode *addChildNode(string, string)
+        XMLNode addChildNode(string name)
+        XMLNode addChildNode(string, string)
         void addAttribute(string, string)
         void addAttribute(string, float32)
         void addOption(string, string)
         bool hasOption(string)
         string getAttribute(string)
-        list[XMLNode *] getNodes()
+        list[XMLNode] getNodes()
         vector[float32] getContentNumericalArray()
+        void setContent(double*, int, int, bool)
+        void setContent(double*, int)
         string getContent()
         bool hasAttribute(string)
 
 cdef extern from "astra/XMLDocument.h" namespace "astra":
     cdef cppclass XMLDocument:
         void saveToFile(string sFilename)
-        XMLNode *getRootNode()
+        XMLNode getRootNode()
         
 cdef extern from "astra/XMLDocument.h" namespace "astra::XMLDocument":
     cdef XMLDocument *createDocument(string rootname)
