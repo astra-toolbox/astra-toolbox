@@ -1,3 +1,11 @@
+% This sample illustrates the use of opTomo.
+%
+% opTomo is a wrapper around the FP and BP operations of the ASTRA Toolbox,
+% to allow you to use them as you would a matrix.
+%
+% This class requires the Spot Linear-Operator Toolbox to be installed.
+% You can download this at http://www.cs.ubc.ca/labs/scl/spot/
+
 % load a phantom image
 im = phantom(256);
 % and flatten it to a vector
