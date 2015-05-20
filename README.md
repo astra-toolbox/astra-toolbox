@@ -27,6 +27,7 @@ Requirements: g++, boost, CUDA (driver+toolkit), matlab
 
 ```
 cd build/linux
+./autogen.sh   # when building a git version
 ./configure --with-cuda=/usr/local/cuda \
             --with-matlab=/usr/local/MATLAB/R2012a \
             --prefix=/usr/local/astra
