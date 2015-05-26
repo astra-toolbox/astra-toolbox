@@ -37,36 +37,41 @@ $Id$
 #include "astra/Projector2D.h"
 #include "astra/Projector3D.h"
 
+#include "astra/Logging.h"
+#include <sstream>
+
 using namespace astra;
 using namespace std;
 
 //-----------------------------------------------------------------------------
 // default constructor
-Config::Config()
+Config::Config() : self()
 {
-	self = 0;
+	_doc = 0;
 }
 
 //-----------------------------------------------------------------------------
 // not so default constructor
-Config::Config(XMLNode* _self) 
+Config::Config(XMLNode _self)
 {
 	self = _self;
+	_doc = 0;
 }
 
 //-----------------------------------------------------------------------------
 Config::~Config()
 {
-	delete self;
-	self = 0;
+	delete _doc;
+	_doc = 0;
 }
 
 //-----------------------------------------------------------------------------
 void Config::initialize(std::string rootname)
 {
-	if (self == 0) {
+	if (!self) {
 		XMLDocument* doc = XMLDocument::createDocument(rootname);
 		self = doc->getRootNode();		
+		_doc = doc;
 	}
 }
 
@@ -121,13 +126,13 @@ bool ConfigStackCheck<T>::stopParsing()
 
 	std::string errors;
 
-	std::list<XMLNode*> nodes = cfg->self->getNodes();
-	for (std::list<XMLNode*>::iterator i = nodes.begin(); i != nodes.end(); ++i)
+	std::list<XMLNode> nodes = cfg->self.getNodes();
+	for (std::list<XMLNode>::iterator i = nodes.begin(); i != nodes.end(); ++i)
 	{
-		std::string nodeName = (*i)->getName();
+		std::string nodeName = i->getName();
 
 		if (nodeName == "Option") {
-			nodeName = (*i)->getAttribute("key", "");
+			nodeName = i->getAttribute("key", "");
 			if (object->configCheckData->parsedOptions.find(nodeName) == object->configCheckData->parsedOptions.end()) {
 				if (!errors.empty()) errors += ", ";
 				errors += nodeName;
@@ -139,12 +144,12 @@ bool ConfigStackCheck<T>::stopParsing()
 			}
 		}
 	}
-	for (std::list<XMLNode*>::iterator i = nodes.begin(); i != nodes.end(); ++i)
-		delete (*i);
 	nodes.clear();
 
 	if (!errors.empty()) {
-		cout << "Warning: " << name << ": unused configuration options: " << errors << std::endl;
+		ostringstream os;
+		os << name << ": unused configuration options: " << errors;
+		ASTRA_WARN(os.str().c_str());
 		return false;
 	}
 

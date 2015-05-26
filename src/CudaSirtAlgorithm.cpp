@@ -76,13 +76,13 @@ bool CCudaSirtAlgorithm::initialize(const Config& _cfg)
 		return false;
 
 	// min/max masks
-	if (_cfg.self->hasOption("MinMaskId")) {
-		int id = boost::lexical_cast<int>(_cfg.self->getOption("MinMaskId"));
+	if (_cfg.self.hasOption("MinMaskId")) {
+		int id = boost::lexical_cast<int>(_cfg.self.getOption("MinMaskId"));
 		m_pMinMask = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 	}
 	CC.markOptionParsed("MinMaskId");
-	if (_cfg.self->hasOption("MaxMaskId")) {
-		int id = boost::lexical_cast<int>(_cfg.self->getOption("MaxMaskId"));
+	if (_cfg.self.hasOption("MaxMaskId")) {
+		int id = boost::lexical_cast<int>(_cfg.self.getOption("MaxMaskId"));
 		m_pMaxMask = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 	}
 	CC.markOptionParsed("MaxMaskId");

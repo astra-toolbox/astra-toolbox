@@ -34,6 +34,7 @@ $Id$
 
 #include <mex.h>
 #include "mexHelpFunctions.h"
+#include "mexInitFunctions.h"
 
 #include "astra/AstraObjectManager.h"
 #include "astra/Projector2D.h"
@@ -475,6 +476,8 @@ void mexFunction(int nlhs, mxArray* plhs[],
 		printHelp();
 		return;
 	}
+
+	initASTRAMex();
 
 	// SWITCH (MODE)
 	if (sMode == "create") {

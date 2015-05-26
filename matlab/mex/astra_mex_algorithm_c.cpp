@@ -32,6 +32,7 @@ $Id$
  */
 #include <mex.h>
 #include "mexHelpFunctions.h"
+#include "mexInitFunctions.h"
 #include "astra/Globals.h"
 
 #define USE_MATLAB_UNDOCUMENTED
@@ -80,7 +81,7 @@ void astra_mex_algorithm_create(int nlhs, mxArray* plhs[], int nrhs, const mxArr
 	// turn MATLAB struct to an XML-based Config object
 	Config* cfg = structToConfig("Algorithm", prhs[1]);
 
-	CAlgorithm* pAlg = CAlgorithmFactory::getSingleton().create(cfg->self->getAttribute("type"));
+	CAlgorithm* pAlg = CAlgorithmFactory::getSingleton().create(cfg->self.getAttribute("type"));
 	if (!pAlg) {
 		delete cfg;
 		mexErrMsgTxt("Unknown algorithm. \n");
@@ -324,6 +325,8 @@ void mexFunction(int nlhs, mxArray* plhs[],
 		printHelp();
 		return;
 	}
+
+	initASTRAMex();
 
 	// SWITCH (MODE)
 	if (sMode == "create") {

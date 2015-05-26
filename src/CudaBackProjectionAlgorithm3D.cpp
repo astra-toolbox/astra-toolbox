@@ -102,9 +102,9 @@ bool CCudaBackProjectionAlgorithm3D::initialize(const Config& _cfg)
 		return false;
 	}
 
-	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUindex", -1);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
 	CC.markOptionParsed("GPUindex");
-	m_iVoxelSuperSampling = (int)_cfg.self->getOptionNumerical("VoxelSuperSampling", 1);
+	m_iVoxelSuperSampling = (int)_cfg.self.getOptionNumerical("VoxelSuperSampling", 1);
 	CC.markOptionParsed("VoxelSuperSampling");
 
 	CFloat32ProjectionData3DMemory* pSinoMem = dynamic_cast<CFloat32ProjectionData3DMemory*>(m_pSinogram);
@@ -114,7 +114,7 @@ const CParallelProjectionGeometry3D* par3dgeom = dynamic_cast<const CParallelPro
 	const CParallelVecProjectionGeometry3D* parvec3dgeom = dynamic_cast<const CParallelVecProjectionGeometry3D*>(projgeom);
 	if (parvec3dgeom || par3dgeom) {
 		// This option is only supported for Par3D currently
-		m_bSIRTWeighting = _cfg.self->getOptionBool("SIRTWeighting", false);
+		m_bSIRTWeighting = _cfg.self.getOptionBool("SIRTWeighting", false);
 		CC.markOptionParsed("SIRTWeighting");
 	}
 

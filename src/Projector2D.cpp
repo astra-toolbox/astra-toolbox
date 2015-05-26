@@ -115,12 +115,12 @@ bool CProjector2D::initialize(const Config& _cfg)
 	}
 
 	// required: ProjectionGeometry
-	XMLNode* node = _cfg.self->getSingleNode("ProjectionGeometry");
+	XMLNode node = _cfg.self.getSingleNode("ProjectionGeometry");
 	ASTRA_CONFIG_CHECK(node, "Projector2D", "No ProjectionGeometry tag specified.");
 
 	// FIXME: Change how the base class is created. (This is duplicated
 	// in astra_mex_data2d.cpp.)
-	std::string type = node->getAttribute("type");
+	std::string type = node.getAttribute("type");
 	if (type == "sparse_matrix") {
 		m_pProjectionGeometry = new CSparseMatrixProjectionGeometry2D();
 		m_pProjectionGeometry->initialize(Config(node));
@@ -146,7 +146,7 @@ bool CProjector2D::initialize(const Config& _cfg)
 
 
 	// required: VolumeGeometry
-	node = _cfg.self->getSingleNode("VolumeGeometry");
+	node = _cfg.self.getSingleNode("VolumeGeometry");
 	ASTRA_CONFIG_CHECK(node, "Projector2D", "No VolumeGeometry tag specified.");
 	m_pVolumeGeometry = new CVolumeGeometry2D();
 	m_pVolumeGeometry->initialize(Config(node));

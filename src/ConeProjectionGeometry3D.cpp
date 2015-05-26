@@ -28,6 +28,8 @@ $Id$
 
 #include "astra/ConeProjectionGeometry3D.h"
 
+#include "astra/Logging.h"
+
 #include <boost/lexical_cast.hpp>
 #include <cstring>
 
@@ -85,17 +87,15 @@ bool CConeProjectionGeometry3D::initialize(const Config& _cfg)
 	CProjectionGeometry3D::initialize(_cfg);
 
 	// Required: DistanceOriginDetector
-	XMLNode* node = _cfg.self->getSingleNode("DistanceOriginDetector");
+	XMLNode node = _cfg.self.getSingleNode("DistanceOriginDetector");
 	ASTRA_CONFIG_CHECK(node, "ConeProjectionGeometry3D", "No DistanceOriginDetector tag specified.");
-	m_fOriginDetectorDistance = boost::lexical_cast<float32>(node->getContent());
-	ASTRA_DELETE(node);
+	m_fOriginDetectorDistance = boost::lexical_cast<float32>(node.getContent());
 	CC.markNodeParsed("DistanceOriginDetector");
 
 	// Required: DetectorOriginSource
-	node = _cfg.self->getSingleNode("DistanceOriginSource");
+	node = _cfg.self.getSingleNode("DistanceOriginSource");
 	ASTRA_CONFIG_CHECK(node, "ConeProjectionGeometry3D", "No DistanceOriginSource tag specified.");
-	m_fOriginSourceDistance = boost::lexical_cast<float32>(node->getContent());
-	ASTRA_DELETE(node);
+	m_fOriginSourceDistance = boost::lexical_cast<float32>(node.getContent());
 	CC.markNodeParsed("DistanceOriginSource");
 
 	// success
@@ -191,14 +191,14 @@ Config* CConeProjectionGeometry3D::getConfiguration() const
 {
 	Config* cfg = new Config();
 	cfg->initialize("ProjectionGeometry3D");
-	cfg->self->addAttribute("type", "cone");
-	cfg->self->addChildNode("DetectorSpacingX", m_fDetectorSpacingX);
-	cfg->self->addChildNode("DetectorSpacingY", m_fDetectorSpacingY);
-	cfg->self->addChildNode("DetectorRowCount", m_iDetectorRowCount);
-	cfg->self->addChildNode("DetectorColCount", m_iDetectorColCount);
-	cfg->self->addChildNode("DistanceOriginDetector", m_fOriginDetectorDistance);
-	cfg->self->addChildNode("DistanceOriginSource", m_fOriginSourceDistance);
-	cfg->self->addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
+	cfg->self.addAttribute("type", "cone");
+	cfg->self.addChildNode("DetectorSpacingX", m_fDetectorSpacingX);
+	cfg->self.addChildNode("DetectorSpacingY", m_fDetectorSpacingY);
+	cfg->self.addChildNode("DetectorRowCount", m_iDetectorRowCount);
+	cfg->self.addChildNode("DetectorColCount", m_iDetectorColCount);
+	cfg->self.addChildNode("DistanceOriginDetector", m_fOriginDetectorDistance);
+	cfg->self.addChildNode("DistanceOriginSource", m_fOriginSourceDistance);
+	cfg->self.addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
 	return cfg;
 }
 
@@ -257,7 +257,7 @@ void CConeProjectionGeometry3D::projectPoint(float32 fX, float32 fY, float32 fZ,
 	// Scale fS to detector plane
 	fU = detectorOffsetXToColIndexFloat( (fS * (m_fOriginSourceDistance + m_fOriginDetectorDistance)) / fD );
 
-	fprintf(stderr, "alpha: %f, D: %f, V: %f, S: %f, U: %f\n", alpha, fD, fV, fS, fU);
+	ASTRA_DEBUG("alpha: %f, D: %f, V: %f, S: %f, U: %f", alpha, fD, fV, fS, fU);
 
 }
 

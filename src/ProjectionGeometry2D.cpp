@@ -121,24 +121,21 @@ bool CProjectionGeometry2D::initialize(const Config& _cfg)
 	}
 
 	// Required: DetectorWidth
-	XMLNode* node = _cfg.self->getSingleNode("DetectorWidth");
+	XMLNode node = _cfg.self.getSingleNode("DetectorWidth");
 	ASTRA_CONFIG_CHECK(node, "ProjectionGeometry2D", "No DetectorWidth tag specified.");
-	m_fDetectorWidth = boost::lexical_cast<float32>(node->getContent());
-	ASTRA_DELETE(node);
+	m_fDetectorWidth = boost::lexical_cast<float32>(node.getContent());
 	CC.markNodeParsed("DetectorWidth");
 
 	// Required: DetectorCount
-	node = _cfg.self->getSingleNode("DetectorCount");
+	node = _cfg.self.getSingleNode("DetectorCount");
 	ASTRA_CONFIG_CHECK(node, "ProjectionGeometry2D", "No DetectorCount tag specified.");
-	m_iDetectorCount = boost::lexical_cast<int>(node->getContent());
-	ASTRA_DELETE(node);
+	m_iDetectorCount = boost::lexical_cast<int>(node.getContent());
 	CC.markNodeParsed("DetectorCount");
 
 	// Required: ProjectionAngles
-	node = _cfg.self->getSingleNode("ProjectionAngles");
+	node = _cfg.self.getSingleNode("ProjectionAngles");
 	ASTRA_CONFIG_CHECK(node, "ProjectionGeometry2D", "No ProjectionAngles tag specified.");
-	vector<float32> angles = node->getContentNumericalArray();
-	delete node;
+	vector<float32> angles = node.getContentNumericalArray();
 	m_iProjectionAngleCount = angles.size();
 	ASTRA_CONFIG_CHECK(m_iProjectionAngleCount > 0, "ProjectionGeometry2D", "Not enough ProjectionAngles specified.");
 	m_pfProjectionAngles = new float32[m_iProjectionAngleCount];

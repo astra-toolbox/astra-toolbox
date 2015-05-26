@@ -92,6 +92,19 @@ public:
 	 * Copy constructor
 	 */
 	CFloat32VolumeData2D(const CFloat32VolumeData2D& _other);
+	
+	/** Constructor. Create an instance of the CFloat32VolumeData2D class with pre-allocated memory.
+	 *
+	 * Creates an instance of the CFloat32VolumeData2D class. Memory 
+	 * is pre-allocated and passed via the abstract CFloat32CustomMemory handle
+	 * class. The handle will be deleted when the memory can be freed.
+	 * You should override the destructor to provide custom behaviour on free.
+	 *
+	 * @param _pGeometry Volume Geometry object.  This object will be HARDCOPIED into this class.
+	 * @param _pCustomMemory custom memory handle
+	 *
+	 */
+	CFloat32VolumeData2D(CVolumeGeometry2D* _pGeometry, CFloat32CustomMemory* _pCustomMemory);
 
 	/**
 	 * Assignment operator
@@ -132,6 +145,18 @@ public:
 	 * @param _fScalar scalar value to be put at each index.
 	 */
 	bool initialize(CVolumeGeometry2D* _pGeometry, float32 _fScalar);
+	
+	/** Initialization. Initializes an instance of the CFloat32VolumeData2D class with pre-allocated memory.
+	 *
+	 * Memory is pre-allocated and passed via the abstract CFloat32CustomMemory handle
+	 * class. The handle will be deleted when the memory can be freed.
+	 * You should override the destructor to provide custom behaviour on free.
+	 *
+	 * @param _pGeometry Volume Geometry object.  This object will be HARDCOPIED into this class.
+	 * @param _pCustomMemory custom memory handle
+	 *
+	 */
+	bool initialize(CVolumeGeometry2D* _pGeometry, CFloat32CustomMemory* _pCustomMemory);
 
 	/** Destructor.
 	 */

@@ -35,36 +35,41 @@ vol_geom = astra_create_vol_geom(det_count, det_count);
 [sinogram_id, sinogram] = astra_create_sino_cuda(I, proj_geom, vol_geom);
 astra_mex_data2d('delete', sinogram_id);
 
-% DART
-D						= DARTalgorithm(sinogram, proj_geom);
-D.t0					= 100;
-D.t						= 10;
+	% DART
+	D						= DARTalgorithm(sinogram, proj_geom);
+	D.t0					= 100;
+	D.t						= 10;
 
-D.tomography.method		= 'SIRT_CUDA';
-D.tomography.gpu_core	= gpu_core;
-D.tomography.use_minc	= 'yes';
+	D.tomography.method		= 'SIRT';
+	D.tomography.gpu_core	= gpu_core;
+	D.tomography.use_minc	= 'yes';
+	D.tomography.gpu        = 'no';
 
-D.segmentation.rho		= rho;
-D.segmentation.tau		= tau;
+	D.segmentation          = SegmentationPDM();
+	D.segmentation.rho		= rho*1.8;
+	D.segmentation.tau		= tau*1.5;
+	D.segmentation.interval = 5;
 
-D.smoothing.b			= 0.1;
-D.smoothing.gpu_core	= gpu_core;
- 
-D.masking.random		= 0.1;
-D.masking.gpu_core		= gpu_core;
+	D.smoothing.b			= 0.1;
+	D.smoothing.gpu_core	= gpu_core;
+	D.smoothing.gpu        = 'no';
+	
+	D.masking.random		= 0.1;
+	D.masking.gpu_core		= gpu_core;
+	D.masking.gpu        = 'no';
+	
+	D.output.directory		= outdir;
+	D.output.pre			= [prefix '_'];
+	D.output.save_images	= 'no';
+	D.output.save_results	= {'stats', 'settings', 'S', 'V'};
+	D.output.save_interval	= dart_iterations;
+	D.output.verbose		= 'yes';
 
-D.output.directory		= outdir;
-D.output.pre			= [prefix '_'];
-D.output.save_images	= 'no';
-D.output.save_results	= {'stats', 'settings', 'S', 'V'};
-D.output.save_interval	= dart_iterations;
-D.output.verbose		= 'yes';
+	D.statistics.proj_diff	= 'no';
 
-D.statistics.proj_diff	= 'no';
+	D.initialize();
 
-D.initialize();
-
-D.iterate(dart_iterations);
+	D.iterate(dart_iterations);
 
 % save the reconstruction and the segmentation to file
 imwritesc(D.S, [outdir '/' prefix '_S.png']);

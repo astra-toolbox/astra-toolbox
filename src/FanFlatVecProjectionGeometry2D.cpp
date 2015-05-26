@@ -116,25 +116,23 @@ bool CFanFlatVecProjectionGeometry2D::initialize(const Config& _cfg)
 	ASTRA_ASSERT(_cfg.self);
 	ConfigStackCheck<CProjectionGeometry2D> CC("FanFlatVecProjectionGeometry2D", this, _cfg);	
 
-	XMLNode* node;
+	XMLNode node;
 
 	// TODO: Fix up class hierarchy... this class doesn't fit very well.
 	// initialization of parent class
 	//CProjectionGeometry2D::initialize(_cfg);
 
 	// Required: DetectorCount
-	node = _cfg.self->getSingleNode("DetectorCount");
+	node = _cfg.self.getSingleNode("DetectorCount");
 	ASTRA_CONFIG_CHECK(node, "FanFlatVecProjectionGeometry3D", "No DetectorRowCount tag specified.");
-	m_iDetectorCount = boost::lexical_cast<int>(node->getContent());
-	ASTRA_DELETE(node);
+	m_iDetectorCount = boost::lexical_cast<int>(node.getContent());
 	CC.markNodeParsed("DetectorCount");
 
 	// Required: Vectors
-	node = _cfg.self->getSingleNode("Vectors");
+	node = _cfg.self.getSingleNode("Vectors");
 	ASTRA_CONFIG_CHECK(node, "FanFlatVecProjectionGeometry3D", "No Vectors tag specified.");
-	vector<float32> data = node->getContentNumericalArray();
+	vector<float32> data = node.getContentNumericalArray();
 	CC.markNodeParsed("Vectors");
-	ASTRA_DELETE(node);
 	ASTRA_CONFIG_CHECK(data.size() % 6 == 0, "FanFlatVecProjectionGeometry3D", "Vectors doesn't consist of 6-tuples.");
 	m_iProjectionAngleCount = data.size() / 6;
 	m_pProjectionAngles = new SFanProjection[m_iProjectionAngleCount];
@@ -232,8 +230,8 @@ Config* CFanFlatVecProjectionGeometry2D::getConfiguration() const
 {
 	Config* cfg = new Config();
 	cfg->initialize("ProjectionGeometry2D");
-	cfg->self->addAttribute("type", "fanflat_vec");
-	cfg->self->addChildNode("DetectorCount", getDetectorCount());
+	cfg->self.addAttribute("type", "fanflat_vec");
+	cfg->self.addChildNode("DetectorCount", getDetectorCount());
 	std::string vectors = "";
 	for (int i = 0; i < m_iProjectionAngleCount; ++i) {
 		SFanProjection& p = m_pProjectionAngles[i];
@@ -245,7 +243,7 @@ Config* CFanFlatVecProjectionGeometry2D::getConfiguration() const
 		vectors += boost::lexical_cast<string>(p.fDetUY);
 		if (i < m_iProjectionAngleCount-1) vectors += ';';
 	}
-	cfg->self->addChildNode("Vectors", vectors);
+	cfg->self.addChildNode("Vectors", vectors);
 	return cfg;
 }
 //----------------------------------------------------------------------------------------

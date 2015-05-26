@@ -28,7 +28,7 @@ CXXFLAGS=@SAVED_CXXFLAGS@
 LDFLAGS=@SAVED_LDFLAGS@
 LIBS=@SAVED_LIBS@
 
-CPPFLAGS+=-I../.. -I../../include -I../../lib/include/rapidxml
+CPPFLAGS+=-I../.. -I../../include -I../../lib/include
 CXXFLAGS+=-g -O3 -Wall -Wshadow
 LIBS+=-lpthread
 LDFLAGS+=-g
@@ -123,7 +123,7 @@ BASE_OBJECTS=\
 	src/Fourier.lo \
 	src/GeometryUtil3D.lo \
 	src/Globals.lo \
-	src/Logger.lo \
+	src/Logging.lo \
 	src/ParallelBeamBlobKernelProjector2D.lo \
 	src/ParallelBeamLinearKernelProjector2D.lo \
 	src/ParallelBeamLineKernelProjector2D.lo \
@@ -222,6 +222,7 @@ TEST_OBJECTS=\
 MATLAB_CXX_OBJECTS=\
 	matlab/mex/mexHelpFunctions.o \
 	matlab/mex/mexCopyDataHelpFunctions.o \
+	matlab/mex/mexInitFunctions.o \
 	matlab/mex/mexDataManagerHelpFunctions.o
 
 MATLAB_MEX=\
@@ -231,6 +232,7 @@ MATLAB_MEX=\
 	matlab/mex/astra_mex_matrix_c.$(MEXSUFFIX) \
 	matlab/mex/astra_mex_projector_c.$(MEXSUFFIX) \
 	matlab/mex/astra_mex_projector3d_c.$(MEXSUFFIX) \
+	matlab/mex/astra_mex_log_c.$(MEXSUFFIX) \
 	matlab/mex/astra_mex_data3d_c.$(MEXSUFFIX)
 
 

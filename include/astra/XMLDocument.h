@@ -78,7 +78,7 @@ public:
 	 *
 	 * @return first XML node of the document
 	 */
-	XMLNode* getRootNode();
+	XMLNode getRootNode();
 
 	/** Save an XML DOM tree to an XML file
 	 *

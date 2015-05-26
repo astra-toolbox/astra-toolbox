@@ -32,6 +32,7 @@ $Id$
  */
 #include <mex.h>
 #include "mexHelpFunctions.h"
+#include "mexInitFunctions.h"
 
 #include <list>
 
@@ -149,7 +150,7 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 		Config* cfg = structToConfig("ProjectionGeometry", prhs[2]);
 		// FIXME: Change how the base class is created. (This is duplicated
 		// in 'change_geometry' and Projector2D.cpp.)
-		std::string type = cfg->self->getAttribute("type");
+		std::string type = cfg->self.getAttribute("type");
 		CProjectionGeometry2D* pGeometry;
 		if (type == "sparse_matrix") {
 			pGeometry = new CSparseMatrixProjectionGeometry2D();
@@ -440,7 +441,7 @@ void astra_mex_data2d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 		Config* cfg = structToConfig("ProjectionGeometry2D", prhs[2]);
 		// FIXME: Change how the base class is created. (This is duplicated
 		// in 'create' and Projector2D.cpp.)
-		std::string type = cfg->self->getAttribute("type");
+		std::string type = cfg->self.getAttribute("type");
 		CProjectionGeometry2D* pGeometry;
 		if (type == "sparse_matrix") {
 			pGeometry = new CSparseMatrixProjectionGeometry2D();
@@ -639,6 +640,8 @@ void mexFunction(int nlhs, mxArray* plhs[],
 		printHelp();
 		return;
 	}
+
+	initASTRAMex();
 
 	// SWITCH (MODE)
 	if (sMode ==  std::string("get")) { 

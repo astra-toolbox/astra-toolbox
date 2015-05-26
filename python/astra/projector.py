@@ -27,21 +27,21 @@ from . import projector_c as p
 
 def create(config):
     """Create projector object.
-    
+
     :param config: Projector options.
     :type config: :class:`dict`
     :returns: :class:`int` -- the ID of the constructed object.
-    
+
     """
     return p.create(config)
 
 
 def delete(ids):
     """Delete a projector object.
-    
+
     :param ids: ID or list of ID's to delete.
     :type ids: :class:`int` or :class:`list`
-    
+
     """
     return p.delete(ids)
 
@@ -57,22 +57,22 @@ def info():
 
 def projection_geometry(i):
     """Get projection geometry of a projector.
-    
+
     :param i: ID of projector.
     :type i: :class:`int`
     :returns: :class:`dict` -- projection geometry
-    
+
     """
     return p.projection_geometry(i)
 
 
 def volume_geometry(i):
     """Get volume geometry of a projector.
-    
+
     :param i: ID of projector.
     :type i: :class:`int`
     :returns: :class:`dict` -- volume geometry
-    
+
     """
     return p.volume_geometry(i)
 
@@ -88,13 +88,23 @@ def weights_projection(i, projection_index):
 def splat(i, row, col):
     return p.splat(i, row, col)
 
+def is_cuda(i):
+    """Check whether a projector is a CUDA projector.
+
+    :param i: ID of projector.
+    :type i: :class:`int`
+    :returns: :class:`bool` -- True if the projector is a CUDA projector.
+
+    """
+    return p.is_cuda(i)
+
 
 def matrix(i):
     """Get sparse matrix of a projector.
-    
+
     :param i: ID of projector.
     :type i: :class:`int`
     :returns: :class:`int` -- ID of sparse matrix.
-    
+
     """
     return p.matrix(i)

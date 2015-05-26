@@ -55,12 +55,6 @@ void CParallelBeamLineKernelProjector2D::projectSingleRay(int _iProjection, int 
 template <typename Policy>
 void CParallelBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, int _iProjTo, int _iDetFrom, int _iDetTo, Policy& p)
 {
-	// variables
-	float32 detX, detY, S, T, I, x, y, c, r, update_c, update_r, offset;
-	float32 lengthPerRow, lengthPerCol, inv_pixelLengthX, inv_pixelLengthY, invTminSTimesLengthPerRow, invTminSTimesLengthPerCol;
-	int iVolumeIndex, iRayIndex, row, col, iAngle, iDetector, colCount, rowCount, detCount;
-	const SParProjection * proj = 0;
-
 	// get vector geometry
 	const CParallelVecProjectionGeometry2D* pVecProjectionGeometry;
 	if (dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry)) {
@@ -70,16 +64,22 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 	}
 
 	// precomputations
-	inv_pixelLengthX = 1.0f / m_pVolumeGeometry->getPixelLengthX();
-	inv_pixelLengthY = 1.0f / m_pVolumeGeometry->getPixelLengthY();
-	colCount = m_pVolumeGeometry->getGridColCount();
-	rowCount = m_pVolumeGeometry->getGridRowCount();
-	detCount = pVecProjectionGeometry->getDetectorCount();
+	const float32 inv_pixelLengthX = 1.0f / m_pVolumeGeometry->getPixelLengthX();
+	const float32 inv_pixelLengthY = 1.0f / m_pVolumeGeometry->getPixelLengthY();
+	const int colCount = m_pVolumeGeometry->getGridColCount();
+	const int rowCount = m_pVolumeGeometry->getGridRowCount();
+	const int detCount = pVecProjectionGeometry->getDetectorCount();
 
 	// loop angles
-	for (iAngle = _iProjFrom; iAngle < _iProjTo; ++iAngle) {
+	#pragma omp parallel for
+	for (int iAngle = _iProjFrom; iAngle < _iProjTo; ++iAngle) {
 
-		proj = &pVecProjectionGeometry->getProjectionVectors()[iAngle];
+		// variables
+		float32 detX, detY, S, T, I, x, y, c, r, update_c, update_r, offset;
+		float32 lengthPerRow, lengthPerCol, invTminSTimesLengthPerRow, invTminSTimesLengthPerCol;
+		int iVolumeIndex, iRayIndex, row, col, iDetector;
+
+		const SParProjection * proj = &pVecProjectionGeometry->getProjectionVectors()[iAngle];
 
 		bool vertical = fabs(proj->fRayX) < fabs(proj->fRayY);
 		if (vertical) {

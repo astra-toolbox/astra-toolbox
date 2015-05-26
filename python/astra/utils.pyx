@@ -26,6 +26,7 @@
 # distutils: language = c++
 # distutils: libraries = astra
 
+cimport numpy as np
 import numpy as np
 import six
 from libcpp.string cimport string
@@ -80,11 +81,12 @@ def wrap_from_bytes(value):
     return s
 
 
-cdef void readDict(XMLNode * root, _dc):
-    cdef XMLNode * listbase
-    cdef XMLNode * itm
+cdef void readDict(XMLNode root, _dc):
+    cdef XMLNode listbase
+    cdef XMLNode itm
     cdef int i
     cdef int j
+    cdef double* data
 
     dc = convert_item(_dc)
     for item in dc:
@@ -93,45 +95,31 @@ cdef void readDict(XMLNode * root, _dc):
             if val.size == 0:
                 break
             listbase = root.addChildNode(item)
-            listbase.addAttribute(< string > six.b('listsize'), < float32 > val.size)
-            index = 0
+            data = <double*>np.PyArray_DATA(np.ascontiguousarray(val,dtype=np.float64)) 
             if val.ndim == 2:
-                for i in range(val.shape[0]):
-                    for j in range(val.shape[1]):
-                        itm = listbase.addChildNode(six.b('ListItem'))
-                        itm.addAttribute(< string > six.b('index'), < float32 > index)
-                        itm.addAttribute( < string > six.b('value'), < float32 > val[i, j])
-                        index += 1
-                        del itm
+                listbase.setContent(data, val.shape[1], val.shape[0], False)
             elif val.ndim == 1:
-                for i in range(val.shape[0]):
-                    itm = listbase.addChildNode(six.b('ListItem'))
-                    itm.addAttribute(< string > six.b('index'), < float32 > index)
-                    itm.addAttribute(< string > six.b('value'), < float32 > val[i])
-                    index += 1
-                    del itm
+                listbase.setContent(data, val.shape[0])
             else:
                 raise Exception("Only 1 or 2 dimensions are allowed")
-            del listbase
         elif isinstance(val, dict):
             if item == six.b('option') or item == six.b('options') or item == six.b('Option') or item == six.b('Options'):
                 readOptions(root, val)
             else:
                 itm = root.addChildNode(item)
                 readDict(itm, val)
-                del itm
         else:
             if item == six.b('type'):
                 root.addAttribute(< string > six.b('type'), <string> wrap_to_bytes(val))
             else:
                 itm = root.addChildNode(item, wrap_to_bytes(val))
-                del itm
 
-cdef void readOptions(XMLNode * node, dc):
-    cdef XMLNode * listbase
-    cdef XMLNode * itm
+cdef void readOptions(XMLNode node, dc):
+    cdef XMLNode listbase
+    cdef XMLNode itm
     cdef int i
     cdef int j
+    cdef double* data
     for item in dc:
         val = dc[item]
         if node.hasOption(item):
@@ -141,26 +129,13 @@ cdef void readOptions(XMLNode * node, dc):
                 break
             listbase = node.addChildNode(six.b('Option'))
             listbase.addAttribute(< string > six.b('key'), < string > item)
-            listbase.addAttribute(< string > six.b('listsize'), < float32 > val.size)
-            index = 0
+            data = <double*>np.PyArray_DATA(np.ascontiguousarray(val,dtype=np.float64)) 
             if val.ndim == 2:
-                for i in range(val.shape[0]):
-                    for j in range(val.shape[1]):
-                        itm = listbase.addChildNode(six.b('ListItem'))
-                        itm.addAttribute(< string > six.b('index'), < float32 > index)
-                        itm.addAttribute( < string > six.b('value'), < float32 > val[i, j])
-                        index += 1
-                        del itm
+                listbase.setContent(data, val.shape[1], val.shape[0], False)
             elif val.ndim == 1:
-                for i in range(val.shape[0]):
-                    itm = listbase.addChildNode(six.b('ListItem'))
-                    itm.addAttribute(< string > six.b('index'), < float32 > index)
-                    itm.addAttribute(< string > six.b('value'), < float32 > val[i])
-                    index += 1
-                    del itm
+                listbase.setContent(data, val.shape[0])
             else:
                 raise Exception("Only 1 or 2 dimensions are allowed")
-            del listbase
         else:
             node.addOption(item, wrap_to_bytes(val))
 
@@ -214,10 +189,10 @@ def stringToPythonValue(inputIn):
             return str(input)
 
 
-cdef XMLNode2dict(XMLNode * node):
-    cdef XMLNode * subnode
-    cdef list[XMLNode * ] nodes
-    cdef list[XMLNode * ].iterator it
+cdef XMLNode2dict(XMLNode node):
+    cdef XMLNode subnode
+    cdef list[XMLNode] nodes
+    cdef list[XMLNode].iterator it
     dct = {}
     opts = {}
     if node.hasAttribute(six.b('type')):
@@ -230,7 +205,6 @@ cdef XMLNode2dict(XMLNode * node):
             opts[castString(subnode.getAttribute('key'))] = stringToPythonValue(subnode.getAttribute('value'))
         else:
             dct[castString(subnode.getName())] = stringToPythonValue(subnode.getContent())
-        del subnode
         inc(it)
     if len(opts)>0: dct['options'] = opts
     return dct

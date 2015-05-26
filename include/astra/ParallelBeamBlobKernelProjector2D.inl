@@ -31,21 +31,21 @@ template <typename Policy>
 void CParallelBeamBlobKernelProjector2D::project(Policy& p)
 {
 	projectBlock_internal(0, m_pProjectionGeometry->getProjectionAngleCount(),
-		                  0, m_pProjectionGeometry->getDetectorCount(), p);
+						  0, m_pProjectionGeometry->getDetectorCount(), p);
 }
 
 template <typename Policy>
 void CParallelBeamBlobKernelProjector2D::projectSingleProjection(int _iProjection, Policy& p)
 {
 	projectBlock_internal(_iProjection, _iProjection + 1,
-	                      0, m_pProjectionGeometry->getDetectorCount(), p);
+						  0, m_pProjectionGeometry->getDetectorCount(), p);
 }
 
 template <typename Policy>
 void CParallelBeamBlobKernelProjector2D::projectSingleRay(int _iProjection, int _iDetector, Policy& p)
 {
 	projectBlock_internal(_iProjection, _iProjection + 1,
-	                      _iDetector, _iDetector + 1, p);
+						  _iDetector, _iDetector + 1, p);
 }
 
 //----------------------------------------------------------------------------------------
@@ -53,12 +53,6 @@ void CParallelBeamBlobKernelProjector2D::projectSingleRay(int _iProjection, int 
 template <typename Policy>
 void CParallelBeamBlobKernelProjector2D::projectBlock_internal(int _iProjFrom, int _iProjTo, int _iDetFrom, int _iDetTo, Policy& p)
 {
-	// variables
-	float32 detX, detY, x, y, c, r, update_c, update_r, offset, invBlobExtent, inv_pixelLengthX, inv_pixelLengthY, weight, d;
-	int iVolumeIndex, iRayIndex, row, col, iAngle, iDetector, colCount, rowCount, detCount;
-	int col_left, col_right, row_top, row_bottom, index;
-	const SParProjection * proj = 0;
-
 	// get vector geometry
 	const CParallelVecProjectionGeometry2D* pVecProjectionGeometry;
 	if (dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry)) {
@@ -68,16 +62,22 @@ void CParallelBeamBlobKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 	}
 
 	// precomputations
-	inv_pixelLengthX = 1.0f / m_pVolumeGeometry->getPixelLengthX();
-	inv_pixelLengthY = 1.0f / m_pVolumeGeometry->getPixelLengthY();
-	colCount = m_pVolumeGeometry->getGridColCount();
-	rowCount = m_pVolumeGeometry->getGridRowCount();
-	detCount = pVecProjectionGeometry->getDetectorCount();
+	const float32 inv_pixelLengthX = 1.0f / m_pVolumeGeometry->getPixelLengthX();
+	const float32 inv_pixelLengthY = 1.0f / m_pVolumeGeometry->getPixelLengthY();
+	const int colCount = m_pVolumeGeometry->getGridColCount();
+	const int rowCount = m_pVolumeGeometry->getGridRowCount();
+	const int detCount = pVecProjectionGeometry->getDetectorCount();
 
 	// loop angles
-	for (iAngle = _iProjFrom; iAngle < _iProjTo; ++iAngle) {
+	#pragma omp parallel for
+	for (int iAngle = _iProjFrom; iAngle < _iProjTo; ++iAngle) {
 
-		proj = &pVecProjectionGeometry->getProjectionVectors()[iAngle];
+		// variables
+		float32 detX, detY, x, y, c, r, update_c, update_r, offset, invBlobExtent, weight, d;
+		int iVolumeIndex, iRayIndex, row, col, iDetector;
+		int col_left, col_right, row_top, row_bottom, index;
+
+		const SParProjection * proj = &pVecProjectionGeometry->getProjectionVectors()[iAngle];
 
 		bool vertical = fabs(proj->fRayX) < fabs(proj->fRayY);
 		if (vertical) {

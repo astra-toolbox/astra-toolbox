@@ -214,6 +214,11 @@ public:
 	 * @return The geometry describing the data stored in this volume
 	 */
 	virtual CVolumeGeometry3D* getGeometry() const;
+
+	/** Change the projection geometry.
+	 *  Note that this can't change the dimensions of the data.
+	 */
+	virtual void changeGeometry(CVolumeGeometry3D* pGeometry);
 };
 
 //----------------------------------------------------------------------------------------
