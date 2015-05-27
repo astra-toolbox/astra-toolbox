@@ -50,6 +50,63 @@ void CParallelBeamBlobKernelProjector2D::projectSingleRay(int _iProjection, int 
 
 //----------------------------------------------------------------------------------------
 // PROJECT BLOCK - vector projection geometry
+// 
+// Kernel limitations: isotropic pixels (PixelLengthX == PixelLengthY)
+//
+// For each angle/detector pair:
+// 
+// Let D=(Dx,Dy) denote the centre of the detector (point) in volume coordinates, and
+// let R=(Rx,Ry) denote the direction of the ray (vector).
+// 
+// For mainly vertical rays (|Rx|<=|Ry|), 
+// let E=(Ex,Ey) denote the centre of the most upper left pixel:
+//    E = (WindowMinX +  PixelLengthX/2, WindowMaxY - PixelLengthY/2),
+// and let F=(Fx,Fy) denote a vector to the next pixel 
+//    F = (PixelLengthX, 0)
+// 
+// The intersection of the ray (D+aR) with the centre line of the upper row of pixels (E+bF) is
+//    { Dx + a*Rx = Ex + b*Fx
+//    { Dy + a*Ry = Ey + b*Fy
+// Solving for (a,b) results in:
+//    a = (Ey + b*Fy - Dy)/Ry
+//      = (Ey - Dy)/Ry
+//    b = (Dx + a*Rx - Ex)/Fx
+//      = (Dx + (Ey - Dy)*Rx/Ry - Ex)/Fx
+//
+// Define c as the x-value of the intersection of the ray with the upper row in pixel coordinates. 
+//    c = b 
+//
+// The intersection of the ray (D+aR) with the centre line of the second row of pixels (E'+bF) with
+//    E'=(WindowMinX + PixelLengthX/2, WindowMaxY - 3*PixelLengthY/2)
+// expressed in x-value pixel coordinates is
+//    c' = (Dx + (Ey' - Dy)*Rx/Ry - Ex)/Fx.
+// And thus:
+//    deltac = c' - c = (Dx + (Ey' - Dy)*Rx/Ry - Ex)/Fx - (Dx + (Ey - Dy)*Rx/Ry - Ex)/Fx
+//                    = [(Ey' - Dy)*Rx/Ry - (Ey - Dy)*Rx/Ry]/Fx
+//                    = [Ey' - Ey]*(Rx/Ry)/Fx
+//                    = [Ey' - Ey]*(Rx/Ry)/Fx
+//                    = -PixelLengthY*(Rx/Ry)/Fx.
+// 
+// Given c on a certain row, its pixel directly on its left (col), and the distance (offset) to it, can be found: 
+//    col = floor(c)
+//    offset = c - col
+//
+// The index of this pixel is
+//    volumeIndex = row * colCount + col
+//
+//
+// Mainly horizontal rays (|Rx|<=|Ry|) are handled in a similar fashion:
+//
+//    E = (WindowMinX +  PixelLengthX/2, WindowMaxY - PixelLengthY/2),
+//    F = (0, -PixelLengthX)
+//
+//    a = (Ex + b*Fx - Dx)/Rx = (Ex - Dx)/Rx
+//    b = (Dy + a*Ry - Ey)/Fy = (Dy + (Ex - Dx)*Ry/Rx - Ey)/Fy
+//    r = b
+//    deltar = PixelLengthX*(Ry/Rx)/Fy.
+//    row = floor(r+1/2)
+//    offset = r - row
+//
 template <typename Policy>
 void CParallelBeamBlobKernelProjector2D::projectBlock_internal(int _iProjFrom, int _iProjTo, int _iDetFrom, int _iDetTo, Policy& p)
 {
@@ -62,6 +119,8 @@ void CParallelBeamBlobKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 	}
 
 	// precomputations
+	const float32 pixelLengthX = m_pVolumeGeometry->getPixelLengthX();
+	const float32 pixelLengthY = m_pVolumeGeometry->getPixelLengthY();	
 	const float32 inv_pixelLengthX = 1.0f / m_pVolumeGeometry->getPixelLengthX();
 	const float32 inv_pixelLengthY = 1.0f / m_pVolumeGeometry->getPixelLengthY();
 	const int colCount = m_pVolumeGeometry->getGridColCount();
@@ -73,7 +132,7 @@ void CParallelBeamBlobKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 	for (int iAngle = _iProjFrom; iAngle < _iProjTo; ++iAngle) {
 
 		// variables
-		float32 detX, detY, x, y, c, r, update_c, update_r, offset, invBlobExtent, weight, d;
+		float32 Dx, Dy, Ex, Ey, c, r, deltac, deltar, offset, invBlobExtent, RxOverRy, RyOverRx;
 		int iVolumeIndex, iRayIndex, row, col, iDetector;
 		int col_left, col_right, row_top, row_bottom, index;
 
@@ -81,14 +140,17 @@ void CParallelBeamBlobKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 
 		bool vertical = fabs(proj->fRayX) < fabs(proj->fRayY);
 		if (vertical) {
-			update_c = -m_pVolumeGeometry->getPixelLengthY() * (proj->fRayX/proj->fRayY) * inv_pixelLengthX;
-			float32 normR = sqrt(proj->fRayY*proj->fRayY + proj->fRayX*proj->fRayX);
-			invBlobExtent = m_pVolumeGeometry->getPixelLengthY() / abs(m_fBlobSize * normR / proj->fRayY);
+			RxOverRy = proj->fRayX/proj->fRayY;
+			deltac = -m_pVolumeGeometry->getPixelLengthY() * (proj->fRayX/proj->fRayY) * inv_pixelLengthX;
+			invBlobExtent = m_pVolumeGeometry->getPixelLengthY() / abs(m_fBlobSize * sqrt(proj->fRayY*proj->fRayY + proj->fRayX*proj->fRayX) / proj->fRayY);
 		} else {
-			update_r = -m_pVolumeGeometry->getPixelLengthX() * (proj->fRayY/proj->fRayX) * inv_pixelLengthY;
-			float32 normR = sqrt(proj->fRayY*proj->fRayY + proj->fRayX*proj->fRayX);
-			invBlobExtent = m_pVolumeGeometry->getPixelLengthX() / abs(m_fBlobSize * normR / proj->fRayX);
+			RyOverRx = proj->fRayY/proj->fRayX;
+			deltar = -m_pVolumeGeometry->getPixelLengthX() * (proj->fRayY/proj->fRayX) * inv_pixelLengthY;
+			invBlobExtent = m_pVolumeGeometry->getPixelLengthX() / abs(m_fBlobSize * sqrt(proj->fRayY*proj->fRayY + proj->fRayX*proj->fRayX) / proj->fRayX);
 		}
+
+		Ex = m_pVolumeGeometry->getWindowMinY() + pixelLengthX*0.5f;
+		Ey = m_pVolumeGeometry->getWindowMaxY() - pixelLengthY*0.5f;
 
 		// loop detectors
 		for (iDetector = _iDetFrom; iDetector < _iDetTo; ++iDetector) {
@@ -98,18 +160,17 @@ void CParallelBeamBlobKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 			// POLICY: RAY PRIOR
 			if (!p.rayPrior(iRayIndex)) continue;
 	
-			detX = proj->fDetSX + (iDetector+0.5f) * proj->fDetUX;
-			detY = proj->fDetSY + (iDetector+0.5f) * proj->fDetUY;
+			Dx = proj->fDetSX + (iDetector+0.5f) * proj->fDetUX;
+			Dy = proj->fDetSY + (iDetector+0.5f) * proj->fDetUY;
 
 			// vertically
 			if (vertical) {
 
-				// calculate x for row 0
-				x = detX + (proj->fRayX/proj->fRayY)*(m_pVolumeGeometry->pixelRowToCenterY(0)-detY);
-				c = (x - m_pVolumeGeometry->getWindowMinX()) * inv_pixelLengthX - 0.5f;
+				// calculate c for row 0
+				c = (Dx + (Ey - Dy)*RxOverRy - Ex) * inv_pixelLengthX;
 
-				// for each row
-				for (row = 0; row < rowCount; ++row, c += update_c) {
+				// loop rows
+				for (row = 0; row < rowCount; ++row, c += deltac) {
 
 					col_left = int(c - 0.5f - m_fBlobSize);
 					col_right = int(c + 0.5f + m_fBlobSize);
@@ -117,17 +178,15 @@ void CParallelBeamBlobKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 					if (col_left < 0) col_left = 0; 
 					if (col_right > colCount-1) col_right = colCount-1; 
 
-					// for each column
+					// loop columns
 					for (col = col_left; col <= col_right; ++col) {
 
-						offset = abs(c - float32(col)) * invBlobExtent;
-						index = (int)(offset*m_iBlobSampleCount+0.5f);
-						weight = m_pfBlobValues[min(index,m_iBlobSampleCount-1)];
-				
 						iVolumeIndex = row * colCount + col;
 						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
 						if (p.pixelPrior(iVolumeIndex)) {
-							p.addWeight(iRayIndex, iVolumeIndex, weight);
+							offset = abs(c - float32(col)) * invBlobExtent;
+							index = (int)(offset*m_iBlobSampleCount+0.5f);
+							p.addWeight(iRayIndex, iVolumeIndex, m_pfBlobValues[min(index,m_iBlobSampleCount-1)]);
 							p.pixelPosterior(iVolumeIndex);
 						}
 					}
@@ -137,12 +196,11 @@ void CParallelBeamBlobKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 			// horizontally
 			else {
 
-				// calculate y for col 0
-				y = detY + (proj->fRayY/proj->fRayX)*(m_pVolumeGeometry->pixelColToCenterX(0)-detX);
-				r = (m_pVolumeGeometry->getWindowMaxY() - y) * inv_pixelLengthY - 0.5f;
+				// calculate r for col 0
+				r = -(Dy + (Ex - Dx)*RyOverRx - Ey) * inv_pixelLengthY;
 
-				// for each col
-				for (col = 0; col < colCount; ++col, r += update_r) {
+				// loop columns
+				for (col = 0; col < colCount; ++col, r += deltar) {
 
 					row_top = int(r - 0.5f - m_fBlobSize);
 					row_bottom = int(r + 0.5f + m_fBlobSize);
@@ -150,21 +208,18 @@ void CParallelBeamBlobKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 					if (row_top < 0) row_top = 0; 
 					if (row_bottom > rowCount-1) row_bottom = rowCount-1; 
 
-					// for each column
+					// loop rows
 					for (row = row_top; row <= row_bottom; ++row) {
 
-						offset = abs(r - float32(row)) * invBlobExtent;
-						index = (int)(offset*m_iBlobSampleCount+0.5f);
-						weight = m_pfBlobValues[min(index,m_iBlobSampleCount-1)];
-				
 						iVolumeIndex = row * colCount + col;
 						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
 						if (p.pixelPrior(iVolumeIndex)) {
-							p.addWeight(iRayIndex, iVolumeIndex, weight);
+							offset = abs(r - float32(row)) * invBlobExtent;
+							index = (int)(offset*m_iBlobSampleCount+0.5f);
+							p.addWeight(iRayIndex, iVolumeIndex, m_pfBlobValues[min(index,m_iBlobSampleCount-1)]);
 							p.pixelPosterior(iVolumeIndex);
 						}
 					}
-
 				}
 			}
 	

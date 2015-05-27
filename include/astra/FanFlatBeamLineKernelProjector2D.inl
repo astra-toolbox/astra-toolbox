@@ -25,9 +25,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 $Id$
 */
-
-
-using namespace astra;
+#define policy_weight(p,rayindex,volindex,weight) if (p.pixelPrior(volindex)) { p.addWeight(rayindex, volindex, weight); p.pixelPosterior(volindex); }
 
 template <typename Policy>
 void CFanFlatBeamLineKernelProjector2D::project(Policy& p)
@@ -55,12 +53,6 @@ void CFanFlatBeamLineKernelProjector2D::projectSingleRay(int _iProjection, int _
 template <typename Policy>
 void CFanFlatBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, int _iProjTo, int _iDetFrom, int _iDetTo, Policy& p)
 {
-	// variables
-	float32 detX, detY, S, T, I, x, y, c, r, update_c, update_r, offset;
-	float32 lengthPerRow, lengthPerCol, inv_pixelLengthX, inv_pixelLengthY, invTminSTimesLengthPerRow, invTminSTimesLengthPerCol;
-	int iVolumeIndex, iRayIndex, row, col, iAngle, iDetector, colCount, rowCount, detCount;
-	const SFanProjection * proj = 0;
-
 	// get vector geometry
 	const CFanFlatVecProjectionGeometry2D* pVecProjectionGeometry;
 	if (dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pProjectionGeometry)) {
@@ -70,16 +62,26 @@ void CFanFlatBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, in
 	}
 
 	// precomputations
-	inv_pixelLengthX = 1.0f / m_pVolumeGeometry->getPixelLengthX();
-	inv_pixelLengthY = 1.0f / m_pVolumeGeometry->getPixelLengthY();
-	colCount = m_pVolumeGeometry->getGridColCount();
-	rowCount = m_pVolumeGeometry->getGridRowCount();
-	detCount = pVecProjectionGeometry->getDetectorCount();
+	const float32 pixelLengthX = m_pVolumeGeometry->getPixelLengthX();
+	const float32 pixelLengthY = m_pVolumeGeometry->getPixelLengthY();
+	const float32 inv_pixelLengthX = 1.0f / pixelLengthX;
+	const float32 inv_pixelLengthY = 1.0f / pixelLengthY;
+	const int colCount = m_pVolumeGeometry->getGridColCount();
+	const int rowCount = m_pVolumeGeometry->getGridRowCount();
+	const int detCount = pVecProjectionGeometry->getDetectorCount();
+	const float32 Ex = m_pVolumeGeometry->getWindowMinY() + pixelLengthX*0.5f;
+	const float32 Ey = m_pVolumeGeometry->getWindowMaxY() - pixelLengthY*0.5f;
 
 	// loop angles
-	for (iAngle = _iProjFrom; iAngle < _iProjTo; ++iAngle) {
+	#pragma omp parallel for
+	for (int iAngle = _iProjFrom; iAngle < _iProjTo; ++iAngle) {
 
-		proj = &pVecProjectionGeometry->getProjectionVectors()[iAngle];
+		// variables
+		float32 Dx, Dy, Rx, Ry, S, T, weight, c, r, deltac, deltar, offset, RxOverRy, RyOverRx;
+		float32 lengthPerRow, lengthPerCol, invTminSTimesLengthPerRow, invTminSTimesLengthPerCol;
+		int iVolumeIndex, iRayIndex, row, col, iDetector;
+
+		const SFanProjection * proj = &pVecProjectionGeometry->getProjectionVectors()[iAngle];
 
 		// loop detectors
 		for (iDetector = _iDetFrom; iDetector < _iDetTo; ++iDetector) {
@@ -89,156 +91,116 @@ void CFanFlatBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, in
 			// POLICY: RAY PRIOR
 			if (!p.rayPrior(iRayIndex)) continue;
 	
-			detX = proj->fDetSX + (iDetector+0.5f) * proj->fDetUX;
-			detY = proj->fDetSY + (iDetector+0.5f) * proj->fDetUY;
+			Dx = proj->fDetSX + (iDetector+0.5f) * proj->fDetUX;
+			Dy = proj->fDetSY + (iDetector+0.5f) * proj->fDetUY;
 
-			float32 fRayX = proj->fSrcX - detX;
-			float32 fRayY = proj->fSrcY - detY;
+			Rx = proj->fSrcX - Dx;
+			Ry = proj->fSrcY - Dy;
 
-			bool vertical = fabs(fRayX) < fabs(fRayY);
+			bool vertical = fabs(Rx) < fabs(Ry);
 			if (vertical) {
-				lengthPerRow = m_pVolumeGeometry->getPixelLengthX() * sqrt(fRayY*fRayY + fRayX*fRayX) / abs(fRayY);
-				update_c = -m_pVolumeGeometry->getPixelLengthY() * (fRayX/fRayY) * inv_pixelLengthX;
-				S = 0.5f - 0.5f*fabs(fRayX/fRayY);
-				T = 0.5f + 0.5f*fabs(fRayX/fRayY);
+				RxOverRy = Rx/Ry;
+				lengthPerRow = pixelLengthX * sqrt(Rx*Rx + Ry*Ry) / abs(Ry);
+				deltac = -pixelLengthY * RxOverRy * inv_pixelLengthX;
+				S = 0.5f - 0.5f*fabs(RxOverRy);
+				T = 0.5f + 0.5f*fabs(RxOverRy);
 				invTminSTimesLengthPerRow = lengthPerRow / (T - S);
 			} else {
-				lengthPerCol = m_pVolumeGeometry->getPixelLengthY() * sqrt(fRayY*fRayY + fRayX*fRayX) / abs(fRayX);
-				update_r = -m_pVolumeGeometry->getPixelLengthX() * (fRayY/fRayX) * inv_pixelLengthY;
-				S = 0.5f - 0.5f*fabs(fRayY/fRayX);
-				T = 0.5f + 0.5f*fabs(fRayY/fRayX);
+				RyOverRx = Ry/Rx;
+				lengthPerCol = pixelLengthY * sqrt(Rx*Rx + Ry*Ry) / abs(Rx);
+				deltar = -pixelLengthX * RyOverRx * inv_pixelLengthY;
+				S = 0.5f - 0.5f*fabs(RyOverRx);
+				T = 0.5f + 0.5f*fabs(RyOverRx);
 				invTminSTimesLengthPerCol = lengthPerCol / (T - S);
 			}
+
+			bool isin = false;
 
 			// vertically
 			if (vertical) {
 
-				// calculate x for row 0
-				x = detX + (fRayX/fRayY)*(m_pVolumeGeometry->pixelRowToCenterY(0)-detY);
-				c = (x - m_pVolumeGeometry->getWindowMinX()) * inv_pixelLengthX - 0.5f;
+				// calculate c for row 0
+				c = (Dx + (Ey - Dy)*RxOverRy - Ex) * inv_pixelLengthX;
 
 				// for each row
-				for (row = 0; row < rowCount; ++row, c += update_c) {
+				for (row = 0; row < rowCount; ++row, c += deltac) {
 
 					col = int(c+0.5f);
+					if (col <= 0 || col >= colCount-1) { if (!isin) continue; else break; }
 					offset = c - float32(col);
-
-					if (col <= 0 || col >= colCount-1) continue;
 
 					// left
 					if (offset < -S) {
-						I = (offset + T) * invTminSTimesLengthPerRow;
+						weight = (offset + T) * invTminSTimesLengthPerRow;
 
 						iVolumeIndex = row * colCount + col - 1;
-						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-						if (p.pixelPrior(iVolumeIndex)) {
-							p.addWeight(iRayIndex, iVolumeIndex, lengthPerRow-I);
-							p.pixelPosterior(iVolumeIndex);
-						}
+						policy_weight(p, iRayIndex, iVolumeIndex, lengthPerRow-weight)
 
 						iVolumeIndex++;
-						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-						if (p.pixelPrior(iVolumeIndex)) {
-							p.addWeight(iRayIndex, iVolumeIndex, I);
-							p.pixelPosterior(iVolumeIndex);
-						}
+						policy_weight(p, iRayIndex, iVolumeIndex, weight)
 					}
 
 					// right
 					else if (S < offset) {
-						I = (offset - S) * invTminSTimesLengthPerRow;
+						weight = (offset - S) * invTminSTimesLengthPerRow;
 
 						iVolumeIndex = row * colCount + col;
-						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-						if (p.pixelPrior(iVolumeIndex)) {
-							p.addWeight(iRayIndex, iVolumeIndex, lengthPerRow-I);
-							p.pixelPosterior(iVolumeIndex);
-						}
+						policy_weight(p, iRayIndex, iVolumeIndex, lengthPerRow-weight)
 
 						iVolumeIndex++;
-						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-						if (p.pixelPrior(iVolumeIndex)) {
-							p.addWeight(iRayIndex, iVolumeIndex, I);
-							p.pixelPosterior(iVolumeIndex);
-						}
+						policy_weight(p, iRayIndex, iVolumeIndex, weight)
 					}
 
 					// centre
 					else {
 						iVolumeIndex = row * colCount + col;
-						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-						if (p.pixelPrior(iVolumeIndex)) {
-							p.addWeight(iRayIndex, iVolumeIndex, lengthPerRow);
-							p.pixelPosterior(iVolumeIndex);
-						}
+						policy_weight(p, iRayIndex, iVolumeIndex, lengthPerRow)
 					}
-		
+					isin = true;
 				}
 			}
 
 			// horizontally
 			else {
 
-				// calculate y for col 0
-				y = detY + (fRayY/fRayX)*(m_pVolumeGeometry->pixelColToCenterX(0)-detX);
-				r = (m_pVolumeGeometry->getWindowMaxY() - y) * inv_pixelLengthY - 0.5f;
+				// calculate r for col 0
+				r = -(Dy + (Ex - Dx)*RyOverRx - Ey) * inv_pixelLengthY;
 
 				// for each col
-				for (col = 0; col < colCount; ++col, r += update_r) {
+				for (col = 0; col < colCount; ++col, r += deltar) {
 
 					int row = int(r+0.5f);
+					if (row <= 0 || row >= rowCount-1) { if (!isin) continue; else break; }
 					offset = r - float32(row);
-
-					if (row <= 0 || row >= rowCount-1) continue;
 
 					// up
 					if (offset < -S) {
-						I = (offset + T) * invTminSTimesLengthPerCol;
+						weight = (offset + T) * invTminSTimesLengthPerCol;
 
 						iVolumeIndex = (row-1) * colCount + col;
-						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-						if (p.pixelPrior(iVolumeIndex)) {
-							p.addWeight(iRayIndex, iVolumeIndex, lengthPerCol-I);
-							p.pixelPosterior(iVolumeIndex);
-						}
+						policy_weight(p, iRayIndex, iVolumeIndex, lengthPerCol-weight)
 
 						iVolumeIndex += colCount;
-						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-						if (p.pixelPrior(iVolumeIndex)) {
-							p.addWeight(iRayIndex, iVolumeIndex, I);
-							p.pixelPosterior(iVolumeIndex);
-						}
+						policy_weight(p, iRayIndex, iVolumeIndex, weight)
 					}
 
 					// down
 					else if (S < offset) {
-						I = (offset - S) * invTminSTimesLengthPerCol;
+						weight = (offset - S) * invTminSTimesLengthPerCol;
 
 						iVolumeIndex = row * colCount + col;
-						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-						if (p.pixelPrior(iVolumeIndex)) {
-							p.addWeight(iRayIndex, iVolumeIndex, lengthPerCol-I);
-							p.pixelPosterior(iVolumeIndex);
-						}
+						policy_weight(p, iRayIndex, iVolumeIndex, lengthPerCol-weight)
 
 						iVolumeIndex += colCount;
-						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-						if (p.pixelPrior(iVolumeIndex)) {
-							p.addWeight(iRayIndex, iVolumeIndex, I);
-							p.pixelPosterior(iVolumeIndex);
-						}
+						policy_weight(p, iRayIndex, iVolumeIndex, weight)
 					}
 
 					// centre
 					else {
 						iVolumeIndex = row * colCount + col;
-						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-						if (p.pixelPrior(iVolumeIndex)) {
-							p.addWeight(iRayIndex, iVolumeIndex, lengthPerCol);
-							p.pixelPosterior(iVolumeIndex);
-						}
+						policy_weight(p, iRayIndex, iVolumeIndex, lengthPerCol)
 					}
-
+					isin = true;
 				}
 			}
 	

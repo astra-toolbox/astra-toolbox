@@ -49,6 +49,68 @@ void CParallelBeamStripKernelProjector2D::projectSingleRay(int _iProjection, int
 
 //----------------------------------------------------------------------------------------
 // PROJECT BLOCK
+// 
+// Kernel limitations: isotropic pixels (PixelLengthX == PixelLengthY)
+//
+// For each angle/detector pair:
+// 
+// Let DL=(DLx,DLy) denote the left of the detector (point) in volume coordinates, and
+// Let DR=(DRx,DRy) denote the right of the detector (point) in volume coordinates, and
+// let R=(Rx,Ry) denote the direction of the ray (vector).
+// 
+// For mainly vertical rays (|Rx|<=|Ry|), 
+// let E=(Ex,Ey) denote the centre of the most upper left pixel:
+//    E = (WindowMinX +  PixelLengthX/2, WindowMaxY - PixelLengthY/2),
+// and let F=(Fx,Fy) denote a vector to the next pixel 
+//    F = (PixelLengthX, 0)
+// 
+// The intersection of the left edge of the strip (DL+aR) with the centre line of the upper row of pixels (E+bF) is
+//    { DLx + a*Rx = Ex + b*Fx
+//    { DLy + a*Ry = Ey + b*Fy
+// Solving for (a,b) results in:
+//    a = (Ey + b*Fy - DLy)/Ry
+//      = (Ey - DLy)/Ry
+//    b = (DLx + a*Rx - Ex)/Fx
+//      = (DLx + (Ey - DLy)*Rx/Ry - Ex)/Fx
+//
+// Define cL as the x-value of the intersection of the left edge of the strip with the upper row in pixel coordinates. 
+//    cL = b 
+//
+// cR, the x-value of the intersection of the right edge of the strip with the upper row in pixel coordinates can be found similarly.
+//
+// The intersection of the ray (DL+aR) with the left line of the second row of pixels (E'+bF) with
+//    E'=(WindowMinX + PixelLengthX/2, WindowMaxY - 3*PixelLengthY/2)
+// expressed in x-value pixel coordinates is
+//    cL' = (DLx + (Ey' - DLy)*Rx/Ry - Ex)/Fx.
+// And thus:
+//    deltac = cL' - cL = (DLx + (Ey' - DLy)*Rx/Ry - Ex)/Fx - (DLx + (Ey - DLy)*Rx/Ry - Ex)/Fx
+//                      = [(Ey' - DLy)*Rx/Ry - (Ey - DLy)*Rx/Ry]/Fx
+//                      = [Ey' - Ey]*(Rx/Ry)/Fx
+//                      = [Ey' - Ey]*(Rx/Ry)/Fx
+//                      = -PixelLengthY*(Rx/Ry)/Fx.
+//
+// The projection weight for a certain pixel is defined by the area between two points of 
+//
+//         _____       LengthPerRow
+//       /|  |  |\
+//      / |  |  | \
+//   __/  |  |  |  \__ 0
+//    -T -S  0  S  T
+// with S = 1/2 - 1/2*|Rx/Ry|, T = 1/2 + 1/2*|Rx/Ry|, and LengthPerRow = pixelLengthX * sqrt(Rx^2+Ry^2) / |Ry|
+// 
+// For a certain row, all columns that are 'hit' by this kernel lie in the interval
+//    (col_left, col_right) = (floor(cL-1/2+S), floor(cR+3/2-S))
+//
+// The offsets for both is
+//    (offsetL, offsetR) = (cL - floor(col_left), cR - floor(col_left))
+//
+// The projection weight is found by the difference between the integrated values of the kernel
+//         offset <= -T   Kernel = 0
+//    -T < offset <= -S   Kernel = PixelArea/2*(T+offset)^2/(T-S)
+//    -S < offset <=  S   Kernel = PixelArea/2 + offset
+//     S < offset <=  T   Kernel = PixelArea - PixelArea/2*(T-offset)^2/(T-S)
+//     T <= offset:       Kernel = PixelArea
+//
 template <typename Policy>
 void CParallelBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, int _iProjTo, int _iDetFrom, int _iDetTo, Policy& p)
 {
@@ -61,9 +123,11 @@ void CParallelBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, 
 	}
 
 	// precomputations
-	const float32 inv_pixelLengthX = 1.0f / m_pVolumeGeometry->getPixelLengthX();
-	const float32 inv_pixelLengthY = 1.0f / m_pVolumeGeometry->getPixelLengthY();
-	const float32 pixelArea = m_pVolumeGeometry->getPixelLengthX() * m_pVolumeGeometry->getPixelLengthY();
+	const float32 pixelLengthX = m_pVolumeGeometry->getPixelLengthX();
+	const float32 pixelLengthY = m_pVolumeGeometry->getPixelLengthY();
+	const float32 pixelArea = pixelLengthX * pixelLengthY;
+	const float32 inv_pixelLengthX = 1.0f / pixelLengthX;
+	const float32 inv_pixelLengthY = 1.0f / pixelLengthY;
 	const int colCount = m_pVolumeGeometry->getGridColCount();
 	const int rowCount = m_pVolumeGeometry->getGridRowCount();
 	const int detCount = pVecProjectionGeometry->getDetectorCount();
@@ -73,8 +137,8 @@ void CParallelBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, 
 	for (int iAngle = _iProjFrom; iAngle < _iProjTo; ++iAngle) {
 
 		// variables
-		float32 detLX, detLY, detRX, detRY, S, T, update_c, update_r, offsetL, offsetR, invTminS;
-		float32 res, fRxOverRy, fRyOverRx;
+		float32 DLx, DLy, DRx, DRy, Ex, Ey, S, T, deltac, deltar, offsetL, offsetR, invTminS;
+		float32 res, RxOverRy, RyOverRx, cL, cR, rL, rR;
 		int iVolumeIndex, iRayIndex, iDetector;
 		int row, row_top, row_bottom, col, col_left, col_right;
 
@@ -82,18 +146,21 @@ void CParallelBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, 
 
 		bool vertical = fabs(proj->fRayX) < fabs(proj->fRayY);
 		if (vertical) {
-			fRxOverRy = proj->fRayX/proj->fRayY;
-			update_c = -m_pVolumeGeometry->getPixelLengthY() * fRxOverRy * inv_pixelLengthX;
-			S = 0.5f - 0.5f*fabs(fRxOverRy);
-			T = 0.5f + 0.5f*fabs(fRxOverRy);
+			RxOverRy = proj->fRayX/proj->fRayY;
+			deltac = -m_pVolumeGeometry->getPixelLengthY() * RxOverRy * inv_pixelLengthX;
+			S = 0.5f - 0.5f*fabs(RxOverRy);
+			T = 0.5f + 0.5f*fabs(RxOverRy);
 			invTminS = 1.0f / (T-S);
 		} else {
-			fRyOverRx = proj->fRayY/proj->fRayX;
-			update_r = -m_pVolumeGeometry->getPixelLengthX() * fRyOverRx * inv_pixelLengthY;
-			S = 0.5f - 0.5f*fabs(fRyOverRx);
-			T = 0.5f + 0.5f*fabs(fRyOverRx);
+			RyOverRx = proj->fRayY/proj->fRayX;
+			deltar = -m_pVolumeGeometry->getPixelLengthX() * RyOverRx * inv_pixelLengthY;
+			S = 0.5f - 0.5f*fabs(RyOverRx);
+			T = 0.5f + 0.5f*fabs(RyOverRx);
 			invTminS = 1.0f / (T-S);
 		}
+
+		Ex = m_pVolumeGeometry->getWindowMinY() + pixelLengthX*0.5f;
+		Ey = m_pVolumeGeometry->getWindowMaxY() - pixelLengthY*0.5f;
 
 		// loop detectors
 		for (iDetector = _iDetFrom; iDetector < _iDetTo; ++iDetector) {
@@ -103,19 +170,17 @@ void CParallelBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, 
 			// POLICY: RAY PRIOR
 			if (!p.rayPrior(iRayIndex)) continue;
 	
-			detLX = proj->fDetSX + iDetector * proj->fDetUX;
-			detLY = proj->fDetSY + iDetector * proj->fDetUY;
-			detRX = detLX + proj->fDetUX;
-			detRY = detLY + proj->fDetUY;
+			DLx = proj->fDetSX + iDetector * proj->fDetUX;
+			DLy = proj->fDetSY + iDetector * proj->fDetUY;
+			DRx = DLx + proj->fDetUX;
+			DRy = DLy + proj->fDetUY;
 
 			// vertically
 			if (vertical) {
 
 				// calculate cL and cR for row 0
-				float32 xL = detLX + fRxOverRy*(m_pVolumeGeometry->pixelRowToCenterY(0)-detLY);
-				float32 cL = (xL - m_pVolumeGeometry->getWindowMinX()) * inv_pixelLengthX - 0.5f;
-				float32 xR = detRX + fRxOverRy*(m_pVolumeGeometry->pixelRowToCenterY(0)-detRY);
-				float32 cR = (xR - m_pVolumeGeometry->getWindowMinX()) * inv_pixelLengthX - 0.5f;
+				cL = (DLx + (Ey - DLy)*RxOverRy - Ex) * inv_pixelLengthX;
+				cR = (DRx + (Ey - DRy)*RxOverRy - Ex) * inv_pixelLengthX;
 
 				if (cR < cL) {
 					float32 tmp = cL;
@@ -123,8 +188,8 @@ void CParallelBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, 
 					cR = tmp;
 				}
 
-				// for each row
-				for (row = 0; row < rowCount; ++row, cL += update_c, cR += update_c) {
+				// loop rows
+				for (row = 0; row < rowCount; ++row, cL += deltac, cR += deltac) {
 
 					col_left = int(cL-0.5f+S);
 					col_right = int(cR+1.5-S);
@@ -132,27 +197,27 @@ void CParallelBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, 
 					if (col_left < 0) col_left = 0; 
 					if (col_right > colCount-1) col_right = colCount-1; 
 
-					offsetL = cL - float32(col_left);
-					offsetR = cR - float32(col_left);
+					float32 tmp = float32(col_left);
+					offsetL = cL - tmp;
+					offsetR = cR - tmp;
 
-					// for each column
+					// loop columns
 					for (col = col_left; col <= col_right; ++col, offsetL -= 1.0f, offsetR -= 1.0f) {
 
 						iVolumeIndex = row * colCount + col;
-
 						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
 						if (p.pixelPrior(iVolumeIndex)) {
 
 							// right ray edge
-							if (T <= offsetR) 		res = 1.0f;
-							else if (S < offsetR) 	res = 1.0f - 0.5f*(T-offsetR)*(T-offsetR)*invTminS;
-							else if (-S < offsetR) 	res = 0.5f + offsetR;
-							else if (-T < offsetR) 	res = 0.5f*(offsetR+T)*(offsetR+T)*invTminS;
-							else 					res = 0.0f;
+							if (T <= offsetR)       res = 1.0f;
+							else if (S < offsetR)   res = 1.0f - 0.5f*(T-offsetR)*(T-offsetR)*invTminS;
+							else if (-S < offsetR)  res = 0.5f + offsetR;
+							else if (-T < offsetR)  res = 0.5f*(offsetR+T)*(offsetR+T)*invTminS;
+							else                    res = 0.0f;
 
 							// left ray edge
-							if (T <= offsetL) 		res -= 1.0f;
-							else if (S < offsetL) 	res -= 1.0f - 0.5f*(T-offsetL)*(T-offsetL)*invTminS;
+							if (T <= offsetL)       res -= 1.0f;
+							else if (S < offsetL)   res -= 1.0f - 0.5f*(T-offsetL)*(T-offsetL)*invTminS;
 							else if (-S < offsetL)  res -= 0.5f + offsetL;
 							else if (-T < offsetL)  res -= 0.5f*(offsetL+T)*(offsetL+T)*invTminS;
 
@@ -167,10 +232,8 @@ void CParallelBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, 
 			else {
 
 				// calculate rL and rR for row 0
-				float32 yL = detLY + fRyOverRx*(m_pVolumeGeometry->pixelColToCenterX(0)-detLX);
-				float32 rL = (m_pVolumeGeometry->getWindowMaxY() - yL) * inv_pixelLengthY - 0.5f;
-				float32 yR = detRY + fRyOverRx*(m_pVolumeGeometry->pixelColToCenterX(0)-detRX);
-				float32 rR = (m_pVolumeGeometry->getWindowMaxY() - yR) * inv_pixelLengthY - 0.5f;
+				rL = -(DLy + (Ex - DLx)*RyOverRx - Ey) * inv_pixelLengthY;
+				rR = -(DRy + (Ex - DRx)*RyOverRx - Ey) * inv_pixelLengthY;
 
 				if (rR < rL) {
 					float32 tmp = rL;
@@ -178,8 +241,8 @@ void CParallelBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, 
 					rR = tmp;
 				}
 
-				// for each column
-				for (col = 0; col < colCount; ++col, rL += update_r, rR += update_r) {
+				// loop columns
+				for (col = 0; col < colCount; ++col, rL += deltar, rR += deltar) {
 
 					row_top = int(rL-0.5f+S);
 					row_bottom = int(rR+1.5-S);
@@ -187,30 +250,29 @@ void CParallelBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, 
 					if (row_top < 0) row_top = 0; 
 					if (row_bottom > rowCount-1) row_bottom = rowCount-1; 
 
-					offsetL = rL - float32(row_top);
-					offsetR = rR - float32(row_top);
+					float32 tmp = float32(row_top);
+					offsetL = rL - tmp;
+					offsetR = rR - tmp;
 
-					// for each row
+					// loop rows
 					for (row = row_top; row <= row_bottom; ++row, offsetL -= 1.0f, offsetR -= 1.0f) {
 
 						iVolumeIndex = row * colCount + col;
-
 						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
 						if (p.pixelPrior(iVolumeIndex)) {
 
 							// right ray edge
-							if (T <= offsetR) 		res = 1.0f;
-							else if (S < offsetR) 	res = 1.0f - 0.5f*(T-offsetR)*(T-offsetR)*invTminS;
-							else if (-S < offsetR) 	res = 0.5f + offsetR;
-							else if (-T < offsetR) 	res = 0.5f*(offsetR+T)*(offsetR+T)*invTminS;
-							else 					res = 0.0f;
+							if (T <= offsetR)       res = 1.0f;
+							else if (S < offsetR)   res = 1.0f - 0.5f*(T-offsetR)*(T-offsetR)*invTminS;
+							else if (-S < offsetR)  res = 0.5f + offsetR;
+							else if (-T < offsetR)  res = 0.5f*(offsetR+T)*(offsetR+T)*invTminS;
+							else                    res = 0.0f;
 
 							// left ray edge
-							if (T <= offsetL) 		res -= 1.0f;
-							else if (S < offsetL) 	res -= 1.0f - 0.5f*(T-offsetL)*(T-offsetL)*invTminS;
+							if (T <= offsetL)       res -= 1.0f;
+							else if (S < offsetL)   res -= 1.0f - 0.5f*(T-offsetL)*(T-offsetL)*invTminS;
 							else if (-S < offsetL)  res -= 0.5f + offsetL;
 							else if (-T < offsetL)  res -= 0.5f*(offsetL+T)*(offsetL+T)*invTminS;
-
 
 							p.addWeight(iRayIndex, iVolumeIndex, pixelArea*res);
 							p.pixelPosterior(iVolumeIndex);
