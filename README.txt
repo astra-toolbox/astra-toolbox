@@ -49,18 +49,20 @@ Add the mex and tools subdirectories to your matlab path.
 Linux, from source:
 --------------------
 
-Requirements: g++, boost, CUDA (driver+toolkit), matlab
+Requirements: g++, boost, CUDA (driver+toolkit), Matlab and/or Python (2.7 or 3.x)
 
 cd build/linux
 ./autogen.sh   # when building a git version
 ./configure --with-cuda=/usr/local/cuda \
             --with-matlab=/usr/local/MATLAB/R2012a \
+            --with-python \
             --prefix=/usr/local/astra
 make
 make install
 Add /usr/local/astra/lib to your LD_LIBRARY_PATH.
 Add /usr/local/astra/matlab and its subdirectories (tools, mex)
   to your matlab path.
+Add /usr/local/astra/python to your PYTHONPATH.
 
 
 NB: Each matlab version only supports a specific range of g++ versions.

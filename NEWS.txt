@@ -9,6 +9,12 @@ Contact: astra@uantwerpen.be
 Website: http://sf.net/projects/astra-toolbox
 -----------------------------------------------------------------------
 
+1.6 (2015-05-29)
+  * integrate and improve python interface
+  * integrate opSpot-based opTomo operator
+  * build fixes for newer platforms
+  * various consistency and bug fixes
+
 1.5 (2015-01-30)
   * add support for fan beam FBP
   * remove limits on number of angles in GPU code
