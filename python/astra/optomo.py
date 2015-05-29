@@ -32,7 +32,13 @@ from . import creators
 from . import algorithm
 from . import functions
 import numpy as np
-from six.moves import range, reduce
+from six.moves import reduce
+try:
+    from six.moves import range
+except ImportError:
+    # six 1.3.0
+    from six.moves import xrange as range
+
 import operator
 import scipy.sparse.linalg
 
@@ -158,7 +164,7 @@ class OpTomo(scipy.sparse.linalg.LinearOperator):
         :param extraOptions: Extra options to use during reconstruction (i.e. for cfg['option']).
         :type extraOptions: :class:`dict`
         """
-        self.__checkArray(s, self.sshape)
+        s = self.__checkArray(s, self.sshape)
         sid = self.data_mod.link('-sino',self.pg,s)
         v = np.zeros(self.vshape,dtype=np.float32)
         vid = self.data_mod.link('-vol',self.vg,v)

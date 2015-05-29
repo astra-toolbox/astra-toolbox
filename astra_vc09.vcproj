@@ -102,7 +102,8 @@
 				Arch3="35"
 				TargetMachinePlatform="0"
 				Runtime="3"
-				Defines="-DASTRA_CUDA -DDLL_EXPORTS"
+				ExtraCppOptions="-Iinclude -Ilib/include"
+				Defines="ASTRA_CUDA;DLL_EXPORTS"
 			/>
 		</Configuration>
 		<Configuration
@@ -186,7 +187,8 @@
 				Arch3="35"
 				TargetMachinePlatform="1"
 				Runtime="3"
-				Defines="-DASTRA_CUDA -DDLL_EXPORTS"
+				ExtraCppOptions="-Iinclude -Ilib/include"
+				Defines="ASTRA_CUDA;DLL_EXPORTS"
 			/>
 		</Configuration>
 		<Configuration
@@ -270,7 +272,8 @@
 				Arch3="35"
 				TargetMachinePlatform="0"
 				Runtime="3"
-				Defines="-DDLL_EXPORTS"
+				ExtraCppOptions="-Iinclude -Ilib/include"
+				Defines="DLL_EXPORTS"
 			/>
 		</Configuration>
 		<Configuration
@@ -353,7 +356,8 @@
 				Arch3="35"
 				TargetMachinePlatform="1"
 				Runtime="3"
-				Defines="-DDLL_EXPORTS"
+				ExtraCppOptions="-Iinclude -Ilib/include"
+				Defines="DLL_EXPORTS"
 			/>
 		</Configuration>
 		<Configuration
@@ -435,7 +439,8 @@
 				Arch3="35"
 				TargetMachinePlatform="0"
 				Runtime="2"
-				Defines="-DASTRA_CUDA -DDLL_EXPORTS"
+				ExtraCppOptions="-Iinclude -Ilib/include"
+				Defines="ASTRA_CUDA;DLL_EXPORTS"
 			/>
 		</Configuration>
 		<Configuration
@@ -516,7 +521,8 @@
 				Arch3="35"
 				TargetMachinePlatform="1"
 				Runtime="2"
-				Defines="-DASTRA_CUDA -DDLL_EXPORTS"
+				ExtraCppOptions="-Iinclude -Ilib/include"
+				Defines="ASTRA_CUDA;DLL_EXPORTS"
 			/>
 		</Configuration>
 		<Configuration
@@ -597,7 +603,8 @@
 				Arch3="35"
 				TargetMachinePlatform="0"
 				Runtime="2"
-				Defines="-DDLL_EXPORTS"
+				ExtraCppOptions="-Iinclude -Ilib/include"
+				Defines="DLL_EXPORTS"
 			/>
 		</Configuration>
 		<Configuration
@@ -677,7 +684,8 @@
 				Arch3="35"
 				TargetMachinePlatform="1"
 				Runtime="2"
-				Defines="-DDLL_EXPORTS"
+				ExtraCppOptions="-Iinclude -Ilib/include"
+				Defines="DLL_EXPORTS"
 			/>
 		</Configuration>
 	</Configurations>

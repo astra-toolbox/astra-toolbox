@@ -946,10 +946,11 @@ def write_main_project09():
       print('\t\t\t\tRuntime="3"', file=F) # MDD
     else:
       print('\t\t\t\tRuntime="2"', file=F) # MD
+    print('\t\t\t\tExtraCppOptions="-Iinclude -Ilib/include"', file=F)
     if c.cuda:
-      print('\t\t\t\tDefines="-DASTRA_CUDA -DDLL_EXPORTS"', file=F)
+      print('\t\t\t\tDefines="ASTRA_CUDA;DLL_EXPORTS"', file=F)
     else: # This 'else' doesn't make much sense
-      print('\t\t\t\tDefines="-DDLL_EXPORTS"', file=F)
+      print('\t\t\t\tDefines="DLL_EXPORTS"', file=F)
     # TODO!!!
     print('\t\t\t/>', file=F)
     print('\t\t</Configuration>', file=F)
