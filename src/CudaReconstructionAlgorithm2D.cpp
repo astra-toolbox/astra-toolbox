@@ -95,8 +95,22 @@ bool CCudaReconstructionAlgorithm2D::initialize(const Config& _cfg)
 		clear();
 	}
 
+	// Projector
+	XMLNode node = _cfg.self.getSingleNode("ProjectorId");
+	CCudaProjector2D* pCudaProjector = 0;
+	if (node) {
+		int id = boost::lexical_cast<int>(node.getContent());
+		CProjector2D *projector = CProjector2DManager::getSingleton().get(id);
+		pCudaProjector = dynamic_cast<CCudaProjector2D*>(projector);
+		if (!pCudaProjector) {
+			ASTRA_WARN("non-CUDA Projector2D passed");
+		}
+	}
+	CC.markNodeParsed("ProjectorId");
+
+
 	// sinogram data
-	XMLNode node = _cfg.self.getSingleNode("ProjectionDataId");
+	node = _cfg.self.getSingleNode("ProjectionDataId");
 	ASTRA_CONFIG_CHECK(node, "CudaSirt2", "No ProjectionDataId tag specified.");
 	int id = boost::lexical_cast<int>(node.getContent());
 	m_pSinogram = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
@@ -161,25 +175,19 @@ bool CCudaReconstructionAlgorithm2D::initialize(const Config& _cfg)
 	if (!_cfg.self.hasOption("GPUindex"))
 		CC.markOptionParsed("GPUIndex");
 
-	// Detector supersampling factor
-	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", 1);
-	CC.markOptionParsed("DetectorSuperSampling");
-
-	// Pixel supersampling factor
-	m_iPixelSuperSampling = (int)_cfg.self.getOptionNumerical("PixelSuperSampling", 1);
-	CC.markOptionParsed("PixelSuperSampling");
-
-
-	// This isn't used yet, but passing it is not something to warn about
-	node = _cfg.self.getSingleNode("ProjectorId");
-	if (node) {
-		id = boost::lexical_cast<int>(node.getContent());
-		CProjector2D *projector = CProjector2DManager::getSingleton().get(id);
-		if (!dynamic_cast<CCudaProjector2D*>(projector)) {
-			ASTRA_WARN("non-CUDA Projector2D passed");
-		}
+	// Supersampling factors
+	m_iDetectorSuperSampling = 1;
+	m_iPixelSuperSampling = 1;
+	if (pCudaProjector) {
+		// New interface
+		m_iDetectorSuperSampling = pCudaProjector->getDetectorSuperSampling();
+		m_iPixelSuperSampling = pCudaProjector->getVoxelSuperSampling();
 	}
-	CC.markNodeParsed("ProjectorId");
+	// Deprecated options
+	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", m_iDetectorSuperSampling);
+	m_iPixelSuperSampling = (int)_cfg.self.getOptionNumerical("PixelSuperSampling", m_iPixelSuperSampling);
+	CC.markOptionParsed("DetectorSuperSampling");
+	CC.markOptionParsed("PixelSuperSampling");
 
 
 	return _check();
