@@ -266,6 +266,10 @@ py: libastra.la
 	cd ../../python; CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" $(PYTHON) builder.py install \
 	--install-base=./finalbuild --install-headers=./finalbuild --install-purelib=./finalbuild \
 	--install-platlib=./finalbuild --install-scripts=./finalbuild --install-data=./finalbuild
+
+python-root-install: libastra.la
+	cd ../../python; CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" $(PYTHON) builder.py install
+
 endif
 
 
