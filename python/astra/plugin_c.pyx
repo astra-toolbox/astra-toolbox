@@ -23,23 +23,37 @@
 #along with the Python interface to the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #
 #-----------------------------------------------------------------------
-from . import matlab as m
-from .creators import astra_dict,create_vol_geom, create_proj_geom, create_backprojection, create_sino, create_reconstruction, create_projector,create_sino3d_gpu, create_backprojection3d_gpu
-from .functions import data_op, add_noise_to_sino, clear, move_vol_geom
-from .extrautils import clipCircle
-from . import data2d
-from . import astra
-from . import data3d
-from . import algorithm
-from . import projector
-from . import projector3d
-from . import matrix
-from . import plugin
-from . import log
-from .optomo import OpTomo
+# distutils: language = c++
+# distutils: libraries = astra
 
-import os
-try:
-    astra.set_gpu_index(int(os.environ['ASTRA_GPU_INDEX']))
-except KeyError:
-    pass
+import six
+import inspect
+
+from libcpp.string cimport string
+from libcpp cimport bool
+
+cdef CPluginAlgorithmFactory *fact = getSingletonPtr()
+
+from . import utils
+
+cdef extern from "astra/PluginAlgorithm.h" namespace "astra":
+    cdef cppclass CPluginAlgorithmFactory:
+        bool registerPlugin(string name, string className)
+        bool registerPluginClass(string name, object className)
+        object getRegistered()
+        string getHelp(string name)
+
+cdef extern from "astra/PluginAlgorithm.h" namespace "astra::CPluginAlgorithmFactory":
+    cdef CPluginAlgorithmFactory* getSingletonPtr()
+
+def register(name, className):
+    if inspect.isclass(className):
+        fact.registerPluginClass(six.b(name), className)
+    else:
+        fact.registerPlugin(six.b(name), six.b(className))
+
+def get_registered():
+    return fact.getRegistered()
+
+def get_help(name):
+    return utils.wrap_from_bytes(fact.getHelp(six.b(name)))

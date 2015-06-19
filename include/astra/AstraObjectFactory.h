@@ -40,6 +40,10 @@ $Id$
 
 #include "AlgorithmTypelist.h"
 
+#ifdef ASTRA_PYTHON
+#include "PluginAlgorithm.h"
+#endif
+
 
 namespace astra {
 
@@ -146,6 +150,15 @@ T* CAstraObjectFactory<T, TypeList>::create(const Config& _cfg)
  * Class used to create algorithms from a string or a config object
 */
 class _AstraExport CAlgorithmFactory : public CAstraObjectFactory<CAlgorithm, AlgorithmTypeList> {};
+
+#ifdef ASTRA_PYTHON
+template <>
+inline CAlgorithm* CAstraObjectFactory<CAlgorithm, AlgorithmTypeList>::findPlugin(std::string _sType)
+	{
+		CPluginAlgorithmFactory *fac = CPluginAlgorithmFactory::getSingletonPtr();
+		return fac->getPlugin(_sType);
+	}
+#endif
 
 /**
  * Class used to create 2D projectors from a string or a config object

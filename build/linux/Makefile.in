@@ -50,11 +50,17 @@ LDFLAGS+=-fopenmp
 endif
 
 ifeq ($(python),yes)
-PYCPPFLAGS  = ${CPPFLAGS}
-PYCPPFLAGS  += -I../include
-PYLDFLAGS = ${LDFLAGS}
-PYLDFLAGS   += -L../build/linux/.libs
 PYTHON      = @PYTHON@
+PYLIBDIR = $(shell $(PYTHON) -c 'from distutils.sysconfig import get_config_var; import six; six.print_(get_config_var("LIBDIR"))')
+PYINCDIR = $(shell $(PYTHON) -c 'from distutils.sysconfig import get_python_inc; import six; six.print_(get_python_inc())')
+PYLIBVER = `basename $(PYINCDIR)`
+CPPFLAGS += -DASTRA_PYTHON -I$(PYINCDIR)
+PYCPPFLAGS  = $(CPPFLAGS)
+PYCPPFLAGS  += -I../include
+PYLDFLAGS = $(LDFLAGS)
+PYLDFLAGS   += -L../build/linux/.libs
+LIBS		+= -l$(PYLIBVER)
+LDFLAGS += -L$(PYLIBDIR)
 endif
 
 BOOST_CPPFLAGS=
@@ -234,6 +240,10 @@ MATLAB_MEX=\
 	matlab/mex/astra_mex_log_c.$(MEXSUFFIX) \
 	matlab/mex/astra_mex_data3d_c.$(MEXSUFFIX)
 
+ifeq ($(python),yes)
+ALL_OBJECTS+=src/PluginAlgorithm.lo
+MATLAB_MEX+=matlab/mex/astra_mex_plugin_c.$(MEXSUFFIX)
+endif
 
 OBJECT_DIRS = src/ tests/ cuda/2d/ cuda/3d/ matlab/mex/ ./
 DEPDIRS = $(addsuffix $(DEPDIR),$(OBJECT_DIRS))
