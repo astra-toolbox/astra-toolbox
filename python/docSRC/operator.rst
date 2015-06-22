@@ -1,4 +1,4 @@
-OpTomo class: the :mod:`operator` module
+OpTomo class: the :mod:`optomo` module
 ==============================================
 
 .. automodule:: astra.optomo
