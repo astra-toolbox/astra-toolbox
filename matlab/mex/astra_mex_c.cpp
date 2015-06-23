@@ -36,9 +36,9 @@ $Id$
 #include "mexInitFunctions.h"
 
 #include "astra/Globals.h"
-
+#ifdef ASTRA_CUDA
 #include "../cuda/2d/darthelper.h"
-
+#endif
 using namespace std;
 using namespace astra;
 
