@@ -128,6 +128,8 @@ cdef void readOptions(XMLNode node, dc):
         val = dc[item]
         if node.hasOption(item):
             raise Exception('Duplicate Option: %s' % item)
+        if isinstance(val, list):
+            val = np.array(val,dtype=np.float64)
         if isinstance(val, np.ndarray):
             if val.size == 0:
                 break
