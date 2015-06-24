@@ -275,7 +275,12 @@ PyObject* XMLNode2dict(XMLNode node){
     while(it!=nodes.end()){
         XMLNode subnode = *it;
         if(subnode.getName()=="Option"){
-            PyObject *obj = stringToPythonValue(subnode.getAttribute("value"));
+            PyObject *obj;
+            if(subnode.hasAttribute("value")){
+                obj = stringToPythonValue(subnode.getAttribute("value"));
+            }else{
+                obj = stringToPythonValue(subnode.getContent());
+            }
             PyDict_SetItemString(opts, subnode.getAttribute("key").c_str(), obj);
             Py_DECREF(obj);
         }else{
