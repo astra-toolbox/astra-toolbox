@@ -62,7 +62,7 @@ bool CPluginAlgorithm::initialize(const Config& _cfg){
 
 void CPluginAlgorithm::run(int _iNrIterations){
     if(instance==NULL) return;
-    PyObject *retVal = PyObject_CallMethod(instance, "run", "i",_iNrIterations);
+    PyObject *retVal = PyObject_CallMethod(instance, "astra_run", "i",_iNrIterations);
     if(retVal==NULL) return;
     Py_DECREF(retVal);
 }

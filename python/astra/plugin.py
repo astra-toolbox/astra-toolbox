@@ -65,6 +65,13 @@ class base(object):
             log.error(str(e))
             raise
 
+    def astra_run(self, its):
+        try:
+            self.run(its)
+        except Exception as e:
+            log.error(str(e))
+            raise
+
 def register(name, className):
     """Register plugin with ASTRA.
     
