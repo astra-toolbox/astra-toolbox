@@ -26,22 +26,20 @@
 
 from . import plugin_c as p
 from . import log
+import inspect
 
 class base(object):
 
     def astra_init(self, cfg):
         try:
-            try:
-                req = self.required_options
-            except AttributeError:
-                log.warn("Plugin '" + self.__class__.__name__ + "' does not specify required options")
-                req = {}
-
-            try:
-                opt = self.optional_options
-            except AttributeError:
-                log.warn("Plugin '" + self.__class__.__name__ + "' does not specify optional options")
-                opt = {}
+            args, varargs, varkw, defaults = inspect.getargspec(self.initialize)
+            nopt = len(defaults)
+            if nopt>0:
+                req = args[2:-nopt]
+                opt = args[-nopt:]
+            else:
+                req = args[2:]
+                opt = []
 
             try:
                 optDict = cfg['options']
@@ -60,7 +58,9 @@ class base(object):
             if not cfgKeys.issubset(reqKeys | optKeys):
                 log.warn(self.__class__.__name__ + ": unused configuration option: " + str(list(cfgKeys.difference(reqKeys | optKeys))))
 
-            self.initialize(cfg)
+            args = [optDict[k] for k in req]
+            kwargs = dict((k,optDict[k]) for k in opt if k in optDict)
+            self.initialize(cfg, *args, **kwargs)
         except Exception as e:
             log.error(str(e))
             raise

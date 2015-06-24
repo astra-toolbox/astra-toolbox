@@ -33,21 +33,16 @@ import six
 class SIRTPlugin(astra.plugin.base):
     """Example of an ASTRA plugin class, implementing a simple 2D SIRT algorithm.
 
-    Optional options:
+    Options:
 
-    'rel_factor': relaxation factor
+    'rel_factor': relaxation factor (optional)
     """
-    required_options=[]
-    optional_options=['rel_factor']
 
-    def initialize(self,cfg):
+    def initialize(self,cfg, rel_factor = 1):
         self.W = astra.OpTomo(cfg['ProjectorId'])
         self.vid = cfg['ReconstructionDataId']
         self.sid = cfg['ProjectionDataId']
-        try:
-            self.rel = cfg['option']['rel_factor']
-        except KeyError:
-            self.rel = 1
+        self.rel = rel_factor
 
     def run(self, its):
         v = astra.data2d.get_shared(self.vid)
