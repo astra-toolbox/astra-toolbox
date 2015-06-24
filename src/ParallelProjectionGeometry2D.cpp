@@ -180,6 +180,9 @@ Config* CParallelProjectionGeometry2D::getConfiguration() const
 	cfg->self.addChildNode("DetectorCount", getDetectorCount());
 	cfg->self.addChildNode("DetectorWidth", getDetectorWidth());
 	cfg->self.addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
+	XMLNode opt = cfg->self.addChildNode("Option");
+	opt.addAttribute("key","ExtraDetectorOffset");
+	opt.setContent(m_pfExtraDetectorOffset, m_iProjectionAngleCount);
 	return cfg;
 }
 //----------------------------------------------------------------------------------------
