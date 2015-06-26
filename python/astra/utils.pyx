@@ -204,7 +204,10 @@ cdef XMLNode2dict(XMLNode node):
     while it != nodes.end():
         subnode = deref(it)
         if castString(subnode.getName())=="Option":
-            opts[castString(subnode.getAttribute('key'))] = stringToPythonValue(subnode.getAttribute('value'))
+            if subnode.hasAttribute('value'):
+                opts[castString(subnode.getAttribute('key'))] = stringToPythonValue(subnode.getAttribute('value'))
+            else:
+                opts[castString(subnode.getAttribute('key'))] = stringToPythonValue(subnode.getContent())
         else:
             dct[castString(subnode.getName())] = stringToPythonValue(subnode.getContent())
         inc(it)
