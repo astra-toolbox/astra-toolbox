@@ -336,7 +336,11 @@ mxArray* XMLNodeToStruct(astra::XMLNode node)
 
 		// option
 		if (subnode.getName() == "Option") {
-			mOptions[subnode.getAttribute("key")] = stringToMxArray(subnode.getAttribute("value"));
+			if(subnode.hasAttribute("value")){
+				mOptions[subnode.getAttribute("key")] = stringToMxArray(subnode.getAttribute("value"));
+			}else{
+				mOptions[subnode.getAttribute("key")] = stringToMxArray(subnode.getContent());
+			}
 		}
 
 		// regular content

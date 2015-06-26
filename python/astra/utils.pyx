@@ -95,7 +95,8 @@ cdef void readDict(XMLNode root, _dc):
             if val.size == 0:
                 break
             listbase = root.addChildNode(item)
-            data = <double*>np.PyArray_DATA(np.ascontiguousarray(val,dtype=np.float64)) 
+            contig_data = np.ascontiguousarray(val,dtype=np.float64)
+            data = <double*>np.PyArray_DATA(contig_data) 
             if val.ndim == 2:
                 listbase.setContent(data, val.shape[1], val.shape[0], False)
             elif val.ndim == 1:
@@ -129,7 +130,8 @@ cdef void readOptions(XMLNode node, dc):
                 break
             listbase = node.addChildNode(six.b('Option'))
             listbase.addAttribute(< string > six.b('key'), < string > item)
-            data = <double*>np.PyArray_DATA(np.ascontiguousarray(val,dtype=np.float64)) 
+            contig_data = np.ascontiguousarray(val,dtype=np.float64)
+            data = <double*>np.PyArray_DATA(contig_data)
             if val.ndim == 2:
                 listbase.setContent(data, val.shape[1], val.shape[0], False)
             elif val.ndim == 1:
@@ -202,7 +204,10 @@ cdef XMLNode2dict(XMLNode node):
     while it != nodes.end():
         subnode = deref(it)
         if castString(subnode.getName())=="Option":
-            opts[castString(subnode.getAttribute('key'))] = stringToPythonValue(subnode.getAttribute('value'))
+            if subnode.hasAttribute('value'):
+                opts[castString(subnode.getAttribute('key'))] = stringToPythonValue(subnode.getAttribute('value'))
+            else:
+                opts[castString(subnode.getAttribute('key'))] = stringToPythonValue(subnode.getContent())
         else:
             dct[castString(subnode.getName())] = stringToPythonValue(subnode.getContent())
         inc(it)
