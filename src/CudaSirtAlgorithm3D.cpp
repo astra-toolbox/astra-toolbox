@@ -36,6 +36,7 @@ $Id$
 #include "astra/ParallelProjectionGeometry3D.h"
 #include "astra/ParallelVecProjectionGeometry3D.h"
 #include "astra/ConeVecProjectionGeometry3D.h"
+#include "astra/CudaProjector3D.h"
 
 #include "../cuda/3d/astra3d.h"
 
@@ -107,12 +108,28 @@ bool CCudaSirtAlgorithm3D::initialize(const Config& _cfg)
 		return false;
 	}
 
+	CCudaProjector3D* pCudaProjector = 0;
+	pCudaProjector = dynamic_cast<CCudaProjector3D*>(m_pProjector);
+	if (!pCudaProjector) {
+		// TODO: Report
+	}
+
 	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
 	CC.markOptionParsed("GPUindex");
-	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", 1);
-	CC.markOptionParsed("DetectorSuperSampling");
-	m_iVoxelSuperSampling = (int)_cfg.self.getOptionNumerical("VoxelSuperSampling", 1);
+
+
+	m_iVoxelSuperSampling = 1;
+	m_iDetectorSuperSampling = 1;
+	if (pCudaProjector) {
+		// New interface
+		m_iVoxelSuperSampling = pCudaProjector->getVoxelSuperSampling();
+		m_iDetectorSuperSampling = pCudaProjector->getDetectorSuperSampling();
+	}
+	// Deprecated options
+	m_iVoxelSuperSampling = (int)_cfg.self.getOptionNumerical("VoxelSuperSampling", m_iVoxelSuperSampling);
+	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", m_iDetectorSuperSampling);
 	CC.markOptionParsed("VoxelSuperSampling");
+	CC.markOptionParsed("DetectorSuperSampling");
 
 	m_pSirt = new AstraSIRT3d();
 

@@ -32,6 +32,7 @@ $Id$
 #include <cstring>
 
 #include "astra/AstraObjectManager.h"
+#include "astra/CudaProjector2D.h"
 #include "../cuda/2d/astra.h"
 
 #include "astra/Logging.h"
@@ -77,8 +78,22 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 		clear();
 	}
 
+	// Projector
+	XMLNode node = _cfg.self.getSingleNode("ProjectorId");
+	CCudaProjector2D* pCudaProjector = 0;
+	if (node) {
+		int id = boost::lexical_cast<int>(node.getContent());
+		CProjector2D *projector = CProjector2DManager::getSingleton().get(id);
+		pCudaProjector = dynamic_cast<CCudaProjector2D*>(projector);
+		if (!pCudaProjector) {
+			ASTRA_WARN("non-CUDA Projector2D passed");
+		}
+	}
+	CC.markNodeParsed("ProjectorId");
+
+
 	// sinogram data
-	XMLNode node = _cfg.self.getSingleNode("ProjectionDataId");
+	node = _cfg.self.getSingleNode("ProjectionDataId");
 	ASTRA_CONFIG_CHECK(node, "CudaFBP", "No ProjectionDataId tag specified.");
 	int id = boost::lexical_cast<int>(node.getContent());
 	m_pSinogram = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
@@ -152,9 +167,15 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
 	CC.markOptionParsed("GPUindex");
 
-	// Pixel supersampling factor
-	m_iPixelSuperSampling = (int)_cfg.self.getOptionNumerical("PixelSuperSampling", 1);
+	m_iPixelSuperSampling = 1;
+	if (pCudaProjector) {
+		// New interface
+		m_iPixelSuperSampling = pCudaProjector->getVoxelSuperSampling();
+	}
+	// Deprecated options
+	m_iPixelSuperSampling = (int)_cfg.self.getOptionNumerical("PixelSuperSampling", m_iPixelSuperSampling);
 	CC.markOptionParsed("PixelSuperSampling");
+
 
 	// Fan beam short scan mode
 	if (m_pSinogram && dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pSinogram->getGeometry())) {
