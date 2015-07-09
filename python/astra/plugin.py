@@ -27,6 +27,7 @@
 from . import plugin_c as p
 from . import log
 import inspect
+import traceback
 
 class base(object):
 
@@ -64,15 +65,15 @@ class base(object):
             args = [optDict[k] for k in req]
             kwargs = dict((k,optDict[k]) for k in opt if k in optDict)
             self.initialize(cfg, *args, **kwargs)
-        except Exception as e:
-            log.error(str(e))
+        except Exception:
+            log.error(traceback.format_exc().replace("%","%%"))
             raise
 
     def astra_run(self, its):
         try:
             self.run(its)
-        except Exception as e:
-            log.error(str(e))
+        except Exception:
+            log.error(traceback.format_exc().replace("%","%%"))
             raise
 
 def register(name, className):
