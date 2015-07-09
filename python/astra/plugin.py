@@ -33,7 +33,10 @@ class base(object):
     def astra_init(self, cfg):
         try:
             args, varargs, varkw, defaults = inspect.getargspec(self.initialize)
-            nopt = len(defaults)
+            if not defaults is None:
+                nopt = len(defaults)
+            else:
+                nopt = 0
             if nopt>0:
                 req = args[2:-nopt]
                 opt = args[-nopt:]
