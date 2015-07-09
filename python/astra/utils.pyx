@@ -93,7 +93,7 @@ cdef void readDict(XMLNode root, _dc):
     dc = convert_item(_dc)
     for item in dc:
         val = dc[item]
-        if isinstance(val, list):
+        if isinstance(val, list) or isinstance(val, tuple):
             val = np.array(val,dtype=np.float64)
         if isinstance(val, np.ndarray):
             if val.size == 0:
@@ -128,7 +128,7 @@ cdef void readOptions(XMLNode node, dc):
         val = dc[item]
         if node.hasOption(item):
             raise Exception('Duplicate Option: %s' % item)
-        if isinstance(val, list):
+        if isinstance(val, list) or isinstance(val, tuple):
             val = np.array(val,dtype=np.float64)
         if isinstance(val, np.ndarray):
             if val.size == 0:
