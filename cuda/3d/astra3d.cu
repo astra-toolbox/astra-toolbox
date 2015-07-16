@@ -287,7 +287,7 @@ bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
 {
 	assert(pVolGeom);
 	assert(pProjGeom);
-	assert(pProjGeom->getProjectionAngles());
+	assert(pProjGeom->getProjectionVectors());
 
 	int nth = pProjGeom->getProjectionCount();
 
