@@ -146,6 +146,8 @@ namespace astra {
 	const float32 PIdiv2 = PI / 2;
 	const float32 PIdiv4 = PI / 4;
 	const float32 eps = 1e-7f;
+	
+	extern bool running_in_matlab;
 }
 
 //----------------------------------------------------------------------------------------
