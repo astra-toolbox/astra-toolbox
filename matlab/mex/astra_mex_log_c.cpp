@@ -55,7 +55,7 @@ void astra_mex_log_debug(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prh
 	string filename = mexToString(prhs[1]);
 	int linenumber = (int)mxGetScalar(prhs[2]);
 	string message = mexToString(prhs[3]);
-	astra::CLogger::debug(filename.c_str(),linenumber,message.c_str());
+	astra::CLogger::debug(filename.c_str(),linenumber,"%s",message.c_str());
 }
 
 //-----------------------------------------------------------------------------------------
@@ -75,7 +75,7 @@ void astra_mex_log_info(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs
 	string filename = mexToString(prhs[1]);
 	int linenumber = (int)mxGetScalar(prhs[2]);
 	string message = mexToString(prhs[3]);
-	astra::CLogger::info(filename.c_str(),linenumber,message.c_str());
+	astra::CLogger::info(filename.c_str(),linenumber,"%s",message.c_str());
 }
 
 //-----------------------------------------------------------------------------------------
@@ -95,7 +95,7 @@ void astra_mex_log_warn(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs
 	string filename = mexToString(prhs[1]);
 	int linenumber = (int)mxGetScalar(prhs[2]);
 	string message = mexToString(prhs[3]);
-	astra::CLogger::warn(filename.c_str(),linenumber,message.c_str());
+	astra::CLogger::warn(filename.c_str(),linenumber,"%s",message.c_str());
 }
 
 //-----------------------------------------------------------------------------------------
@@ -115,7 +115,7 @@ void astra_mex_log_error(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prh
 	string filename = mexToString(prhs[1]);
 	int linenumber = (int)mxGetScalar(prhs[2]);
 	string message = mexToString(prhs[3]);
-	astra::CLogger::error(filename.c_str(),linenumber,message.c_str());
+	astra::CLogger::error(filename.c_str(),linenumber,"%s",message.c_str());
 }
 
 //-----------------------------------------------------------------------------------------
