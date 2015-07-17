@@ -67,79 +67,19 @@ void CPluginAlgorithm::run(int _iNrIterations){
     Py_DECREF(retVal);
 }
 
-const char ps =
-#ifdef _WIN32
-                            '\\';
-#else
-                            '/';
-#endif
-
-std::vector<std::string> CPluginAlgorithmFactory::getPluginPathList(){
-    std::vector<std::string> list;
-    list.push_back("/etc/astra-toolbox");
-    PyObject *ret, *retb;
-    ret = PyObject_CallMethod(inspect,"getfile","O",astra);
-    if(ret!=NULL){
-        retb = PyObject_CallMethod(six,"b","O",ret);
-        Py_DECREF(ret);
-        if(retb!=NULL){
-            std::string astra_inst (PyBytes_AsString(retb));
-            Py_DECREF(retb);
-            ret = PyObject_CallMethod(ospath,"dirname","s",astra_inst.c_str());
-            if(ret!=NULL){
-                retb = PyObject_CallMethod(six,"b","O",ret);
-                Py_DECREF(ret);
-                if(retb!=NULL){
-                    list.push_back(std::string(PyBytes_AsString(retb)));
-                    Py_DECREF(retb);
-                }
-            }
-        }
-    }
-    ret = PyObject_CallMethod(ospath,"expanduser","s","~");
-    if(ret!=NULL){
-        retb = PyObject_CallMethod(six,"b","O",ret);
-        Py_DECREF(ret);
-        if(retb!=NULL){
-            list.push_back(std::string(PyBytes_AsString(retb)) + ps + ".astra-toolbox");
-            Py_DECREF(retb);
-        }
-    }
-    const char *envval = getenv("ASTRA_PLUGIN_PATH");
-    if(envval!=NULL){
-        list.push_back(std::string(envval));
-    }
-    return list;
-}
-
 CPluginAlgorithmFactory::CPluginAlgorithmFactory(){
     Py_Initialize();
     pluginDict = PyDict_New();
-    ospath = PyImport_ImportModule("os.path");
     inspect = PyImport_ImportModule("inspect");
     six = PyImport_ImportModule("six");
-    astra = PyImport_ImportModule("astra");
-    std::vector<std::string> fls = getPluginPathList();
-    std::vector<std::string> items;
-    for(unsigned int i=0;i<fls.size();i++){
-        std::ifstream fs ((fls[i]+ps+"plugins.txt").c_str());
-        if(!fs.is_open()) continue;
-        std::string line;
-        while (std::getline(fs,line)){
-            boost::split(items, line, boost::is_any_of(" "));
-            if(items.size()<2) continue;
-            PyObject *str = PyBytes_FromString(items[1].c_str());
-            PyDict_SetItemString(pluginDict,items[0].c_str(),str);
-            Py_DECREF(str);
-        }
-        fs.close();
-    }
 }
 
 CPluginAlgorithmFactory::~CPluginAlgorithmFactory(){
     if(pluginDict!=NULL){
         Py_DECREF(pluginDict);
     }
+    if(inspect!=NULL) Py_DECREF(inspect);
+    if(six!=NULL) Py_DECREF(six);
 }
 
 bool CPluginAlgorithmFactory::registerPlugin(std::string name, std::string className){
@@ -198,18 +138,16 @@ std::string CPluginAlgorithmFactory::getHelp(std::string name){
     std::string ret = "";
     PyObject *pyclass = getClassFromString(str);
     if(pyclass==NULL) return "";
-    PyObject *module = PyImport_ImportModule("inspect");
-    if(module!=NULL){
-        PyObject *retVal = PyObject_CallMethod(module,"getdoc","O",pyclass);
+    if(inspect!=NULL && six!=NULL){
+        PyObject *retVal = PyObject_CallMethod(inspect,"getdoc","O",pyclass);
         if(retVal!=NULL){
             PyObject *retb = PyObject_CallMethod(six,"b","O",retVal);
             Py_DECREF(retVal);
-            if(retVal!=NULL){
+            if(retb!=NULL){
                 ret = std::string(PyBytes_AsString(retb));
                 Py_DECREF(retb);
             }
         }
-        Py_DECREF(module);
     }
     Py_DECREF(pyclass);
     return ret;

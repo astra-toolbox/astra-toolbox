@@ -72,8 +72,7 @@ public:
 
 private:
     PyObject * pluginDict;
-    PyObject *ospath, *inspect, *six, *astra;
-    std::vector<std::string> getPluginPathList();
+    PyObject *inspect, *six;
 };
 
 PyObject* XMLNode2dict(XMLNode node);
