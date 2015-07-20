@@ -29,6 +29,7 @@ $Id$
 #ifdef ASTRA_PYTHON
 
 #include "astra/PluginAlgorithm.h"
+#include "astra/Logging.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/lexical_cast.hpp>
@@ -38,8 +39,53 @@ $Id$
 
 namespace astra {
 
+
+void logPythonError(){
+    if(PyErr_Occurred()){
+        PyObject *ptype, *pvalue, *ptraceback;
+        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+        PyObject *traceback = PyImport_ImportModule("traceback");
+        if(traceback!=NULL){
+            PyObject *exc;
+            if(ptraceback==NULL){
+                exc = PyObject_CallMethod(traceback,"format_exception_only","OO",ptype, pvalue);
+            }else{
+                exc = PyObject_CallMethod(traceback,"format_exception","OOO",ptype, pvalue, ptraceback);
+            }
+            if(exc!=NULL){
+                PyObject *six = PyImport_ImportModule("six");
+                if(six!=NULL){
+                    PyObject *iter = PyObject_GetIter(exc);
+                    if(iter!=NULL){
+                        PyObject *line;
+                        std::string errStr = "";
+                        while(line = PyIter_Next(iter)){
+                            PyObject *retb = PyObject_CallMethod(six,"b","O",line);
+                            if(retb!=NULL){
+                                errStr += std::string(PyBytes_AsString(retb));
+                                Py_DECREF(retb);
+                            }
+                            Py_DECREF(line);
+                        }
+                        ASTRA_ERROR("%s",errStr.c_str());
+                        Py_DECREF(iter);
+                    }
+                    Py_DECREF(six);
+                }
+                Py_DECREF(exc);
+            }
+            Py_DECREF(traceback);
+        }
+        if(ptype!=NULL) Py_DECREF(ptype);
+        if(pvalue!=NULL) Py_DECREF(pvalue);
+        if(ptraceback!=NULL) Py_DECREF(ptraceback);
+    }
+}
+
+
 CPluginAlgorithm::CPluginAlgorithm(PyObject* pyclass){
     instance = PyObject_CallObject(pyclass, NULL);
+    if(instance==NULL) logPythonError();
 }
 
 CPluginAlgorithm::~CPluginAlgorithm(){
@@ -148,6 +194,8 @@ CPluginAlgorithm * CPluginAlgorithmFactory::getPlugin(std::string name){
         if(pyclass!=NULL){
             alg = new CPluginAlgorithm(pyclass);
             Py_DECREF(pyclass);
+        }else{
+            logPythonError();
         }
     }else{
         alg = new CPluginAlgorithm(className);
