@@ -26,6 +26,10 @@
 
 from . import plugin_c as p
 from . import log
+from . import data2d
+from . import data2d_c
+from . import data3d
+from . import projector
 import inspect
 import traceback
 
@@ -64,6 +68,29 @@ class base(object):
         args = [optDict[k] for k in req]
         kwargs = dict((k,optDict[k]) for k in opt if k in optDict)
         self.initialize(cfg, *args, **kwargs)
+
+class ReconstructionAlgorithm2D(base):
+
+    def astra_init(self, cfg):
+        self.pid = cfg['ProjectorId']
+        self.s = data2d.get_shared(cfg['ProjectionDataId'])
+        self.v = data2d.get_shared(cfg['ReconstructionDataId'])
+        self.vg = projector.volume_geometry(self.pid)
+        self.pg = projector.projection_geometry(self.pid)
+        if not data2d_c.check_compatible(cfg['ProjectionDataId'], self.pid):
+            raise ValueError("Projection data and projector not compatible")
+        if not data2d_c.check_compatible(cfg['ReconstructionDataId'], self.pid):
+            raise ValueError("Reconstruction data and projector not compatible")
+        super(ReconstructionAlgorithm2D,self).astra_init(cfg)
+
+class ReconstructionAlgorithm3D(base):
+
+    def astra_init(self, cfg):
+        self.s = data3d.get_shared(cfg['ProjectionDataId'])
+        self.v = data3d.get_shared(cfg['ReconstructionDataId'])
+        self.vg = data3d.get_geometry(cfg['ReconstructionDataId'])
+        self.pg = data3d.get_geometry(cfg['ProjectionDataId'])
+        super(ReconstructionAlgorithm3D,self).astra_init(cfg)
 
 def register(className):
     """Register plugin with ASTRA.

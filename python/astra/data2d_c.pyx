@@ -34,6 +34,9 @@ from cython cimport view
 cimport PyData2DManager
 from .PyData2DManager cimport CData2DManager
 
+cimport PyProjector2DManager
+from .PyProjector2DManager cimport CProjector2DManager
+
 cimport PyXMLDocument
 from .PyXMLDocument cimport XMLDocument
 
@@ -54,6 +57,8 @@ import operator
 from six.moves import reduce
 
 cdef CData2DManager * man2d = <CData2DManager * >PyData2DManager.getSingletonPtr()
+cdef CProjector2DManager * manProj = <CProjector2DManager * >PyProjector2DManager.getSingletonPtr()
+
 
 cdef extern from "CFloat32CustomPython.h":
     cdef cppclass CFloat32CustomPython:
@@ -164,7 +169,6 @@ def store(i, data):
     cdef CFloat32Data2D * pDataObject = getObject(i)
     fillDataObject(pDataObject, data)
 
-
 def get_geometry(i):
     cdef CFloat32Data2D * pDataObject = getObject(i)
     cdef CFloat32ProjectionData2D * pDataObject2
@@ -179,6 +183,27 @@ def get_geometry(i):
         raise Exception("Not a known data object")
     return geom
 
+cdef CProjector2D * getProjector(i) except NULL:
+    cdef CProjector2D * proj = manProj.get(i)
+    if proj == NULL:
+        raise Exception("Projector not initialized.")
+    if not proj.isInitialized():
+        raise Exception("Projector not initialized.")
+    return proj
+
+def check_compatible(i, proj_id):
+    cdef CProjector2D * proj = getProjector(proj_id)
+    cdef CFloat32Data2D * pDataObject = getObject(i)
+    cdef CFloat32ProjectionData2D * pDataObject2
+    cdef CFloat32VolumeData2D * pDataObject3
+    if pDataObject.getType() == TWOPROJECTION:
+        pDataObject2 = <CFloat32ProjectionData2D * >pDataObject
+        return pDataObject2.getGeometry().isEqual(proj.getProjectionGeometry())
+    elif pDataObject.getType() == TWOVOLUME:
+        pDataObject3 = <CFloat32VolumeData2D * >pDataObject
+        return pDataObject3.getGeometry().isEqual(proj.getVolumeGeometry())
+    else:
+        raise Exception("Not a known data object")
 
 def change_geometry(i, geom):
     cdef Config *cfg
