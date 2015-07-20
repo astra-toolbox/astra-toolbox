@@ -32,60 +32,47 @@ import traceback
 class base(object):
 
     def astra_init(self, cfg):
+        args, varargs, varkw, defaults = inspect.getargspec(self.initialize)
+        if not defaults is None:
+            nopt = len(defaults)
+        else:
+            nopt = 0
+        if nopt>0:
+            req = args[2:-nopt]
+            opt = args[-nopt:]
+        else:
+            req = args[2:]
+            opt = []
+
         try:
-            args, varargs, varkw, defaults = inspect.getargspec(self.initialize)
-            if not defaults is None:
-                nopt = len(defaults)
-            else:
-                nopt = 0
-            if nopt>0:
-                req = args[2:-nopt]
-                opt = args[-nopt:]
-            else:
-                req = args[2:]
-                opt = []
+            optDict = cfg['options']
+        except KeyError:
+            optDict = {}
 
-            try:
-                optDict = cfg['options']
-            except KeyError:
-                optDict = {}
+        cfgKeys = set(optDict.keys())
+        reqKeys = set(req)
+        optKeys = set(opt)
 
-            cfgKeys = set(optDict.keys())
-            reqKeys = set(req)
-            optKeys = set(opt)
+        if not reqKeys.issubset(cfgKeys):
+            for key in reqKeys.difference(cfgKeys):
+                log.error("Required option '" + key + "' for plugin '" + self.__class__.__name__ + "' not specified")
+            raise ValueError("Missing required options")
 
-            if not reqKeys.issubset(cfgKeys):
-                for key in reqKeys.difference(cfgKeys):
-                    log.error("Required option '" + key + "' for plugin '" + self.__class__.__name__ + "' not specified")
-                raise ValueError("Missing required options")
+        if not cfgKeys.issubset(reqKeys | optKeys):
+            log.warn(self.__class__.__name__ + ": unused configuration option: " + str(list(cfgKeys.difference(reqKeys | optKeys))))
 
-            if not cfgKeys.issubset(reqKeys | optKeys):
-                log.warn(self.__class__.__name__ + ": unused configuration option: " + str(list(cfgKeys.difference(reqKeys | optKeys))))
+        args = [optDict[k] for k in req]
+        kwargs = dict((k,optDict[k]) for k in opt if k in optDict)
+        self.initialize(cfg, *args, **kwargs)
 
-            args = [optDict[k] for k in req]
-            kwargs = dict((k,optDict[k]) for k in opt if k in optDict)
-            self.initialize(cfg, *args, **kwargs)
-        except Exception:
-            log.error(traceback.format_exc().replace("%","%%"))
-            raise
-
-    def astra_run(self, its):
-        try:
-            self.run(its)
-        except Exception:
-            log.error(traceback.format_exc().replace("%","%%"))
-            raise
-
-def register(name, className):
+def register(className):
     """Register plugin with ASTRA.
     
-    :param name: Plugin name to register
-    :type name: :class:`str`
     :param className: Class name or class object to register
     :type className: :class:`str` or :class:`class`
     
     """
-    p.register(name,className)
+    p.register(className)
 
 def get_registered():
     """Get dictionary of registered plugins.

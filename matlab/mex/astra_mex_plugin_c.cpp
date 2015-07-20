@@ -37,9 +37,6 @@ $Id$
 
 #include "astra/PluginAlgorithm.h"
 
-#include "Python.h"
-#include "bytesobject.h"
-
 using namespace std;
 using namespace astra;
 
@@ -52,29 +49,25 @@ using namespace astra;
 void astra_mex_plugin_get_registered(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
     astra::CPluginAlgorithmFactory *fact = astra::CPluginAlgorithmFactory::getSingletonPtr();
-    PyObject *dict = fact->getRegistered();
-    PyObject *key, *value;
-    Py_ssize_t pos = 0;
-    while (PyDict_Next(dict, &pos, &key, &value)) {
-        mexPrintf("%s: %s\n",PyBytes_AsString(key),PyBytes_AsString(value));
+    std::map<std::string, std::string> mp = fact->getRegisteredMap();
+    for(std::map<std::string,std::string>::iterator it=mp.begin();it!=mp.end();it++){
+        mexPrintf("%s: %s\n",it->first.c_str(), it->second.c_str());
     }
-    Py_DECREF(dict);
 }
 
 //-----------------------------------------------------------------------------------------
-/** astra_mex_plugin('register', name, class_name);
+/** astra_mex_plugin('register', class_name);
  *
  * Register plugin.
  */
 void astra_mex_plugin_register(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
-    if (3 <= nrhs) {
-        string name = mexToString(prhs[1]);
-        string class_name = mexToString(prhs[2]);
+    if (2 <= nrhs) {
+        string class_name = mexToString(prhs[1]);
         astra::CPluginAlgorithmFactory *fact = astra::CPluginAlgorithmFactory::getSingletonPtr();
-        fact->registerPlugin(name, class_name);
+        fact->registerPlugin(class_name);
     }else{
-        mexPrintf("astra_mex_plugin('register', name, class_name);\n");
+        mexPrintf("astra_mex_plugin('register', class_name);\n");
     }
 }
 

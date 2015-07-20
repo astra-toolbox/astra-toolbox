@@ -38,7 +38,9 @@ from . import utils
 
 cdef extern from "astra/PluginAlgorithm.h" namespace "astra":
     cdef cppclass CPluginAlgorithmFactory:
+        bool registerPlugin(string className)
         bool registerPlugin(string name, string className)
+        bool registerPluginClass(object className)
         bool registerPluginClass(string name, object className)
         object getRegistered()
         string getHelp(string name)
@@ -46,11 +48,17 @@ cdef extern from "astra/PluginAlgorithm.h" namespace "astra":
 cdef extern from "astra/PluginAlgorithm.h" namespace "astra::CPluginAlgorithmFactory":
     cdef CPluginAlgorithmFactory* getSingletonPtr()
 
-def register(name, className):
+def register(className, name=None):
     if inspect.isclass(className):
-        fact.registerPluginClass(six.b(name), className)
+        if name==None:
+            fact.registerPluginClass(className)
+        else:
+            fact.registerPluginClass(six.b(name), className)
     else:
-        fact.registerPlugin(six.b(name), six.b(className))
+        if name==None:
+            fact.registerPlugin(six.b(className))
+        else:
+            fact.registerPlugin(six.b(name), six.b(className))
 
 def get_registered():
     return fact.getRegistered()

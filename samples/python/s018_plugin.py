@@ -38,6 +38,10 @@ class SIRTPlugin(astra.plugin.base):
     'rel_factor': relaxation factor (optional)
     """
 
+    # The astra_name variable defines the name to use to
+    # call the plugin from ASTRA
+    astra_name = "SIRT-PLUGIN"
+
     def initialize(self,cfg, rel_factor = 1):
         self.W = astra.OpTomo(cfg['ProjectorId'])
         self.vid = cfg['ReconstructionDataId']
@@ -68,18 +72,13 @@ if __name__=='__main__':
     sinogram = sinogram.reshape([180, 384])
 
     # Register the plugin with ASTRA
-    # A default set of plugins to load can be defined in:
-    #     - /etc/astra-toolbox/plugins.txt
-    #     - [ASTRA_INSTALL_PATH]/python/astra/plugins.txt
-    #     - [USER_HOME_PATH]/.astra-toolbox/plugins.txt
-    #     - [ASTRA_PLUGIN_PATH environment variable]/plugins.txt
-    # In these files, create a separate line for each plugin with:
-    # [PLUGIN_ASTRA_NAME] [FULL_PLUGIN_CLASS]
-    #
-    # So in this case, it would be a line:
-    # SIRT-PLUGIN s018_plugin.SIRTPlugin
-    #
-    astra.plugin.register('SIRT-PLUGIN','s018_plugin.SIRTPlugin')
+    # First we import the package that contains the plugin
+    import s018_plugin
+    # Then, we register the plugin class with ASTRA
+    astra.plugin.register(s018_plugin.SIRTPlugin)
+
+    # Get a list of registered plugins
+    six.print_(astra.plugin.get_registered())
 
     # To get help on a registered plugin, use get_help
     six.print_(astra.plugin.get_help('SIRT-PLUGIN'))

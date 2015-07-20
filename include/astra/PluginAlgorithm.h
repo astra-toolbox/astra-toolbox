@@ -64,9 +64,12 @@ public:
     CPluginAlgorithm * getPlugin(std::string name);
 
     bool registerPlugin(std::string name, std::string className);
+    bool registerPlugin(std::string className);
     bool registerPluginClass(std::string name, PyObject * className);
+    bool registerPluginClass(PyObject * className);
     
     PyObject * getRegistered();
+    std::map<std::string, std::string> getRegisteredMap();
     
     std::string getHelp(std::string name);
 
