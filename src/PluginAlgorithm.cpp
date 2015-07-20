@@ -173,13 +173,19 @@ PyObject * getClassFromString(std::string str){
     std::vector<std::string> items;
     boost::split(items, str, boost::is_any_of("."));
     PyObject *pyclass = PyImport_ImportModule(items[0].c_str());
-    if(pyclass==NULL) return NULL;
+    if(pyclass==NULL){
+        logPythonError();
+        return NULL;
+    }
     PyObject *submod = pyclass;
     for(unsigned int i=1;i<items.size();i++){
         submod = PyObject_GetAttrString(submod,items[i].c_str());
         Py_DECREF(pyclass);
         pyclass = submod;
-        if(pyclass==NULL) return NULL;
+        if(pyclass==NULL){
+            logPythonError();
+            return NULL;
+        }
     }
     return pyclass;
 }
@@ -194,8 +200,6 @@ CPluginAlgorithm * CPluginAlgorithmFactory::getPlugin(std::string name){
         if(pyclass!=NULL){
             alg = new CPluginAlgorithm(pyclass);
             Py_DECREF(pyclass);
-        }else{
-            logPythonError();
         }
     }else{
         alg = new CPluginAlgorithm(className);
