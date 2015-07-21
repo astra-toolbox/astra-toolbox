@@ -86,6 +86,7 @@ class ReconstructionAlgorithm2D(base):
 class ReconstructionAlgorithm3D(base):
 
     def astra_init(self, cfg):
+        self.pid = cfg['ProjectorId']
         self.s = data3d.get_shared(cfg['ProjectionDataId'])
         self.v = data3d.get_shared(cfg['ReconstructionDataId'])
         self.vg = data3d.get_geometry(cfg['ReconstructionDataId'])
