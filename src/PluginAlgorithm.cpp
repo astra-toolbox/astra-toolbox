@@ -249,11 +249,24 @@ std::map<std::string, std::string> CPluginAlgorithmFactory::getRegisteredMap(){
     PyObject *key, *value;
     Py_ssize_t pos = 0;
     while (PyDict_Next(pluginDict, &pos, &key, &value)) {
-        PyObject * keyb = PyObject_Bytes(key);
-        PyObject * valb = PyObject_Bytes(value);
-        ret[PyBytes_AsString(keyb)] = PyBytes_AsString(valb);
-        Py_DECREF(keyb);
-        Py_DECREF(valb);
+        PyObject *keystr = PyObject_Str(key);
+        if(keystr!=NULL){
+            PyObject *valstr = PyObject_Str(value);
+            if(valstr!=NULL){
+                PyObject * keyb = PyObject_CallMethod(six,"b","O",keystr);
+                if(keyb!=NULL){
+                    PyObject * valb = PyObject_CallMethod(six,"b","O",valstr);
+                    if(valb!=NULL){
+                        ret[PyBytes_AsString(keyb)] = PyBytes_AsString(valb);
+                        Py_DECREF(valb);
+                    }
+                    Py_DECREF(keyb);
+                }
+                Py_DECREF(valstr);
+            }
+            Py_DECREF(keystr);
+        }
+        logPythonError();
     }
     return ret;
 }
