@@ -262,6 +262,7 @@ std::string CPluginAlgorithmFactory::getHelp(std::string name){
     PyObject *className = PyDict_GetItemString(pluginDict, name.c_str());
     if(className==NULL){
         ASTRA_ERROR("Plugin %s not found!",name.c_str());
+        PyErr_Clear();
         return "";
     }
     std::string ret = "";
