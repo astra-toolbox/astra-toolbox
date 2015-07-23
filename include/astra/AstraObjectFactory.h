@@ -59,16 +59,16 @@ public:
 	 */
 	~CAstraObjectFactory();
 
-	/** Create, but don't initialize, a new projector object.
+	/** Create, but don't initialize, a new object.
 	 *
-	 * @param _sType Type of the new projector.
-	 * @return Pointer to a new, unitialized projector.
+	 * @param _sType Type of the new object.
+	 * @return Pointer to a new, uninitialized object.
 	 */
 	T* create(std::string _sType);
 
-	/** Create and initialize a new projector object.
+	/** Create and initialize a new object.
 	 *
-	 * @param _cfg Configuration object to create and initialize a new projector.
+	 * @param _cfg Configuration object to create and initialize a new object.
 	 * @return Pointer to a new, initialized projector.
 	 */
 	T* create(const Config& _cfg);
