@@ -109,14 +109,11 @@ T* CAstraObjectFactory<T, TypeList>::create(std::string _sType)
 template <typename T, typename TypeList>
 T* CAstraObjectFactory<T, TypeList>::create(const Config& _cfg)
 {
-	functor_find<T> finder = functor_find<T>();
-	finder.tofind = _cfg.self.getAttribute("type");
-	CreateObject<TypeList>::find(finder);
-	if (finder.res == NULL) return NULL;
-	if (finder.res->initialize(_cfg))
-		return finder.res;
-
-	delete finder.res;
+	T* object = create(_cfg.self.getAttribute("type"));
+	if (object == NULL) return NULL;
+	if (object->initialize(_cfg))
+		return object;
+	delete object;
 	return NULL;
 }
 //----------------------------------------------------------------------------------------
