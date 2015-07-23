@@ -73,6 +73,13 @@ public:
 	 */
 	T* create(const Config& _cfg);
 
+	/** Find a plugin.
+	*
+	* @param _sType Name of plugin to find.
+	* @return Pointer to a new, uninitialized object, or NULL if not found.
+	*/
+	T* findPlugin(std::string _sType);
+
 
 };
 
@@ -93,6 +100,15 @@ CAstraObjectFactory<T, TypeList>::~CAstraObjectFactory()
 
 }
 
+
+//----------------------------------------------------------------------------------------
+// Hook for finding plugin in registered plugins.
+template <typename T, typename TypeList>
+T* CAstraObjectFactory<T, TypeList>::findPlugin(std::string _sType)
+{
+	return NULL;
+}
+
 //----------------------------------------------------------------------------------------
 // Create 
 template <typename T, typename TypeList>
@@ -101,6 +117,9 @@ T* CAstraObjectFactory<T, TypeList>::create(std::string _sType)
 	functor_find<T> finder = functor_find<T>();
 	finder.tofind = _sType;
 	CreateObject<TypeList>::find(finder);
+	if (finder.res == NULL) {
+		finder.res = findPlugin(_sType);
+	}
 	return finder.res;
 }
 
