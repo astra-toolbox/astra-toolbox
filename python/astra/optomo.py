@@ -86,7 +86,15 @@ class OpTomo(scipy.sparse.linalg.LinearOperator):
 
         self.proj_id = proj_id
 
-        self.T = OpTomoTranspose(self)
+        self.transposeOpTomo = OpTomoTranspose(self)
+        try:
+            self.T = self.transposeOpTomo
+        except AttributeError:
+            # Scipy >= 0.16 defines self.T using self._transpose()
+            pass
+
+    def _transpose(self):
+        return self.transposeOpTomo
 
     def __checkArray(self, arr, shp):
         if len(arr.shape)==1:
