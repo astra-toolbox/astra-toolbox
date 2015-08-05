@@ -290,12 +290,14 @@ std::string CPluginAlgorithmFactory::getHelp(std::string name){
     if(inspect!=NULL && six!=NULL){
         PyObject *retVal = PyObject_CallMethod(inspect,"getdoc","O",pyclass);
         if(retVal!=NULL){
-            PyObject *retb = PyObject_CallMethod(six,"b","O",retVal);
-            Py_DECREF(retVal);
-            if(retb!=NULL){
-                ret = std::string(PyBytes_AsString(retb));
-                Py_DECREF(retb);
+            if(retVal!=Py_None){
+                PyObject *retb = PyObject_CallMethod(six,"b","O",retVal);
+                if(retb!=NULL){
+                    ret = std::string(PyBytes_AsString(retb));
+                    Py_DECREF(retb);
+                }
             }
+            Py_DECREF(retVal);
         }else{
             logPythonError();
         }
