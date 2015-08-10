@@ -112,12 +112,14 @@ bool CPluginAlgorithm::initialize(const Config& _cfg){
 
 void CPluginAlgorithm::run(int _iNrIterations){
     if(instance==NULL) return;
+    PyGILState_STATE state = PyGILState_Ensure();
     PyObject *retVal = PyObject_CallMethod(instance, "run", "i",_iNrIterations);
     if(retVal==NULL){
         logPythonError();
-        return;
+    }else{
+        Py_DECREF(retVal);
     }
-    Py_DECREF(retVal);
+    PyGILState_Release(state);
 }
 
 void fixLapackLoading(){
@@ -147,7 +149,10 @@ void fixLapackLoading(){
 }
 
 CPluginAlgorithmFactory::CPluginAlgorithmFactory(){
-    Py_Initialize();
+    if(!Py_IsInitialized()){
+        Py_Initialize();
+        PyEval_InitThreads();
+    }
 #ifndef _MSC_VER
     if(astra::running_in_matlab) fixLapackLoading();
 #endif
