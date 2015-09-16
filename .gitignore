@@ -18,12 +18,15 @@
 /build/linux/aclocal.m4
 /build/linux/autom4te.cache/*
 /build/linux/config.guess
+/build/linux/config.guess.dist
 /build/linux/config.log
 /build/linux/config.status
 /build/linux/config.sub
+/build/linux/config.sub.dist
 /build/linux/configure
 /build/linux/cuda/*
 /build/linux/install-sh
+/build/linux/install-sh.dist
 /build/linux/libastra.la
 /build/linux/libtool
 /build/linux/ltmain.sh
