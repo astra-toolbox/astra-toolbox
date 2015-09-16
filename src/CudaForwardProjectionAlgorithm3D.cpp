@@ -97,18 +97,28 @@ bool CCudaForwardProjectionAlgorithm3D::initialize(const Config& _cfg)
 
 	// optional: projector
 	node = _cfg.self.getSingleNode("ProjectorId");
+	CCudaProjector3D* pCudaProjector = 0;
+	m_pProjector = 0;
 	if (node) {
 		id = boost::lexical_cast<int>(node.getContent());
 		m_pProjector = CProjector3DManager::getSingleton().get(id);
-	} else {
-		m_pProjector = 0; // TODO: or manually construct default projector?
+		pCudaProjector = dynamic_cast<CCudaProjector3D*>(CProjector3DManager::getSingleton().get(id));
+		m_pProjector = pCudaProjector;
+		if (!pCudaProjector) {
+			// TODO: Report
+		}
 	}
 	CC.markNodeParsed("ProjectorId");
 
 	// GPU number
 	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
 	CC.markOptionParsed("GPUindex");
-	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", 1);
+
+
+	m_iDetectorSuperSampling = 1;
+	if (pCudaProjector)
+		m_iDetectorSuperSampling = pCudaProjector->getDetectorSuperSampling();
+	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", m_iDetectorSuperSampling);
 	CC.markOptionParsed("DetectorSuperSampling");
 
 	// success

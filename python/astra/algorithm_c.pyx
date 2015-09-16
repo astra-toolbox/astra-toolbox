@@ -73,7 +73,9 @@ cdef CAlgorithm * getAlg(i) except NULL:
 
 def run(i, iterations=0):
     cdef CAlgorithm * alg = getAlg(i)
-    alg.run(iterations)
+    cdef int its = iterations
+    with nogil:
+        alg.run(its)
 
 
 def get_res_norm(i):

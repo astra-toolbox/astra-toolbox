@@ -62,6 +62,8 @@ void CCudaProjector3D::_clear()
 	m_bIsInitialized = false;
 
 	m_projectionKernel = ker3d_default;
+	m_iVoxelSuperSampling = 1;
+	m_iDetectorSuperSampling = 1;
 }
 
 //----------------------------------------------------------------------------------------
@@ -119,6 +121,12 @@ bool CCudaProjector3D::initialize(const Config& _cfg)
 		}
 	}
 	CC.markNodeParsed("ProjectionKernel");
+
+	m_iVoxelSuperSampling = (int)_cfg.self.getOptionNumerical("VoxelSuperSampling", 1);
+	CC.markOptionParsed("VoxelSuperSampling");
+ 
+	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", 1);
+	CC.markOptionParsed("DetectorSuperSampling");
 
 	m_bIsInitialized = _check();
 	return m_bIsInitialized;

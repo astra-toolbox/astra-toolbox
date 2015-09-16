@@ -53,19 +53,19 @@ cdef extern from "astra/Logging.h" namespace "astra::CLogger":
 
 def log_debug(sfile, sline, message):
     cstr = list(map(six.b,(sfile,message)))
-    debug(cstr[0],sline,cstr[1])
+    debug(cstr[0],sline,"%s",<char*>cstr[1])
 
 def log_info(sfile, sline, message):
     cstr = list(map(six.b,(sfile,message)))
-    info(cstr[0],sline,cstr[1])
+    info(cstr[0],sline,"%s",<char*>cstr[1])
 
 def log_warn(sfile, sline, message):
     cstr = list(map(six.b,(sfile,message)))
-    warn(cstr[0],sline,cstr[1])
+    warn(cstr[0],sline,"%s",<char*>cstr[1])
 
 def log_error(sfile, sline, message):
     cstr = list(map(six.b,(sfile,message)))
-    error(cstr[0],sline,cstr[1])
+    error(cstr[0],sline,"%s",<char*>cstr[1])
 
 def log_enable():
     enable()

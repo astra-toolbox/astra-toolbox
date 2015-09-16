@@ -86,7 +86,15 @@ class OpTomo(scipy.sparse.linalg.LinearOperator):
 
         self.proj_id = proj_id
 
-        self.T = OpTomoTranspose(self)
+        self.transposeOpTomo = OpTomoTranspose(self)
+        try:
+            self.T = self.transposeOpTomo
+        except AttributeError:
+            # Scipy >= 0.16 defines self.T using self._transpose()
+            pass
+
+    def _transpose(self):
+        return self.transposeOpTomo
 
     def __checkArray(self, arr, shp):
         if len(arr.shape)==1:
@@ -189,12 +197,20 @@ class OpTomoTranspose(scipy.sparse.linalg.LinearOperator):
         self.parent = parent
         self.dtype = np.float32
         self.shape = (parent.shape[1], parent.shape[0])
+        try:
+            self.T = self.parent
+        except AttributeError:
+            # Scipy >= 0.16 defines self.T using self._transpose()
+            pass
 
     def _matvec(self, s):
         return self.parent.rmatvec(s)
 
     def rmatvec(self, v):
         return self.parent.matvec(v)
+
+    def _transpose(self):
+        return self.parent
 
     def __mul__(self,s):
         # Catch the case of a backprojection of 2D/3D data
