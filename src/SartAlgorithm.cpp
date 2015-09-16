@@ -126,7 +126,7 @@ bool CSartAlgorithm::initialize(const Config& _cfg)
 	// projection order
 	m_iCurrentProjection = 0;
 	m_iProjectionCount = m_pProjector->getProjectionGeometry()->getProjectionAngleCount();
-	string projOrder = _cfg.self->getOption("ProjectionOrder", "sequential");
+	string projOrder = _cfg.self.getOption("ProjectionOrder", "sequential");
 	CC.markOptionParsed("ProjectionOrder");
 	if (projOrder == "sequential") {
 		m_piProjectionOrder = new int[m_iProjectionCount];
@@ -145,7 +145,7 @@ bool CSartAlgorithm::initialize(const Config& _cfg)
 			m_piProjectionOrder[i + k] = t;
 		}
 	} else if (projOrder == "custom") {
-		vector<float32> projOrderList = _cfg.self->getOptionNumericalArray("ProjectionOrderList");
+		vector<float32> projOrderList = _cfg.self.getOptionNumericalArray("ProjectionOrderList");
 		m_piProjectionOrder = new int[projOrderList.size()];
 		for (int i = 0; i < m_iProjectionCount; i++) {
 			m_piProjectionOrder[i] = static_cast<int>(projOrderList[i]);

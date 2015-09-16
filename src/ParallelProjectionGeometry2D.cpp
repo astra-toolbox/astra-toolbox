@@ -176,10 +176,15 @@ Config* CParallelProjectionGeometry2D::getConfiguration() const
 {
 	Config* cfg = new Config();
 	cfg->initialize("ProjectionGeometry2D");
-	cfg->self->addAttribute("type", "parallel");
-	cfg->self->addChildNode("DetectorCount", getDetectorCount());
-	cfg->self->addChildNode("DetectorWidth", getDetectorWidth());
-	cfg->self->addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
+	cfg->self.addAttribute("type", "parallel");
+	cfg->self.addChildNode("DetectorCount", getDetectorCount());
+	cfg->self.addChildNode("DetectorWidth", getDetectorWidth());
+	cfg->self.addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
+	if(m_pfExtraDetectorOffset!=NULL){
+		XMLNode opt = cfg->self.addChildNode("Option");
+		opt.addAttribute("key","ExtraDetectorOffset");
+		opt.setContent(m_pfExtraDetectorOffset, m_iProjectionAngleCount);
+	}
 	return cfg;
 }
 //----------------------------------------------------------------------------------------

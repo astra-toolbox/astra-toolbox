@@ -23,22 +23,39 @@
 #along with the Python interface to the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #
 #-----------------------------------------------------------------------
-from . import matlab as m
-from .creators import astra_dict,create_vol_geom, create_proj_geom, create_backprojection, create_sino, create_reconstruction, create_projector,create_sino3d_gpu, create_backprojection3d_gpu
-from .functions import data_op, add_noise_to_sino, clear, move_vol_geom
-from .extrautils import clipCircle
-from . import data2d
-from . import astra
-from . import data3d
-from . import algorithm
-from . import projector
-from . import projector3d
-from . import matrix
-from . import log
-from .optomo import OpTomo
 
-import os
-try:
-    astra.set_gpu_index(int(os.environ['ASTRA_GPU_INDEX']))
-except KeyError:
-    pass
+import astra
+import numpy as np
+import scipy.sparse.linalg
+
+vol_geom = astra.create_vol_geom(256, 256)
+proj_geom = astra.create_proj_geom('parallel', 1.0, 384, np.linspace(0,np.pi,180,False))
+
+# As before, create a sinogram from a phantom
+import scipy.io
+P = scipy.io.loadmat('phantom.mat')['phantom256']
+proj_id = astra.create_projector('cuda',proj_geom,vol_geom)
+
+# construct the OpTomo object
+W = astra.OpTomo(proj_id)
+
+sinogram = W * P
+sinogram = sinogram.reshape([180, 384])
+
+import pylab
+pylab.gray()
+pylab.figure(1)
+pylab.imshow(P)
+pylab.figure(2)
+pylab.imshow(sinogram)
+
+# Run the lsqr linear solver
+output = scipy.sparse.linalg.lsqr(W, sinogram.flatten(), iter_lim=150)
+rec = output[0].reshape([256, 256])
+
+pylab.figure(3)
+pylab.imshow(rec)
+pylab.show()
+
+# Clean up.
+astra.projector.delete(proj_id)

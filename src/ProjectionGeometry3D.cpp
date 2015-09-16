@@ -149,38 +149,34 @@ bool CProjectionGeometry3D::initialize(const Config& _cfg)
 	ASTRA_ASSERT(_cfg.self);
 	
 	// Required: DetectorWidth
-	XMLNode* node = _cfg.self->getSingleNode("DetectorSpacingX");
+	XMLNode node = _cfg.self.getSingleNode("DetectorSpacingX");
 	ASTRA_CONFIG_CHECK(node, "ProjectionGeometry3D", "No DetectorSpacingX tag specified.");
-	m_fDetectorSpacingX = boost::lexical_cast<float32>(node->getContent());
-	ASTRA_DELETE(node);
+	m_fDetectorSpacingX = boost::lexical_cast<float32>(node.getContent());
 	CC.markNodeParsed("DetectorSpacingX");
 
 	// Required: DetectorHeight
-	node = _cfg.self->getSingleNode("DetectorSpacingY");
+	node = _cfg.self.getSingleNode("DetectorSpacingY");
 	ASTRA_CONFIG_CHECK(node, "ProjectionGeometry3D", "No DetectorSpacingY tag specified.");
-	m_fDetectorSpacingY = boost::lexical_cast<float32>(node->getContent());
-	ASTRA_DELETE(node);
+	m_fDetectorSpacingY = boost::lexical_cast<float32>(node.getContent());
 	CC.markNodeParsed("DetectorSpacingY");
 
 	// Required: DetectorRowCount
-	node = _cfg.self->getSingleNode("DetectorRowCount");
+	node = _cfg.self.getSingleNode("DetectorRowCount");
 	ASTRA_CONFIG_CHECK(node, "ProjectionGeometry3D", "No DetectorRowCount tag specified.");
-	m_iDetectorRowCount = boost::lexical_cast<int>(node->getContent());
-	ASTRA_DELETE(node);
+	m_iDetectorRowCount = boost::lexical_cast<int>(node.getContent());
 	CC.markNodeParsed("DetectorRowCount");
 
 	// Required: DetectorCount
-	node = _cfg.self->getSingleNode("DetectorColCount");
+	node = _cfg.self.getSingleNode("DetectorColCount");
 	ASTRA_CONFIG_CHECK(node, "ProjectionGeometry3D", "No DetectorColCount tag specified.");
-	m_iDetectorColCount = boost::lexical_cast<int>(node->getContent());
+	m_iDetectorColCount = boost::lexical_cast<int>(node.getContent());
 	m_iDetectorTotCount = m_iDetectorRowCount * m_iDetectorColCount;
-	ASTRA_DELETE(node);
 	CC.markNodeParsed("DetectorColCount");
 
 	// Required: ProjectionAngles
-	node = _cfg.self->getSingleNode("ProjectionAngles");
+	node = _cfg.self.getSingleNode("ProjectionAngles");
 	ASTRA_CONFIG_CHECK(node, "ProjectionGeometry3D", "No ProjectionAngles tag specified.");
-	vector<float32> angles = node->getContentNumericalArray();
+	vector<float32> angles = node.getContentNumericalArray();
 	m_iProjectionAngleCount = angles.size();
 	ASTRA_CONFIG_CHECK(m_iProjectionAngleCount > 0, "ProjectionGeometry3D", "Not enough ProjectionAngles specified.");
 	m_pfProjectionAngles = new float32[m_iProjectionAngleCount];
@@ -188,7 +184,6 @@ bool CProjectionGeometry3D::initialize(const Config& _cfg)
 		m_pfProjectionAngles[i] = angles[i];
 	}
 	CC.markNodeParsed("ProjectionAngles");
-	ASTRA_DELETE(node);
 
 	// Interface class, so don't return true
 	return false;

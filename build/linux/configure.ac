@@ -24,7 +24,7 @@ dnl
 dnl -----------------------------------------------------------------------
 dnl $Id$
 
-AC_INIT(astra_toolbox, 1.5.0)
+AC_INIT(astra_toolbox, 1.6.0)
 AC_CONFIG_SRCDIR([Makefile.in])
 LT_INIT([disable-static])
 
@@ -190,7 +190,7 @@ if test x"$with_python" != x -a x"$with_python" != xno; then
   AC_MSG_CHECKING(for python)
   ASTRA_RUN_LOGOUTPUT(echo 'import sys' | $PYTHON -)
   if test $? -ne 0; then
-    AC_MSG_ERROR(Python binary not found)]
+    AC_MSG_ERROR(Python binary not found)
   fi
   AC_MSG_RESULT([$PYTHON])
   HAVEPYTHON=yes

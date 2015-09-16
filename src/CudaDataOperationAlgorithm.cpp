@@ -67,40 +67,37 @@ bool CCudaDataOperationAlgorithm::initialize(const Config& _cfg)
 	ConfigStackCheck<CAlgorithm> CC("CCudaDataOperationAlgorithm", this, _cfg);
 
 	// operation
-	XMLNode* node = _cfg.self->getSingleNode("Operation");
+	XMLNode node = _cfg.self.getSingleNode("Operation");
 	ASTRA_CONFIG_CHECK(node, "CCudaDataOperationAlgorithm", "No Operation tag specified.");
-	m_sOperation = node->getContent();
+	m_sOperation = node.getContent();
 	m_sOperation.erase(std::remove(m_sOperation.begin(), m_sOperation.end(), ' '), m_sOperation.end());
-	ASTRA_DELETE(node);
 	CC.markNodeParsed("Operation");
 
 	// data
-	node = _cfg.self->getSingleNode("DataId");
+	node = _cfg.self.getSingleNode("DataId");
 	ASTRA_CONFIG_CHECK(node, "CCudaDataOperationAlgorithm", "No DataId tag specified.");
-	vector<string> data = node->getContentArray();
+	vector<string> data = node.getContentArray();
 	for (vector<string>::iterator it = data.begin(); it != data.end(); it++){
 		int id = boost::lexical_cast<int>(*it);
 		m_pData.push_back(dynamic_cast<CFloat32Data2D*>(CData2DManager::getSingleton().get(id)));
 	}
-	ASTRA_DELETE(node);
 	CC.markNodeParsed("DataId");
 
 	// scalar
-	node = _cfg.self->getSingleNode("Scalar");
+	node = _cfg.self.getSingleNode("Scalar");
 	ASTRA_CONFIG_CHECK(node, "CCudaDataOperationAlgorithm", "No Scalar tag specified.");
-	m_fScalar = node->getContentNumericalArray();
-	ASTRA_DELETE(node);
+	m_fScalar = node.getContentNumericalArray();
 	CC.markNodeParsed("Scalar");
 
 	// Option: GPU number
-	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUindex", -1);
-	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUIndex", m_iGPUIndex);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
 	CC.markOptionParsed("GPUindex");
-	if (!_cfg.self->hasOption("GPUindex"))
+	if (!_cfg.self.hasOption("GPUindex"))
 		CC.markOptionParsed("GPUIndex");
 
-	if (_cfg.self->hasOption("MaskId")) {
-		int id = boost::lexical_cast<int>(_cfg.self->getOption("MaskId"));
+	if (_cfg.self.hasOption("MaskId")) {
+		int id = boost::lexical_cast<int>(_cfg.self.getOption("MaskId"));
 		m_pMask = dynamic_cast<CFloat32Data2D*>(CData2DManager::getSingleton().get(id));
 	}
 	CC.markOptionParsed("MaskId");

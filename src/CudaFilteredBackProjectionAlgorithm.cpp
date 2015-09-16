@@ -32,6 +32,7 @@ $Id$
 #include <cstring>
 
 #include "astra/AstraObjectManager.h"
+#include "astra/CudaProjector2D.h"
 #include "../cuda/2d/astra.h"
 
 #include "astra/Logging.h"
@@ -77,40 +78,51 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 		clear();
 	}
 
+	// Projector
+	XMLNode node = _cfg.self.getSingleNode("ProjectorId");
+	CCudaProjector2D* pCudaProjector = 0;
+	if (node) {
+		int id = boost::lexical_cast<int>(node.getContent());
+		CProjector2D *projector = CProjector2DManager::getSingleton().get(id);
+		pCudaProjector = dynamic_cast<CCudaProjector2D*>(projector);
+		if (!pCudaProjector) {
+			ASTRA_WARN("non-CUDA Projector2D passed");
+		}
+	}
+	CC.markNodeParsed("ProjectorId");
+
+
 	// sinogram data
-	XMLNode* node = _cfg.self->getSingleNode("ProjectionDataId");
+	node = _cfg.self.getSingleNode("ProjectionDataId");
 	ASTRA_CONFIG_CHECK(node, "CudaFBP", "No ProjectionDataId tag specified.");
-	int id = boost::lexical_cast<int>(node->getContent());
+	int id = boost::lexical_cast<int>(node.getContent());
 	m_pSinogram = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
-	ASTRA_DELETE(node);
 	CC.markNodeParsed("ProjectionDataId");
 
 	// reconstruction data
-	node = _cfg.self->getSingleNode("ReconstructionDataId");
+	node = _cfg.self.getSingleNode("ReconstructionDataId");
 	ASTRA_CONFIG_CHECK(node, "CudaFBP", "No ReconstructionDataId tag specified.");
-	id = boost::lexical_cast<int>(node->getContent());
+	id = boost::lexical_cast<int>(node.getContent());
 	m_pReconstruction = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
-	ASTRA_DELETE(node);
 	CC.markNodeParsed("ReconstructionDataId");
 
 	// filter type
-	node = _cfg.self->getSingleNode("FilterType");
-	if(node != NULL)
+	node = _cfg.self.getSingleNode("FilterType");
+	if (node)
 	{
-		m_eFilter = _convertStringToFilter(node->getContent().c_str());
+		m_eFilter = _convertStringToFilter(node.getContent().c_str());
 	}
 	else
 	{
 		m_eFilter = FILTER_RAMLAK;
 	}
 	CC.markNodeParsed("FilterType");
-	ASTRA_DELETE(node);
 
 	// filter
-	node = _cfg.self->getSingleNode("FilterSinogramId");
-	if(node != NULL)
+	node = _cfg.self.getSingleNode("FilterSinogramId");
+	if (node)
 	{
-		id = boost::lexical_cast<int>(node->getContent());
+		id = boost::lexical_cast<int>(node.getContent());
 		const CFloat32ProjectionData2D * pFilterData = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
 		m_iFilterWidth = pFilterData->getGeometry()->getDetectorCount();
 		int iFilterProjectionCount = pFilterData->getGeometry()->getProjectionAngleCount();
@@ -124,13 +136,12 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 		m_pfFilter = NULL;
 	}
 	CC.markNodeParsed("FilterSinogramId"); // TODO: Only for some types!
-	ASTRA_DELETE(node);
 
 	// filter parameter
-	node = _cfg.self->getSingleNode("FilterParameter");
-	if(node != NULL)
+	node = _cfg.self.getSingleNode("FilterParameter");
+	if (node)
 	{
-		float fParameter = boost::lexical_cast<float>(node->getContent());
+		float fParameter = boost::lexical_cast<float>(node.getContent());
 		m_fFilterParameter = fParameter;
 	}
 	else
@@ -138,13 +149,12 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 		m_fFilterParameter = -1.0f;
 	}
 	CC.markNodeParsed("FilterParameter"); // TODO: Only for some types!
-	ASTRA_DELETE(node);
 
 	// D value
-	node = _cfg.self->getSingleNode("FilterD");
-	if(node != NULL)
+	node = _cfg.self.getSingleNode("FilterD");
+	if (node)
 	{
-		float fD = boost::lexical_cast<float>(node->getContent());
+		float fD = boost::lexical_cast<float>(node.getContent());
 		m_fFilterD = fD;
 	}
 	else
@@ -152,19 +162,24 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 		m_fFilterD = 1.0f;
 	}
 	CC.markNodeParsed("FilterD"); // TODO: Only for some types!
-	ASTRA_DELETE(node);
 
 	// GPU number
-	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUindex", -1);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
 	CC.markOptionParsed("GPUindex");
 
-	// Pixel supersampling factor
-	m_iPixelSuperSampling = (int)_cfg.self->getOptionNumerical("PixelSuperSampling", 1);
+	m_iPixelSuperSampling = 1;
+	if (pCudaProjector) {
+		// New interface
+		m_iPixelSuperSampling = pCudaProjector->getVoxelSuperSampling();
+	}
+	// Deprecated options
+	m_iPixelSuperSampling = (int)_cfg.self.getOptionNumerical("PixelSuperSampling", m_iPixelSuperSampling);
 	CC.markOptionParsed("PixelSuperSampling");
+
 
 	// Fan beam short scan mode
 	if (m_pSinogram && dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pSinogram->getGeometry())) {
-		m_bShortScan = (int)_cfg.self->getOptionBool("ShortScan", false);
+		m_bShortScan = (int)_cfg.self.getOptionBool("ShortScan", false);
 		CC.markOptionParsed("ShortScan");
 	}
 

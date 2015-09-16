@@ -95,94 +95,99 @@ bool CCudaReconstructionAlgorithm2D::initialize(const Config& _cfg)
 		clear();
 	}
 
+	// Projector
+	XMLNode node = _cfg.self.getSingleNode("ProjectorId");
+	CCudaProjector2D* pCudaProjector = 0;
+	if (node) {
+		int id = boost::lexical_cast<int>(node.getContent());
+		CProjector2D *projector = CProjector2DManager::getSingleton().get(id);
+		pCudaProjector = dynamic_cast<CCudaProjector2D*>(projector);
+		if (!pCudaProjector) {
+			ASTRA_WARN("non-CUDA Projector2D passed");
+		}
+	}
+	CC.markNodeParsed("ProjectorId");
+
+
 	// sinogram data
-	XMLNode* node = _cfg.self->getSingleNode("ProjectionDataId");
+	node = _cfg.self.getSingleNode("ProjectionDataId");
 	ASTRA_CONFIG_CHECK(node, "CudaSirt2", "No ProjectionDataId tag specified.");
-	int id = boost::lexical_cast<int>(node->getContent());
+	int id = boost::lexical_cast<int>(node.getContent());
 	m_pSinogram = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
-	ASTRA_DELETE(node);
 	CC.markNodeParsed("ProjectionDataId");
 
 	// reconstruction data
-	node = _cfg.self->getSingleNode("ReconstructionDataId");
+	node = _cfg.self.getSingleNode("ReconstructionDataId");
 	ASTRA_CONFIG_CHECK(node, "CudaSirt2", "No ReconstructionDataId tag specified.");
-	id = boost::lexical_cast<int>(node->getContent());
+	id = boost::lexical_cast<int>(node.getContent());
 	m_pReconstruction = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
-	ASTRA_DELETE(node);
 	CC.markNodeParsed("ReconstructionDataId");
 
 	// fixed mask
-	if (_cfg.self->hasOption("ReconstructionMaskId")) {
+	if (_cfg.self.hasOption("ReconstructionMaskId")) {
 		m_bUseReconstructionMask = true;
-		id = boost::lexical_cast<int>(_cfg.self->getOption("ReconstructionMaskId"));
+		id = boost::lexical_cast<int>(_cfg.self.getOption("ReconstructionMaskId"));
 		m_pReconstructionMask = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 		ASTRA_CONFIG_CHECK(m_pReconstructionMask, "CudaReconstruction2D", "Invalid ReconstructionMaskId.");
 	}
 	CC.markOptionParsed("ReconstructionMaskId");
 	// fixed mask
-	if (_cfg.self->hasOption("SinogramMaskId")) {
+	if (_cfg.self.hasOption("SinogramMaskId")) {
 		m_bUseSinogramMask = true;
-		id = boost::lexical_cast<int>(_cfg.self->getOption("SinogramMaskId"));
+		id = boost::lexical_cast<int>(_cfg.self.getOption("SinogramMaskId"));
 		m_pSinogramMask = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
 		ASTRA_CONFIG_CHECK(m_pSinogramMask, "CudaReconstruction2D", "Invalid SinogramMaskId.");
 	}
 	CC.markOptionParsed("SinogramMaskId");
 
 	// Constraints - NEW
-	if (_cfg.self->hasOption("MinConstraint")) {
+	if (_cfg.self.hasOption("MinConstraint")) {
 		m_bUseMinConstraint = true;
-		m_fMinValue = _cfg.self->getOptionNumerical("MinConstraint", 0.0f);
+		m_fMinValue = _cfg.self.getOptionNumerical("MinConstraint", 0.0f);
 		CC.markOptionParsed("MinConstraint");
 	} else {
 		// Constraint - OLD
-		m_bUseMinConstraint = _cfg.self->getOptionBool("UseMinConstraint", false);
+		m_bUseMinConstraint = _cfg.self.getOptionBool("UseMinConstraint", false);
 		CC.markOptionParsed("UseMinConstraint");
 		if (m_bUseMinConstraint) {
-			m_fMinValue = _cfg.self->getOptionNumerical("MinConstraintValue", 0.0f);
+			m_fMinValue = _cfg.self.getOptionNumerical("MinConstraintValue", 0.0f);
 			CC.markOptionParsed("MinConstraintValue");
 		}
 	}
-	if (_cfg.self->hasOption("MaxConstraint")) {
+	if (_cfg.self.hasOption("MaxConstraint")) {
 		m_bUseMaxConstraint = true;
-		m_fMaxValue = _cfg.self->getOptionNumerical("MaxConstraint", 255.0f);
+		m_fMaxValue = _cfg.self.getOptionNumerical("MaxConstraint", 255.0f);
 		CC.markOptionParsed("MaxConstraint");
 	} else {
 		// Constraint - OLD
-		m_bUseMaxConstraint = _cfg.self->getOptionBool("UseMaxConstraint", false);
+		m_bUseMaxConstraint = _cfg.self.getOptionBool("UseMaxConstraint", false);
 		CC.markOptionParsed("UseMaxConstraint");
 		if (m_bUseMaxConstraint) {
-			m_fMaxValue = _cfg.self->getOptionNumerical("MaxConstraintValue", 0.0f);
+			m_fMaxValue = _cfg.self.getOptionNumerical("MaxConstraintValue", 0.0f);
 			CC.markOptionParsed("MaxConstraintValue");
 		}
 	}
 
 	// GPU number
-	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUindex", -1);
-	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUIndex", m_iGPUIndex);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
 	CC.markOptionParsed("GPUindex");
-	if (!_cfg.self->hasOption("GPUindex"))
+	if (!_cfg.self.hasOption("GPUindex"))
 		CC.markOptionParsed("GPUIndex");
 
-	// Detector supersampling factor
-	m_iDetectorSuperSampling = (int)_cfg.self->getOptionNumerical("DetectorSuperSampling", 1);
-	CC.markOptionParsed("DetectorSuperSampling");
-
-	// Pixel supersampling factor
-	m_iPixelSuperSampling = (int)_cfg.self->getOptionNumerical("PixelSuperSampling", 1);
-	CC.markOptionParsed("PixelSuperSampling");
-
-
-	// This isn't used yet, but passing it is not something to warn about
-	node = _cfg.self->getSingleNode("ProjectorId");
-	if (node) {
-		id = boost::lexical_cast<int>(node->getContent());
-		CProjector2D *projector = CProjector2DManager::getSingleton().get(id);
-		if (!dynamic_cast<CCudaProjector2D*>(projector)) {
-			ASTRA_WARN("non-CUDA Projector2D passed");
-		}
-		delete node;
+	// Supersampling factors
+	m_iDetectorSuperSampling = 1;
+	m_iPixelSuperSampling = 1;
+	if (pCudaProjector) {
+		// New interface
+		m_iDetectorSuperSampling = pCudaProjector->getDetectorSuperSampling();
+		m_iPixelSuperSampling = pCudaProjector->getVoxelSuperSampling();
 	}
-	CC.markNodeParsed("ProjectorId");
+	// Deprecated options
+	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", m_iDetectorSuperSampling);
+	m_iPixelSuperSampling = (int)_cfg.self.getOptionNumerical("PixelSuperSampling", m_iPixelSuperSampling);
+	CC.markOptionParsed("DetectorSuperSampling");
+	CC.markOptionParsed("PixelSuperSampling");
 
 
 	return _check();

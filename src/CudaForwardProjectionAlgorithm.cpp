@@ -71,47 +71,52 @@ bool CCudaForwardProjectionAlgorithm::initialize(const Config& _cfg)
 {
 	ASTRA_ASSERT(_cfg.self);
 	ConfigStackCheck<CAlgorithm> CC("CudaForwardProjectionAlgorithm", this, _cfg);
+
+	// Projector
+	XMLNode node = _cfg.self.getSingleNode("ProjectorId");
+	CCudaProjector2D* pCudaProjector = 0;
+	if (node) {
+		int id = boost::lexical_cast<int>(node.getContent());
+		CProjector2D *projector = CProjector2DManager::getSingleton().get(id);
+		pCudaProjector = dynamic_cast<CCudaProjector2D*>(projector);
+		if (!pCudaProjector) {
+			ASTRA_WARN("non-CUDA Projector2D passed to FP_CUDA");
+		}
+	}
+	CC.markNodeParsed("ProjectorId");
+
+
 	
 	// sinogram data
-	XMLNode* node = _cfg.self->getSingleNode("ProjectionDataId");
+	node = _cfg.self.getSingleNode("ProjectionDataId");
 	ASTRA_CONFIG_CHECK(node, "FP_CUDA", "No ProjectionDataId tag specified.");
-	int id = boost::lexical_cast<int>(node->getContent());
+	int id = boost::lexical_cast<int>(node.getContent());
 	m_pSinogram = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
-	ASTRA_DELETE(node);
 	CC.markNodeParsed("ProjectionDataId");
 
 	// volume data
-	node = _cfg.self->getSingleNode("VolumeDataId");
+	node = _cfg.self.getSingleNode("VolumeDataId");
 	ASTRA_CONFIG_CHECK(node, "FP_CUDA", "No VolumeDataId tag specified.");
-	id = boost::lexical_cast<int>(node->getContent());
+	id = boost::lexical_cast<int>(node.getContent());
 	m_pVolume = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
-	ASTRA_DELETE(node);
 	CC.markNodeParsed("VolumeDataId");
 
 	// GPU number
-	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUindex", -1);
-	m_iGPUIndex = (int)_cfg.self->getOptionNumerical("GPUIndex", m_iGPUIndex);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
 	CC.markOptionParsed("GPUindex");
-	if (!_cfg.self->hasOption("GPUindex"))
+	if (!_cfg.self.hasOption("GPUindex"))
 		CC.markOptionParsed("GPUIndex");
 
 	// Detector supersampling factor
-	m_iDetectorSuperSampling = (int)_cfg.self->getOptionNumerical("DetectorSuperSampling", 1);
-	CC.markOptionParsed("DetectorSuperSampling");
-
-
-	// This isn't used yet, but passing it is not something to warn about
-	node = _cfg.self->getSingleNode("ProjectorId");
-	if (node) {
-		id = boost::lexical_cast<int>(node->getContent());
-		CProjector2D *projector = CProjector2DManager::getSingleton().get(id);
-		if (!dynamic_cast<CCudaProjector2D*>(projector)) {
-			ASTRA_WARN("non-CUDA Projector2D passed to FP_CUDA");
-		}
-		delete node;
+	m_iDetectorSuperSampling = 1;
+	if (pCudaProjector) {
+		// New interface
+		m_iDetectorSuperSampling = pCudaProjector->getDetectorSuperSampling();
 	}
-	CC.markNodeParsed("ProjectorId");
-	
+	// Deprecated option
+	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", m_iDetectorSuperSampling);
+	CC.markOptionParsed("DetectorSuperSampling");
 
 
 	// return success

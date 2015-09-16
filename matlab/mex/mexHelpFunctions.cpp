@@ -185,7 +185,7 @@ Config* structToConfig(string rootname, const mxArray* pStruct)
 }
 
 //-----------------------------------------------------------------------------------------
-bool structToXMLNode(XMLNode* node, const mxArray* pStruct) 
+bool structToXMLNode(XMLNode node, const mxArray* pStruct) 
 {
 	// loop all fields
 	int nfields = mxGetNumberOfFields(pStruct);
@@ -199,16 +199,16 @@ bool structToXMLNode(XMLNode* node, const mxArray* pStruct)
 		if (mxIsChar(pField)) {
 			string sValue = mexToString(pField);
 			if (sFieldName == "type") {
-				node->addAttribute("type", sValue);
+				node.addAttribute("type", sValue);
 			} else {
-				delete node->addChildNode(sFieldName, sValue);
+				node.addChildNode(sFieldName, sValue);
 			}
 		}
 
 		// scalar
 		else if (mxIsNumeric(pField) && mxGetM(pField)*mxGetN(pField) == 1) {
 			string sValue = mexToString(pField);
-			delete node->addChildNode(sFieldName, sValue);
+			node.addChildNode(sFieldName, sValue);
 		}
 
 		// numerical array
@@ -217,20 +217,9 @@ bool structToXMLNode(XMLNode* node, const mxArray* pStruct)
 				mexErrMsgTxt("Numeric input must be double.");
 				return false;
 			}
-			XMLNode* listbase = node->addChildNode(sFieldName);
-			listbase->addAttribute("listsize", mxGetM(pField)*mxGetN(pField));
+			XMLNode listbase = node.addChildNode(sFieldName);
 			double* pdValues = mxGetPr(pField);
-			int index = 0;
-			for (unsigned int row = 0; row < mxGetM(pField); row++) {
-				for (unsigned int col = 0; col < mxGetN(pField); col++) {
-					XMLNode* item = listbase->addChildNode("ListItem");
-					item->addAttribute("index", index);
-					item->addAttribute("value", pdValues[col*mxGetM(pField)+row]);
-					index++;
-					delete item;
-				}
-			}
-			delete listbase;
+			listbase.setContent(pdValues, mxGetN(pField), mxGetM(pField), true);
 		}
 
 		// not castable to a single string
@@ -240,9 +229,8 @@ bool structToXMLNode(XMLNode* node, const mxArray* pStruct)
 				if (!ret)
 					return false;
 			} else {
-				XMLNode* newNode = node->addChildNode(sFieldName);
+				XMLNode newNode = node.addChildNode(sFieldName);
 				bool ret = structToXMLNode(newNode, pField);
-				delete newNode;
 				if (!ret)
 					return false;
 			}
@@ -254,7 +242,7 @@ bool structToXMLNode(XMLNode* node, const mxArray* pStruct)
 }
 //-----------------------------------------------------------------------------------------
 // Options struct to xml node
-bool optionsToXMLNode(XMLNode* node, const mxArray* pOptionStruct)
+bool optionsToXMLNode(XMLNode node, const mxArray* pOptionStruct)
 {
 	// loop all fields
 	int nfields = mxGetNumberOfFields(pOptionStruct);
@@ -262,7 +250,7 @@ bool optionsToXMLNode(XMLNode* node, const mxArray* pOptionStruct)
 		std::string sFieldName = std::string(mxGetFieldNameByNumber(pOptionStruct, i));
 		const mxArray* pField = mxGetFieldByNumber(pOptionStruct, 0, i);
 
-		if (node->hasOption(sFieldName)) {
+		if (node.hasOption(sFieldName)) {
 			mexErrMsgTxt("Duplicate option");
 			return false;
 		}
@@ -270,7 +258,7 @@ bool optionsToXMLNode(XMLNode* node, const mxArray* pOptionStruct)
 		// string or scalar
 		if (mxIsChar(pField) || mexIsScalar(pField)) {
 			string sValue = mexToString(pField);
-			node->addOption(sFieldName, sValue);
+			node.addOption(sFieldName, sValue);
 		}
 		// numerical array
 		else if (mxIsNumeric(pField) && mxGetM(pField)*mxGetN(pField) > 1) {
@@ -279,21 +267,10 @@ bool optionsToXMLNode(XMLNode* node, const mxArray* pOptionStruct)
 				return false;
 			}
 
-			XMLNode* listbase = node->addChildNode("Option");
-			listbase->addAttribute("key", sFieldName);
-			listbase->addAttribute("listsize", mxGetM(pField)*mxGetN(pField));
+			XMLNode listbase = node.addChildNode("Option");
+			listbase.addAttribute("key", sFieldName);
 			double* pdValues = mxGetPr(pField);
-			int index = 0;
-			for (unsigned int row = 0; row < mxGetM(pField); row++) {
-				for (unsigned int col = 0; col < mxGetN(pField); col++) {
-					XMLNode* item = listbase->addChildNode("ListItem");
-					item->addAttribute("index", index);
-					item->addAttribute("value", pdValues[col*mxGetM(pField)+row]);
-					index++;
-					delete item;
-				}
-			}
-			delete listbase;
+			listbase.setContent(pdValues, mxGetN(pField), mxGetM(pField), true);
 		} else {
 			mexErrMsgTxt("Unsupported option type");
 			return false;
@@ -343,30 +320,33 @@ mxArray* configToStruct(astra::Config* cfg)
 }
 
 //-----------------------------------------------------------------------------------------
-mxArray* XMLNodeToStruct(astra::XMLNode* node)
+mxArray* XMLNodeToStruct(astra::XMLNode node)
 {
 	std::map<std::string, mxArray*> mList;
 	std::map<std::string, mxArray*> mOptions;
 
 	// type_attribute
-	if (node->hasAttribute("type")) {
-		mList["type"] = mxCreateString(node->getAttribute("type").c_str());
+	if (node.hasAttribute("type")) {
+		mList["type"] = mxCreateString(node.getAttribute("type").c_str());
 	}
 
-	list<XMLNode*> nodes = node->getNodes();
-	for (list<XMLNode*>::iterator it = nodes.begin(); it != nodes.end(); it++) {
-		XMLNode* subnode = (*it);
+	list<XMLNode> nodes = node.getNodes();
+	for (list<XMLNode>::iterator it = nodes.begin(); it != nodes.end(); it++) {
+		XMLNode subnode = (*it);
 
 		// option
-		if (subnode->getName() == "Option") {
-			mOptions[subnode->getAttribute("key")] = stringToMxArray(subnode->getAttribute("value"));
+		if (subnode.getName() == "Option") {
+			if(subnode.hasAttribute("value")){
+				mOptions[subnode.getAttribute("key")] = stringToMxArray(subnode.getAttribute("value"));
+			}else{
+				mOptions[subnode.getAttribute("key")] = stringToMxArray(subnode.getContent());
+			}
 		}
 
 		// regular content
 		else {
-			mList[subnode->getName()] = stringToMxArray(subnode->getContent());
+			mList[subnode.getName()] = stringToMxArray(subnode.getContent());
 		}
-		delete subnode;
 	}
 
 	if (mOptions.size() > 0) mList["options"] = buildStruct(mOptions);

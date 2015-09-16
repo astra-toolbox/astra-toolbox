@@ -47,6 +47,12 @@ from .PyIncludes cimport *
 cimport utils
 from .utils import wrap_from_bytes
 
+from .pythonutils import geom_size
+
+import operator
+
+from six.moves import reduce
+
 cdef CData2DManager * man2d = <CData2DManager * >PyData2DManager.getSingletonPtr()
 
 cdef extern from "CFloat32CustomPython.h":
@@ -71,6 +77,10 @@ def create(datatype, geometry, data=None, link=False):
     cdef CProjectionGeometry2D * ppGeometry
     cdef CFloat32Data2D * pDataObject2D
     cdef CFloat32CustomMemory * pCustom
+
+    if link and data.shape!=geom_size(geometry):
+        raise Exception("The dimensions of the data do not match those specified in the geometry.")
+
     if datatype == '-vol':
         cfg = utils.dictToConfig(six.b('VolumeGeometry'), geometry)
         pGeometry = new CVolumeGeometry2D()

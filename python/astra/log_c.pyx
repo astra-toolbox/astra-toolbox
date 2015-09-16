@@ -52,16 +52,20 @@ cdef extern from "astra/Logging.h" namespace "astra::CLogger":
     void setFormatScreen(const char *fmt)
 
 def log_debug(sfile, sline, message):
-    debug(six.b(sfile),sline,six.b(message))
+    cstr = list(map(six.b,(sfile,message)))
+    debug(cstr[0],sline,"%s",<char*>cstr[1])
 
 def log_info(sfile, sline, message):
-    info(six.b(sfile),sline,six.b(message))
+    cstr = list(map(six.b,(sfile,message)))
+    info(cstr[0],sline,"%s",<char*>cstr[1])
 
 def log_warn(sfile, sline, message):
-    warn(six.b(sfile),sline,six.b(message))
+    cstr = list(map(six.b,(sfile,message)))
+    warn(cstr[0],sline,"%s",<char*>cstr[1])
 
 def log_error(sfile, sline, message):
-    error(six.b(sfile),sline,six.b(message))
+    cstr = list(map(six.b,(sfile,message)))
+    error(cstr[0],sline,"%s",<char*>cstr[1])
 
 def log_enable():
     enable()
@@ -82,10 +86,12 @@ def log_disableFile():
     disableFile()
 
 def log_setFormatFile(fmt):
-    setFormatFile(six.b(fmt))
+    cstr = six.b(fmt)
+    setFormatFile(cstr)
 
 def log_setFormatScreen(fmt):
-    setFormatScreen(six.b(fmt))
+    cstr = six.b(fmt)
+    setFormatScreen(cstr)
 
 enumList = [LOG_DEBUG,LOG_INFO,LOG_WARN,LOG_ERROR]
 
@@ -93,4 +99,5 @@ def log_setOutputScreen(fd, level):
     setOutputScreen(fd, enumList[level])
 
 def log_setOutputFile(filename, level):
-    setOutputFile(six.b(filename), enumList[level])
+    cstr = six.b(filename)
+    setOutputFile(cstr, enumList[level])

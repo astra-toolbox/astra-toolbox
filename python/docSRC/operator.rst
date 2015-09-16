@@ -1,7 +1,7 @@
-Helper class: the :mod:`ASTRAProjector` module
+OpTomo class: the :mod:`optomo` module
 ==============================================
 
-.. automodule:: astra.ASTRAProjector
+.. automodule:: astra.optomo
     :members:
     :undoc-members:
     :show-inheritance:

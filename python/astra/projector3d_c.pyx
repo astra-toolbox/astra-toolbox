@@ -87,12 +87,18 @@ cdef CProjector3D * getObject(i) except NULL:
 
 def projection_geometry(i):
     cdef CProjector3D * proj = getObject(i)
-    return utils.configToDict(proj.getProjectionGeometry().getConfiguration())
+    cdef Config * cfg = proj.getProjectionGeometry().getConfiguration()
+    dct = utils.configToDict(cfg)
+    del cfg
+    return dct
 
 
 def volume_geometry(i):
     cdef CProjector3D * proj = getObject(i)
-    return utils.configToDict(proj.getVolumeGeometry().getConfiguration())
+    cdef Config * cfg = proj.getVolumeGeometry().getConfiguration()
+    dct = utils.configToDict(cfg)
+    del cfg
+    return dct
 
 
 def weights_single_ray(i, projection_index, detector_index):

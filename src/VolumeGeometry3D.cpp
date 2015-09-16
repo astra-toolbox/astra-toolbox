@@ -192,33 +192,30 @@ bool CVolumeGeometry3D::initialize(const Config& _cfg)
 	}
 
 	// Required: GridColCount
-	XMLNode* node = _cfg.self->getSingleNode("GridColCount");
+	XMLNode node = _cfg.self.getSingleNode("GridColCount");
 	ASTRA_CONFIG_CHECK(node, "ReconstructionGeometry2D", "No GridColCount tag specified.");
-	m_iGridColCount = boost::lexical_cast<int>(node->getContent());
-	ASTRA_DELETE(node);
+	m_iGridColCount = boost::lexical_cast<int>(node.getContent());
 	CC.markNodeParsed("GridColCount");
 
 	// Required: GridRowCount
-	node = _cfg.self->getSingleNode("GridRowCount");
+	node = _cfg.self.getSingleNode("GridRowCount");
 	ASTRA_CONFIG_CHECK(node, "ReconstructionGeometry2D", "No GridRowCount tag specified.");
-	m_iGridRowCount = boost::lexical_cast<int>(node->getContent());
-	ASTRA_DELETE(node);
+	m_iGridRowCount = boost::lexical_cast<int>(node.getContent());
 	CC.markNodeParsed("GridRowCount");
 
 	// Required: GridRowCount
-	node = _cfg.self->getSingleNode("GridSliceCount");
+	node = _cfg.self.getSingleNode("GridSliceCount");
 	ASTRA_CONFIG_CHECK(node, "ReconstructionGeometry2D", "No GridSliceCount tag specified.");
-	m_iGridSliceCount = boost::lexical_cast<int>(node->getContent());
-	ASTRA_DELETE(node);
+	m_iGridSliceCount = boost::lexical_cast<int>(node.getContent());
 	CC.markNodeParsed("GridSliceCount");
 
 	// Optional: Window minima and maxima
-	m_fWindowMinX = _cfg.self->getOptionNumerical("WindowMinX", -m_iGridColCount/2.0f);
-	m_fWindowMaxX = _cfg.self->getOptionNumerical("WindowMaxX", m_iGridColCount/2.0f);
-	m_fWindowMinY = _cfg.self->getOptionNumerical("WindowMinY", -m_iGridRowCount/2.0f);
-	m_fWindowMaxY = _cfg.self->getOptionNumerical("WindowMaxY", m_iGridRowCount/2.0f);
-	m_fWindowMinZ = _cfg.self->getOptionNumerical("WindowMinZ", -m_iGridSliceCount/2.0f);
-	m_fWindowMaxZ = _cfg.self->getOptionNumerical("WindowMaxZ", m_iGridSliceCount/2.0f);
+	m_fWindowMinX = _cfg.self.getOptionNumerical("WindowMinX", -m_iGridColCount/2.0f);
+	m_fWindowMaxX = _cfg.self.getOptionNumerical("WindowMaxX", m_iGridColCount/2.0f);
+	m_fWindowMinY = _cfg.self.getOptionNumerical("WindowMinY", -m_iGridRowCount/2.0f);
+	m_fWindowMaxY = _cfg.self.getOptionNumerical("WindowMaxY", m_iGridRowCount/2.0f);
+	m_fWindowMinZ = _cfg.self.getOptionNumerical("WindowMinZ", -m_iGridSliceCount/2.0f);
+	m_fWindowMaxZ = _cfg.self.getOptionNumerical("WindowMaxZ", m_iGridSliceCount/2.0f);
 	CC.markOptionParsed("WindowMinX");
 	CC.markOptionParsed("WindowMaxX");
 	CC.markOptionParsed("WindowMinY");
@@ -386,16 +383,16 @@ Config* CVolumeGeometry3D::getConfiguration() const
 	Config* cfg = new Config();
 	cfg->initialize("VolumeGeometry3D");
 
-	cfg->self->addChildNode("GridColCount", m_iGridColCount);
-	cfg->self->addChildNode("GridRowCount", m_iGridRowCount);
-	cfg->self->addChildNode("GridSliceCount", m_iGridSliceCount);
+	cfg->self.addChildNode("GridColCount", m_iGridColCount);
+	cfg->self.addChildNode("GridRowCount", m_iGridRowCount);
+	cfg->self.addChildNode("GridSliceCount", m_iGridSliceCount);
 
-	cfg->self->addOption("WindowMinX", m_fWindowMinX);
-	cfg->self->addOption("WindowMaxX", m_fWindowMaxX);
-	cfg->self->addOption("WindowMinY", m_fWindowMinY);
-	cfg->self->addOption("WindowMaxY", m_fWindowMaxY);
-	cfg->self->addOption("WindowMinZ", m_fWindowMinZ);
-	cfg->self->addOption("WindowMaxZ", m_fWindowMaxZ);
+	cfg->self.addOption("WindowMinX", m_fWindowMinX);
+	cfg->self.addOption("WindowMaxX", m_fWindowMaxX);
+	cfg->self.addOption("WindowMinY", m_fWindowMinY);
+	cfg->self.addOption("WindowMaxY", m_fWindowMaxY);
+	cfg->self.addOption("WindowMinZ", m_fWindowMinZ);
+	cfg->self.addOption("WindowMaxZ", m_fWindowMaxZ);
 
 	return cfg;
 }

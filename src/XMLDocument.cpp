@@ -32,13 +32,8 @@ $Id$
 #include <iostream>
 #include <sstream>
 
-#ifdef _MSC_VER
 #include "rapidxml/rapidxml.hpp"
 #include "rapidxml/rapidxml_print.hpp"
-#else
-#include "rapidxml.hpp"
-#include "rapidxml_print.hpp"
-#endif
 
 using namespace rapidxml;
 using namespace astra;
@@ -94,10 +89,9 @@ XMLDocument* XMLDocument::createDocument(string sRootName)
 }
 
 //-----------------------------------------------------------------------------
-XMLNode* XMLDocument::getRootNode() 
+XMLNode XMLDocument::getRootNode() 
 {
-	// TODO: clean up: this 'new' requires callers to do memory management
-	return new XMLNode(fDOMDocument->first_node());
+	return XMLNode(fDOMDocument->first_node());
 }
 
 //-----------------------------------------------------------------------------

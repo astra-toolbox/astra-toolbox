@@ -58,13 +58,13 @@ mxArray* anyToMxArray(boost::any _any);
 
 // turn a MATLAB struct into a Config object
 astra::Config* structToConfig(string rootname, const mxArray* pStruct);
-bool structToXMLNode(astra::XMLNode* node, const mxArray* pStruct);
-bool optionsToXMLNode(astra::XMLNode* node, const mxArray* pOptionStruct);
+bool structToXMLNode(astra::XMLNode node, const mxArray* pStruct);
+bool optionsToXMLNode(astra::XMLNode node, const mxArray* pOptionStruct);
 std::map<std::string, mxArray*> parseStruct(const mxArray* pInput);
 
 // turn a Config object into a MATLAB struct
 mxArray* configToStruct(astra::Config* cfg);
-mxArray* XMLNodeToStruct(astra::XMLNode* xml);
+mxArray* XMLNodeToStruct(astra::XMLNode xml);
 mxArray* stringToMxArray(std::string input);
 mxArray* buildStruct(std::map<std::string, mxArray*> mInput);
 

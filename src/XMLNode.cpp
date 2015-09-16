@@ -28,15 +28,15 @@ $Id$
 
 #include "astra/XMLNode.h"
 
-#ifdef _MSC_VER
 #include "rapidxml/rapidxml.hpp"
 #include "rapidxml/rapidxml_print.hpp"
-#else
-#include "rapidxml.hpp"
-#include "rapidxml_print.hpp"
-#endif
 
 #include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
+
+
 
 using namespace rapidxml;
 using namespace astra;
@@ -44,21 +44,10 @@ using namespace std;
 
 
 //-----------------------------------------------------------------------------
-// Utility function to delete a list of nodes
-static void deleteNodes(list<XMLNode*>& nodes)
-{
-	for (list<XMLNode*>::iterator i = nodes.begin(); i != nodes.end(); ++i)
-		delete (*i);
-
-	nodes.clear();
-}
-
-
-//-----------------------------------------------------------------------------
 // default constructor
 XMLNode::XMLNode() 
 {
-
+	fDOMElement = 0;
 }
 
 //-----------------------------------------------------------------------------	
@@ -84,14 +73,14 @@ void XMLNode::setDOMNode(xml_node<>* n)
 
 //-----------------------------------------------------------------------------	
 // print XML Node
-void XMLNode::print()
+void XMLNode::print() const
 {
 	std::cout << fDOMElement;
 }
 
 //-----------------------------------------------------------------------------	
 // print XML Node
-std::string XMLNode::toString()
+std::string XMLNode::toString() const
 {
 	std::string s;
 	::print(std::back_inserter(s), *fDOMElement, 0);
@@ -100,64 +89,61 @@ std::string XMLNode::toString()
 
 //-----------------------------------------------------------------------------	
 // Get single node
-XMLNode* XMLNode::getSingleNode(string name) 
+XMLNode XMLNode::getSingleNode(string name) const
 {
 	xml_node<> *node = fDOMElement->first_node(name.c_str());
 
-	if (node)
-		return new XMLNode(node);
-	else
-		return 0;
+	return XMLNode(node);
 }
 
 //-----------------------------------------------------------------------------	
 // Get list of nodes
-list<XMLNode*> XMLNode::getNodes(string name) 
+list<XMLNode> XMLNode::getNodes(string name) const
 {	
-	list<XMLNode*> result;
+	list<XMLNode> result;
 	xml_node<> *iter;
 	for (iter = fDOMElement->first_node(name.c_str()); iter; iter = iter->next_sibling(name.c_str())) {
-		result.push_back(new XMLNode(iter));
+		result.push_back(XMLNode(iter));
 	}
 	return result;
 }
 
 //-----------------------------------------------------------------------------	
 // Get list of nodes
-list<XMLNode*> XMLNode::getNodes() 
+list<XMLNode> XMLNode::getNodes() const
 {	
-	list<XMLNode*> result;
+	list<XMLNode> result;
 	xml_node<> *iter;
 	for (iter = fDOMElement->first_node(); iter; iter = iter->next_sibling()) {
-		result.push_back(new XMLNode(iter));
+		result.push_back(XMLNode(iter));
 	}
 	return result;
 }
 
 //-----------------------------------------------------------------------------	
 // Get name of this node
-std::string XMLNode::getName()
+std::string XMLNode::getName() const
 {
 	return fDOMElement->name();
 }
 
 //-----------------------------------------------------------------------------	
 // Get node content - STRING
-string XMLNode::getContent() 
+string XMLNode::getContent() const
 {
 	return fDOMElement->value();
 }
 
 //-----------------------------------------------------------------------------	
 // Get node content - NUMERICAL
-float32 XMLNode::getContentNumerical() 
+float32 XMLNode::getContentNumerical() const
 {
 	return boost::lexical_cast<float32>(getContent());
 }
 
 //-----------------------------------------------------------------------------	
 // Get node content - BOOLEAN
-bool XMLNode::getContentBool() 
+bool XMLNode::getContentBool() const
 {
 	string res = getContent();
 	return ((res == "1") || (res == "yes") || (res == "true") || (res == "on"));
@@ -165,21 +151,20 @@ bool XMLNode::getContentBool()
 
 //-----------------------------------------------------------------------------	
 // Get node content - STRING LIST
-vector<string> XMLNode::getContentArray()
+vector<string> XMLNode::getContentArray() const
 {
 	// get listsize
 	int iSize = boost::lexical_cast<int>(getAttribute("listsize"));
 	// create result array
 	vector<string> res(iSize);
 	// loop all list item nodes
-	list<XMLNode*> nodes = getNodes("ListItem");
-	for (list<XMLNode*>::iterator it = nodes.begin(); it != nodes.end(); it++) {
-		int iIndex = (*it)->getAttributeNumerical("index");
-		string sValue = (*it)->getAttribute("value");
+	list<XMLNode> nodes = getNodes("ListItem");
+	for (list<XMLNode>::iterator it = nodes.begin(); it != nodes.end(); it++) {
+		int iIndex = it->getAttributeNumerical("index");
+		string sValue = it->getAttribute("value");
 		ASTRA_ASSERT(iIndex < iSize);
 		res[iIndex] = sValue;
 	}
-	deleteNodes(nodes);
 
 	// return 
 	return res;
@@ -187,85 +172,48 @@ vector<string> XMLNode::getContentArray()
 
 //-----------------------------------------------------------------------------	
 // Get node content - NUMERICAL LIST
-vector<float32> XMLNode::getContentNumericalArray()
+// NB: A 2D matrix is returned as a linear list
+vector<float32> XMLNode::getContentNumericalArray() const
 {
-	// is scalar
-	if (!hasAttribute("listsize")) {
-		vector<float32> res(1);
-		res[0] = getContentNumerical();
-		return res;
-	}
+	string input = getContent();
 
-	int iSize = boost::lexical_cast<int>(getAttribute("listsize"));
-	// create result array
-	vector<float32> res(iSize);
-	// loop all list item nodes
-	list<XMLNode*> nodes = getNodes("ListItem");
-	for (list<XMLNode*>::iterator it = nodes.begin(); it != nodes.end(); it++) {
-		int iIndex = (*it)->getAttributeNumerical("index");
-		float32 fValue = (*it)->getAttributeNumerical("value");
-		ASTRA_ASSERT(iIndex < iSize);
-		res[iIndex] = fValue;
+	// split
+	std::vector<std::string> items;
+	boost::split(items, input, boost::is_any_of(",;"));
+
+	// init list
+	vector<float32> out;
+	out.resize(items.size());
+
+	// loop elements
+	for (unsigned int i = 0; i < items.size(); i++) {
+		out[i] = boost::lexical_cast<float32>(items[i]);
 	}
-	deleteNodes(nodes);
-	// return 
-	return res;
+	return out;
 }
 
-vector<double> XMLNode::getContentNumericalArrayDouble()
+vector<double> XMLNode::getContentNumericalArrayDouble() const
 {
-	// is scalar
-	if (!hasAttribute("listsize")) {
-		vector<double> res(1);
-		res[0] = getContentNumerical();
-		return res;
-	}
+	string input = getContent();
 
-	int iSize = boost::lexical_cast<int>(getAttribute("listsize"));
-	// create result array
-	vector<double> res(iSize);
-	// loop all list item nodes
-	list<XMLNode*> nodes = getNodes("ListItem");
-	for (list<XMLNode*>::iterator it = nodes.begin(); it != nodes.end(); it++) {
-		int iIndex = (*it)->getAttributeNumerical("index");
-		double fValue = (*it)->getAttributeNumericalDouble("value");
-		ASTRA_ASSERT(iIndex < iSize);
-		res[iIndex] = fValue;
-	}
-	deleteNodes(nodes);
-	// return 
-	return res;
-}
+	// split
+	std::vector<std::string> items;
+	boost::split(items, input, boost::is_any_of(",;"));
 
-//-----------------------------------------------------------------------------	
-// Get node content - NUMERICAL LIST 2
-void XMLNode::getContentNumericalArray(float32*& _pfData, int& _iSize)
-{
-	// is scalar
-	if (!hasAttribute("listsize")) {
-		_iSize = 1;
-		_pfData = new float32[_iSize];
-		_pfData[0] = getContentNumerical();
-		return;
+	// init list
+	vector<double> out;
+	out.resize(items.size());
+
+	// loop elements
+	for (unsigned int i = 0; i < items.size(); i++) {
+		out[i] = boost::lexical_cast<double>(items[i]);
 	}
-	// get listsize
-	_iSize = boost::lexical_cast<int>(getAttribute("listsize"));
-	// create result array
-	_pfData = new float32[_iSize];
-	// loop all list item nodes
-	list<XMLNode*> nodes = getNodes("ListItem");
-	for (list<XMLNode*>::iterator it = nodes.begin(); it != nodes.end(); it++) {
-		int iIndex = (*it)->getAttributeNumerical("index");
-		float32 fValue = (*it)->getAttributeNumerical("value");
-		ASTRA_ASSERT(iIndex < _iSize);
-		_pfData[iIndex] = fValue;
-	}
-	deleteNodes(nodes);
+	return out;
 }
 
 //-----------------------------------------------------------------------------	
 // Is attribute?
-bool XMLNode::hasAttribute(string _sName)
+bool XMLNode::hasAttribute(string _sName) const
 {
 	xml_attribute<> *attr = fDOMElement->first_attribute(_sName.c_str());
 	return (attr != 0);
@@ -273,7 +221,7 @@ bool XMLNode::hasAttribute(string _sName)
 
 //-----------------------------------------------------------------------------	
 // Get attribute - STRING
-string XMLNode::getAttribute(string _sName, string _sDefaultValue)
+string XMLNode::getAttribute(string _sName, string _sDefaultValue) const
 {
 	xml_attribute<> *attr = fDOMElement->first_attribute(_sName.c_str());
 
@@ -284,12 +232,12 @@ string XMLNode::getAttribute(string _sName, string _sDefaultValue)
 
 //-----------------------------------------------------------------------------	
 // Get attribute - NUMERICAL
-float32 XMLNode::getAttributeNumerical(string _sName, float32 _fDefaultValue)
+float32 XMLNode::getAttributeNumerical(string _sName, float32 _fDefaultValue) const
 {
 	if (!hasAttribute(_sName)) return _fDefaultValue;
 	return boost::lexical_cast<float32>(getAttribute(_sName));
 }
-double XMLNode::getAttributeNumericalDouble(string _sName, double _fDefaultValue)
+double XMLNode::getAttributeNumericalDouble(string _sName, double _fDefaultValue) const
 {
 	if (!hasAttribute(_sName)) return _fDefaultValue;
 	return boost::lexical_cast<double>(getAttribute(_sName));
@@ -297,7 +245,7 @@ double XMLNode::getAttributeNumericalDouble(string _sName, double _fDefaultValue
 
 //-----------------------------------------------------------------------------	
 // Get attribute - BOOLEAN
-bool XMLNode::getAttributeBool(string _sName, bool _bDefaultValue)
+bool XMLNode::getAttributeBool(string _sName, bool _bDefaultValue) const
 {
 	if (!hasAttribute(_sName)) return _bDefaultValue;
 	string res = getAttribute(_sName);
@@ -306,7 +254,7 @@ bool XMLNode::getAttributeBool(string _sName, bool _bDefaultValue)
 
 //-----------------------------------------------------------------------------	
 // Has option?
-bool XMLNode::hasOption(string _sKey) 
+bool XMLNode::hasOption(string _sKey) const
 {
 	xml_node<> *iter;
 	for (iter = fDOMElement->first_node("Option"); iter; iter = iter->next_sibling("Option")) {
@@ -319,7 +267,7 @@ bool XMLNode::hasOption(string _sKey)
 
 //-----------------------------------------------------------------------------	
 // Get option - STRING
-string XMLNode::getOption(string _sKey, string _sDefaultValue) 
+string XMLNode::getOption(string _sKey, string _sDefaultValue) const
 {
 	xml_node<> *iter;
 	for (iter = fDOMElement->first_node("Option"); iter; iter = iter->next_sibling("Option")) {
@@ -336,7 +284,7 @@ string XMLNode::getOption(string _sKey, string _sDefaultValue)
 
 //-----------------------------------------------------------------------------	
 // Get option - NUMERICAL
-float32 XMLNode::getOptionNumerical(string _sKey, float32 _fDefaultValue) 
+float32 XMLNode::getOptionNumerical(string _sKey, float32 _fDefaultValue) const
 {
 	if (!hasOption(_sKey)) return _fDefaultValue;
 	return boost::lexical_cast<float32>(getOption(_sKey));
@@ -344,7 +292,7 @@ float32 XMLNode::getOptionNumerical(string _sKey, float32 _fDefaultValue)
 
 //-----------------------------------------------------------------------------	
 // Get option - BOOL
-bool XMLNode::getOptionBool(string _sKey, bool _bDefaultValue)
+bool XMLNode::getOptionBool(string _sKey, bool _bDefaultValue) const
 {
 	bool bHasOption = hasOption(_sKey);
 	if (!bHasOption) return _bDefaultValue;
@@ -354,20 +302,18 @@ bool XMLNode::getOptionBool(string _sKey, bool _bDefaultValue)
 
 //-----------------------------------------------------------------------------	
 // Get option - NUMERICAL ARRAY
-vector<float32> XMLNode::getOptionNumericalArray(string _sKey)
+vector<float32> XMLNode::getOptionNumericalArray(string _sKey) const
 {
 	if (!hasOption(_sKey)) return vector<float32>();
 
-	list<XMLNode*> nodes = getNodes("Option");
-	for (list<XMLNode*>::iterator it = nodes.begin(); it != nodes.end(); it++) {
-		if ((*it)->getAttribute("key") == _sKey) {
-			vector<float32> vals = (*it)->getContentNumericalArray();
-			deleteNodes(nodes);
+	list<XMLNode> nodes = getNodes("Option");
+	for (list<XMLNode>::iterator it = nodes.begin(); it != nodes.end(); it++) {
+		if (it->getAttribute("key") == _sKey) {
+			vector<float32> vals = it->getContentNumericalArray();
 			return vals;
 		}
 	}
 
-	deleteNodes(nodes);
 	return vector<float32>();
 }
 
@@ -390,41 +336,40 @@ vector<float32> XMLNode::getOptionNumericalArray(string _sKey)
 
 //-----------------------------------------------------------------------------
 // Add child node - EMPTY
-XMLNode* XMLNode::addChildNode(string _sNodeName) 
+XMLNode XMLNode::addChildNode(string _sNodeName) 
 {
 	xml_document<> *doc = fDOMElement->document();
 	char *node_name = doc->allocate_string(_sNodeName.c_str());
 	xml_node<> *node = doc->allocate_node(node_element, node_name);
 	fDOMElement->append_node(node);
 
-	// TODO: clean up: this 'new' requires callers to do memory management
-	return new XMLNode(node);
+	return XMLNode(node);
 }
 
 //-----------------------------------------------------------------------------
 // Add child node - STRING
-XMLNode* XMLNode::addChildNode(string _sNodeName, string _sText) 
+XMLNode XMLNode::addChildNode(string _sNodeName, string _sText) 
 {
-	XMLNode* res = addChildNode(_sNodeName);
-	res->setContent(_sText);
+	XMLNode res = addChildNode(_sNodeName);
+	res.setContent(_sText);
 	return res;
 }
 
 //-----------------------------------------------------------------------------
 // Add child node - FLOAT
-XMLNode* XMLNode::addChildNode(string _sNodeName, float32 _fValue) 
+XMLNode XMLNode::addChildNode(string _sNodeName, float32 _fValue) 
 {
-	XMLNode* res = addChildNode(_sNodeName);
-	res->setContent(_fValue);
+	XMLNode res = addChildNode(_sNodeName);
+	res.setContent(_fValue);
 	return res;
 }
 
 //-----------------------------------------------------------------------------
 // Add child node - LIST
-XMLNode* XMLNode::addChildNode(string _sNodeName, float32* _pfList, int _iSize) 
+XMLNode XMLNode::addChildNode(string _sNodeName, float32* _pfList, int _iSize) 
 {
-	XMLNode* res = addChildNode(_sNodeName);
-	res->setContent(_pfList, _iSize);
+	XMLNode res = addChildNode(_sNodeName);
+	res.setContent(_pfList, _iSize);
 	return res;
 }
 
@@ -446,14 +391,67 @@ void XMLNode::setContent(float32 _fValue)
 
 //-----------------------------------------------------------------------------	
 // Set content - LIST
-void XMLNode::setContent(float32* pfList, int _iSize) 
-{
+
+template<typename T>
+static std::string setContentList_internal(T* pfList, int _iSize) {
 	std::string str = (_iSize > 0) ? boost::lexical_cast<std::string>(pfList[0]) : "";
 	for (int i = 1; i < _iSize; i++) {
 		str += "," + boost::lexical_cast<std::string>(pfList[i]);
 	}
-	setContent(str);
+	return str;
 }
+
+void XMLNode::setContent(float32* pfList, int _iSize)
+{
+	setContent(setContentList_internal<float32>(pfList, _iSize));
+}
+
+void XMLNode::setContent(double* pfList, int _iSize)
+{
+	setContent(setContentList_internal<double>(pfList, _iSize));
+}
+
+//-----------------------------------------------------------------------------	
+// Set content - MATRIX
+
+template<typename T>
+static std::string setContentMatrix_internal(T* _pfMatrix, int _iWidth, int _iHeight, bool transposed)
+{
+	std::string str = "";
+
+	int s1,s2;
+
+	if (!transposed) {
+		s1 = 1;
+		s2 = _iWidth;
+	} else {
+		s1 = _iHeight;
+		s2 = 1;
+	}
+
+	for (int y = 0; y < _iHeight; ++y) {
+		if (_iWidth > 0)
+			str += boost::lexical_cast<std::string>(_pfMatrix[0*s1 + y*s2]);
+			for (int x = 1; x < _iWidth; x++)
+				str += "," + boost::lexical_cast<std::string>(_pfMatrix[x*s1 + y*s2]);
+
+		if (y != _iHeight-1)
+			str += ";";
+	}
+
+	return str;
+}
+
+void XMLNode::setContent(float32* _pfMatrix, int _iWidth, int _iHeight, bool transposed)
+{
+	setContent(setContentMatrix_internal<float32>(_pfMatrix, _iWidth, _iHeight, transposed));
+}
+
+void XMLNode::setContent(double* _pfMatrix, int _iWidth, int _iHeight, bool transposed)
+{
+	setContent(setContentMatrix_internal<double>(_pfMatrix, _iWidth, _iHeight, transposed));
+}
+
 
 //-----------------------------------------------------------------------------	
 // Add attribute - STRING
@@ -477,20 +475,18 @@ void XMLNode::addAttribute(string _sName, float32 _fValue)
 // Add option - STRING
 void XMLNode::addOption(string _sName, string _sText) 
 {
-	XMLNode* node = addChildNode("Option");
-	node->addAttribute("key", _sName);
-	node->addAttribute("value", _sText);
-	delete node;
+	XMLNode node = addChildNode("Option");
+	node.addAttribute("key", _sName);
+	node.addAttribute("value", _sText);
 }
 
 //-----------------------------------------------------------------------------	
 // Add option - FLOAT
 void XMLNode::addOption(string _sName, float32 _sText) 
 {
-	XMLNode* node = addChildNode("Option");
-	node->addAttribute("key", _sName);
-	node->addAttribute("value", _sText);
-	delete node;
+	XMLNode node = addChildNode("Option");
+	node.addAttribute("key", _sName);
+	node.addAttribute("value", _sText);
 }
 //-----------------------------------------------------------------------------	
 

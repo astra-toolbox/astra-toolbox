@@ -104,72 +104,74 @@ bool CReconstructionAlgorithm3D::initialize(const Config& _cfg)
 	ASTRA_ASSERT(_cfg.self);
 	ConfigStackCheck<CAlgorithm> CC("ReconstructionAlgorithm3D", this, _cfg);
 
-	XMLNode* node;
+	XMLNode node;
 	int id;
-#if 0
+
 	// projector
-	node = _cfg.self->getSingleNode("ProjectorId");
-	ASTRA_CONFIG_CHECK(node, "Reconstruction3D", "No ProjectorId tag specified.");
-	id = boost::lexical_cast<int>(node->getContent());
-	m_pProjector = CProjector3DManager::getSingleton().get(id);
-	ASTRA_DELETE(node);
-#endif
+	node = _cfg.self.getSingleNode("ProjectorId");
+	m_pProjector = 0;
+	if (node) {
+		id = boost::lexical_cast<int>(node.getContent());
+		m_pProjector = CProjector3DManager::getSingleton().get(id);
+		if (!m_pProjector) {
+			// TODO: Report
+		}
+	}
+	CC.markNodeParsed("ProjectorId");
 
 	// sinogram data
-	node = _cfg.self->getSingleNode("ProjectionDataId");
+	node = _cfg.self.getSingleNode("ProjectionDataId");
 	ASTRA_CONFIG_CHECK(node, "Reconstruction3D", "No ProjectionDataId tag specified.");
-	id = boost::lexical_cast<int>(node->getContent());
+	id = boost::lexical_cast<int>(node.getContent());
 	m_pSinogram = dynamic_cast<CFloat32ProjectionData3D*>(CData3DManager::getSingleton().get(id));
-	ASTRA_DELETE(node);
 	CC.markNodeParsed("ProjectionDataId");
 
 	// reconstruction data
-	node = _cfg.self->getSingleNode("ReconstructionDataId");
+	node = _cfg.self.getSingleNode("ReconstructionDataId");
 	ASTRA_CONFIG_CHECK(node, "Reconstruction3D", "No ReconstructionDataId tag specified.");
-	id = boost::lexical_cast<int>(node->getContent());
+	id = boost::lexical_cast<int>(node.getContent());
 	m_pReconstruction = dynamic_cast<CFloat32VolumeData3D*>(CData3DManager::getSingleton().get(id));
-	ASTRA_DELETE(node);
 	CC.markNodeParsed("ReconstructionDataId");
 
 	// fixed mask
-	if (_cfg.self->hasOption("ReconstructionMaskId")) {
+	if (_cfg.self.hasOption("ReconstructionMaskId")) {
 		m_bUseReconstructionMask = true;
-		id = boost::lexical_cast<int>(_cfg.self->getOption("ReconstructionMaskId"));
+		id = boost::lexical_cast<int>(_cfg.self.getOption("ReconstructionMaskId"));
 		m_pReconstructionMask = dynamic_cast<CFloat32VolumeData3D*>(CData3DManager::getSingleton().get(id));
 	}
 	CC.markOptionParsed("ReconstructionMaskId");
 
 	// fixed mask
-	if (_cfg.self->hasOption("SinogramMaskId")) {
+	if (_cfg.self.hasOption("SinogramMaskId")) {
 		m_bUseSinogramMask = true;
-		id = boost::lexical_cast<int>(_cfg.self->getOption("SinogramMaskId"));
+		id = boost::lexical_cast<int>(_cfg.self.getOption("SinogramMaskId"));
 		m_pSinogramMask = dynamic_cast<CFloat32ProjectionData3D*>(CData3DManager::getSingleton().get(id));
 	}
 
 	// Constraints - NEW
-	if (_cfg.self->hasOption("MinConstraint")) {
+	if (_cfg.self.hasOption("MinConstraint")) {
 		m_bUseMinConstraint = true;
-		m_fMinValue = _cfg.self->getOptionNumerical("MinConstraint", 0.0f);
+		m_fMinValue = _cfg.self.getOptionNumerical("MinConstraint", 0.0f);
 		CC.markOptionParsed("MinConstraint");
 	} else {
 		// Constraint - OLD
-		m_bUseMinConstraint = _cfg.self->getOptionBool("UseMinConstraint", false);
+		m_bUseMinConstraint = _cfg.self.getOptionBool("UseMinConstraint", false);
 		CC.markOptionParsed("UseMinConstraint");
 		if (m_bUseMinConstraint) {
-			m_fMinValue = _cfg.self->getOptionNumerical("MinConstraintValue", 0.0f);
+			m_fMinValue = _cfg.self.getOptionNumerical("MinConstraintValue", 0.0f);
 			CC.markOptionParsed("MinConstraintValue");
 		}
 	}
-	if (_cfg.self->hasOption("MaxConstraint")) {
+	if (_cfg.self.hasOption("MaxConstraint")) {
 		m_bUseMaxConstraint = true;
-		m_fMaxValue = _cfg.self->getOptionNumerical("MaxConstraint", 255.0f);
+		m_fMaxValue = _cfg.self.getOptionNumerical("MaxConstraint", 255.0f);
 		CC.markOptionParsed("MaxConstraint");
 	} else {
 		// Constraint - OLD
-		m_bUseMaxConstraint = _cfg.self->getOptionBool("UseMaxConstraint", false);
+		m_bUseMaxConstraint = _cfg.self.getOptionBool("UseMaxConstraint", false);
 		CC.markOptionParsed("UseMaxConstraint");
 		if (m_bUseMaxConstraint) {
-			m_fMaxValue = _cfg.self->getOptionNumerical("MaxConstraintValue", 0.0f);
+			m_fMaxValue = _cfg.self.getOptionNumerical("MaxConstraintValue", 0.0f);
 			CC.markOptionParsed("MaxConstraintValue");
 		}
 	}
