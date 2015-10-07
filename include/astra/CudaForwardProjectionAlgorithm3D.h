@@ -122,6 +122,7 @@ protected:
 	int m_iGPUIndex;
 	int m_iDetectorSuperSampling;
 
+	void initializeFromProjector();
 };
 
 // inline functions
