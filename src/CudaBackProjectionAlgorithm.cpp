@@ -76,10 +76,9 @@ bool CCudaBackProjectionAlgorithm::initialize(const Config& _cfg)
 // Initialize - C++
 bool CCudaBackProjectionAlgorithm::initialize(CProjector2D* _pProjector,
                                      CFloat32ProjectionData2D* _pSinogram, 
-                                     CFloat32VolumeData2D* _pReconstruction,
-                                     int _iGPUindex, int _iPixelSuperSampling)
+                                     CFloat32VolumeData2D* _pReconstruction)
 {
-	m_bIsInitialized = CCudaReconstructionAlgorithm2D::initialize(_pProjector, _pSinogram, _pReconstruction, _iGPUindex, 1, _iPixelSuperSampling);
+	m_bIsInitialized = CCudaReconstructionAlgorithm2D::initialize(_pProjector, _pSinogram, _pReconstruction);
 
 	if (!m_bIsInitialized)
 		return false;
