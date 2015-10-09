@@ -96,8 +96,8 @@ public:
 	 * @return success
 	 */
 	bool initialize(CProjector2D* _pProjector,
-					CFloat32VolumeData2D* _pVolume, 
-					CFloat32ProjectionData2D* _pSinogram);
+	                CFloat32VolumeData2D* _pVolume,
+	                CFloat32ProjectionData2D* _pSinogram);
 
 
 	/** Get all information parameters
