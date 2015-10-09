@@ -163,9 +163,9 @@ bool CCudaReconstructionAlgorithm2D::_check()
 	if (!CReconstructionAlgorithm2D::_check())
 		return false;
 
-	ASTRA_CONFIG_CHECK(m_iDetectorSuperSampling >= 1, "SIRT_CUDA", "DetectorSuperSampling must be a positive integer.");
-	ASTRA_CONFIG_CHECK(m_iPixelSuperSampling >= 1, "SIRT_CUDA", "PixelSuperSampling must be a positive integer.");
-	ASTRA_CONFIG_CHECK(m_iGPUIndex >= -1, "SIRT_CUDA", "GPUIndex must be a non-negative integer.");
+	ASTRA_CONFIG_CHECK(m_iDetectorSuperSampling >= 1, "CudaReconstructionAlgorithm2D", "DetectorSuperSampling must be a positive integer.");
+	ASTRA_CONFIG_CHECK(m_iPixelSuperSampling >= 1, "CudaReconstructionAlgorithm2D", "PixelSuperSampling must be a positive integer.");
+	ASTRA_CONFIG_CHECK(m_iGPUIndex >= -1, "CudaReconstructionAlgorithm2D", "GPUIndex must be a non-negative integer or -1.");
 
 	// check restrictions
 	// TODO: check restrictions built into cuda code
