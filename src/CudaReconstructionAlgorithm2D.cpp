@@ -462,10 +462,18 @@ void CCudaReconstructionAlgorithm2D::run(int _iNrIterations)
 
 	ASTRA_ASSERT(ok);
 
-	if (m_bUseMinConstraint)
-		ok &= m_pAlgo->setMinConstraint(m_fMinValue);
-	if (m_bUseMaxConstraint)
-		ok &= m_pAlgo->setMaxConstraint(m_fMaxValue);
+	if (m_bUseMinConstraint) {
+		bool ret = m_pAlgo->setMinConstraint(m_fMinValue);
+		if (!ret) {
+			ASTRA_WARN("This algorithm ignores MinConstraint");
+		}
+	}
+	if (m_bUseMaxConstraint) {
+		bool ret= m_pAlgo->setMaxConstraint(m_fMaxValue);
+		if (!ret) {
+			ASTRA_WARN("This algorithm ignores MaxConstraint");
+		}
+	}
 
 	ok &= m_pAlgo->iterate(_iNrIterations);
 	ASTRA_ASSERT(ok);
