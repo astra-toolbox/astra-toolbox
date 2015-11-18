@@ -99,6 +99,7 @@ BASE_OBJECTS=\
 	src/AstraObjectManager.lo \
 	src/BackProjectionAlgorithm.lo \
 	src/CglsAlgorithm.lo \
+	src/CompositeGeometryManager.lo \
 	src/ConeProjectionGeometry3D.lo \
 	src/ConeVecProjectionGeometry3D.lo \
 	src/Config.lo \
@@ -197,7 +198,8 @@ CUDA_OBJECTS=\
 	cuda/3d/sirt3d.lo \
 	cuda/3d/astra3d.lo \
 	cuda/3d/util3d.lo \
-	cuda/3d/arith3d.lo
+	cuda/3d/arith3d.lo \
+	cuda/3d/mem3d.lo
 
 ALL_OBJECTS=$(BASE_OBJECTS)
 ifeq ($(cuda),yes)

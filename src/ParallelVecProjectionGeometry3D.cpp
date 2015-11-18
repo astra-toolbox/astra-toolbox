@@ -239,9 +239,9 @@ CVector3D CParallelVecProjectionGeometry3D::getProjectionDirection(int _iProject
 	return CVector3D(p.fRayX, p.fRayY, p.fRayZ);
 }
 
-void CParallelVecProjectionGeometry3D::projectPoint(float32 fX, float32 fY, float32 fZ,
-                                                 int iAngleIndex,
-                                                 float32 &fU, float32 &fV) const
+void CParallelVecProjectionGeometry3D::projectPoint(double fX, double fY, double fZ,
+                                                    int iAngleIndex,
+                                                    double &fU, double &fV) const
 {
 	ASTRA_ASSERT(iAngleIndex >= 0);
 	ASTRA_ASSERT(iAngleIndex < m_iProjectionAngleCount);
@@ -257,6 +257,61 @@ void CParallelVecProjectionGeometry3D::projectPoint(float32 fX, float32 fY, floa
 	fV = (fVX*fX + fVY*fY + fVZ*fZ + fVC) - 0.5f;
 
 }
+
+void CParallelVecProjectionGeometry3D::backprojectPointX(int iAngleIndex, double fU, double fV,
+	                               double fX, double &fY, double &fZ) const
+{
+	ASTRA_ASSERT(iAngleIndex >= 0);
+	ASTRA_ASSERT(iAngleIndex < m_iProjectionAngleCount);
+
+	SPar3DProjection &proj = m_pProjectionAngles[iAngleIndex];
+
+	double px = proj.fDetSX + fU * proj.fDetUX + fV * proj.fDetVX;
+	double py = proj.fDetSY + fU * proj.fDetUY + fV * proj.fDetVY;
+	double pz = proj.fDetSZ + fU * proj.fDetUZ + fV * proj.fDetVZ;
+
+	double a = (fX - px) / proj.fRayX;
+
+	fY = py + a * proj.fRayY;
+	fZ = pz + a * proj.fRayZ;
+}
+
+void CParallelVecProjectionGeometry3D::backprojectPointY(int iAngleIndex, double fU, double fV,
+	                               double fY, double &fX, double &fZ) const
+{
+	ASTRA_ASSERT(iAngleIndex >= 0);
+	ASTRA_ASSERT(iAngleIndex < m_iProjectionAngleCount);
+
+	SPar3DProjection &proj = m_pProjectionAngles[iAngleIndex];
+
+	double px = proj.fDetSX + fU * proj.fDetUX + fV * proj.fDetVX;
+	double py = proj.fDetSY + fU * proj.fDetUY + fV * proj.fDetVY;
+	double pz = proj.fDetSZ + fU * proj.fDetUZ + fV * proj.fDetVZ;
+
+	double a = (fY - py) / proj.fRayY;
+
+	fX = px + a * proj.fRayX;
+	fZ = pz + a * proj.fRayZ;
+}
+
+void CParallelVecProjectionGeometry3D::backprojectPointZ(int iAngleIndex, double fU, double fV,
+	                               double fZ, double &fX, double &fY) const
+{
+	ASTRA_ASSERT(iAngleIndex >= 0);
+	ASTRA_ASSERT(iAngleIndex < m_iProjectionAngleCount);
+
+	SPar3DProjection &proj = m_pProjectionAngles[iAngleIndex];
+
+	double px = proj.fDetSX + fU * proj.fDetUX + fV * proj.fDetVX;
+	double py = proj.fDetSY + fU * proj.fDetUY + fV * proj.fDetVY;
+	double pz = proj.fDetSZ + fU * proj.fDetUZ + fV * proj.fDetVZ;
+
+	double a = (fZ - pz) / proj.fRayZ;
+
+	fX = px + a * proj.fRayX;
+	fY = py + a * proj.fRayY;
+}
+
 
 //----------------------------------------------------------------------------------------
 

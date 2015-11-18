@@ -40,6 +40,8 @@ $Id$
 #include "astra/ParallelVecProjectionGeometry3D.h"
 #include "astra/ConeVecProjectionGeometry3D.h"
 
+#include "astra/CompositeGeometryManager.h"
+
 #include "astra/Logging.h"
 
 #include "../cuda/3d/astra3d.h"
@@ -263,6 +265,12 @@ void CCudaForwardProjectionAlgorithm3D::run(int)
 	// check initialized
 	assert(m_bIsInitialized);
 
+#if 1
+	CCompositeGeometryManager cgm;
+
+	cgm.doFP(m_pProjector, m_pVolume, m_pProjections);
+
+#else
 	const CProjectionGeometry3D* projgeom = m_pProjections->getGeometry();
 	const CVolumeGeometry3D& volgeom = *m_pVolume->getGeometry();
 
@@ -294,6 +302,7 @@ void CCudaForwardProjectionAlgorithm3D::run(int)
 	astraCudaFP(m_pVolume->getDataConst(), m_pProjections->getData(),
 	            &volgeom, projgeom,
 	            m_iGPUIndex, m_iDetectorSuperSampling, projKernel);
+#endif
 }
 
 

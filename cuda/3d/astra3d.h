@@ -281,6 +281,15 @@ protected:
 	AstraCGLS3d_internal *pData;
 };
 
+bool convertAstraGeometry_dims(const CVolumeGeometry3D* pVolGeom,
+                               const CProjectionGeometry3D* pProjGeom,
+                               astraCUDA3d::SDimensions3D& dims);
+
+bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
+                          const CProjectionGeometry3D* pProjGeom,
+                          SPar3DProjection*& pParProjs,
+                          SConeProjection*& pConeProjs,
+                          float& fOutputScale);
 
 _AstraExport bool astraCudaFP(const float* pfVolume, float* pfProjections,
                       const CVolumeGeometry3D* pVolGeom,
