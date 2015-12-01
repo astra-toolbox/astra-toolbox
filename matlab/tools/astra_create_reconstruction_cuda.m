@@ -45,7 +45,7 @@ if strcmp(rec_type,'')
 end
 
 % configure
-cfg = astra_struct('SIRT_CUDA');
+cfg = astra_struct(rec_type);
 cfg.ProjectionGeometry = proj_geom;
 cfg.ReconstructionGeometry = vol_geom;
 cfg.ProjectionDataId = sinogram_id;

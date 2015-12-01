@@ -38,8 +38,11 @@ $Id$
 #include <boost/lexical_cast.hpp>
 
 #include "astra/AstraObjectManager.h"
+#include "astra/ParallelProjectionGeometry2D.h"
 #include "astra/FanFlatProjectionGeometry2D.h"
 #include "astra/FanFlatVecProjectionGeometry2D.h"
+#include "astra/Float32ProjectionData2D.h"
+#include "astra/Float32VolumeData2D.h"
 #include "astra/CudaProjector2D.h"
 
 #include "astra/Logging.h"
@@ -66,14 +69,42 @@ CCudaForwardProjectionAlgorithm::~CCudaForwardProjectionAlgorithm()
 }
 
 //---------------------------------------------------------------------------------------
+void CCudaForwardProjectionAlgorithm::initializeFromProjector()
+{
+	m_iDetectorSuperSampling = 1;
+	m_iGPUIndex = -1;
+
+	// Projector
+	CCudaProjector2D* pCudaProjector = dynamic_cast<CCudaProjector2D*>(m_pProjector);
+	if (!pCudaProjector) {
+		if (m_pProjector) {
+			ASTRA_WARN("non-CUDA Projector2D passed to FP_CUDA");
+		}
+	} else {
+		m_iDetectorSuperSampling = pCudaProjector->getDetectorSuperSampling();
+		m_iGPUIndex = pCudaProjector->getGPUIndex();
+	}
+}
+
+//---------------------------------------------------------------------------------------
 // Initialize - Config
 bool CCudaForwardProjectionAlgorithm::initialize(const Config& _cfg)
 {
 	ASTRA_ASSERT(_cfg.self);
 	ConfigStackCheck<CAlgorithm> CC("CudaForwardProjectionAlgorithm", this, _cfg);
+
+	// Projector
+	XMLNode node = _cfg.self.getSingleNode("ProjectorId");
+	if (node) {
+		int id = boost::lexical_cast<int>(node.getContent());
+		m_pProjector = CProjector2DManager::getSingleton().get(id);
+	}
+	CC.markNodeParsed("ProjectorId");
+
+
 	
 	// sinogram data
-	XMLNode node = _cfg.self.getSingleNode("ProjectionDataId");
+	node = _cfg.self.getSingleNode("ProjectionDataId");
 	ASTRA_CONFIG_CHECK(node, "FP_CUDA", "No ProjectionDataId tag specified.");
 	int id = boost::lexical_cast<int>(node.getContent());
 	m_pSinogram = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
@@ -86,29 +117,18 @@ bool CCudaForwardProjectionAlgorithm::initialize(const Config& _cfg)
 	m_pVolume = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 	CC.markNodeParsed("VolumeDataId");
 
+	initializeFromProjector();
+
+	// Deprecated options
+	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", m_iDetectorSuperSampling);
+	CC.markOptionParsed("DetectorSuperSampling");
 	// GPU number
 	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
 	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
-	CC.markOptionParsed("GPUindex");
-	if (!_cfg.self.hasOption("GPUindex"))
-		CC.markOptionParsed("GPUIndex");
+	CC.markOptionParsed("GPUIndex");
+	if (!_cfg.self.hasOption("GPUIndex"))
+		CC.markOptionParsed("GPUindex");
 
-	// Detector supersampling factor
-	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", 1);
-	CC.markOptionParsed("DetectorSuperSampling");
-
-
-	// This isn't used yet, but passing it is not something to warn about
-	node = _cfg.self.getSingleNode("ProjectorId");
-	if (node) {
-		id = boost::lexical_cast<int>(node.getContent());
-		CProjector2D *projector = CProjector2DManager::getSingleton().get(id);
-		if (!dynamic_cast<CCudaProjector2D*>(projector)) {
-			ASTRA_WARN("non-CUDA Projector2D passed to FP_CUDA");
-		}
-	}
-	CC.markNodeParsed("ProjectorId");
-	
 
 
 	// return success
@@ -117,20 +137,16 @@ bool CCudaForwardProjectionAlgorithm::initialize(const Config& _cfg)
 
 //----------------------------------------------------------------------------------------
 // Initialize - C++
-bool CCudaForwardProjectionAlgorithm::initialize(CProjectionGeometry2D* _pProjectionGeometry,
-												 CVolumeGeometry2D* _pReconstructionGeometry,
+bool CCudaForwardProjectionAlgorithm::initialize(CProjector2D* _pProjector,
 												 CFloat32VolumeData2D* _pVolume,
-												 CFloat32ProjectionData2D* _pSinogram,
-												 int _iGPUindex, int _iDetectorSuperSampling)
+												 CFloat32ProjectionData2D* _pSinogram)
 {
 	// store classes
-	//m_pProjectionGeometry = _pProjectionGeometry;
-	//m_pReconstructionGeometry = _pReconstructionGeometry;
+	m_pProjector = _pProjector;
 	m_pVolume = _pVolume;
 	m_pSinogram = _pSinogram;
 
-	m_iDetectorSuperSampling = _iDetectorSuperSampling;
-	m_iGPUIndex = _iGPUindex;
+	initializeFromProjector();
 
 	// return success
 	return check();

@@ -8,7 +8,7 @@ bool mexIsInitialized=false;
  *
  */
 void logCallBack(const char *msg, size_t len){
-    mexPrintf(msg);
+    mexPrintf("%s",msg);
 }
 
 /**

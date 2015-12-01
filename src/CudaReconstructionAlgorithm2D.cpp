@@ -84,103 +84,51 @@ void CCudaReconstructionAlgorithm2D::_clear()
 }
 
 //---------------------------------------------------------------------------------------
+void CCudaReconstructionAlgorithm2D::initializeFromProjector()
+{
+	m_iPixelSuperSampling = 1;
+	m_iDetectorSuperSampling = 1;
+	m_iGPUIndex = -1;
+
+	// Projector
+	CCudaProjector2D* pCudaProjector = dynamic_cast<CCudaProjector2D*>(m_pProjector);
+	if (!pCudaProjector) {
+		if (m_pProjector) {
+			ASTRA_WARN("non-CUDA Projector2D passed");
+		}
+	} else {
+		m_iDetectorSuperSampling = pCudaProjector->getDetectorSuperSampling();
+		m_iPixelSuperSampling = pCudaProjector->getVoxelSuperSampling();
+		m_iGPUIndex = pCudaProjector->getGPUIndex();
+	}
+}
+
+//---------------------------------------------------------------------------------------
 // Initialize - Config
 bool CCudaReconstructionAlgorithm2D::initialize(const Config& _cfg)
 {
 	ASTRA_ASSERT(_cfg.self);
 	ConfigStackCheck<CAlgorithm> CC("CudaReconstructionAlgorithm2D", this, _cfg);
 
-	// if already initialized, clear first
-	if (m_bIsInitialized) {
-		clear();
-	}
+	m_bIsInitialized = CReconstructionAlgorithm2D::initialize(_cfg);
 
-	// sinogram data
-	XMLNode node = _cfg.self.getSingleNode("ProjectionDataId");
-	ASTRA_CONFIG_CHECK(node, "CudaSirt2", "No ProjectionDataId tag specified.");
-	int id = boost::lexical_cast<int>(node.getContent());
-	m_pSinogram = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
-	CC.markNodeParsed("ProjectionDataId");
+	if (!m_bIsInitialized)
+		return false;
 
-	// reconstruction data
-	node = _cfg.self.getSingleNode("ReconstructionDataId");
-	ASTRA_CONFIG_CHECK(node, "CudaSirt2", "No ReconstructionDataId tag specified.");
-	id = boost::lexical_cast<int>(node.getContent());
-	m_pReconstruction = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
-	CC.markNodeParsed("ReconstructionDataId");
+	initializeFromProjector();
 
-	// fixed mask
-	if (_cfg.self.hasOption("ReconstructionMaskId")) {
-		m_bUseReconstructionMask = true;
-		id = boost::lexical_cast<int>(_cfg.self.getOption("ReconstructionMaskId"));
-		m_pReconstructionMask = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
-		ASTRA_CONFIG_CHECK(m_pReconstructionMask, "CudaReconstruction2D", "Invalid ReconstructionMaskId.");
-	}
-	CC.markOptionParsed("ReconstructionMaskId");
-	// fixed mask
-	if (_cfg.self.hasOption("SinogramMaskId")) {
-		m_bUseSinogramMask = true;
-		id = boost::lexical_cast<int>(_cfg.self.getOption("SinogramMaskId"));
-		m_pSinogramMask = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
-		ASTRA_CONFIG_CHECK(m_pSinogramMask, "CudaReconstruction2D", "Invalid SinogramMaskId.");
-	}
-	CC.markOptionParsed("SinogramMaskId");
-
-	// Constraints - NEW
-	if (_cfg.self.hasOption("MinConstraint")) {
-		m_bUseMinConstraint = true;
-		m_fMinValue = _cfg.self.getOptionNumerical("MinConstraint", 0.0f);
-		CC.markOptionParsed("MinConstraint");
-	} else {
-		// Constraint - OLD
-		m_bUseMinConstraint = _cfg.self.getOptionBool("UseMinConstraint", false);
-		CC.markOptionParsed("UseMinConstraint");
-		if (m_bUseMinConstraint) {
-			m_fMinValue = _cfg.self.getOptionNumerical("MinConstraintValue", 0.0f);
-			CC.markOptionParsed("MinConstraintValue");
-		}
-	}
-	if (_cfg.self.hasOption("MaxConstraint")) {
-		m_bUseMaxConstraint = true;
-		m_fMaxValue = _cfg.self.getOptionNumerical("MaxConstraint", 255.0f);
-		CC.markOptionParsed("MaxConstraint");
-	} else {
-		// Constraint - OLD
-		m_bUseMaxConstraint = _cfg.self.getOptionBool("UseMaxConstraint", false);
-		CC.markOptionParsed("UseMaxConstraint");
-		if (m_bUseMaxConstraint) {
-			m_fMaxValue = _cfg.self.getOptionNumerical("MaxConstraintValue", 0.0f);
-			CC.markOptionParsed("MaxConstraintValue");
-		}
-	}
+	// Deprecated options
+	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", m_iDetectorSuperSampling);
+	m_iPixelSuperSampling = (int)_cfg.self.getOptionNumerical("PixelSuperSampling", m_iPixelSuperSampling);
+	CC.markOptionParsed("DetectorSuperSampling");
+	CC.markOptionParsed("PixelSuperSampling");
 
 	// GPU number
 	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
 	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
-	CC.markOptionParsed("GPUindex");
-	if (!_cfg.self.hasOption("GPUindex"))
-		CC.markOptionParsed("GPUIndex");
-
-	// Detector supersampling factor
-	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", 1);
-	CC.markOptionParsed("DetectorSuperSampling");
-
-	// Pixel supersampling factor
-	m_iPixelSuperSampling = (int)_cfg.self.getOptionNumerical("PixelSuperSampling", 1);
-	CC.markOptionParsed("PixelSuperSampling");
-
-
-	// This isn't used yet, but passing it is not something to warn about
-	node = _cfg.self.getSingleNode("ProjectorId");
-	if (node) {
-		id = boost::lexical_cast<int>(node.getContent());
-		CProjector2D *projector = CProjector2DManager::getSingleton().get(id);
-		if (!dynamic_cast<CCudaProjector2D*>(projector)) {
-			ASTRA_WARN("non-CUDA Projector2D passed");
-		}
-	}
-	CC.markNodeParsed("ProjectorId");
-
+	CC.markOptionParsed("GPUIndex");
+	if (!_cfg.self.hasOption("GPUIndex"))
+		CC.markOptionParsed("GPUindex");
 
 	return _check();
 }
@@ -191,32 +139,18 @@ bool CCudaReconstructionAlgorithm2D::initialize(CProjector2D* _pProjector,
                                      CFloat32ProjectionData2D* _pSinogram, 
                                      CFloat32VolumeData2D* _pReconstruction)
 {
-	return initialize(_pProjector, _pSinogram, _pReconstruction, 0, 1);
-}
-
-//---------------------------------------------------------------------------------------
-// Initialize - C++
-bool CCudaReconstructionAlgorithm2D::initialize(CProjector2D* _pProjector,
-                                     CFloat32ProjectionData2D* _pSinogram, 
-                                     CFloat32VolumeData2D* _pReconstruction,
-                                     int _iGPUindex,
-                                     int _iDetectorSuperSampling,
-                                     int _iPixelSuperSampling)
-{
 	// if already initialized, clear first
 	if (m_bIsInitialized) {
 		clear();
 	}
 	
-	m_pProjector = 0;
+	m_pProjector = _pProjector;
 	
 	// required classes
 	m_pSinogram = _pSinogram;
 	m_pReconstruction = _pReconstruction;
 
-	m_iDetectorSuperSampling = _iDetectorSuperSampling;
-	m_iPixelSuperSampling = _iPixelSuperSampling;
-	m_iGPUIndex = _iGPUindex;
+	initializeFromProjector();
 
 	return _check();
 }
@@ -226,40 +160,13 @@ bool CCudaReconstructionAlgorithm2D::initialize(CProjector2D* _pProjector,
 // Check
 bool CCudaReconstructionAlgorithm2D::_check() 
 {
-	// TODO: CLEAN UP
+	if (!CReconstructionAlgorithm2D::_check())
+		return false;
 
+	ASTRA_CONFIG_CHECK(m_iDetectorSuperSampling >= 1, "CudaReconstructionAlgorithm2D", "DetectorSuperSampling must be a positive integer.");
+	ASTRA_CONFIG_CHECK(m_iPixelSuperSampling >= 1, "CudaReconstructionAlgorithm2D", "PixelSuperSampling must be a positive integer.");
+	ASTRA_CONFIG_CHECK(m_iGPUIndex >= -1, "CudaReconstructionAlgorithm2D", "GPUIndex must be a non-negative integer or -1.");
 
-	// check pointers
-	//ASTRA_CONFIG_CHECK(m_pProjector, "Reconstruction2D", "Invalid Projector Object.");
-	ASTRA_CONFIG_CHECK(m_pSinogram, "SIRT_CUDA", "Invalid Projection Data Object.");
-	ASTRA_CONFIG_CHECK(m_pReconstruction, "SIRT_CUDA", "Invalid Reconstruction Data Object.");
-
-	// check initializations
-	//ASTRA_CONFIG_CHECK(m_pProjector->isInitialized(), "Reconstruction2D", "Projector Object Not Initialized.");
-	ASTRA_CONFIG_CHECK(m_pSinogram->isInitialized(), "SIRT_CUDA", "Projection Data Object Not Initialized.");
-	ASTRA_CONFIG_CHECK(m_pReconstruction->isInitialized(), "SIRT_CUDA", "Reconstruction Data Object Not Initialized.");
-
-	ASTRA_CONFIG_CHECK(m_iDetectorSuperSampling >= 1, "SIRT_CUDA", "DetectorSuperSampling must be a positive integer.");
-	ASTRA_CONFIG_CHECK(m_iPixelSuperSampling >= 1, "SIRT_CUDA", "PixelSuperSampling must be a positive integer.");
-	ASTRA_CONFIG_CHECK(m_iGPUIndex >= -1, "SIRT_CUDA", "GPUIndex must be a non-negative integer.");
-
-	// check compatibility between projector and data classes
-//	ASTRA_CONFIG_CHECK(m_pSinogram->getGeometry()->isEqual(m_pProjector->getProjectionGeometry()), "SIRT_CUDA", "Projection Data not compatible with the specified Projector.");
-//	ASTRA_CONFIG_CHECK(m_pReconstruction->getGeometry()->isEqual(m_pProjector->getVolumeGeometry()), "SIRT_CUDA", "Reconstruction Data not compatible with the specified Projector.");
-
-	// todo: turn some of these back on
-
-// 	ASTRA_CONFIG_CHECK(m_pProjectionGeometry, "SIRT_CUDA", "ProjectionGeometry not specified.");
-// 	ASTRA_CONFIG_CHECK(m_pProjectionGeometry->isInitialized(), "SIRT_CUDA", "ProjectionGeometry not initialized.");
-// 	ASTRA_CONFIG_CHECK(m_pReconstructionGeometry, "SIRT_CUDA", "ReconstructionGeometry not specified.");
-// 	ASTRA_CONFIG_CHECK(m_pReconstructionGeometry->isInitialized(), "SIRT_CUDA", "ReconstructionGeometry not initialized.");
-
-	// check dimensions
-	//ASTRA_CONFIG_CHECK(m_pSinogram->getAngleCount() == m_pProjectionGeometry->getProjectionAngleCount(), "SIRT_CUDA", "Sinogram data object size mismatch.");
-	//ASTRA_CONFIG_CHECK(m_pSinogram->getDetectorCount() == m_pProjectionGeometry->getDetectorCount(), "SIRT_CUDA", "Sinogram data object size mismatch.");
-	//ASTRA_CONFIG_CHECK(m_pReconstruction->getWidth() == m_pReconstructionGeometry->getGridColCount(), "SIRT_CUDA", "Reconstruction data object size mismatch.");
-	//ASTRA_CONFIG_CHECK(m_pReconstruction->getHeight() == m_pReconstructionGeometry->getGridRowCount(), "SIRT_CUDA", "Reconstruction data object size mismatch.");
-	
 	// check restrictions
 	// TODO: check restrictions built into cuda code
 
@@ -454,10 +361,18 @@ void CCudaReconstructionAlgorithm2D::run(int _iNrIterations)
 
 	ASTRA_ASSERT(ok);
 
-	if (m_bUseMinConstraint)
-		ok &= m_pAlgo->setMinConstraint(m_fMinValue);
-	if (m_bUseMaxConstraint)
-		ok &= m_pAlgo->setMaxConstraint(m_fMaxValue);
+	if (m_bUseMinConstraint) {
+		bool ret = m_pAlgo->setMinConstraint(m_fMinValue);
+		if (!ret) {
+			ASTRA_WARN("This algorithm ignores MinConstraint");
+		}
+	}
+	if (m_bUseMaxConstraint) {
+		bool ret= m_pAlgo->setMaxConstraint(m_fMaxValue);
+		if (!ret) {
+			ASTRA_WARN("This algorithm ignores MaxConstraint");
+		}
+	}
 
 	ok &= m_pAlgo->iterate(_iNrIterations);
 	ASTRA_ASSERT(ok);

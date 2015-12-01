@@ -175,6 +175,8 @@ protected:
 	bool m_bAstraSIRTInit;
 	int m_iDetectorSuperSampling;
 	int m_iVoxelSuperSampling;
+
+	void initializeFromProjector();
 };
 
 // inline functions

@@ -59,6 +59,9 @@ void CCudaProjector2D::_clear()
 	m_bIsInitialized = false;
 
 	m_projectionKernel = ker2d_default;
+	m_iVoxelSuperSampling = 1;
+	m_iDetectorSuperSampling = 1;
+	m_iGPUIndex = -1;
 }
 
 //----------------------------------------------------------------------------------------
@@ -117,18 +120,24 @@ bool CCudaProjector2D::initialize(const Config& _cfg)
 	}
 	CC.markNodeParsed("ProjectionKernel");
 
+	m_iVoxelSuperSampling = (int)_cfg.self.getOptionNumerical("VoxelSuperSampling", 1);
+	CC.markOptionParsed("VoxelSuperSampling");
+ 
+	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", 1);
+	CC.markOptionParsed("DetectorSuperSampling");
+
+	// GPU number
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
+	CC.markOptionParsed("GPUIndex");
+	if (!_cfg.self.hasOption("GPUIndex"))
+		CC.markOptionParsed("GPUindex");
+
+
 	m_bIsInitialized = _check();
 	return m_bIsInitialized;
 }
 
-/*
-bool CProjector2D::initialize(astra::CProjectionGeometry2D *, astra::CVolumeGeometry2D *)
-{
-	ASTRA_ASSERT(false);
-
-	return false;
-}
-*/
 
 std::string CCudaProjector2D::description() const
 {

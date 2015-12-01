@@ -145,7 +145,7 @@ cdef extern from "astra/Float32ProjectionData2D.h" namespace "astra":
 cdef extern from "astra/Algorithm.h" namespace "astra":
 	cdef cppclass CAlgorithm:
 		bool initialize(Config)
-		void run(int)
+		void run(int) nogil
 		bool isInitialized()
 
 cdef extern from "astra/ReconstructionAlgorithm2D.h" namespace "astra":

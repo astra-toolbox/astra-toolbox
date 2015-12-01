@@ -72,6 +72,23 @@ CCudaForwardProjectionAlgorithm3D::~CCudaForwardProjectionAlgorithm3D()
 }
 
 //---------------------------------------------------------------------------------------
+void CCudaForwardProjectionAlgorithm3D::initializeFromProjector()
+{
+	m_iDetectorSuperSampling = 1;
+	m_iGPUIndex = -1;
+
+	CCudaProjector3D* pCudaProjector = dynamic_cast<CCudaProjector3D*>(m_pProjector);
+	if (!pCudaProjector) {
+		if (m_pProjector) {
+			ASTRA_WARN("non-CUDA Projector3D passed to FP3D_CUDA");
+		}
+	} else {
+		m_iDetectorSuperSampling = pCudaProjector->getDetectorSuperSampling();
+		m_iGPUIndex = pCudaProjector->getGPUIndex();
+	}
+}
+
+//---------------------------------------------------------------------------------------
 // Initialize - Config
 bool CCudaForwardProjectionAlgorithm3D::initialize(const Config& _cfg)
 {
@@ -97,19 +114,21 @@ bool CCudaForwardProjectionAlgorithm3D::initialize(const Config& _cfg)
 
 	// optional: projector
 	node = _cfg.self.getSingleNode("ProjectorId");
+	m_pProjector = 0;
 	if (node) {
 		id = boost::lexical_cast<int>(node.getContent());
 		m_pProjector = CProjector3DManager::getSingleton().get(id);
-	} else {
-		m_pProjector = 0; // TODO: or manually construct default projector?
 	}
 	CC.markNodeParsed("ProjectorId");
 
-	// GPU number
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
-	CC.markOptionParsed("GPUindex");
-	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", 1);
+	initializeFromProjector();
+
+	// Deprecated options
+	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", m_iDetectorSuperSampling);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", m_iGPUIndex);
 	CC.markOptionParsed("DetectorSuperSampling");
+	CC.markOptionParsed("GPUindex");
+
 
 	// success
 	m_bIsInitialized = check();
@@ -132,8 +151,15 @@ bool CCudaForwardProjectionAlgorithm3D::initialize(CProjector3D* _pProjector,
 	m_pProjections = _pProjections;
 	m_pVolume = _pVolume;
 
-	m_iDetectorSuperSampling = _iDetectorSuperSampling;
-	m_iGPUIndex = _iGPUindex;
+	CCudaProjector3D* pCudaProjector = dynamic_cast<CCudaProjector3D*>(m_pProjector);
+	if (!pCudaProjector) {
+		// TODO: Report
+		m_iDetectorSuperSampling = _iDetectorSuperSampling;
+		m_iGPUIndex = _iGPUindex;
+	} else {
+		m_iDetectorSuperSampling = pCudaProjector->getDetectorSuperSampling();
+		m_iGPUIndex = pCudaProjector->getGPUIndex();
+	}
 
 	// success
 	m_bIsInitialized = check();

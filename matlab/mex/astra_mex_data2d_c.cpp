@@ -222,7 +222,7 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 
 			// logical data		
 			if (mxIsLogical(prhs[3])) {
-				bool* pbMatlabData = mxGetLogicals(prhs[3]);
+				mxLogical* pbMatlabData = mxGetLogicals(prhs[3]);
 				int i = 0;
 				int col, row;
 				for (col = 0; col < dims[1]; ++col) {
@@ -322,7 +322,7 @@ void astra_mex_data2d_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 
 		// logical data		
 		if (mxIsLogical(prhs[2])) {
-			bool* pbMatlabData = mxGetLogicals(prhs[2]);
+			mxLogical* pbMatlabData = mxGetLogicals(prhs[2]);
 			int i = 0;
 			int col, row;
 			for (col = 0; col < dims[1]; ++col) {

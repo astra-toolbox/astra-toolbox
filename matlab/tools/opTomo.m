@@ -248,6 +248,7 @@ classdef opTomo < opSpot
                 % cleanup
                 astra_mex_data3d('delete', vol_id);
                 astra_mex_data3d('delete', sino_id);
+                astra_mex_algorithm('delete', alg_id);
             else
                 % X is passed as a vector, reshape it into projection data
                 x = reshape(x, op.proj_size);
@@ -272,6 +273,7 @@ classdef opTomo < opSpot
                 % cleanup
                 astra_mex_data3d('delete', vol_id);
                 astra_mex_data3d('delete', sino_id);
+                astra_mex_algorithm('delete', alg_id);
             end 
         end % opTomo_intrnl3D
         

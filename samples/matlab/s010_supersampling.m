@@ -12,23 +12,15 @@ vol_geom = astra_create_vol_geom(256, 256);
 proj_geom = astra_create_proj_geom('parallel', 3.0, 128, linspace2(0,pi,180));
 P = phantom(256);
 
-% Because the astra_create_sino_gpu wrapper does not have support for
-% all possible algorithm options, we manually create a sinogram
-phantom_id = astra_mex_data2d('create', '-vol', vol_geom, P);
-sinogram_id = astra_mex_data2d('create', '-sino', proj_geom);
-cfg = astra_struct('FP_CUDA');
-cfg.VolumeDataId = phantom_id;
-cfg.ProjectionDataId = sinogram_id;
+% We create a projector set up to use 3 rays per detector element
+cfg_proj = astra_struct('cuda');
+cfg_proj.option.DetectorSuperSampling = 3;
+cfg_proj.ProjectionGeometry = proj_geom;
+cfg_proj.VolumeGeometry = vol_geom;
+proj_id = astra_mex_projector('create', cfg_proj);
 
-% Set up 3 rays per detector element
-cfg.option.DetectorSuperSampling = 3;
 
-alg_id = astra_mex_algorithm('create', cfg);
-astra_mex_algorithm('run', alg_id);
-astra_mex_algorithm('delete', alg_id);
-astra_mex_data2d('delete', phantom_id);
-
-sinogram3 = astra_mex_data2d('get', sinogram_id);
+[sinogram3 sinogram_id] = astra_create_sino(P, proj_id);
 
 figure(1); imshow(P, []);
 figure(2); imshow(sinogram3, []);
@@ -39,14 +31,14 @@ rec_id = astra_mex_data2d('create', '-vol', vol_geom);
 cfg = astra_struct('SIRT_CUDA');
 cfg.ReconstructionDataId = rec_id;
 cfg.ProjectionDataId = sinogram_id;
-% Set up 3 rays per detector element
-cfg.option.DetectorSuperSampling = 3;
+cfg.ProjectorId = proj_id;
+
 
 % There is also an option for supersampling during the backprojection step.
 % This should be used if your detector pixels are smaller than the voxels.
 
 % Set up 2 rays per image pixel dimension, for 4 rays total per image pixel.
-% cfg.option.PixelSuperSampling = 2;
+% cfg_proj.option.PixelSuperSampling = 2;
 
 
 alg_id = astra_mex_algorithm('create', cfg);

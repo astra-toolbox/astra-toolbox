@@ -1,7 +1,7 @@
-OpTomo class: the :mod:`operator` module
+OpTomo class: the :mod:`optomo` module
 ==============================================
 
-.. automodule:: astra.operator
+.. automodule:: astra.optomo
     :members:
     :undoc-members:
     :show-inheritance:

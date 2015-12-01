@@ -106,14 +106,18 @@ bool CReconstructionAlgorithm3D::initialize(const Config& _cfg)
 
 	XMLNode node;
 	int id;
-#if 0
+
 	// projector
-	node = _cfg.self->getSingleNode("ProjectorId");
-	ASTRA_CONFIG_CHECK(node, "Reconstruction3D", "No ProjectorId tag specified.");
-	id = boost::lexical_cast<int>(node->getContent());
-	m_pProjector = CProjector3DManager::getSingleton().get(id);
-	ASTRA_DELETE(node);
-#endif
+	node = _cfg.self.getSingleNode("ProjectorId");
+	m_pProjector = 0;
+	if (node) {
+		id = boost::lexical_cast<int>(node.getContent());
+		m_pProjector = CProjector3DManager::getSingleton().get(id);
+		if (!m_pProjector) {
+			// TODO: Report
+		}
+	}
+	CC.markNodeParsed("ProjectorId");
 
 	// sinogram data
 	node = _cfg.self.getSingleNode("ProjectionDataId");
@@ -143,6 +147,7 @@ bool CReconstructionAlgorithm3D::initialize(const Config& _cfg)
 		id = boost::lexical_cast<int>(_cfg.self.getOption("SinogramMaskId"));
 		m_pSinogramMask = dynamic_cast<CFloat32ProjectionData3D*>(CData3DManager::getSingleton().get(id));
 	}
+	CC.markOptionParsed("SinogramMaskId");
 
 	// Constraints - NEW
 	if (_cfg.self.hasOption("MinConstraint")) {
