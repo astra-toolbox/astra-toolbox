@@ -85,13 +85,10 @@ public:
 	 * @param _pProjector		Projector Object. (Ignored)
 	 * @param _pSinogram		ProjectionData2D object containing the sinogram data.
 	 * @param _pReconstruction	VolumeData2D object for storing the reconstructed volume.
-	 * @param _iGPUindex		GPU to use.
-	 * @param _iPixelSuperSampling  Square root of number of samples per voxel, used to compute the backprojection
 	 */
 	bool initialize(CProjector2D* _pProjector,
 	                CFloat32ProjectionData2D* _pSinogram, 
-					CFloat32VolumeData2D* _pReconstruction,
-					int _iGPUindex = -1, int _iPixelSuperSampling = 1);
+					CFloat32VolumeData2D* _pReconstruction);
 
 	/** Get a description of the class.
 	 *

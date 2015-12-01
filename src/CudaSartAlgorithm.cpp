@@ -116,10 +116,9 @@ bool CCudaSartAlgorithm::initialize(const Config& _cfg)
 // Initialize - C++
 bool CCudaSartAlgorithm::initialize(CProjector2D* _pProjector,
                                      CFloat32ProjectionData2D* _pSinogram, 
-                                     CFloat32VolumeData2D* _pReconstruction,
-                                     int _iGPUindex, int _iDetectorSuperSampling)
+                                     CFloat32VolumeData2D* _pReconstruction)
 {
-	m_bIsInitialized = CCudaReconstructionAlgorithm2D::initialize(_pProjector, _pSinogram, _pReconstruction, _iGPUindex, _iDetectorSuperSampling, 1);
+	m_bIsInitialized = CCudaReconstructionAlgorithm2D::initialize(_pProjector, _pSinogram, _pReconstruction);
 
 	if (!m_bIsInitialized)
 		return false;

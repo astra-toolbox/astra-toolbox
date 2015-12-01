@@ -91,18 +91,13 @@ public:
 
 	/** Initialize class, use sequential order.
 	 *
-	 * @param _pProjector		Projector Object. (Ignored)
+	 * @param _pProjector		Projector Object. (Optional)
 	 * @param _pSinogram		ProjectionData2D object containing the sinogram
 	 * @param _pReconstruction	VolumeData2D for storing the reconstruction
-	 * @param _iGPUindex		Index of GPU to use. (Starting at 0.)
-	 * @param _iDetectorSuperSampling Supersampling factor for the FP.
-	 * @param _iPixelSuperSampling  Square root of number of samples per voxel, used to compute the backprojection
 	 */
 	bool initialize(CProjector2D* _pProjector, 
 					CFloat32ProjectionData2D* _pSinogram, 
-					CFloat32VolumeData2D* _pReconstruction,
-					int _iGPUindex = -1, int _iDetectorSuperSampling = 1,
-					int _iPixelSuperSampling = 1);
+					CFloat32VolumeData2D* _pReconstruction);
 
 	/** Get a description of the class.
 	 *

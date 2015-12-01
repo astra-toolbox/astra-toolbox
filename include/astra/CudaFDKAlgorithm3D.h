@@ -152,6 +152,8 @@ protected:
 	int m_iGPUIndex;
 	int m_iVoxelSuperSampling;
 	bool m_bShortScan;
+
+	void initializeFromProjector();
 };
 
 // inline functions

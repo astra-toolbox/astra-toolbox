@@ -147,6 +147,8 @@ protected:
 	 */
 	bool m_bSIRTWeighting;
 
+
+	void initializeFromProjector();
 };
 
 // inline functions

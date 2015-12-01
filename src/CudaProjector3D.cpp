@@ -64,6 +64,7 @@ void CCudaProjector3D::_clear()
 	m_projectionKernel = ker3d_default;
 	m_iVoxelSuperSampling = 1;
 	m_iDetectorSuperSampling = 1;
+	m_iGPUIndex = -1;
 }
 
 //----------------------------------------------------------------------------------------
@@ -127,6 +128,12 @@ bool CCudaProjector3D::initialize(const Config& _cfg)
  
 	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", 1);
 	CC.markOptionParsed("DetectorSuperSampling");
+
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
+	CC.markOptionParsed("GPUIndex");
+	if (!_cfg.self.hasOption("GPUIndex"))
+		CC.markOptionParsed("GPUindex");
 
 	m_bIsInitialized = _check();
 	return m_bIsInitialized;

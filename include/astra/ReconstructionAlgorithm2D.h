@@ -208,6 +208,9 @@ protected:
 	//< Use the fixed reconstruction mask?
 	bool m_bUseSinogramMask;
 
+
+	//< Specify if initialize/check should check for a valid Projector
+	virtual bool requiresProjector() const { return true; }
 };
 
 // inline functions
