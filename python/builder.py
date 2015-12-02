@@ -41,6 +41,12 @@ try:
         usecuda=True
 except KeyError:
     pass
+try:
+    if os.environ['CL'].find('/DASTRA_CUDA')!=-1:
+        usecuda=True
+except KeyError:
+    pass
+
 
 cfgToWrite = 'DEF HAVE_CUDA=' + str(usecuda) + "\n"
 cfgHasToBeUpdated = True
