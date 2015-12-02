@@ -599,6 +599,22 @@
 			>
 		</File>
 		<File
+			RelativePath=".\mexCopyDataHelpFunctions.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\mexCopyDataHelpFunctions.h"
+			>
+		</File>
+		<File
+			RelativePath=".\mexDataManagerHelpFunctions.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\mexDataManagerHelpFunctions.h"
+			>
+		</File>
+		<File
 			RelativePath=".\mexInitFunctions.cpp"
 			>
 		</File>

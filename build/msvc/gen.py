@@ -103,6 +103,10 @@ P8["files"] = [
 "astra_mex_direct_c.cpp",
 "mexHelpFunctions.cpp",
 "mexHelpFunctions.h",
+"mexCopyDataHelpFunctions.cpp",
+"mexCopyDataHelpFunctions.h",
+"mexDataManagerHelpFunctions.cpp",
+"mexDataManagerHelpFunctions.h",
 "mexInitFunctions.cpp",
 "mexInitFunctions.h",
 ]
