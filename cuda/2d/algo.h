@@ -118,7 +118,8 @@ protected:
 	            float* D_projData, unsigned int projPitch,
 	            float outputScale);
 	bool callBP(float* D_volumeData, unsigned int volumePitch,
-	            float* D_projData, unsigned int projPitch);
+	            float* D_projData, unsigned int projPitch,
+	            float outputScale);
 
 
 	SDimensions dims;

@@ -15,6 +15,7 @@ function vol_geom = astra_create_vol_geom(varargin)
 % vol_geom: MATLAB struct containing all information of the geometry.
 %--------------------------------------------------------------------------
 % vol_geom = astra_create_vol_geom(row_count, col_count, slice_count);
+% vol_geom = astra_create_vol_geom(row_count, col_count, slice_count, min_x, max_x, min_y, max_y, min_z, max_z);
 %
 % Create a 3D volume geometry.  See the API for more information.
 % row_count: number of rows.
@@ -93,4 +94,18 @@ elseif numel(varargin) == 3
 	vol_geom.GridRowCount =	varargin{1};
 	vol_geom.GridColCount = varargin{2};
 	vol_geom.GridSliceCount = varargin{3};
+
+% astra_create_vol_geom(row_count, col_count, slice_count, min_x, max_x, min_y, max_y, min_z, max_z)
+elseif numel(varargin) == 9
+	vol_geom = struct();
+	vol_geom.GridRowCount = varargin{1};
+	vol_geom.GridColCount = varargin{2};
+	vol_geom.GridSliceCount = varargin{3};
+	vol_geom.option.WindowMinX = varargin{4};
+	vol_geom.option.WindowMaxX = varargin{5};
+	vol_geom.option.WindowMinY = varargin{6};
+	vol_geom.option.WindowMaxY = varargin{7};
+	vol_geom.option.WindowMinZ = varargin{8};
+	vol_geom.option.WindowMaxZ = varargin{9};
+
 end

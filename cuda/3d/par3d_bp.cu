@@ -77,7 +77,7 @@ static bool bindProjDataTexture(const cudaArray* array)
 }
 
 
-__global__ void dev_par3D_BP(void* D_volData, unsigned int volPitch, int startAngle, int angleOffset, const SDimensions3D dims)
+__global__ void dev_par3D_BP(void* D_volData, unsigned int volPitch, int startAngle, int angleOffset, const SDimensions3D dims, float fOutputScale)
 {
 	float* volData = (float*)D_volData;
 
@@ -139,11 +139,11 @@ __global__ void dev_par3D_BP(void* D_volData, unsigned int volPitch, int startAn
 		endZ = dims.iVolZ - startZ;
 
 	for(int i=0; i < endZ; i++)
-		volData[((startZ+i)*dims.iVolY+Y)*volPitch+X] += Z[i];
+		volData[((startZ+i)*dims.iVolY+Y)*volPitch+X] += Z[i] * fOutputScale;
 }
 
 // supersampling version
-__global__ void dev_par3D_BP_SS(void* D_volData, unsigned int volPitch, int startAngle, int angleOffset, const SDimensions3D dims)
+__global__ void dev_par3D_BP_SS(void* D_volData, unsigned int volPitch, int startAngle, int angleOffset, const SDimensions3D dims, float fOutputScale)
 {
 	float* volData = (float*)D_volData;
 
@@ -179,6 +179,9 @@ __global__ void dev_par3D_BP_SS(void* D_volData, unsigned int volPitch, int star
 	float fZ = startZ - 0.5f*dims.iVolZ + 0.5f - 0.5f + 0.5f/dims.iRaysPerVoxelDim;
 
 	const float fSubStep = 1.0f/dims.iRaysPerVoxelDim;
+
+	fOutputScale /= (dims.iRaysPerVoxelDim*dims.iRaysPerVoxelDim*dims.iRaysPerVoxelDim);
+
 
 	for (int Z = startZ; Z < endZ; ++Z, fZ += 1.0f)
 	{
@@ -217,14 +220,15 @@ __global__ void dev_par3D_BP_SS(void* D_volData, unsigned int volPitch, int star
 
 		}
 
-		volData[(Z*dims.iVolY+Y)*volPitch+X] += fVal / (dims.iRaysPerVoxelDim*dims.iRaysPerVoxelDim*dims.iRaysPerVoxelDim);
+		volData[(Z*dims.iVolY+Y)*volPitch+X] += fVal * fOutputScale;
 	}
 
 }
 
 bool Par3DBP_Array(cudaPitchedPtr D_volumeData,
                    cudaArray *D_projArray,
-                   const SDimensions3D& dims, const SPar3DProjection* angles)
+                   const SDimensions3D& dims, const SPar3DProjection* angles,
+                   float fOutputScale)
 {
 	bindProjDataTexture(D_projArray);
 
@@ -271,9 +275,9 @@ bool Par3DBP_Array(cudaPitchedPtr D_volumeData,
 		for (unsigned int i = 0; i < angleCount; i += g_anglesPerBlock) {
 			// printf("Calling BP: %d, %dx%d, %dx%d to %p\n", i, dimBlock.x, dimBlock.y, dimGrid.x, dimGrid.y, (void*)D_volumeData.ptr); 
 			if (dims.iRaysPerVoxelDim == 1)
-				dev_par3D_BP<<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims);
+				dev_par3D_BP<<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, fOutputScale);
 			else
-				dev_par3D_BP_SS<<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims);
+				dev_par3D_BP_SS<<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, fOutputScale);
 		}
 
 		cudaTextForceKernelsCompletion();
@@ -288,14 +292,15 @@ bool Par3DBP_Array(cudaPitchedPtr D_volumeData,
 
 bool Par3DBP(cudaPitchedPtr D_volumeData,
             cudaPitchedPtr D_projData,
-            const SDimensions3D& dims, const SPar3DProjection* angles)
+            const SDimensions3D& dims, const SPar3DProjection* angles,
+            float fOutputScale)
 {
 	// transfer projections to array
 
 	cudaArray* cuArray = allocateProjectionArray(dims);
 	transferProjectionsToArray(D_projData, cuArray, dims);
 
-	bool ret = Par3DBP_Array(D_volumeData, cuArray, dims, angles);
+	bool ret = Par3DBP_Array(D_volumeData, cuArray, dims, angles, fOutputScale);
 
 	cudaFreeArray(cuArray);
 
@@ -445,7 +450,7 @@ int main()
 		cudaMemcpy3D(&p);
 	}
 
-	astraCUDA3d::Par3DBP(volData, projData, dims, angle);
+	astraCUDA3d::Par3DBP(volData, projData, dims, angle, 1.0f);
 #if 1
 	float* buf = new float[256*256];
 

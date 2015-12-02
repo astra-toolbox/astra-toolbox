@@ -73,7 +73,7 @@ static bool bindProjDataTexture(float* data, unsigned int pitch, unsigned int wi
 	return true;
 }
 
-__global__ void devBP(float* D_volData, unsigned int volPitch, unsigned int startAngle, bool offsets, const SDimensions dims)
+__global__ void devBP(float* D_volData, unsigned int volPitch, unsigned int startAngle, bool offsets, const SDimensions dims, float fOutputScale)
 {
 	const int relX = threadIdx.x;
 	const int relY = threadIdx.y;
@@ -123,11 +123,11 @@ __global__ void devBP(float* D_volData, unsigned int volPitch, unsigned int star
 
 	}
 
-	volData[Y*volPitch+X] += fVal;
+	volData[Y*volPitch+X] += fVal * fOutputScale;
 }
 
 // supersampling version
-__global__ void devBP_SS(float* D_volData, unsigned int volPitch, unsigned int startAngle, bool offsets, const SDimensions dims)
+__global__ void devBP_SS(float* D_volData, unsigned int volPitch, unsigned int startAngle, bool offsets, const SDimensions dims, float fOutputScale)
 {
 	const int relX = threadIdx.x;
 	const int relY = threadIdx.y;
@@ -151,6 +151,8 @@ __global__ void devBP_SS(float* D_volData, unsigned int volPitch, unsigned int s
 	float fVal = 0.0f;
 	float fA = startAngle + 0.5f;
 	const float fT_base = 0.5f*dims.iProjDets - 0.5f + 0.5f;
+
+	fOutputScale /= (dims.iRaysPerPixelDim * dims.iRaysPerPixelDim);
 
 	if (offsets) {
 
@@ -196,10 +198,10 @@ __global__ void devBP_SS(float* D_volData, unsigned int volPitch, unsigned int s
 
 	}
 
-	volData[Y*volPitch+X] += fVal / (dims.iRaysPerPixelDim * dims.iRaysPerPixelDim);
+	volData[Y*volPitch+X] += fVal * fOutputScale;
 }
 
-__global__ void devBP_SART(float* D_volData, unsigned int volPitch, float offset, float angle_sin, float angle_cos, const SDimensions dims)
+__global__ void devBP_SART(float* D_volData, unsigned int volPitch, float offset, float angle_sin, float angle_cos, const SDimensions dims, float fOutputScale)
 {
 	const int relX = threadIdx.x;
 	const int relY = threadIdx.y;
@@ -218,13 +220,13 @@ __global__ void devBP_SART(float* D_volData, unsigned int volPitch, float offset
 	const float fT = fT_base + fX * angle_cos - fY * angle_sin + offset;
 	const float fVal = tex2D(gT_projTexture, fT, 0.5f);
 
-	D_volData[Y*volPitch+X] += fVal;
+	D_volData[Y*volPitch+X] += fVal * fOutputScale;
 }
 
 
 bool BP_internal(float* D_volumeData, unsigned int volumePitch,
         float* D_projData, unsigned int projPitch,
-        const SDimensions& dims, const float* angles, const float* TOffsets)
+        const SDimensions& dims, const float* angles, const float* TOffsets, float fOutputScale)
 {
 	// TODO: process angles block by block
 	assert(dims.iProjAngles <= g_MaxAngles);
@@ -261,9 +263,9 @@ bool BP_internal(float* D_volumeData, unsigned int volumePitch,
 	for (unsigned int i = 0; i < dims.iProjAngles; i += g_anglesPerBlock) {
 
 		if (dims.iRaysPerPixelDim > 1)
-			devBP_SS<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, (TOffsets != 0), dims);
+			devBP_SS<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, (TOffsets != 0), dims, fOutputScale);
 		else
-			devBP<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, (TOffsets != 0), dims);
+			devBP<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, (TOffsets != 0), dims, fOutputScale);
 	}
 	cudaThreadSynchronize();
 
@@ -276,7 +278,7 @@ bool BP_internal(float* D_volumeData, unsigned int volumePitch,
 
 bool BP(float* D_volumeData, unsigned int volumePitch,
         float* D_projData, unsigned int projPitch,
-        const SDimensions& dims, const float* angles, const float* TOffsets)
+        const SDimensions& dims, const float* angles, const float* TOffsets, float fOutputScale)
 {
 	for (unsigned int iAngle = 0; iAngle < dims.iProjAngles; iAngle += g_MaxAngles) {
 		SDimensions subdims = dims;
@@ -289,7 +291,8 @@ bool BP(float* D_volumeData, unsigned int volumePitch,
 		ret = BP_internal(D_volumeData, volumePitch,
 		                  D_projData + iAngle * projPitch, projPitch,
 		                  subdims, angles + iAngle,
-		                  TOffsets ? TOffsets + iAngle : 0);
+		                  TOffsets ? TOffsets + iAngle : 0,
+		                  fOutputScale);
 		if (!ret)
 			return false;
 	}
@@ -300,7 +303,7 @@ bool BP(float* D_volumeData, unsigned int volumePitch,
 bool BP_SART(float* D_volumeData, unsigned int volumePitch,
              float* D_projData, unsigned int projPitch,
              unsigned int angle, const SDimensions& dims,
-             const float* angles, const float* TOffsets)
+             const float* angles, const float* TOffsets, float fOutputScale)
 {
 	// Only one angle.
 	// We need to Clamp to the border pixels instead of to zero, because
@@ -318,7 +321,7 @@ bool BP_SART(float* D_volumeData, unsigned int volumePitch,
 	dim3 dimGrid((dims.iVolWidth+g_blockSlices-1)/g_blockSlices,
 	             (dims.iVolHeight+g_blockSliceSize-1)/g_blockSliceSize);
 
-	devBP_SART<<<dimGrid, dimBlock>>>(D_volumeData, volumePitch, offset, angle_sin, angle_cos, dims);
+	devBP_SART<<<dimGrid, dimBlock>>>(D_volumeData, volumePitch, offset, angle_sin, angle_cos, dims, fOutputScale);
 	cudaThreadSynchronize();
 
 	cudaTextForceKernelsCompletion();
@@ -369,7 +372,7 @@ int main()
 	for (unsigned int i = 0; i < dims.iProjAngles; ++i)
 		angle[i] = i*(M_PI/dims.iProjAngles);
 
-	BP(D_volumeData, volumePitch, D_projData, projPitch, dims, angle, 0);
+	BP(D_volumeData, volumePitch, D_projData, projPitch, dims, angle, 0, 1.0f);
 
 	delete[] angle;
 

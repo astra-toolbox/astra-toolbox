@@ -264,10 +264,6 @@ void CCudaForwardProjectionAlgorithm3D::run(int)
 	assert(m_bIsInitialized);
 
 	const CProjectionGeometry3D* projgeom = m_pProjections->getGeometry();
-	const CConeProjectionGeometry3D* conegeom = dynamic_cast<const CConeProjectionGeometry3D*>(projgeom);
-	const CParallelProjectionGeometry3D* par3dgeom = dynamic_cast<const CParallelProjectionGeometry3D*>(projgeom);
-	const CConeVecProjectionGeometry3D* conevecgeom = dynamic_cast<const CConeVecProjectionGeometry3D*>(projgeom);
-	const CParallelVecProjectionGeometry3D* parvec3dgeom = dynamic_cast<const CParallelVecProjectionGeometry3D*>(projgeom);
 	const CVolumeGeometry3D& volgeom = *m_pVolume->getGeometry();
 
 	Cuda3DProjectionKernel projKernel = ker3d_default;
@@ -295,58 +291,9 @@ void CCudaForwardProjectionAlgorithm3D::run(int)
 	}
 #endif
 
-	if (conegeom) {
-		astraCudaConeFP(m_pVolume->getDataConst(), m_pProjections->getData(),
-		                volgeom.getGridColCount(),
-		                volgeom.getGridRowCount(),
-		                volgeom.getGridSliceCount(),
-		                conegeom->getProjectionCount(),
-		                conegeom->getDetectorColCount(),
-		                conegeom->getDetectorRowCount(),
-		                conegeom->getOriginSourceDistance(),
-		                conegeom->getOriginDetectorDistance(),
-		                conegeom->getDetectorSpacingX(),
-		                conegeom->getDetectorSpacingY(),
-		                conegeom->getProjectionAngles(),
-		                m_iGPUIndex, m_iDetectorSuperSampling);
-	} else if (par3dgeom) {
-		astraCudaPar3DFP(m_pVolume->getDataConst(), m_pProjections->getData(),
-		                 volgeom.getGridColCount(),
-		                 volgeom.getGridRowCount(),
-		                 volgeom.getGridSliceCount(),
-		                 par3dgeom->getProjectionCount(),
-		                 par3dgeom->getDetectorColCount(),
-		                 par3dgeom->getDetectorRowCount(),
-		                 par3dgeom->getDetectorSpacingX(),
-		                 par3dgeom->getDetectorSpacingY(),
-		                 par3dgeom->getProjectionAngles(),
-		                 m_iGPUIndex, m_iDetectorSuperSampling,
-		                 projKernel);
-	} else if (parvec3dgeom) {
-		astraCudaPar3DFP(m_pVolume->getDataConst(), m_pProjections->getData(),
-		                 volgeom.getGridColCount(),
-		                 volgeom.getGridRowCount(),
-		                 volgeom.getGridSliceCount(),
-		                 parvec3dgeom->getProjectionCount(),
-		                 parvec3dgeom->getDetectorColCount(),
-		                 parvec3dgeom->getDetectorRowCount(),
-		                 parvec3dgeom->getProjectionVectors(),
-		                 m_iGPUIndex, m_iDetectorSuperSampling,
-		                 projKernel);
-	} else if (conevecgeom) {
-		astraCudaConeFP(m_pVolume->getDataConst(), m_pProjections->getData(),
-		                volgeom.getGridColCount(),
-		                volgeom.getGridRowCount(),
-		                volgeom.getGridSliceCount(),
-		                conevecgeom->getProjectionCount(),
-		                conevecgeom->getDetectorColCount(),
-		                conevecgeom->getDetectorRowCount(),
-		                conevecgeom->getProjectionVectors(),
-		                m_iGPUIndex, m_iDetectorSuperSampling);
-	} else {
-		ASTRA_ASSERT(false);
-	}
-
+	astraCudaFP(m_pVolume->getDataConst(), m_pProjections->getData(),
+	            &volgeom, projgeom,
+	            m_iGPUIndex, m_iDetectorSuperSampling, projKernel);
 }
 
 

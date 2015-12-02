@@ -368,20 +368,18 @@ bool AstraFBP::run()
 
 	}
 
+	float fOutputScale = (M_PI / 2.0f) / (float)pData->dims.iProjAngles;
+
 	if (pData->bFanBeam) {
-		ok = FanBP_FBPWeighted(pData->D_volumeData, pData->volumePitch, pData->D_sinoData, pData->sinoPitch, pData->dims, pData->fanProjections);
+		ok = FanBP_FBPWeighted(pData->D_volumeData, pData->volumePitch, pData->D_sinoData, pData->sinoPitch, pData->dims, pData->fanProjections, fOutputScale);
 
 	} else {
-		ok = BP(pData->D_volumeData, pData->volumePitch, pData->D_sinoData, pData->sinoPitch, pData->dims, pData->angles, pData->TOffsets);
+		ok = BP(pData->D_volumeData, pData->volumePitch, pData->D_sinoData, pData->sinoPitch, pData->dims, pData->angles, pData->TOffsets, fOutputScale);
 	}
 	if(!ok)
 	{
 		return false;
 	}
-
-	processVol<opMul>(pData->D_volumeData,
-	                      (M_PI / 2.0f) / (float)pData->dims.iProjAngles,
-	                      pData->volumePitch, pData->dims);
 
 	return true;
 }
@@ -594,7 +592,7 @@ bool BPalgo::iterate(unsigned int)
 {
 	// TODO: This zeroVolume makes an earlier memcpy of D_volumeData redundant
 	zeroVolumeData(D_volumeData, volumePitch, dims);
-	callBP(D_volumeData, volumePitch, D_sinoData, sinoPitch);
+	callBP(D_volumeData, volumePitch, D_sinoData, sinoPitch, 1.0f);
 	return true;
 }
 

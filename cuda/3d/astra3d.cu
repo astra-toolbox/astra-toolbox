@@ -40,6 +40,12 @@ $Id$
 #include "arith3d.h"
 #include "astra3d.h"
 
+#include "astra/ParallelProjectionGeometry3D.h"
+#include "astra/ParallelVecProjectionGeometry3D.h"
+#include "astra/ConeProjectionGeometry3D.h"
+#include "astra/ConeVecProjectionGeometry3D.h"
+#include "astra/VolumeGeometry3D.h"
+
 #include <iostream>
 
 using namespace astraCUDA3d;
@@ -137,6 +143,202 @@ static SPar3DProjection* genPar3DProjections(unsigned int iProjAngles,
 
 
 
+
+// adjust pProjs to normalize volume geometry
+template<typename ProjectionT>
+static bool convertAstraGeometry_internal(const CVolumeGeometry3D* pVolGeom,
+                          unsigned int iProjectionAngleCount,
+                          ProjectionT*& pProjs,
+                          float& fOutputScale)
+{
+	assert(pVolGeom);
+	assert(pProjs);
+
+	// TODO: Relative instead of absolute
+	const float EPS = 0.00001f;
+	if (abs(pVolGeom->getPixelLengthX() - pVolGeom->getPixelLengthY()) > EPS)
+		return false;
+	if (abs(pVolGeom->getPixelLengthX() - pVolGeom->getPixelLengthZ()) > EPS)
+		return false;
+
+
+	// Translate
+	float dx = -(pVolGeom->getWindowMinX() + pVolGeom->getWindowMaxX()) / 2;
+	float dy = -(pVolGeom->getWindowMinY() + pVolGeom->getWindowMaxY()) / 2;
+	float dz = -(pVolGeom->getWindowMinZ() + pVolGeom->getWindowMaxZ()) / 2;
+
+	float factor = 1.0f / pVolGeom->getPixelLengthX();
+
+	for (int i = 0; i < iProjectionAngleCount; ++i) {
+		// CHECKME: Order of scaling and translation
+		pProjs[i].translate(dx, dy, dz);
+		pProjs[i].scale(factor);
+	}
+
+	// CHECKME: Check factor
+	fOutputScale *= pVolGeom->getPixelLengthX();
+
+	return true;
+}
+
+
+bool convertAstraGeometry_dims(const CVolumeGeometry3D* pVolGeom,
+                               const CProjectionGeometry3D* pProjGeom,
+                               SDimensions3D& dims)
+{
+	dims.iVolX = pVolGeom->getGridColCount();
+	dims.iVolY = pVolGeom->getGridRowCount();
+	dims.iVolZ = pVolGeom->getGridSliceCount();
+	dims.iProjAngles = pProjGeom->getProjectionCount();
+	dims.iProjU = pProjGeom->getDetectorColCount(),
+	dims.iProjV = pProjGeom->getDetectorRowCount(),
+	dims.iRaysPerDetDim = 1;
+	dims.iRaysPerVoxelDim = 1;
+
+	if (dims.iVolX <= 0 || dims.iVolX <= 0 || dims.iVolX <= 0)
+		return false;
+	if (dims.iProjAngles <= 0 || dims.iProjU <= 0 || dims.iProjV <= 0)
+		return false;
+
+	return true;
+}
+
+
+bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
+                          const CParallelProjectionGeometry3D* pProjGeom,
+                          SPar3DProjection*& pProjs, float& fOutputScale)
+{
+	assert(pVolGeom);
+	assert(pProjGeom);
+	assert(pProjGeom->getProjectionAngles());
+
+	int nth = pProjGeom->getProjectionCount();
+
+	pProjs = genPar3DProjections(nth,
+	                             pProjGeom->getDetectorColCount(),
+	                             pProjGeom->getDetectorRowCount(),
+	                             pProjGeom->getDetectorSpacingX(),
+	                             pProjGeom->getDetectorSpacingY(),
+	                             pProjGeom->getProjectionAngles());
+
+	bool ok;
+
+	fOutputScale = 1.0f;
+
+	ok = convertAstraGeometry_internal(pVolGeom, nth, pProjs, fOutputScale);
+
+	return ok;
+}
+
+bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
+                          const CParallelVecProjectionGeometry3D* pProjGeom,
+                          SPar3DProjection*& pProjs, float& fOutputScale)
+{
+	assert(pVolGeom);
+	assert(pProjGeom);
+	assert(pProjGeom->getProjectionVectors());
+
+	int nth = pProjGeom->getProjectionCount();
+
+	pProjs = new SPar3DProjection[nth];
+	for (int i = 0; i < nth; ++i)
+		pProjs[i] = pProjGeom->getProjectionVectors()[i];
+
+	bool ok;
+
+	fOutputScale = 1.0f;
+
+	ok = convertAstraGeometry_internal(pVolGeom, nth, pProjs, fOutputScale);
+
+	return ok;
+}
+
+bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
+                          const CConeProjectionGeometry3D* pProjGeom,
+                          SConeProjection*& pProjs, float& fOutputScale)
+{
+	assert(pVolGeom);
+	assert(pProjGeom);
+	assert(pProjGeom->getProjectionAngles());
+
+	int nth = pProjGeom->getProjectionCount();
+
+	pProjs = genConeProjections(nth,
+	                            pProjGeom->getDetectorColCount(),
+	                            pProjGeom->getDetectorRowCount(),
+	                            pProjGeom->getOriginSourceDistance(),
+	                            pProjGeom->getOriginDetectorDistance(),
+	                            pProjGeom->getDetectorSpacingX(),
+	                            pProjGeom->getDetectorSpacingY(),
+	                            pProjGeom->getProjectionAngles());
+
+	bool ok;
+
+	fOutputScale = 1.0f;
+
+	ok = convertAstraGeometry_internal(pVolGeom, nth, pProjs, fOutputScale);
+
+	return ok;
+}
+
+bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
+                          const CConeVecProjectionGeometry3D* pProjGeom,
+                          SConeProjection*& pProjs, float& fOutputScale)
+{
+	assert(pVolGeom);
+	assert(pProjGeom);
+	assert(pProjGeom->getProjectionVectors());
+
+	int nth = pProjGeom->getProjectionCount();
+
+	pProjs = new SConeProjection[nth];
+	for (int i = 0; i < nth; ++i)
+		pProjs[i] = pProjGeom->getProjectionVectors()[i];
+
+	bool ok;
+
+	fOutputScale = 1.0f;
+
+	ok = convertAstraGeometry_internal(pVolGeom, nth, pProjs, fOutputScale);
+
+	return ok;
+}
+
+
+bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
+                          const CProjectionGeometry3D* pProjGeom,
+                          SPar3DProjection*& pParProjs,
+                          SConeProjection*& pConeProjs,
+                          float& fOutputScale)
+{
+	const CConeProjectionGeometry3D* conegeom = dynamic_cast<const CConeProjectionGeometry3D*>(pProjGeom);
+	const CParallelProjectionGeometry3D* par3dgeom = dynamic_cast<const CParallelProjectionGeometry3D*>(pProjGeom);
+	const CParallelVecProjectionGeometry3D* parvec3dgeom = dynamic_cast<const CParallelVecProjectionGeometry3D*>(pProjGeom);
+	const CConeVecProjectionGeometry3D* conevec3dgeom = dynamic_cast<const CConeVecProjectionGeometry3D*>(pProjGeom);
+
+	pConeProjs = 0;
+	pParProjs = 0;
+
+	bool ok;
+
+	if (conegeom) {
+		ok = convertAstraGeometry(pVolGeom, conegeom, pConeProjs, fOutputScale);
+	} else if (conevec3dgeom) {
+		ok = convertAstraGeometry(pVolGeom, conevec3dgeom, pConeProjs, fOutputScale);
+	} else if (par3dgeom) {
+		ok = convertAstraGeometry(pVolGeom, par3dgeom, pParProjs, fOutputScale);
+	} else if (parvec3dgeom) {
+		ok = convertAstraGeometry(pVolGeom, parvec3dgeom, pParProjs, fOutputScale);
+	} else {
+		ok = false;
+	}
+
+	return ok;
+}
+
+
+
+
 class AstraSIRT3d_internal {
 public:
 	SDimensions3D dims;
@@ -151,7 +353,7 @@ public:
 	SConeProjection* projs;
 	SPar3DProjection* parprojs;
 
-	float fPixelSize;
+	float fOutputScale;
 
 	bool initialized;
 	bool setStartReconstruction;
@@ -188,6 +390,8 @@ AstraSIRT3d::AstraSIRT3d()
 	pData->dims.iRaysPerVoxelDim = 1;
 
 	pData->projs = 0;
+	pData->parprojs = 0;
+	pData->fOutputScale = 1.0f;
 
 	pData->initialized = false;
 	pData->setStartReconstruction = false;
@@ -220,127 +424,37 @@ AstraSIRT3d::~AstraSIRT3d()
 	pData = 0;
 }
 
-bool AstraSIRT3d::setReconstructionGeometry(unsigned int iVolX,
-                                            unsigned int iVolY,
-                                            unsigned int iVolZ/*,
-                                            float fPixelSize = 1.0f*/)
+bool AstraSIRT3d::setGeometry(const CVolumeGeometry3D* pVolGeom,
+	                      const CProjectionGeometry3D* pProjGeom)
 {
 	if (pData->initialized)
 		return false;
 
-	pData->dims.iVolX = iVolX;
-	pData->dims.iVolY = iVolY;
-	pData->dims.iVolZ = iVolZ;
+	bool ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, pData->dims);
 
-	return (iVolX > 0 && iVolY > 0 && iVolZ > 0);
-}
-
-
-bool AstraSIRT3d::setPar3DGeometry(unsigned int iProjAngles,
-                                   unsigned int iProjU,
-                                   unsigned int iProjV,
-                                   const SPar3DProjection* projs)
-{
-	if (pData->initialized)
+	if (!ok)
 		return false;
 
-	pData->dims.iProjAngles = iProjAngles;
-	pData->dims.iProjU = iProjU;
-	pData->dims.iProjV = iProjV;
+	pData->projs = 0;
+	pData->parprojs = 0;
 
-	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || projs == 0)
+	ok = convertAstraGeometry(pVolGeom, pProjGeom,
+	                          pData->parprojs, pData->projs,
+	                          pData->fOutputScale);
+	if (!ok)
 		return false;
 
-	pData->parprojs = new SPar3DProjection[iProjAngles];
-	memcpy(pData->parprojs, projs, iProjAngles * sizeof(projs[0]));
-
-	pData->projType = PROJ_PARALLEL;
+	if (pData->projs) {
+		assert(pData->parprojs == 0);
+		pData->projType = PROJ_CONE;
+	} else {
+		assert(pData->parprojs != 0);
+		pData->projType = PROJ_PARALLEL;
+	}
 
 	return true;
 }
 
-bool AstraSIRT3d::setPar3DGeometry(unsigned int iProjAngles,
-                                   unsigned int iProjU,
-                                   unsigned int iProjV,
-                                   float fDetUSize,
-                                   float fDetVSize,
-                                   const float *pfAngles)
-{
-	if (pData->initialized)
-		return false;
-
-	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || pfAngles == 0)
-		return false;
-
-	SPar3DProjection* p = genPar3DProjections(iProjAngles,
-                                              iProjU, iProjV,
-                                              fDetUSize, fDetVSize,
-                                              pfAngles);
-	pData->dims.iProjAngles = iProjAngles;
-	pData->dims.iProjU = iProjU;
-	pData->dims.iProjV = iProjV;
-
-	pData->parprojs = p;
-	pData->projType = PROJ_PARALLEL;
-
-	return true;
-}
-
-
-
-bool AstraSIRT3d::setConeGeometry(unsigned int iProjAngles,
-                                  unsigned int iProjU,
-                                  unsigned int iProjV,
-                                  const SConeProjection* projs)
-{
-	if (pData->initialized)
-		return false;
-
-	pData->dims.iProjAngles = iProjAngles;
-	pData->dims.iProjU = iProjU;
-	pData->dims.iProjV = iProjV;
-
-	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || projs == 0)
-		return false;
-
-	pData->projs = new SConeProjection[iProjAngles];
-	memcpy(pData->projs, projs, iProjAngles * sizeof(projs[0]));
-
-	pData->projType = PROJ_CONE;
-
-	return true;
-}
-
-bool AstraSIRT3d::setConeGeometry(unsigned int iProjAngles,
-                                  unsigned int iProjU,
-                                  unsigned int iProjV,
-                                  float fOriginSourceDistance,
-                                  float fOriginDetectorDistance,
-                                  float fDetUSize,
-                                  float fDetVSize,
-                                  const float *pfAngles)
-{
-	if (pData->initialized)
-		return false;
-
-	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || pfAngles == 0)
-		return false;
-
-	SConeProjection* p = genConeProjections(iProjAngles,
-                                            iProjU, iProjV,
-                                            fOriginSourceDistance,
-                                            fOriginDetectorDistance,
-                                            fDetUSize, fDetVSize,
-                                            pfAngles);
-	pData->dims.iProjAngles = iProjAngles;
-	pData->dims.iProjU = iProjU;
-	pData->dims.iProjV = iProjV;
-
-	pData->projs = p;
-	pData->projType = PROJ_CONE;
-
-	return true;
-}
 
 bool AstraSIRT3d::enableSuperSampling(unsigned int iVoxelSuperSampling,
                                       unsigned int iDetectorSuperSampling)
@@ -404,9 +518,9 @@ bool AstraSIRT3d::init()
 	bool ok;
 
 	if (pData->projType == PROJ_PARALLEL) {
-		ok = pData->sirt.setPar3DGeometry(pData->dims, pData->parprojs);
+		ok = pData->sirt.setPar3DGeometry(pData->dims, pData->parprojs, pData->fOutputScale);
 	} else {
-		ok = pData->sirt.setConeGeometry(pData->dims, pData->projs);
+		ok = pData->sirt.setConeGeometry(pData->dims, pData->projs, pData->fOutputScale);
 	}
 
 	if (!ok)
@@ -618,7 +732,7 @@ public:
 	SConeProjection* projs;
 	SPar3DProjection* parprojs;
 
-	float fPixelSize;
+	float fOutputScale;
 
 	bool initialized;
 	bool setStartReconstruction;
@@ -655,6 +769,8 @@ AstraCGLS3d::AstraCGLS3d()
 	pData->dims.iRaysPerVoxelDim = 1;
 
 	pData->projs = 0;
+	pData->parprojs = 0;
+	pData->fOutputScale = 1.0f;
 
 	pData->initialized = false;
 	pData->setStartReconstruction = false;
@@ -687,125 +803,33 @@ AstraCGLS3d::~AstraCGLS3d()
 	pData = 0;
 }
 
-bool AstraCGLS3d::setReconstructionGeometry(unsigned int iVolX,
-                                            unsigned int iVolY,
-                                            unsigned int iVolZ/*,
-                                            float fPixelSize = 1.0f*/)
+bool AstraCGLS3d::setGeometry(const CVolumeGeometry3D* pVolGeom,
+	                      const CProjectionGeometry3D* pProjGeom)
 {
 	if (pData->initialized)
 		return false;
 
-	pData->dims.iVolX = iVolX;
-	pData->dims.iVolY = iVolY;
-	pData->dims.iVolZ = iVolZ;
+	bool ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, pData->dims);
 
-	return (iVolX > 0 && iVolY > 0 && iVolZ > 0);
-}
-
-
-bool AstraCGLS3d::setPar3DGeometry(unsigned int iProjAngles,
-                                   unsigned int iProjU,
-                                   unsigned int iProjV,
-                                   const SPar3DProjection* projs)
-{
-	if (pData->initialized)
+	if (!ok)
 		return false;
 
-	pData->dims.iProjAngles = iProjAngles;
-	pData->dims.iProjU = iProjU;
-	pData->dims.iProjV = iProjV;
+	pData->projs = 0;
+	pData->parprojs = 0;
 
-	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || projs == 0)
+	ok = convertAstraGeometry(pVolGeom, pProjGeom,
+	                          pData->parprojs, pData->projs,
+	                          pData->fOutputScale);
+	if (!ok)
 		return false;
 
-	pData->parprojs = new SPar3DProjection[iProjAngles];
-	memcpy(pData->parprojs, projs, iProjAngles * sizeof(projs[0]));
-
-	pData->projType = PROJ_PARALLEL;
-
-	return true;
-}
-
-bool AstraCGLS3d::setPar3DGeometry(unsigned int iProjAngles,
-                                   unsigned int iProjU,
-                                   unsigned int iProjV,
-                                   float fDetUSize,
-                                   float fDetVSize,
-                                   const float *pfAngles)
-{
-	if (pData->initialized)
-		return false;
-
-	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || pfAngles == 0)
-		return false;
-
-	SPar3DProjection* p = genPar3DProjections(iProjAngles,
-                                              iProjU, iProjV,
-                                              fDetUSize, fDetVSize,
-                                              pfAngles);
-	pData->dims.iProjAngles = iProjAngles;
-	pData->dims.iProjU = iProjU;
-	pData->dims.iProjV = iProjV;
-
-	pData->parprojs = p;
-	pData->projType = PROJ_PARALLEL;
-
-	return true;
-}
-
-
-
-bool AstraCGLS3d::setConeGeometry(unsigned int iProjAngles,
-                                  unsigned int iProjU,
-                                  unsigned int iProjV,
-                                  const SConeProjection* projs)
-{
-	if (pData->initialized)
-		return false;
-
-	pData->dims.iProjAngles = iProjAngles;
-	pData->dims.iProjU = iProjU;
-	pData->dims.iProjV = iProjV;
-
-	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || projs == 0)
-		return false;
-
-	pData->projs = new SConeProjection[iProjAngles];
-	memcpy(pData->projs, projs, iProjAngles * sizeof(projs[0]));
-
-	pData->projType = PROJ_CONE;
-
-	return true;
-}
-
-bool AstraCGLS3d::setConeGeometry(unsigned int iProjAngles,
-                                  unsigned int iProjU,
-                                  unsigned int iProjV,
-                                  float fOriginSourceDistance,
-                                  float fOriginDetectorDistance,
-                                  float fDetUSize,
-                                  float fDetVSize,
-                                  const float *pfAngles)
-{
-	if (pData->initialized)
-		return false;
-
-	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || pfAngles == 0)
-		return false;
-
-	SConeProjection* p = genConeProjections(iProjAngles,
-                                            iProjU, iProjV,
-                                            fOriginSourceDistance,
-                                            fOriginDetectorDistance,
-                                            fDetUSize, fDetVSize,
-                                            pfAngles);
-
-	pData->dims.iProjAngles = iProjAngles;
-	pData->dims.iProjU = iProjU;
-	pData->dims.iProjV = iProjV;
-
-	pData->projs = p;
-	pData->projType = PROJ_CONE;
+	if (pData->projs) {
+		assert(pData->parprojs == 0);
+		pData->projType = PROJ_CONE;
+	} else {
+		assert(pData->parprojs != 0);
+		pData->projType = PROJ_PARALLEL;
+	}
 
 	return true;
 }
@@ -874,9 +898,9 @@ bool AstraCGLS3d::init()
 	bool ok;
 
 	if (pData->projType == PROJ_PARALLEL) {
-		ok = pData->cgls.setPar3DGeometry(pData->dims, pData->parprojs);
+		ok = pData->cgls.setPar3DGeometry(pData->dims, pData->parprojs, pData->fOutputScale);
 	} else {
-		ok = pData->cgls.setConeGeometry(pData->dims, pData->projs);
+		ok = pData->cgls.setConeGeometry(pData->dims, pData->projs, pData->fOutputScale);
 	}
 
 	if (!ok)
@@ -1077,70 +1101,31 @@ float AstraCGLS3d::computeDiffNorm()
 
 
 
-bool astraCudaConeFP(const float* pfVolume, float* pfProjections,
-                     unsigned int iVolX,
-                     unsigned int iVolY,
-                     unsigned int iVolZ,
-                     unsigned int iProjAngles,
-                     unsigned int iProjU,
-                     unsigned int iProjV,
-                     float fOriginSourceDistance,
-                     float fOriginDetectorDistance,
-                     float fDetUSize,
-                     float fDetVSize,
-                     const float *pfAngles,
-                     int iGPUIndex, int iDetectorSuperSampling)
-{
-	if (iVolX == 0 || iVolY == 0 || iVolZ == 0)
-		return false;
-	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || pfAngles == 0)
-		return false;
-
-	SConeProjection* p = genConeProjections(iProjAngles,
-                                            iProjU, iProjV,
-                                            fOriginSourceDistance,
-                                            fOriginDetectorDistance,
-                                            fDetUSize, fDetVSize,
-                                            pfAngles);
-
-	bool ok;
-	ok = astraCudaConeFP(pfVolume, pfProjections, iVolX, iVolY, iVolZ,
-	                     iProjAngles, iProjU, iProjV, p, iGPUIndex, iDetectorSuperSampling);
-
-	delete[] p;
-
-	return ok;
-}
-
-bool astraCudaConeFP(const float* pfVolume, float* pfProjections,
-                     unsigned int iVolX,
-                     unsigned int iVolY,
-                     unsigned int iVolZ,
-                     unsigned int iProjAngles,
-                     unsigned int iProjU,
-                     unsigned int iProjV,
-                     const SConeProjection *pfAngles,
-                     int iGPUIndex, int iDetectorSuperSampling)
+bool astraCudaFP(const float* pfVolume, float* pfProjections,
+                 const CVolumeGeometry3D* pVolGeom,
+                 const CProjectionGeometry3D* pProjGeom,
+                 int iGPUIndex, int iDetectorSuperSampling,
+                 Cuda3DProjectionKernel projKernel)
 {
 	SDimensions3D dims;
 
-	dims.iVolX = iVolX;
-	dims.iVolY = iVolY;
-	dims.iVolZ = iVolZ;
-	if (iVolX == 0 || iVolY == 0 || iVolZ == 0)
-		return false;
-
-	dims.iProjAngles = iProjAngles;
-	dims.iProjU = iProjU;
-	dims.iProjV = iProjV;
-
-	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || pfAngles == 0)
+	bool ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
+	if (!ok)
 		return false;
 
 	dims.iRaysPerDetDim = iDetectorSuperSampling;
-
 	if (iDetectorSuperSampling == 0)
 		return false;
+
+	SPar3DProjection* pParProjs;
+	SConeProjection* pConeProjs;
+
+	float outputScale;
+
+	ok = convertAstraGeometry(pVolGeom, pProjGeom,
+	                          pParProjs, pConeProjs,
+	                          outputScale);
+
 
 	if (iGPUIndex != -1) {
 		cudaSetDevice(iGPUIndex);
@@ -1151,8 +1136,9 @@ bool astraCudaConeFP(const float* pfVolume, float* pfProjections,
 			return false;
 	}
 
+
 	cudaPitchedPtr D_volumeData = allocateVolumeData(dims);
-	bool ok = D_volumeData.ptr;
+	ok = D_volumeData.ptr;
 	if (!ok)
 		return false;
 
@@ -1173,7 +1159,26 @@ bool astraCudaConeFP(const float* pfVolume, float* pfProjections,
 		return false;
 	}
 
-	ok &= ConeFP(D_volumeData, D_projData, dims, pfAngles, 1.0f);
+	if (pParProjs) {
+		switch (projKernel) {
+		case ker3d_default:
+			ok &= Par3DFP(D_volumeData, D_projData, dims, pParProjs, outputScale);
+			break;
+		case ker3d_sum_square_weights:
+			ok &= Par3DFP_SumSqW(D_volumeData, D_projData, dims, pParProjs, outputScale*outputScale);
+			break;
+		default:
+			assert(false);
+		}
+	} else {
+		switch (projKernel) {
+		case ker3d_default:
+			ok &= ConeFP(D_volumeData, D_projData, dims, pConeProjs, outputScale);
+			break;
+		default:
+			assert(false);
+		}
+	}
 
 	ok &= copyProjectionsFromDevice(pfProjections, D_projData,
 	                                dims, dims.iProjU);
@@ -1186,189 +1191,28 @@ bool astraCudaConeFP(const float* pfVolume, float* pfProjections,
 
 }
 
-bool astraCudaPar3DFP(const float* pfVolume, float* pfProjections,
-                      unsigned int iVolX,
-                      unsigned int iVolY,
-                      unsigned int iVolZ,
-                      unsigned int iProjAngles,
-                      unsigned int iProjU,
-                      unsigned int iProjV,
-                      float fDetUSize,
-                      float fDetVSize,
-                      const float *pfAngles,
-                      int iGPUIndex, int iDetectorSuperSampling,
-                      Cuda3DProjectionKernel projKernel)
-{
-	if (iVolX == 0 || iVolY == 0 || iVolZ == 0)
-		return false;
-	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || pfAngles == 0)
-		return false;
 
-	SPar3DProjection* p = genPar3DProjections(iProjAngles,
-                                             iProjU, iProjV,
-                                             fDetUSize, fDetVSize,
-                                             pfAngles);
-
-	bool ok;
-	ok = astraCudaPar3DFP(pfVolume, pfProjections, iVolX, iVolY, iVolZ,
-	                      iProjAngles, iProjU, iProjV, p, iGPUIndex, iDetectorSuperSampling,
-	                      projKernel);
-
-	delete[] p;
-
-	return ok;
-}
-
-
-bool astraCudaPar3DFP(const float* pfVolume, float* pfProjections,
-                      unsigned int iVolX,
-                      unsigned int iVolY,
-                      unsigned int iVolZ,
-                      unsigned int iProjAngles,
-                      unsigned int iProjU,
-                      unsigned int iProjV,
-                      const SPar3DProjection *pfAngles,
-                      int iGPUIndex, int iDetectorSuperSampling,
-                      Cuda3DProjectionKernel projKernel)
+bool astraCudaBP(float* pfVolume, const float* pfProjections,
+                 const CVolumeGeometry3D* pVolGeom,
+                 const CProjectionGeometry3D* pProjGeom,
+                 int iGPUIndex, int iVoxelSuperSampling)
 {
 	SDimensions3D dims;
 
-	dims.iVolX = iVolX;
-	dims.iVolY = iVolY;
-	dims.iVolZ = iVolZ;
-	if (iVolX == 0 || iVolY == 0 || iVolZ == 0)
-		return false;
-
-	dims.iProjAngles = iProjAngles;
-	dims.iProjU = iProjU;
-	dims.iProjV = iProjV;
-
-	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || pfAngles == 0)
-		return false;
-
-	dims.iRaysPerDetDim = iDetectorSuperSampling;
-
-	if (iDetectorSuperSampling == 0)
-		return false;
-
-	if (iGPUIndex != -1) {
-		cudaSetDevice(iGPUIndex);
-		cudaError_t err = cudaGetLastError();
-
-		// Ignore errors caused by calling cudaSetDevice multiple times
-		if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
-			return false;
-	}
-
-
-	cudaPitchedPtr D_volumeData = allocateVolumeData(dims);
-	bool ok = D_volumeData.ptr;
+	bool ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
 	if (!ok)
-		return false;
-
-	cudaPitchedPtr D_projData = allocateProjectionData(dims);
-	ok = D_projData.ptr;
-	if (!ok) {
-		cudaFree(D_volumeData.ptr);
-		return false;
-	}
-
-	ok &= copyVolumeToDevice(pfVolume, D_volumeData, dims, dims.iVolX);
-
-	ok &= zeroProjectionData(D_projData, dims);
-
-	if (!ok) {
-		cudaFree(D_volumeData.ptr);
-		cudaFree(D_projData.ptr);
-		return false;
-	}
-
-	switch (projKernel) {
-	case ker3d_default:
-		ok &= Par3DFP(D_volumeData, D_projData, dims, pfAngles, 1.0f);
-		break;
-	case ker3d_sum_square_weights:
-		ok &= Par3DFP_SumSqW(D_volumeData, D_projData, dims, pfAngles, 1.0f);
-		break;
-	default:
-		assert(false);
-	}
-
-	ok &= copyProjectionsFromDevice(pfProjections, D_projData,
-	                                dims, dims.iProjU);
-
-
-	cudaFree(D_volumeData.ptr);
-	cudaFree(D_projData.ptr);
-
-	return ok;
-
-}
-
-bool astraCudaConeBP(float* pfVolume, const float* pfProjections,
-                     unsigned int iVolX,
-                     unsigned int iVolY,
-                     unsigned int iVolZ,
-                     unsigned int iProjAngles,
-                     unsigned int iProjU,
-                     unsigned int iProjV,
-                     float fOriginSourceDistance,
-                     float fOriginDetectorDistance,
-                     float fDetUSize,
-                     float fDetVSize,
-                     const float *pfAngles,
-                     int iGPUIndex, int iVoxelSuperSampling)
-{
-	if (iVolX == 0 || iVolY == 0 || iVolZ == 0)
-		return false;
-	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || pfAngles == 0)
-		return false;
-
-	SConeProjection* p = genConeProjections(iProjAngles,
-                                            iProjU, iProjV,
-                                            fOriginSourceDistance,
-                                            fOriginDetectorDistance,
-                                            fDetUSize, fDetVSize,
-                                            pfAngles);
-
-	bool ok;
-	ok = astraCudaConeBP(pfVolume, pfProjections, iVolX, iVolY, iVolZ,
-	                     iProjAngles, iProjU, iProjV, p, iGPUIndex, iVoxelSuperSampling);
-
-	delete[] p;
-
-	return ok;
-}
-
-bool astraCudaConeBP(float* pfVolume, const float* pfProjections,
-                     unsigned int iVolX,
-                     unsigned int iVolY,
-                     unsigned int iVolZ,
-                     unsigned int iProjAngles,
-                     unsigned int iProjU,
-                     unsigned int iProjV,
-                     const SConeProjection *pfAngles,
-                     int iGPUIndex, int iVoxelSuperSampling)
-{
-	SDimensions3D dims;
-
-	dims.iVolX = iVolX;
-	dims.iVolY = iVolY;
-	dims.iVolZ = iVolZ;
-	if (iVolX == 0 || iVolY == 0 || iVolZ == 0)
-		return false;
-
-	dims.iProjAngles = iProjAngles;
-	dims.iProjU = iProjU;
-	dims.iProjV = iProjV;
-
-	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || pfAngles == 0)
 		return false;
 
 	dims.iRaysPerVoxelDim = iVoxelSuperSampling;
 
-	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || pfAngles == 0)
-		return false;
+	SPar3DProjection* pParProjs;
+	SConeProjection* pConeProjs;
+
+	float outputScale;
+
+	ok = convertAstraGeometry(pVolGeom, pProjGeom,
+	                          pParProjs, pConeProjs,
+	                          outputScale);
 
 	if (iGPUIndex != -1) {
 		cudaSetDevice(iGPUIndex);
@@ -1379,8 +1223,9 @@ bool astraCudaConeBP(float* pfVolume, const float* pfProjections,
 			return false;
 	}
 
+
 	cudaPitchedPtr D_volumeData = allocateVolumeData(dims);
-	bool ok = D_volumeData.ptr;
+	ok = D_volumeData.ptr;
 	if (!ok)
 		return false;
 
@@ -1402,145 +1247,10 @@ bool astraCudaConeBP(float* pfVolume, const float* pfProjections,
 		return false;
 	}
 
-	ok &= ConeBP(D_volumeData, D_projData, dims, pfAngles);
-
-	ok &= copyVolumeFromDevice(pfVolume, D_volumeData, dims, dims.iVolX);
-
-
-	cudaFree(D_volumeData.ptr);
-	cudaFree(D_projData.ptr);
-
-	return ok;
-
-}
-
-bool astraCudaPar3DBP(float* pfVolume, const float* pfProjections,
-                      unsigned int iVolX,
-                      unsigned int iVolY,
-                      unsigned int iVolZ,
-                      unsigned int iProjAngles,
-                      unsigned int iProjU,
-                      unsigned int iProjV,
-                      float fDetUSize,
-                      float fDetVSize,
-                      const float *pfAngles,
-                      int iGPUIndex, int iVoxelSuperSampling)
-{
-	if (iVolX == 0 || iVolY == 0 || iVolZ == 0)
-		return false;
-	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || pfAngles == 0)
-		return false;
-
-	SPar3DProjection* p = genPar3DProjections(iProjAngles,
-                                             iProjU, iProjV,
-                                             fDetUSize, fDetVSize,
-                                             pfAngles);
-
-	bool ok;
-	ok = astraCudaPar3DBP(pfVolume, pfProjections, iVolX, iVolY, iVolZ,
-	                      iProjAngles, iProjU, iProjV, p, iGPUIndex, iVoxelSuperSampling);
-
-	delete[] p;
-
-	return ok;
-}
-
-// This computes the column weights, divides by them, and adds the
-// result to the current volume. This is both more expensive and more
-// GPU memory intensive than the regular BP, but allows saving system RAM.
-bool astraCudaPar3DBP_SIRTWeighted(float* pfVolume, const float* pfProjections,
-                      unsigned int iVolX,
-                      unsigned int iVolY,
-                      unsigned int iVolZ,
-                      unsigned int iProjAngles,
-                      unsigned int iProjU,
-                      unsigned int iProjV,
-                      float fDetUSize,
-                      float fDetVSize,
-                      const float *pfAngles,
-                      int iGPUIndex, int iVoxelSuperSampling)
-{
-	if (iVolX == 0 || iVolY == 0 || iVolZ == 0)
-		return false;
-	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || pfAngles == 0)
-		return false;
-
-	SPar3DProjection* p = genPar3DProjections(iProjAngles,
-                                             iProjU, iProjV,
-                                             fDetUSize, fDetVSize,
-                                             pfAngles);
-
-	bool ok;
-	ok = astraCudaPar3DBP_SIRTWeighted(pfVolume, pfProjections, iVolX, iVolY, iVolZ,
-	                      iProjAngles, iProjU, iProjV, p, iGPUIndex, iVoxelSuperSampling);
-
-	delete[] p;
-
-	return ok;
-}
-
-
-bool astraCudaPar3DBP(float* pfVolume, const float* pfProjections,
-                      unsigned int iVolX,
-                      unsigned int iVolY,
-                      unsigned int iVolZ,
-                      unsigned int iProjAngles,
-                      unsigned int iProjU,
-                      unsigned int iProjV,
-                      const SPar3DProjection *pfAngles,
-                      int iGPUIndex, int iVoxelSuperSampling)
-{
-	SDimensions3D dims;
-
-	dims.iVolX = iVolX;
-	dims.iVolY = iVolY;
-	dims.iVolZ = iVolZ;
-	if (iVolX == 0 || iVolY == 0 || iVolZ == 0)
-		return false;
-
-	dims.iProjAngles = iProjAngles;
-	dims.iProjU = iProjU;
-	dims.iProjV = iProjV;
-
-	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || pfAngles == 0)
-		return false;
-
-	dims.iRaysPerVoxelDim = iVoxelSuperSampling;
-
-	if (iGPUIndex != -1) {
-		cudaSetDevice(iGPUIndex);
-		cudaError_t err = cudaGetLastError();
-
-		// Ignore errors caused by calling cudaSetDevice multiple times
-		if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
-			return false;
-	}
-
-
-	cudaPitchedPtr D_volumeData = allocateVolumeData(dims);
-	bool ok = D_volumeData.ptr;
-	if (!ok)
-		return false;
-
-	cudaPitchedPtr D_projData = allocateProjectionData(dims);
-	ok = D_projData.ptr;
-	if (!ok) {
-		cudaFree(D_volumeData.ptr);
-		return false;
-	}
-
-	ok &= copyProjectionsToDevice(pfProjections, D_projData,
-	                              dims, dims.iProjU);
-
-	ok &= zeroVolumeData(D_volumeData, dims);
-
-	if (!ok) {
-		cudaFree(D_volumeData.ptr);
-		cudaFree(D_projData.ptr);
-		return false;
-	}
-
-	ok &= Par3DBP(D_volumeData, D_projData, dims, pfAngles);
+	if (pParProjs)
+		ok &= Par3DBP(D_volumeData, D_projData, dims, pParProjs, outputScale);
+	else
+		ok &= ConeBP(D_volumeData, D_projData, dims, pConeProjs, outputScale);
 
 	ok &= copyVolumeFromDevice(pfVolume, D_volumeData, dims, dims.iVolX);
 
@@ -1556,33 +1266,28 @@ bool astraCudaPar3DBP(float* pfVolume, const float* pfProjections,
 // This computes the column weights, divides by them, and adds the
 // result to the current volume. This is both more expensive and more
 // GPU memory intensive than the regular BP, but allows saving system RAM.
-bool astraCudaPar3DBP_SIRTWeighted(float* pfVolume,
+bool astraCudaBP_SIRTWeighted(float* pfVolume,
                       const float* pfProjections,
-                      unsigned int iVolX,
-                      unsigned int iVolY,
-                      unsigned int iVolZ,
-                      unsigned int iProjAngles,
-                      unsigned int iProjU,
-                      unsigned int iProjV,
-                      const SPar3DProjection *pfAngles,
+                      const CVolumeGeometry3D* pVolGeom,
+                      const CProjectionGeometry3D* pProjGeom,
                       int iGPUIndex, int iVoxelSuperSampling)
 {
 	SDimensions3D dims;
 
-	dims.iVolX = iVolX;
-	dims.iVolY = iVolY;
-	dims.iVolZ = iVolZ;
-	if (iVolX == 0 || iVolY == 0 || iVolZ == 0)
-		return false;
-
-	dims.iProjAngles = iProjAngles;
-	dims.iProjU = iProjU;
-	dims.iProjV = iProjV;
-
-	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || pfAngles == 0)
+	bool ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
+	if (!ok)
 		return false;
 
 	dims.iRaysPerVoxelDim = iVoxelSuperSampling;
+
+	SPar3DProjection* pParProjs;
+	SConeProjection* pConeProjs;
+
+	float outputScale;
+
+	ok = convertAstraGeometry(pVolGeom, pProjGeom,
+	                          pParProjs, pConeProjs,
+	                          outputScale);
 
 	if (iGPUIndex != -1) {
 		cudaSetDevice(iGPUIndex);
@@ -1595,7 +1300,7 @@ bool astraCudaPar3DBP_SIRTWeighted(float* pfVolume,
 
 
 	cudaPitchedPtr D_pixelWeight = allocateVolumeData(dims);
-	bool ok = D_pixelWeight.ptr;
+	ok = D_pixelWeight.ptr;
 	if (!ok)
 		return false;
 
@@ -1617,7 +1322,12 @@ bool astraCudaPar3DBP_SIRTWeighted(float* pfVolume,
 	// Compute weights
 	ok &= zeroVolumeData(D_pixelWeight, dims);
 	processSino3D<opSet>(D_projData, 1.0f, dims);
-	ok &= Par3DBP(D_pixelWeight, D_projData, dims, pfAngles);
+
+	if (pParProjs)
+		ok &= Par3DBP(D_pixelWeight, D_projData, dims, pParProjs, outputScale);
+	else
+		ok &= ConeBP(D_pixelWeight, D_projData, dims, pConeProjs, outputScale);
+
 	processVol3D<opInvert>(D_pixelWeight, dims);
 	if (!ok) {
 		cudaFree(D_pixelWeight.ptr);
@@ -1630,7 +1340,11 @@ bool astraCudaPar3DBP_SIRTWeighted(float* pfVolume,
 	                              dims, dims.iProjU);
 	ok &= zeroVolumeData(D_volumeData, dims);
 	// Do BP into D_volumeData
-	ok &= Par3DBP(D_volumeData, D_projData, dims, pfAngles);
+	if (pParProjs)
+		ok &= Par3DBP(D_volumeData, D_projData, dims, pParProjs, outputScale);
+	else
+		ok &= ConeBP(D_volumeData, D_projData, dims, pConeProjs, outputScale);
+
 	// Multiply with weights
 	processVol3D<opMul>(D_volumeData, D_pixelWeight, dims);
 
@@ -1653,6 +1367,9 @@ bool astraCudaPar3DBP_SIRTWeighted(float* pfVolume,
 	cudaFree(D_volumeData.ptr);
 	cudaFree(D_projData.ptr);
 
+	delete[] pParProjs;
+	delete[] pConeProjs;
+
 	return ok;
 
 }
@@ -1660,33 +1377,19 @@ bool astraCudaPar3DBP_SIRTWeighted(float* pfVolume,
 
 
 bool astraCudaFDK(float* pfVolume, const float* pfProjections,
-                  unsigned int iVolX,
-                  unsigned int iVolY,
-                  unsigned int iVolZ,
-                  unsigned int iProjAngles,
-                  unsigned int iProjU,
-                  unsigned int iProjV,
-                  float fOriginSourceDistance,
-                  float fOriginDetectorDistance,
-                  float fDetUSize,
-                  float fDetVSize,
-                  const float *pfAngles,
+                  const CVolumeGeometry3D* pVolGeom,
+                  const CConeProjectionGeometry3D* pProjGeom,
                   bool bShortScan,
                   int iGPUIndex, int iVoxelSuperSampling)
 {
 	SDimensions3D dims;
 
-	dims.iVolX = iVolX;
-	dims.iVolY = iVolY;
-	dims.iVolZ = iVolZ;
-	if (iVolX == 0 || iVolY == 0 || iVolZ == 0)
-		return false;
+	bool ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
 
-	dims.iProjAngles = iProjAngles;
-	dims.iProjU = iProjU;
-	dims.iProjV = iProjV;
+	// TODO: Check that pVolGeom is normalized, since we don't support
+	// other volume geometries yet
 
-	if (iProjAngles == 0 || iProjU == 0 || iProjV == 0 || pfAngles == 0)
+	if (!ok)
 		return false;
 
 	dims.iRaysPerVoxelDim = iVoxelSuperSampling;
@@ -1703,9 +1406,8 @@ bool astraCudaFDK(float* pfVolume, const float* pfProjections,
 			return false;
 	}
 
-
 	cudaPitchedPtr D_volumeData = allocateVolumeData(dims);
-	bool ok = D_volumeData.ptr;
+	ok = D_volumeData.ptr;
 	if (!ok)
 		return false;
 
@@ -1725,6 +1427,13 @@ bool astraCudaFDK(float* pfVolume, const float* pfProjections,
 		cudaFree(D_projData.ptr);
 		return false;
 	}
+
+	float fOriginSourceDistance = pProjGeom->getOriginSourceDistance();
+	float fOriginDetectorDistance = pProjGeom->getOriginDetectorDistance();
+	float fDetUSize = pProjGeom->getDetectorSpacingX();
+	float fDetVSize = pProjGeom->getDetectorSpacingY();
+	const float *pfAngles = pProjGeom->getProjectionAngles();
+
 
 	// TODO: Offer interface for SrcZ, DetZ
 	ok &= FDK(D_volumeData, D_projData, fOriginSourceDistance,
