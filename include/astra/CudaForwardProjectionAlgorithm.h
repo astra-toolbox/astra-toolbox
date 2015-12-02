@@ -33,15 +33,14 @@ $Id$
 
 #include "Algorithm.h"
 
-#include "ParallelProjectionGeometry2D.h"
-#include "VolumeGeometry2D.h"
-
-#include "Float32ProjectionData2D.h"
-#include "Float32VolumeData2D.h"
-
 #ifdef ASTRA_CUDA
 
 namespace astra {
+
+class CProjector2D;
+class CProjectionGeometry2D;
+class CFloat32ProjectionData2D;
+class CFloat32VolumeData2D;
 
 /**
  * \brief
@@ -91,19 +90,15 @@ public:
 
 	/** Initialize class.
 	 *
-	 * @param _pVolumeGeometry		Geometry of the volume.
-	 * @param _pProjectionGeometry	Geometry of the projection.
+	 * @param _pProjector		Projector2D object. (Optional)
 	 * @param _pVolume				VolumeData2D object containing the phantom to compute sinogram from		
 	 * @param _pSinogram			ProjectionData2D object to store sinogram data in.
-	 * @param _iGPUindex		Index of GPU to use. (Starting at 0.)
-	 * @param _iDetectorSuperSampling  Number of samples per detector element, used to compute the forward projection
 	 * @return success
 	 */
-	bool initialize(CProjectionGeometry2D* _pProjectionGeometry,
-					CVolumeGeometry2D* _pVolumeGeometry, 
-					CFloat32VolumeData2D* _pVolume, 
-					CFloat32ProjectionData2D* _pSinogram,
-					int _iGPUindex = -1, int _iDetectorSuperSampling = 1);
+	bool initialize(CProjector2D* _pProjector,
+	                CFloat32VolumeData2D* _pVolume,
+	                CFloat32ProjectionData2D* _pSinogram);
+
 
 	/** Get all information parameters
 	 *
@@ -147,6 +142,9 @@ public:
 	void setGPUIndex(int _iGPUIndex);
 
 protected:
+	//< Optional Projector2D object
+	CProjector2D* m_pProjector;
+
 	//< ProjectionData2D object containing the sinogram.
 	CFloat32ProjectionData2D* m_pSinogram;
 	//< VolumeData2D object containing the phantom.
@@ -157,6 +155,7 @@ protected:
 	//< Number of rays per detector element
 	int m_iDetectorSuperSampling;
 
+	void initializeFromProjector();
 };
 
 // inline functions

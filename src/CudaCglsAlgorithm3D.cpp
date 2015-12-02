@@ -37,6 +37,8 @@ $Id$
 #include "astra/ParallelVecProjectionGeometry3D.h"
 #include "astra/ConeVecProjectionGeometry3D.h"
 
+#include "astra/Logging.h"
+
 #include "../cuda/3d/astra3d.h"
 
 using namespace std;
@@ -90,6 +92,26 @@ bool CCudaCglsAlgorithm3D::_check()
 }
 
 //---------------------------------------------------------------------------------------
+void CCudaCglsAlgorithm3D::initializeFromProjector()
+{
+	m_iVoxelSuperSampling = 1;
+	m_iDetectorSuperSampling = 1;
+	m_iGPUIndex = -1;
+
+	CCudaProjector3D* pCudaProjector = dynamic_cast<CCudaProjector3D*>(m_pProjector);
+	if (!pCudaProjector) {
+		if (m_pProjector) {
+			ASTRA_WARN("non-CUDA Projector3D passed to CGLS3D_CUDA");
+		}
+	} else {
+		m_iVoxelSuperSampling = pCudaProjector->getVoxelSuperSampling();
+		m_iDetectorSuperSampling = pCudaProjector->getDetectorSuperSampling();
+		m_iGPUIndex = pCudaProjector->getGPUIndex();
+	}
+
+}
+
+//---------------------------------------------------------------------------------------
 // Initialize - Config
 bool CCudaCglsAlgorithm3D::initialize(const Config& _cfg)
 {
@@ -107,27 +129,20 @@ bool CCudaCglsAlgorithm3D::initialize(const Config& _cfg)
 		return false;
 	}
 
-	CCudaProjector3D* pCudaProjector = 0;
-	pCudaProjector = dynamic_cast<CCudaProjector3D*>(m_pProjector);
-	if (!pCudaProjector) {
-		// TODO: Report
-	}
+	initializeFromProjector();
 
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
-	CC.markOptionParsed("GPUindex");
-
-	m_iVoxelSuperSampling = 1;
-	m_iDetectorSuperSampling = 1;
-	if (pCudaProjector) {
-		// New interface
-		m_iVoxelSuperSampling = pCudaProjector->getVoxelSuperSampling();
-		m_iDetectorSuperSampling = pCudaProjector->getDetectorSuperSampling();
-	}
 	// Deprecated options
 	m_iVoxelSuperSampling = (int)_cfg.self.getOptionNumerical("VoxelSuperSampling", m_iVoxelSuperSampling);
 	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", m_iDetectorSuperSampling);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", m_iGPUIndex);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
 	CC.markOptionParsed("VoxelSuperSampling");
 	CC.markOptionParsed("DetectorSuperSampling");
+	CC.markOptionParsed("GPUIndex");
+	if (!_cfg.self.hasOption("GPUIndex"))
+		CC.markOptionParsed("GPUindex");
+
+
 
 	m_pCgls = new AstraCGLS3d();
 
@@ -154,6 +169,8 @@ bool CCudaCglsAlgorithm3D::initialize(CProjector3D* _pProjector,
 	m_pProjector = _pProjector;
 	m_pSinogram = _pSinogram;
 	m_pReconstruction = _pReconstruction;
+
+	initializeFromProjector();
 
 	m_pCgls = new AstraCGLS3d;
 
