@@ -31,12 +31,15 @@ $Id$
 
 #ifdef ASTRA_PYTHON
 
-#include <Python.h>
-#include "bytesobject.h"
 #include "astra/Algorithm.h"
 #include "astra/Singleton.h"
 #include "astra/XMLDocument.h"
 #include "astra/XMLNode.h"
+
+// Slightly hackish forward declaration of PyObject
+struct _object;
+typedef _object PyObject;
+
 
 namespace astra {
 class _AstraExport CPluginAlgorithm : public CAlgorithm {

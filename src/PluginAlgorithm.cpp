@@ -37,7 +37,11 @@ $Id$
 #include <fstream>
 #include <string>
 
+#include <Python.h>
+#include "bytesobject.h"
+
 namespace astra {
+
 
 
 void logPythonError(){
