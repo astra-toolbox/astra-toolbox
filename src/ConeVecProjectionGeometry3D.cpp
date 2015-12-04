@@ -241,9 +241,9 @@ CVector3D CConeVecProjectionGeometry3D::getProjectionDirection(int _iProjectionI
 	return CVector3D(p.fDetSX + (u+0.5)*p.fDetUX + (v+0.5)*p.fDetVX - p.fSrcX, p.fDetSY + (u+0.5)*p.fDetUY + (v+0.5)*p.fDetVY - p.fSrcY, p.fDetSZ + (u+0.5)*p.fDetUZ + (v+0.5)*p.fDetVZ - p.fSrcZ);
 }
 
-void CConeVecProjectionGeometry3D::projectPoint(float32 fX, float32 fY, float32 fZ,
+void CConeVecProjectionGeometry3D::projectPoint(double fX, double fY, double fZ,
                                                  int iAngleIndex,
-                                                 float32 &fU, float32 &fV) const
+                                                 double &fU, double &fV) const
 {
 	ASTRA_ASSERT(iAngleIndex >= 0);
 	ASTRA_ASSERT(iAngleIndex < m_iProjectionAngleCount);
@@ -261,6 +261,60 @@ void CConeVecProjectionGeometry3D::projectPoint(float32 fX, float32 fY, float32 
 	fV = (fVX*fX + fVY*fY + fVZ*fZ + fVC) / fD - 0.5f;
 }
 
+
+void CConeVecProjectionGeometry3D::backprojectPointX(int iAngleIndex, double fU, double fV,
+	                               double fX, double &fY, double &fZ) const
+{
+	ASTRA_ASSERT(iAngleIndex >= 0);
+	ASTRA_ASSERT(iAngleIndex < m_iProjectionAngleCount);
+
+	SConeProjection &proj = m_pProjectionAngles[iAngleIndex];
+
+	double px = proj.fDetSX + fU * proj.fDetUX + fV * proj.fDetVX;
+	double py = proj.fDetSY + fU * proj.fDetUY + fV * proj.fDetVY;
+	double pz = proj.fDetSZ + fU * proj.fDetUZ + fV * proj.fDetVZ;
+
+	double a = (fX - proj.fSrcX) / (px - proj.fSrcX);
+
+	fY = proj.fSrcY + a * (py - proj.fSrcY);
+	fZ = proj.fSrcZ + a * (pz - proj.fSrcZ);
+}
+
+void CConeVecProjectionGeometry3D::backprojectPointY(int iAngleIndex, double fU, double fV,
+	                               double fY, double &fX, double &fZ) const
+{
+	ASTRA_ASSERT(iAngleIndex >= 0);
+	ASTRA_ASSERT(iAngleIndex < m_iProjectionAngleCount);
+
+	SConeProjection &proj = m_pProjectionAngles[iAngleIndex];
+
+	double px = proj.fDetSX + fU * proj.fDetUX + fV * proj.fDetVX;
+	double py = proj.fDetSY + fU * proj.fDetUY + fV * proj.fDetVY;
+	double pz = proj.fDetSZ + fU * proj.fDetUZ + fV * proj.fDetVZ;
+
+	double a = (fY - proj.fSrcY) / (py - proj.fSrcY);
+
+	fX = proj.fSrcX + a * (px - proj.fSrcX);
+	fZ = proj.fSrcZ + a * (pz - proj.fSrcZ);
+}
+
+void CConeVecProjectionGeometry3D::backprojectPointZ(int iAngleIndex, double fU, double fV,
+	                               double fZ, double &fX, double &fY) const
+{
+	ASTRA_ASSERT(iAngleIndex >= 0);
+	ASTRA_ASSERT(iAngleIndex < m_iProjectionAngleCount);
+
+	SConeProjection &proj = m_pProjectionAngles[iAngleIndex];
+
+	double px = proj.fDetSX + fU * proj.fDetUX + fV * proj.fDetVX;
+	double py = proj.fDetSY + fU * proj.fDetUY + fV * proj.fDetVY;
+	double pz = proj.fDetSZ + fU * proj.fDetUZ + fV * proj.fDetVZ;
+
+	double a = (fZ - proj.fSrcZ) / (pz - proj.fSrcZ);
+
+	fX = proj.fSrcX + a * (px - proj.fSrcX);
+	fY = proj.fSrcY + a * (py - proj.fSrcY);
+}
 
 //----------------------------------------------------------------------------------------
 

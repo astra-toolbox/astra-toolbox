@@ -45,6 +45,7 @@ bool CVolumeGeometry3D::_check()
 	ASTRA_CONFIG_CHECK(m_fWindowMinZ < m_fWindowMaxZ, "VolumeGeometry3D", "WindowMinZ should be lower than WindowMaxZ.");
 
 	ASTRA_CONFIG_CHECK(m_iGridTotCount == (m_iGridColCount * m_iGridRowCount * m_iGridSliceCount), "VolumeGeometry3D", "Internal configuration error.");
+#if 0
 	ASTRA_CONFIG_CHECK(m_fWindowLengthX == (m_fWindowMaxX - m_fWindowMinX), "VolumeGeometry3D", "Internal configuration error.");
 	ASTRA_CONFIG_CHECK(m_fWindowLengthY == (m_fWindowMaxY - m_fWindowMinY), "VolumeGeometry3D", "Internal configuration error.");
 	ASTRA_CONFIG_CHECK(m_fWindowLengthZ == (m_fWindowMaxZ - m_fWindowMinZ), "VolumeGeometry3D", "Internal configuration error.");
@@ -57,6 +58,7 @@ bool CVolumeGeometry3D::_check()
 	ASTRA_CONFIG_CHECK(m_fDivPixelLengthX == (1.0f / m_fPixelLengthX), "VolumeGeometry3D", "Internal configuration error.");
 	ASTRA_CONFIG_CHECK(m_fDivPixelLengthY == (1.0f / m_fPixelLengthY), "VolumeGeometry3D", "Internal configuration error.");
 	ASTRA_CONFIG_CHECK(m_fDivPixelLengthZ == (1.0f / m_fPixelLengthZ), "VolumeGeometry3D", "Internal configuration error.");
+#endif
 
 	return true;
 }

@@ -29,6 +29,7 @@ $Id$
 #include "astra/ConeProjectionGeometry3D.h"
 
 #include "astra/Logging.h"
+#include "astra/GeometryUtil3D.h"
 
 #include <boost/lexical_cast.hpp>
 #include <cstring>
@@ -230,14 +231,14 @@ CVector3D CConeProjectionGeometry3D::getProjectionDirection(int _iProjectionInde
 	return ret;
 }
 
-void CConeProjectionGeometry3D::projectPoint(float32 fX, float32 fY, float32 fZ,
-                                                 int iAngleIndex,
-                                                 float32 &fU, float32 &fV) const
+void CConeProjectionGeometry3D::projectPoint(double fX, double fY, double fZ,
+                                             int iAngleIndex,
+                                             double &fU, double &fV) const
 {
 	ASTRA_ASSERT(iAngleIndex >= 0);
 	ASTRA_ASSERT(iAngleIndex < m_iProjectionAngleCount);
 
-	float alpha = m_pfProjectionAngles[iAngleIndex];
+	double alpha = m_pfProjectionAngles[iAngleIndex];
 
 	// Project point onto optical axis
 
@@ -245,14 +246,14 @@ void CConeProjectionGeometry3D::projectPoint(float32 fX, float32 fY, float32 fZ,
 	// Vector source->origin is (-sin(alpha), cos(alpha))
 
 	// Distance from source, projected on optical axis
-	float fD = -sin(alpha) * fX + cos(alpha) * fY + m_fOriginSourceDistance;
+	double fD = -sin(alpha) * fX + cos(alpha) * fY + m_fOriginSourceDistance;
 
 	// Scale fZ to detector plane
 	fV = detectorOffsetYToRowIndexFloat( (fZ * (m_fOriginSourceDistance + m_fOriginDetectorDistance)) / fD );
 
 
 	// Orthogonal distance in XY-plane to optical axis
-	float fS = cos(alpha) * fX + sin(alpha) * fY;
+	double fS = cos(alpha) * fX + sin(alpha) * fY;
 
 	// Scale fS to detector plane
 	fU = detectorOffsetXToColIndexFloat( (fS * (m_fOriginSourceDistance + m_fOriginDetectorDistance)) / fD );
@@ -260,6 +261,85 @@ void CConeProjectionGeometry3D::projectPoint(float32 fX, float32 fY, float32 fZ,
 	ASTRA_DEBUG("alpha: %f, D: %f, V: %f, S: %f, U: %f", alpha, fD, fV, fS, fU);
 
 }
+
+void CConeProjectionGeometry3D::backprojectPointX(int iAngleIndex, double fU, double fV,
+	                               double fX, double &fY, double &fZ) const
+{
+	ASTRA_ASSERT(iAngleIndex >= 0);
+	ASTRA_ASSERT(iAngleIndex < m_iProjectionAngleCount);
+
+	SConeProjection *projs = genConeProjections(1, m_iDetectorColCount, m_iDetectorRowCount,
+	                                           m_fOriginSourceDistance,
+	                                           m_fOriginDetectorDistance,
+	                                           m_fDetectorSpacingX, m_fDetectorSpacingY,
+	                                           &m_pfProjectionAngles[iAngleIndex]);
+
+	SConeProjection &proj = projs[0];
+
+	double px = proj.fDetSX + fU * proj.fDetUX + fV * proj.fDetVX;
+	double py = proj.fDetSY + fU * proj.fDetUY + fV * proj.fDetVY;
+	double pz = proj.fDetSZ + fU * proj.fDetUZ + fV * proj.fDetVZ;
+
+	double a = (fX - proj.fSrcX) / (px - proj.fSrcX);
+
+	fY = proj.fSrcY + a * (py - proj.fSrcY);
+	fZ = proj.fSrcZ + a * (pz - proj.fSrcZ);
+
+	delete[] projs;
+}
+
+void CConeProjectionGeometry3D::backprojectPointY(int iAngleIndex, double fU, double fV,
+	                               double fY, double &fX, double &fZ) const
+{
+	ASTRA_ASSERT(iAngleIndex >= 0);
+	ASTRA_ASSERT(iAngleIndex < m_iProjectionAngleCount);
+
+	SConeProjection *projs = genConeProjections(1, m_iDetectorColCount, m_iDetectorRowCount,
+	                                           m_fOriginSourceDistance,
+	                                           m_fOriginDetectorDistance,
+	                                           m_fDetectorSpacingX, m_fDetectorSpacingY,
+	                                           &m_pfProjectionAngles[iAngleIndex]);
+
+	SConeProjection &proj = projs[0];
+
+	double px = proj.fDetSX + fU * proj.fDetUX + fV * proj.fDetVX;
+	double py = proj.fDetSY + fU * proj.fDetUY + fV * proj.fDetVY;
+	double pz = proj.fDetSZ + fU * proj.fDetUZ + fV * proj.fDetVZ;
+
+	double a = (fY - proj.fSrcY) / (py - proj.fSrcY);
+
+	fX = proj.fSrcX + a * (px - proj.fSrcX);
+	fZ = proj.fSrcZ + a * (pz - proj.fSrcZ);
+
+	delete[] projs;
+}
+
+void CConeProjectionGeometry3D::backprojectPointZ(int iAngleIndex, double fU, double fV,
+	                               double fZ, double &fX, double &fY) const
+{
+	ASTRA_ASSERT(iAngleIndex >= 0);
+	ASTRA_ASSERT(iAngleIndex < m_iProjectionAngleCount);
+
+	SConeProjection *projs = genConeProjections(1, m_iDetectorColCount, m_iDetectorRowCount,
+	                                           m_fOriginSourceDistance,
+	                                           m_fOriginDetectorDistance,
+	                                           m_fDetectorSpacingX, m_fDetectorSpacingY,
+	                                           &m_pfProjectionAngles[iAngleIndex]);
+
+	SConeProjection &proj = projs[0];
+
+	double px = proj.fDetSX + fU * proj.fDetUX + fV * proj.fDetVX;
+	double py = proj.fDetSY + fU * proj.fDetUY + fV * proj.fDetVY;
+	double pz = proj.fDetSZ + fU * proj.fDetUZ + fV * proj.fDetVZ;
+
+	double a = (fZ - proj.fSrcZ) / (pz - proj.fSrcZ);
+
+	fX = proj.fSrcX + a * (px - proj.fSrcX);
+	fY = proj.fSrcY + a * (py - proj.fSrcY);
+
+	delete[] projs;
+}
+
 
 
 } // end namespace astra

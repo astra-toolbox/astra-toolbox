@@ -119,6 +119,23 @@ void computeBP_UV_Coeffs(const SConeProjection& proj,
                          double &fDX, double &fDY, double &fDZ, double &fDC);
 
 
+SConeProjection* genConeProjections(unsigned int iProjAngles,
+                                    unsigned int iProjU,
+                                    unsigned int iProjV,
+                                    double fOriginSourceDistance,
+                                    double fOriginDetectorDistance,
+                                    double fDetUSize,
+                                    double fDetVSize,
+                                    const float *pfAngles);
+
+SPar3DProjection* genPar3DProjections(unsigned int iProjAngles,
+                                      unsigned int iProjU,
+                                      unsigned int iProjV,
+                                      double fDetUSize,
+                                      double fDetVSize,
+                                      const float *pfAngles);
+
+
 
 
 }

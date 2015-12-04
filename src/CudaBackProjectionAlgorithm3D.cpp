@@ -37,6 +37,7 @@ $Id$
 #include "astra/ParallelProjectionGeometry3D.h"
 #include "astra/ParallelVecProjectionGeometry3D.h"
 #include "astra/ConeVecProjectionGeometry3D.h"
+#include "astra/CompositeGeometryManager.h"
 
 #include "astra/Logging.h"
 
@@ -203,9 +204,16 @@ void CCudaBackProjectionAlgorithm3D::run(int _iNrIterations)
 		                         &volgeom, projgeom,
 		                         m_iGPUIndex, m_iVoxelSuperSampling);
 	} else {
+
+#if 1
+		CCompositeGeometryManager cgm;
+
+		cgm.doBP(m_pProjector, pReconMem, pSinoMem);
+#else
 		astraCudaBP(pReconMem->getData(), pSinoMem->getDataConst(),
 		            &volgeom, projgeom,
 		            m_iGPUIndex, m_iVoxelSuperSampling);
+#endif
 	}
 
 }
