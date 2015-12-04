@@ -71,7 +71,7 @@ ext_modules = cythonize("astra/*.pyx", language_level=2)
 cmdclass = { 'build_ext': build_ext }
 
 setup (name = 'PyASTRAToolbox',
-       version = '1.6',
+       version = '1.7',
        description = 'Python interface to the ASTRA-Toolbox',
        author='D.M. Pelt',
        author_email='D.M.Pelt@cwi.nl',
