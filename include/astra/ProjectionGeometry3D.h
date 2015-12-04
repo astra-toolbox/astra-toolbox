@@ -204,6 +204,11 @@ public:
 	 * @return Number of rows of detectors.
 	 */
 	int getDetectorRowCount() const;
+	
+	/** Set the number of rows of detectors.
+	 *
+	 */
+	void setDetectorRowCount(const int);
 
 	/** Get the number of columns of detectors.
 	 *
@@ -371,6 +376,13 @@ inline int CProjectionGeometry3D::getDetectorRowCount() const
 {
 	ASTRA_ASSERT(m_bInitialized);
 	return m_iDetectorRowCount;
+}
+
+// Set the number of detector rows.
+inline void CProjectionGeometry3D::setDetectorRowCount(const int nRows)
+{
+	ASTRA_ASSERT(m_bInitialized);
+	m_iDetectorRowCount = nRows;
 }
 
 //----------------------------------------------------------------------------------------

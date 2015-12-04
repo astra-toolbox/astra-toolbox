@@ -270,6 +270,14 @@ public:
 	 */
 	int getGridSliceCount() const;
 
+
+
+	/** Set the number of slices in the volume grid.
+	 *
+	 */
+	void setGridSliceCount(const int);
+
+
 	/** Get the total number of pixels in the volume grid.
 	 *
 	 * @return Total number of pixels.
@@ -528,6 +536,22 @@ inline int CVolumeGeometry3D::getGridSliceCount() const
 	ASTRA_ASSERT(m_bInitialized);
 	return m_iGridSliceCount;
 }
+
+
+inline void CVolumeGeometry3D::setGridSliceCount(const int nSlices)
+{
+	ASTRA_ASSERT(m_bInitialized);
+	m_iGridSliceCount  = nSlices;
+	m_fWindowMinZ 	   = -m_iGridSliceCount/2.0f;
+	m_fWindowMaxZ  	   =  m_iGridSliceCount/2.0f;
+	m_iGridTotCount    = (m_iGridColCount  * m_iGridRowCount * m_iGridSliceCount);
+	m_fWindowLengthZ   = (m_fWindowMaxZ    - m_fWindowMinZ);
+	m_fWindowArea 	   = (m_fWindowLengthX * m_fWindowLengthY * m_fWindowLengthZ);
+	m_fPixelLengthZ	   = (m_fWindowLengthZ / (float32)m_iGridSliceCount);
+	m_fPixelArea 	   = (m_fPixelLengthX  * m_fPixelLengthY * m_fPixelLengthZ);
+	m_fDivPixelLengthZ = ((float32)m_iGridSliceCount / m_fWindowLengthZ); // == (1.0f / m_fPixelLengthZ);
+}
+
 
 //----------------------------------------------------------------------------------------
 // Get the total number of pixels in the volume window.

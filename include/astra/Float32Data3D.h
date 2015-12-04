@@ -35,6 +35,8 @@ $Id$
 
 namespace astra {
 
+class CMPIProjector3D;	
+
 /**
  * This class represents a three-dimensional block of float32ing point data.
  */
@@ -46,6 +48,10 @@ protected:
 	int m_iHeight;			///< height of the data (y)
 	int m_iDepth;			///< depth of the data (z)
 	size_t m_iSize;			///< size of the data (width*height*depth)
+
+
+        CMPIProjector3D *m_pMPIProjector3D; ///< reference to the used MPIProjector, if used
+
 
 	/**
 	 * Compares the size of two CFloat32Data instances.
@@ -130,6 +136,23 @@ public:
 	 */
 	virtual std::string description() const;
 
+	/** Get the connected MPIProjector object.
+	 *
+	 * @return pointer to the MPIProjector 
+	 */
+	CMPIProjector3D *getMPIProjector3D() const;
+
+	/** Set the connected MPIProjector object.
+	 *
+	 * @param pointer to the MPIProjector 
+	 */
+        void setMPIProjector3D(CMPIProjector3D* prj);
+
+	/** Test if a MPIProjector object is associated with this object
+	 *
+	 * @return true if there is a MPIProjector3D set, otherwise false
+	 */
+	bool hasMPIProjector3D() const {return m_pMPIProjector3D != NULL;}
 };
 //----------------------------------------------------------------------------------------
 
@@ -181,6 +204,23 @@ inline CFloat32Data3D::EDataType CFloat32Data3D::getType() const
 {
 	return BASE;
 }
+
+
+//----------------------------------------------------------------------------------------
+// get MPIProjector3D
+inline CMPIProjector3D* CFloat32Data3D::getMPIProjector3D() const
+{
+        return m_pMPIProjector3D;
+}
+
+//----------------------------------------------------------------------------------------
+// set MPIProjector3D
+inline void CFloat32Data3D::setMPIProjector3D(CMPIProjector3D* prj)
+{
+         m_pMPIProjector3D = prj;
+}
+
+
 
 } // end namespace astra
 

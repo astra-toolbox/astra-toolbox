@@ -40,6 +40,8 @@ $Id$
 
 #include "dims3d.h"
 
+#include "astra/MPIProjector3D.h"
+
 typedef texture<float, 3, cudaReadModeElementType> texture3D;
 
 static texture3D gT_par3DVolumeTexture;
@@ -513,12 +515,35 @@ bool Par3DFP_Array_internal(cudaPitchedPtr D_projData,
 
 bool Par3DFP(cudaPitchedPtr D_volumeData,
              cudaPitchedPtr D_projData,
-             const SDimensions3D& dims, const SPar3DProjection* angles,
-             float fOutputScale)
+             const SDimensions3D& dims2, const SPar3DProjection* angles,
+             float fOutputScale,
+	     const astra::CMPIProjector3D *mpiPrj = NULL)
 {
+	int 	       zoffset = 0, incr = 0;
+	SDimensions3D  dims    = dims2;
+
+#if USE_MPI
+	if(mpiPrj)
+	{
+		//Modify the volume properties to ignore the ghostcells
+		//Modify the height, and change the startpoint of the copy (zoffset)
+		int2 ghosts = mpiPrj->getGhostCells();
+		dims.iVolZ -= (ghosts.x + ghosts.y);
+		zoffset     = ghosts.x;
+
+
+		//Now for the projection data ghostcells
+		ghosts 	     = mpiPrj->getGhostCellsPrj();
+		dims.iProjV -= (ghosts.x + ghosts.y);  
+		incr         = ghosts.x * D_projData.pitch * D_projData.ysize;
+
+
+	}
+#endif
+
 	// transfer volume to array
 	cudaArray* cuArray = allocateVolumeArray(dims);
-	transferVolumeToArray(D_volumeData, cuArray, dims);
+	transferVolumeToArray(D_volumeData, cuArray, dims, zoffset); //NOTE the zoffset
 	bindVolumeDataTexture(cuArray);
 
 	bool ret;
@@ -529,7 +554,7 @@ bool Par3DFP(cudaPitchedPtr D_volumeData,
 			iEndAngle = dims.iProjAngles;
 
 		cudaPitchedPtr D_subprojData = D_projData;
-		D_subprojData.ptr = (char*)D_projData.ptr + iAngle * D_projData.pitch;
+		D_subprojData.ptr = (char*)D_projData.ptr + iAngle * D_projData.pitch + incr;
 
 		ret = Par3DFP_Array_internal(D_subprojData,
 		                             dims, iEndAngle - iAngle, angles + iAngle,
@@ -540,6 +565,14 @@ bool Par3DFP(cudaPitchedPtr D_volumeData,
 
 	cudaFreeArray(cuArray);
 
+#if USE_MPI
+   	  if(mpiPrj)
+	  {
+	    //Note not changed ptr as the exchange function figures this out itself
+	    const_cast<astra::CMPIProjector3D*>(mpiPrj)->exchangeOverlapRegions(NULL, D_projData, false);
+	    const_cast<astra::CMPIProjector3D*>(mpiPrj)->exchangeOverlapAndGhostRegions(NULL, D_projData, false, 1); //1 only the non-overlapped ghost region parts
+	  }
+#endif
 	return ret;
 }
 
@@ -548,7 +581,8 @@ bool Par3DFP(cudaPitchedPtr D_volumeData,
 bool Par3DFP_SumSqW(cudaPitchedPtr D_volumeData,
                     cudaPitchedPtr D_projData,
                     const SDimensions3D& dims, const SPar3DProjection* angles,
-                    float fOutputScale)
+                    float fOutputScale,
+	     	    const astra::CMPIProjector3D *mpiPrj = NULL)
 {
 	// transfer angles to constant memory
 	float* tmp = new float[dims.iProjAngles];
@@ -666,6 +700,13 @@ bool Par3DFP_SumSqW(cudaPitchedPtr D_volumeData,
 
 
 	// printf("%f\n", toc(t));
+#if USE_MPI
+   	  if(mpiPrj)
+	  {
+	    const_cast<astra::CMPIProjector3D*>(mpiPrj)->exchangeOverlapRegions(NULL, D_projData, false);
+	    const_cast<astra::CMPIProjector3D*>(mpiPrj)->exchangeOverlapAndGhostRegions(NULL, D_projData, false, 1);
+	  }
+#endif
 
 	return true;
 }

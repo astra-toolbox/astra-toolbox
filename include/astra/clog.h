@@ -83,6 +83,11 @@
 #define snprintf _snprintf
 #endif
 
+
+#ifdef USE_MPI
+  #include <mpi.h>
+#endif
+
 /* Number of loggers that can be defined. */
 #define CLOG_MAX_LOGGERS 16
 
@@ -95,6 +100,7 @@
 
 /* Default format strings. */
 #define CLOG_DEFAULT_FORMAT "%d %t %f(%n): %l: %m\n"
+#define CLOG_DEFAULT_FORMAT_MPI "%D %d %t %f(%n): %l: %m\n"
 #define CLOG_DEFAULT_DATE_FORMAT "%Y-%m-%d"
 #define CLOG_DEFAULT_TIME_FORMAT "%H:%M:%S"
 
@@ -291,6 +297,11 @@ struct clog {
     /* Time format */
     char time_fmt[CLOG_FORMAT_LENGTH];
 
+    /* MPI info */
+    char mpiBuff[512];
+    int  nProcs;
+    int  procId;
+
     /* Tracks whether the fd needs to be closed eventually. */
     int opened;
 
@@ -315,12 +326,24 @@ const char *const CLOG_LEVEL_NAMES[] = {
     "Error",
 };
 
+void _clog_init_MPI_str(struct clog *logger);
+void _clog_get_MPI_props(int &nProcs, int &procId);
+
 int
 clog_init_path(int id, const char *const path)
 {
-    int fd = open(path, O_CREAT | O_WRONLY | O_APPEND, 0666);
+   char newPath[1024];
+   int nProcs, procId;
+   _clog_get_MPI_props(nProcs, procId);
+   if(nProcs > 1)
+      sprintf(newPath,"%s-%d", path, procId);
+   else
+      strcpy(newPath, path);
+
+
+    int fd = open(newPath, O_CREAT | O_WRONLY | O_APPEND, 0666);
     if (fd == -1) {
-        _clog_err("Unable to open %s: %s\n", path, strerror(errno));
+        _clog_err("Unable to open %s: %s\n", newPath, strerror(errno));
         return 1;
     }
     if (clog_init_fd(id, fd)) {
@@ -330,6 +353,7 @@ clog_init_path(int id, const char *const path)
     _clog_loggers[id]->opened = 1;
     return 0;
 }
+
 
 int
 clog_init_fd(int id, int fd)
@@ -355,6 +379,12 @@ clog_init_fd(int id, int fd)
     strcpy(logger->time_fmt, CLOG_DEFAULT_TIME_FORMAT);
     logger->cb = NULL;
 
+    logger->nProcs = 1;
+    logger->procId = 0;
+    _clog_init_MPI_str(logger);
+    if(logger->nProcs > 1)
+    	strcpy(logger->fmt, CLOG_DEFAULT_FORMAT_MPI);
+	
     _clog_loggers[id] = logger;
     return 0;
 }
@@ -501,6 +531,45 @@ _clog_append_time(char **dst, char *orig_buf, struct tm *lt,
     return cur_size;
 }
 
+void
+_clog_init_MPI_str(struct clog *logger)
+{
+    #ifdef USE_MPI
+	/* Retrieve the running MPI configuration
+	 * and convert this into a string to be added
+	 * to the log output. This only happens if we 
+	 * run with more than 1 process 
+	*/
+
+
+	int procId, nProcs, namelen;
+	char procName[512];
+	_clog_get_MPI_props(nProcs, procId);
+	MPI_Get_processor_name(procName,&namelen);
+
+	if(nProcs == 1)
+	  strcpy(logger->mpiBuff, "");
+	else
+	  sprintf(logger->mpiBuff, "( %d of %d on %s )", procId, nProcs, procName);
+
+	logger->nProcs = nProcs;
+	logger->procId = procId;
+    #endif
+}
+
+void _clog_get_MPI_props(int &nProcs, int &procId)
+{
+    #ifdef USE_MPI
+	int isInit = 0;
+	MPI_Initialized(&isInit);
+	if (!isInit) MPI_Init(NULL, NULL);
+	MPI_Comm_size(MPI_COMM_WORLD, &nProcs);
+	MPI_Comm_rank(MPI_COMM_WORLD, &procId);
+     #else
+ 	nProcs = 1; procId = 0;
+     #endif
+}
+
 const char *
 _clog_basename(const char *path)
 {
@@ -563,10 +632,13 @@ _clog_format(const struct clog *logger, char buf[], size_t buf_size,
                 case 'f':
                     cur_size = _clog_append_str(&result, buf, sfile, cur_size);
                     break;
+		case 'D':
+                    cur_size = _clog_append_str(&result, buf, logger->mpiBuff, cur_size);
+                    break;
                 case 'm':
                     cur_size = _clog_append_str(&result, buf, message,
                                                 cur_size);
-                    break;
+		    break;
             }
             state = NORMAL;
         }

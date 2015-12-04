@@ -33,6 +33,8 @@ cdef extern from "astra/AstraObjectManager.h" namespace "astra":
         void clear()
         void remove(int i)
         int store(CFloat32Data3D *)
+        int store(CFloat32Data3D *, int idx)
+        void change_index(int oldIndex, int newIndex)
         CFloat32Data3D * get(int i)
 
 cdef extern from "astra/AstraObjectManager.h" namespace "astra::CData3DManager":

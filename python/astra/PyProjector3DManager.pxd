@@ -33,7 +33,10 @@ cdef extern from "astra/AstraObjectManager.h" namespace "astra":
         void clear()
         void remove(int i)
         int store(CProjector3D *)
+        int store(CProjector3D *, int idx)
         CProjector3D * get(int i)
+        int getIndex(CProjector3D *)
+
 
 cdef extern from "astra/AstraObjectManager.h" namespace "astra::CProjector3DManager":
     cdef CProjector3DManager* getSingletonPtr()

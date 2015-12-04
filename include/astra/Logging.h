@@ -116,9 +116,13 @@ public:
    *     %d: The current date, formatted using the logger's date format.
    *     %t: The current time, formatted using the logger's time format.
    *     %l: The log level (one of "DEBUG", "INFO", "WARN", or "ERROR").
+   *     %D: The MPI runtime information.
    *     %%: A literal percent sign.
    *
    * The default format string is "%d %t %f(%n): %l: %m\n".
+   *
+   * IF and only IF we run with more than one process the default is
+   * The default format string is "%D %d %t %f(%n): %l: %m\n".
    *
    * @param fmt
    * The new format string, which must be less than 256 bytes.

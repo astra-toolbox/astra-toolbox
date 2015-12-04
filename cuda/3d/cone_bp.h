@@ -29,6 +29,7 @@ $Id$
 #ifndef _CUDA_CONE_BP_H
 #define _CUDA_CONE_BP_H
 
+#include "astra/MPIProjector3D.h"
 namespace astraCUDA3d {
 
 _AstraExport bool ConeBP_Array(cudaPitchedPtr D_volumeData,
@@ -39,7 +40,8 @@ _AstraExport bool ConeBP_Array(cudaPitchedPtr D_volumeData,
 _AstraExport bool ConeBP(cudaPitchedPtr D_volumeData,
             cudaPitchedPtr D_projData,
             const SDimensions3D& dims, const SConeProjection* angles,
-            float fOutputScale);
+            float fOutputScale,
+	    const astra::CMPIProjector3D *mpiPr = NULL);
          
 }
 

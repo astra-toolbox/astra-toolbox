@@ -206,12 +206,13 @@ void CCudaSirtAlgorithm3D::run(int _iNrIterations)
 	const CVolumeGeometry3D& volgeom = *m_pReconstruction->getGeometry();
 
 	bool ok = true;
-
+        
 	if (!m_bAstraSIRTInit) {
 
 		ok &= m_pSirt->setGPUIndex(m_iGPUIndex);
 
-		ok &= m_pSirt->setGeometry(&volgeom, projgeom);
+
+		ok &= m_pSirt->setGeometry(&volgeom, projgeom, m_pSinogram->getMPIProjector3D());
 
 		ok &= m_pSirt->enableSuperSampling(m_iVoxelSuperSampling, m_iDetectorSuperSampling);
 

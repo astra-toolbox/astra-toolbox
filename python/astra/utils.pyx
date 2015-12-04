@@ -139,6 +139,12 @@ cdef void readOptions(XMLNode node, dc):
             listbase = node.addChildNode(six.b('Option'))
             listbase.addAttribute(< string > six.b('key'), < string > item)
             contig_data = np.ascontiguousarray(val,dtype=np.float64)
+
+            #If this is a single list item mark it so we properly 
+            #deserialize the XML 
+            if(len(contig_data) == 1):
+                listbase.addAttribute(< string > six.b('list'),  <string> "1")
+
             data = <double*>np.PyArray_DATA(contig_data)
             if val.ndim == 2:
                 listbase.setContent(data, val.shape[1], val.shape[0], False)

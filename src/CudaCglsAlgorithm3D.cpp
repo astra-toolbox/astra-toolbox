@@ -212,7 +212,7 @@ void CCudaCglsAlgorithm3D::run(int _iNrIterations)
 
 		ok &= m_pCgls->setGPUIndex(m_iGPUIndex);
 
-		ok &= m_pCgls->setGeometry(&volgeom, projgeom);
+		ok &= m_pCgls->setGeometry(&volgeom, projgeom, m_pSinogram->getMPIProjector3D());
 
 		ok &= m_pCgls->enableSuperSampling(m_iVoxelSuperSampling, m_iDetectorSuperSampling);
 

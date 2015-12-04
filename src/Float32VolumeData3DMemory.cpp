@@ -40,39 +40,39 @@ namespace astra
 CFloat32VolumeData3DMemory::CFloat32VolumeData3DMemory() :
 	CFloat32Data3DMemory() 
 {
-	m_pGeometry = NULL;
-	m_bInitialized = false;
+	m_pGeometry       = NULL;
+	m_bInitialized    = false;
 }
 
 //----------------------------------------------------------------------------------------
 // Create an instance of the CFloat32VolumeData2D class, allocating (but not initializing) the data block.
 CFloat32VolumeData3DMemory::CFloat32VolumeData3DMemory(CVolumeGeometry3D* _pGeometry) 
 {
-	m_bInitialized = false;
-	m_bInitialized = initialize(_pGeometry);
+	m_bInitialized    = false;
+	m_bInitialized    = initialize(_pGeometry);
 }
 
 //----------------------------------------------------------------------------------------
 // Create an instance of the CFloat32VolumeData2D class with initialization of the data.
 CFloat32VolumeData3DMemory::CFloat32VolumeData3DMemory(CVolumeGeometry3D* _pGeometry, const float32* _pfData) 
 {
-	m_bInitialized = false;
-	m_bInitialized = initialize(_pGeometry, _pfData);
+	m_bInitialized    = false;
+	m_bInitialized    = initialize(_pGeometry, _pfData);
 }
 
 //----------------------------------------------------------------------------------------
 // Create an instance of the CFloat32VolumeData2D class with initialization of the data.
 CFloat32VolumeData3DMemory::CFloat32VolumeData3DMemory(CVolumeGeometry3D* _pGeometry, float32 _fScalar) 
 {
-	m_bInitialized = false;
-	m_bInitialized = initialize(_pGeometry, _fScalar);
+	m_bInitialized    = false;
+	m_bInitialized    = initialize(_pGeometry, _fScalar);
 }
 //----------------------------------------------------------------------------------------
 // Create an instance of the CFloat32VolumeData2D class with pre-allocated data
 CFloat32VolumeData3DMemory::CFloat32VolumeData3DMemory(CVolumeGeometry3D* _pGeometry, CFloat32CustomMemory* _pCustomMemory)
 {
-	m_bInitialized = false;
-	m_bInitialized = initialize(_pGeometry, _pCustomMemory);
+	m_bInitialized    = false;
+	m_bInitialized    = initialize(_pGeometry, _pCustomMemory);
 }
 
 

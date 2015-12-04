@@ -37,7 +37,8 @@ namespace astra {
 // Default constructor.
 CFloat32Data3D::CFloat32Data3D()
 {
-	m_bInitialized = false;
+	m_bInitialized    = false;
+        m_pMPIProjector3D = NULL;
 }
 
 //----------------------------------------------------------------------------------------

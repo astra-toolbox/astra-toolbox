@@ -222,6 +222,7 @@ public:
 	 */
 	virtual EDataType getType() const;
 
+
 	/**
 	 * Overloaded Operator: data = data (pointwise)
 	 *
@@ -239,6 +240,7 @@ inline CFloat32Data3D::EDataType CFloat32ProjectionData3DMemory::getType() const
 	return PROJECTION;
 }
 //----------------------------------------------------------------------------------------
+
 
 } // end namespace astra
 

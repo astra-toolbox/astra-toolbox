@@ -81,6 +81,17 @@ def get_shared(i):
     """
     return d.get_shared(i)
 
+def get_shared_local(i):
+    """Get a 3D object with memory shared between the ASTRA toolbox and numpy array.
+    In an MPI run this function will only return a pointer to the local data buffer.
+
+    :param i: ID of object to get.
+    :type i: :class:`int`
+    :returns: :class:`numpy.ndarray` -- The object data.
+
+    """
+    return d.get_shared_local(i)
+
 def get_single(i):
     """Get a 3D object in single precision.
 
@@ -133,6 +144,26 @@ def dimensions(i):
     """
     return d.dimensions(i)
 
+def dimensions_global(i):   
+    """Get the global dimensions (all processes combined) of a 3D object.
+
+    :param i: ID of object.
+    :type i: :class:`int`
+    :returns: :class:`tuple` -- dimensions of object with ID ``i``.
+
+    """
+    return d.dimensions_global(i)
+
+def dimensions_global_volume_geometry(i):
+    """Get dimensions of the gobal volume geometry related to the object i.
+
+    :param i: ID of object.
+    :type i: :class:`int`
+    :returns: :class:`tuple` -- dimensions of object with ID ``i``.
+
+    """
+    return d.dimensions_global(i)
+
 def delete(ids):
     """Delete a 2D object.
 
@@ -149,3 +180,34 @@ def clear():
 def info():
     """Print info on 3D objects in memory."""
     return d.info()
+
+def sync(i):
+    """Sync the 3D buffer over multiple processes
+    This only updates the regions that are shared
+    on multiple processes, the so called ghost regions
+
+    :param i: ID of object to get.
+    :type i: :class:`int` 
+    """
+    return d.sync(i)
+
+def get_local(i):
+    """Get the local 3D object. (No multi process merge)
+
+    :param i: ID of object to get.
+    :type i: :class:`int`
+    :returns: :class:`numpy.ndarray` -- The object data.
+
+    """
+    return d.get_local(i)
+
+def store_local(i,data):
+    """Fill existing local 3D object with data.
+
+    :param i: ID of object to fill.
+    :type i: :class:`int`
+    :param data: Data to fill the object with, either a scalar or array.
+    :type data: :class:`float` or :class:`numpy.ndarray`
+
+    """
+    return d.store_local(i,data)

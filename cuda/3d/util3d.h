@@ -52,7 +52,12 @@ bool duplicateProjectionData(cudaPitchedPtr& D_dest, const cudaPitchedPtr& D_src
 
 
 bool transferProjectionsToArray(cudaPitchedPtr D_projData, cudaArray* array, const SDimensions3D& dims);
-bool transferVolumeToArray(cudaPitchedPtr D_volumeData, cudaArray* array, const SDimensions3D& dims);
+
+
+bool transferVolumeToArray(cudaPitchedPtr D_volumeData, cudaArray* array, const SDimensions3D& dims, const int zoffset = 0);
+bool transferVolumeToArray(cudaPitchedPtr D_volumeData, cudaArray* array, const SDimensions3D& dims, const cudaPos zp);
+
+
 bool zeroProjectionArray(cudaArray* array, const SDimensions3D& dims);
 bool zeroVolumeArray(cudaArray* array, const SDimensions3D& dims);
 cudaArray* allocateProjectionArray(const SDimensions3D& dims);
@@ -60,7 +65,7 @@ cudaArray* allocateVolumeArray(const SDimensions3D& dims);
 
 bool cudaTextForceKernelsCompletion();
 
-float dotProduct3D(cudaPitchedPtr data, unsigned int x, unsigned int y, unsigned int z);
+float dotProduct3D(cudaPitchedPtr data, unsigned int x, unsigned int y, unsigned int z, unsigned int startSlice = 0);
 
 int calcNextPowerOfTwo(int _iValue);
 

@@ -38,6 +38,7 @@ $Id$
 #include "testutil.h"
 #endif
 
+
 namespace astraCUDA3d {
 
 SIRT::SIRT() : ReconAlgo3D()
@@ -150,6 +151,7 @@ bool SIRT::precomputeWeights()
 		processVol3D<opSet>(D_tmpData, 1.0f, dims);
 		callFP(D_tmpData, D_lineWeight, 1.0f);
 	}
+	
 	processSino3D<opInvert>(D_lineWeight, dims);
 
 	if (useSinogramMask) {
@@ -235,6 +237,7 @@ bool SIRT::iterate(unsigned int iterations)
 	if (useVolumeMask || useSinogramMask)
 		precomputeWeights();
 
+
 #if 0
 	float* buf = new float[256*256];
 
@@ -264,7 +267,13 @@ bool SIRT::iterate(unsigned int iterations)
 	// iteration
 	for (unsigned int iter = 0; iter < iterations && !shouldAbort; ++iter) {
 		// copy sinogram to projection data
-		duplicateProjectionData(D_projData, D_sinoData, dims);
+
+#if 1// MPI
+                zeroProjectionData(D_projData, dims);
+#else
+                duplicateProjectionData(D_projData, D_sinoData, dims);
+#endif
+
 
 		// do FP, subtracting projection from sinogram
 		if (useVolumeMask) {
@@ -274,6 +283,11 @@ bool SIRT::iterate(unsigned int iterations)
 		} else {
 				callFP(D_volumeData, D_projData, -1.0f);
 		}
+
+
+#if 1 // MPI
+                processSino3D<opAddScaled>(D_projData, D_sinoData, 1, dims);
+#endif
 
 		processSino3D<opMul>(D_projData, D_lineWeight, dims);
 

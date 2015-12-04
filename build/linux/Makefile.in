@@ -1,6 +1,7 @@
 cuda=@HAVECUDA@
 matlab=@HAVEMATLAB@
 python=@HAVEPYTHON@
+mpi=@HAVEMPI@
 boostutf=@HAVEBOOSTUTF@
 
 
@@ -29,18 +30,34 @@ LDFLAGS=@SAVED_LDFLAGS@
 LIBS=@SAVED_LIBS@
 
 CPPFLAGS+=-I../.. -I../../include -I../../lib/include
-CXXFLAGS+=-g -O3 -Wall -Wshadow
+CXXFLAGS+= -std=c++11 -g -O3 -Wall -Wshadow
 LIBS+=-lpthread
 LDFLAGS+=-g
+
+MPI_INCLUDE_PATH=
+ifeq ($(mpi), yes)
+  MPI_INCLUDE_PATH =@MPI_PATH@
+  CXXFLAGS	+= -std=c++11 -DUSE_MPI=1  -DMPICH_SKIP_MPICXX=1 -DOMPI_SKIP_MPICXX=1
+  #The above disables c++ bindings which, for some reason, give loading errors
+endif
 
 CPPFLAGS+=@CPPFLAGS_OS@
 
 ifeq ($(cuda),yes)
-CPPFLAGS  += @CPPFLAGS_CUDA@ -DASTRA_CUDA
-NVCCFLAGS  = @NVCCFLAGS@ @CPPFLAGS_CUDA@ -I../.. -I../../include -DASTRA_CUDA
-LDFLAGS   += @LDFLAGS_CUDA@
-LIBS      += -lcudart -lcufft
-NVCC       = @NVCC@
+  CPPFLAGS  += @CPPFLAGS_CUDA@ -DASTRA_CUDA
+  NVCCFLAGS  = @NVCCFLAGS@ @CPPFLAGS_CUDA@ -I../.. -I../../include -DASTRA_CUDA
+  
+  #Only add if it is not empty
+  ifneq ($(strip $(MPI_INCLUDE_PATH)),)
+    NVCCFLAGS += -I$(MPI_INCLUDE_PATH) 
+  endif
+
+  ifeq ($(mpi), yes)
+    NVCCFLAGS += -std=c++11 -DUSE_MPI=1
+  endif
+  LDFLAGS   += @LDFLAGS_CUDA@
+  LIBS      += -lcudart -lcufft
+  NVCC       = @NVCC@
 endif
 
 ifeq ($(matlab),yes)
@@ -61,6 +78,9 @@ PYLDFLAGS = $(LDFLAGS)
 PYLDFLAGS   += -L../build/linux/.libs
 LIBS		+= -l$(PYLIBVER)
 LDFLAGS += -L$(PYLIBDIR)
+ifeq ($(mpi), yes)
+    PYCPPFLAGS += -std=c++11 -DUSE_MPI=1
+endif
 endif
 
 BOOST_CPPFLAGS=
@@ -71,6 +91,10 @@ BOOSTUTF_LIBS=@LIBS_BOOSTUTF@
 
 CPPFLAGS+=$(BOOST_CPPFLAGS)
 LDFLAGS+=$(BOOST_LDFLAGS)
+
+ifneq ($(strip $(MPI_INCLUDE_PATH)),)
+  CPPFLAGS+= -I$(MPI_INCLUDE_PATH)  
+endif
 
 
 MKDIR=mkdir -p
@@ -131,6 +155,7 @@ BASE_OBJECTS=\
 	src/GeometryUtil3D.lo \
 	src/Globals.lo \
 	src/Logging.lo \
+	src/MPIProjector3D.lo \
 	src/ParallelBeamBlobKernelProjector2D.lo \
 	src/ParallelBeamLinearKernelProjector2D.lo \
 	src/ParallelBeamLineKernelProjector2D.lo \

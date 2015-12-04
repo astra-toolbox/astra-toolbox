@@ -330,7 +330,16 @@ cudaArray* allocateProjectionArray(const SDimensions3D& dims)
 	return cuArray;
 }
 
-bool transferVolumeToArray(cudaPitchedPtr D_volumeData, cudaArray* array, const SDimensions3D& dims)
+
+
+bool transferVolumeToArray(cudaPitchedPtr D_volumeData, cudaArray* array, const SDimensions3D& dims, const int zoffset)
+{
+	cudaPos zp = {0, 0, zoffset};
+	return transferVolumeToArray(D_volumeData, array, dims, zp);
+}
+
+
+bool transferVolumeToArray(cudaPitchedPtr D_volumeData, cudaArray* array, const SDimensions3D& dims, const cudaPos zp)
 {
 	cudaExtent extentA;
 	extentA.width = dims.iVolX;
@@ -338,7 +347,7 @@ bool transferVolumeToArray(cudaPitchedPtr D_volumeData, cudaArray* array, const 
 	extentA.depth = dims.iVolZ;
 
 	cudaMemcpy3DParms p;
-	cudaPos zp = {0, 0, 0};
+//	cudaPos zp = {0, 0, 0};
 	p.srcArray = 0;
 	p.srcPos = zp;
 	p.srcPtr = D_volumeData;
@@ -347,7 +356,8 @@ bool transferVolumeToArray(cudaPitchedPtr D_volumeData, cudaArray* array, const 
 	p.dstPtr.pitch = 0;
 	p.dstPtr.xsize = 0;
 	p.dstPtr.ysize = 0;
-	p.dstPos = zp;
+	cudaPos dp = {0, 0, 0};
+	p.dstPos = dp;
 	p.extent = extentA;
 	p.kind = cudaMemcpyDeviceToDevice;
 
@@ -387,12 +397,13 @@ bool transferProjectionsToArray(cudaPitchedPtr D_projData, cudaArray* array, con
 }
 
 
+//Use startSlice to start at an offset and thereby ignore part of the volume
 float dotProduct3D(cudaPitchedPtr data, unsigned int x, unsigned int y,
-                   unsigned int z)
+                   unsigned int z, unsigned int startSlice)
 {
-	return astraCUDA::dotProduct2D((float*)data.ptr, data.pitch/sizeof(float), x, y*z);
+	size_t startIdx = data.pitch/sizeof(float)*y*startSlice; 
+	return astraCUDA::dotProduct2D(((float*)data.ptr)+startIdx, data.pitch/sizeof(float), x, y*z);
 }
-
 
 bool cudaTextForceKernelsCompletion()
 {

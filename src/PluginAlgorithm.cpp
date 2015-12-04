@@ -378,7 +378,14 @@ PyObject* XMLNode2dict(XMLNode node){
         XMLNode subnode = *it;
         if(subnode.getName()=="Option"){
             PyObject *obj;
-            if(subnode.hasAttribute("value")){
+	    if(subnode.hasAttribute("list"))
+	    {
+		//Do list magic, creates a list with a single item
+		std::string str = subnode.getContent();;
+        	obj = PyList_New(1);
+        	PyList_SetItem(obj, 0, PyFloat_FromDouble(boost::lexical_cast<double>(str.c_str())));
+	    }
+	    else if(subnode.hasAttribute("value")){
                 obj = stringToPythonValue(subnode.getAttribute("value"));
             }else{
                 obj = stringToPythonValue(subnode.getContent());

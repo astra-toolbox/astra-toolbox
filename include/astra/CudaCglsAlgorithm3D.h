@@ -152,6 +152,12 @@ public:
 	 * @return true if this operation is supported
 	 */
 	virtual bool getResidualNorm(float32& _fNorm);
+	
+	/*
+	 * The required MPI code is implemented for this function / algorithm
+	 * 
+	*/	
+	bool isMPICapable() {return true;}
 
 protected:
 

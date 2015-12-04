@@ -38,6 +38,8 @@ $Id$
 #include "testutil.h"
 #endif
 
+#include "mpi.h"
+
 namespace astraCUDA3d {
 
 CGLS::CGLS() : ReconAlgo3D()
@@ -149,10 +151,35 @@ bool CGLS::iterate(unsigned int iterations)
 {
 	shouldAbort = false;
 
+        //TODO FIXME Modify this function, like we did with SIRT, to handle
+        //the changes required for MPI
+
+	int dotPStartSliceVol  = 0;
+	int dotPHeightVol      = dims.iVolZ;
+	int dotPStartSliceProj = 0;
+	int dotPHeightProj     = dims.iProjV;
+
+
+        if(this->mpiPrj != NULL)
+        {
+	  //Compute the start slice and height of the areas for which we 
+	  //need to compute the dotProducts
+	  dotPStartSliceProj = this->mpiPrj->getResponsibleProjStartIndex();
+	  dotPHeightProj     = this->mpiPrj->getResponsibleProjEndIndex() -
+		  	       dotPStartSliceProj;
+
+	  dotPStartSliceVol  = this->mpiPrj->getResponsibleVolStartIndex();
+	  dotPHeightVol      = this->mpiPrj->getResponsibleVolEndIndex() -
+		  	       dotPStartSliceVol;
+        } 
+
+
+
 	if (!sliceInitialized) {
 
 		// copy sinogram
-		duplicateProjectionData(D_r, D_sinoData, dims);
+		//duplicateProjectionData(D_r, D_sinoData, dims); //ORI
+		zeroProjectionData(D_r, dims);        //MPI
 
 		// r = sino - A*x
 		if (useVolumeMask) {
@@ -163,16 +190,22 @@ bool CGLS::iterate(unsigned int iterations)
 				callFP(D_volumeData, D_r, -1.0f);
 		}
 
+                processSino3D<opAddScaled>(D_r, D_sinoData, 1, dims);  //MPI
+
+
+
 		// p = A'*r
 		zeroVolumeData(D_p, dims);
 		callBP(D_p, D_r, 1.0f);
 		if (useVolumeMask)
 			processVol3D<opMul>(D_p, D_maskData, dims);
 
-		gamma = dotProduct3D(D_p, dims.iVolX, dims.iVolY, dims.iVolZ);
+		//gamma = dotProduct3D(D_p, dims.iVolX, dims.iVolY, dims.iVolZ);
+		gamma = dotProduct3D(D_p, dims.iVolX, dims.iVolY, 
+				     dotPHeightVol, dotPStartSliceVol);
+		if(this->mpiPrj) gamma = this->mpiPrj->sum(gamma);
 
 		sliceInitialized = true;
-
 	}
 
 
@@ -184,7 +217,11 @@ bool CGLS::iterate(unsigned int iterations)
 		callFP(D_p, D_w, 1.0f);
 
 		// alpha = gamma / <w,w>
-		float ww = dotProduct3D(D_w, dims.iProjU, dims.iProjAngles, dims.iProjV);
+		//float ww = dotProduct3D(D_w, dims.iProjU, dims.iProjAngles, dims.iProjV);
+		float ww = dotProduct3D(D_w, dims.iProjU, dims.iProjAngles, 
+					dotPHeightProj, dotPStartSliceProj);
+		if(this->mpiPrj) ww = this->mpiPrj->sum(ww);
+        
 		float alpha = gamma / ww;
 
 		// x += alpha*p
@@ -200,7 +237,10 @@ bool CGLS::iterate(unsigned int iterations)
 			processVol3D<opMul>(D_z, D_maskData, dims);
 
 		float beta = 1.0f / gamma;
-		gamma = dotProduct3D(D_z, dims.iVolX, dims.iVolY, dims.iVolZ);
+		//gamma = dotProduct3D(D_z, dims.iVolX, dims.iVolY, dims.iVolZ);
+		gamma = dotProduct3D(D_z, dims.iVolX, dims.iVolY, 
+				     dotPHeightVol, dotPStartSliceVol);
+		if(this->mpiPrj) gamma = this->mpiPrj->sum(gamma);
 
 		beta *= gamma;
 
@@ -215,6 +255,19 @@ float CGLS::computeDiffNorm()
 {
 	// We can use w and z as temporary storage here since they're not
 	// used outside of iterations.
+	
+	int dotPStartSliceProj = 0;
+	int dotPHeightProj     = dims.iProjV;
+
+
+        if(this->mpiPrj != NULL)
+        {
+	  //Compute the start slice and height of the areas for which we 
+	  //need to compute the dotProducts
+	  dotPStartSliceProj = this->mpiPrj->getResponsibleProjStartIndex();
+	  dotPHeightProj     = this->mpiPrj->getResponsibleProjEndIndex() -
+		  	       dotPStartSliceProj;
+        } 
 
 	// copy sinogram to w
 	duplicateProjectionData(D_w, D_sinoData, dims);
@@ -228,7 +281,9 @@ float CGLS::computeDiffNorm()
 			callFP(D_volumeData, D_w, -1.0f);
 	}
 
-	float s = dotProduct3D(D_w, dims.iProjU, dims.iProjAngles, dims.iProjV);
+	//float s = dotProduct3D(D_w, dims.iProjU, dims.iProjAngles, dims.iProjV);
+	float s = dotProduct3D(D_w, dims.iProjU, dims.iProjAngles,
+			       dotPHeightProj, dotPStartSliceProj);
 	return sqrt(s);
 }
 

@@ -40,6 +40,7 @@ $Id$
 #endif
 
 #include "dims3d.h"
+#include "astra/MPIProjector3D.h"
 
 typedef texture<float, 3, cudaReadModeElementType> texture3D;
 
@@ -312,11 +313,33 @@ bool ConeBP_Array(cudaPitchedPtr D_volumeData,
 	return true;
 }
 
-bool ConeBP(cudaPitchedPtr D_volumeData,
-            cudaPitchedPtr D_projData,
-            const SDimensions3D& dims, const SConeProjection* angles,
-            float fOutputScale)
+bool ConeBP(cudaPitchedPtr D_volumeData2,
+            cudaPitchedPtr D_projData2,
+            const SDimensions3D& dims2, const SConeProjection* angles,
+            float fOutputScale,
+	    const astra::CMPIProjector3D *mpiPrj = NULL)
 {
+	SDimensions3D  dims 	    = dims2;
+	cudaPitchedPtr D_volumeData = D_volumeData2;
+        cudaPitchedPtr D_projData   = D_projData2;
+
+#if USE_MPI
+	if(mpiPrj)
+	{
+		//Modify the height of the volume to not count the ghostcells
+		int2 ghosts = mpiPrj->getGhostCells();
+		dims.iVolZ -= (ghosts.x + ghosts.y);
+		//Modify the volume pointer to skip the ghostcells
+		int incr 	 = ghosts.x * D_volumeData.pitch * D_volumeData.ysize;
+		D_volumeData.ptr = (void*)((char*)D_volumeData.ptr + incr);
+
+		//Do the same for the Projection data /ghostcells
+		ghosts       = mpiPrj->getGhostCellsPrj();
+		dims.iProjV -= (ghosts.x + ghosts.y);
+		incr 	     = ghosts.x * D_projData.pitch * D_projData.ysize;
+		D_projData.ptr =   (void*)((char*)D_projData.ptr + incr);
+	}
+#endif
 	// transfer projections to array
 
 	cudaArray* cuArray = allocateProjectionArray(dims);
@@ -326,6 +349,14 @@ bool ConeBP(cudaPitchedPtr D_volumeData,
 
 	cudaFreeArray(cuArray);
 
+#if USE_MPI
+	if(mpiPrj)
+	{
+	    const_cast<astra::CMPIProjector3D*>(mpiPrj)->exchangeOverlapAndGhostRegions(
+			    NULL, D_volumeData2, false, 0);
+	    //Use D_volumeData2 as this is the unmodifed full ptr
+	}
+#endif
 	return ret;
 }
 

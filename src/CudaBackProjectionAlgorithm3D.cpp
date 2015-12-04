@@ -203,6 +203,16 @@ void CCudaBackProjectionAlgorithm3D::run(int _iNrIterations)
 		                         pSinoMem->getDataConst(),
 		                         &volgeom, projgeom,
 		                         m_iGPUIndex, m_iVoxelSuperSampling);
+
+	} else if (pSinoMem->getMPIProjector3D()) {
+
+		// MPI
+
+		astraCudaBP(pReconMem->getData(), pSinoMem->getDataConst(),
+		            &volgeom, projgeom,
+		            m_iGPUIndex, m_iVoxelSuperSampling,
+		            pSinoMem->getMPIProjector3D());
+
 	} else {
 
 #if 1

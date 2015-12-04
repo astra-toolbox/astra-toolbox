@@ -28,6 +28,12 @@
 
 import six
 
+from mpi4py import MPI    
+comm    = MPI.COMM_WORLD  
+nProcs  = comm.Get_size() 
+procId  = comm.Get_rank()  
+
+
 cdef extern from "astra/Logging.h" namespace "astra":
     cdef enum log_level:
         LOG_DEBUG
@@ -68,36 +74,51 @@ def log_error(sfile, sline, message):
     error(cstr[0],sline,"%s",<char*>cstr[1])
 
 def log_enable():
+    if procId == 0 : comm.bcast(501, root = 0)
     enable()
 
 def log_enableScreen():
+    if procId == 0 : comm.bcast(502, root = 0)
     enableScreen()
 
 def log_enableFile():
+    if procId == 0 : comm.bcast(503, root = 0)
     enableFile()
 
 def log_disable():
+    if procId == 0 : comm.bcast(504, root = 0)
     disable()
 
 def log_disableScreen():
+    if procId == 0 : comm.bcast(505, root = 0)
     disableScreen()
 
 def log_disableFile():
+    if procId == 0 : comm.bcast(506, root = 0)
     disableFile()
 
 def log_setFormatFile(fmt):
+    if procId == 0 : comm.bcast(507, root = 0)
+    fmt = comm.bcast(fmt, root = 0)
     cstr = six.b(fmt)
     setFormatFile(cstr)
 
 def log_setFormatScreen(fmt):
+    if procId == 0 : comm.bcast(508, root = 0)
+    fmt = comm.bcast(fmt, root = 0)
     cstr = six.b(fmt)
     setFormatScreen(cstr)
 
 enumList = [LOG_DEBUG,LOG_INFO,LOG_WARN,LOG_ERROR]
 
 def log_setOutputScreen(fd, level):
+    if procId == 0 : comm.bcast(509, root = 0)
+    fd, level = comm.bcast([fd, level], root = 0)
     setOutputScreen(fd, enumList[level])
 
 def log_setOutputFile(filename, level):
+    if procId == 0 : comm.bcast(510, root = 0)
+    filename, level = comm.bcast([filename, level], root = 0)
     cstr = six.b(filename)
     setOutputFile(cstr, enumList[level])
+

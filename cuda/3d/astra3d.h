@@ -49,7 +49,7 @@ class CConeProjectionGeometry3D;
 class CConeVecProjectionGeometry3D;
 class CVolumeGeometry3D;
 class AstraSIRT3d_internal;
-
+class CMPIProjector3D;
 
 class _AstraExport AstraSIRT3d {
 public:
@@ -59,7 +59,8 @@ public:
 
 	// Set the volume and projection geometry
 	bool setGeometry(const CVolumeGeometry3D* pVolGeom,
-	                 const CProjectionGeometry3D* pProjGeom);
+	                 const CProjectionGeometry3D* pProjGeom,
+			 const CMPIProjector3D *pMPIProj = NULL);
 
 	// Enable supersampling.
 	//
@@ -176,7 +177,8 @@ public:
 
 	// Set the volume and projection geometry
 	bool setGeometry(const CVolumeGeometry3D* pVolGeom,
-	                 const CProjectionGeometry3D* pProjGeom);
+	                 const CProjectionGeometry3D* pProjGeom,
+			 const CMPIProjector3D *pMPIProj = NULL);
 
 	// Enable supersampling.
 	//
@@ -295,13 +297,15 @@ _AstraExport bool astraCudaFP(const float* pfVolume, float* pfProjections,
                       const CVolumeGeometry3D* pVolGeom,
                       const CProjectionGeometry3D* pProjGeom,
                       int iGPUIndex, int iDetectorSuperSampling,
-                      Cuda3DProjectionKernel projKernel);
+                      Cuda3DProjectionKernel projKernel,
+		      const CMPIProjector3D *pMPIPrj = NULL);
 
 
 _AstraExport bool astraCudaBP(float* pfVolume, const float* pfProjections,
                       const CVolumeGeometry3D* pVolGeom,
                       const CProjectionGeometry3D* pProjGeom,
-                      int iGPUIndex, int iVoxelSuperSampling);
+                      int iGPUIndex, int iVoxelSuperSampling,
+		      const CMPIProjector3D *pMPIPrj = NULL);
 
 _AstraExport bool astraCudaBP_SIRTWeighted(float* pfVolume, const float* pfProjections,
                       const CVolumeGeometry3D* pVolGeom,

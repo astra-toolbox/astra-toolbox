@@ -147,6 +147,7 @@ cdef extern from "astra/Algorithm.h" namespace "astra":
 		bool initialize(Config)
 		void run(int) nogil
 		bool isInitialized()
+		bool isMPICapable()
 
 cdef extern from "astra/ReconstructionAlgorithm2D.h" namespace "astra":
 	cdef cppclass CReconstructionAlgorithm2D:
@@ -196,6 +197,9 @@ cdef extern from "astra/Float32Data3DMemory.h" namespace "astra":
 		float32 *getData()
 		float32 ***getData3D()
 		THREEEDataType getType()
+		CMPIProjector3D *getMPIProjector3D()
+		void setMPIProjector3D(CMPIProjector3D *)
+		bool hasMPIProjector3D()       
 
 
 cdef extern from "astra/VolumeGeometry3D.h" namespace "astra":
@@ -269,3 +273,26 @@ cdef extern from "astra/Float32Data3D.h" namespace "astra":
 		int getHeight()
 		int getDepth()
 		void updateStatistics()
+
+cdef extern from "astra/MPIProjector3D.h" namespace "astra":
+	cdef cppclass CMPIProjector3D:
+		CMPIProjector3D()
+		bool initialize(Config, int nGhostcellsVol, int nGhostcellsPrj)
+		CProjectionGeometry3D* getProjectionGlobal()
+		CProjectionGeometry3D* getProjectionLocal()
+		CVolumeGeometry3D*	   getVolumeGlobal()
+		CVolumeGeometry3D*	   getVolumeLocal()
+		int getNumberOfSlices(int procIdx, int type)
+		int getStartSlice(int procIdx, int type)
+		int getGlobalNumberOfSlices(int procIdx, int type)
+		int getResponsibleVolStartIndex(int procIdx)
+		int getResponsibleVolStart(int procIdx)
+		int getResponsibleVolEndIndex(int procIdx)
+		int getResponsibleProjStart(int procIdx)
+		int getResponsibleProjStartIndex(int procIdx)
+		int getResponsibleProjEndIndex(int procIdx)
+		bool isBuiltWithMPI()
+		void pyExchangeGhostRegionsVolume(float32*)
+		void pyExchangeGhostRegionsProjection(float32*)
+		void pyExchangeGhostRegionsProjectionFull(float32*)
+

@@ -42,6 +42,7 @@ ReconAlgo3D::ReconAlgo3D()
 	par3DProjs = 0;
 	shouldAbort = false;
 	fOutputScale = 1.0f;
+        mpiPrj = NULL;
 }
 
 ReconAlgo3D::~ReconAlgo3D()
@@ -90,9 +91,9 @@ bool ReconAlgo3D::callFP(cudaPitchedPtr& D_volumeData,
                        float outputScale)
 {
 	if (coneProjs) {
-		return ConeFP(D_volumeData, D_projData, dims, coneProjs, outputScale * this->fOutputScale);
+		return ConeFP(D_volumeData, D_projData, dims, coneProjs, outputScale * this->fOutputScale, mpiPrj);
 	} else {
-		return Par3DFP(D_volumeData, D_projData, dims, par3DProjs, outputScale * this->fOutputScale);
+		return Par3DFP(D_volumeData, D_projData, dims, par3DProjs, outputScale * this->fOutputScale, mpiPrj);
 	}
 }
 
@@ -101,9 +102,9 @@ bool ReconAlgo3D::callBP(cudaPitchedPtr& D_volumeData,
                        float outputScale)
 {
 	if (coneProjs) {
-		return ConeBP(D_volumeData, D_projData, dims, coneProjs, outputScale * this->fOutputScale);
+		return ConeBP(D_volumeData, D_projData, dims, coneProjs, outputScale * this->fOutputScale, mpiPrj);
 	} else {
-		return Par3DBP(D_volumeData, D_projData, dims, par3DProjs, outputScale * this->fOutputScale);
+		return Par3DBP(D_volumeData, D_projData, dims, par3DProjs, outputScale * this->fOutputScale, mpiPrj);
 	}
 }
 

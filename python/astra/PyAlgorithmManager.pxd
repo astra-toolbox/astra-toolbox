@@ -30,6 +30,7 @@ from .PyIncludes cimport *
 cdef extern from "astra/AstraObjectManager.h" namespace "astra":
     cdef cppclass CAlgorithmManager:
         int store(CAlgorithm *)
+        int store(CAlgorithm *, int idx)
         CAlgorithm * get(int)
         void remove(int)
         void clear()

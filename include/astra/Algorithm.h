@@ -106,6 +106,16 @@ public:
 	 */
 	virtual void signalAbort() { m_bShouldAbort = true; }
 
+
+	/*
+	 *
+	 * If an algorithm supports distributed MPI execution then
+	 * it should return true. This is, for example, the case when the projection
+	 * geometry has been modified to support MPI. See CudaForwardProjectionAlgorithm3D
+	 * for an example.
+	 */
+	virtual bool isMPICapable() {return false;}
+
 protected:
 
 	//< Has this class been initialized?

@@ -265,12 +265,6 @@ void CCudaForwardProjectionAlgorithm3D::run(int)
 	// check initialized
 	assert(m_bIsInitialized);
 
-#if 1
-	CCompositeGeometryManager cgm;
-
-	cgm.doFP(m_pProjector, m_pVolume, m_pProjections);
-
-#else
 	const CProjectionGeometry3D* projgeom = m_pProjections->getGeometry();
 	const CVolumeGeometry3D& volgeom = *m_pVolume->getGeometry();
 
@@ -280,29 +274,48 @@ void CCudaForwardProjectionAlgorithm3D::run(int)
 		projKernel = projector->getProjectionKernel();
 	}
 
+	if (m_pProjections->getMPIProjector3D()) {
+
+		// MPI
+
+		astraCudaFP(m_pVolume->getDataConst(), m_pProjections->getData(),
+		            &volgeom, projgeom,
+		            m_iGPUIndex, m_iDetectorSuperSampling, projKernel,
+		            m_pProjections->getMPIProjector3D());
+
+	} else {
+
+#if 1
+		CCompositeGeometryManager cgm;
+
+		cgm.doFP(m_pProjector, m_pVolume, m_pProjections);
+
+#else
 #if 0
-	// Debugging code that gives the coordinates of the corners of the volume
-	// projected on the detector.
-	{
-		float fX[] = { volgeom.getWindowMinX(), volgeom.getWindowMaxX() };
-		float fY[] = { volgeom.getWindowMinY(), volgeom.getWindowMaxY() };
-		float fZ[] = { volgeom.getWindowMinZ(), volgeom.getWindowMaxZ() };
+		// Debugging code that gives the coordinates of the corners of the volume
+		// projected on the detector.
+		{
+			float fX[] = { volgeom.getWindowMinX(), volgeom.getWindowMaxX() };
+			float fY[] = { volgeom.getWindowMinY(), volgeom.getWindowMaxY() };
+			float fZ[] = { volgeom.getWindowMinZ(), volgeom.getWindowMaxZ() };
 
-		for (int a = 0; a < projgeom->getProjectionCount(); ++a)
-		for (int i = 0; i < 2; ++i)
-		for (int j = 0; j < 2; ++j)
-		for (int k = 0; k < 2; ++k) {
-			float fU, fV;
-			projgeom->projectPoint(fX[i], fY[j], fZ[k], a, fU, fV);
-			ASTRA_DEBUG("%3d %c1,%c1,%c1 -> %12f %12f", a, i ? ' ' : '-', j ? ' ' : '-', k ? ' ' : '-', fU, fV);
+			for (int a = 0; a < projgeom->getProjectionCount(); ++a)
+			for (int i = 0; i < 2; ++i)
+			for (int j = 0; j < 2; ++j)
+			for (int k = 0; k < 2; ++k) {
+				float fU, fV;
+				projgeom->projectPoint(fX[i], fY[j], fZ[k], a, fU, fV);
+				ASTRA_DEBUG("%3d %c1,%c1,%c1 -> %12f %12f", a, i ? ' ' : '-', j ? ' ' : '-', k ? ' ' : '-', fU, fV);
+			}
 		}
-	}
 #endif
 
-	astraCudaFP(m_pVolume->getDataConst(), m_pProjections->getData(),
-	            &volgeom, projgeom,
-	            m_iGPUIndex, m_iDetectorSuperSampling, projKernel);
+		astraCudaFP(m_pVolume->getDataConst(), m_pProjections->getData(),
+		            &volgeom, projgeom,
+		            m_iGPUIndex, m_iDetectorSuperSampling, projKernel);
 #endif
+	}
+
 }
 
 

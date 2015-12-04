@@ -31,6 +31,7 @@ $Id$
 
 #include "dims3d.h"
 #include "util3d.h"
+#include "astra/MPIProjector3D.h"
 
 namespace astraCUDA3d {
 
@@ -61,6 +62,12 @@ protected:
 	float fOutputScale;
 
 	volatile bool shouldAbort;
+
+        astra::CMPIProjector3D *mpiPrj;
+public: 
+        void setMPIProjector3D(const astra::CMPIProjector3D *prj) {
+                               mpiPrj = const_cast<astra::CMPIProjector3D*>(prj);
+        }
 
 };
 

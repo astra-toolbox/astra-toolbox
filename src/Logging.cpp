@@ -179,6 +179,9 @@ void CLogger::_assureIsInitialized()
 		clog_init_fd(0, 2);
 		clog_set_level(0, CLOG_INFO);
 		clog_set_fmt(0, "%l: %m\n");
+		#if USE_MPI
+   		  clog_set_fmt(0, "%D %l: %m\n");
+		#endif
 		m_bInitialized = true;
 	}
 }

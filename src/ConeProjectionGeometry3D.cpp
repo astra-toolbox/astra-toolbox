@@ -258,7 +258,7 @@ void CConeProjectionGeometry3D::projectPoint(double fX, double fY, double fZ,
 	// Scale fS to detector plane
 	fU = detectorOffsetXToColIndexFloat( (fS * (m_fOriginSourceDistance + m_fOriginDetectorDistance)) / fD );
 
-	ASTRA_DEBUG("alpha: %f, D: %f, V: %f, S: %f, U: %f", alpha, fD, fV, fS, fU);
+	//ASTRA_DEBUG("alpha: %f, D: %f, V: %f, S: %f, U: %f", alpha, fD, fV, fS, fU);
 
 }
 

@@ -81,6 +81,15 @@ public:
 	 * and the object was NOT stored.
 	 */
 	int store(T* _pObject);
+	
+	/** Store the object in the manager with a spefic handle.
+	 *
+	 * @param _pObject A pointer to the object that should be stored.
+	 * @param _iIndex  The handle under which to store the object.
+	 * @return The index of the stored data object.  If the index in negative, an error occurred 
+	 * and the object was NOT stored.
+	 */
+	int store(T* _pObject, int _iIndex);
 
 	/** Does the manager contain an object with the index _iIndex?
 	 *
@@ -105,6 +114,16 @@ public:
 	* @return Error code. 0 for success.
 	*/
 	void remove(int _iIndex);
+
+
+	void change_index(int oldIndex, int newIndex);
+	/** Change the index of an object 
+	 *
+	 * NOTE: The caller is responsible of deleting any data on the oldIndex
+	 *
+	 * @param oldIndex The original index of the data object
+	 * @param newIndex The new index of the data object
+	**/
 
 	/** Get the index of the object, zero if it doesn't exist.
 	 *
@@ -154,6 +173,15 @@ int CAstraObjectManager<T>::store(T* _pDataObject)
 	return m_iPreviousIndex;
 }
 
+template <typename T>
+int CAstraObjectManager<T>::store(T* _pDataObject, int _iIndex) 
+{
+	//TODO check that we do not overwrite an existing object
+	m_iPreviousIndex = _iIndex;
+	m_mIndexToObject[m_iPreviousIndex] = _pDataObject;
+	return m_iPreviousIndex;
+}
+
 //----------------------------------------------------------------------------------------
 // has data?
 template <typename T>
@@ -190,6 +218,26 @@ void CAstraObjectManager<T>::remove(int _iIndex)
 	// delete from map
 	m_mIndexToObject.erase(it);  
 }
+
+
+
+//----------------------------------------------------------------------------------------
+// change Index
+template <typename T>
+void CAstraObjectManager<T>::change_index(int oldIndex, int newIndex)
+{
+	if (!hasIndex(oldIndex)) {
+		return;
+	}
+	// find data
+	typename map<int,T*>::iterator it = m_mIndexToObject.find(oldIndex);
+	m_mIndexToObject[newIndex] = (*it).second;
+	
+	// delete old index from map
+	m_mIndexToObject.erase(it);  
+}
+
+
 
 //----------------------------------------------------------------------------------------
 // Get Index

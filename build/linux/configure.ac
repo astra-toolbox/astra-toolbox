@@ -84,6 +84,26 @@ if test x$BOOSTok = xno; then
   AC_MSG_ERROR([boost not found])
 fi
 
+
+# MPI, multi node implementation 
+
+AC_ARG_WITH(mpi, [[  --with-mpi=path         include path of MPI headers (optional)]],,)
+
+HAVEMPI=no
+MPI_PATH=
+if test x"$with_mpi" != x -a x"$with_mpi" != xno; then
+	HAVEMPI=yes
+
+	MPI_PATH=""
+  	if test x"$with_mpi" != x -a x"$with_mpi" != xyes; then
+	    MPI_PATH="$with_mpi"
+	fi
+fi	
+
+AC_SUBST(HAVEMPI)
+AC_SUBST(MPI_PATH)
+
+
 # nvcc, cuda
 
 AC_ARG_WITH(cuda, [[  --with-cuda=path        path of CUDA SDK (optional)]],,)
@@ -214,12 +234,41 @@ assert(LooseVersion(Cython.__version__)>=LooseVersion("0.13"))
   fi
   AC_MSG_RESULT(yes)
   AC_MSG_CHECKING(for six module)
-  ASTRA_TRY_PYTHON([import six])
+  ASTRA_TRY_PYTHON([import six],, HAVEPYTHON=no)
   if test x$HAVEPYTHON = xno; then
     AC_MSG_RESULT(no)
     AC_MSG_ERROR(You need the six module to use the ASTRA toolbox in Python)
   fi
   AC_MSG_RESULT(yes)
+	
+  #Test incase we use MPI
+if test x"$with_mpi" != x -a x"$with_mpi" != xno; then
+  if test x"$with_mpi" != xno; then
+    AC_MSG_CHECKING(for mpi4py module)
+    ASTRA_TRY_PYTHON([import mpi4py],, HAVEPYTHON=no)
+    if test x$HAVEPYTHON = xno; then
+      AC_MSG_RESULT(no)
+      AC_MSG_ERROR(You need the mpi4py module to use the ASTRA toolbox with MPI support in Python)
+    fi
+    AC_MSG_RESULT(yes)
+    AC_MSG_CHECKING(for dill module)
+    ASTRA_TRY_PYTHON([import dill],, HAVEPYTHON=no)
+    if test x$HAVEPYTHON = xno; then
+      AC_MSG_RESULT(no)
+      AC_MSG_ERROR(You need the dill module to use the ASTRA toolbox with MPI support in Python)
+    fi
+    AC_MSG_RESULT(yes)
+    AC_MSG_CHECKING(for scipy module)
+    ASTRA_TRY_PYTHON([import scipy],, HAVEPYTHON=no)
+    if test x$HAVEPYTHON = xno; then
+      AC_MSG_RESULT(no)
+      AC_MSG_ERROR(You need the scipy module to use the ASTRA toolbox with MPI support in Python)
+    fi
+    AC_MSG_RESULT(yes)
+  fi
+fi
+#end MPI tests
+
 fi
 
 AC_SUBST(HAVEPYTHON)
@@ -259,6 +308,7 @@ echo "Summary of ASTRA Toolbox build options:"
 echo "  CUDA   : $HAVECUDA"
 echo "  Matlab : $HAVEMATLAB"
 echo "  Python : $HAVEPYTHON"
+echo "  MPI    : $HAVEMPI"
 echo
 echo "  prefix : $prefix"
 echo

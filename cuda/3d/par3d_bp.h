@@ -29,6 +29,8 @@ $Id$
 #ifndef _CUDA_PAR3D_BP_H
 #define _CUDA_PAR3D_BP_H
 
+#include "astra/MPIProjector3D.h"
+
 namespace astraCUDA3d {
 
 _AstraExport bool Par3DBP_Array(cudaPitchedPtr D_volumeData,
@@ -39,7 +41,8 @@ _AstraExport bool Par3DBP_Array(cudaPitchedPtr D_volumeData,
 _AstraExport bool Par3DBP(cudaPitchedPtr D_volumeData,
              cudaPitchedPtr D_projData,
              const SDimensions3D& dims, const SPar3DProjection* angles,
-             float fOutputScale);
+             float fOutputScalei,
+	     const astra::CMPIProjector3D *mpiPr = NULL);
          
 
 }

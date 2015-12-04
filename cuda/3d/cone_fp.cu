@@ -39,6 +39,7 @@ $Id$
 #endif
 
 #include "dims3d.h"
+#include "astra/MPIProjector3D.h"
 
 typedef texture<float, 3, cudaReadModeElementType> texture3D;
 
@@ -413,13 +414,33 @@ bool ConeFP_Array_internal(cudaPitchedPtr D_projData,
 
 bool ConeFP(cudaPitchedPtr D_volumeData,
             cudaPitchedPtr D_projData,
-            const SDimensions3D& dims, const SConeProjection* angles,
-            float fOutputScale)
+            const SDimensions3D& dims2, const SConeProjection* angles,
+            float fOutputScale,
+            const astra::CMPIProjector3D *mpiPrj = NULL)
 {
-	// transfer volume to array
+	int 	       zoffset = 0;
+	SDimensions3D  dims    = dims2;
+	int	  	incr = 0; //todo proper name
 
+#if USE_MPI
+	if(mpiPrj)
+	{
+		//Modify the volume properties to ignore the ghostcells
+		//Modify the height, and change the startpoint of the copy (zoffset)
+		int2 ghosts = mpiPrj->getGhostCells();
+		dims.iVolZ -= (ghosts.x + ghosts.y);
+		zoffset     = ghosts.x;
+
+		//Now for the projection data ghostcells
+		ghosts 	     = mpiPrj->getGhostCellsPrj();
+		dims.iProjV -= (ghosts.x + ghosts.y);  
+		incr      = ghosts.x * D_projData.pitch * D_projData.ysize;
+
+	}
+#endif
+	// transfer volume to array
 	cudaArray* cuArray = allocateVolumeArray(dims);
-	transferVolumeToArray(D_volumeData, cuArray, dims);
+	transferVolumeToArray(D_volumeData, cuArray, dims, zoffset); //NOTE the zoffset
 	bindVolumeDataTexture(cuArray);
 
 	bool ret;
@@ -430,7 +451,7 @@ bool ConeFP(cudaPitchedPtr D_volumeData,
 			iEndAngle = dims.iProjAngles;
 
 		cudaPitchedPtr D_subprojData = D_projData;
-		D_subprojData.ptr = (char*)D_projData.ptr + iAngle * D_projData.pitch;
+		D_subprojData.ptr = (char*)D_projData.ptr + iAngle * D_projData.pitch + incr;
 
 		ret = ConeFP_Array_internal(D_subprojData,
 		                            dims, iEndAngle - iAngle, angles + iAngle,
@@ -440,6 +461,17 @@ bool ConeFP(cudaPitchedPtr D_volumeData,
 	}
 
 	cudaFreeArray(cuArray);
+
+#if USE_MPI
+   	  if(mpiPrj)
+	  {
+	    //Note not changed ptr as the exchange function figures this out itself
+	    const_cast<astra::CMPIProjector3D*>(mpiPrj)->exchangeOverlapAndGhostRegions(NULL, D_projData, false, 3);
+	    const_cast<astra::CMPIProjector3D*>(mpiPrj)->exchangeOverlapAndGhostRegions(NULL, D_projData, false, 1);
+	  }
+#endif
+
+
 
 	return ret;
 }

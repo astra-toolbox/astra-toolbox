@@ -44,6 +44,10 @@ from .PyXMLDocument cimport XMLDocument
 cimport PyMatrixManager
 from .PyMatrixManager cimport CMatrixManager
 
+from mpi4py import MPI
+
+import log as logging
+
 cdef CProjector2DManager * manProj = <CProjector2DManager * >PyProjector2DManager.getSingletonPtr()
 cdef CMatrixManager * manM = <CMatrixManager * >PyMatrixManager.getSingletonPtr()
 
@@ -55,12 +59,28 @@ IF HAVE_CUDA:
 
 
 def create(config):
+    #MPI Setup
+    comm  = MPI.COMM_WORLD
+    size  = comm.Get_size()
+    rank  = comm.Get_rank()
+    if rank == 0:
+        comm.bcast(301,      root = 0)
+    config = comm.bcast(config, root = 0)
+    #End MPI Setup
+   
+    logging.debug("Create projector Rank: " + str(rank) + " geom: " + str(config))
+
     cdef Config * cfg = utils.dictToConfig(six.b('Projector2D'), config)
     cdef CProjector2D * proj
     proj = PyProjector2DFactory.getSingletonPtr().create(cfg[0])
     if proj == NULL:
         del cfg
         raise Exception("Error creating projector.")
+
+    print("="*78)
+    print("TODO, projector_c.pyx create ")
+    print("="*78)
+
     del cfg
     return manProj.store(proj)
 
