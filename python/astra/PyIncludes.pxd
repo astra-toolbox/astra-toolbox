@@ -224,6 +224,7 @@ cdef extern from "astra/Float32VolumeData3DMemory.h" namespace "astra":
 		int getRowCount()
 		int getColCount()
 		int getSliceCount()
+		bool isInitialized()
 
 
 
@@ -255,6 +256,7 @@ cdef extern from "astra/Float32ProjectionData3DMemory.h" namespace "astra":
 		int getDetectorColCount()
 		int getDetectorRowCount()
 		int getAngleCount()
+		bool isInitialized()
 
 cdef extern from "astra/Float32Data3D.h" namespace "astra":
 	cdef cppclass CFloat32Data3D:
