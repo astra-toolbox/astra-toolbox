@@ -136,6 +136,8 @@ public:
 	bool doBP(CProjector3D *pProjector, CFloat32VolumeData3DMemory *pVolData,
 	          CFloat32ProjectionData3DMemory *pProjData);
 
+	bool doFP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3DMemory *>& volData, const std::vector<CFloat32ProjectionData3DMemory *>& projData);
+	bool doBP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3DMemory *>& volData, const std::vector<CFloat32ProjectionData3DMemory *>& projData);
 
 protected:
 

@@ -102,7 +102,6 @@ bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div
 			     i_out != splitOutput.end(); ++i_out)
 			{
 				boost::shared_ptr<CPart> outputPart = *i_out;
-				split[outputPart.get()] = TJobList();
 
 				SJob newjob;
 				newjob.pOutput = outputPart;
@@ -319,7 +318,7 @@ static size_t computeVerticalSplit(size_t maxBlock, int div, size_t sliceCount)
     // (This can't make the blocks larger)
     blockSize = ceildiv(sliceCount, blockCount); 
 
-    ASTRA_DEBUG("%ld %ld -> %ld * %ld\n", sliceCount, maxBlock, blockCount, blockSize);
+    ASTRA_DEBUG("%ld %ld -> %ld * %ld", sliceCount, maxBlock, blockCount, blockSize);
 
     assert(blockSize <= maxBlock);
     assert((divCount * divCount > sliceCount) || (blockCount % div) == 0);
@@ -724,6 +723,116 @@ bool CCompositeGeometryManager::doBP(CProjector3D *pProjector, CFloat32VolumeDat
 
 	return doJobs(L);
 }
+
+bool CCompositeGeometryManager::doFP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3DMemory *>& volData, const std::vector<CFloat32ProjectionData3DMemory *>& projData)
+{
+	ASTRA_DEBUG("CCompositeGeometryManager::doFP, multi-volume");
+
+	std::vector<CFloat32VolumeData3DMemory *>::const_iterator i;
+	std::vector<boost::shared_ptr<CPart> > inputs;
+
+	for (i = volData.begin(); i != volData.end(); ++i) {
+		CVolumePart *input = new CVolumePart();
+		input->pData = *i;
+		input->subX = 0;
+		input->subY = 0;
+		input->subZ = 0;
+		input->pGeom = (*i)->getGeometry()->clone();
+
+		inputs.push_back(boost::shared_ptr<CPart>(input));
+	}
+
+	std::vector<CFloat32ProjectionData3DMemory *>::const_iterator j;
+	std::vector<boost::shared_ptr<CPart> > outputs;
+
+	for (j = projData.begin(); j != projData.end(); ++j) {
+		CProjectionPart *output = new CProjectionPart();
+		output->pData = *j;
+		output->subX = 0;
+		output->subY = 0;
+		output->subZ = 0;
+		output->pGeom = (*j)->getGeometry()->clone();
+
+		outputs.push_back(boost::shared_ptr<CPart>(output));
+	}
+
+	std::vector<boost::shared_ptr<CPart> >::iterator i2;
+	std::vector<boost::shared_ptr<CPart> >::iterator j2;
+	TJobList L;
+
+	for (i2 = outputs.begin(); i2 != outputs.end(); ++i2) {
+		SJob FP;
+		FP.eMode = SJob::MODE_SET;
+		for (j2 = inputs.begin(); j2 != inputs.end(); ++j2) {
+			FP.pInput = *j2;
+			FP.pOutput = *i2;
+			FP.pProjector = pProjector;
+			FP.eType = SJob::JOB_FP;
+			L.push_back(FP);
+
+			// Set first, add rest
+			FP.eMode = SJob::MODE_ADD;
+		}
+	}
+
+	return doJobs(L);
+}
+
+bool CCompositeGeometryManager::doBP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3DMemory *>& volData, const std::vector<CFloat32ProjectionData3DMemory *>& projData)
+{
+	ASTRA_DEBUG("CCompositeGeometryManager::doBP, multi-volume");
+
+
+	std::vector<CFloat32VolumeData3DMemory *>::const_iterator i;
+	std::vector<boost::shared_ptr<CPart> > outputs;
+
+	for (i = volData.begin(); i != volData.end(); ++i) {
+		CVolumePart *output = new CVolumePart();
+		output->pData = *i;
+		output->subX = 0;
+		output->subY = 0;
+		output->subZ = 0;
+		output->pGeom = (*i)->getGeometry()->clone();
+
+		outputs.push_back(boost::shared_ptr<CPart>(output));
+	}
+
+	std::vector<CFloat32ProjectionData3DMemory *>::const_iterator j;
+	std::vector<boost::shared_ptr<CPart> > inputs;
+
+	for (j = projData.begin(); j != projData.end(); ++j) {
+		CProjectionPart *input = new CProjectionPart();
+		input->pData = *j;
+		input->subX = 0;
+		input->subY = 0;
+		input->subZ = 0;
+		input->pGeom = (*j)->getGeometry()->clone();
+
+		inputs.push_back(boost::shared_ptr<CPart>(input));
+	}
+
+	std::vector<boost::shared_ptr<CPart> >::iterator i2;
+	std::vector<boost::shared_ptr<CPart> >::iterator j2;
+	TJobList L;
+
+	for (i2 = outputs.begin(); i2 != outputs.end(); ++i2) {
+		SJob BP;
+		BP.eMode = SJob::MODE_SET;
+		for (j2 = inputs.begin(); j2 != inputs.end(); ++j2) {
+			BP.pInput = *j2;
+			BP.pOutput = *i2;
+			BP.pProjector = pProjector;
+			BP.eType = SJob::JOB_BP;
+			L.push_back(BP);
+
+			// Set first, add rest
+			BP.eMode = SJob::MODE_ADD;
+		}
+	}
+
+	return doJobs(L);
+}
+
 
 
 
