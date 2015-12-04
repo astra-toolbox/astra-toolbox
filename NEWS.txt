@@ -9,6 +9,20 @@ Contact: astra@uantwerpen.be
 Website: http://sf.net/projects/astra-toolbox
 -----------------------------------------------------------------------
 
+1.7beta (2015-12-04)
+  * NB: This release has a beta tag as it contains two new
+    big experimental features.
+  * experimental MPI distributed computing support in Python
+  * experimental support in Python for FP and BP of objects
+    composited from multiple 3d data objects, at possibly different resolutions.
+    This also removes some restrictions on data size for 3D GPU FP and BP.
+  * support for Python algorithm plugins
+  * removed restrictions on volume geometries:
+        The volume no longer has to be centered.
+        Voxels still have to be cubes, but no longer 1x1x1.
+  * build fixes for newer platforms
+  * various consistency and bug fixes
+
 1.6 (2015-05-29)
   * integrate and improve python interface
   * integrate opSpot-based opTomo operator
