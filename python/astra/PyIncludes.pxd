@@ -62,6 +62,7 @@ cdef extern from "astra/VolumeGeometry2D.h" namespace "astra":
 		float32 getWindowMaxX()
 		float32 getWindowMaxY()
 		Config* getConfiguration()
+		bool isEqual(CVolumeGeometry2D*)
 
 cdef extern from "astra/Float32Data2D.h" namespace "astra":
 	cdef cppclass CFloat32CustomMemory:
@@ -89,6 +90,7 @@ cdef extern from "astra/ProjectionGeometry2D.h" namespace "astra":
 		float32 getProjectionAngle(int)
 		float32 getDetectorWidth()
 		Config* getConfiguration()
+		bool isEqual(CProjectionGeometry2D*)
 
 cdef extern from "astra/Float32Data2D.h" namespace "astra::CFloat32Data2D":
 	cdef enum TWOEDataType "astra::CFloat32Data2D::EDataType":
