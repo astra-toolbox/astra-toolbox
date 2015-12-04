@@ -105,6 +105,9 @@
     <ClCompile Include="src\ForwardProjectionAlgorithm.cpp">
       <Filter>Algorithms\source</Filter>
     </ClCompile>
+    <ClCompile Include="src\PluginAlgorithm.cpp">
+      <Filter>Algorithms\source</Filter>
+    </ClCompile>
     <ClCompile Include="src\ReconstructionAlgorithm2D.cpp">
       <Filter>Algorithms\source</Filter>
     </ClCompile>
@@ -348,6 +351,9 @@
       <Filter>Algorithms\headers</Filter>
     </ClInclude>
     <ClInclude Include="include\astra\ForwardProjectionAlgorithm.h">
+      <Filter>Algorithms\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\PluginAlgorithm.h">
       <Filter>Algorithms\headers</Filter>
     </ClInclude>
     <ClInclude Include="include\astra\ReconstructionAlgorithm2D.h">

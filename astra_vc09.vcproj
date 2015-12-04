@@ -749,6 +749,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\include\astra\PluginAlgorithm.h"
+					>
+				</File>
+				<File
 					RelativePath=".\include\astra\ReconstructionAlgorithm2D.h"
 					>
 				</File>
@@ -794,6 +798,10 @@
 				</File>
 				<File
 					RelativePath=".\src\ForwardProjectionAlgorithm.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\PluginAlgorithm.cpp"
 					>
 				</File>
 				<File
