@@ -53,13 +53,13 @@ CFloat32ProjectionData3D& CFloat32ProjectionData3D::operator+=(const CFloat32Pro
 	CProjectionGeometry3D * pThisGeometry = getGeometry();
 
 	int iProjectionCount = pThisGeometry->getProjectionCount();
+	int iDetectorCount = pThisGeometry->getDetectorTotCount();
 #ifdef _DEBUG
 	CProjectionGeometry3D * pDataGeometry = _data.getGeometry();
-	int iThisProjectionDetectorCount = pThisGeometry->getDetectorRowCount() * pThisGeometry->getDetectorColCount();
-	int iDataProjectionDetectorCount = pDataGeometry->getDetectorRowCount() * pDataGeometry->getDetectorColCount();
+	int iDataProjectionDetectorCount = pDataGeometry->getDetectorTotCount();
 
 	ASTRA_ASSERT(iProjectionCount == pDataGeometry->getProjectionCount());
-	ASTRA_ASSERT(iThisProjectionDetectorCount == iDataProjectionDetectorCount);
+	ASTRA_ASSERT(iDetectorCount == iDataProjectionDetectorCount);
 #endif
 
 	for(int iProjectionIndex = 0; iProjectionIndex < iProjectionCount; iProjectionIndex++)
@@ -67,7 +67,7 @@ CFloat32ProjectionData3D& CFloat32ProjectionData3D::operator+=(const CFloat32Pro
 		CFloat32VolumeData2D * pThisProjection = fetchProjection(iProjectionIndex);
 		CFloat32VolumeData2D * pDataProjection = _data.fetchProjection(iProjectionIndex);
 
-		for(int iDetectorIndex = 0; iDetectorIndex < iDetectorIndex; iDetectorIndex++)
+		for(int iDetectorIndex = 0; iDetectorIndex < iDetectorCount; iDetectorIndex++)
 		{
 			float32 fThisValue = pThisProjection->getData()[iDetectorIndex];
 			float32 fDataValue = pDataProjection->getDataConst()[iDetectorIndex];
@@ -91,13 +91,13 @@ CFloat32ProjectionData3D& CFloat32ProjectionData3D::operator-=(const CFloat32Pro
 	CProjectionGeometry3D * pThisGeometry = getGeometry();
 
 	int iProjectionCount = pThisGeometry->getProjectionCount();
+	int iDetectorCount = pThisGeometry->getDetectorTotCount();
 #ifdef _DEBUG
 	CProjectionGeometry3D * pDataGeometry = _data.getGeometry();
-	int iThisProjectionDetectorCount = pThisGeometry->getDetectorRowCount() * pThisGeometry->getDetectorColCount();
-	int iDataProjectionDetectorCount = pDataGeometry->getDetectorRowCount() * pDataGeometry->getDetectorColCount();
+	int iDataProjectionDetectorCount = pDataGeometry->getDetectorTotCount();
 
 	ASTRA_ASSERT(iProjectionCount == pDataGeometry->getProjectionCount());
-	ASTRA_ASSERT(iThisProjectionDetectorCount == iDataProjectionDetectorCount);
+	ASTRA_ASSERT(iDetectorCount == iDataProjectionDetectorCount);
 #endif
 
 	for(int iProjectionIndex = 0; iProjectionIndex < iProjectionCount; iProjectionIndex++)
@@ -105,7 +105,7 @@ CFloat32ProjectionData3D& CFloat32ProjectionData3D::operator-=(const CFloat32Pro
 		CFloat32VolumeData2D * pThisProjection = fetchProjection(iProjectionIndex);
 		CFloat32VolumeData2D * pDataProjection = _data.fetchProjection(iProjectionIndex);
 
-		for(int iDetectorIndex = 0; iDetectorIndex < iDetectorIndex; iDetectorIndex++)
+		for(int iDetectorIndex = 0; iDetectorIndex < iDetectorCount; iDetectorIndex++)
 		{
 			float32 fThisValue = pThisProjection->getData()[iDetectorIndex];
 			float32 fDataValue = pDataProjection->getDataConst()[iDetectorIndex];
@@ -129,13 +129,13 @@ CFloat32ProjectionData3D& CFloat32ProjectionData3D::operator*=(const CFloat32Pro
 	CProjectionGeometry3D * pThisGeometry = getGeometry();
 
 	int iProjectionCount = pThisGeometry->getProjectionCount();
+	int iDetectorCount = pThisGeometry->getDetectorTotCount();
 #ifdef _DEBUG
 	CProjectionGeometry3D * pDataGeometry = _data.getGeometry();
-	int iThisProjectionDetectorCount = pThisGeometry->getDetectorRowCount() * pThisGeometry->getDetectorColCount();
-	int iDataProjectionDetectorCount = pDataGeometry->getDetectorRowCount() * pDataGeometry->getDetectorColCount();
+	int iDataProjectionDetectorCount = pDataGeometry->getDetectorTotCount();
 
 	ASTRA_ASSERT(iProjectionCount == pDataGeometry->getProjectionCount());
-	ASTRA_ASSERT(iThisProjectionDetectorCount == iDataProjectionDetectorCount);
+	ASTRA_ASSERT(iDetectorCount == iDataProjectionDetectorCount);
 #endif
 
 	for(int iProjectionIndex = 0; iProjectionIndex < iProjectionCount; iProjectionIndex++)
@@ -143,7 +143,7 @@ CFloat32ProjectionData3D& CFloat32ProjectionData3D::operator*=(const CFloat32Pro
 		CFloat32VolumeData2D * pThisProjection = fetchProjection(iProjectionIndex);
 		CFloat32VolumeData2D * pDataProjection = _data.fetchProjection(iProjectionIndex);
 
-		for(int iDetectorIndex = 0; iDetectorIndex < iDetectorIndex; iDetectorIndex++)
+		for(int iDetectorIndex = 0; iDetectorIndex < iDetectorCount; iDetectorIndex++)
 		{
 			float32 fThisValue = pThisProjection->getData()[iDetectorIndex];
 			float32 fDataValue = pDataProjection->getDataConst()[iDetectorIndex];
@@ -167,12 +167,13 @@ CFloat32ProjectionData3D& CFloat32ProjectionData3D::operator*=(const float32& _f
 	CProjectionGeometry3D * pThisGeometry = getGeometry();
 
 	int iProjectionCount = pThisGeometry->getProjectionCount();
+	int iDetectorCount = pThisGeometry->getDetectorTotCount();
 
 	for(int iProjectionIndex = 0; iProjectionIndex < iProjectionCount; iProjectionIndex++)
 	{
 		CFloat32VolumeData2D * pThisProjection = fetchProjection(iProjectionIndex);
 
-		for(int iDetectorIndex = 0; iDetectorIndex < iDetectorIndex; iDetectorIndex++)
+		for(int iDetectorIndex = 0; iDetectorIndex < iDetectorCount; iDetectorIndex++)
 		{
 			float32 fThisValue = pThisProjection->getData()[iDetectorIndex];
 
@@ -194,12 +195,13 @@ CFloat32ProjectionData3D& CFloat32ProjectionData3D::operator/=(const float32& _f
 	CProjectionGeometry3D * pThisGeometry = getGeometry();
 
 	int iProjectionCount = pThisGeometry->getProjectionCount();
+	int iDetectorCount = pThisGeometry->getDetectorTotCount();
 
 	for(int iProjectionIndex = 0; iProjectionIndex < iProjectionCount; iProjectionIndex++)
 	{
 		CFloat32VolumeData2D * pThisProjection = fetchProjection(iProjectionIndex);
 
-		for(int iDetectorIndex = 0; iDetectorIndex < iDetectorIndex; iDetectorIndex++)
+		for(int iDetectorIndex = 0; iDetectorIndex < iDetectorCount; iDetectorIndex++)
 		{
 			float32 fThisValue = pThisProjection->getData()[iDetectorIndex];
 
@@ -221,12 +223,13 @@ CFloat32ProjectionData3D& CFloat32ProjectionData3D::operator+=(const float32& _f
 	CProjectionGeometry3D * pThisGeometry = getGeometry();
 
 	int iProjectionCount = pThisGeometry->getProjectionCount();
+	int iDetectorCount = pThisGeometry->getDetectorTotCount();
 
 	for(int iProjectionIndex = 0; iProjectionIndex < iProjectionCount; iProjectionIndex++)
 	{
 		CFloat32VolumeData2D * pThisProjection = fetchProjection(iProjectionIndex);
 
-		for(int iDetectorIndex = 0; iDetectorIndex < iDetectorIndex; iDetectorIndex++)
+		for(int iDetectorIndex = 0; iDetectorIndex < iDetectorCount; iDetectorIndex++)
 		{
 			float32 fThisValue = pThisProjection->getData()[iDetectorIndex];
 
@@ -248,12 +251,13 @@ CFloat32ProjectionData3D& CFloat32ProjectionData3D::operator-=(const float32& _f
 	CProjectionGeometry3D * pThisGeometry = getGeometry();
 
 	int iProjectionCount = pThisGeometry->getProjectionCount();
+	int iDetectorCount = pThisGeometry->getDetectorTotCount();
 
 	for(int iProjectionIndex = 0; iProjectionIndex < iProjectionCount; iProjectionIndex++)
 	{
 		CFloat32VolumeData2D * pThisProjection = fetchProjection(iProjectionIndex);
 
-		for(int iDetectorIndex = 0; iDetectorIndex < iDetectorIndex; iDetectorIndex++)
+		for(int iDetectorIndex = 0; iDetectorIndex < iDetectorCount; iDetectorIndex++)
 		{
 			float32 fThisValue = pThisProjection->getData()[iDetectorIndex];
 

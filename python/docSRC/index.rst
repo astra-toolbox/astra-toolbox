@@ -19,6 +19,7 @@ Contents:
    creators
    functions
    operator
+   plugins
    matlab
    astra
 .. astra

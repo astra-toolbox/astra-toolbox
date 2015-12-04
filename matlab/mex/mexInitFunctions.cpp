@@ -17,6 +17,9 @@ void logCallBack(const char *msg, size_t len){
  */
 void initASTRAMex(){
     if(mexIsInitialized) return;
+
+    astra::running_in_matlab=true;
+
     if(!astra::CLogger::setCallbackScreen(&logCallBack)){
         mexErrMsgTxt("Error initializing mex functions.");
     }

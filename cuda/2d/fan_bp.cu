@@ -77,7 +77,7 @@ static bool bindProjDataTexture(float* data, unsigned int pitch, unsigned int wi
 	return true;
 }
 
-__global__ void devFanBP(float* D_volData, unsigned int volPitch, unsigned int startAngle, const SDimensions dims)
+__global__ void devFanBP(float* D_volData, unsigned int volPitch, unsigned int startAngle, const SDimensions dims, float fOutputScale)
 {
 	const int relX = threadIdx.x;
 	const int relY = threadIdx.y;
@@ -121,11 +121,11 @@ __global__ void devFanBP(float* D_volData, unsigned int volPitch, unsigned int s
 		fA += 1.0f;
 	}
 
-	volData[Y*volPitch+X] += fVal;
+	volData[Y*volPitch+X] += fVal * fOutputScale;
 }
 
 // supersampling version
-__global__ void devFanBP_SS(float* D_volData, unsigned int volPitch, unsigned int startAngle, const SDimensions dims)
+__global__ void devFanBP_SS(float* D_volData, unsigned int volPitch, unsigned int startAngle, const SDimensions dims, float fOutputScale)
 {
 	const int relX = threadIdx.x;
 	const int relY = threadIdx.y;
@@ -145,6 +145,8 @@ __global__ void devFanBP_SS(float* D_volData, unsigned int volPitch, unsigned in
 	const float fSubStep = 1.0f/dims.iRaysPerPixelDim;
 
 	float* volData = (float*)D_volData;
+
+	fOutputScale /= (dims.iRaysPerPixelDim * dims.iRaysPerPixelDim);
 
 	float fVal = 0.0f;
 	float fA = startAngle + 0.5f;
@@ -180,14 +182,14 @@ __global__ void devFanBP_SS(float* D_volData, unsigned int volPitch, unsigned in
 		fA += 1.0f;
 	}
 
-	volData[Y*volPitch+X] += fVal / (dims.iRaysPerPixelDim * dims.iRaysPerPixelDim);
+	volData[Y*volPitch+X] += fVal * fOutputScale;
 }
 
 
 // BP specifically for SART.
 // It includes (free) weighting with voxel weight.
 // It assumes the proj texture is set up _without_ padding, unlike regular BP.
-__global__ void devFanBP_SART(float* D_volData, unsigned int volPitch, const SDimensions dims)
+__global__ void devFanBP_SART(float* D_volData, unsigned int volPitch, const SDimensions dims, float fOutputScale)
 {
 	const int relX = threadIdx.x;
 	const int relY = threadIdx.y;
@@ -222,12 +224,12 @@ __global__ void devFanBP_SART(float* D_volData, unsigned int volPitch, const SDi
 	const float fT = fNum / fDen;
 	const float fVal = tex2D(gT_FanProjTexture, fT, 0.5f);
 
-	volData[Y*volPitch+X] += fVal;
+	volData[Y*volPitch+X] += fVal * fOutputScale;
 }
 
 // Weighted BP for use in fan beam FBP
 // Each pixel/ray is weighted by 1/L^2 where L is the distance to the source.
-__global__ void devFanBP_FBPWeighted(float* D_volData, unsigned int volPitch, unsigned int startAngle, const SDimensions dims)
+__global__ void devFanBP_FBPWeighted(float* D_volData, unsigned int volPitch, unsigned int startAngle, const SDimensions dims, float fOutputScale)
 {
 	const int relX = threadIdx.x;
 	const int relY = threadIdx.y;
@@ -273,13 +275,14 @@ __global__ void devFanBP_FBPWeighted(float* D_volData, unsigned int volPitch, un
 		fA += 1.0f;
 	}
 
-	volData[Y*volPitch+X] += fVal;
+	volData[Y*volPitch+X] += fVal * fOutputScale;
 }
 
 
 bool FanBP_internal(float* D_volumeData, unsigned int volumePitch,
            float* D_projData, unsigned int projPitch,
-           const SDimensions& dims, const SFanProjection* angles)
+           const SDimensions& dims, const SFanProjection* angles,
+           float fOutputScale)
 {
 	assert(dims.iProjAngles <= g_MaxAngles);
 
@@ -310,9 +313,9 @@ bool FanBP_internal(float* D_volumeData, unsigned int volumePitch,
 
 	for (unsigned int i = 0; i < dims.iProjAngles; i += g_anglesPerBlock) {
 		if (dims.iRaysPerPixelDim > 1)
-			devFanBP_SS<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, dims);
+			devFanBP_SS<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, dims, fOutputScale);
 		else
-			devFanBP<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, dims);
+			devFanBP<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, dims, fOutputScale);
 	}
 	cudaThreadSynchronize();
 
@@ -325,7 +328,8 @@ bool FanBP_internal(float* D_volumeData, unsigned int volumePitch,
 
 bool FanBP_FBPWeighted_internal(float* D_volumeData, unsigned int volumePitch,
            float* D_projData, unsigned int projPitch,
-           const SDimensions& dims, const SFanProjection* angles)
+           const SDimensions& dims, const SFanProjection* angles,
+           float fOutputScale)
 {
 	assert(dims.iProjAngles <= g_MaxAngles);
 
@@ -355,7 +359,7 @@ bool FanBP_FBPWeighted_internal(float* D_volumeData, unsigned int volumePitch,
 	cudaStreamCreate(&stream);
 
 	for (unsigned int i = 0; i < dims.iProjAngles; i += g_anglesPerBlock) {
-		devFanBP_FBPWeighted<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, dims);
+		devFanBP_FBPWeighted<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, dims, fOutputScale);
 	}
 	cudaThreadSynchronize();
 
@@ -370,7 +374,8 @@ bool FanBP_FBPWeighted_internal(float* D_volumeData, unsigned int volumePitch,
 bool FanBP_SART(float* D_volumeData, unsigned int volumePitch,
                 float* D_projData, unsigned int projPitch,
                 unsigned int angle,
-                const SDimensions& dims, const SFanProjection* angles)
+                const SDimensions& dims, const SFanProjection* angles,
+                float fOutputScale)
 {
 	// only one angle
 	bindProjDataTexture(D_projData, projPitch, dims.iProjDets, 1, cudaAddressModeClamp);
@@ -391,7 +396,7 @@ bool FanBP_SART(float* D_volumeData, unsigned int volumePitch,
 	dim3 dimGrid((dims.iVolWidth+g_blockSlices-1)/g_blockSlices,
 	             (dims.iVolHeight+g_blockSliceSize-1)/g_blockSliceSize);
 
-	devFanBP_SART<<<dimGrid, dimBlock>>>(D_volumeData, volumePitch, dims);
+	devFanBP_SART<<<dimGrid, dimBlock>>>(D_volumeData, volumePitch, dims, fOutputScale);
 	cudaThreadSynchronize();
 
 	cudaTextForceKernelsCompletion();
@@ -401,7 +406,8 @@ bool FanBP_SART(float* D_volumeData, unsigned int volumePitch,
 
 bool FanBP(float* D_volumeData, unsigned int volumePitch,
            float* D_projData, unsigned int projPitch,
-           const SDimensions& dims, const SFanProjection* angles)
+           const SDimensions& dims, const SFanProjection* angles,
+           float fOutputScale)
 {
 	for (unsigned int iAngle = 0; iAngle < dims.iProjAngles; iAngle += g_MaxAngles) {
 		SDimensions subdims = dims;
@@ -413,7 +419,7 @@ bool FanBP(float* D_volumeData, unsigned int volumePitch,
 		bool ret;
 		ret = FanBP_internal(D_volumeData, volumePitch,
 		                  D_projData + iAngle * projPitch, projPitch,
-		                  subdims, angles + iAngle);
+		                  subdims, angles + iAngle, fOutputScale);
 		if (!ret)
 			return false;
 	}
@@ -422,7 +428,8 @@ bool FanBP(float* D_volumeData, unsigned int volumePitch,
 
 bool FanBP_FBPWeighted(float* D_volumeData, unsigned int volumePitch,
            float* D_projData, unsigned int projPitch,
-           const SDimensions& dims, const SFanProjection* angles)
+           const SDimensions& dims, const SFanProjection* angles,
+           float fOutputScale)
 {
 	for (unsigned int iAngle = 0; iAngle < dims.iProjAngles; iAngle += g_MaxAngles) {
 		SDimensions subdims = dims;
@@ -434,7 +441,7 @@ bool FanBP_FBPWeighted(float* D_volumeData, unsigned int volumePitch,
 		bool ret;
 		ret = FanBP_FBPWeighted_internal(D_volumeData, volumePitch,
 		                  D_projData + iAngle * projPitch, projPitch,
-		                  subdims, angles + iAngle);
+		                  subdims, angles + iAngle, fOutputScale);
 
 		if (!ret)
 			return false;
@@ -498,7 +505,7 @@ int main()
 	copyVolumeToDevice(img, dims.iVolWidth, dims.iVolWidth, dims.iVolHeight, D_volumeData, volumePitch);
 	copySinogramToDevice(sino, dims.iProjDets, dims.iProjDets, dims.iProjAngles, D_projData, projPitch);
 
-	FanBP(D_volumeData, volumePitch, D_projData, projPitch, dims, projs);
+	FanBP(D_volumeData, volumePitch, D_projData, projPitch, dims, projs, 1.0f);
 
 	copyVolumeFromDevice(img, dims.iVolWidth, dims.iVolWidth, dims.iVolHeight, D_volumeData, volumePitch);
 

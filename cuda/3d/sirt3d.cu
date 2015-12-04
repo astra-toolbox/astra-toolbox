@@ -160,10 +160,10 @@ bool SIRT::precomputeWeights()
 	zeroVolumeData(D_pixelWeight, dims);
 
 	if (useSinogramMask) {
-		callBP(D_pixelWeight, D_smaskData);
+		callBP(D_pixelWeight, D_smaskData, 1.0f);
 	} else {
 		processSino3D<opSet>(D_projData, 1.0f, dims);
-		callBP(D_pixelWeight, D_projData);
+		callBP(D_pixelWeight, D_projData, 1.0f);
 	}
 #if 0
 	float* bufp = new float[512*512];
@@ -293,7 +293,7 @@ bool SIRT::iterate(unsigned int iterations)
 #endif
 
 
-		callBP(D_tmpData, D_projData);
+		callBP(D_tmpData, D_projData, 1.0f);
 #if 0
 	printf("Dumping tmpData: %p\n", (void*)D_tmpData.ptr);
 	float* buf = new float[256*256];
@@ -347,7 +347,7 @@ bool doSIRT(cudaPitchedPtr& D_volumeData,
 	SIRT sirt;
 	bool ok = true;
 
-	ok &= sirt.setConeGeometry(dims, angles);
+	ok &= sirt.setConeGeometry(dims, angles, 1.0f);
 	if (D_maskData.ptr)
 		ok &= sirt.enableVolumeMask();
 

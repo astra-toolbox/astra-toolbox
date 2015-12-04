@@ -70,28 +70,13 @@ public:
 
 	/** Initialize class.
 	 *
-	 * @param _pProjector		Projector Object. (Ignored)
+	 * @param _pProjector		Projector Object. (Optional)
 	 * @param _pSinogram		ProjectionData2D object containing the sinogram data.
 	 * @param _pReconstruction	VolumeData2D object for storing the reconstructed volume.
-	 */
-	bool initialize(CProjector2D* _pProjector, 
-					CFloat32ProjectionData2D* _pSinogram, 
-					CFloat32VolumeData2D* _pReconstruction);
-
-	/** Initialize class.
-	 *
-	 * @param _pProjector		Projector Object. (Ignored)
-	 * @param _pSinogram		ProjectionData2D object containing the sinogram data.
-	 * @param _pReconstruction	VolumeData2D object for storing the reconstructed volume.
-	 * @param _iGPUindex		GPU to use.
-	 * @param _iDetectorSuperSampling Supersampling factor for the FP.
-	 * @param _iPixelSuperSampling  Square root of number of samples per voxel, used to compute the backprojection
 	 */
 	virtual bool initialize(CProjector2D* _pProjector, 
 	                        CFloat32ProjectionData2D* _pSinogram, 
-	                        CFloat32VolumeData2D* _pReconstruction,
-	                        int _iGPUindex = -1, int _iDetectorSuperSampling = 1,
-	                        int _iPixelSuperSampling = 1);
+	                        CFloat32VolumeData2D* _pReconstruction);
 
 
 	/** Clear this class.
@@ -166,6 +151,9 @@ protected:
 	int m_iGPUIndex;
 
 	bool m_bAlgoInit;
+
+	void initializeFromProjector();
+	virtual bool requiresProjector() const { return false; }
 };
 
 // inline functions

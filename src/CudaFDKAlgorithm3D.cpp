@@ -35,6 +35,8 @@ $Id$
 #include "astra/CudaProjector3D.h"
 #include "astra/ConeProjectionGeometry3D.h"
 
+#include "astra/Logging.h"
+
 #include "../cuda/3d/astra3d.h"
 
 using namespace std;
@@ -85,6 +87,24 @@ bool CCudaFDKAlgorithm3D::_check()
 }
 
 //---------------------------------------------------------------------------------------
+void CCudaFDKAlgorithm3D::initializeFromProjector()
+{
+	m_iVoxelSuperSampling = 1;
+	m_iGPUIndex = -1;
+
+	CCudaProjector3D* pCudaProjector = dynamic_cast<CCudaProjector3D*>(m_pProjector);
+	if (!pCudaProjector) {
+		if (m_pProjector) {
+			ASTRA_WARN("non-CUDA Projector3D passed to FDK_CUDA");
+		}
+	} else {
+		m_iVoxelSuperSampling = pCudaProjector->getVoxelSuperSampling();
+		m_iGPUIndex = pCudaProjector->getGPUIndex();
+	}
+
+}
+
+//---------------------------------------------------------------------------------------
 // Initialize - Config
 bool CCudaFDKAlgorithm3D::initialize(const Config& _cfg)
 {
@@ -101,20 +121,18 @@ bool CCudaFDKAlgorithm3D::initialize(const Config& _cfg)
 		return false;
 	}
 
-	CCudaProjector3D* pCudaProjector = 0;
-	pCudaProjector = dynamic_cast<CCudaProjector3D*>(m_pProjector);
-	if (!pCudaProjector) {
-		// TODO: Report
-	}
+	initializeFromProjector();
 
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
-	CC.markOptionParsed("GPUindex");
-
-	m_iVoxelSuperSampling = 1;
-	if (pCudaProjector)
-		m_iVoxelSuperSampling = pCudaProjector->getVoxelSuperSampling();
+	// Deprecated options
 	m_iVoxelSuperSampling = (int)_cfg.self.getOptionNumerical("VoxelSuperSampling", m_iVoxelSuperSampling);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", m_iGPUIndex);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
 	CC.markOptionParsed("VoxelSuperSampling");
+	CC.markOptionParsed("GPUIndex");
+	if (!_cfg.self.hasOption("GPUIndex"))
+		CC.markOptionParsed("GPUindex");
+
+
 
 	m_bShortScan = _cfg.self.getOptionBool("ShortScan", false);
 	CC.markOptionParsed("ShortScan");
@@ -182,17 +200,7 @@ void CCudaFDKAlgorithm3D::run(int _iNrIterations)
 	bool ok = true;
 
 	ok = astraCudaFDK(pReconMem->getData(), pSinoMem->getDataConst(),
-	                  volgeom.getGridColCount(),
-	                  volgeom.getGridRowCount(),
-	                  volgeom.getGridSliceCount(),
-	                  conegeom->getProjectionCount(),
-	                  conegeom->getDetectorColCount(),
-	                  conegeom->getDetectorRowCount(),
-	                  conegeom->getOriginSourceDistance(),
-	                  conegeom->getOriginDetectorDistance(),
-	                  conegeom->getDetectorSpacingX(),
-	                  conegeom->getDetectorSpacingY(),
-	                  conegeom->getProjectionAngles(),
+	                  &volgeom, conegeom,
 	                  m_bShortScan, m_iGPUIndex, m_iVoxelSuperSampling);
 
 	ASTRA_ASSERT(ok);

@@ -59,7 +59,7 @@ protected:
 	                 unsigned int angle, float outputScale);
 	bool callBP_SART(float* D_volumeData, unsigned int volumePitch,
 	                 float* D_projData, unsigned int projPitch,
-	                 unsigned int angle);
+	                 unsigned int angle, float outputScale);
 
 
 	// projection angle variables

@@ -749,6 +749,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\include\astra\PluginAlgorithm.h"
+					>
+				</File>
+				<File
 					RelativePath=".\include\astra\ReconstructionAlgorithm2D.h"
 					>
 				</File>
@@ -794,6 +798,10 @@
 				</File>
 				<File
 					RelativePath=".\src\ForwardProjectionAlgorithm.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\PluginAlgorithm.cpp"
 					>
 				</File>
 				<File
@@ -933,6 +941,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\include\astra\CompositeGeometryManager.h"
+					>
+				</File>
+				<File
 					RelativePath=".\include\astra\Config.h"
 					>
 				</File>
@@ -986,6 +998,10 @@
 				</File>
 				<File
 					RelativePath=".\src\AstraObjectManager.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\CompositeGeometryManager.cpp"
 					>
 				</File>
 				<File
@@ -2229,6 +2245,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\cuda\3d\mem3d.h"
+					>
+				</File>
+				<File
 					RelativePath=".\cuda\3d\par3d_bp.h"
 					>
 				</File>
@@ -3006,6 +3026,42 @@
 				</File>
 				<File
 					RelativePath=".\cuda\3d\fdk.cu"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="Cudart Build Rule"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|x64"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="Cudart Build Rule"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="Cudart Build Rule"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|x64"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="Cudart Build Rule"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\cuda\3d\mem3d.cu"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"

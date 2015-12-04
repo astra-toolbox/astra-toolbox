@@ -28,5 +28,8 @@ $Id$
 
 #include "astra/Globals.h"
 
+namespace astra{
+    bool running_in_matlab=false;
+}
 // nothing to see here :)
 

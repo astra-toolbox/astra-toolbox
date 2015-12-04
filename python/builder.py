@@ -41,6 +41,12 @@ try:
         usecuda=True
 except KeyError:
     pass
+try:
+    if os.environ['CL'].find('/DASTRA_CUDA')!=-1:
+        usecuda=True
+except KeyError:
+    pass
+
 
 cfgToWrite = 'DEF HAVE_CUDA=' + str(usecuda) + "\n"
 cfgHasToBeUpdated = True
@@ -65,7 +71,7 @@ ext_modules = cythonize("astra/*.pyx", language_level=2)
 cmdclass = { 'build_ext': build_ext }
 
 setup (name = 'PyASTRAToolbox',
-       version = '1.6',
+       version = '1.7',
        description = 'Python interface to the ASTRA-Toolbox',
        author='D.M. Pelt',
        author_email='D.M.Pelt@cwi.nl',

@@ -67,6 +67,24 @@ CCudaFilteredBackProjectionAlgorithm::~CCudaFilteredBackProjectionAlgorithm()
 	}
 }
 
+void CCudaFilteredBackProjectionAlgorithm::initializeFromProjector()
+{
+	m_iPixelSuperSampling = 1;
+	m_iGPUIndex = -1;
+
+	// Projector
+	CCudaProjector2D* pCudaProjector = dynamic_cast<CCudaProjector2D*>(m_pProjector);
+	if (!pCudaProjector) {
+		if (m_pProjector) {
+			ASTRA_WARN("non-CUDA Projector2D passed to FBP_CUDA");
+		}
+	} else {
+		m_iPixelSuperSampling = pCudaProjector->getVoxelSuperSampling();
+		m_iGPUIndex = pCudaProjector->getGPUIndex();
+	}
+
+}
+
 bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 {
 	ASTRA_ASSERT(_cfg.self);
@@ -163,35 +181,30 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 	}
 	CC.markNodeParsed("FilterD"); // TODO: Only for some types!
 
-	// GPU number
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
-	CC.markOptionParsed("GPUindex");
-
-	m_iPixelSuperSampling = 1;
-	if (pCudaProjector) {
-		// New interface
-		m_iPixelSuperSampling = pCudaProjector->getVoxelSuperSampling();
-	}
-	// Deprecated options
-	m_iPixelSuperSampling = (int)_cfg.self.getOptionNumerical("PixelSuperSampling", m_iPixelSuperSampling);
-	CC.markOptionParsed("PixelSuperSampling");
-
-
 	// Fan beam short scan mode
 	if (m_pSinogram && dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pSinogram->getGeometry())) {
 		m_bShortScan = (int)_cfg.self.getOptionBool("ShortScan", false);
 		CC.markOptionParsed("ShortScan");
 	}
 
+	initializeFromProjector();
 
+	// Deprecated options
+	m_iPixelSuperSampling = (int)_cfg.self.getOptionNumerical("PixelSuperSampling", m_iPixelSuperSampling);
+	CC.markOptionParsed("PixelSuperSampling");
+
+	// GPU number
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
+	CC.markOptionParsed("GPUIndex");
+	if (!_cfg.self.hasOption("GPUIndex"))
+		CC.markOptionParsed("GPUindex");
 
 
 	m_pFBP = new AstraFBP;
 	m_bAstraFBPInit = false;
 
-	// success
-	m_bIsInitialized = true;
-	return m_bIsInitialized;
+	return check();
 }
 
 bool CCudaFilteredBackProjectionAlgorithm::initialize(CFloat32ProjectionData2D * _pSinogram, CFloat32VolumeData2D * _pReconstruction, E_FBPFILTER _eFilter, const float * _pfFilter /* = NULL */, int _iFilterWidth /* = 0 */, int _iGPUIndex /* = 0 */, float _fFilterParameter /* = -1.0f */)
@@ -241,7 +254,7 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(CFloat32ProjectionData2D *
 
 	m_fFilterParameter = _fFilterParameter;
 
-	return m_bIsInitialized;
+	return check();
 }
 
 void CCudaFilteredBackProjectionAlgorithm::run(int _iNrIterations /* = 0 */)
@@ -361,7 +374,7 @@ bool CCudaFilteredBackProjectionAlgorithm::check()
 	ASTRA_CONFIG_CHECK(m_pReconstruction->isInitialized(), "FBP_CUDA", "Reconstruction Data Object Not Initialized.");
 
 	// check gpu index
-	ASTRA_CONFIG_CHECK(m_iGPUIndex >= -1, "FBP_CUDA", "GPUIndex must be a non-negative integer.");
+	ASTRA_CONFIG_CHECK(m_iGPUIndex >= -1, "FBP_CUDA", "GPUIndex must be a non-negative integer or -1.");
 	// check pixel supersampling
 	ASTRA_CONFIG_CHECK(m_iPixelSuperSampling >= 0, "FBP_CUDA", "PixelSuperSampling must be a non-negative integer.");
 

@@ -67,6 +67,9 @@
     <CudaCompile Include="cuda\3d\fdk.cu">
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>
+    <CudaCompile Include="cuda\3d\mem3d.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
     <CudaCompile Include="cuda\3d\par3d_bp.cu">
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>
@@ -100,6 +103,9 @@
       <Filter>Algorithms\source</Filter>
     </ClCompile>
     <ClCompile Include="src\ForwardProjectionAlgorithm.cpp">
+      <Filter>Algorithms\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PluginAlgorithm.cpp">
       <Filter>Algorithms\source</Filter>
     </ClCompile>
     <ClCompile Include="src\ReconstructionAlgorithm2D.cpp">
@@ -151,6 +157,9 @@
       <Filter>Global &amp; Other\source</Filter>
     </ClCompile>
     <ClCompile Include="src\AstraObjectManager.cpp">
+      <Filter>Global &amp; Other\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CompositeGeometryManager.cpp">
       <Filter>Global &amp; Other\source</Filter>
     </ClCompile>
     <ClCompile Include="src\Config.cpp">
@@ -344,6 +353,9 @@
     <ClInclude Include="include\astra\ForwardProjectionAlgorithm.h">
       <Filter>Algorithms\headers</Filter>
     </ClInclude>
+    <ClInclude Include="include\astra\PluginAlgorithm.h">
+      <Filter>Algorithms\headers</Filter>
+    </ClInclude>
     <ClInclude Include="include\astra\ReconstructionAlgorithm2D.h">
       <Filter>Algorithms\headers</Filter>
     </ClInclude>
@@ -396,6 +408,9 @@
       <Filter>Global &amp; Other\headers</Filter>
     </ClInclude>
     <ClInclude Include="include\astra\clog.h">
+      <Filter>Global &amp; Other\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\CompositeGeometryManager.h">
       <Filter>Global &amp; Other\headers</Filter>
     </ClInclude>
     <ClInclude Include="include\astra\Config.h">
@@ -639,6 +654,9 @@
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
     <ClInclude Include="cuda\3d\fdk.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\mem3d.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
     <ClInclude Include="cuda\3d\par3d_bp.h">

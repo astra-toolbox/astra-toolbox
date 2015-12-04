@@ -380,6 +380,7 @@
     <ClCompile Include="src\AsyncAlgorithm.cpp" />
     <ClCompile Include="src\BackProjectionAlgorithm.cpp" />
     <ClCompile Include="src\CglsAlgorithm.cpp" />
+    <ClCompile Include="src\CompositeGeometryManager.cpp" />
     <ClCompile Include="src\ConeProjectionGeometry3D.cpp" />
     <ClCompile Include="src\ConeVecProjectionGeometry3D.cpp" />
     <ClCompile Include="src\Config.cpp" />
@@ -539,6 +540,7 @@
     <ClCompile Include="src\ParallelProjectionGeometry3D.cpp" />
     <ClCompile Include="src\ParallelVecProjectionGeometry3D.cpp" />
     <ClCompile Include="src\PlatformDepSystemCode.cpp" />
+    <ClCompile Include="src\PluginAlgorithm.cpp" />
     <ClCompile Include="src\ProjectionGeometry2D.cpp" />
     <ClCompile Include="src\ProjectionGeometry3D.cpp" />
     <ClCompile Include="src\Projector2D.cpp" />
@@ -582,6 +584,7 @@
     <ClInclude Include="cuda\3d\darthelper3d.h" />
     <ClInclude Include="cuda\3d\dims3d.h" />
     <ClInclude Include="cuda\3d\fdk.h" />
+    <ClInclude Include="cuda\3d\mem3d.h" />
     <ClInclude Include="cuda\3d\par3d_bp.h" />
     <ClInclude Include="cuda\3d\par3d_fp.h" />
     <ClInclude Include="cuda\3d\sirt3d.h" />
@@ -594,6 +597,7 @@
     <ClInclude Include="include\astra\AsyncAlgorithm.h" />
     <ClInclude Include="include\astra\BackProjectionAlgorithm.h" />
     <ClInclude Include="include\astra\CglsAlgorithm.h" />
+    <ClInclude Include="include\astra\CompositeGeometryManager.h" />
     <ClInclude Include="include\astra\ConeProjectionGeometry3D.h" />
     <ClInclude Include="include\astra\ConeVecProjectionGeometry3D.h" />
     <ClInclude Include="include\astra\Config.h" />
@@ -649,6 +653,7 @@
     <ClInclude Include="include\astra\ParallelProjectionGeometry3D.h" />
     <ClInclude Include="include\astra\ParallelVecProjectionGeometry3D.h" />
     <ClInclude Include="include\astra\PlatformDepSystemCode.h" />
+    <ClInclude Include="include\astra\PluginAlgorithm.h" />
     <ClInclude Include="include\astra\ProjectionGeometry2D.h" />
     <ClInclude Include="include\astra\ProjectionGeometry3D.h" />
     <ClInclude Include="include\astra\Projector2D.h" />
@@ -799,6 +804,12 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </CudaCompile>
     <CudaCompile Include="cuda\3d\fdk.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </CudaCompile>
+    <CudaCompile Include="cuda\3d\mem3d.cu">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
