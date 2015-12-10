@@ -57,23 +57,23 @@ This method can be called in a number of ways:
 ``create_vol_geom(N)``:
     :returns: A 2D volume geometry of size :math:`N \\times N`.
 
-``create_vol_geom((M, N))``:
-    :returns: A 2D volume geometry of size :math:`M \\times N`.
+``create_vol_geom((Y, X))``:
+    :returns: A 2D volume geometry of size :math:`Y \\times X`.
 
-``create_vol_geom(M, N)``:
-    :returns: A 2D volume geometry of size :math:`M \\times N`.
+``create_vol_geom(Y, X)``:
+    :returns: A 2D volume geometry of size :math:`Y \\times X`.
 
-``create_vol_geom(M, N, minx, maxx, miny, maxy)``:
-    :returns: A 2D volume geometry of size :math:`M \\times N`, windowed as :math:`minx \\leq x \\leq maxx` and :math:`miny \\leq y \\leq maxy`.
+``create_vol_geom(Y, X, minx, maxx, miny, maxy)``:
+    :returns: A 2D volume geometry of size :math:`Y \\times X`, windowed as :math:`minx \\leq x \\leq maxx` and :math:`miny \\leq y \\leq maxy`.
 
-``create_vol_geom((M, N, Z))``:
-    :returns: A 3D volume geometry of size :math:`M \\times N \\times Z`.
+``create_vol_geom((Y, X, Z))``:
+    :returns: A 3D volume geometry of size :math:`Y \\times X \\times Z`.
 
-``create_vol_geom(M, N, Z)``:
-    :returns: A 3D volume geometry of size :math:`M \\times N \\times Z`.
+``create_vol_geom(Y, X, Z)``:
+    :returns: A 3D volume geometry of size :math:`Y \\times X \\times Z`.
 
-``create_vol_geom(M, N, Z, minx, maxx, miny, maxy, minz, maxz)``:
-    :returns: A 3D volume geometry of size :math:`M \\times N \\times Z`, windowed as :math:`minx \\leq x \\leq maxx` and :math:`miny \\leq y \\leq maxy` and :math:`minz \\leq z \\leq maxz` .
+``create_vol_geom(Y, X, Z, minx, maxx, miny, maxy, minz, maxz)``:
+    :returns: A 3D volume geometry of size :math:`Y \\times X \\times Z`, windowed as :math:`minx \\leq x \\leq maxx` and :math:`miny \\leq y \\leq maxy` and :math:`minz \\leq z \\leq maxz` .
 
 
 """
