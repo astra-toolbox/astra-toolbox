@@ -94,6 +94,7 @@ bool CCudaForwardProjectionAlgorithm::initialize(const Config& _cfg)
 	ConfigStackCheck<CAlgorithm> CC("CudaForwardProjectionAlgorithm", this, _cfg);
 
 	// Projector
+	m_pProjector = 0;
 	XMLNode node = _cfg.self.getSingleNode("ProjectorId");
 	if (node) {
 		int id = boost::lexical_cast<int>(node.getContent());
