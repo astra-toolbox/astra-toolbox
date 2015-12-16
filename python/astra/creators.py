@@ -156,7 +156,7 @@ This method can be called in a number of ways:
 :returns: A parallel projection geometry.
 
 
-``create_proj_geom('fanflat', det_width, det_count, angles, source_origin, source_det)``:
+``create_proj_geom('fanflat', det_width, det_count, angles, source_origin, origin_det)``:
 
 :param det_width: Size of a detector pixel.
 :type det_width: :class:`float`
@@ -165,7 +165,7 @@ This method can be called in a number of ways:
 :param angles: Array of angles in radians.
 :type angles: :class:`numpy.ndarray`
 :param source_origin: Position of the source.
-:param source_det: Position of the detector
+:param origin_det: Position of the detector
 :returns: A fan-beam projection geometry.
 
 ``create_proj_geom('fanflat_vec', det_count, V)``:
@@ -188,7 +188,7 @@ This method can be called in a number of ways:
 :type angles: :class:`numpy.ndarray`
 :returns: A parallel projection geometry.
 
-``create_proj_geom('cone', detector_spacing_x, detector_spacing_y, det_row_count, det_col_count, angles, source_origin, source_det)``:
+``create_proj_geom('cone', detector_spacing_x, detector_spacing_y, det_row_count, det_col_count, angles, source_origin, origin_det)``:
 
 :param detector_spacing_*: Distance between two adjacent detector pixels.
 :type detector_spacing_*: :class:`float`
@@ -200,8 +200,8 @@ This method can be called in a number of ways:
 :type angles: :class:`numpy.ndarray`
 :param source_origin: Distance between point source and origin.
 :type source_origin: :class:`float`
-:param source_det: Distance between the detector and origin.
-:type source_det: :class:`float`
+:param origin_det: Distance between the detector and origin.
+:type origin_det: :class:`float`
 :returns: A cone-beam projection geometry.
 
 ``create_proj_geom('cone_vec', det_row_count, det_col_count, V)``:
@@ -244,7 +244,7 @@ This method can be called in a number of ways:
         return {'type': 'parallel', 'DetectorWidth': args[0], 'DetectorCount': args[1], 'ProjectionAngles': args[2]}
     elif intype == 'fanflat':
         if len(args) < 5:
-            raise Exception('not enough variables: astra_create_proj_geom(fanflat, det_width, det_count, angles, source_origin, source_det)')
+            raise Exception('not enough variables: astra_create_proj_geom(fanflat, det_width, det_count, angles, source_origin, origin_det)')
         return {'type': 'fanflat', 'DetectorWidth': args[0], 'DetectorCount': args[1], 'ProjectionAngles': args[2], 'DistanceOriginSource': args[3], 'DistanceOriginDetector': args[4]}
     elif intype == 'fanflat_vec':
         if len(args) < 2:
@@ -258,7 +258,7 @@ This method can be called in a number of ways:
         return {'type':'parallel3d', 'DetectorSpacingX':args[0], 'DetectorSpacingY':args[1], 'DetectorRowCount':args[2], 'DetectorColCount':args[3],'ProjectionAngles':args[4]}
     elif intype == 'cone':
         if len(args) < 7:
-            raise Exception('not enough variables: astra_create_proj_geom(cone, detector_spacing_x, detector_spacing_y, det_row_count, det_col_count, angles, source_origin, source_det)')
+            raise Exception('not enough variables: astra_create_proj_geom(cone, detector_spacing_x, detector_spacing_y, det_row_count, det_col_count, angles, source_origin, origin_det)')
         return {'type':	'cone','DetectorSpacingX':args[0], 'DetectorSpacingY':args[1], 'DetectorRowCount':args[2],'DetectorColCount':args[3],'ProjectionAngles':args[4],'DistanceOriginSource':	args[5],'DistanceOriginDetector':args[6]}
     elif intype == 'cone_vec':
         if len(args) < 3:
