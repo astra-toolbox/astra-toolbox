@@ -34,7 +34,6 @@ $Id$
 #include "../cuda/2d/algo.h"
 
 #include "astra/AstraObjectManager.h"
-#include <boost/lexical_cast.hpp>
 
 using namespace std;
 
@@ -67,14 +66,14 @@ bool CCudaDartSmoothingAlgorithm::initialize(const Config& _cfg)
 	// reconstruction data
 	XMLNode node = _cfg.self.getSingleNode("InDataId");
 	ASTRA_CONFIG_CHECK(node, "CudaDartMask", "No InDataId tag specified.");
-	int id = boost::lexical_cast<int>(node.getContent());
+	int id = node.getContentInt();
 	m_pIn = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 	CC.markNodeParsed("InDataId");
 
 	// reconstruction data
 	node = _cfg.self.getSingleNode("OutDataId");
 	ASTRA_CONFIG_CHECK(node, "CudaDartMask", "No OutDataId tag specified.");
-	id = boost::lexical_cast<int>(node.getContent());
+	id = node.getContentInt();
 	m_pOut = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 	CC.markNodeParsed("OutDataId");
 

@@ -29,7 +29,6 @@ $Id$
 #include "astra/ParallelBeamLinearKernelProjector2D.h"
 
 #include <cmath>
-#include <boost/lexical_cast.hpp>
 
 #include "astra/DataProjectorPolicies.h"
 

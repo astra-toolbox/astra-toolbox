@@ -27,7 +27,6 @@ $Id$
 */
 
 #include "astra/ParallelProjectionGeometry2D.h"
-#include <boost/lexical_cast.hpp>
 
 #include <cstring>
 

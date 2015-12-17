@@ -101,6 +101,12 @@ public:
 	 */ 
 	string getContent() const;
 
+	/** Get the content of the XML node as an integer
+	 *
+	 * @return node content
+	 */
+	int getContentInt() const;
+
 	/** Get the content of the XML node as a numerical.
 	 *
 	 * @return node content
@@ -152,6 +158,7 @@ public:
 	 */ 
 	float32 getAttributeNumerical(string _sName, float32 _fDefaultValue = 0) const;
 	double getAttributeNumericalDouble(string _sName, double _fDefaultValue = 0) const;
+	int getAttributeInt(string _sName, int _fDefaultValue = 0) const;
 
 	/** Get the value of a boolean attribute.
 	 *
@@ -186,6 +193,7 @@ public:
 	 * @return option value, _fDefaultValue if the option doesn't exist
 	 */ 
 	float32 getOptionNumerical(string _sKey, float32 _fDefaultValue = 0) const;
+	int getOptionInt(string _sKey, int _fDefaultValue = 0) const;
 
 	/** Get the value of an option within this XML Node
 	 *

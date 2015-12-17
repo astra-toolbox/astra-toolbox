@@ -28,4 +28,99 @@ $Id$
 
 #include "astra/Utilities.h"
 
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
 
+#include <sstream>
+#include <locale>
+#include <iomanip>
+
+namespace astra {
+
+namespace StringUtil {
+
+int stringToInt(const std::string& s)
+{
+	double i;
+	std::istringstream iss(s);
+	iss.imbue(std::locale::classic());
+	iss >> i;
+	if (iss.fail() || !iss.eof())
+		throw bad_cast();
+	return i;
+
+}
+
+float stringToFloat(const std::string& s)
+{
+	return (float)stringToDouble(s);
+}
+
+double stringToDouble(const std::string& s)
+{
+	double f;
+	std::istringstream iss(s);
+	iss.imbue(std::locale::classic());
+	iss >> f;
+	if (iss.fail() || !iss.eof())
+		throw bad_cast();
+	return f;
+}
+
+template<> float stringTo(const std::string& s) { return stringToFloat(s); }
+template<> double stringTo(const std::string& s) { return stringToDouble(s); }
+
+std::vector<float> stringToFloatVector(const std::string &s)
+{
+	return stringToVector<float>(s);
+}
+
+std::vector<double> stringToDoubleVector(const std::string &s)
+{
+	return stringToVector<double>(s);
+}
+
+template<typename T>
+std::vector<T> stringToVector(const std::string& s)
+{
+	// split
+	std::vector<std::string> items;
+	boost::split(items, s, boost::is_any_of(",;"));
+
+	// init list
+	std::vector<T> out;
+	out.resize(items.size());
+
+	// loop elements
+	for (unsigned int i = 0; i < items.size(); i++) {
+		out[i] = stringTo<T>(items[i]);
+	}
+	return out;
+}
+
+
+std::string floatToString(float f)
+{
+	std::ostringstream s;
+	s.imbue(std::locale::classic());
+	s << std::setprecision(9) << f;
+	return s.str();
+}
+
+std::string doubleToString(double f)
+{
+	std::ostringstream s;
+	s.imbue(std::locale::classic());
+	s << std::setprecision(17) << f;
+	return s.str();
+}
+
+
+template<> std::string toString(float f) { return floatToString(f); }
+template<> std::string toString(double f) { return doubleToString(f); }
+
+
+}
+
+}

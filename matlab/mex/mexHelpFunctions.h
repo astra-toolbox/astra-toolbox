@@ -37,7 +37,6 @@ $Id$
 #include <algorithm>
 #include <mex.h>
 
-#include <boost/lexical_cast.hpp>
 #include <boost/any.hpp>
 
 #include "astra/Globals.h"

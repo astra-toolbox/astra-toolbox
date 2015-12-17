@@ -30,7 +30,6 @@ $Id$
 
 #include <cstring>
 #include <sstream>
-#include <boost/lexical_cast.hpp>
 
 using namespace std;
 
@@ -125,7 +124,7 @@ bool CFanFlatVecProjectionGeometry2D::initialize(const Config& _cfg)
 	// Required: DetectorCount
 	node = _cfg.self.getSingleNode("DetectorCount");
 	ASTRA_CONFIG_CHECK(node, "FanFlatVecProjectionGeometry3D", "No DetectorRowCount tag specified.");
-	m_iDetectorCount = boost::lexical_cast<int>(node.getContent());
+	m_iDetectorCount = node.getContentInt();
 	CC.markNodeParsed("DetectorCount");
 
 	// Required: Vectors
@@ -235,12 +234,12 @@ Config* CFanFlatVecProjectionGeometry2D::getConfiguration() const
 	std::string vectors = "";
 	for (int i = 0; i < m_iProjectionAngleCount; ++i) {
 		SFanProjection& p = m_pProjectionAngles[i];
-		vectors += boost::lexical_cast<string>(p.fSrcX) + ",";
-		vectors += boost::lexical_cast<string>(p.fSrcY) + ",";
-		vectors += boost::lexical_cast<string>(p.fDetSX + 0.5f * m_iDetectorCount * p.fDetUX) + ",";
-		vectors += boost::lexical_cast<string>(p.fDetSY + 0.5f * m_iDetectorCount * p.fDetUY) + ",";
-		vectors += boost::lexical_cast<string>(p.fDetUX) + ",";
-		vectors += boost::lexical_cast<string>(p.fDetUY);
+		vectors += StringUtil::toString(p.fSrcX) + ",";
+		vectors += StringUtil::toString(p.fSrcY) + ",";
+		vectors += StringUtil::toString(p.fDetSX + 0.5f * m_iDetectorCount * p.fDetUX) + ",";
+		vectors += StringUtil::toString(p.fDetSY + 0.5f * m_iDetectorCount * p.fDetUY) + ",";
+		vectors += StringUtil::toString(p.fDetUX) + ",";
+		vectors += StringUtil::toString(p.fDetUY);
 		if (i < m_iProjectionAngleCount-1) vectors += ';';
 	}
 	cfg->self.addChildNode("Vectors", vectors);

@@ -31,12 +31,6 @@ $Id$
 #include "rapidxml/rapidxml.hpp"
 #include "rapidxml/rapidxml_print.hpp"
 
-#include <boost/lexical_cast.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/classification.hpp>
-
-
 
 using namespace rapidxml;
 using namespace astra;
@@ -138,8 +132,13 @@ string XMLNode::getContent() const
 // Get node content - NUMERICAL
 float32 XMLNode::getContentNumerical() const
 {
-	return boost::lexical_cast<float32>(getContent());
+	return StringUtil::stringToFloat(getContent());
 }
+int XMLNode::getContentInt() const
+{
+	return StringUtil::stringToInt(getContent());
+}
+
 
 //-----------------------------------------------------------------------------	
 // Get node content - BOOLEAN
@@ -154,7 +153,7 @@ bool XMLNode::getContentBool() const
 vector<string> XMLNode::getContentArray() const
 {
 	// get listsize
-	int iSize = boost::lexical_cast<int>(getAttribute("listsize"));
+	int iSize = StringUtil::stringToInt(getAttribute("listsize"));
 	// create result array
 	vector<string> res(iSize);
 	// loop all list item nodes
@@ -175,40 +174,12 @@ vector<string> XMLNode::getContentArray() const
 // NB: A 2D matrix is returned as a linear list
 vector<float32> XMLNode::getContentNumericalArray() const
 {
-	string input = getContent();
-
-	// split
-	std::vector<std::string> items;
-	boost::split(items, input, boost::is_any_of(",;"));
-
-	// init list
-	vector<float32> out;
-	out.resize(items.size());
-
-	// loop elements
-	for (unsigned int i = 0; i < items.size(); i++) {
-		out[i] = boost::lexical_cast<float32>(items[i]);
-	}
-	return out;
+	return StringUtil::stringToFloatVector(getContent());
 }
 
 vector<double> XMLNode::getContentNumericalArrayDouble() const
 {
-	string input = getContent();
-
-	// split
-	std::vector<std::string> items;
-	boost::split(items, input, boost::is_any_of(",;"));
-
-	// init list
-	vector<double> out;
-	out.resize(items.size());
-
-	// loop elements
-	for (unsigned int i = 0; i < items.size(); i++) {
-		out[i] = boost::lexical_cast<double>(items[i]);
-	}
-	return out;
+	return StringUtil::stringToDoubleVector(getContent());
 }
 
 //-----------------------------------------------------------------------------	
@@ -235,13 +206,19 @@ string XMLNode::getAttribute(string _sName, string _sDefaultValue) const
 float32 XMLNode::getAttributeNumerical(string _sName, float32 _fDefaultValue) const
 {
 	if (!hasAttribute(_sName)) return _fDefaultValue;
-	return boost::lexical_cast<float32>(getAttribute(_sName));
+	return StringUtil::stringToFloat(getAttribute(_sName));
 }
 double XMLNode::getAttributeNumericalDouble(string _sName, double _fDefaultValue) const
 {
 	if (!hasAttribute(_sName)) return _fDefaultValue;
-	return boost::lexical_cast<double>(getAttribute(_sName));
+	return StringUtil::stringToDouble(getAttribute(_sName));
 }
+int XMLNode::getAttributeInt(string _sName, int _iDefaultValue) const
+{
+	if (!hasAttribute(_sName)) return _iDefaultValue;
+	return StringUtil::stringToInt(getAttribute(_sName));
+}
+
 
 //-----------------------------------------------------------------------------	
 // Get attribute - BOOLEAN
@@ -287,8 +264,14 @@ string XMLNode::getOption(string _sKey, string _sDefaultValue) const
 float32 XMLNode::getOptionNumerical(string _sKey, float32 _fDefaultValue) const
 {
 	if (!hasOption(_sKey)) return _fDefaultValue;
-	return boost::lexical_cast<float32>(getOption(_sKey));
+	return StringUtil::stringToFloat(getOption(_sKey));
 }
+int XMLNode::getOptionInt(string _sKey, int _iDefaultValue) const
+{
+	if (!hasOption(_sKey)) return _iDefaultValue;
+	return StringUtil::stringToInt(getOption(_sKey));
+}
+
 
 //-----------------------------------------------------------------------------	
 // Get option - BOOL
@@ -386,7 +369,7 @@ void XMLNode::setContent(string _sText)
 // Set content - FLOAT
 void XMLNode::setContent(float32 _fValue) 
 {
-	setContent(boost::lexical_cast<string>(_fValue));
+	setContent(StringUtil::floatToString(_fValue));
 }
 
 //-----------------------------------------------------------------------------	
@@ -394,9 +377,9 @@ void XMLNode::setContent(float32 _fValue)
 
 template<typename T>
 static std::string setContentList_internal(T* pfList, int _iSize) {
-	std::string str = (_iSize > 0) ? boost::lexical_cast<std::string>(pfList[0]) : "";
+	std::string str = (_iSize > 0) ? StringUtil::toString(pfList[0]) : "";
 	for (int i = 1; i < _iSize; i++) {
-		str += "," + boost::lexical_cast<std::string>(pfList[i]);
+		str += "," + StringUtil::toString(pfList[i]);
 	}
 	return str;
 }
@@ -431,9 +414,9 @@ static std::string setContentMatrix_internal(T* _pfMatrix, int _iWidth, int _iHe
 
 	for (int y = 0; y < _iHeight; ++y) {
 		if (_iWidth > 0)
-			str += boost::lexical_cast<std::string>(_pfMatrix[0*s1 + y*s2]);
+			str += StringUtil::toString(_pfMatrix[0*s1 + y*s2]);
 			for (int x = 1; x < _iWidth; x++)
-				str += "," + boost::lexical_cast<std::string>(_pfMatrix[x*s1 + y*s2]);
+				str += "," + StringUtil::toString(_pfMatrix[x*s1 + y*s2]);
 
 		if (y != _iHeight-1)
 			str += ";";
@@ -468,7 +451,7 @@ void XMLNode::addAttribute(string _sName, string _sText)
 // Add attribute - FLOAT
 void XMLNode::addAttribute(string _sName, float32 _fValue) 
 {
-	addAttribute(_sName, boost::lexical_cast<string>(_fValue)); 
+	addAttribute(_sName, StringUtil::floatToString(_fValue));
 }
 
 //-----------------------------------------------------------------------------	

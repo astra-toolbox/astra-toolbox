@@ -28,7 +28,6 @@ $Id$
 
 #include "astra/VolumeGeometry2D.h"
 
-#include <boost/lexical_cast.hpp>
 #include <cmath>
 
 namespace astra
@@ -166,13 +165,13 @@ bool CVolumeGeometry2D::initialize(const Config& _cfg)
 	// Required: GridColCount
 	XMLNode node = _cfg.self.getSingleNode("GridColCount");
 	ASTRA_CONFIG_CHECK(node, "ReconstructionGeometry2D", "No GridColCount tag specified.");
-	m_iGridColCount = boost::lexical_cast<int>(node.getContent());
+	m_iGridColCount = node.getContentInt();
 	CC.markNodeParsed("GridColCount");
 
 	// Required: GridRowCount
 	node = _cfg.self.getSingleNode("GridRowCount");
 	ASTRA_CONFIG_CHECK(node, "ReconstructionGeometry2D", "No GridRowCount tag specified.");
-	m_iGridRowCount = boost::lexical_cast<int>(node.getContent());
+	m_iGridRowCount = node.getContentInt();
 	CC.markNodeParsed("GridRowCount");
 
 	// Optional: Window minima and maxima

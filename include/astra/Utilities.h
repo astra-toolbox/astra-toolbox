@@ -39,6 +39,57 @@ namespace astra {
 
 
 
+namespace StringUtil {
+
+// Exception thrown by functions below
+class bad_cast : public std::exception {
+public:
+	bad_cast() { }
+};
+
+
+//< Parse string as int.
+//< Throw exception on failure.
+int stringToInt(const std::string& s);
+
+//< Parse string as float.
+//< Throw exception on failure.
+float stringToFloat(const std::string& s);
+
+//< Parse string as double.
+//< Throw exception on failure.
+double stringToDouble(const std::string& s);
+
+template<typename T>
+T stringTo(const std::string& s);
+
+//< Parse comma/semicolon-separated string as float vector.
+//< Throw exception on failure.
+std::vector<float> stringToFloatVector(const std::string& s);
+
+//< Parse comma/semicolon-separated string as double vector.
+//< Throw exception on failure.
+std::vector<double> stringToDoubleVector(const std::string& s);
+
+template<typename T>
+std::vector<T> stringToVector(const std::string& s);
+
+
+
+//< Generate string from float.
+std::string floatToString(float f);
+
+//< Generate string from double.
+std::string doubleToString(double f);
+
+template<typename T>
+std::string toString(T f);
+
+}
+
+
+
+
 template<typename T, typename S>
 std::map<T,S> mergeMap(std::map<T,S> _mMap1, std::map<T,S> _mMap2) 
 {

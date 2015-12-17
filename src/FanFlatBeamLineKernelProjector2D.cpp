@@ -30,7 +30,6 @@ $Id$
 
 #include <cmath>
 #include <cstring>
-#include <boost/lexical_cast.hpp>
 
 #include "astra/DataProjectorPolicies.h"
 

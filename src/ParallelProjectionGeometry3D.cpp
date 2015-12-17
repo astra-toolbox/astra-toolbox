@@ -30,7 +30,6 @@ $Id$
 
 #include "astra/GeometryUtil3D.h"
 
-#include <boost/lexical_cast.hpp>
 #include <cstring>
 
 using namespace std;

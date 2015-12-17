@@ -28,8 +28,6 @@ $Id$
 
 #include "astra/ProjectionGeometry3D.h"
 
-#include <boost/lexical_cast.hpp>
-
 using namespace std;
 
 namespace astra
@@ -151,25 +149,25 @@ bool CProjectionGeometry3D::initialize(const Config& _cfg)
 	// Required: DetectorWidth
 	XMLNode node = _cfg.self.getSingleNode("DetectorSpacingX");
 	ASTRA_CONFIG_CHECK(node, "ProjectionGeometry3D", "No DetectorSpacingX tag specified.");
-	m_fDetectorSpacingX = boost::lexical_cast<float32>(node.getContent());
+	m_fDetectorSpacingX = node.getContentNumerical();
 	CC.markNodeParsed("DetectorSpacingX");
 
 	// Required: DetectorHeight
 	node = _cfg.self.getSingleNode("DetectorSpacingY");
 	ASTRA_CONFIG_CHECK(node, "ProjectionGeometry3D", "No DetectorSpacingY tag specified.");
-	m_fDetectorSpacingY = boost::lexical_cast<float32>(node.getContent());
+	m_fDetectorSpacingY = node.getContentNumerical();
 	CC.markNodeParsed("DetectorSpacingY");
 
 	// Required: DetectorRowCount
 	node = _cfg.self.getSingleNode("DetectorRowCount");
 	ASTRA_CONFIG_CHECK(node, "ProjectionGeometry3D", "No DetectorRowCount tag specified.");
-	m_iDetectorRowCount = boost::lexical_cast<int>(node.getContent());
+	m_iDetectorRowCount = node.getContentInt();
 	CC.markNodeParsed("DetectorRowCount");
 
 	// Required: DetectorCount
 	node = _cfg.self.getSingleNode("DetectorColCount");
 	ASTRA_CONFIG_CHECK(node, "ProjectionGeometry3D", "No DetectorColCount tag specified.");
-	m_iDetectorColCount = boost::lexical_cast<int>(node.getContent());
+	m_iDetectorColCount = node.getContentInt();
 	m_iDetectorTotCount = m_iDetectorRowCount * m_iDetectorColCount;
 	CC.markNodeParsed("DetectorColCount");
 

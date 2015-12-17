@@ -28,7 +28,6 @@ $Id$
 
 #include <astra/CudaFilteredBackProjectionAlgorithm.h>
 #include <astra/FanFlatProjectionGeometry2D.h>
-#include <boost/lexical_cast.hpp>
 #include <cstring>
 
 #include "astra/AstraObjectManager.h"
@@ -100,7 +99,7 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 	XMLNode node = _cfg.self.getSingleNode("ProjectorId");
 	CCudaProjector2D* pCudaProjector = 0;
 	if (node) {
-		int id = boost::lexical_cast<int>(node.getContent());
+		int id = node.getContentInt();
 		CProjector2D *projector = CProjector2DManager::getSingleton().get(id);
 		pCudaProjector = dynamic_cast<CCudaProjector2D*>(projector);
 		if (!pCudaProjector) {
@@ -113,14 +112,14 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 	// sinogram data
 	node = _cfg.self.getSingleNode("ProjectionDataId");
 	ASTRA_CONFIG_CHECK(node, "CudaFBP", "No ProjectionDataId tag specified.");
-	int id = boost::lexical_cast<int>(node.getContent());
+	int id = node.getContentInt();
 	m_pSinogram = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
 	CC.markNodeParsed("ProjectionDataId");
 
 	// reconstruction data
 	node = _cfg.self.getSingleNode("ReconstructionDataId");
 	ASTRA_CONFIG_CHECK(node, "CudaFBP", "No ReconstructionDataId tag specified.");
-	id = boost::lexical_cast<int>(node.getContent());
+	id = node.getContentInt();
 	m_pReconstruction = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 	CC.markNodeParsed("ReconstructionDataId");
 
@@ -140,7 +139,7 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 	node = _cfg.self.getSingleNode("FilterSinogramId");
 	if (node)
 	{
-		id = boost::lexical_cast<int>(node.getContent());
+		id = node.getContentInt();
 		const CFloat32ProjectionData2D * pFilterData = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
 		m_iFilterWidth = pFilterData->getGeometry()->getDetectorCount();
 		int iFilterProjectionCount = pFilterData->getGeometry()->getProjectionAngleCount();
@@ -159,7 +158,7 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 	node = _cfg.self.getSingleNode("FilterParameter");
 	if (node)
 	{
-		float fParameter = boost::lexical_cast<float>(node.getContent());
+		float fParameter = node.getContentNumerical();
 		m_fFilterParameter = fParameter;
 	}
 	else
@@ -172,7 +171,7 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 	node = _cfg.self.getSingleNode("FilterD");
 	if (node)
 	{
-		float fD = boost::lexical_cast<float>(node.getContent());
+		float fD = node.getContentNumerical();
 		m_fFilterD = fD;
 	}
 	else

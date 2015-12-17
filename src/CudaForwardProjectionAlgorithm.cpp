@@ -35,8 +35,6 @@ $Id$
 #include <driver_types.h>
 #include <cuda_runtime_api.h>
 
-#include <boost/lexical_cast.hpp>
-
 #include "astra/AstraObjectManager.h"
 #include "astra/ParallelProjectionGeometry2D.h"
 #include "astra/FanFlatProjectionGeometry2D.h"
@@ -97,7 +95,7 @@ bool CCudaForwardProjectionAlgorithm::initialize(const Config& _cfg)
 	m_pProjector = 0;
 	XMLNode node = _cfg.self.getSingleNode("ProjectorId");
 	if (node) {
-		int id = boost::lexical_cast<int>(node.getContent());
+		int id = node.getContentInt();
 		m_pProjector = CProjector2DManager::getSingleton().get(id);
 	}
 	CC.markNodeParsed("ProjectorId");
@@ -107,14 +105,14 @@ bool CCudaForwardProjectionAlgorithm::initialize(const Config& _cfg)
 	// sinogram data
 	node = _cfg.self.getSingleNode("ProjectionDataId");
 	ASTRA_CONFIG_CHECK(node, "FP_CUDA", "No ProjectionDataId tag specified.");
-	int id = boost::lexical_cast<int>(node.getContent());
+	int id = node.getContentInt();
 	m_pSinogram = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
 	CC.markNodeParsed("ProjectionDataId");
 
 	// volume data
 	node = _cfg.self.getSingleNode("VolumeDataId");
 	ASTRA_CONFIG_CHECK(node, "FP_CUDA", "No VolumeDataId tag specified.");
-	id = boost::lexical_cast<int>(node.getContent());
+	id = node.getContentInt();
 	m_pVolume = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 	CC.markNodeParsed("VolumeDataId");
 
