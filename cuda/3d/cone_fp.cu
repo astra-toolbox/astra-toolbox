@@ -50,7 +50,7 @@ namespace astraCUDA3d {
 static const unsigned int g_anglesPerBlock = 4;
 
 // thickness of the slices we're splitting the volume up into
-static const unsigned int g_blockSlices = 64;
+static const unsigned int g_blockSlices = 32;
 static const unsigned int g_detBlockU = 32;
 static const unsigned int g_detBlockV = 32;
 

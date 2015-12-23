@@ -259,7 +259,7 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 					else  {
 						I = (1.5f - T - x2) / (1.0f - 2.0f*T) * lengthPerCol;
 
-						if (x1 >= 0 && x1 < m_pVolumeGeometry->getGridColCount()) {
+						if (x1 >= 0 && x1 < m_pVolumeGeometry->getGridRowCount()) {
 							iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(x1, col);
 							// POLICY: PIXEL PRIOR + ADD + POSTERIOR
 							if (p.pixelPrior(iVolumeIndex)) {
@@ -267,7 +267,7 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 								p.pixelPosterior(iVolumeIndex);
 							}
 						}
-						if (x1+1 >= 0 && x1+1 < m_pVolumeGeometry->getGridColCount()) {
+						if (x1+1 >= 0 && x1+1 < m_pVolumeGeometry->getGridRowCount()) {
 							iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(x1+1, col);
 							// POLICY: PIXEL PRIOR + ADD + POSTERIOR
 							if (p.pixelPrior(iVolumeIndex)) {

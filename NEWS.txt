@@ -9,6 +9,11 @@ Contact: astra@uantwerpen.be
 Website: http://sf.net/projects/astra-toolbox
 -----------------------------------------------------------------------
 
+1.7.1beta (2015-12-23)
+  * NB: This release has a beta tag as it contains two new
+    big experimental features.
+  * fix crash with certain 2D CUDA FP calls
+
 1.7beta (2015-12-04)
   * NB: This release has a beta tag as it contains two new
     big experimental features.
