@@ -50,16 +50,19 @@ using namespace astra;
  */
 void astra_mex_credits(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 { 
-	mexPrintf("All Scale Tomographic Reconstruction Antwerp Toolbox (ASTRA-Toolbox) was developed at the University of Antwerp by\n");
+	mexPrintf("The ASTRA Toolbox has been developed at the University of Antwerp and CWI, Amsterdam by\n");
 	mexPrintf(" * Prof. dr. Joost Batenburg\n");
-	mexPrintf(" * Andrei Dabravolski\n");
-	mexPrintf(" * Gert Merckx\n");
-	mexPrintf(" * Willem Jan Palenstijn\n");
-	mexPrintf(" * Tom Roelandts\n");
 	mexPrintf(" * Prof. dr. Jan Sijbers\n");
-	mexPrintf(" * dr. Wim van Aarle\n");
-	mexPrintf(" * Sander van der Maar\n");
-	mexPrintf(" * dr. Gert Van Gompel\n");
+	mexPrintf(" * Dr. Jeroen Bedorf\n");
+	mexPrintf(" * Dr. Folkert Bleichrodt\n");
+	mexPrintf(" * Dr. Andrei Dabravolski\n");
+	mexPrintf(" * Dr. Willem Jan Palenstijn\n");
+	mexPrintf(" * Dr. Tom Roelandts\n");
+	mexPrintf(" * Dr. Wim van Aarle\n");
+	mexPrintf(" * Dr. Gert Van Gompel\n");
+	mexPrintf(" * Sander van der Maar, MSc.\n");
+	mexPrintf(" * Gert Merckx, MSc.\n");
+	mexPrintf(" * Daan Pelt, MSc.\n");
 }
 
 //-----------------------------------------------------------------------------------------
@@ -100,7 +103,7 @@ void astra_mex_version(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[
 	if (1 <= nlhs) {
 		plhs[0] = mxCreateDoubleScalar(astra::getVersion());
 	} else {
-		mexPrintf("astra toolbox version %s\n", astra::getVersionString());
+		mexPrintf("ASTRA Toolbox version %s\n", astra::getVersionString());
 	}
 }
 
