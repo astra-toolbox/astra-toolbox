@@ -305,37 +305,37 @@ CCompositeGeometryManager::CPart* CCompositeGeometryManager::CVolumePart::reduce
 
 
 static size_t ceildiv(size_t a, size_t b) {
-    return (a + b - 1) / b;
+	return (a + b - 1) / b;
 }
 
 static size_t computeVerticalSplit(size_t maxBlock, int div, size_t sliceCount)
 {
-    size_t blockSize = maxBlock;
-    size_t blockCount = ceildiv(sliceCount, blockSize);
+	size_t blockSize = maxBlock;
+	size_t blockCount = ceildiv(sliceCount, blockSize);
 
-    // Increase number of blocks to be divisible by div
-    size_t divCount = div * ceildiv(blockCount, div);
+	// Increase number of blocks to be divisible by div
+	size_t divCount = div * ceildiv(blockCount, div);
 
-    // If divCount is above sqrt(number of slices), then
-    // we can't guarantee divisibility by div, but let's try anyway
-    if (ceildiv(sliceCount, ceildiv(sliceCount, divCount)) % div == 0) {
-        blockCount = divCount;
-    } else {
-        // If divisibility isn't achievable, we may want to optimize
-        // differently.
-        // TODO: Figure out how to model and optimize this.
-    }
+	// If divCount is above sqrt(number of slices), then
+	// we can't guarantee divisibility by div, but let's try anyway
+	if (ceildiv(sliceCount, ceildiv(sliceCount, divCount)) % div == 0) {
+		blockCount = divCount;
+	} else {
+		// If divisibility isn't achievable, we may want to optimize
+		// differently.
+		// TODO: Figure out how to model and optimize this.
+	}
 
-    // Final adjustment to make blocks more evenly sized
-    // (This can't make the blocks larger)
-    blockSize = ceildiv(sliceCount, blockCount); 
+	// Final adjustment to make blocks more evenly sized
+	// (This can't make the blocks larger)
+	blockSize = ceildiv(sliceCount, blockCount);
 
-    ASTRA_DEBUG("%ld %ld -> %ld * %ld", sliceCount, maxBlock, blockCount, blockSize);
+	ASTRA_DEBUG("%ld %ld -> %ld * %ld", sliceCount, maxBlock, blockCount, blockSize);
 
-    assert(blockSize <= maxBlock);
-    assert((divCount * divCount > sliceCount) || (blockCount % div) == 0);
+	assert(blockSize <= maxBlock);
+	assert((divCount * divCount > sliceCount) || (blockCount % div) == 0);
 
-    return blockSize;
+	return blockSize;
 }
 
 template<class V, class P>
