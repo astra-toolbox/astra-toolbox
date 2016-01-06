@@ -49,10 +49,10 @@ def version(printToScreen=False):
     """
     return a.version(printToScreen)
 
-def set_gpu_index(idx):
+def set_gpu_index(idx, memory=0):
     """Set default GPU index to use.
     
     :param idx: GPU index
     :type idx: :class:`int`
     """
-    a.set_gpu_index(idx)
+    a.set_gpu_index(idx, memory)
