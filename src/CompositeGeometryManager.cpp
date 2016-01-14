@@ -247,6 +247,18 @@ CCompositeGeometryManager::CPart* CCompositeGeometryManager::CVolumePart::reduce
 
 	//ASTRA_DEBUG("coord extent: %f - %f", zmin, zmax);
 
+	// Clip both zmin and zmax to get rid of extreme (or infinite) values
+	// NB: When individual pz values are +/-Inf, the sign is determined
+	// by ray direction and on which side of the face the ray passes.
+	if (zmin < pGeom->getWindowMinZ() - 2*pixz)
+		zmin = pGeom->getWindowMinZ() - 2*pixz;
+	if (zmin > pGeom->getWindowMaxZ() + 2*pixz)
+		zmin = pGeom->getWindowMaxZ() + 2*pixz;
+	if (zmax < pGeom->getWindowMinZ() - 2*pixz)
+		zmax = pGeom->getWindowMinZ() - 2*pixz;
+	if (zmax > pGeom->getWindowMaxZ() + 2*pixz)
+		zmax = pGeom->getWindowMaxZ() + 2*pixz;
+
 	zmin = (zmin - pixz - pGeom->getWindowMinZ()) / pixz;
 	zmax = (zmax + pixz - pGeom->getWindowMinZ()) / pixz;
 
