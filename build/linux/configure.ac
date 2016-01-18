@@ -74,7 +74,6 @@ AC_SUBST(HAVEBOOSTUTF)
 AC_SUBST(LIBS_BOOSTUTF)
 
 BOOSTok=yes
-AC_CHECK_HEADER([boost/lexical_cast.hpp],[],[BOOSTok=no],[])
 AC_CHECK_HEADER([boost/any.hpp],[],[BOOSTok=no],[])
 dnl AC_CHECK_HEADER([boost/thread.hpp],[],[BOOSTok=no],[])
 dnl AC_CHECK_HEADER([boost/bind.hpp],[],[BOOSTok=no],[])

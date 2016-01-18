@@ -28,8 +28,6 @@ $Id$
 
 #include "astra/ReconstructionAlgorithm2D.h"
 
-#include <boost/lexical_cast.hpp>
-
 #include "astra/AstraObjectManager.h"
 
 using namespace std;
@@ -90,7 +88,7 @@ bool CReconstructionAlgorithm2D::initialize(const Config& _cfg)
 	}
 	int id;
 	if (node) {
-		id = boost::lexical_cast<int>(node.getContent());
+		id = node.getContentInt();
 		m_pProjector = CProjector2DManager::getSingleton().get(id);
 	} else {
 		m_pProjector = 0;
@@ -100,21 +98,21 @@ bool CReconstructionAlgorithm2D::initialize(const Config& _cfg)
 	// sinogram data
 	node = _cfg.self.getSingleNode("ProjectionDataId");
 	ASTRA_CONFIG_CHECK(node, "Reconstruction2D", "No ProjectionDataId tag specified.");
-	id = boost::lexical_cast<int>(node.getContent());
+	id = node.getContentInt();
 	m_pSinogram = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
 	CC.markNodeParsed("ProjectionDataId");
 
 	// reconstruction data
 	node = _cfg.self.getSingleNode("ReconstructionDataId");
 	ASTRA_CONFIG_CHECK(node, "Reconstruction2D", "No ReconstructionDataId tag specified.");
-	id = boost::lexical_cast<int>(node.getContent());
+	id = node.getContentInt();
 	m_pReconstruction = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 	CC.markNodeParsed("ReconstructionDataId");
 
 	// fixed mask
 	if (_cfg.self.hasOption("ReconstructionMaskId")) {
 		m_bUseReconstructionMask = true;
-		id = boost::lexical_cast<int>(_cfg.self.getOption("ReconstructionMaskId"));
+		id = _cfg.self.getOptionInt("ReconstructionMaskId");
 		m_pReconstructionMask = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 		ASTRA_CONFIG_CHECK(m_pReconstructionMask, "Reconstruction2D", "Invalid ReconstructionMaskId.");
 	}
@@ -123,7 +121,7 @@ bool CReconstructionAlgorithm2D::initialize(const Config& _cfg)
 	// fixed mask
 	if (_cfg.self.hasOption("SinogramMaskId")) {
 		m_bUseSinogramMask = true;
-		id = boost::lexical_cast<int>(_cfg.self.getOption("SinogramMaskId"));
+		id = _cfg.self.getOptionInt("SinogramMaskId");
 		m_pSinogramMask = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
 		ASTRA_CONFIG_CHECK(m_pSinogramMask, "Reconstruction2D", "Invalid SinogramMaskId.");
 	}

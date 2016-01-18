@@ -30,7 +30,6 @@ $Id$
 
 #include "astra/CudaSirtAlgorithm.h"
 
-#include <boost/lexical_cast.hpp>
 #include "astra/AstraObjectManager.h"
 
 #include "../cuda/2d/sirt.h"
@@ -77,12 +76,12 @@ bool CCudaSirtAlgorithm::initialize(const Config& _cfg)
 
 	// min/max masks
 	if (_cfg.self.hasOption("MinMaskId")) {
-		int id = boost::lexical_cast<int>(_cfg.self.getOption("MinMaskId"));
+		int id = _cfg.self.getOptionInt("MinMaskId");
 		m_pMinMask = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 	}
 	CC.markOptionParsed("MinMaskId");
 	if (_cfg.self.hasOption("MaxMaskId")) {
-		int id = boost::lexical_cast<int>(_cfg.self.getOption("MaxMaskId"));
+		int id = _cfg.self.getOptionInt("MaxMaskId");
 		m_pMaxMask = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 	}
 	CC.markOptionParsed("MaxMaskId");

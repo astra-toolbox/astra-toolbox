@@ -30,8 +30,6 @@ $Id$
 
 #include "astra/CudaReconstructionAlgorithm2D.h"
 
-#include <boost/lexical_cast.hpp>
-
 #include "astra/AstraObjectManager.h"
 #include "astra/FanFlatProjectionGeometry2D.h"
 #include "astra/FanFlatVecProjectionGeometry2D.h"
