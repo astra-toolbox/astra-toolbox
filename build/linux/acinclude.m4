@@ -93,13 +93,13 @@ int main() {
 }
 _ACEOF
 $1="yes"
-ASTRA_RUN_STOREOUTPUT([$NVCC -c -o conftest.o conftest.cu $$2],conftest.nvcc.out) || {
+ASTRA_RUN_STOREOUTPUT([$NVCC -c -o conftest.o conftest.cu $NVCCFLAGS $$2],conftest.nvcc.out) || {
   $1="no"
   # Check if hack for gcc 4.4 helps
   if grep -q __builtin_stdarg_start conftest.nvcc.out; then
     AS_ECHO(["$as_me:${as_lineno-$LINENO}: Trying CUDA hack for gcc 4.4"]) >&AS_MESSAGE_LOG_FD
     NVCC_OPT="-Xcompiler -D__builtin_stdarg_start=__builtin_va_start"
-    ASTRA_RUN_LOGOUTPUT([$NVCC -c -o conftest.o conftest.cu $$2 $NVCC_OPT]) && {
+    ASTRA_RUN_LOGOUTPUT([$NVCC -c -o conftest.o conftest.cu $NVCCFLAGS $$2 $NVCC_OPT]) && {
       $1="yes"
       $2="$$2 $NVCC_OPT"
     }
@@ -133,7 +133,7 @@ IFS=,
 for arch in $1; do
   IFS=$astra_save_IFS
   NVCC_opt="-gencode=arch=compute_$arch,code=sm_$arch"
-  $NVCC -c -o conftest.o conftest.cu $$2 $NVCC_opt >conftest.nvcc.out 2>&1 && {
+  $NVCC -c -o conftest.o conftest.cu $NVCCFLAGS $$2 $NVCC_opt >conftest.nvcc.out 2>&1 && {
     NVCC_lastarch=$arch
     NVCC_extra="$NVCC_extra $NVCC_opt"
     NVCC_list="${NVCC_list:+$NVCC_list, }$arch"
