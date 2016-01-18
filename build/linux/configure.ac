@@ -30,6 +30,7 @@ LT_INIT([disable-static])
 
 SAVED_CPPFLAGS="$CPPFLAGS"
 SAVED_CXXFLAGS="$CXXFLAGS"
+SAVED_NVCCFLAGS="$NVCCFLAGS"
 SAVED_LDFLAGS="$LDFLAGS"
 SAVED_LIBS="$LIBS"
 
@@ -73,7 +74,6 @@ AC_SUBST(HAVEBOOSTUTF)
 AC_SUBST(LIBS_BOOSTUTF)
 
 BOOSTok=yes
-AC_CHECK_HEADER([boost/lexical_cast.hpp],[],[BOOSTok=no],[])
 AC_CHECK_HEADER([boost/any.hpp],[],[BOOSTok=no],[])
 dnl AC_CHECK_HEADER([boost/thread.hpp],[],[BOOSTok=no],[])
 dnl AC_CHECK_HEADER([boost/bind.hpp],[],[BOOSTok=no],[])
@@ -124,10 +124,9 @@ if test x"$NVCC" != xno; then
   AC_SUBST(NVCC)
 fi
 
-NVCCFLAGS=""
 if test x"$HAVECUDA" = xyes; then
   AC_MSG_CHECKING([if nvcc works])
-  ASTRA_CHECK_NVCC(HAVECUDA,NVCCFLAGS)
+  ASTRA_CHECK_NVCC(HAVECUDA,NVCCFLAGS_EXTRA)
   AC_MSG_RESULT($HAVECUDA)
 fi
 
@@ -138,7 +137,7 @@ if test x"$HAVECUDA" = xyes; then
   if test x"$with_cuda_compute" = x; then
     with_cuda_compute="10,12,20,30,35,50"
   fi
-  ASTRA_FIND_NVCC_ARCHS([$with_cuda_compute],NVCCFLAGS,NVCCARCHS)
+  ASTRA_FIND_NVCC_ARCHS([$with_cuda_compute],NVCCFLAGS_EXTRA,NVCCARCHS)
   AC_MSG_RESULT([$NVCCARCHS])
 fi
 
@@ -146,7 +145,7 @@ fi
 AC_SUBST(HAVECUDA)
 AC_SUBST(LDFLAGS_CUDA)
 AC_SUBST(CPPFLAGS_CUDA)
-AC_SUBST(NVCCFLAGS)
+AC_SUBST(NVCCFLAGS_EXTRA)
 
 
 # mex, matlab
@@ -249,6 +248,7 @@ AC_SUBST(CPPFLAGS_OS)
 
 AC_SUBST(SAVED_CPPFLAGS)
 AC_SUBST(SAVED_CXXFLAGS)
+AC_SUBST(SAVED_NVCCFLAGS)
 AC_SUBST(SAVED_LDFLAGS)
 AC_SUBST(SAVED_LIBS)
 AC_CONFIG_FILES([Makefile])

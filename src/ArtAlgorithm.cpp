@@ -28,8 +28,6 @@ $Id$
 
 #include "astra/ArtAlgorithm.h"
 
-#include <boost/lexical_cast.hpp>
-
 #include "astra/AstraObjectManager.h"
 
 using namespace std;

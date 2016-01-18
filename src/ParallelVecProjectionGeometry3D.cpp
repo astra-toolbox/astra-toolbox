@@ -27,9 +27,9 @@ $Id$
 */
 
 #include "astra/ParallelVecProjectionGeometry3D.h"
+#include "astra/Utilities.h"
 
 #include <cstring>
-#include <boost/lexical_cast.hpp>
 
 using namespace std;
 
@@ -82,13 +82,13 @@ bool CParallelVecProjectionGeometry3D::initialize(const Config& _cfg)
 	// Required: DetectorRowCount
 	node = _cfg.self.getSingleNode("DetectorRowCount");
 	ASTRA_CONFIG_CHECK(node, "ParallelVecProjectionGeometry3D", "No DetectorRowCount tag specified.");
-	m_iDetectorRowCount = boost::lexical_cast<int>(node.getContent());
+	m_iDetectorRowCount = node.getContentInt();
 	CC.markNodeParsed("DetectorRowCount");
 
 	// Required: DetectorCount
 	node = _cfg.self.getSingleNode("DetectorColCount");
 	ASTRA_CONFIG_CHECK(node, "", "No DetectorColCount tag specified.");
-	m_iDetectorColCount = boost::lexical_cast<int>(node.getContent());
+	m_iDetectorColCount = node.getContentInt();
 	m_iDetectorTotCount = m_iDetectorRowCount * m_iDetectorColCount;
 	CC.markNodeParsed("DetectorColCount");
 
@@ -212,18 +212,18 @@ Config* CParallelVecProjectionGeometry3D::getConfiguration() const
 	std::string vectors = "";
 	for (int i = 0; i < m_iProjectionAngleCount; ++i) {
 		SPar3DProjection& p = m_pProjectionAngles[i];
-		vectors += boost::lexical_cast<string>(p.fRayX) + ",";
-		vectors += boost::lexical_cast<string>(p.fRayY) + ",";
-		vectors += boost::lexical_cast<string>(p.fRayZ) + ",";
-		vectors += boost::lexical_cast<string>(p.fDetSX + 0.5f*m_iDetectorRowCount*p.fDetVX + 0.5f*m_iDetectorColCount*p.fDetUX) + ",";
-		vectors += boost::lexical_cast<string>(p.fDetSY + 0.5f*m_iDetectorRowCount*p.fDetVY + 0.5f*m_iDetectorColCount*p.fDetUY) + ",";
-		vectors += boost::lexical_cast<string>(p.fDetSZ + 0.5f*m_iDetectorRowCount*p.fDetVZ + 0.5f*m_iDetectorColCount*p.fDetUZ) + ",";
-		vectors += boost::lexical_cast<string>(p.fDetUX) + ",";
-		vectors += boost::lexical_cast<string>(p.fDetUY) + ",";
-		vectors += boost::lexical_cast<string>(p.fDetUZ) + ",";
-		vectors += boost::lexical_cast<string>(p.fDetVX) + ",";
-		vectors += boost::lexical_cast<string>(p.fDetVY) + ",";
-		vectors += boost::lexical_cast<string>(p.fDetVZ);
+		vectors += StringUtil::toString(p.fRayX) + ",";
+		vectors += StringUtil::toString(p.fRayY) + ",";
+		vectors += StringUtil::toString(p.fRayZ) + ",";
+		vectors += StringUtil::toString(p.fDetSX + 0.5f*m_iDetectorRowCount*p.fDetVX + 0.5f*m_iDetectorColCount*p.fDetUX) + ",";
+		vectors += StringUtil::toString(p.fDetSY + 0.5f*m_iDetectorRowCount*p.fDetVY + 0.5f*m_iDetectorColCount*p.fDetUY) + ",";
+		vectors += StringUtil::toString(p.fDetSZ + 0.5f*m_iDetectorRowCount*p.fDetVZ + 0.5f*m_iDetectorColCount*p.fDetUZ) + ",";
+		vectors += StringUtil::toString(p.fDetUX) + ",";
+		vectors += StringUtil::toString(p.fDetUY) + ",";
+		vectors += StringUtil::toString(p.fDetUZ) + ",";
+		vectors += StringUtil::toString(p.fDetVX) + ",";
+		vectors += StringUtil::toString(p.fDetVY) + ",";
+		vectors += StringUtil::toString(p.fDetVZ);
 		if (i < m_iProjectionAngleCount-1) vectors += ';';
 	}
 	cfg->self.addChildNode("Vectors", vectors);

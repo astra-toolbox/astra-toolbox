@@ -28,8 +28,6 @@ $Id$
 
 #include "astra/CudaBackProjectionAlgorithm3D.h"
 
-#include <boost/lexical_cast.hpp>
-
 #include "astra/AstraObjectManager.h"
 
 #include "astra/CudaProjector3D.h"

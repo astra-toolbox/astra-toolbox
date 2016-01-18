@@ -34,7 +34,6 @@ $Id$
 #include "../cuda/3d/dims3d.h"
 
 #include "astra/AstraObjectManager.h"
-#include <boost/lexical_cast.hpp>
 
 using namespace std;
 
@@ -67,14 +66,14 @@ bool CCudaDartMaskAlgorithm3D::initialize(const Config& _cfg)
 	// reconstruction data
 	XMLNode node = _cfg.self.getSingleNode("SegmentationDataId");
 	ASTRA_CONFIG_CHECK(node, "CudaDartMask", "No SegmentationDataId tag specified.");
-	int id = boost::lexical_cast<int>(node.getContent());
+	int id = node.getContentInt();
 	m_pSegmentation = dynamic_cast<CFloat32VolumeData3DMemory*>(CData3DManager::getSingleton().get(id));
 	CC.markNodeParsed("SegmentationDataId");
 
 	// reconstruction data
 	node = _cfg.self.getSingleNode("MaskDataId");
 	ASTRA_CONFIG_CHECK(node, "CudaDartMask", "No MaskDataId tag specified.");
-	id = boost::lexical_cast<int>(node.getContent());
+	id = node.getContentInt();
 	m_pMask = dynamic_cast<CFloat32VolumeData3DMemory*>(CData3DManager::getSingleton().get(id));
 	CC.markNodeParsed("MaskDataId");
 

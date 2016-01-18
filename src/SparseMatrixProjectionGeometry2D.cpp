@@ -28,7 +28,6 @@ $Id$
 
 #include "astra/SparseMatrixProjectionGeometry2D.h"
 
-#include <boost/lexical_cast.hpp>
 #include "astra/AstraObjectManager.h"
 
 
@@ -100,7 +99,7 @@ bool CSparseMatrixProjectionGeometry2D::initialize(const Config& _cfg)
 	// get matrix
 	XMLNode node = _cfg.self.getSingleNode("MatrixID");
 	ASTRA_CONFIG_CHECK(node, "SparseMatrixProjectionGeometry2D", "No MatrixID tag specified.");
-	int id = boost::lexical_cast<int>(node.getContent());
+	int id = node.getContentInt();
 	m_pMatrix = CMatrixManager::getSingleton().get(id);
 	CC.markNodeParsed("MatrixID");
 

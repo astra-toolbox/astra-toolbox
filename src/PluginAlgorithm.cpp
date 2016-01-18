@@ -30,9 +30,9 @@ $Id$
 
 #include "astra/PluginAlgorithm.h"
 #include "astra/Logging.h"
+#include "astra/Utilities.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/lexical_cast.hpp>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -338,7 +338,7 @@ PyObject* stringToPythonValue(std::string str){
             boost::split(row, rows[i], boost::is_any_of(","));
             PyObject *rowlist = PyList_New(row.size());
             for(unsigned int j=0;j<row.size();j++){
-                PyList_SetItem(rowlist, j, PyFloat_FromDouble(boost::lexical_cast<double>(row[j])));
+                PyList_SetItem(rowlist, j, PyFloat_FromDouble(StringUtil::stringToDouble(row[j])));
             }
             PyList_SetItem(mat, i, rowlist);
         }
@@ -349,16 +349,16 @@ PyObject* stringToPythonValue(std::string str){
         boost::split(vec, str, boost::is_any_of(","));
         PyObject *veclist = PyList_New(vec.size());
         for(unsigned int i=0;i<vec.size();i++){
-            PyList_SetItem(veclist, i, PyFloat_FromDouble(boost::lexical_cast<double>(vec[i])));
+            PyList_SetItem(veclist, i, PyFloat_FromDouble(StringUtil::stringToDouble(vec[i])));
         }
         return veclist;
     }
     try{
-        return PyLong_FromLong(boost::lexical_cast<long>(str));
-    }catch(const boost::bad_lexical_cast &){
+        return PyLong_FromLong(StringUtil::stringToInt(str));
+    }catch(const StringUtil::bad_cast &){
         try{
-            return PyFloat_FromDouble(boost::lexical_cast<double>(str));
-        }catch(const boost::bad_lexical_cast &){
+            return PyFloat_FromDouble(StringUtil::stringToDouble(str));
+        }catch(const StringUtil::bad_cast &){
             return pyStringFromString(str);
         }
     }

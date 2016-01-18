@@ -28,8 +28,6 @@ $Id$
 
 #include "astra/SartAlgorithm.h"
 
-#include <boost/lexical_cast.hpp>
-
 #include "astra/AstraObjectManager.h"
 #include "astra/DataProjectorPolicies.h"
 

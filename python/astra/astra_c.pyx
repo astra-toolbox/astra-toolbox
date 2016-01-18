@@ -45,21 +45,19 @@ ELSE:
     pass
 
 def credits():
-    six.print_("""
-All Scale Tomographic Reconstruction Antwerp Toolbox (ASTRA-Toolbox)
-was developed at the University of Antwerp by
-    * Prof. dr. Joost Batenburg
-    * Andrei Dabravolski
-    * Gert Merckx
-    * Willem Jan Palenstijn
-    * Tom Roelandts
-    * Prof. dr. Jan Sijbers
-    * dr. Wim van Aarle
-    * Sander van der Maar
-    * dr. Gert Van Gompel
-
-Python interface written by
-    * Daniel M. Pelt (CWI, Amsterdam)""")
+    six.print_("""The ASTRA Toolbox has been developed at the University of Antwerp and CWI, Amsterdam by
+ * Prof. dr. Joost Batenburg
+ * Prof. dr. Jan Sijbers
+ * Dr. Jeroen Bedorf
+ * Dr. Folkert Bleichrodt
+ * Dr. Andrei Dabravolski
+ * Dr. Willem Jan Palenstijn
+ * Dr. Tom Roelandts
+ * Dr. Wim van Aarle
+ * Dr. Gert Van Gompel
+ * Sander van der Maar, MSc.
+ * Gert Merckx, MSc.
+ * Daan Pelt, MSc.""")
 
 
 def use_cuda():

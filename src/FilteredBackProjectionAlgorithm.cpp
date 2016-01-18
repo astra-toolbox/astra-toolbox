@@ -28,8 +28,6 @@ $Id$
 
 #include "astra/FilteredBackProjectionAlgorithm.h"
 
-#include <boost/lexical_cast.hpp>
-
 #include <iostream>
 #include <iomanip>
 #include <math.h>
@@ -96,19 +94,19 @@ bool CFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 	// projector
 	XMLNode node = _cfg.self.getSingleNode("ProjectorId");
 	ASTRA_CONFIG_CHECK(node, "FilteredBackProjection", "No ProjectorId tag specified.");
-	int id = boost::lexical_cast<int>(node.getContent());
+	int id = node.getContentInt();
 	m_pProjector = CProjector2DManager::getSingleton().get(id);
 
 	// sinogram data
 	node = _cfg.self.getSingleNode("ProjectionDataId");
 	ASTRA_CONFIG_CHECK(node, "FilteredBackProjection", "No ProjectionDataId tag specified.");
-	id = boost::lexical_cast<int>(node.getContent());
+	id = node.getContentInt();
 	m_pSinogram = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
 
 	// volume data
 	node = _cfg.self.getSingleNode("ReconstructionDataId");
 	ASTRA_CONFIG_CHECK(node, "FilteredBackProjection", "No ReconstructionDataId tag specified.");
-	id = boost::lexical_cast<int>(node.getContent());
+	id = node.getContentInt();
 	m_pReconstruction = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 
 	node = _cfg.self.getSingleNode("ProjectionIndex");
