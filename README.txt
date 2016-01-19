@@ -10,8 +10,8 @@ Website: http://sf.net/projects/astra-toolbox
 -----------------------------------------------------------------------
 
 
-The ASTRA Toolbox is a MATLAB toolbox of high-performance GPU primitives
-for 2D and 3D tomography.
+The ASTRA Toolbox is a MATLAB and Python toolbox of high-performance GPU
+primitives for 2D and 3D tomography.
 
 We support 2D parallel and fan beam geometries, and 3D parallel and cone beam.
 All of them have highly flexible source/detector positioning.
@@ -19,8 +19,8 @@ All of them have highly flexible source/detector positioning.
 A large number of 2D and 3D algorithms are available, including FBP, SIRT,
 SART, CGLS.
 
-The basic forward and backward projection operations are GPU-accelerated,
-and directly callable from MATLAB to enable building new algorithms.
+The basic forward and backward projection operations are GPU-accelerated, and
+directly callable from MATLAB and Python to enable building new algorithms.
 
 
 
@@ -28,7 +28,7 @@ and directly callable from MATLAB to enable building new algorithms.
 Documentation / samples:
 -------------------------
 
-See the matlab code samples in samples/ and on
+See the MATLAB and Python code samples in samples/ and on
 http://sf.net/projects/astra-toolbox .
 
 
@@ -42,7 +42,8 @@ Installation instructions:
 Windows, binary:
 -----------------
 
-Add the mex and tools subdirectories to your matlab path.
+Add the mex and tools subdirectories to your matlab path and the Python module
+to your Python path.
 
 
 
