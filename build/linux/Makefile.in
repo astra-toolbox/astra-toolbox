@@ -21,7 +21,10 @@ all: $(TARGETS)
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 
-VPATH=../..
+srcdir=@srcdir@
+abs_top_builddir=@abs_top_builddir@
+
+VPATH=$(srcdir)/../..
 
 CPPFLAGS=@SAVED_CPPFLAGS@
 CXXFLAGS=@SAVED_CXXFLAGS@
@@ -29,7 +32,7 @@ NVCCFLAGS=@SAVED_NVCCFLAGS@
 LDFLAGS=@SAVED_LDFLAGS@
 LIBS=@SAVED_LIBS@
 
-CPPFLAGS+=-I../.. -I../../include -I../../lib/include
+CPPFLAGS+=-I$(srcdir)/../.. -I$(srcdir)/../../include -I$(srcdir)/../../lib/include
 CXXFLAGS+=-g -O3 -Wall -Wshadow
 LIBS+=-lpthread
 LDFLAGS+=-g
@@ -38,7 +41,7 @@ CPPFLAGS+=@CPPFLAGS_OS@
 
 ifeq ($(cuda),yes)
 CPPFLAGS  += @CPPFLAGS_CUDA@ -DASTRA_CUDA
-NVCCFLAGS += @NVCCFLAGS_EXTRA@ @CPPFLAGS_CUDA@ -I../.. -I../../include -DASTRA_CUDA
+NVCCFLAGS += @NVCCFLAGS_EXTRA@ @CPPFLAGS_CUDA@ -I$(srcdir)/../.. -I$(srcdir)/../../include -DASTRA_CUDA
 LDFLAGS   += @LDFLAGS_CUDA@
 LIBS      += -lcudart -lcufft
 NVCC       = @NVCC@
@@ -59,7 +62,7 @@ CPPFLAGS += -DASTRA_PYTHON -I$(PYINCDIR)
 PYCPPFLAGS  = $(CPPFLAGS)
 PYCPPFLAGS  += -I../include
 PYLDFLAGS = $(LDFLAGS)
-PYLDFLAGS   += -L../build/linux/.libs
+PYLDFLAGS   += -L$(abs_top_builddir)/.libs
 LIBS		+= -l$(PYLIBVER)
 LDFLAGS += -L$(PYLIBDIR)
 endif
@@ -78,6 +81,7 @@ MKDIR=mkdir -p
 CXX=@CXX@
 LD=@CXX@
 SHELL=@SHELL@
+INSTALL_SH=$(SHELL) $(srcdir)/install-sh
 
 ifeq ($(matlab),yes)
 MEXFLAGS  = -cxx
@@ -264,12 +268,12 @@ endif
 
 ifeq ($(python),yes)
 py: libastra.la
-	cd ../../python; CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" $(PYTHON) builder.py install \
+	cd $(srcdir)/../../python; CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" $(PYTHON) builder.py install \
 	--install-base=./finalbuild --install-headers=./finalbuild --install-purelib=./finalbuild \
 	--install-platlib=./finalbuild --install-scripts=./finalbuild --install-data=./finalbuild
 
 python-root-install: libastra.la
-	cd ../../python; CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" $(PYTHON) builder.py install
+	cd $(srcdir)/../../python; CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" $(PYTHON) builder.py install
 
 endif
 
@@ -331,33 +335,33 @@ clean:
 	rm -f $(addsuffix /*.d,$(DEPDIRS))
 	rm -f $(addsuffix /*,$(LIBDIRS))
 	rm -f $(TEST_OBJECTS) test.bin
-	rm -fr ../../python/finalbuild/
-	rm -fr ../../python/build/
-	rm -f ../../python/astra/*.cpp
-	rm -f ../../python/astra/*.c
+	rm -fr $(srcdir)/../../python/finalbuild/
+	rm -fr $(srcdir)/../../python/build/
+	rm -f $(srcdir)/../../python/astra/*.cpp
+	rm -f $(srcdir)/../../python/astra/*.c
 
 distclean: clean
-	rm -f config.guess config.sub ltmain.sh libtool install-sh
+	rm -f $(srcdir)/config.guess $(srcdir)/config.sub $(srcdir)/ltmain.sh libtool $(srcdir)/install-sh
 	rm -f config.log config.status
-	rm -f aclocal.m4
-	rm -rf autom4te.cache
-	rm -f configure Makefile
+	rm -f $(srcdir)/aclocal.m4
+	rm -rf $(srcdir)/autom4te.cache
+	rm -f $(srcdir)/configure Makefile
 
 install: install-libraries install-matlab install-python
 
 install-libraries: libastra.la
-	./install-sh -m 755 -d @libdir@
-	./libtool --mode=install ./install-sh -m 644 libastra.la @libdir@
+	$(INSTALL_SH) -m 755 -d @libdir@
+	./libtool --mode=install $(INSTALL_SH) -m 644 libastra.la @libdir@
 	./libtool --mode=finish @libdir@
 
 ifeq ($(matlab),yes)
 # TODO: This install location doesn't work well for /usr or /usr/local
 install-matlab: $(MATLAB_MEX)
-	./install-sh -m 755 -d @prefix@/matlab
-	./install-sh -m 755 -d @prefix@/matlab/mex
-	./install-sh -m 755 -d @prefix@/matlab/tools
-	./install-sh -m 644 $(MATLAB_MEX) @prefix@/matlab/mex
-	./install-sh -m 644 ../../matlab/tools/*.m @prefix@/matlab/tools
+	$(INSTALL_SH) -m 755 -d @prefix@/matlab
+	$(INSTALL_SH) -m 755 -d @prefix@/matlab/mex
+	$(INSTALL_SH) -m 755 -d @prefix@/matlab/tools
+	$(INSTALL_SH) -m 644 $(MATLAB_MEX) @prefix@/matlab/mex
+	$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/tools/*.m @prefix@/matlab/tools
 # TODO: docs
 else
 install-matlab:
@@ -366,11 +370,11 @@ endif
 ifeq ($(python),yes)
 # TODO: This install location doesn't work well for /usr or /usr/local
 install-python: py
-	./install-sh -m 755 -d @prefix@/python
-	./install-sh -m 755 -d @prefix@/python/astra
-	./install-sh -m 644 ../../python/finalbuild/astra/*.so @prefix@/python/astra
-	./install-sh -m 644 ../../python/finalbuild/astra/*.py @prefix@/python/astra
-	./install-sh -m 644 ../../python/finalbuild/*.egg-info @prefix@/python/
+	$(INSTALL_SH) -m 755 -d @prefix@/python
+	$(INSTALL_SH) -m 755 -d @prefix@/python/astra
+	$(INSTALL_SH) -m 644 $(srcdir)/../../python/finalbuild/astra/*.so @prefix@/python/astra
+	$(INSTALL_SH) -m 644 $(srcdir)/../../python/finalbuild/astra/*.py @prefix@/python/astra
+	$(INSTALL_SH) -m 644 $(srcdir)/../../python/finalbuild/*.egg-info @prefix@/python/
 	@echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 	@echo "To use ASTRA in Python, add @prefix@/python/ to your PYTHONPATH"
 	@echo "and @libdir@ to your LD_LIBRARY_PATH."
@@ -381,18 +385,21 @@ install-python:
 endif
 
 
-Makefile: Makefile.in config.status
+Makefile: $(srcdir)/Makefile.in config.status
 	CONFIG_HEADERS= CONFIG_LINKS= CONFIG_FILES=$@ $(SHELL) ./config.status
 
-config.status: configure
+config.status: $(srcdir)/configure
 	@echo "configure script has changed. Re-running it with last parameters"
 	$(SHELL) ./config.status --recheck
 
-configure: configure.ac
+$(srcdir)/configure: $(srcdir)/configure.ac
 	@echo "configure.ac has been changed. Regenerating configure script"
-	$(SHELL) ./autogen.sh
+	cd $(srcdir) && $(SHELL) ./autogen.sh
 
 .PHONY: all mex test clean distclean install install-libraries
 
 # don't remove intermediate files:
 .SECONDARY:
+
+# disable all implicit built-in rules
+.SUFFIXES:
