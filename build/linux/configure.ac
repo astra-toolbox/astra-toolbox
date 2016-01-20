@@ -219,6 +219,13 @@ assert(LooseVersion(Cython.__version__)>=LooseVersion("0.13"))
     AC_MSG_ERROR(You need the six module to use the ASTRA toolbox in Python)
   fi
   AC_MSG_RESULT(yes)
+  AC_MSG_CHECKING(for scipy module)
+  ASTRA_TRY_PYTHON([import scipy],,HAVEPYTHON=no)
+  if test x$HAVEPYTHON = xno; then
+    AC_MSG_RESULT(no)
+    AC_MSG_ERROR(You need the scipy module to use the ASTRA toolbox in Python)
+  fi
+  AC_MSG_RESULT(yes)
 fi
 
 AC_SUBST(HAVEPYTHON)
