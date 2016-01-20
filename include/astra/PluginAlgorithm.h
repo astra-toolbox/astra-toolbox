@@ -29,62 +29,37 @@ $Id$
 #ifndef _INC_ASTRA_PLUGINALGORITHM
 #define _INC_ASTRA_PLUGINALGORITHM
 
-#ifdef ASTRA_PYTHON
+#include "astra/Globals.h"
 
-#include "astra/Algorithm.h"
-#include "astra/Singleton.h"
-#include "astra/XMLDocument.h"
-#include "astra/XMLNode.h"
-
-// Slightly hackish forward declaration of PyObject
-struct _object;
-typedef _object PyObject;
-
+#include <map>
+#include <string>
 
 namespace astra {
-class _AstraExport CPluginAlgorithm : public CAlgorithm {
+
+class CAlgorithm;
+
+class _AstraExport CPluginAlgorithmFactory {
 
 public:
+    CPluginAlgorithmFactory() { }
+    virtual ~CPluginAlgorithmFactory() { }
 
-    CPluginAlgorithm(PyObject* pyclass);
-    ~CPluginAlgorithm();
+    virtual CAlgorithm * getPlugin(const std::string &name) = 0;
 
-    bool initialize(const Config& _cfg);
-    void run(int _iNrIterations);
+    virtual bool registerPlugin(std::string name, std::string className) = 0;
+    virtual bool registerPlugin(std::string className) = 0;
+
+    virtual std::map<std::string, std::string> getRegisteredMap() = 0;
+    
+    virtual std::string getHelp(const std::string &name) = 0;
+
+    static void registerFactory(CPluginAlgorithmFactory *factory) { m_factory = factory; }
+	static CPluginAlgorithmFactory* getFactory() { return m_factory; }
 
 private:
-    PyObject * instance;
-
+    static CPluginAlgorithmFactory *m_factory;
 };
-
-class _AstraExport CPluginAlgorithmFactory : public Singleton<CPluginAlgorithmFactory> {
-
-public:
-
-    CPluginAlgorithmFactory();
-    ~CPluginAlgorithmFactory();
-
-    CPluginAlgorithm * getPlugin(std::string name);
-
-    bool registerPlugin(std::string name, std::string className);
-    bool registerPlugin(std::string className);
-    bool registerPluginClass(std::string name, PyObject * className);
-    bool registerPluginClass(PyObject * className);
-    
-    PyObject * getRegistered();
-    std::map<std::string, std::string> getRegisteredMap();
-    
-    std::string getHelp(std::string name);
-
-private:
-    PyObject * pluginDict;
-    PyObject *inspect, *six;
-};
-
-PyObject* XMLNode2dict(XMLNode node);
 
 }
-
-#endif
 
 #endif

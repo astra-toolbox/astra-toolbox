@@ -32,21 +32,25 @@ import inspect
 from libcpp.string cimport string
 from libcpp cimport bool
 
-cdef CPluginAlgorithmFactory *fact = getSingletonPtr()
+cdef CPythonPluginAlgorithmFactory *fact = getSingletonPtr()
 
 from . import utils
 
-cdef extern from "astra/PluginAlgorithm.h" namespace "astra":
-    cdef cppclass CPluginAlgorithmFactory:
+cdef extern from "src/PythonPluginAlgorithm.h" namespace "astra":
+    cdef cppclass CPythonPluginAlgorithmFactory:
         bool registerPlugin(string className)
         bool registerPlugin(string name, string className)
         bool registerPluginClass(object className)
         bool registerPluginClass(string name, object className)
         object getRegistered()
-        string getHelp(string name)
+        string getHelp(string &name)
+
+cdef extern from "src/PythonPluginAlgorithm.h" namespace "astra::CPythonPluginAlgorithmFactory":
+    cdef CPythonPluginAlgorithmFactory* getSingletonPtr()
 
 cdef extern from "astra/PluginAlgorithm.h" namespace "astra::CPluginAlgorithmFactory":
-    cdef CPluginAlgorithmFactory* getSingletonPtr()
+    # NB: Using wrong pointer type here for convenience
+    cdef void registerFactory(CPythonPluginAlgorithmFactory *)
 
 def register(className, name=None):
     if inspect.isclass(className):
@@ -65,3 +69,6 @@ def get_registered():
 
 def get_help(name):
     return utils.wrap_from_bytes(fact.getHelp(six.b(name)))
+
+# Register python plugin factory with astra
+registerFactory(fact)

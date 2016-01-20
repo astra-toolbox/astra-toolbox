@@ -70,6 +70,10 @@ ext_modules = [ ]
 ext_modules = cythonize("astra/*.pyx", language_level=2)
 cmdclass = { 'build_ext': build_ext }
 
+for m in ext_modules:
+  if m.name == 'astra.plugin_c':
+    m.sources.append('astra/src/PythonPluginAlgorithm.cpp')
+
 setup (name = 'PyASTRAToolbox',
        version = '1.7.1',
        description = 'Python interface to the ASTRA-Toolbox',

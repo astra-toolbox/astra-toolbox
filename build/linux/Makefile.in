@@ -62,8 +62,6 @@ PYCPPFLAGS  := $(CPPFLAGS)
 PYCPPFLAGS  += -I../include
 PYLDFLAGS = $(LDFLAGS)
 PYLDFLAGS   += -L$(abs_top_builddir)/.libs
-LIBS		+= -l$(PYLIBVER)
-LDFLAGS += -L$(PYLIBDIR)
 endif
 
 # This is below where PYCPPFLAGS copies CPPFLAGS.  The python code is built

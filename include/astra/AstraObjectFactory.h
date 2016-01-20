@@ -155,8 +155,11 @@ class _AstraExport CAlgorithmFactory : public CAstraObjectFactory<CAlgorithm, Al
 template <>
 inline CAlgorithm* CAstraObjectFactory<CAlgorithm, AlgorithmTypeList>::findPlugin(std::string _sType)
 	{
-		CPluginAlgorithmFactory *fac = CPluginAlgorithmFactory::getSingletonPtr();
-		return fac->getPlugin(_sType);
+		CPluginAlgorithmFactory *fac = CPluginAlgorithmFactory::getFactory();
+		if (fac)
+			return fac->getPlugin(_sType);
+		else
+			return 0;
 	}
 #endif
 

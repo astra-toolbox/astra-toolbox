@@ -48,7 +48,11 @@ using namespace astra;
  */
 void astra_mex_plugin_get_registered(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
-    astra::CPluginAlgorithmFactory *fact = astra::CPluginAlgorithmFactory::getSingletonPtr();
+    astra::CPluginAlgorithmFactory *fact = astra::CPluginAlgorithmFactory::getFactory();
+    if (!fact) {
+        mexPrintf("Plugin support not initialized.");
+        return;
+    }
     std::map<std::string, std::string> mp = fact->getRegisteredMap();
     for(std::map<std::string,std::string>::iterator it=mp.begin();it!=mp.end();it++){
         mexPrintf("%s: %s\n",it->first.c_str(), it->second.c_str());
@@ -62,9 +66,13 @@ void astra_mex_plugin_get_registered(int nlhs, mxArray* plhs[], int nrhs, const 
  */
 void astra_mex_plugin_register(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
+    astra::CPluginAlgorithmFactory *fact = astra::CPluginAlgorithmFactory::getFactory();
+    if (!fact) {
+        mexPrintf("Plugin support not initialized.");
+        return;
+    }
     if (2 <= nrhs) {
         string class_name = mexToString(prhs[1]);
-        astra::CPluginAlgorithmFactory *fact = astra::CPluginAlgorithmFactory::getSingletonPtr();
         fact->registerPlugin(class_name);
     }else{
         mexPrintf("astra_mex_plugin('register', class_name);\n");
@@ -78,9 +86,13 @@ void astra_mex_plugin_register(int nlhs, mxArray* plhs[], int nrhs, const mxArra
  */
 void astra_mex_plugin_get_help(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
+    astra::CPluginAlgorithmFactory *fact = astra::CPluginAlgorithmFactory::getFactory();
+    if (!fact) {
+        mexPrintf("Plugin support not initialized.");
+        return;
+    }
     if (2 <= nrhs) {
         string name = mexToString(prhs[1]);
-        astra::CPluginAlgorithmFactory *fact = astra::CPluginAlgorithmFactory::getSingletonPtr();
         mexPrintf((fact->getHelp(name)+"\n").c_str());
     }else{
         mexPrintf("astra_mex_plugin('get_help', name);\n");
