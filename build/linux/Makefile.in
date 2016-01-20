@@ -32,7 +32,6 @@ NVCCFLAGS=@SAVED_NVCCFLAGS@
 LDFLAGS=@SAVED_LDFLAGS@
 LIBS=@SAVED_LIBS@
 
-CPPFLAGS+=-I$(srcdir)/../.. -I$(srcdir)/../../include -I$(srcdir)/../../lib/include
 CXXFLAGS+=-g -O3 -Wall -Wshadow
 LIBS+=-lpthread
 LDFLAGS+=-g
@@ -59,13 +58,17 @@ PYLIBDIR = $(shell $(PYTHON) -c 'from distutils.sysconfig import get_config_var;
 PYINCDIR = $(shell $(PYTHON) -c 'from distutils.sysconfig import get_python_inc; import six; six.print_(get_python_inc())')
 PYLIBVER = `basename $(PYINCDIR)`
 CPPFLAGS += -DASTRA_PYTHON -I$(PYINCDIR)
-PYCPPFLAGS  = $(CPPFLAGS)
+PYCPPFLAGS  := $(CPPFLAGS)
 PYCPPFLAGS  += -I../include
 PYLDFLAGS = $(LDFLAGS)
 PYLDFLAGS   += -L$(abs_top_builddir)/.libs
 LIBS		+= -l$(PYLIBVER)
 LDFLAGS += -L$(PYLIBDIR)
 endif
+
+# This is below where PYCPPFLAGS copies CPPFLAGS.  The python code is built
+# from a different directory, so these relative includes would be wrong.
+CPPFLAGS+=-I$(srcdir)/../.. -I$(srcdir)/../../include -I$(srcdir)/../../lib/include
 
 BOOST_CPPFLAGS=
 BOOST_LDFLAGS=
