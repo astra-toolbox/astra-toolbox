@@ -295,14 +295,18 @@ libastra.la: $(ALL_OBJECTS)
 	$(MKDIR) $(*D)/$(DEPDIR)
 	./libtool --mode=compile --tag=CXX $(CXX) -Wp,-MMD,"$(*D)/$(DEPDIR)/$(*F).d",-MQ,"$@",-MP $(CXXFLAGS) $(CPPFLAGS) -c $(<) -o $*.o
 
+gen_static_libs := `./libtool --features | grep -q 'disable static' && echo no || echo yes`
+
 ifeq ($(cuda),yes)
 %.lo: %.cu
 	@# Behave like libtool: compile both a PIC and a non-PIC object file
 	@$(MKDIR) $(*D)
-	$(NVCC) $(NVCCFLAGS) -c $(<) -o $*.o
 	@$(MKDIR) $(*D)/.libs
 	@$(MKDIR) $(*D)/$(DEPDIR)
-	@$(NVCC) $(NVCCFLAGS) -c $(<) -Xcompiler -fPIC -DPIC -o $(*D)/.libs/$(*F).o >/dev/null 2>&1
+	$(NVCC) $(NVCCFLAGS) -c $(<) -Xcompiler -fPIC -DPIC -o $(*D)/.libs/$(*F).o
+ifeq ($(gen_static_libs),yes)
+	@$(NVCC) $(NVCCFLAGS) -c $(<) -o $*.o >/dev/null 2>&1
+endif
 	@# Generate a .d file, with target name $*.lo
 	@$(NVCC) $(NVCCFLAGS) -M $(<) -MT $(*F).lo -odir $(*D) -o $(*D)/$(DEPDIR)/$(*F).d
 	@# Generate empty targets for all dependencies listed in the .d file.
@@ -319,7 +323,11 @@ ifeq ($(cuda),yes)
 	@echo "pic_object='.libs/$(*F).o'" >> $*.lo
 	@echo >> $*.lo
 	@echo "# Name of the non-PIC object." >> $*.lo
+ifeq ($(gen_static_libs),yes)
 	@echo "non_pic_object='$(*F).o'" >> $*.lo
+else
+	@echo "non_pic_object=none" >> $*.lo
+endif
 	@# Remove generated .linkinfo file
 	@rm -f $(*F).linkinfo
 endif
