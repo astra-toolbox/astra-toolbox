@@ -37,8 +37,29 @@ $Id$
 
 #include "astra/PluginAlgorithm.h"
 
+#include <Python.h>
+
 using namespace std;
 using namespace astra;
+
+
+//-----------------------------------------------------------------------------------------
+/** astra_mex_plugin('init');
+ *
+ * Initialize plugin support by initializing python and importing astra
+ */
+void astra_mex_plugin_init()
+{
+    if(!Py_IsInitialized()){
+        Py_Initialize();
+        PyEval_InitThreads();
+    }
+
+    // Importing astra may be overkill, since we only need to initialize
+    // PythonPluginAlgorithmFactory from astra.plugin_c.
+    PyObject *mod = PyImport_ImportModule("astra");
+    Py_DECREF(mod);
+}
 
 
 //-----------------------------------------------------------------------------------------
@@ -128,7 +149,9 @@ void mexFunction(int nlhs, mxArray* plhs[],
 	initASTRAMex();
 
 	// SWITCH (MODE)
-	if (sMode ==  std::string("get_registered")) {
+	if (sMode == "init") {
+		astra_mex_plugin_init();
+	} else if (sMode ==  std::string("get_registered")) {
 		astra_mex_plugin_get_registered(nlhs, plhs, nrhs, prhs);
 	}else if (sMode ==  std::string("get_help")) {
 		astra_mex_plugin_get_help(nlhs, plhs, nrhs, prhs);

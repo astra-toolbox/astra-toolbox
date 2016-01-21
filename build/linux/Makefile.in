@@ -95,6 +95,11 @@ ifeq ($(cuda),yes)
 MEXFLAGS += -DASTRA_CUDA
 endif
 
+ifeq ($(python),yes)
+MEXPYLDFLAGS='$$LDFLAGS $(LDFLAGS) -L$(PYLIBDIR)'
+MEXPYLIBS=$(MEXLIBS) -l$(PYLIBVER)
+endif
+
 endif
 
 LIBDIR=/usr/local/lib
@@ -265,6 +270,11 @@ mex: $(MATLAB_MEX)
 
 %.$(MEXSUFFIX): %.o $(MATLAB_CXX_OBJECTS) libastra.la
 	$(MEX) LDFLAGS=$(MEXLDFLAGS) $(MEXFLAGS) $(LIBS) $(MEXLIBS) -lastra -output $* $*.o $(MATLAB_CXX_OBJECTS)
+
+ifeq ($(python),yes)
+matlab/mex/astra_mex_plugin_c.$(MEXSUFFIX): matlab/mex/astra_mex_plugin_c.o $(MATLAB_CXX_OBJECTS) libastra.la
+	$(MEX) LDFLAGS=$(MEXPYLDFLAGS) $(MEXFLAGS) $(LIBS) $(MEXPYLIBS) -lastra -output matlab/mex/astra_mex_plugin_c $< $(MATLAB_CXX_OBJECTS)
+endif
 endif
 
 ifeq ($(python),yes)
