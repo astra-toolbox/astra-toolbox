@@ -684,13 +684,12 @@ CCompositeGeometryManager::CProjectionPart* CCompositeGeometryManager::CProjecti
 	return new CProjectionPart(*this);
 }
 
-
-bool CCompositeGeometryManager::doFP(CProjector3D *pProjector, CFloat32VolumeData3DMemory *pVolData,
-                                     CFloat32ProjectionData3DMemory *pProjData)
+CCompositeGeometryManager::SJob CCompositeGeometryManager::createJobFP(CProjector3D *pProjector,
+                                            CFloat32VolumeData3DMemory *pVolData,
+                                            CFloat32ProjectionData3DMemory *pProjData)
 {
-	ASTRA_DEBUG("CCompositeGeometryManager::doFP");
+	ASTRA_DEBUG("CCompositeGeometryManager::createJobFP");
 	// Create single job for FP
-	// Run result
 
 	CVolumePart *input = new CVolumePart();
 	input->pData = pVolData;
@@ -715,18 +714,15 @@ bool CCompositeGeometryManager::doFP(CProjector3D *pProjector, CFloat32VolumeDat
 	FP.eType = SJob::JOB_FP;
 	FP.eMode = SJob::MODE_SET;
 
-	TJobList L;
-	L.push_back(FP);
-
-	return doJobs(L);
+	return FP;
 }
 
-bool CCompositeGeometryManager::doBP(CProjector3D *pProjector, CFloat32VolumeData3DMemory *pVolData,
-                                     CFloat32ProjectionData3DMemory *pProjData)
+CCompositeGeometryManager::SJob CCompositeGeometryManager::createJobBP(CProjector3D *pProjector,
+                                            CFloat32VolumeData3DMemory *pVolData,
+                                            CFloat32ProjectionData3DMemory *pProjData)
 {
-	ASTRA_DEBUG("CCompositeGeometryManager::doBP");
+	ASTRA_DEBUG("CCompositeGeometryManager::createJobBP");
 	// Create single job for BP
-	// Run result
 
 	CProjectionPart *input = new CProjectionPart();
 	input->pData = pProjData;
@@ -749,8 +745,23 @@ bool CCompositeGeometryManager::doBP(CProjector3D *pProjector, CFloat32VolumeDat
 	BP.eType = SJob::JOB_BP;
 	BP.eMode = SJob::MODE_SET;
 
+	return BP;
+}
+
+bool CCompositeGeometryManager::doFP(CProjector3D *pProjector, CFloat32VolumeData3DMemory *pVolData,
+                                     CFloat32ProjectionData3DMemory *pProjData)
+{
 	TJobList L;
-	L.push_back(BP);
+	L.push_back(createJobFP(pProjector, pVolData, pProjData));
+
+	return doJobs(L);
+}
+
+bool CCompositeGeometryManager::doBP(CProjector3D *pProjector, CFloat32VolumeData3DMemory *pVolData,
+                                     CFloat32ProjectionData3DMemory *pProjData)
+{
+	TJobList L;
+	L.push_back(createJobBP(pProjector, pVolData, pProjData));
 
 	return doJobs(L);
 }

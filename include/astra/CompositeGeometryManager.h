@@ -137,6 +137,13 @@ public:
 
 	bool doJobs(TJobList &jobs);
 
+	SJob createJobFP(CProjector3D *pProjector,
+                     CFloat32VolumeData3DMemory *pVolData,
+                     CFloat32ProjectionData3DMemory *pProjData);
+	SJob createJobBP(CProjector3D *pProjector,
+                     CFloat32VolumeData3DMemory *pVolData,
+                     CFloat32ProjectionData3DMemory *pProjData);
+
 	// Convenience functions for creating and running a single FP or BP job
 	bool doFP(CProjector3D *pProjector, CFloat32VolumeData3DMemory *pVolData,
 	          CFloat32ProjectionData3DMemory *pProjData);
