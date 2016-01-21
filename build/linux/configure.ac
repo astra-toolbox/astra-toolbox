@@ -213,10 +213,17 @@ assert(LooseVersion(Cython.__version__)>=LooseVersion("0.13"))
   fi
   AC_MSG_RESULT(yes)
   AC_MSG_CHECKING(for six module)
-  ASTRA_TRY_PYTHON([import six])
+  ASTRA_TRY_PYTHON([import six],,HAVEPYTHON=no)
   if test x$HAVEPYTHON = xno; then
     AC_MSG_RESULT(no)
     AC_MSG_ERROR(You need the six module to use the ASTRA toolbox in Python)
+  fi
+  AC_MSG_RESULT(yes)
+  AC_MSG_CHECKING(for scipy module)
+  ASTRA_TRY_PYTHON([import scipy],,HAVEPYTHON=no)
+  if test x$HAVEPYTHON = xno; then
+    AC_MSG_RESULT(no)
+    AC_MSG_ERROR(You need the scipy module to use the ASTRA toolbox in Python)
   fi
   AC_MSG_RESULT(yes)
 fi
@@ -236,6 +243,12 @@ esac
 
 AC_SUBST(CPPFLAGS_OS)
 
+# For some reason, some older versions of autoconf produce a config.status
+# that disables all lines looking like VPATH=@srcdir@
+# (More recent autoconf fixes the too broad matching there.)
+# We use a different variable name as a workaround.
+VPATH_SRCDIR="$srcdir"
+AC_SUBST(VPATH_SRCDIR)
 
 # TODO:
 

@@ -21,6 +21,7 @@ requirements:
     - python
     - cython >=0.13
     - numpy
+    - scipy
     - six
 
   run:
