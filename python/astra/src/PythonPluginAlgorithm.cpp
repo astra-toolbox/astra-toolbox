@@ -238,7 +238,7 @@ CAlgorithm * CPythonPluginAlgorithmFactory::getPlugin(const std::string &name){
     CPluginAlgorithm *alg = NULL;
     if(PyBytes_Check(className)){
         std::string str = std::string(PyBytes_AsString(className));
-    	PyObject *pyclass = getClassFromString(str);
+        PyObject *pyclass = getClassFromString(str);
         if(pyclass!=NULL){
             alg = new CPluginAlgorithm(pyclass);
             Py_DECREF(pyclass);

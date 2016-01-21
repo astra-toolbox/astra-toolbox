@@ -128,12 +128,12 @@ void mexFunction(int nlhs, mxArray* plhs[],
 	initASTRAMex();
 
 	// SWITCH (MODE)
-	if (sMode ==  std::string("get_registered")) { 
-		astra_mex_plugin_get_registered(nlhs, plhs, nrhs, prhs); 
-    }else if (sMode ==  std::string("get_help")) { 
-        astra_mex_plugin_get_help(nlhs, plhs, nrhs, prhs); 
-    }else if (sMode ==  std::string("register")) { 
-		astra_mex_plugin_register(nlhs, plhs, nrhs, prhs); 
+	if (sMode ==  std::string("get_registered")) {
+		astra_mex_plugin_get_registered(nlhs, plhs, nrhs, prhs);
+	}else if (sMode ==  std::string("get_help")) {
+		astra_mex_plugin_get_help(nlhs, plhs, nrhs, prhs);
+	}else if (sMode ==  std::string("register")) {
+		astra_mex_plugin_register(nlhs, plhs, nrhs, prhs);
 	} else {
 		printHelp();
 	}
