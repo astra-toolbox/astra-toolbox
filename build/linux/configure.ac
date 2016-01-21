@@ -243,6 +243,12 @@ esac
 
 AC_SUBST(CPPFLAGS_OS)
 
+# For some reason, some older versions of autoconf produce a config.status
+# that disables all lines looking like VPATH=@srcdir@
+# (More recent autoconf fixes the too broad matching there.)
+# We use a different variable name as a workaround.
+VPATH_SRCDIR="$srcdir"
+AC_SUBST(VPATH_SRCDIR)
 
 # TODO:
 

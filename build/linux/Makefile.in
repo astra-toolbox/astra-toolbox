@@ -24,7 +24,7 @@ exec_prefix=@exec_prefix@
 srcdir=@srcdir@
 abs_top_builddir=@abs_top_builddir@
 
-VPATH=$(srcdir)/../..
+VPATH=@VPATH_SRCDIR@/../..
 
 CPPFLAGS=@SAVED_CPPFLAGS@
 CXXFLAGS=@SAVED_CXXFLAGS@
