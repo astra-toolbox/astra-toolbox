@@ -144,7 +144,10 @@ void fixLapackLoading(){
                 if(lapack!=NULL){
                     Py_DECREF(lapack);
                 }
-                PyObject_CallMethod(sys, "setdlopenflags", "O",curFlags);
+                PyObject *retVal2 = PyObject_CallMethod(sys, "setdlopenflags", "O",curFlags);
+                if(retVal2!=NULL){
+                    Py_DECREF(retVal2);
+                }
                 Py_DECREF(retVal);
             }
             Py_DECREF(curFlags);
