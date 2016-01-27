@@ -127,43 +127,11 @@ void CPluginAlgorithm::run(int _iNrIterations){
     PyGILState_Release(state);
 }
 
-void fixLapackLoading(){
-    // When running in Matlab, we need to force numpy
-    // to use its internal lapack library instead of
-    // Matlab's MKL library to avoid errors. To do this,
-    // we set Python's dlopen flags to RTLD_NOW|RTLD_DEEPBIND
-    // and import 'numpy.linalg.lapack_lite' here. We reset
-    // Python's dlopen flags afterwards.
-    PyObject *sys = PyImport_ImportModule("sys");
-    if(sys!=NULL){
-        PyObject *curFlags = PyObject_CallMethod(sys,"getdlopenflags",NULL);
-        if(curFlags!=NULL){
-            PyObject *retVal = PyObject_CallMethod(sys, "setdlopenflags", "i",10);
-            if(retVal!=NULL){
-                PyObject *lapack = PyImport_ImportModule("numpy.linalg.lapack_lite");
-                if(lapack!=NULL){
-                    Py_DECREF(lapack);
-                }
-                PyObject *retVal2 = PyObject_CallMethod(sys, "setdlopenflags", "O",curFlags);
-                if(retVal2!=NULL){
-                    Py_DECREF(retVal2);
-                }
-                Py_DECREF(retVal);
-            }
-            Py_DECREF(curFlags);
-        }
-        Py_DECREF(sys);
-    }
-}
-
 CPythonPluginAlgorithmFactory::CPythonPluginAlgorithmFactory(){
     if(!Py_IsInitialized()){
         Py_Initialize();
         PyEval_InitThreads();
     }
-#ifndef _MSC_VER
-    if(astra::running_in_matlab) fixLapackLoading();
-#endif
     pluginDict = PyDict_New();
     inspect = PyImport_ImportModule("inspect");
     six = PyImport_ImportModule("six");
