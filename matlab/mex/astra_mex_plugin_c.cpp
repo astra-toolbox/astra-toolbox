@@ -58,7 +58,7 @@ void astra_mex_plugin_init()
     // Importing astra may be overkill, since we only need to initialize
     // PythonPluginAlgorithmFactory from astra.plugin_c.
     PyObject *mod = PyImport_ImportModule("astra");
-    Py_DECREF(mod);
+    Py_XDECREF(mod);
 }
 
 
