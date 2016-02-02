@@ -1,6 +1,6 @@
-#-----------------------------------------------------------------------
-# Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-#            2014-2015, CWI, Amsterdam
+# -----------------------------------------------------------------------
+# Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+#            2013-2016, CWI, Amsterdam
 #
 # Contact: astra@uantwerpen.be
 # Website: http://sf.net/projects/astra-toolbox
@@ -21,8 +21,8 @@
 # You should have received a copy of the GNU General Public License
 # along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #
-#-----------------------------------------------------------------------
-
+# -----------------------------------------------------------------------
+#
 # distutils: language = c++
 # distutils: libraries = astra
 
