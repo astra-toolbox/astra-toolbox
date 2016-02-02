@@ -38,6 +38,7 @@ $Id$
 #include "astra/Globals.h"
 #ifdef ASTRA_CUDA
 #include "../cuda/2d/darthelper.h"
+#include "astra/CompositeGeometryManager.h"
 #endif
 using namespace std;
 using namespace astra;
@@ -83,12 +84,46 @@ void astra_mex_use_cuda(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs
  * Set active GPU
  */
 void astra_mex_set_gpu_index(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
-{ 
+{
 #ifdef ASTRA_CUDA
-	if (nrhs >= 2) {
-		bool ret = astraCUDA::setGPUIndex((int)mxGetScalar(prhs[1]));
-		if (!ret)
-			mexPrintf("Failed to set GPU %d\n", (int)mxGetScalar(prhs[1]));
+	bool usage = false;
+	if (nrhs != 2 && nrhs != 4) {
+		usage = true;
+	}
+
+	astra::SGPUParams params;
+	params.memory = 0;
+
+	if (!usage && nrhs >= 4) {
+		std::string s = mexToString(prhs[2]);
+		if (s != "memory") {
+			usage = true;
+		} else {
+			params.memory = (size_t)mxGetScalar(prhs[3]);
+		}
+	}
+
+	if (!usage && nrhs >= 2) {
+		int n = mxGetN(prhs[1]) * mxGetM(prhs[1]);
+		params.GPUIndices.resize(n);
+		double* pdMatlabData = mxGetPr(prhs[1]);
+		for (int i = 0; i < n; ++i)
+			params.GPUIndices[i] = (int)pdMatlabData[i];
+
+
+		astra::CCompositeGeometryManager::setGlobalGPUParams(params);
+
+
+		// Set first GPU
+		if (n >= 1) {
+			bool ret = astraCUDA::setGPUIndex((int)pdMatlabData[0]);
+			if (!ret)
+				mexPrintf("Failed to set GPU %d\n", (int)pdMatlabData[0]);
+		}
+	}
+
+	if (usage) {
+		mexPrintf("Usage: astra_mex('set_gpu_index', index/indices [, 'memory', memory])");
 	}
 #endif
 }

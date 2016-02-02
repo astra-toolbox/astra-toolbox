@@ -50,9 +50,16 @@ class CProjectionGeometry3D;
 class CProjector3D;
 
 
+struct SGPUParams {
+	std::vector<int> GPUIndices;
+	size_t memory;
+};
+
 
 class _AstraExport CCompositeGeometryManager {
 public:
+	CCompositeGeometryManager();
+
 	class CPart;
 	typedef std::list<boost::shared_ptr<CPart> > TPartList;
 	class CPart {
@@ -139,10 +146,19 @@ public:
 	bool doFP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3DMemory *>& volData, const std::vector<CFloat32ProjectionData3DMemory *>& projData);
 	bool doBP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3DMemory *>& volData, const std::vector<CFloat32ProjectionData3DMemory *>& projData);
 
+	void setGPUIndices(const std::vector<int>& GPUIndices);
+
+	static void setGlobalGPUParams(const SGPUParams& params);
+
 protected:
 
 	bool splitJobs(TJobSet &jobs, size_t maxSize, int div, TJobSet &split);
 
+	std::vector<int> m_GPUIndices;
+	size_t m_iMaxSize;
+
+
+	static SGPUParams* s_params;
 };
 
 }

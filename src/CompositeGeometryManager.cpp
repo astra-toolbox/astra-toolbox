@@ -44,11 +44,31 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "../cuda/3d/mem3d.h"
 
 #include <cstring>
+#include <sstream>
+
+#ifndef USE_PTHREADS
+#include <boost/thread/mutex.hpp>
+#include <boost/thread.hpp>
+#endif
 
 namespace astra {
 
+
+SGPUParams* CCompositeGeometryManager::s_params = 0;
+
+CCompositeGeometryManager::CCompositeGeometryManager()
+{
+	m_iMaxSize = 0;
+
+	if (s_params) {
+		m_iMaxSize = s_params->memory;
+		m_GPUIndices = s_params->GPUIndices;
+	}
+}
+
+
 // JOB:
-//  
+//
 // VolumePart
 // ProjectionPart
 // FP-or-BP
@@ -74,7 +94,6 @@ namespace astra {
 // For splitting on both input and output side:
 //   How to divide up memory? (Optimization problem; compute/benchmark)
 //   (First approach: 0.5/0.5)
-
 
 
 bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div, TJobSet &split)
@@ -305,37 +324,37 @@ CCompositeGeometryManager::CPart* CCompositeGeometryManager::CVolumePart::reduce
 
 
 static size_t ceildiv(size_t a, size_t b) {
-    return (a + b - 1) / b;
+	return (a + b - 1) / b;
 }
 
 static size_t computeVerticalSplit(size_t maxBlock, int div, size_t sliceCount)
 {
-    size_t blockSize = maxBlock;
-    size_t blockCount = ceildiv(sliceCount, blockSize);
+	size_t blockSize = maxBlock;
+	size_t blockCount = ceildiv(sliceCount, blockSize);
 
-    // Increase number of blocks to be divisible by div
-    size_t divCount = div * ceildiv(blockCount, div);
+	// Increase number of blocks to be divisible by div
+	size_t divCount = div * ceildiv(blockCount, div);
 
-    // If divCount is above sqrt(number of slices), then
-    // we can't guarantee divisibility by div, but let's try anyway
-    if (ceildiv(sliceCount, ceildiv(sliceCount, divCount)) % div == 0) {
-        blockCount = divCount;
-    } else {
-        // If divisibility isn't achievable, we may want to optimize
-        // differently.
-        // TODO: Figure out how to model and optimize this.
-    }
+	// If divCount is above sqrt(number of slices), then
+	// we can't guarantee divisibility by div, but let's try anyway
+	if (ceildiv(sliceCount, ceildiv(sliceCount, divCount)) % div == 0) {
+		blockCount = divCount;
+	} else {
+		// If divisibility isn't achievable, we may want to optimize
+		// differently.
+		// TODO: Figure out how to model and optimize this.
+	}
 
-    // Final adjustment to make blocks more evenly sized
-    // (This can't make the blocks larger)
-    blockSize = ceildiv(sliceCount, blockCount); 
+	// Final adjustment to make blocks more evenly sized
+	// (This can't make the blocks larger)
+	blockSize = ceildiv(sliceCount, blockCount);
 
-    ASTRA_DEBUG("%ld %ld -> %ld * %ld", sliceCount, maxBlock, blockCount, blockSize);
+	ASTRA_DEBUG("%ld %ld -> %ld * %ld", sliceCount, maxBlock, blockCount, blockSize);
 
-    assert(blockSize <= maxBlock);
-    assert((divCount * divCount > sliceCount) || (blockCount % div) == 0);
+	assert(blockSize <= maxBlock);
+	assert((divCount * divCount > sliceCount) || (blockCount % div) == 0);
 
-    return blockSize;
+	return blockSize;
 }
 
 template<class V, class P>
@@ -848,6 +867,260 @@ bool CCompositeGeometryManager::doBP(CProjector3D *pProjector, const std::vector
 
 
 
+static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter)
+{
+	CCompositeGeometryManager::CPart* output = iter->first;
+	const CCompositeGeometryManager::TJobList& L = iter->second;
+
+	assert(!L.empty());
+
+	bool zero = L.begin()->eMode == CCompositeGeometryManager::SJob::MODE_SET;
+
+	size_t outx, outy, outz;
+	output->getDims(outx, outy, outz);
+
+	if (L.begin()->eType == CCompositeGeometryManager::SJob::JOB_NOP) {
+		// just zero output?
+		if (zero) {
+			for (size_t z = 0; z < outz; ++z) {
+				for (size_t y = 0; y < outy; ++y) {
+					float* ptr = output->pData->getData();
+					ptr += (z + output->subX) * (size_t)output->pData->getHeight() * (size_t)output->pData->getWidth();
+					ptr += (y + output->subY) * (size_t)output->pData->getWidth();
+					ptr += output->subX;
+					memset(ptr, 0, sizeof(float) * outx);
+				}
+			}
+		}
+		return true;
+	}
+
+
+	astraCUDA3d::SSubDimensions3D dstdims;
+	dstdims.nx = output->pData->getWidth();
+	dstdims.pitch = dstdims.nx;
+	dstdims.ny = output->pData->getHeight();
+	dstdims.nz = output->pData->getDepth();
+	dstdims.subnx = outx;
+	dstdims.subny = outy;
+	dstdims.subnz = outz;
+	ASTRA_DEBUG("dstdims: %d,%d,%d in %d,%d,%d", dstdims.subnx, dstdims.subny, dstdims.subnz, dstdims.nx, dstdims.ny, dstdims.nz);
+	dstdims.subx = output->subX;
+	dstdims.suby = output->subY;
+	dstdims.subz = output->subZ;
+	float *dst = output->pData->getData();
+
+	astraCUDA3d::MemHandle3D outputMem = astraCUDA3d::allocateGPUMemory(outx, outy, outz, zero ? astraCUDA3d::INIT_ZERO : astraCUDA3d::INIT_NO);
+	bool ok = outputMem;
+
+	for (CCompositeGeometryManager::TJobList::const_iterator i = L.begin(); i != L.end(); ++i) {
+		const CCompositeGeometryManager::SJob &j = *i;
+
+		assert(j.pInput);
+
+		CCudaProjector3D *projector = dynamic_cast<CCudaProjector3D*>(j.pProjector);
+		Cuda3DProjectionKernel projKernel = ker3d_default;
+		int detectorSuperSampling = 1;
+		int voxelSuperSampling = 1;
+		if (projector) {
+			projKernel = projector->getProjectionKernel();
+			detectorSuperSampling = projector->getDetectorSuperSampling();
+			voxelSuperSampling = projector->getVoxelSuperSampling();
+		}
+
+		size_t inx, iny, inz;
+		j.pInput->getDims(inx, iny, inz);
+		astraCUDA3d::MemHandle3D inputMem = astraCUDA3d::allocateGPUMemory(inx, iny, inz, astraCUDA3d::INIT_NO);
+
+		astraCUDA3d::SSubDimensions3D srcdims;
+		srcdims.nx = j.pInput->pData->getWidth();
+		srcdims.pitch = srcdims.nx;
+		srcdims.ny = j.pInput->pData->getHeight();
+		srcdims.nz = j.pInput->pData->getDepth();
+		srcdims.subnx = inx;
+		srcdims.subny = iny;
+		srcdims.subnz = inz;
+		srcdims.subx = j.pInput->subX;
+		srcdims.suby = j.pInput->subY;
+		srcdims.subz = j.pInput->subZ;
+		const float *src = j.pInput->pData->getDataConst();
+
+		ok = astraCUDA3d::copyToGPUMemory(src, inputMem, srcdims);
+		if (!ok) ASTRA_ERROR("Error copying input data to GPU");
+
+		if (j.eType == CCompositeGeometryManager::SJob::JOB_FP) {
+			assert(dynamic_cast<CCompositeGeometryManager::CVolumePart*>(j.pInput.get()));
+			assert(dynamic_cast<CCompositeGeometryManager::CProjectionPart*>(j.pOutput.get()));
+
+			ASTRA_DEBUG("CCompositeGeometryManager::doJobs: doing FP");
+
+			ok = astraCUDA3d::FP(((CCompositeGeometryManager::CProjectionPart*)j.pOutput.get())->pGeom, outputMem, ((CCompositeGeometryManager::CVolumePart*)j.pInput.get())->pGeom, inputMem, detectorSuperSampling, projKernel);
+			if (!ok) ASTRA_ERROR("Error performing sub-FP");
+			ASTRA_DEBUG("CCompositeGeometryManager::doJobs: FP done");
+		} else if (j.eType == CCompositeGeometryManager::SJob::JOB_BP) {
+			assert(dynamic_cast<CCompositeGeometryManager::CVolumePart*>(j.pOutput.get()));
+			assert(dynamic_cast<CCompositeGeometryManager::CProjectionPart*>(j.pInput.get()));
+
+			ASTRA_DEBUG("CCompositeGeometryManager::doJobs: doing BP");
+
+			ok = astraCUDA3d::BP(((CCompositeGeometryManager::CProjectionPart*)j.pInput.get())->pGeom, inputMem, ((CCompositeGeometryManager::CVolumePart*)j.pOutput.get())->pGeom, outputMem, voxelSuperSampling);
+			if (!ok) ASTRA_ERROR("Error performing sub-BP");
+			ASTRA_DEBUG("CCompositeGeometryManager::doJobs: BP done");
+		} else {
+			assert(false);
+		}
+
+		ok = astraCUDA3d::freeGPUMemory(inputMem);
+		if (!ok) ASTRA_ERROR("Error freeing GPU memory");
+
+	}
+
+	ok = astraCUDA3d::copyFromGPUMemory(dst, outputMem, dstdims);
+	if (!ok) ASTRA_ERROR("Error copying output data from GPU");
+	
+	ok = astraCUDA3d::freeGPUMemory(outputMem);
+	if (!ok) ASTRA_ERROR("Error freeing GPU memory");
+
+	return true;
+}
+
+
+class WorkQueue {
+public:
+	WorkQueue(CCompositeGeometryManager::TJobSet &_jobs) : m_jobs(_jobs) {
+#ifdef USE_PTHREADS
+		pthread_mutex_init(&m_mutex, 0);
+#endif
+		m_iter = m_jobs.begin();
+	}
+	bool receive(CCompositeGeometryManager::TJobSet::const_iterator &i) {
+		lock();
+
+		if (m_iter == m_jobs.end()) {
+			unlock();
+			return false;
+		}
+
+		i = m_iter++;
+
+		unlock();
+
+		return true;	
+	}
+#ifdef USE_PTHREADS
+	void lock() {
+		// TODO: check mutex op return values
+		pthread_mutex_lock(&m_mutex);
+	}
+	void unlock() {
+		// TODO: check mutex op return values
+		pthread_mutex_unlock(&m_mutex);
+	}
+#else
+	void lock() {
+		m_mutex.lock();
+	}
+	void unlock() {
+		m_mutex.unlock();
+	}
+#endif
+
+private:
+	CCompositeGeometryManager::TJobSet &m_jobs;
+	CCompositeGeometryManager::TJobSet::const_iterator m_iter;
+#ifdef USE_PTHREADS
+	pthread_mutex_t m_mutex;
+#else
+	boost::mutex m_mutex;
+#endif
+};
+
+struct WorkThreadInfo {
+	WorkQueue* m_queue;
+	unsigned int m_iGPU;
+};
+
+#ifndef USE_PTHREADS
+
+void runEntries_boost(WorkThreadInfo* info)
+{
+	ASTRA_DEBUG("Launching thread on GPU %d\n", info->m_iGPU);
+	CCompositeGeometryManager::TJobSet::const_iterator i;
+	while (info->m_queue->receive(i)) {
+		ASTRA_DEBUG("Running block on GPU %d\n", info->m_iGPU);
+		astraCUDA3d::setGPUIndex(info->m_iGPU);
+		boost::this_thread::interruption_point();
+		doJob(i);
+		boost::this_thread::interruption_point();
+	}
+	ASTRA_DEBUG("Finishing thread on GPU %d\n", info->m_iGPU);
+}
+
+
+#else
+
+void* runEntries_pthreads(void* data) {
+	WorkThreadInfo* info = (WorkThreadInfo*)data;
+
+	ASTRA_DEBUG("Launching thread on GPU %d\n", info->m_iGPU);
+
+	CCompositeGeometryManager::TJobSet::const_iterator i;
+
+	while (info->m_queue->receive(i)) {
+		ASTRA_DEBUG("Running block on GPU %d\n", info->m_iGPU);
+		astraCUDA3d::setGPUIndex(info->m_iGPU);
+		pthread_testcancel();
+		doJob(i);
+		pthread_testcancel();
+	}
+	ASTRA_DEBUG("Finishing thread on GPU %d\n", info->m_iGPU);
+
+	return 0;
+}
+
+#endif
+
+
+void runWorkQueue(WorkQueue &queue, const std::vector<int> & iGPUIndices) {
+	int iThreadCount = iGPUIndices.size();
+
+	std::vector<WorkThreadInfo> infos;
+#ifdef USE_PTHREADS
+	std::vector<pthread_t> threads;
+#else
+	std::vector<boost::thread*> threads;
+#endif
+	infos.resize(iThreadCount);
+	threads.resize(iThreadCount);
+
+	for (int i = 0; i < iThreadCount; ++i) {
+		infos[i].m_queue = &queue;
+		infos[i].m_iGPU = iGPUIndices[i];
+#ifdef USE_PTHREADS
+		pthread_create(&threads[i], 0, runEntries_pthreads, (void*)&infos[i]);
+#else
+		threads[i] = new boost::thread(runEntries_boost, &infos[i]);
+#endif
+	}
+
+	// Wait for them to finish
+	for (int i = 0; i < iThreadCount; ++i) {
+#ifdef USE_PTHREADS
+		pthread_join(threads[i], 0);
+#else
+		threads[i]->join();
+		delete threads[i];
+		threads[i] = 0;
+#endif
+	}
+}
+
+
+void CCompositeGeometryManager::setGPUIndices(const std::vector<int>& GPUIndices)
+{
+	m_GPUIndices = GPUIndices;
+}
+
 bool CCompositeGeometryManager::doJobs(TJobList &jobs)
 {
 	ASTRA_DEBUG("CCompositeGeometryManager::doJobs");
@@ -859,145 +1132,78 @@ bool CCompositeGeometryManager::doJobs(TJobList &jobs)
 		jobset[i->pOutput.get()].push_back(*i);
 	}
 
-	size_t maxSize = astraCUDA3d::availableGPUMemory();
+	size_t maxSize = m_iMaxSize;
 	if (maxSize == 0) {
-		ASTRA_WARN("Unable to get available GPU memory. Defaulting to 1GB.");
-		maxSize = 1024 * 1024 * 1024;
+		// Get memory from first GPU. Not optimal...
+		if (!m_GPUIndices.empty())
+			astraCUDA3d::setGPUIndex(m_GPUIndices[0]);
+		maxSize = astraCUDA3d::availableGPUMemory();
+		if (maxSize == 0) {
+			ASTRA_WARN("Unable to get available GPU memory. Defaulting to 1GB.");
+			maxSize = 1024 * 1024 * 1024;
+		} else {
+			ASTRA_DEBUG("Detected %lu bytes of GPU memory", maxSize);
+		}
 	} else {
-		ASTRA_DEBUG("Detected %lu bytes of GPU memory", maxSize);
+		ASTRA_DEBUG("Set to %lu bytes of GPU memory", maxSize);
 	}
 	maxSize = (maxSize * 9) / 10;
 
 	maxSize /= sizeof(float);
 	int div = 1;
-
-	// TODO: Multi-GPU support
+	if (!m_GPUIndices.empty())
+		div = m_GPUIndices.size();
 
 	// Split jobs to fit
 	TJobSet split;
 	splitJobs(jobset, maxSize, div, split);
 	jobset.clear();
 
-	// Run jobs
-	
-	for (TJobSet::iterator iter = split.begin(); iter != split.end(); ++iter) {
+	if (m_GPUIndices.size() <= 1) {
 
-		CPart* output = iter->first;
-		TJobList& L = iter->second;
+		// Run jobs
+		ASTRA_DEBUG("Running single-threaded");
 
-		assert(!L.empty());
+		if (!m_GPUIndices.empty())
+			astraCUDA3d::setGPUIndex(m_GPUIndices[0]);
 
-		bool zero = L.begin()->eMode == SJob::MODE_SET;
-
-		size_t outx, outy, outz;
-		output->getDims(outx, outy, outz);
-
-		if (L.begin()->eType == SJob::JOB_NOP) {
-			// just zero output?
-			if (zero) {
-				for (size_t z = 0; z < outz; ++z) {
-					for (size_t y = 0; y < outy; ++y) {
-						float* ptr = output->pData->getData();
-						ptr += (z + output->subX) * (size_t)output->pData->getHeight() * (size_t)output->pData->getWidth();
-						ptr += (y + output->subY) * (size_t)output->pData->getWidth();
-						ptr += output->subX;
-						memset(ptr, 0, sizeof(float) * outx);
-					}
-				}
-			}
-			continue;
+		for (TJobSet::const_iterator iter = split.begin(); iter != split.end(); ++iter) {
+			doJob(iter);
 		}
 
+	} else {
 
-		astraCUDA3d::SSubDimensions3D dstdims;
-		dstdims.nx = output->pData->getWidth();
-		dstdims.pitch = dstdims.nx;
-		dstdims.ny = output->pData->getHeight();
-		dstdims.nz = output->pData->getDepth();
-		dstdims.subnx = outx;
-		dstdims.subny = outy;
-		dstdims.subnz = outz;
-		ASTRA_DEBUG("dstdims: %d,%d,%d in %d,%d,%d", dstdims.subnx, dstdims.subny, dstdims.subnz, dstdims.nx, dstdims.ny, dstdims.nz);
-		dstdims.subx = output->subX;
-		dstdims.suby = output->subY;
-		dstdims.subz = output->subZ;
-		float *dst = output->pData->getData();
+		ASTRA_DEBUG("Running multi-threaded");
 
-		astraCUDA3d::MemHandle3D outputMem = astraCUDA3d::allocateGPUMemory(outx, outy, outz, zero ? astraCUDA3d::INIT_ZERO : astraCUDA3d::INIT_NO);
-		bool ok = outputMem;
+		WorkQueue wq(split);
 
-		for (TJobList::iterator i = L.begin(); i != L.end(); ++i) {
-			SJob &j = *i;
+		runWorkQueue(wq, m_GPUIndices);
 
-			assert(j.pInput);
-
-			CCudaProjector3D *projector = dynamic_cast<CCudaProjector3D*>(j.pProjector);
-			Cuda3DProjectionKernel projKernel = ker3d_default;
-			int detectorSuperSampling = 1;
-			int voxelSuperSampling = 1;
-			if (projector) {
-				projKernel = projector->getProjectionKernel();
-				detectorSuperSampling = projector->getDetectorSuperSampling();
-				voxelSuperSampling = projector->getVoxelSuperSampling();
-			}
-
-			size_t inx, iny, inz;
-			j.pInput->getDims(inx, iny, inz);
-			astraCUDA3d::MemHandle3D inputMem = astraCUDA3d::allocateGPUMemory(inx, iny, inz, astraCUDA3d::INIT_NO);
-
-			astraCUDA3d::SSubDimensions3D srcdims;
-			srcdims.nx = j.pInput->pData->getWidth();
-			srcdims.pitch = srcdims.nx;
-			srcdims.ny = j.pInput->pData->getHeight();
-			srcdims.nz = j.pInput->pData->getDepth();
-			srcdims.subnx = inx;
-			srcdims.subny = iny;
-			srcdims.subnz = inz;
-			srcdims.subx = j.pInput->subX;
-			srcdims.suby = j.pInput->subY;
-			srcdims.subz = j.pInput->subZ;
-			const float *src = j.pInput->pData->getDataConst();
-
-			ok = astraCUDA3d::copyToGPUMemory(src, inputMem, srcdims);
-			if (!ok) ASTRA_ERROR("Error copying input data to GPU");
-
-			if (j.eType == SJob::JOB_FP) {
-				assert(dynamic_cast<CVolumePart*>(j.pInput.get()));
-				assert(dynamic_cast<CProjectionPart*>(j.pOutput.get()));
-
-				ASTRA_DEBUG("CCompositeGeometryManager::doJobs: doing FP");
-
-				ok = astraCUDA3d::FP(((CProjectionPart*)j.pOutput.get())->pGeom, outputMem, ((CVolumePart*)j.pInput.get())->pGeom, inputMem, detectorSuperSampling, projKernel);
-				if (!ok) ASTRA_ERROR("Error performing sub-FP");
-				ASTRA_DEBUG("CCompositeGeometryManager::doJobs: FP done");
-			} else if (j.eType == SJob::JOB_BP) {
-				assert(dynamic_cast<CVolumePart*>(j.pOutput.get()));
-				assert(dynamic_cast<CProjectionPart*>(j.pInput.get()));
-
-				ASTRA_DEBUG("CCompositeGeometryManager::doJobs: doing BP");
-
-				ok = astraCUDA3d::BP(((CProjectionPart*)j.pInput.get())->pGeom, inputMem, ((CVolumePart*)j.pOutput.get())->pGeom, outputMem, voxelSuperSampling);
-				if (!ok) ASTRA_ERROR("Error performing sub-BP");
-				ASTRA_DEBUG("CCompositeGeometryManager::doJobs: BP done");
-			} else {
-				assert(false);
-			}
-
-			ok = astraCUDA3d::freeGPUMemory(inputMem);
-			if (!ok) ASTRA_ERROR("Error freeing GPU memory");
-
-		}
-
-		ok = astraCUDA3d::copyFromGPUMemory(dst, outputMem, dstdims);
-		if (!ok) ASTRA_ERROR("Error copying output data from GPU");
-		
-		ok = astraCUDA3d::freeGPUMemory(outputMem);
-		if (!ok) ASTRA_ERROR("Error freeing GPU memory");
 	}
 
 	return true;
 }
 
+
+
+
+//static
+void CCompositeGeometryManager::setGlobalGPUParams(const SGPUParams& params)
+{
+	delete s_params;
+
+	s_params = new SGPUParams;
+	*s_params = params;
+
+	ASTRA_DEBUG("CompositeGeometryManager: Setting global GPU params:");
+	std::ostringstream s;
+	s << "GPU indices:";
+	for (unsigned int i = 0; i < params.GPUIndices.size(); ++i)
+		s << " " << params.GPUIndices[i];
+	std::string ss = s.str();
+	ASTRA_DEBUG(ss.c_str());
+	ASTRA_DEBUG("Memory: %llu", params.memory);
+}
 
 
 }
