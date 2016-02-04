@@ -143,7 +143,7 @@ __global__ void dev_par3D_BP(void* D_volData, unsigned int volPitch, int startAn
 }
 
 // supersampling version
-__global__ void dev_par3D_BP_SS(void* D_volData, unsigned int volPitch, int startAngle, int angleOffset, const SDimensions3D dims, float fOutputScale)
+__global__ void dev_par3D_BP_SS(void* D_volData, unsigned int volPitch, int startAngle, int angleOffset, const SDimensions3D dims, int iRaysPerVoxelDim, float fOutputScale)
 {
 	float* volData = (float*)D_volData;
 
@@ -174,13 +174,13 @@ __global__ void dev_par3D_BP_SS(void* D_volData, unsigned int volPitch, int star
 	if (endZ > dims.iVolZ)
 		endZ = dims.iVolZ;
 
-	float fX = X - 0.5f*dims.iVolX + 0.5f - 0.5f + 0.5f/dims.iRaysPerVoxelDim;
-	float fY = Y - 0.5f*dims.iVolY + 0.5f - 0.5f + 0.5f/dims.iRaysPerVoxelDim;
-	float fZ = startZ - 0.5f*dims.iVolZ + 0.5f - 0.5f + 0.5f/dims.iRaysPerVoxelDim;
+	float fX = X - 0.5f*dims.iVolX + 0.5f - 0.5f + 0.5f/iRaysPerVoxelDim;
+	float fY = Y - 0.5f*dims.iVolY + 0.5f - 0.5f + 0.5f/iRaysPerVoxelDim;
+	float fZ = startZ - 0.5f*dims.iVolZ + 0.5f - 0.5f + 0.5f/iRaysPerVoxelDim;
 
-	const float fSubStep = 1.0f/dims.iRaysPerVoxelDim;
+	const float fSubStep = 1.0f/iRaysPerVoxelDim;
 
-	fOutputScale /= (dims.iRaysPerVoxelDim*dims.iRaysPerVoxelDim*dims.iRaysPerVoxelDim);
+	fOutputScale /= (iRaysPerVoxelDim*iRaysPerVoxelDim*iRaysPerVoxelDim);
 
 
 	for (int Z = startZ; Z < endZ; ++Z, fZ += 1.0f)
@@ -201,11 +201,11 @@ __global__ void dev_par3D_BP_SS(void* D_volData, unsigned int volPitch, int star
 			const float fCvc = gC_C[8*angle+7];
 
 			float fXs = fX;
-			for (int iSubX = 0; iSubX < dims.iRaysPerVoxelDim; ++iSubX) {
+			for (int iSubX = 0; iSubX < iRaysPerVoxelDim; ++iSubX) {
 			float fYs = fY;
-			for (int iSubY = 0; iSubY < dims.iRaysPerVoxelDim; ++iSubY) {
+			for (int iSubY = 0; iSubY < iRaysPerVoxelDim; ++iSubY) {
 			float fZs = fZ;
-			for (int iSubZ = 0; iSubZ < dims.iRaysPerVoxelDim; ++iSubZ) {
+			for (int iSubZ = 0; iSubZ < iRaysPerVoxelDim; ++iSubZ) {
 
 				const float fU = fCuc + fXs * fCux + fYs * fCuy + fZs * fCuz;
 				const float fV = fCvc + fXs * fCvx + fYs * fCvy + fZs * fCvz;
@@ -228,7 +228,7 @@ __global__ void dev_par3D_BP_SS(void* D_volData, unsigned int volPitch, int star
 bool Par3DBP_Array(cudaPitchedPtr D_volumeData,
                    cudaArray *D_projArray,
                    const SDimensions3D& dims, const SPar3DProjection* angles,
-                   float fOutputScale)
+                   const SProjectorParams3D& params)
 {
 	bindProjDataTexture(D_projArray);
 
@@ -274,10 +274,10 @@ bool Par3DBP_Array(cudaPitchedPtr D_volumeData,
 
 		for (unsigned int i = 0; i < angleCount; i += g_anglesPerBlock) {
 			// printf("Calling BP: %d, %dx%d, %dx%d to %p\n", i, dimBlock.x, dimBlock.y, dimGrid.x, dimGrid.y, (void*)D_volumeData.ptr); 
-			if (dims.iRaysPerVoxelDim == 1)
-				dev_par3D_BP<<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, fOutputScale);
+			if (params.iRaysPerVoxelDim == 1)
+				dev_par3D_BP<<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, params.fOutputScale);
 			else
-				dev_par3D_BP_SS<<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, fOutputScale);
+				dev_par3D_BP_SS<<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, params.iRaysPerVoxelDim, params.fOutputScale);
 		}
 
 		cudaTextForceKernelsCompletion();
@@ -293,14 +293,14 @@ bool Par3DBP_Array(cudaPitchedPtr D_volumeData,
 bool Par3DBP(cudaPitchedPtr D_volumeData,
             cudaPitchedPtr D_projData,
             const SDimensions3D& dims, const SPar3DProjection* angles,
-            float fOutputScale)
+            const SProjectorParams3D& params)
 {
 	// transfer projections to array
 
 	cudaArray* cuArray = allocateProjectionArray(dims);
 	transferProjectionsToArray(D_projData, cuArray, dims);
 
-	bool ret = Par3DBP_Array(D_volumeData, cuArray, dims, angles, fOutputScale);
+	bool ret = Par3DBP_Array(D_volumeData, cuArray, dims, angles, params);
 
 	cudaFreeArray(cuArray);
 

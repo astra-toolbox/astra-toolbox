@@ -341,7 +341,6 @@ bool AstraFBP::run()
 		dims3d.iProjAngles = pData->dims.iProjAngles;
 		dims3d.iProjU = pData->dims.iProjDets;
 		dims3d.iProjV = 1;
-		dims3d.iRaysPerDetDim = dims3d.iRaysPerVoxelDim = 1;
 
 		astraCUDA3d::FDK_PreWeight(tmp, pData->fOriginSourceDistance,
 		              pData->fOriginDetectorDistance, 0.0f, 0.0f,

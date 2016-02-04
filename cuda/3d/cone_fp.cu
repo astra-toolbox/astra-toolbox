@@ -214,7 +214,7 @@ template<class COORD>
 __global__ void cone_FP_SS_t(float* D_projData, unsigned int projPitch,
                              unsigned int startSlice,
                              unsigned int startAngle, unsigned int endAngle,
-                             const SDimensions3D dims, float fOutputScale)
+                             const SDimensions3D dims, int iRaysPerDetDim, float fOutputScale)
 {
 	COORD c;
 
@@ -245,7 +245,7 @@ __global__ void cone_FP_SS_t(float* D_projData, unsigned int projPitch,
 	if (endSlice > c.nSlices(dims))
 		endSlice = c.nSlices(dims);
 
-	const float fSubStep = 1.0f/dims.iRaysPerDetDim;
+	const float fSubStep = 1.0f/iRaysPerDetDim;
 
 	for (int detectorV = startDetectorV; detectorV < endDetectorV; ++detectorV)
 	{
@@ -255,9 +255,9 @@ __global__ void cone_FP_SS_t(float* D_projData, unsigned int projPitch,
 		float fV = 0.0f;
 
 		float fdU = detectorU - 0.5f + 0.5f*fSubStep;
-		for (int iSubU = 0; iSubU < dims.iRaysPerDetDim; ++iSubU, fdU+=fSubStep) {
+		for (int iSubU = 0; iSubU < iRaysPerDetDim; ++iSubU, fdU+=fSubStep) {
 		float fdV = detectorV - 0.5f + 0.5f*fSubStep;
-		for (int iSubV = 0; iSubV < dims.iRaysPerDetDim; ++iSubV, fdV+=fSubStep) {
+		for (int iSubV = 0; iSubV < iRaysPerDetDim; ++iSubV, fdV+=fSubStep) {
 
 		const float fDetX = fDetSX + fdU*fDetUX + fdV*fDetVX;
 		const float fDetY = fDetSY + fdU*fDetUY + fdV*fDetVY;
@@ -294,14 +294,14 @@ __global__ void cone_FP_SS_t(float* D_projData, unsigned int projPitch,
 		}
 		}
 
-		D_projData[(detectorV*dims.iProjAngles+angle)*projPitch+detectorU] += fV / (dims.iRaysPerDetDim * dims.iRaysPerDetDim);
+		D_projData[(detectorV*dims.iProjAngles+angle)*projPitch+detectorU] += fV / (iRaysPerDetDim * iRaysPerDetDim);
 	}
 }
 
 
 bool ConeFP_Array_internal(cudaPitchedPtr D_projData,
                   const SDimensions3D& dims, unsigned int angleCount, const SConeProjection* angles,
-                  float fOutputScale)
+                  const SProjectorParams3D& params)
 {
 	// transfer angles to constant memory
 	float* tmp = new float[angleCount];
@@ -373,22 +373,22 @@ bool ConeFP_Array_internal(cudaPitchedPtr D_projData,
 
 				if (blockDirection == 0) {
 					for (unsigned int i = 0; i < dims.iVolX; i += g_blockSlices)
-						if (dims.iRaysPerDetDim == 1)
-							cone_FP_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, fOutputScale);
+						if (params.iRaysPerDetDim == 1)
+							cone_FP_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, params.fOutputScale);
 						else
-							cone_FP_SS_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, fOutputScale);
+							cone_FP_SS_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, params.iRaysPerDetDim, params.fOutputScale);
 				} else if (blockDirection == 1) {
 					for (unsigned int i = 0; i < dims.iVolY; i += g_blockSlices)
-						if (dims.iRaysPerDetDim == 1)
-							cone_FP_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, fOutputScale);
+						if (params.iRaysPerDetDim == 1)
+							cone_FP_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, params.fOutputScale);
 						else
-							cone_FP_SS_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, fOutputScale);
+							cone_FP_SS_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, params.iRaysPerDetDim, params.fOutputScale);
 				} else if (blockDirection == 2) {
 					for (unsigned int i = 0; i < dims.iVolZ; i += g_blockSlices)
-						if (dims.iRaysPerDetDim == 1)
-							cone_FP_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, fOutputScale);
+						if (params.iRaysPerDetDim == 1)
+							cone_FP_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, params.fOutputScale);
 						else
-							cone_FP_SS_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, fOutputScale);
+							cone_FP_SS_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, params.iRaysPerDetDim, params.fOutputScale);
 				}
 
 			}
@@ -414,7 +414,7 @@ bool ConeFP_Array_internal(cudaPitchedPtr D_projData,
 bool ConeFP(cudaPitchedPtr D_volumeData,
             cudaPitchedPtr D_projData,
             const SDimensions3D& dims, const SConeProjection* angles,
-            float fOutputScale)
+            const SProjectorParams3D& params)
 {
 	// transfer volume to array
 
@@ -434,7 +434,7 @@ bool ConeFP(cudaPitchedPtr D_volumeData,
 
 		ret = ConeFP_Array_internal(D_subprojData,
 		                            dims, iEndAngle - iAngle, angles + iAngle,
-		                            fOutputScale);
+		                            params);
 		if (!ret)
 			break;
 	}
