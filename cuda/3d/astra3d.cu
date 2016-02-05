@@ -72,29 +72,36 @@ static bool convertAstraGeometry_internal(const CVolumeGeometry3D* pVolGeom,
 	assert(pVolGeom);
 	assert(pProjs);
 
+#if 0
 	// TODO: Relative instead of absolute
 	const float EPS = 0.00001f;
 	if (abs(pVolGeom->getPixelLengthX() - pVolGeom->getPixelLengthY()) > EPS)
 		return false;
 	if (abs(pVolGeom->getPixelLengthX() - pVolGeom->getPixelLengthZ()) > EPS)
 		return false;
-
+#endif
 
 	// Translate
 	float dx = -(pVolGeom->getWindowMinX() + pVolGeom->getWindowMaxX()) / 2;
 	float dy = -(pVolGeom->getWindowMinY() + pVolGeom->getWindowMaxY()) / 2;
 	float dz = -(pVolGeom->getWindowMinZ() + pVolGeom->getWindowMaxZ()) / 2;
 
-	float factor = 1.0f / pVolGeom->getPixelLengthX();
+	float fx = 1.0f / pVolGeom->getPixelLengthX();
+	float fy = 1.0f / pVolGeom->getPixelLengthY();
+	float fz = 1.0f / pVolGeom->getPixelLengthZ();
 
 	for (int i = 0; i < iProjectionAngleCount; ++i) {
 		// CHECKME: Order of scaling and translation
 		pProjs[i].translate(dx, dy, dz);
-		pProjs[i].scale(factor);
+		pProjs[i].scale(fx, fy, fz);
 	}
 
+	params.fVolScaleX = pVolGeom->getPixelLengthX();
+	params.fVolScaleY = pVolGeom->getPixelLengthY();
+	params.fVolScaleZ = pVolGeom->getPixelLengthZ();
+
 	// CHECKME: Check factor
-	params.fOutputScale *= pVolGeom->getPixelLengthX();
+	//params.fOutputScale *= pVolGeom->getPixelLengthX();
 
 	return true;
 }
