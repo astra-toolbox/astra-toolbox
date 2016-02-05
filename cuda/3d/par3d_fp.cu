@@ -174,6 +174,9 @@ __global__ void par3D_FP_t(float* D_projData, unsigned int projPitch,
 	const float fDetSY = gC_DetSY[angle] + 0.5f * fDetUY + 0.5f * fDetVY;
 	const float fDetSZ = gC_DetSZ[angle] + 0.5f * fDetUZ + 0.5f * fDetVZ;
 
+	const float a1 = c.c1(fRayX,fRayY,fRayZ) / c.c0(fRayX,fRayY,fRayZ);
+	const float a2 = c.c2(fRayX,fRayY,fRayZ) / c.c0(fRayX,fRayY,fRayZ);
+	const float fDistCorr = sc.scale(a1, a2);
 
 
 	const int detectorU = (blockIdx.x%((dims.iProjU+g_detBlockU-1)/g_detBlockU)) * g_detBlockU + threadIdx.x;
@@ -199,12 +202,8 @@ __global__ void par3D_FP_t(float* D_projData, unsigned int projPitch,
 		/* ray:   (y) = (ay) * x + (by)    */
 		/*        (z)   (az)       (bz)    */
 
-		const float a1 = c.c1(fRayX,fRayY,fRayZ) / c.c0(fRayX,fRayY,fRayZ);
-		const float a2 = c.c2(fRayX,fRayY,fRayZ) / c.c0(fRayX,fRayY,fRayZ);
 		const float b1 = c.c1(fDetX,fDetY,fDetZ) - a1 * c.c0(fDetX,fDetY,fDetZ);
 		const float b2 = c.c2(fDetX,fDetY,fDetZ) - a2 * c.c0(fDetX,fDetY,fDetZ);
-
-		const float fDistCorr = sc.scale(a1, a2);
 
 		float fVal = 0.0f;
 
@@ -253,7 +252,9 @@ __global__ void par3D_FP_SS_t(float* D_projData, unsigned int projPitch,
 	const float fDetSY = gC_DetSY[angle] + 0.5f * fDetUY + 0.5f * fDetVY;
 	const float fDetSZ = gC_DetSZ[angle] + 0.5f * fDetUZ + 0.5f * fDetVZ;
 
-
+	const float a1 = c.c1(fRayX,fRayY,fRayZ) / c.c0(fRayX,fRayY,fRayZ);
+	const float a2 = c.c2(fRayX,fRayY,fRayZ) / c.c0(fRayX,fRayY,fRayZ);
+	const float fDistCorr = sc.scale(a1, a2);
 
 	const int detectorU = (blockIdx.x%((dims.iProjU+g_detBlockU-1)/g_detBlockU)) * g_detBlockU + threadIdx.x;
 	const int startDetectorV = (blockIdx.x/((dims.iProjU+g_detBlockU-1)/g_detBlockU)) * g_detBlockV;
@@ -288,12 +289,9 @@ __global__ void par3D_FP_SS_t(float* D_projData, unsigned int projPitch,
 		/* ray:   (y) = (ay) * x + (by)    */
 		/*        (z)   (az)       (bz)    */
 
-		const float a1 = c.c1(fRayX,fRayY,fRayZ) / c.c0(fRayX,fRayY,fRayZ);
-		const float a2 = c.c2(fRayX,fRayY,fRayZ) / c.c0(fRayX,fRayY,fRayZ);
 		const float b1 = c.c1(fDetX,fDetY,fDetZ) - a1 * c.c0(fDetX,fDetY,fDetZ);
 		const float b2 = c.c2(fDetX,fDetY,fDetZ) - a2 * c.c0(fDetX,fDetY,fDetZ);
 
-		const float fDistCorr = sc.scale(a1, a2);
 
 		float fVal = 0.0f;
 
@@ -309,12 +307,12 @@ __global__ void par3D_FP_SS_t(float* D_projData, unsigned int projPitch,
 			f2 += a2;
 		}
 
-		fVal *= fDistCorr;
 		fV += fVal;
 
 		}
 		}
 
+		fV *= fDistCorr;
 		D_projData[(detectorV*dims.iProjAngles+angle)*projPitch+detectorU] += fV / (iRaysPerDetDim * iRaysPerDetDim);
 	}
 }
@@ -360,6 +358,9 @@ __global__ void par3D_FP_SumSqW_t(float* D_projData, unsigned int projPitch,
 	const float fDetSY = gC_DetSY[angle] + 0.5f * fDetUY + 0.5f * fDetVY;
 	const float fDetSZ = gC_DetSZ[angle] + 0.5f * fDetUZ + 0.5f * fDetVZ;
 
+	const float a1 = c.c1(fRayX,fRayY,fRayZ) / c.c0(fRayX,fRayY,fRayZ);
+	const float a2 = c.c2(fRayX,fRayY,fRayZ) / c.c0(fRayX,fRayY,fRayZ);
+	const float fDistCorr = sc.scale(a1, a2);
 
 
 	const int detectorU = (blockIdx.x%((dims.iProjU+g_detBlockU-1)/g_detBlockU)) * g_detBlockU + threadIdx.x;
@@ -385,12 +386,8 @@ __global__ void par3D_FP_SumSqW_t(float* D_projData, unsigned int projPitch,
 		/* ray:   (y) = (ay) * x + (by)    */
 		/*        (z)   (az)       (bz)    */
 
-		const float a1 = c.c1(fRayX,fRayY,fRayZ) / c.c0(fRayX,fRayY,fRayZ);
-		const float a2 = c.c2(fRayX,fRayY,fRayZ) / c.c0(fRayX,fRayY,fRayZ);
 		const float b1 = c.c1(fDetX,fDetY,fDetZ) - a1 * c.c0(fDetX,fDetY,fDetZ);
 		const float b2 = c.c2(fDetX,fDetY,fDetZ) - a2 * c.c0(fDetX,fDetY,fDetZ);
-
-		const float fDistCorr = sc.scale(a1, a2);
 
 		float fVal = 0.0f;
 
@@ -400,12 +397,13 @@ __global__ void par3D_FP_SumSqW_t(float* D_projData, unsigned int projPitch,
 
 		for (int s = startSlice; s < endSlice; ++s)
 		{
-			fVal += dirWeights(f1, c.nDim1(dims)) * dirWeights(f2, c.nDim2(dims)) * fDistCorr * fDistCorr;
+			fVal += dirWeights(f1, c.nDim1(dims)) * dirWeights(f2, c.nDim2(dims));
 			f0 += 1.0f;
 			f1 += a1;
 			f2 += a2;
 		}
 
+		fVal *= fDistCorr * fDistCorr;
 		D_projData[(detectorV*dims.iProjAngles+angle)*projPitch+detectorU] += fVal;
 	}
 }
