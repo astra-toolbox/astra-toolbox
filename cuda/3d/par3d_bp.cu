@@ -232,6 +232,8 @@ bool Par3DBP_Array(cudaPitchedPtr D_volumeData,
 {
 	bindProjDataTexture(D_projArray);
 
+	float fOutputScale = params.fOutputScale * params.fVolScaleX * params.fVolScaleY * params.fVolScaleZ;
+
 	for (unsigned int th = 0; th < dims.iProjAngles; th += g_MaxAngles) {
 		unsigned int angleCount = g_MaxAngles;
 		if (th + angleCount > dims.iProjAngles)
@@ -275,9 +277,9 @@ bool Par3DBP_Array(cudaPitchedPtr D_volumeData,
 		for (unsigned int i = 0; i < angleCount; i += g_anglesPerBlock) {
 			// printf("Calling BP: %d, %dx%d, %dx%d to %p\n", i, dimBlock.x, dimBlock.y, dimGrid.x, dimGrid.y, (void*)D_volumeData.ptr); 
 			if (params.iRaysPerVoxelDim == 1)
-				dev_par3D_BP<<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, params.fOutputScale);
+				dev_par3D_BP<<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, fOutputScale);
 			else
-				dev_par3D_BP_SS<<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, params.iRaysPerVoxelDim, params.fOutputScale);
+				dev_par3D_BP_SS<<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, params.iRaysPerVoxelDim, fOutputScale);
 		}
 
 		cudaTextForceKernelsCompletion();
