@@ -81,6 +81,17 @@ bool CCudaFDKAlgorithm3D::_check()
 	const CProjectionGeometry3D* projgeom = m_pSinogram->getGeometry();
 	ASTRA_CONFIG_CHECK(dynamic_cast<const CConeProjectionGeometry3D*>(projgeom), "CUDA_FDK", "Error setting FDK geometry");
 
+
+	const CVolumeGeometry3D* volgeom = m_pReconstruction->getGeometry();
+	bool cube = true;
+	if (abs(volgeom->getPixelLengthX() / volgeom->getPixelLengthY() - 1.0) > 0.00001)
+		cube = false;
+	if (abs(volgeom->getPixelLengthX() / volgeom->getPixelLengthZ() - 1.0) > 0.00001)
+		cube = false;
+	ASTRA_CONFIG_CHECK(cube, "CUDA_FDK", "Voxels must be cubes for FDK");
+
+
+
 	return true;
 }
 
