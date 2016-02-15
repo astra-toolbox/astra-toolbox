@@ -45,6 +45,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstring>
 #include <sstream>
+#include <stdint.h>
 
 #ifndef USE_PTHREADS
 #include <boost/thread/mutex.hpp>
@@ -115,18 +116,20 @@ bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div
 		//    c. create jobs for new (input,output) subparts
 
 		TPartList splitOutput;
-		pOutput->splitZ(splitOutput, maxSize/3, MAX_BLOCK_DIM, div);
+		pOutput->splitZ(splitOutput, maxSize/3, SIZE_MAX, div);
+#if 0
 		TPartList splitOutput2;
 		for (TPartList::iterator i_out = splitOutput.begin(); i_out != splitOutput.end(); ++i_out) {
 			boost::shared_ptr<CPart> outputPart = *i_out;
-			outputPart.get()->splitX(splitOutput2, maxSize/3, MAX_BLOCK_DIM, 1);
+			outputPart.get()->splitX(splitOutput2, SIZE_MAX, SIZE_MAX, 1);
 		}
 		splitOutput.clear();
 		for (TPartList::iterator i_out = splitOutput2.begin(); i_out != splitOutput2.end(); ++i_out) {
 			boost::shared_ptr<CPart> outputPart = *i_out;
-			outputPart.get()->splitY(splitOutput, maxSize/3, MAX_BLOCK_DIM, 1);
+					outputPart.get()->splitY(splitOutput, SIZE_MAX, SIZE_MAX, 1);
 		}
 		splitOutput2.clear();
+#endif
 
 
 		for (TJobList::const_iterator j = L.begin(); j != L.end(); ++j)
@@ -161,12 +164,12 @@ bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div
 				TPartList splitInput2;
 				for (TPartList::iterator i_in = splitInput.begin(); i_in != splitInput.end(); ++i_in) {
 					boost::shared_ptr<CPart> inputPart = *i_in;
-					inputPart.get()->splitX(splitInput2, maxSize/3, MAX_BLOCK_DIM, 1);
+					inputPart.get()->splitX(splitInput2, SIZE_MAX, MAX_BLOCK_DIM, 1);
 				}
 				splitInput.clear();
 				for (TPartList::iterator i_in = splitInput2.begin(); i_in != splitInput2.end(); ++i_in) {
 					boost::shared_ptr<CPart> inputPart = *i_in;
-					inputPart.get()->splitY(splitInput, maxSize/3, MAX_BLOCK_DIM, 1);
+					inputPart.get()->splitY(splitInput, SIZE_MAX, MAX_BLOCK_DIM, 1);
 				}
 				splitInput2.clear();
 
