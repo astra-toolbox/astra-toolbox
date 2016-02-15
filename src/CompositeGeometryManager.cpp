@@ -362,7 +362,11 @@ static size_t ceildiv(size_t a, size_t b) {
 static size_t computeLinearSplit(size_t maxBlock, int div, size_t sliceCount)
 {
 	size_t blockSize = maxBlock;
-	size_t blockCount = ceildiv(sliceCount, blockSize);
+	size_t blockCount;
+	if (sliceCount <= blockSize)
+		blockCount = 1;
+	else
+		blockCount = ceildiv(sliceCount, blockSize);
 
 	// Increase number of blocks to be divisible by div
 	size_t divCount = div * ceildiv(blockCount, div);
