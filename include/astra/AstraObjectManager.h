@@ -216,11 +216,10 @@ T* CAstraObjectManager<T>::get(int _iIndex) const
 template <typename T>
 void CAstraObjectManager<T>::remove(int _iIndex)
 {
-	if (!hasIndex(_iIndex)) {
-		return;
-	}
 	// find data
 	typename map<int,T*>::iterator it = m_mIndexToObject.find(_iIndex);
+	if (it == m_mIndexToObject.end())
+		return;
 	// delete data
 	delete (*it).second;
 	// delete from map
