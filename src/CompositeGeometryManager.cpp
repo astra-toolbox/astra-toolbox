@@ -55,9 +55,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 namespace astra {
 
-static const size_t MAX_BLOCK_DIM = 4096;
-
-
 SGPUParams* CCompositeGeometryManager::s_params = 0;
 
 CCompositeGeometryManager::CCompositeGeometryManager()
@@ -102,6 +99,9 @@ CCompositeGeometryManager::CCompositeGeometryManager()
 
 bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div, TJobSet &split)
 {
+	int maxBlockDim = astraCUDA3d::maxBlockDimension();
+	ASTRA_DEBUG("Found max block dim %d", maxBlockDim);
+
 	split.clear();
 
 	for (TJobSet::const_iterator i = jobs.begin(); i != jobs.end(); ++i)
@@ -159,17 +159,17 @@ bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div
 				size_t remainingSize = ( maxSize - outputPart->getSize() ) / 2;
 
 				TPartList splitInput;
-				input->splitZ(splitInput, remainingSize, MAX_BLOCK_DIM, 1);
+				input->splitZ(splitInput, remainingSize, maxBlockDim, 1);
 				delete input;
 				TPartList splitInput2;
 				for (TPartList::iterator i_in = splitInput.begin(); i_in != splitInput.end(); ++i_in) {
 					boost::shared_ptr<CPart> inputPart = *i_in;
-					inputPart.get()->splitX(splitInput2, SIZE_MAX, MAX_BLOCK_DIM, 1);
+					inputPart.get()->splitX(splitInput2, SIZE_MAX, maxBlockDim, 1);
 				}
 				splitInput.clear();
 				for (TPartList::iterator i_in = splitInput2.begin(); i_in != splitInput2.end(); ++i_in) {
 					boost::shared_ptr<CPart> inputPart = *i_in;
-					inputPart.get()->splitY(splitInput, SIZE_MAX, MAX_BLOCK_DIM, 1);
+					inputPart.get()->splitY(splitInput, SIZE_MAX, maxBlockDim, 1);
 				}
 				splitInput2.clear();
 

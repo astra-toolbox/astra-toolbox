@@ -78,6 +78,7 @@ enum Mem3DZeroMode {
 };
 
 size_t availableGPUMemory();
+int maxBlockDimension();
 
 MemHandle3D allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Mem3DZeroMode zero);
 
