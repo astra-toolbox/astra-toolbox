@@ -77,6 +77,13 @@ public:
 			return 0;
 	}
 
+	void remove(int index) {
+		std::map<int, CAstraObjectManagerBase*>::iterator i;
+		i = m_table.find(index);
+		if (i != m_table.end())
+			m_table.erase(i);
+	}
+
 private:
 	/** The index last handed out
 	 */
@@ -216,7 +223,9 @@ void CAstraObjectManager<T>::remove(int _iIndex)
 	// delete data
 	delete (*it).second;
 	// delete from map
-	m_mIndexToObject.erase(it);  
+	m_mIndexToObject.erase(it);
+
+	CAstraIndexManager::getSingleton().remove(_iIndex);
 }
 
 //----------------------------------------------------------------------------------------
