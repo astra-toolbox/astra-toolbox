@@ -153,7 +153,7 @@ public:
 	 *
 	 * @return initialized successfully
 	 */
-	bool isInitialized();
+	bool isInitialized() const;
 
 	/** get a description of the class
 	 *
@@ -174,7 +174,7 @@ private:
 };
 
 // inline functions
-inline bool CProjector3D::isInitialized() { return m_bIsInitialized; }
+inline bool CProjector3D::isInitialized() const { return m_bIsInitialized; }
 inline CProjectionGeometry3D* CProjector3D::getProjectionGeometry() { return m_pProjectionGeometry; }
 inline CVolumeGeometry3D* CProjector3D::getVolumeGeometry() { return m_pVolumeGeometry; }
 
