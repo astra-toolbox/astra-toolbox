@@ -36,10 +36,14 @@ $Id$
 #include "mexInitFunctions.h"
 
 #include "astra/Globals.h"
+#include "astra/AstraObjectManager.h"
+
 #ifdef ASTRA_CUDA
 #include "../cuda/2d/darthelper.h"
 #include "astra/CompositeGeometryManager.h"
 #endif
+
+
 using namespace std;
 using namespace astra;
 
@@ -144,6 +148,47 @@ void astra_mex_version(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[
 
 //-----------------------------------------------------------------------------------------
 
+void astra_mex_info(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
+{
+	if (nrhs < 2) {
+		mexErrMsgTxt("Usage: astra_mex('info', index/indices);\n");
+		return;
+	}
+
+	for (int i = 1; i < nrhs; i++) {
+		int iDataID = (int)(mxGetScalar(prhs[i]));
+		CAstraObjectManagerBase *ptr;
+		ptr = CAstraIndexManager::getSingleton().get(iDataID);
+		if (ptr) {
+			mexPrintf("%s\t%s\n", ptr->getType().c_str(), ptr->getInfo(iDataID).c_str());
+		}
+	}
+
+}
+
+//-----------------------------------------------------------------------------------------
+
+void astra_mex_delete(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
+{
+	if (nrhs < 2) {
+		mexErrMsgTxt("Usage: astra_mex('delete', index/indices);\n");
+		return;
+	}
+
+	for (int i = 1; i < nrhs; i++) {
+		int iDataID = (int)(mxGetScalar(prhs[i]));
+		CAstraObjectManagerBase *ptr;
+		ptr = CAstraIndexManager::getSingleton().get(iDataID);
+		if (ptr)
+			ptr->remove(iDataID);
+	}
+
+}
+
+
+
+//-----------------------------------------------------------------------------------------
+
 static void printHelp()
 {
 	mexPrintf("Please specify a mode of operation.\n");
@@ -178,6 +223,10 @@ void mexFunction(int nlhs, mxArray* plhs[],
 		astra_mex_credits(nlhs, plhs, nrhs, prhs); 
 	} else if (sMode == std::string("set_gpu_index")) {
 		astra_mex_set_gpu_index(nlhs, plhs, nrhs, prhs);
+	} else if (sMode == std::string("info")) {
+		astra_mex_info(nlhs, plhs, nrhs, prhs);
+	} else if (sMode == std::string("delete")) {
+		astra_mex_delete(nlhs, plhs, nrhs, prhs);
 	} else {
 		printHelp();
 	}

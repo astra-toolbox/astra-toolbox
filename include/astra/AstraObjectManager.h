@@ -53,6 +53,7 @@ namespace astra {
  */
 
 class CAstraObjectManagerBase {
+public:
 	virtual std::string getInfo(int index) const =0;
 	virtual void remove(int index) =0;
 	virtual std::string getType() const =0;
