@@ -33,6 +33,9 @@ from .utils import wrap_from_bytes
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libcpp cimport bool
+cimport PyIndexManager
+from .PyIndexManager cimport CAstraObjectManagerBase
+
 cdef extern from "astra/Globals.h" namespace "astra":
     int getVersion()
     string getVersionString()
@@ -50,6 +53,7 @@ cdef extern from "astra/CompositeGeometryManager.h" namespace "astra":
         size_t memory
 cdef extern from "astra/CompositeGeometryManager.h" namespace "astra::CCompositeGeometryManager":
     void setGlobalGPUParams(SGPUParams&)
+
 
 def credits():
     six.print_("""The ASTRA Toolbox has been developed at the University of Antwerp and CWI, Amsterdam by
@@ -78,11 +82,10 @@ def version(printToScreen=False):
         return getVersion()
 
 def set_gpu_index(idx, memory=0):
-    import types
     import collections
     cdef SGPUParams params
     if use_cuda()==True:
-        if not isinstance(idx, collections.Iterable) or isinstance(idx, types.StringTypes):
+        if not isinstance(idx, collections.Iterable) or isinstance(idx, six.string_types + (six.text_type,six.binary_type)):
             idx = (idx,)
         params.memory = memory
         params.GPUIndices = idx
@@ -90,3 +93,26 @@ def set_gpu_index(idx, memory=0):
         ret = setGPUIndex(params.GPUIndices[0])
         if not ret:
             six.print_("Failed to set GPU " + str(params.GPUIndices[0]))
+
+def delete(ids):
+    import collections
+    cdef CAstraObjectManagerBase* ptr
+    if not isinstance(ids, collections.Iterable) or isinstance(ids, six.string_types + (six.text_type,six.binary_type)):
+        ids = (ids,)
+    for i in ids:
+        ptr = PyIndexManager.getSingletonPtr().get(i)
+        if ptr:
+            ptr.remove(i)
+
+def info(ids):
+    import collections
+    cdef CAstraObjectManagerBase* ptr
+    if not isinstance(ids, collections.Iterable) or isinstance(ids, six.string_types + (six.text_type,six.binary_type)):
+        ids = (ids,)
+    for i in ids:
+        ptr = PyIndexManager.getSingletonPtr().get(i)
+        if ptr:
+            s = ptr.getType() + six.b("\t") + ptr.getInfo(i)
+            six.print_(wrap_from_bytes(s))
+
+
