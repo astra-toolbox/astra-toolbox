@@ -62,8 +62,6 @@ PYCPPFLAGS  := $(CPPFLAGS)
 PYCPPFLAGS  += -I../include
 PYLDFLAGS = $(LDFLAGS)
 PYLDFLAGS   += -L$(abs_top_builddir)/.libs
-LIBS		+= -l$(PYLIBVER)
-LDFLAGS += -L$(PYLIBDIR)
 endif
 
 # This is below where PYCPPFLAGS copies CPPFLAGS.  The python code is built
@@ -95,6 +93,11 @@ MEX       = @MEX@
 
 ifeq ($(cuda),yes)
 MEXFLAGS += -DASTRA_CUDA
+endif
+
+ifeq ($(python),yes)
+MEXPYLDFLAGS='$$LDFLAGS $(LDFLAGS) -L$(PYLIBDIR)'
+MEXPYLIBS=$(MEXLIBS) -l$(PYLIBVER)
 endif
 
 endif
@@ -267,6 +270,11 @@ mex: $(MATLAB_MEX)
 
 %.$(MEXSUFFIX): %.o $(MATLAB_CXX_OBJECTS) libastra.la
 	$(MEX) LDFLAGS=$(MEXLDFLAGS) $(MEXFLAGS) $(LIBS) $(MEXLIBS) -lastra -output $* $*.o $(MATLAB_CXX_OBJECTS)
+
+ifeq ($(python),yes)
+matlab/mex/astra_mex_plugin_c.$(MEXSUFFIX): matlab/mex/astra_mex_plugin_c.o $(MATLAB_CXX_OBJECTS) libastra.la
+	$(MEX) LDFLAGS=$(MEXPYLDFLAGS) $(MEXFLAGS) $(LIBS) $(MEXPYLIBS) -lastra -output matlab/mex/astra_mex_plugin_c $< $(MATLAB_CXX_OBJECTS)
+endif
 endif
 
 ifeq ($(python),yes)
@@ -411,7 +419,7 @@ $(srcdir)/configure: $(srcdir)/configure.ac
 	@echo "configure.ac has been changed. Regenerating configure script"
 	cd $(srcdir) && $(SHELL) ./autogen.sh
 
-.PHONY: all mex test clean distclean install install-libraries
+.PHONY: all mex test clean distclean install install-libraries py python-root-install install-python
 
 # don't remove intermediate files:
 .SECONDARY:

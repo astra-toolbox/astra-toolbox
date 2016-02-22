@@ -37,8 +37,62 @@ $Id$
 
 #include "astra/PluginAlgorithm.h"
 
+#include <Python.h>
+
 using namespace std;
 using namespace astra;
+
+static void fixLapackLoading()
+{
+    // When running in Matlab, we need to force numpy
+    // to use its internal lapack library instead of
+    // Matlab's MKL library to avoid errors. To do this,
+    // we set Python's dlopen flags to RTLD_NOW|RTLD_DEEPBIND
+    // and import 'numpy.linalg.lapack_lite' here. We reset
+    // Python's dlopen flags afterwards.
+    PyObject *sys = PyImport_ImportModule("sys");
+    if (sys != NULL) {
+        PyObject *curFlags = PyObject_CallMethod(sys, "getdlopenflags", NULL);
+        if (curFlags != NULL) {
+            PyObject *retVal = PyObject_CallMethod(sys, "setdlopenflags", "i", 10); // RTLD_NOW|RTLD_DEEPBIND
+            if (retVal != NULL) {
+                PyObject *lapack = PyImport_ImportModule("numpy.linalg.lapack_lite");
+                if (lapack != NULL) {
+                    Py_DECREF(lapack);
+                }
+                PyObject *retVal2 = PyObject_CallMethod(sys, "setdlopenflags", "O",curFlags);
+                if (retVal2 != NULL) {
+                    Py_DECREF(retVal2);
+                }
+                Py_DECREF(retVal);
+            }
+            Py_DECREF(curFlags);
+        }
+        Py_DECREF(sys);
+    }
+}
+
+//-----------------------------------------------------------------------------------------
+/** astra_mex_plugin('init');
+ *
+ * Initialize plugin support by initializing python and importing astra
+ */
+void astra_mex_plugin_init()
+{
+    if(!Py_IsInitialized()){
+        Py_Initialize();
+        PyEval_InitThreads();
+    }
+
+#ifndef _MSC_VER
+    fixLapackLoading();
+#endif
+
+    // Importing astra may be overkill, since we only need to initialize
+    // PythonPluginAlgorithmFactory from astra.plugin_c.
+    PyObject *mod = PyImport_ImportModule("astra");
+    Py_XDECREF(mod);
+}
 
 
 //-----------------------------------------------------------------------------------------
@@ -48,7 +102,11 @@ using namespace astra;
  */
 void astra_mex_plugin_get_registered(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
-    astra::CPluginAlgorithmFactory *fact = astra::CPluginAlgorithmFactory::getSingletonPtr();
+    astra::CPluginAlgorithmFactory *fact = astra::CPluginAlgorithmFactory::getFactory();
+    if (!fact) {
+        mexPrintf("Plugin support not initialized.");
+        return;
+    }
     std::map<std::string, std::string> mp = fact->getRegisteredMap();
     for(std::map<std::string,std::string>::iterator it=mp.begin();it!=mp.end();it++){
         mexPrintf("%s: %s\n",it->first.c_str(), it->second.c_str());
@@ -62,9 +120,13 @@ void astra_mex_plugin_get_registered(int nlhs, mxArray* plhs[], int nrhs, const 
  */
 void astra_mex_plugin_register(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
+    astra::CPluginAlgorithmFactory *fact = astra::CPluginAlgorithmFactory::getFactory();
+    if (!fact) {
+        mexPrintf("Plugin support not initialized.");
+        return;
+    }
     if (2 <= nrhs) {
         string class_name = mexToString(prhs[1]);
-        astra::CPluginAlgorithmFactory *fact = astra::CPluginAlgorithmFactory::getSingletonPtr();
         fact->registerPlugin(class_name);
     }else{
         mexPrintf("astra_mex_plugin('register', class_name);\n");
@@ -78,9 +140,13 @@ void astra_mex_plugin_register(int nlhs, mxArray* plhs[], int nrhs, const mxArra
  */
 void astra_mex_plugin_get_help(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
+    astra::CPluginAlgorithmFactory *fact = astra::CPluginAlgorithmFactory::getFactory();
+    if (!fact) {
+        mexPrintf("Plugin support not initialized.");
+        return;
+    }
     if (2 <= nrhs) {
         string name = mexToString(prhs[1]);
-        astra::CPluginAlgorithmFactory *fact = astra::CPluginAlgorithmFactory::getSingletonPtr();
         mexPrintf((fact->getHelp(name)+"\n").c_str());
     }else{
         mexPrintf("astra_mex_plugin('get_help', name);\n");
@@ -116,12 +182,14 @@ void mexFunction(int nlhs, mxArray* plhs[],
 	initASTRAMex();
 
 	// SWITCH (MODE)
-	if (sMode ==  std::string("get_registered")) { 
-		astra_mex_plugin_get_registered(nlhs, plhs, nrhs, prhs); 
-    }else if (sMode ==  std::string("get_help")) { 
-        astra_mex_plugin_get_help(nlhs, plhs, nrhs, prhs); 
-    }else if (sMode ==  std::string("register")) { 
-		astra_mex_plugin_register(nlhs, plhs, nrhs, prhs); 
+	if (sMode == "init") {
+		astra_mex_plugin_init();
+	} else if (sMode ==  std::string("get_registered")) {
+		astra_mex_plugin_get_registered(nlhs, plhs, nrhs, prhs);
+	}else if (sMode ==  std::string("get_help")) {
+		astra_mex_plugin_get_help(nlhs, plhs, nrhs, prhs);
+	}else if (sMode ==  std::string("register")) {
+		astra_mex_plugin_register(nlhs, plhs, nrhs, prhs);
 	} else {
 		printHelp();
 	}
