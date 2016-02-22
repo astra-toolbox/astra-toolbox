@@ -192,7 +192,7 @@ void astra_mex_delete(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]
 static void printHelp()
 {
 	mexPrintf("Please specify a mode of operation.\n");
-	mexPrintf("   Valid modes: version, use_cuda, credits\n");
+	mexPrintf("   Valid modes: version, use_cuda, credits, set_gpu_index, info, delete\n");
 }
 
 //-----------------------------------------------------------------------------------------
