@@ -77,7 +77,8 @@ def version(printToScreen=False):
     else:
         return getVersion()
 
-def set_gpu_index(idx, memory=0):
+IF HAVE_CUDA==True:
+  def set_gpu_index(idx, memory=0):
     import types
     import collections
     cdef SGPUParams params
@@ -90,3 +91,6 @@ def set_gpu_index(idx, memory=0):
         ret = setGPUIndex(params.GPUIndices[0])
         if not ret:
             six.print_("Failed to set GPU " + str(params.GPUIndices[0]))
+ELSE:
+  def set_gpu_index(idx, memory=0):
+    raise NotImplementedError("CUDA support is not enabled in ASTRA")
