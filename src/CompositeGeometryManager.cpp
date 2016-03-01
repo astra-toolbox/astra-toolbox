@@ -45,14 +45,15 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstring>
 #include <sstream>
+#include <stdint.h>
 
 #ifndef USE_PTHREADS
 #include <boost/thread/mutex.hpp>
 #include <boost/thread.hpp>
 #endif
 
-namespace astra {
 
+namespace astra {
 
 SGPUParams* CCompositeGeometryManager::s_params = 0;
 
@@ -98,6 +99,9 @@ CCompositeGeometryManager::CCompositeGeometryManager()
 
 bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div, TJobSet &split)
 {
+	int maxBlockDim = astraCUDA3d::maxBlockDimension();
+	ASTRA_DEBUG("Found max block dim %d", maxBlockDim);
+
 	split.clear();
 
 	for (TJobSet::const_iterator i = jobs.begin(); i != jobs.end(); ++i)
@@ -111,7 +115,22 @@ bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div
 		//    b. split input part
 		//    c. create jobs for new (input,output) subparts
 
-		TPartList splitOutput = pOutput->split(maxSize/3, div);
+		TPartList splitOutput;
+		pOutput->splitZ(splitOutput, maxSize/3, SIZE_MAX, div);
+#if 0
+		TPartList splitOutput2;
+		for (TPartList::iterator i_out = splitOutput.begin(); i_out != splitOutput.end(); ++i_out) {
+			boost::shared_ptr<CPart> outputPart = *i_out;
+			outputPart.get()->splitX(splitOutput2, SIZE_MAX, SIZE_MAX, 1);
+		}
+		splitOutput.clear();
+		for (TPartList::iterator i_out = splitOutput2.begin(); i_out != splitOutput2.end(); ++i_out) {
+			boost::shared_ptr<CPart> outputPart = *i_out;
+					outputPart.get()->splitY(splitOutput, SIZE_MAX, SIZE_MAX, 1);
+		}
+		splitOutput2.clear();
+#endif
+
 
 		for (TJobList::const_iterator j = L.begin(); j != L.end(); ++j)
 		{
@@ -139,8 +158,21 @@ bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div
 
 				size_t remainingSize = ( maxSize - outputPart->getSize() ) / 2;
 
-				TPartList splitInput = input->split(remainingSize, 1);
+				TPartList splitInput;
+				input->splitZ(splitInput, remainingSize, maxBlockDim, 1);
 				delete input;
+				TPartList splitInput2;
+				for (TPartList::iterator i_in = splitInput.begin(); i_in != splitInput.end(); ++i_in) {
+					boost::shared_ptr<CPart> inputPart = *i_in;
+					inputPart.get()->splitX(splitInput2, SIZE_MAX, maxBlockDim, 1);
+				}
+				splitInput.clear();
+				for (TPartList::iterator i_in = splitInput2.begin(); i_in != splitInput2.end(); ++i_in) {
+					boost::shared_ptr<CPart> inputPart = *i_in;
+					inputPart.get()->splitY(splitInput, SIZE_MAX, maxBlockDim, 1);
+				}
+				splitInput2.clear();
+
 				ASTRA_DEBUG("Input split into %d parts", splitInput.size());
 
 				for (TPartList::iterator i_in = splitInput.begin();
@@ -327,10 +359,14 @@ static size_t ceildiv(size_t a, size_t b) {
 	return (a + b - 1) / b;
 }
 
-static size_t computeVerticalSplit(size_t maxBlock, int div, size_t sliceCount)
+static size_t computeLinearSplit(size_t maxBlock, int div, size_t sliceCount)
 {
 	size_t blockSize = maxBlock;
-	size_t blockCount = ceildiv(sliceCount, blockSize);
+	size_t blockCount;
+	if (sliceCount <= blockSize)
+		blockCount = 1;
+	else
+		blockCount = ceildiv(sliceCount, blockSize);
 
 	// Increase number of blocks to be divisible by div
 	size_t divCount = div * ceildiv(blockCount, div);
@@ -410,7 +446,17 @@ SPar3DProjection* getProjectionVectors(const CParallelVecProjectionGeometry3D* p
 
 
 template<class V>
-static void translateProjectionVectors(V* pProjs, int count, double dv)
+static void translateProjectionVectorsU(V* pProjs, int count, double du)
+{
+	for (int i = 0; i < count; ++i) {
+		pProjs[i].fDetSX += du * pProjs[i].fDetUX;
+		pProjs[i].fDetSY += du * pProjs[i].fDetUY;
+		pProjs[i].fDetSZ += du * pProjs[i].fDetUZ;
+	}
+}
+
+template<class V>
+static void translateProjectionVectorsV(V* pProjs, int count, double dv)
 {
 	for (int i = 0; i < count; ++i) {
 		pProjs[i].fDetSX += dv * pProjs[i].fDetVX;
@@ -420,8 +466,7 @@ static void translateProjectionVectors(V* pProjs, int count, double dv)
 }
 
 
-
-static CProjectionGeometry3D* getSubProjectionGeometry(const CProjectionGeometry3D* pProjGeom, int v, int size)
+static CProjectionGeometry3D* getSubProjectionGeometryU(const CProjectionGeometry3D* pProjGeom, int u, int size)
 {
 	// First convert to vectors, then translate, then convert into new object
 
@@ -438,7 +483,58 @@ static CProjectionGeometry3D* getSubProjectionGeometry(const CProjectionGeometry
 			pConeProjs = getProjectionVectors<SConeProjection>(conevec3dgeom);
 		}
 
-		translateProjectionVectors(pConeProjs, pProjGeom->getProjectionCount(), v);
+		translateProjectionVectorsU(pConeProjs, pProjGeom->getProjectionCount(), u);
+
+		CProjectionGeometry3D* ret = new CConeVecProjectionGeometry3D(pProjGeom->getProjectionCount(),
+		                                                              pProjGeom->getDetectorRowCount(),
+		                                                              size,
+		                                                              pConeProjs);
+
+
+		delete[] pConeProjs;
+		return ret;
+	} else {
+		assert(par3dgeom || parvec3dgeom);
+		SPar3DProjection* pParProjs;
+		if (par3dgeom) {
+			pParProjs = getProjectionVectors<SPar3DProjection>(par3dgeom);
+		} else {
+			pParProjs = getProjectionVectors<SPar3DProjection>(parvec3dgeom);
+		}
+
+		translateProjectionVectorsU(pParProjs, pProjGeom->getProjectionCount(), u);
+
+		CProjectionGeometry3D* ret = new CParallelVecProjectionGeometry3D(pProjGeom->getProjectionCount(),
+		                                                                  pProjGeom->getDetectorRowCount(),
+		                                                                  size,
+		                                                                  pParProjs);
+
+		delete[] pParProjs;
+		return ret;
+	}
+
+}
+
+
+
+static CProjectionGeometry3D* getSubProjectionGeometryV(const CProjectionGeometry3D* pProjGeom, int v, int size)
+{
+	// First convert to vectors, then translate, then convert into new object
+
+	const CConeProjectionGeometry3D* conegeom = dynamic_cast<const CConeProjectionGeometry3D*>(pProjGeom);
+	const CParallelProjectionGeometry3D* par3dgeom = dynamic_cast<const CParallelProjectionGeometry3D*>(pProjGeom);
+	const CParallelVecProjectionGeometry3D* parvec3dgeom = dynamic_cast<const CParallelVecProjectionGeometry3D*>(pProjGeom);
+	const CConeVecProjectionGeometry3D* conevec3dgeom = dynamic_cast<const CConeVecProjectionGeometry3D*>(pProjGeom);
+
+	if (conegeom || conevec3dgeom) {
+		SConeProjection* pConeProjs;
+		if (conegeom) {
+			pConeProjs = getProjectionVectors<SConeProjection>(conegeom);
+		} else {
+			pConeProjs = getProjectionVectors<SConeProjection>(conevec3dgeom);
+		}
+
+		translateProjectionVectorsV(pConeProjs, pProjGeom->getProjectionCount(), v);
 
 		CProjectionGeometry3D* ret = new CConeVecProjectionGeometry3D(pProjGeom->getProjectionCount(),
 		                                                              size,
@@ -457,7 +553,7 @@ static CProjectionGeometry3D* getSubProjectionGeometry(const CProjectionGeometry
 			pParProjs = getProjectionVectors<SPar3DProjection>(parvec3dgeom);
 		}
 
-		translateProjectionVectors(pParProjs, pProjGeom->getProjectionCount(), v);
+		translateProjectionVectorsV(pParProjs, pProjGeom->getProjectionCount(), v);
 
 		CProjectionGeometry3D* ret = new CParallelVecProjectionGeometry3D(pProjGeom->getProjectionCount(),
 		                                                                  size,
@@ -476,17 +572,110 @@ static CProjectionGeometry3D* getSubProjectionGeometry(const CProjectionGeometry
 // - each no bigger than maxSize
 // - number of sub-parts is divisible by div
 // - maybe all approximately the same size?
-CCompositeGeometryManager::TPartList CCompositeGeometryManager::CVolumePart::split(size_t maxSize, int div)
+void CCompositeGeometryManager::CVolumePart::splitX(CCompositeGeometryManager::TPartList& out, size_t maxSize, size_t maxDim, int div)
 {
-	TPartList ret;
+	if (true) {
+		// Split in vertical direction only at first, until we figure out
+		// a model for splitting in other directions
 
+		size_t sliceSize = ((size_t) pGeom->getGridSliceCount()) * pGeom->getGridRowCount();
+		int sliceCount = pGeom->getGridColCount();
+		size_t m = std::min(maxSize / sliceSize, maxDim);
+		size_t blockSize = computeLinearSplit(m, div, sliceCount);
+
+		int rem = sliceCount % blockSize;
+
+		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
+
+		for (int x = -(rem / 2); x < sliceCount; x += blockSize) {
+			int newsubX = x;
+			if (newsubX < 0) newsubX = 0;
+			int endX = x + blockSize;
+			if (endX > sliceCount) endX = sliceCount;
+			int size = endX - newsubX;
+
+			CVolumePart *sub = new CVolumePart();
+			sub->subX = this->subX + newsubX;
+			sub->subY = this->subY;
+			sub->subZ = this->subZ;
+
+			ASTRA_DEBUG("VolumePart split %d %d %d -> %p", sub->subX, sub->subY, sub->subZ, (void*)sub);
+
+			double shift = pGeom->getPixelLengthX() * newsubX;
+
+			sub->pData = pData;
+			sub->pGeom = new CVolumeGeometry3D(size,
+			                                   pGeom->getGridRowCount(),
+			                                   pGeom->getGridSliceCount(),
+			                                   pGeom->getWindowMinX() + shift,
+			                                   pGeom->getWindowMinY(),
+			                                   pGeom->getWindowMinZ(),
+			                                   pGeom->getWindowMinX() + shift + size * pGeom->getPixelLengthX(),
+			                                   pGeom->getWindowMaxY(),
+			                                   pGeom->getWindowMaxZ());
+
+			out.push_back(boost::shared_ptr<CPart>(sub));
+		}
+	}
+}
+
+void CCompositeGeometryManager::CVolumePart::splitY(CCompositeGeometryManager::TPartList& out, size_t maxSize, size_t maxDim, int div)
+{
+	if (true) {
+		// Split in vertical direction only at first, until we figure out
+		// a model for splitting in other directions
+
+		size_t sliceSize = ((size_t) pGeom->getGridColCount()) * pGeom->getGridSliceCount();
+		int sliceCount = pGeom->getGridRowCount();
+		size_t m = std::min(maxSize / sliceSize, maxDim);
+		size_t blockSize = computeLinearSplit(m, div, sliceCount);
+
+		int rem = sliceCount % blockSize;
+
+		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
+
+		for (int y = -(rem / 2); y < sliceCount; y += blockSize) {
+			int newsubY = y;
+			if (newsubY < 0) newsubY = 0;
+			int endY = y + blockSize;
+			if (endY > sliceCount) endY = sliceCount;
+			int size = endY - newsubY;
+
+			CVolumePart *sub = new CVolumePart();
+			sub->subX = this->subX;
+			sub->subY = this->subY + newsubY;
+			sub->subZ = this->subZ;
+
+			ASTRA_DEBUG("VolumePart split %d %d %d -> %p", sub->subX, sub->subY, sub->subZ, (void*)sub);
+
+			double shift = pGeom->getPixelLengthY() * newsubY;
+
+			sub->pData = pData;
+			sub->pGeom = new CVolumeGeometry3D(pGeom->getGridColCount(),
+			                                   size,
+			                                   pGeom->getGridSliceCount(),
+			                                   pGeom->getWindowMinX(),
+			                                   pGeom->getWindowMinY() + shift,
+			                                   pGeom->getWindowMinZ(),
+			                                   pGeom->getWindowMaxX(),
+			                                   pGeom->getWindowMinY() + shift + size * pGeom->getPixelLengthY(),
+			                                   pGeom->getWindowMaxZ());
+
+			out.push_back(boost::shared_ptr<CPart>(sub));
+		}
+	}
+}
+
+void CCompositeGeometryManager::CVolumePart::splitZ(CCompositeGeometryManager::TPartList& out, size_t maxSize, size_t maxDim, int div)
+{
 	if (true) {
 		// Split in vertical direction only at first, until we figure out
 		// a model for splitting in other directions
 
 		size_t sliceSize = ((size_t) pGeom->getGridColCount()) * pGeom->getGridRowCount();
 		int sliceCount = pGeom->getGridSliceCount();
-		size_t blockSize = computeVerticalSplit(maxSize / sliceSize, div, sliceCount);
+		size_t m = std::min(maxSize / sliceSize, maxDim);
+		size_t blockSize = computeLinearSplit(m, div, sliceCount);
 
 		int rem = sliceCount % blockSize;
 
@@ -519,11 +708,9 @@ CCompositeGeometryManager::TPartList CCompositeGeometryManager::CVolumePart::spl
 			                                   pGeom->getWindowMaxY(),
 			                                   pGeom->getWindowMinZ() + shift + size * pGeom->getPixelLengthZ());
 
-			ret.push_back(boost::shared_ptr<CPart>(sub));
+			out.push_back(boost::shared_ptr<CPart>(sub));
 		}
 	}
-
-	return ret;
 }
 
 CCompositeGeometryManager::CVolumePart* CCompositeGeometryManager::CVolumePart::clone() const
@@ -630,7 +817,7 @@ CCompositeGeometryManager::CPart* CCompositeGeometryManager::CProjectionPart::re
 	if (_vmin == _vmax) {
 		sub->pGeom = 0;
 	} else {
-		sub->pGeom = getSubProjectionGeometry(pGeom, _vmin, _vmax - _vmin);
+		sub->pGeom = getSubProjectionGeometryV(pGeom, _vmin, _vmax - _vmin);
 	}
 
 	ASTRA_DEBUG("Reduce projection from %d - %d to %d - %d", this->subZ, this->subZ + pGeom->getDetectorRowCount(), this->subZ + _vmin, this->subZ + _vmax);
@@ -639,17 +826,58 @@ CCompositeGeometryManager::CPart* CCompositeGeometryManager::CProjectionPart::re
 }
 
 
-CCompositeGeometryManager::TPartList CCompositeGeometryManager::CProjectionPart::split(size_t maxSize, int div)
+void CCompositeGeometryManager::CProjectionPart::splitX(CCompositeGeometryManager::TPartList &out, size_t maxSize, size_t maxDim, int div)
 {
-	TPartList ret;
+	if (true) {
+		// Split in vertical direction only at first, until we figure out
+		// a model for splitting in other directions
 
+		size_t sliceSize = ((size_t) pGeom->getDetectorRowCount()) * pGeom->getProjectionCount();
+		int sliceCount = pGeom->getDetectorColCount();
+		size_t m = std::min(maxSize / sliceSize, maxDim);
+		size_t blockSize = computeLinearSplit(m, div, sliceCount);
+
+		int rem = sliceCount % blockSize;
+
+		for (int x = -(rem / 2); x < sliceCount; x += blockSize) {
+			int newsubX = x;
+			if (newsubX < 0) newsubX = 0;
+			int endX = x + blockSize;
+			if (endX > sliceCount) endX = sliceCount;
+			int size = endX - newsubX;
+
+			CProjectionPart *sub = new CProjectionPart();
+			sub->subX = this->subX + newsubX;
+			sub->subY = this->subY;
+			sub->subZ = this->subZ;
+
+			ASTRA_DEBUG("ProjectionPart split %d %d %d -> %p", sub->subX, sub->subY, sub->subZ, (void*)sub);
+
+			sub->pData = pData;
+
+			sub->pGeom = getSubProjectionGeometryU(pGeom, newsubX, size);
+
+			out.push_back(boost::shared_ptr<CPart>(sub));
+		}
+	}
+}
+
+void CCompositeGeometryManager::CProjectionPart::splitY(CCompositeGeometryManager::TPartList &out, size_t maxSize, size_t maxDim, int div)
+{
+	// TODO
+	out.push_back(boost::shared_ptr<CPart>(clone()));
+}
+
+void CCompositeGeometryManager::CProjectionPart::splitZ(CCompositeGeometryManager::TPartList &out, size_t maxSize, size_t maxDim, int div)
+{
 	if (true) {
 		// Split in vertical direction only at first, until we figure out
 		// a model for splitting in other directions
 
 		size_t sliceSize = ((size_t) pGeom->getDetectorColCount()) * pGeom->getProjectionCount();
 		int sliceCount = pGeom->getDetectorRowCount();
-		size_t blockSize = computeVerticalSplit(maxSize / sliceSize, div, sliceCount);
+		size_t m = std::min(maxSize / sliceSize, maxDim);
+		size_t blockSize = computeLinearSplit(m, div, sliceCount);
 
 		int rem = sliceCount % blockSize;
 
@@ -669,13 +897,11 @@ CCompositeGeometryManager::TPartList CCompositeGeometryManager::CProjectionPart:
 
 			sub->pData = pData;
 
-			sub->pGeom = getSubProjectionGeometry(pGeom, newsubZ, size);
+			sub->pGeom = getSubProjectionGeometryV(pGeom, newsubZ, size);
 
-			ret.push_back(boost::shared_ptr<CPart>(sub));
+			out.push_back(boost::shared_ptr<CPart>(sub));
 		}
 	}
-
-	return ret;
 
 }
 
