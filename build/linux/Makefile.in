@@ -391,17 +391,13 @@ install-matlab:
 endif
 
 ifeq ($(python),yes)
-# TODO: This install location doesn't work well for /usr or /usr/local
+sitepkg=@prefix@/lib/python@PYTHON_VERSION@/dist-packages
 install-python: py
-	$(INSTALL_SH) -m 755 -d @prefix@/python
-	$(INSTALL_SH) -m 755 -d @prefix@/python/astra
-	$(INSTALL_SH) -m 644 python/finalbuild/astra/*.so @prefix@/python/astra
-	$(INSTALL_SH) -m 644 python/finalbuild/astra/*.py @prefix@/python/astra
-	$(INSTALL_SH) -m 644 python/finalbuild/*.egg-info @prefix@/python/
-	@echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-	@echo "To use ASTRA in Python, add @prefix@/python/ to your PYTHONPATH"
-	@echo "and @libdir@ to your LD_LIBRARY_PATH."
-	@echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+	$(INSTALL_SH) -m 755 -d $(sitepkg)
+	$(INSTALL_SH) -m 755 -d $(sitepkg)/astra
+	$(INSTALL_SH) -m 644 python/finalbuild/astra/*.so $(sitepkg)/astra
+	$(INSTALL_SH) -m 644 python/finalbuild/astra/*.py $(sitepkg)/astra
+	$(INSTALL_SH) -m 644 python/finalbuild/*.egg-info $(sitepkg)
 # TODO: docs
 else
 install-python:
