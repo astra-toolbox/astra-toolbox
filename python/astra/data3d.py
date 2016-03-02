@@ -89,7 +89,7 @@ def get_single(i):
     :returns: :class:`numpy.ndarray` -- The object data.
 
     """
-    return g.get_single(i)
+    return d.get_single(i)
 
 def store(i,data):
     """Fill existing 3D object with data.
