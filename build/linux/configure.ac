@@ -194,6 +194,12 @@ if test x"$with_python" != x -a x"$with_python" != xno; then
   AC_MSG_RESULT([$PYTHON])
   HAVEPYTHON=yes
   AC_SUBST(PYTHON)
+
+  AC_MSG_CHECKING(for Python version)
+  PYTHON_VERSION=`$PYTHON -c "import sys; print (sys.version[[:3]])"`
+  AC_MSG_RESULT([$PYTHON_VERSION])
+  AC_SUBST(PYTHON_VERSION)
+
   AC_MSG_CHECKING(for numpy module)
   ASTRA_TRY_PYTHON([import numpy],,HAVEPYTHON=no)
   if test x$HAVEPYTHON = xno; then
