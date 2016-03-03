@@ -150,6 +150,7 @@ BASE_OBJECTS=\
 	src/ParallelProjectionGeometry3D.lo \
 	src/ParallelVecProjectionGeometry3D.lo \
 	src/PlatformDepSystemCode.lo \
+	src/PluginAlgorithm.lo \
 	src/ProjectionGeometry2D.lo \
 	src/ProjectionGeometry3D.lo \
 	src/Projector2D.lo \
@@ -255,7 +256,6 @@ MATLAB_MEX=\
 	matlab/mex/astra_mex_direct_c.$(MEXSUFFIX)
 
 ifeq ($(python),yes)
-ALL_OBJECTS+=src/PluginAlgorithm.lo
 MATLAB_MEX+=matlab/mex/astra_mex_plugin_c.$(MEXSUFFIX)
 endif
 

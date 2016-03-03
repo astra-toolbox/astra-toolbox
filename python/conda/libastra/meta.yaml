@@ -1,5 +1,5 @@
 package:
-  name: astra-toolbox
+  name: libastra
   version: '1.8b'
 
 source:
@@ -11,26 +11,6 @@ build:
   script_env:
     - CUDA_ROOT
     - MAKEOPTS
-
-test:
-  imports:
-    - astra
-
-requirements:
-  build:
-    - python
-    - cython >=0.13
-    - numpy
-    - scipy
-    - six
-
-  run:
-    - python
-    - numpy
-    - scipy
-    - six
-    - libastra ==1.8b
-
 
 about:
   home: http://www.astra-toolbox.com
