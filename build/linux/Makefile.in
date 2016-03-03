@@ -315,8 +315,10 @@ ifeq ($(cuda),yes)
 ifeq ($(gen_static_libs),yes)
 	@$(NVCC) $(NVCCFLAGS) -c $(<) -o $*.o >/dev/null 2>&1
 endif
-	@# Generate a .d file, with target name $*.lo
-	@$(NVCC) $(NVCCFLAGS) -M $(<) -MT $(*F).lo -odir $(*D) -o $(*D)/$(DEPDIR)/$(*F).d
+	@# Generate a .d file, and change the target name in it from .o to .lo
+	@$(NVCC) $(NVCCFLAGS) -M $(<) -odir $(*D) -o $(*D)/$(DEPDIR)/$(*F).d2
+	@sed '1s/\.o :/.lo :/' < $(*D)/$(DEPDIR)/$(*F).d2 > $(*D)/$(DEPDIR)/$(*F).d
+	@rm -f $(*D)/$(DEPDIR)/$(*F).d2
 	@# Generate empty targets for all dependencies listed in the .d file.
 	@# This mimics gcc's -MP option.
 	@for x in `cat $(*D)/$(DEPDIR)/$(*F).d`; do if test a$$x != a: -a a$$x != a\\; then echo -e "\n$$x:\n" >> $(*D)/$(DEPDIR)/$(*F).d; fi; done
