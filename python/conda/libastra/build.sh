@@ -1,6 +1,6 @@
 cd build/linux
 ./autogen.sh
-./configure --with-python --with-cuda=$CUDA_ROOT --prefix=$PREFIX
+./configure --with-cuda=$CUDA_ROOT --prefix=$PREFIX
 if [ $MAKEOPTS == '<UNDEFINED>' ]
   then
     MAKEOPTS=""
