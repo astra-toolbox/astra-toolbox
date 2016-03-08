@@ -146,6 +146,7 @@ bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div
 				newjob.eType = j->eType;
 				newjob.eMode = j->eMode;
 				newjob.pProjector = j->pProjector;
+				newjob.FDKSettings = j->FDKSettings;
 
 				CPart* input = job.pInput->reduce(outputPart.get());
 
@@ -992,6 +993,25 @@ bool CCompositeGeometryManager::doBP(CProjector3D *pProjector, CFloat32VolumeDat
 	return doJobs(L);
 }
 
+
+bool CCompositeGeometryManager::doFDK(CProjector3D *pProjector, CFloat32VolumeData3DMemory *pVolData,
+                                     CFloat32ProjectionData3DMemory *pProjData, bool bShortScan)
+{
+	if (!dynamic_cast<CConeProjectionGeometry3D*>(pProjData->getGeometry())) {
+		ASTRA_ERROR("CCompositeGeometryManager::doFDK: cone geometry required");
+		return false;
+	}
+
+	SJob job = createJobBP(pProjector, pVolData, pProjData);
+	job.eType = SJob::JOB_FDK;
+	job.FDKSettings.bShortScan = bShortScan;
+
+	TJobList L;
+	L.push_back(job);
+
+	return doJobs(L);
+}
+
 bool CCompositeGeometryManager::doFP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3DMemory *>& volData, const std::vector<CFloat32ProjectionData3DMemory *>& projData)
 {
 	ASTRA_DEBUG("CCompositeGeometryManager::doFP, multi-volume");
@@ -1185,7 +1205,9 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 		ok = astraCUDA3d::copyToGPUMemory(src, inputMem, srcdims);
 		if (!ok) ASTRA_ERROR("Error copying input data to GPU");
 
-		if (j.eType == CCompositeGeometryManager::SJob::JOB_FP) {
+		switch (j.eType) {
+		case CCompositeGeometryManager::SJob::JOB_FP:
+		{
 			assert(dynamic_cast<CCompositeGeometryManager::CVolumePart*>(j.pInput.get()));
 			assert(dynamic_cast<CCompositeGeometryManager::CProjectionPart*>(j.pOutput.get()));
 
@@ -1194,7 +1216,10 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 			ok = astraCUDA3d::FP(((CCompositeGeometryManager::CProjectionPart*)j.pOutput.get())->pGeom, outputMem, ((CCompositeGeometryManager::CVolumePart*)j.pInput.get())->pGeom, inputMem, detectorSuperSampling, projKernel);
 			if (!ok) ASTRA_ERROR("Error performing sub-FP");
 			ASTRA_DEBUG("CCompositeGeometryManager::doJobs: FP done");
-		} else if (j.eType == CCompositeGeometryManager::SJob::JOB_BP) {
+		}
+		break;
+		case CCompositeGeometryManager::SJob::JOB_BP:
+		{
 			assert(dynamic_cast<CCompositeGeometryManager::CVolumePart*>(j.pOutput.get()));
 			assert(dynamic_cast<CCompositeGeometryManager::CProjectionPart*>(j.pInput.get()));
 
@@ -1203,7 +1228,26 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 			ok = astraCUDA3d::BP(((CCompositeGeometryManager::CProjectionPart*)j.pInput.get())->pGeom, inputMem, ((CCompositeGeometryManager::CVolumePart*)j.pOutput.get())->pGeom, outputMem, voxelSuperSampling);
 			if (!ok) ASTRA_ERROR("Error performing sub-BP");
 			ASTRA_DEBUG("CCompositeGeometryManager::doJobs: BP done");
-		} else {
+		}
+		break;
+		case CCompositeGeometryManager::SJob::JOB_FDK:
+		{
+			assert(dynamic_cast<CCompositeGeometryManager::CVolumePart*>(j.pOutput.get()));
+			assert(dynamic_cast<CCompositeGeometryManager::CProjectionPart*>(j.pInput.get()));
+
+			if (srcdims.subx || srcdims.suby) {
+				ASTRA_ERROR("CCompositeGeometryManager::doJobs: data too large for FDK");
+				ok = false;
+			} else {
+				ASTRA_DEBUG("CCompositeGeometryManager::doJobs: doing FDK");
+
+				ok = astraCUDA3d::FDK(((CCompositeGeometryManager::CProjectionPart*)j.pInput.get())->pGeom, inputMem, ((CCompositeGeometryManager::CVolumePart*)j.pOutput.get())->pGeom, outputMem, j.FDKSettings.bShortScan);
+				if (!ok) ASTRA_ERROR("Error performing sub-FDK");
+				ASTRA_DEBUG("CCompositeGeometryManager::doJobs: FDK done");
+			}
+		}
+		break;
+		default:
 			assert(false);
 		}
 

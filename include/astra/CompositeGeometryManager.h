@@ -55,6 +55,10 @@ struct SGPUParams {
 	size_t memory;
 };
 
+struct SFDKSettings {
+	bool bShortScan;
+};
+
 
 class _AstraExport CCompositeGeometryManager {
 public:
@@ -127,9 +131,10 @@ public:
 		CProjector3D *pProjector; // For a `global' geometry. It will not match
 		                          // the geometries of the input and output.
 
+		SFDKSettings FDKSettings;
 
 		enum {
-			JOB_FP, JOB_BP, JOB_NOP
+			JOB_FP, JOB_BP, JOB_FDK, JOB_NOP
 		} eType;
 		enum {
 			MODE_ADD, MODE_SET
@@ -155,6 +160,8 @@ public:
 	          CFloat32ProjectionData3DMemory *pProjData);
 	bool doBP(CProjector3D *pProjector, CFloat32VolumeData3DMemory *pVolData,
 	          CFloat32ProjectionData3DMemory *pProjData);
+	bool doFDK(CProjector3D *pProjector, CFloat32VolumeData3DMemory *pVolData,
+	          CFloat32ProjectionData3DMemory *pProjData, bool bShortScan);
 
 	bool doFP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3DMemory *>& volData, const std::vector<CFloat32ProjectionData3DMemory *>& projData);
 	bool doBP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3DMemory *>& volData, const std::vector<CFloat32ProjectionData3DMemory *>& projData);

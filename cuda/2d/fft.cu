@@ -35,6 +35,7 @@ $Id$
 #include <fstream>
 
 #include "../../include/astra/Logging.h"
+#include "../../include/astra/Fourier.h"
 
 using namespace astra;
 
@@ -303,6 +304,8 @@ void genFilter(E_FBPFILTER _eFilter, float _fD, int _iProjectionCount,
 	float * pfFilt = new float[_iFFTFourierDetectorCount];
 	float * pfW = new float[_iFFTFourierDetectorCount];
 
+#if 1
+
 	for(int iDetectorIndex = 0; iDetectorIndex < _iFFTFourierDetectorCount; iDetectorIndex++)
 	{
 		float fRelIndex = (float)iDetectorIndex / (float)_iFFTRealDetectorCount;
@@ -314,6 +317,48 @@ void genFilter(E_FBPFILTER _eFilter, float _fD, int _iProjectionCount,
 		// w = 2*pi*(0:size(filt,2)-1)/order
 		pfW[iDetectorIndex] = 3.1415f * 2.0f * fRelIndex;
 	}
+#else
+
+	float *pfRealIn = new float[_iFFTRealDetectorCount];
+	float *pfImagIn = new float[_iFFTRealDetectorCount];
+	float *pfRealOut = new float[_iFFTRealDetectorCount];
+	float *pfImagOut = new float[_iFFTRealDetectorCount];
+
+	for (int i = 0; i < _iFFTRealDetectorCount; ++i) {
+		pfImagIn[i] = 0.0f;
+		pfRealOut[i] = 0.0f;
+		pfImagOut[i] = 0.0f;
+
+		if (i & 1) {
+			int j = i;
+			if (2*j > _iFFTRealDetectorCount)
+				j = _iFFTRealDetectorCount - j;
+			float f = M_PI * j;
+			pfRealIn[i] = -1 / (f*f);
+		} else {
+			pfRealIn[i] = 0.0f;
+		}
+	}
+
+	pfRealIn[0] = 0.25f;
+
+	fastTwoPowerFourierTransform1D(_iFFTRealDetectorCount, pfRealIn, pfImagIn,
+	                               pfRealOut, pfImagOut, 1, 1, false);
+
+	for(int iDetectorIndex = 0; iDetectorIndex < _iFFTFourierDetectorCount; iDetectorIndex++)
+	{
+		float fRelIndex = (float)iDetectorIndex / (float)_iFFTRealDetectorCount;
+
+		pfFilt[iDetectorIndex] = 2.0f * pfRealOut[iDetectorIndex];
+		pfW[iDetectorIndex] = M_PI * 2.0f * fRelIndex;
+	}
+
+	delete[] pfRealIn;
+	delete[] pfImagIn;
+	delete[] pfRealOut;
+	delete[] pfImagOut;
+
+#endif
 
 	switch(_eFilter)
 	{

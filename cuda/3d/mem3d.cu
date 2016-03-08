@@ -38,6 +38,7 @@ $Id$
 #include "cone_bp.h"
 #include "par3d_fp.h"
 #include "par3d_bp.h"
+#include "fdk.h"
 
 #include "astra/Logging.h"
 
@@ -275,6 +276,33 @@ bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, con
 		ok &= ConeBP(volData.d->ptr, projData.d->ptr, dims, pConeProjs, params);
 
 	return ok;
+
+}
+
+bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, bool bShortScan)
+{
+	SDimensions3D dims;
+	SProjectorParams3D params;
+
+	bool ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
+	if (!ok)
+		return false;
+
+	SPar3DProjection* pParProjs;
+	SConeProjection* pConeProjs;
+
+	ok = convertAstraGeometry(pVolGeom, pProjGeom,
+	                          pParProjs, pConeProjs,
+	                          params);
+
+	if (!ok || !pConeProjs)
+		return false;
+
+	ok &= FDK(volData.d->ptr, projData.d->ptr, pConeProjs, dims, params, bShortScan);
+
+	return ok;
+
+
 
 }
 

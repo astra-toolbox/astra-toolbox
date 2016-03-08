@@ -32,6 +32,7 @@ $Id$
 
 #include "astra/CudaProjector3D.h"
 #include "astra/ConeProjectionGeometry3D.h"
+#include "astra/CompositeGeometryManager.h"
 
 #include "astra/Logging.h"
 
@@ -206,6 +207,7 @@ void CCudaFDKAlgorithm3D::run(int _iNrIterations)
 	ASTRA_ASSERT(pReconMem);
 
 
+#if 0
 	bool ok = true;
 
 	ok = astraCudaFDK(pReconMem->getData(), pSinoMem->getDataConst(),
@@ -213,6 +215,13 @@ void CCudaFDKAlgorithm3D::run(int _iNrIterations)
 	                  m_bShortScan, m_iGPUIndex, m_iVoxelSuperSampling);
 
 	ASTRA_ASSERT(ok);
+#endif
+
+	CCompositeGeometryManager cgm;
+
+	cgm.doFDK(m_pProjector, pReconMem, pSinoMem, m_bShortScan);
+
+
 
 }
 //----------------------------------------------------------------------------------------
