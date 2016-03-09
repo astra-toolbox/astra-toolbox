@@ -32,6 +32,9 @@ $Id$
 #include "Globals.h"
 #include "Config.h"
 
+#include "astra/Logging.h"
+
+
 #include <list>
 
 #include "Float32ProjectionData2D.h"
@@ -163,11 +166,15 @@ public:
 class TotalPixelWeightPolicy {
 
 	CFloat32VolumeData2D* m_pPixelWeight;
+	// Accumulate ones for non-zero weights (instead of the weights)? defaults to false.
+	// Used by BICAV.
+	bool m_bBinary;
 
 public:
 
 	FORCEINLINE TotalPixelWeightPolicy();
-	FORCEINLINE TotalPixelWeightPolicy(CFloat32VolumeData2D* _pPixelWeight);
+	FORCEINLINE TotalPixelWeightPolicy(CFloat32VolumeData2D* _pPixelWeight,
+		bool _bBinary = false);
 	FORCEINLINE ~TotalPixelWeightPolicy();
 
 	FORCEINLINE bool rayPrior(int _iRayIndex);
@@ -183,11 +190,15 @@ public:
 class TotalRayLengthPolicy {
 
 	CFloat32ProjectionData2D* m_pRayLength;
+	// Accumulate the weights squared instead? defaults to false.
+	// This is used by BICAV.
+	bool m_bSquare;
 
 public:
 
 	FORCEINLINE TotalRayLengthPolicy();
-	FORCEINLINE TotalRayLengthPolicy(CFloat32ProjectionData2D* _pRayLength);
+	FORCEINLINE TotalRayLengthPolicy(CFloat32ProjectionData2D* _pRayLength, 
+		bool bSquare = false);
 	FORCEINLINE ~TotalRayLengthPolicy();
 
 	FORCEINLINE bool rayPrior(int _iRayIndex);
@@ -319,10 +330,12 @@ class SIRTBPPolicy {
 	CFloat32ProjectionData2D* m_pTotalRayLength;
 	CFloat32VolumeData2D* m_pTotalPixelWeight;
 
+	float32 m_fAlpha;
+
 public:
 
 	FORCEINLINE SIRTBPPolicy();
-	FORCEINLINE SIRTBPPolicy(CFloat32VolumeData2D* _pReconstruction, CFloat32ProjectionData2D* _pSinogram, CFloat32VolumeData2D* _pTotalPixelWeight, CFloat32ProjectionData2D* _pTotalRayLength); 
+	FORCEINLINE SIRTBPPolicy(CFloat32VolumeData2D* _pReconstruction, CFloat32ProjectionData2D* _pSinogram, CFloat32VolumeData2D* _pTotalPixelWeight, CFloat32ProjectionData2D* _pTotalRayLength, float32 _fAlhpa = 1.0f); 
 	FORCEINLINE ~SIRTBPPolicy();
 
 	FORCEINLINE bool rayPrior(int _iRayIndex);
@@ -331,7 +344,6 @@ public:
 	FORCEINLINE void rayPosterior(int _iRayIndex);
 	FORCEINLINE void pixelPosterior(int _iVolumeIndex);
 };
-
 
 //----------------------------------------------------------------------------------------
 /** Policy For Sinogram Mask
