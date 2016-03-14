@@ -176,12 +176,23 @@ classdef opTomo < opSpot
             if issparse(x)
                 x = full(x);
             end
+
+            if isa(x, 'double')
+                isdouble = true;
+                x = single(x);
+            else
+                isdouble = false;
+            end
             
             % the multiplication
             y = op.funHandle(op, x, mode);
             
             % make sure output is column vector
             y = y(:);
+
+            if isdouble
+                y = double(y);
+            end
             
         end % multiply
         
@@ -206,11 +217,7 @@ classdef opTomo < opSpot
                 astra_mex_algorithm('iterate', op.fp_alg_id);
                 
                 % retrieve Matlab array
-                if isa(x, 'single')
-                    y = astra_mex_data2d('get_single', op.sino_id);
-                else
-                    y = astra_mex_data2d('get', op.sino_id);
-                end
+                y = astra_mex_data2d('get_single', op.sino_id);
             else
                 % x is passed as a vector, reshape it into a sinogram.
                 x = reshape(x, op.proj_size);
@@ -222,11 +229,7 @@ classdef opTomo < opSpot
                 astra_mex_algorithm('iterate', op.bp_alg_id);
                 
                 % retrieve Matlab array
-                if isa(x, 'single')
-                    y = astra_mex_data2d('get_single', op.vol_id);
-                else
-                    y = astra_mex_data2d('get', op.vol_id);
-                end
+                y = astra_mex_data2d('get_single', op.vol_id);
             end
 
         end % opTomo_intrnl2D
