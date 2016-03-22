@@ -83,7 +83,7 @@ bool is_cuda(vector<astra::CProjector3D *> & pProjectors)
 	bool is_not_cuda = false;
 	for (mwIndex itProj = 0; itProj < num_projectors; itProj++)
 	{
-		is_not_cuda |= !(dynamic_cast<CCudaProjector3D*>(pProjectors[0]));
+		is_not_cuda |= !(dynamic_cast<CCudaProjector3D*>(pProjectors[itProj]));
 	}
 	return !is_not_cuda;
 }
