@@ -272,9 +272,8 @@ void CSartAlgorithm::run(int _iNrIterations)
 
 	m_bShouldAbort = false;
 
-	int iIteration = 0;
-
 	// data projectors
+	CDataProjectorInterface* pFirstForwardProjector;
 	CDataProjectorInterface* pForwardProjector;
 	CDataProjectorInterface* pBackProjector;
 
@@ -292,7 +291,7 @@ void CSartAlgorithm::run(int _iNrIterations)
 
 	// first time forward projection data projector,
 	// also computes total pixel weight and total ray length
-	pForwardProjector = dispatchDataProjector(
+	pFirstForwardProjector = dispatchDataProjector(
 			m_pProjector, 
 			SinogramMaskPolicy(m_pSinogramMask),														// sinogram mask
 			ReconstructionMaskPolicy(m_pReconstructionMask),											// reconstruction mask
@@ -303,16 +302,30 @@ void CSartAlgorithm::run(int _iNrIterations)
 			m_bUseSinogramMask, m_bUseReconstructionMask, true											 // options on/off
 		);
 
+	// forward projection data projector
+	pForwardProjector = dispatchDataProjector(
+			m_pProjector,
+			SinogramMaskPolicy(m_pSinogramMask),														// sinogram mask
+			ReconstructionMaskPolicy(m_pReconstructionMask),											// reconstruction mask
+			CombinePolicy<DiffFPPolicy, TotalPixelWeightPolicy>(					// 2 basic operations
+				DiffFPPolicy(m_pReconstruction, m_pDiffSinogram, m_pSinogram),								// forward projection with difference calculation
+				TotalPixelWeightPolicy(m_pTotalPixelWeight)),												// calculate the total pixel weights
+			m_bUseSinogramMask, m_bUseReconstructionMask, true											 // options on/off
+		);
+
 
 
 	// iteration loop
-	for (; iIteration < _iNrIterations && !m_bShouldAbort; ++iIteration) {
+	for (int iIteration = 0; iIteration < _iNrIterations && !m_bShouldAbort; ++iIteration) {
 
 		int iProjection = m_piProjectionOrder[m_iIterationCount % m_iProjectionCount];
 	
 		// forward projection and difference calculation
 		m_pTotalPixelWeight->setData(0.0f);
-		pForwardProjector->projectSingleProjection(iProjection);
+		if (iIteration < m_iProjectionCount)
+			pFirstForwardProjector->projectSingleProjection(iProjection);
+		else
+			pForwardProjector->projectSingleProjection(iProjection);
 		// backprojection
 		pBackProjector->projectSingleProjection(iProjection);
 		// update iteration count
@@ -325,6 +338,7 @@ void CSartAlgorithm::run(int _iNrIterations)
 	}
 
 
+	ASTRA_DELETE(pFirstForwardProjector);
 	ASTRA_DELETE(pForwardProjector);
 	ASTRA_DELETE(pBackProjector);
 
