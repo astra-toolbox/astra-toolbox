@@ -93,8 +93,6 @@ public:
 	 */
 	virtual bool initialize(const Config& _cfg);
 
-	virtual void run(int _iNrIterations);
-
 	/** Initialize class.
 	 *
 	 * @param _pProjector		Projector Object. (Optional)
@@ -114,6 +112,8 @@ public:
 protected:
 	CFloat32VolumeData2D* m_pMinMask;
 	CFloat32VolumeData2D* m_pMaxMask;
+
+	virtual void initCUDAAlgorithm();
 };
 
 // inline functions

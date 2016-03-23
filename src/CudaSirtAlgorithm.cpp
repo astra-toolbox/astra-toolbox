@@ -113,36 +113,23 @@ bool CCudaSirtAlgorithm::initialize(CProjector2D* _pProjector,
 }
 
 //----------------------------------------------------------------------------------------
-// Iterate
-void CCudaSirtAlgorithm::run(int _iNrIterations)
+
+void CCudaSirtAlgorithm::initCUDAAlgorithm()
 {
-	// check initialized
-	ASTRA_ASSERT(m_bIsInitialized);
+	CCudaReconstructionAlgorithm2D::initCUDAAlgorithm();
 
-	if (!m_bAlgoInit) {
-		// We only override the initialisation step to copy the min/max masks
+	astraCUDA::SIRT* pSirt = dynamic_cast<astraCUDA::SIRT*>(m_pAlgo);
 
-		bool ok = setupGeometry();
+	if (m_pMinMask || m_pMaxMask) {
+		const CVolumeGeometry2D& volgeom = *m_pReconstruction->getGeometry();
+		const float *pfMinMaskData = 0;
+		const float *pfMaxMaskData = 0;
+		if (m_pMinMask) pfMinMaskData = m_pMinMask->getDataConst();
+		if (m_pMaxMask) pfMaxMaskData = m_pMaxMask->getDataConst();
+		bool ok = pSirt->uploadMinMaxMasks(pfMinMaskData, pfMaxMaskData, volgeom.getGridColCount());
 		ASTRA_ASSERT(ok);
-
-		ok = m_pAlgo->allocateBuffers();
-		ASTRA_ASSERT(ok);
-
-		if (m_pMinMask || m_pMaxMask) {
-			const CVolumeGeometry2D& volgeom = *m_pReconstruction->getGeometry();
-			astraCUDA::SIRT* pSirt = dynamic_cast<astraCUDA::SIRT*>(m_pAlgo);
-			const float *pfMinMaskData = 0;
-			const float *pfMaxMaskData = 0;
-			if (m_pMinMask) pfMinMaskData = m_pMinMask->getDataConst();
-			if (m_pMaxMask) pfMaxMaskData = m_pMaxMask->getDataConst();
-			ok = pSirt->uploadMinMaxMasks(pfMinMaskData, pfMaxMaskData, volgeom.getGridColCount());
-			ASTRA_ASSERT(ok);
-		}
-
-		m_bAlgoInit = true;
 	}
 
-	CCudaReconstructionAlgorithm2D::run(_iNrIterations);
 }
 
 
