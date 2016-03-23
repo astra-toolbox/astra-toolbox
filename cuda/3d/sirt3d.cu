@@ -59,6 +59,8 @@ SIRT::SIRT() : ReconAlgo3D()
 
 	useMinConstraint = false;
 	useMaxConstraint = false;
+
+	fRelaxation = 1.0f;
 }
 
 
@@ -88,6 +90,8 @@ void SIRT::reset()
 
 	useVolumeMask = false;
 	useSinogramMask = false;
+
+	fRelaxation = 1.0f;
 
 	ReconAlgo3D::reset();
 }
@@ -196,6 +200,8 @@ bool SIRT::precomputeWeights()
 		// scale pixel weights with mask to zero out masked pixels
 		processVol3D<opMul>(D_pixelWeight, D_maskData, dims);
 	}
+	processVol3D<opMul>(D_pixelWeight, fRelaxation, dims);
+
 
 	return true;
 }
@@ -307,7 +313,7 @@ bool SIRT::iterate(unsigned int iterations)
 	}
 #endif
 
-
+		// pixel weights also contain the volume mask and relaxation factor
 		processVol3D<opAddMul>(D_volumeData, D_tmpData, D_pixelWeight, dims);
 
 		if (useMinConstraint)

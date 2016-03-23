@@ -56,6 +56,7 @@ CCudaSirtAlgorithm3D::CCudaSirtAlgorithm3D()
 	m_iGPUIndex = -1;
 	m_iVoxelSuperSampling = 1;
 	m_iDetectorSuperSampling = 1;
+	m_fLambda = 1.0f;
 }
 
 //----------------------------------------------------------------------------------------
@@ -128,6 +129,8 @@ bool CCudaSirtAlgorithm3D::initialize(const Config& _cfg)
 		return false;
 	}
 
+	m_fLambda = _cfg.self.getOptionNumerical("Relaxation");
+
 	initializeFromProjector();
 
 	// Deprecated options
@@ -135,6 +138,7 @@ bool CCudaSirtAlgorithm3D::initialize(const Config& _cfg)
 	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", m_iDetectorSuperSampling);
 	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", m_iGPUIndex);
 	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
+
 	CC.markOptionParsed("VoxelSuperSampling");
 	CC.markOptionParsed("DetectorSuperSampling");
 	CC.markOptionParsed("GPUIndex");
@@ -163,6 +167,8 @@ bool CCudaSirtAlgorithm3D::initialize(CProjector3D* _pProjector,
 	if (m_bIsInitialized) {
 		clear();
 	}
+
+	m_fLambda = 1.0f;
 
 	// required classes
 	m_pProjector = _pProjector;
@@ -223,6 +229,8 @@ void CCudaSirtAlgorithm3D::run(int _iNrIterations)
 		ok &= m_pSirt->init();
 
 		ASTRA_ASSERT(ok);
+
+		m_pSirt->setRelaxation(m_fLambda);
 
 		m_bAstraSIRTInit = true;
 
