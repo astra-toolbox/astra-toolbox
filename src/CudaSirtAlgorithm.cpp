@@ -50,6 +50,8 @@ CCudaSirtAlgorithm::CCudaSirtAlgorithm()
 
 	m_pMinMask = 0;
 	m_pMaxMask = 0;
+
+	m_fLambda = 1.0f;
 }
 
 //----------------------------------------------------------------------------------------
@@ -86,6 +88,8 @@ bool CCudaSirtAlgorithm::initialize(const Config& _cfg)
 	}
 	CC.markOptionParsed("MaxMaskId");
 
+	m_fLambda = _cfg.self.getOptionNumerical("Relaxation", 1.0f);
+	CC.markOptionParsed("Relaxation");
 
 	m_pAlgo = new astraCUDA::SIRT();
 	m_bAlgoInit = false;
@@ -108,6 +112,7 @@ bool CCudaSirtAlgorithm::initialize(CProjector2D* _pProjector,
 
 	m_pAlgo = new astraCUDA::SIRT();
 	m_bAlgoInit = false;
+	m_fLambda = 1.0f;
 
 	return true;
 }
@@ -130,6 +135,7 @@ void CCudaSirtAlgorithm::initCUDAAlgorithm()
 		ASTRA_ASSERT(ok);
 	}
 
+	pSirt->setRelaxation(m_fLambda);
 }
 
 

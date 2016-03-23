@@ -71,6 +71,8 @@ SART::SART() : ReconAlgo()
 	projectionCount = 0;
 	iteration = 0;
 	customOrder = false;
+
+	fRelaxation = 1.0f;
 }
 
 
@@ -98,6 +100,7 @@ void SART::reset()
 	projectionCount = 0;
 	iteration = 0;
 	customOrder = false;
+	fRelaxation = 1.0f;
 
 	ReconAlgo::reset();
 }
@@ -200,10 +203,10 @@ bool SART::iterate(unsigned int iterations)
 			// BP, mask, and add back
 			// TODO: Try putting the masking directly in the BP
 			zeroVolumeData(D_tmpData, tmpPitch, dims);
-			callBP_SART(D_tmpData, tmpPitch, D_projData, projPitch, angle, 1.0f);
+			callBP_SART(D_tmpData, tmpPitch, D_projData, projPitch, angle, fRelaxation);
 			processVol<opAddMul>(D_volumeData, D_maskData, D_tmpData, volumePitch, dims);
 		} else {
-			callBP_SART(D_volumeData, volumePitch, D_projData, projPitch, angle, 1.0f);
+			callBP_SART(D_volumeData, volumePitch, D_projData, projPitch, angle, fRelaxation);
 		}
 
 		if (useMinConstraint)
