@@ -30,7 +30,6 @@ $Id$
 #define _INC_ASTRA_DATAPROJECTORPOLICIES_INLINE
 
 
-
 //----------------------------------------------------------------------------------------
 // DEFAULT FORWARD PROJECTION (Ray Driven)
 //----------------------------------------------------------------------------------------
@@ -295,9 +294,11 @@ TotalPixelWeightPolicy::TotalPixelWeightPolicy()
 
 }
 //----------------------------------------------------------------------------------------
-TotalPixelWeightPolicy::TotalPixelWeightPolicy(CFloat32VolumeData2D* _pPixelWeight) 
+TotalPixelWeightPolicy::TotalPixelWeightPolicy(CFloat32VolumeData2D* _pPixelWeight,
+											   bool _bBinary) 
 {
 	m_pPixelWeight = _pPixelWeight;
+	m_bBinary = _bBinary;
 }
 //----------------------------------------------------------------------------------------	
 TotalPixelWeightPolicy::~TotalPixelWeightPolicy() 
@@ -317,7 +318,10 @@ bool TotalPixelWeightPolicy::pixelPrior(int _iVolumeIndex)
 //----------------------------------------------------------------------------------------	
 void TotalPixelWeightPolicy::addWeight(int _iRayIndex, int _iVolumeIndex, float32 _fWeight) 
 {
-	m_pPixelWeight->getData()[_iVolumeIndex] += _fWeight;
+	m_pPixelWeight->getData()[_iVolumeIndex] += m_bBinary ? 
+		static_cast<float32>(_fWeight > 1e-12) : _fWeight;
+	//ASTRA_INFO("PixelWeight ray=%d voxel=%d wt=%f val=%f", _iRayIndex, _iVolumeIndex, _fWeight,
+	//	m_pPixelWeight->getData()[_iVolumeIndex]);
 }
 //----------------------------------------------------------------------------------------
 void TotalPixelWeightPolicy::rayPosterior(int _iRayIndex) 
@@ -342,9 +346,11 @@ TotalRayLengthPolicy::TotalRayLengthPolicy()
 
 }
 //----------------------------------------------------------------------------------------
-TotalRayLengthPolicy::TotalRayLengthPolicy(CFloat32ProjectionData2D* _pRayLength) 
+TotalRayLengthPolicy::TotalRayLengthPolicy(CFloat32ProjectionData2D* _pRayLength,
+										   bool _bSquare) 
 {
 	m_pRayLength = _pRayLength;
+	m_bSquare = _bSquare;
 }
 //----------------------------------------------------------------------------------------	
 TotalRayLengthPolicy::~TotalRayLengthPolicy() 
@@ -364,7 +370,10 @@ bool TotalRayLengthPolicy::pixelPrior(int _iVolumeIndex)
 //----------------------------------------------------------------------------------------	
 void TotalRayLengthPolicy::addWeight(int _iRayIndex, int _iVolumeIndex, float32 _fWeight) 
 {
-	m_pRayLength->getData()[_iRayIndex] += _fWeight; 
+	m_pRayLength->getData()[_iRayIndex] += m_bSquare ? _fWeight * _fWeight : _fWeight; 
+	//ASTRA_INFO("RayLength ray=%d voxel=%d wt=%f val=%f", _iRayIndex, _iVolumeIndex, _fWeight, 
+	//	m_pRayLength->getData()[_iRayIndex]);
+
 }
 //----------------------------------------------------------------------------------------
 void TotalRayLengthPolicy::rayPosterior(int _iRayIndex) 
@@ -377,9 +386,6 @@ void TotalRayLengthPolicy::pixelPosterior(int _iVolumeIndex)
 	// nothing
 }
 //----------------------------------------------------------------------------------------
-
-
-
 
 
 //----------------------------------------------------------------------------------------
@@ -712,12 +718,14 @@ SIRTBPPolicy::SIRTBPPolicy()
 SIRTBPPolicy::SIRTBPPolicy(CFloat32VolumeData2D* _pReconstruction, 
 						   CFloat32ProjectionData2D* _pSinogram, 
 						   CFloat32VolumeData2D* _pTotalPixelWeight, 
-						   CFloat32ProjectionData2D* _pTotalRayLength) 
+						   CFloat32ProjectionData2D* _pTotalRayLength,
+						   float32 _fAlhpa) 
 {
 	m_pReconstruction = _pReconstruction;
 	m_pSinogram = _pSinogram;
 	m_pTotalPixelWeight = _pTotalPixelWeight;
 	m_pTotalRayLength = _pTotalRayLength;
+	m_fAlpha = _fAlhpa;
 }
 //----------------------------------------------------------------------------------------	
 SIRTBPPolicy::~SIRTBPPolicy() 
@@ -739,7 +747,7 @@ void SIRTBPPolicy::addWeight(int _iRayIndex, int _iVolumeIndex, float32 _fWeight
 {
 	float32 fGammaBeta = m_pTotalPixelWeight->getData()[_iVolumeIndex] * m_pTotalRayLength->getData()[_iRayIndex];
 	if ((fGammaBeta > 0.001f) || (fGammaBeta < -0.001f)) {
-		m_pReconstruction->getData()[_iVolumeIndex] += _fWeight * m_pSinogram->getData()[_iRayIndex] / fGammaBeta;
+		m_pReconstruction->getData()[_iVolumeIndex] += m_fAlpha * _fWeight * m_pSinogram->getData()[_iRayIndex] / fGammaBeta;
 	}
 }
 //----------------------------------------------------------------------------------------
@@ -753,9 +761,6 @@ void SIRTBPPolicy::pixelPosterior(int _iVolumeIndex)
 	// nothing
 }
 //----------------------------------------------------------------------------------------
-
-
-
 
 
 //----------------------------------------------------------------------------------------
