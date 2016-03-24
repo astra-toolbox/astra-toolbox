@@ -32,7 +32,7 @@ import six
 if six.PY3:
     import builtins
 else:
-    import __builtin__
+    import __builtin__ as builtins
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libcpp.list cimport list
@@ -95,14 +95,14 @@ cdef void readDict(XMLNode root, _dc):
     dc = convert_item(_dc)
     for item in dc:
         val = dc[item]
-        if isinstance(val, __builtins__.list) or isinstance(val, tuple):
+        if isinstance(val, builtins.list) or isinstance(val, tuple):
             val = np.array(val,dtype=np.float64)
         if isinstance(val, np.ndarray):
             if val.size == 0:
                 break
             listbase = root.addChildNode(item)
             contig_data = np.ascontiguousarray(val,dtype=np.float64)
-            data = <double*>np.PyArray_DATA(contig_data) 
+            data = <double*>np.PyArray_DATA(contig_data)
             if val.ndim == 2:
                 listbase.setContent(data, val.shape[1], val.shape[0], False)
             elif val.ndim == 1:
@@ -119,6 +119,8 @@ cdef void readDict(XMLNode root, _dc):
             if item == six.b('type'):
                 root.addAttribute(< string > six.b('type'), <string> wrap_to_bytes(val))
             else:
+                if isinstance(val, builtins.bool):
+                    val = int(val)
                 itm = root.addChildNode(item, wrap_to_bytes(val))
 
 cdef void readOptions(XMLNode node, dc):
@@ -131,7 +133,7 @@ cdef void readOptions(XMLNode node, dc):
         val = dc[item]
         if node.hasOption(item):
             raise Exception('Duplicate Option: %s' % item)
-        if isinstance(val, __builtins__.list) or isinstance(val, tuple):
+        if isinstance(val, builtins.list) or isinstance(val, tuple):
             val = np.array(val,dtype=np.float64)
         if isinstance(val, np.ndarray):
             if val.size == 0:
@@ -147,6 +149,8 @@ cdef void readOptions(XMLNode node, dc):
             else:
                 raise Exception("Only 1 or 2 dimensions are allowed")
         else:
+            if isinstance(val, builtins.bool):
+                val = int(val)
             node.addOption(item, wrap_to_bytes(val))
 
 cdef configToDict(Config *cfg):
