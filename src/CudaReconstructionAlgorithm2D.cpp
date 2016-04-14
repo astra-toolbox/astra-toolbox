@@ -329,6 +329,20 @@ bool CCudaReconstructionAlgorithm2D::setupGeometry()
 }
 
 //----------------------------------------------------------------------------------------
+
+void CCudaReconstructionAlgorithm2D::initCUDAAlgorithm()
+{
+	bool ok;
+
+	ok = setupGeometry();
+	ASTRA_ASSERT(ok);
+
+	ok = m_pAlgo->allocateBuffers();
+	ASTRA_ASSERT(ok);
+}
+
+
+//----------------------------------------------------------------------------------------
 // Iterate
 void CCudaReconstructionAlgorithm2D::run(int _iNrIterations)
 {
@@ -339,13 +353,7 @@ void CCudaReconstructionAlgorithm2D::run(int _iNrIterations)
 	const CVolumeGeometry2D& volgeom = *m_pReconstruction->getGeometry();
 
 	if (!m_bAlgoInit) {
-
-		ok = setupGeometry();
-		ASTRA_ASSERT(ok);
-
-		ok = m_pAlgo->allocateBuffers();
-		ASTRA_ASSERT(ok);
-
+		initCUDAAlgorithm();
 		m_bAlgoInit = true;
 	}
 

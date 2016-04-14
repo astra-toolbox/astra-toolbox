@@ -53,6 +53,7 @@ namespace astra {
  * \astra_xml_item{ProjectionDataId, integer, Identifier of a projection data object as it is stored in the DataManager.}
  * \astra_xml_item{ReconstructionDataId, integer, Identifier of a volume data object as it is stored in the DataManager.}
  * \astra_xml_item_option{ReconstructionMaskId, integer, not used, Identifier of a volume data object that acts as a reconstruction mask. 0 = reconstruct on this pixel. 1 = don't reconstruct on this pixel.}
+ * \astra_xml_item_option{Relaxation, float, 1, Relaxation parameter.}
  *
  * \par MATLAB example
  * \astra_code{
@@ -62,6 +63,7 @@ namespace astra {
  *		cfg.ProjectionDataId = sino_id;\n
  *		cfg.ReconstructionDataId = recon_id;\n
  *		cfg.option.ReconstructionMaskId = mask_id;\n
+ *		cfg.option.Relaxation = 1.0;\n
  *		alg_id = astra_mex_algorithm('create'\, cfg);\n
  *		astra_mex_algorithm('iterate'\, alg_id\, 10);\n
  *		astra_mex_algorithm('delete'\, alg_id);\n
@@ -93,8 +95,6 @@ public:
 	 */
 	virtual bool initialize(const Config& _cfg);
 
-	virtual void run(int _iNrIterations);
-
 	/** Initialize class.
 	 *
 	 * @param _pProjector		Projector Object. (Optional)
@@ -114,6 +114,12 @@ public:
 protected:
 	CFloat32VolumeData2D* m_pMinMask;
 	CFloat32VolumeData2D* m_pMaxMask;
+
+	/** Relaxation factor
+	 */
+	float m_fLambda;
+
+	virtual void initCUDAAlgorithm();
 };
 
 // inline functions

@@ -141,6 +141,9 @@ protected:
 	 */
 	bool setupGeometry();
 
+	/** Initialize CUDA algorithm. For internal use only.
+	 */
+	virtual void initCUDAAlgorithm();
 
 	/** The internally used CUDA algorithm object
 	 */ 
