@@ -1668,7 +1668,7 @@ bool CCompositeGeometryManager::doJobs(TJobList &jobs)
 
 	maxSize /= sizeof(float);
 	int div = 1;
-	if (!m_GPUIndices.empty())
+	if (!m_GPUIndices.empty() && jobset.size() <= 1)
 		div = m_GPUIndices.size();
 
 	// Split jobs to fit
