@@ -76,7 +76,7 @@ bool CCudaDataOperationAlgorithm::initialize(const Config& _cfg)
 	node = _cfg.self.getSingleNode("DataId");
 	ASTRA_CONFIG_CHECK(node, "CCudaDataOperationAlgorithm", "No DataId tag specified.");
 	vector<string> data = node.getContentArray();
-	for (vector<string>::iterator it = data.begin(); it != data.end(); it++){
+	for (vector<string>::iterator it = data.begin(); it != data.end(); ++it){
 		int id = StringUtil::stringToInt(*it);
 		m_pData.push_back(dynamic_cast<CFloat32Data2D*>(CData2DManager::getSingleton().get(id)));
 	}
