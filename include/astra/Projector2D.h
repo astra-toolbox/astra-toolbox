@@ -174,7 +174,7 @@ public:
 	 *
 	 * @return initialized successfully
 	 */
-	bool isInitialized();
+	bool isInitialized() const;
 
 	/** get a description of the class
 	 *
@@ -191,7 +191,7 @@ private:
 };
 
 // inline functions
-inline bool CProjector2D::isInitialized() { return m_bIsInitialized; }
+inline bool CProjector2D::isInitialized() const { return m_bIsInitialized; }
 inline CProjectionGeometry2D* CProjector2D::getProjectionGeometry() { return m_pProjectionGeometry; }
 inline CVolumeGeometry2D* CProjector2D::getVolumeGeometry() { return m_pVolumeGeometry; }
 

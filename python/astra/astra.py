@@ -56,3 +56,23 @@ def set_gpu_index(idx, memory=0):
     :type idx: :class:`int`
     """
     a.set_gpu_index(idx, memory)
+
+def delete(ids):
+    """Delete an astra object.
+    
+    :param ids: ID or list of ID's to delete.
+    :type ids: :class:`int` or :class:`list`
+    
+    """
+    return a.delete(ids)
+
+def info(ids):
+    """Print info about an astra object.
+    
+    :param ids: ID or list of ID's to show.
+    :type ids: :class:`int` or :class:`list`
+    
+    """
+    return a.info(ids)
+
+

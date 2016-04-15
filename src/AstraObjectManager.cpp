@@ -31,13 +31,13 @@ $Id$
 
 namespace astra {
 
-int CAstraIndexManager::m_iPreviousIndex = 0;
+DEFINE_SINGLETON(CProjector2DManager);
+DEFINE_SINGLETON(CProjector3DManager);
+DEFINE_SINGLETON(CData2DManager);
+DEFINE_SINGLETON(CData3DManager);
+DEFINE_SINGLETON(CAlgorithmManager);
+DEFINE_SINGLETON(CMatrixManager);
 
-DEFINE_SINGLETON(CAstraObjectManager<CProjector2D>);
-DEFINE_SINGLETON(CAstraObjectManager<CProjector3D>);
-DEFINE_SINGLETON(CAstraObjectManager<CFloat32Data2D>);
-DEFINE_SINGLETON(CAstraObjectManager<CFloat32Data3D>);
-DEFINE_SINGLETON(CAstraObjectManager<CAlgorithm>);
-DEFINE_SINGLETON(CAstraObjectManager<CSparseMatrix>);
+DEFINE_SINGLETON(CAstraIndexManager);
 
 } // end namespace
