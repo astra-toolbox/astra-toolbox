@@ -42,7 +42,7 @@ namespace StringUtil {
 
 int stringToInt(const std::string& s)
 {
-	double i;
+	int i;
 	std::istringstream iss(s);
 	iss.imbue(std::locale::classic());
 	iss >> i;
