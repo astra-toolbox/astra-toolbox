@@ -158,7 +158,7 @@ vector<string> XMLNode::getContentArray() const
 	vector<string> res(iSize);
 	// loop all list item nodes
 	list<XMLNode> nodes = getNodes("ListItem");
-	for (list<XMLNode>::iterator it = nodes.begin(); it != nodes.end(); it++) {
+	for (list<XMLNode>::iterator it = nodes.begin(); it != nodes.end(); ++it) {
 		int iIndex = it->getAttributeNumerical("index");
 		string sValue = it->getAttribute("value");
 		ASTRA_ASSERT(iIndex < iSize);
@@ -290,7 +290,7 @@ vector<float32> XMLNode::getOptionNumericalArray(string _sKey) const
 	if (!hasOption(_sKey)) return vector<float32>();
 
 	list<XMLNode> nodes = getNodes("Option");
-	for (list<XMLNode>::iterator it = nodes.begin(); it != nodes.end(); it++) {
+	for (list<XMLNode>::iterator it = nodes.begin(); it != nodes.end(); ++it) {
 		if (it->getAttribute("key") == _sKey) {
 			vector<float32> vals = it->getContentNumericalArray();
 			return vals;

@@ -263,6 +263,7 @@ public:
 	float* angles;
 	float fOriginSourceDistance;
 	float fOriginDetectorDistance;
+	float fRelaxation;
 
 	SConeProjection* projs;
 	SPar3DProjection* parprojs;
@@ -301,6 +302,8 @@ AstraSIRT3d::AstraSIRT3d()
 
 	pData->projs = 0;
 	pData->parprojs = 0;
+
+	pData->fRelaxation = 1.0f;
 
 	pData->initialized = false;
 	pData->setStartReconstruction = false;
@@ -380,6 +383,14 @@ bool AstraSIRT3d::enableSuperSampling(unsigned int iVoxelSuperSampling,
 	return true;
 }
 
+void AstraSIRT3d::setRelaxation(float r)
+{
+	if (pData->initialized)
+		return;
+
+	pData->fRelaxation = r;
+}
+
 bool AstraSIRT3d::enableVolumeMask()
 {
 	if (pData->initialized)
@@ -438,6 +449,8 @@ bool AstraSIRT3d::init()
 	ok = pData->sirt.init();
 	if (!ok)
 		return false;
+
+	pData->sirt.setRelaxation(pData->fRelaxation);
 
 	pData->D_volumeData = allocateVolumeData(pData->dims);
 	ok = pData->D_volumeData.ptr;

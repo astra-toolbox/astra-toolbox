@@ -107,7 +107,8 @@ bool CCudaSartAlgorithm::initialize(const Config& _cfg)
 		CC.markOptionParsed("ProjectionOrderList");
 	}
 
-
+	m_fLambda = _cfg.self.getOptionNumerical("Relaxation", 1.0f);
+	CC.markOptionParsed("Relaxation");
 
 	return true;
 }
@@ -123,11 +124,25 @@ bool CCudaSartAlgorithm::initialize(CProjector2D* _pProjector,
 	if (!m_bIsInitialized)
 		return false;
 
+	m_fLambda = 1.0f;
+
 	m_pAlgo = new astraCUDA::SART();
 	m_bAlgoInit = false;
 
 	return true;
 }
+
+//----------------------------------------------------------------------------------------
+
+void CCudaSartAlgorithm::initCUDAAlgorithm()
+{
+	CCudaReconstructionAlgorithm2D::initCUDAAlgorithm();
+
+	astraCUDA::SART* pSart = dynamic_cast<astraCUDA::SART*>(m_pAlgo);
+
+	pSart->setRelaxation(m_fLambda);
+}
+
 
 
 } // namespace astra

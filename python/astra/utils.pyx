@@ -1,28 +1,28 @@
-#-----------------------------------------------------------------------
-#Copyright 2013 Centrum Wiskunde & Informatica, Amsterdam
+# -----------------------------------------------------------------------
+# Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+#            2013-2016, CWI, Amsterdam
 #
-#Author: Daniel M. Pelt
-#Contact: D.M.Pelt@cwi.nl
-#Website: http://dmpelt.github.io/pyastratoolbox/
+# Contact: astra@uantwerpen.be
+# Website: http://sf.net/projects/astra-toolbox
+#
+# This file is part of the ASTRA Toolbox.
 #
 #
-#This file is part of the Python interface to the
-#All Scale Tomographic Reconstruction Antwerp Toolbox ("ASTRA Toolbox").
+# The ASTRA Toolbox is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
-#The Python interface to the ASTRA Toolbox is free software: you can redistribute it and/or modify
-#it under the terms of the GNU General Public License as published by
-#the Free Software Foundation, either version 3 of the License, or
-#(at your option) any later version.
+# The ASTRA Toolbox is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
 #
-#The Python interface to the ASTRA Toolbox is distributed in the hope that it will be useful,
-#but WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-#GNU General Public License for more details.
+# You should have received a copy of the GNU General Public License
+# along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #
-#You should have received a copy of the GNU General Public License
-#along with the Python interface to the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
+# -----------------------------------------------------------------------
 #
-#-----------------------------------------------------------------------
 # distutils: language = c++
 # distutils: libraries = astra
 
@@ -32,7 +32,7 @@ import six
 if six.PY3:
     import builtins
 else:
-    import __builtin__
+    import __builtin__ as builtins
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libcpp.list cimport list
@@ -95,14 +95,14 @@ cdef void readDict(XMLNode root, _dc):
     dc = convert_item(_dc)
     for item in dc:
         val = dc[item]
-        if isinstance(val, __builtins__.list) or isinstance(val, tuple):
+        if isinstance(val, builtins.list) or isinstance(val, tuple):
             val = np.array(val,dtype=np.float64)
         if isinstance(val, np.ndarray):
             if val.size == 0:
                 break
             listbase = root.addChildNode(item)
             contig_data = np.ascontiguousarray(val,dtype=np.float64)
-            data = <double*>np.PyArray_DATA(contig_data) 
+            data = <double*>np.PyArray_DATA(contig_data)
             if val.ndim == 2:
                 listbase.setContent(data, val.shape[1], val.shape[0], False)
             elif val.ndim == 1:
@@ -119,6 +119,8 @@ cdef void readDict(XMLNode root, _dc):
             if item == six.b('type'):
                 root.addAttribute(< string > six.b('type'), <string> wrap_to_bytes(val))
             else:
+                if isinstance(val, builtins.bool):
+                    val = int(val)
                 itm = root.addChildNode(item, wrap_to_bytes(val))
 
 cdef void readOptions(XMLNode node, dc):
@@ -131,7 +133,7 @@ cdef void readOptions(XMLNode node, dc):
         val = dc[item]
         if node.hasOption(item):
             raise Exception('Duplicate Option: %s' % item)
-        if isinstance(val, __builtins__.list) or isinstance(val, tuple):
+        if isinstance(val, builtins.list) or isinstance(val, tuple):
             val = np.array(val,dtype=np.float64)
         if isinstance(val, np.ndarray):
             if val.size == 0:
@@ -147,6 +149,8 @@ cdef void readOptions(XMLNode node, dc):
             else:
                 raise Exception("Only 1 or 2 dimensions are allowed")
         else:
+            if isinstance(val, builtins.bool):
+                val = int(val)
             node.addOption(item, wrap_to_bytes(val))
 
 cdef configToDict(Config *cfg):

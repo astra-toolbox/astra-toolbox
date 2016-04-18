@@ -62,6 +62,25 @@ size_t availableGPUMemory()
 	return free;
 }
 
+int maxBlockDimension()
+{
+	int dev;
+	cudaError_t err = cudaGetDevice(&dev);
+	if (err != cudaSuccess) {
+		ASTRA_WARN("Error querying device");
+		return 0;
+	}
+
+	cudaDeviceProp props;
+	err = cudaGetDeviceProperties(&props, dev);
+	if (err != cudaSuccess) {
+		ASTRA_WARN("Error querying device %d properties", dev);
+		return 0;
+	}
+
+	return std::min(props.maxTexture3D[0], std::min(props.maxTexture3D[1], props.maxTexture3D[2]));
+}
+
 MemHandle3D allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Mem3DZeroMode zero)
 {
 	SMemHandle3D_internal hnd;

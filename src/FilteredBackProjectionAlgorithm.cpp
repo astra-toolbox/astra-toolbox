@@ -117,12 +117,10 @@ bool CFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 		int angleCount = projectionIndex.size();
 		int detectorCount = m_pProjector->getProjectionGeometry()->getDetectorCount();
 
+		// TODO: There is no need to allocate this. Better just
+		// create the CFloat32ProjectionData2D object directly, and use its
+		// memory.
 		float32 * sinogramData2D = new float32[angleCount* detectorCount];
-		float32 ** sinogramData = new float32*[angleCount];
-		for (int i = 0; i < angleCount; i++)
-		{
-			sinogramData[i] = &(sinogramData2D[i * detectorCount]);
-		}
 
 		float32 * projectionAngles = new float32[angleCount];
 		float32 detectorWidth = m_pProjector->getProjectionGeometry()->getDetectorWidth();
@@ -130,6 +128,8 @@ bool CFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 		for (int i = 0; i < angleCount; i ++) {
 			if (projectionIndex[i] > m_pProjector->getProjectionGeometry()->getProjectionAngleCount() -1 )
 			{
+				delete[] sinogramData2D;
+				delete[] projectionAngles;
 				ASTRA_ERROR("Invalid Projection Index");
 				return false;
 			} else {
@@ -139,7 +139,6 @@ bool CFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 				{
 					sinogramData2D[i*detectorCount+ iDetector] = m_pSinogram->getData2D()[orgIndex][iDetector];
 				}
-//				sinogramData[i] = m_pSinogram->getSingleProjectionData(projectionIndex[i]);
 				projectionAngles[i] = m_pProjector->getProjectionGeometry()->getProjectionAngle((int)projectionIndex[i] );
 
 			}
@@ -148,6 +147,9 @@ bool CFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 		CParallelProjectionGeometry2D * pg = new CParallelProjectionGeometry2D(angleCount, detectorCount,detectorWidth,projectionAngles);
 		m_pProjector = new CParallelBeamLineKernelProjector2D(pg,m_pReconstruction->getGeometry());
 		m_pSinogram = new CFloat32ProjectionData2D(pg, sinogramData2D);
+
+		delete[] sinogramData2D;
+		delete[] projectionAngles;
 	}
 
 	// TODO: check that the angles are linearly spaced between 0 and pi

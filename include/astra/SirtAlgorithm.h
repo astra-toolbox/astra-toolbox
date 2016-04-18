@@ -49,7 +49,7 @@ namespace astra {
  *
  * The update step of pixel \f$v_j\f$ for iteration \f$k\f$ is given by:
  * \f[
- *	v_j^{(k+1)} = v_j^{(k)} + \alpha \sum_{i=1}^{M} \left( \frac{w_{ij}\left( p_i - \sum_{r=1}^{N} w_{ir}v_r^{(k)}\right)}{\sum_{k=1}^{N} w_{ik}} \right) \frac{1}{\sum_{l=1}^{M}w_{lj}}
+ *	v_j^{(k+1)} = v_j^{(k)} + \lambda \sum_{i=1}^{M} \left( \frac{w_{ij}\left( p_i - \sum_{r=1}^{N} w_{ir}v_r^{(k)}\right)}{\sum_{k=1}^{N} w_{ik}} \right) \frac{1}{\sum_{l=1}^{M}w_{lj}}
  * \f]
  *
  * \par XML Configuration
@@ -62,6 +62,7 @@ namespace astra {
  * \astra_xml_item_option{MinConstraintValue, float, 0, Minimum constraint value.}
  * \astra_xml_item_option{UseMaxConstraint, bool, false, Use maximum value constraint.}
  * \astra_xml_item_option{MaxConstraintValue, float, 255, Maximum constraint value.}
+ * \astra_xml_item_option{Relaxation, float, 1, The relaxation factor.}
  *
  * \par XML Example
  * \astra_code{
@@ -74,6 +75,7 @@ namespace astra {
  *		&lt;Option key="UseMinConstraint" value="yes"/&gt;\n
  *		&lt;Option key="UseMaxConstraint" value="yes"/&gt;\n
  *		&lt;Option key="MaxConstraintValue" value="1024"/&gt;\n
+ *		&lt;Option key="Relaxation" value="1"/&gt;\n
  *		&lt;/Algorithm&gt;
  * }
  *
@@ -88,6 +90,7 @@ namespace astra {
  *		cfg.option.UseMinConstraint = 'yes';\n 
  *		cfg.option.UseMaxConstraint = 'yes';\n
  *		cfg.option.MaxConstraintValue = 1024;\n
+ *		cfg.option.Relaxation = 1.0;\n
  *		alg_id = astra_mex_algorithm('create'\, cfg);\n
  *		astra_mex_algorithm('iterate'\, alg_id\, 10);\n
  *		astra_mex_algorithm('delete'\, alg_id);\n
@@ -135,6 +138,10 @@ protected:
 	/** The number of performed iterations
 	 */
 	int m_iIterationCount;
+
+	/** Relaxation parameter
+	 */
+	float m_fLambda;
 
 public:
 	

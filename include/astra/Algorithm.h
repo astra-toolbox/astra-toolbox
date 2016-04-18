@@ -81,7 +81,7 @@ public:
 	 *
 	 * @return initialized
 	 */
-	bool isInitialized();
+	bool isInitialized() const;
 
 	/** get a description of the class
 	 *
@@ -133,7 +133,7 @@ private:
 
 // inline functions
 inline std::string CAlgorithm::description() const { return "Algorithm"; };
-inline bool CAlgorithm::isInitialized() { return m_bIsInitialized; }
+inline bool CAlgorithm::isInitialized() const { return m_bIsInitialized; }
 
 } // end namespace
 

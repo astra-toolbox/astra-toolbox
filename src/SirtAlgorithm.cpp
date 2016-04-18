@@ -76,6 +76,7 @@ void CSirtAlgorithm::_clear()
 	m_pDiffSinogram = NULL;
 	m_pTmpVolume = NULL;
 
+	m_fLambda = 1.0f;
 	m_iIterationCount = 0;
 }
 
@@ -91,6 +92,7 @@ void CSirtAlgorithm::clear()
 	ASTRA_DELETE(m_pDiffSinogram);
 	ASTRA_DELETE(m_pTmpVolume);
 
+	m_fLambda = 1.0f;
 	m_iIterationCount = 0;
 }
 
@@ -128,6 +130,9 @@ bool CSirtAlgorithm::initialize(const Config& _cfg)
 		return false;
 	}
 
+	m_fLambda = _cfg.self.getOptionNumerical("Relaxation", 1.0f);
+	CC.markOptionParsed("Relaxation");
+
 	// init data objects and data projectors
 	_init();
 
@@ -151,6 +156,8 @@ bool CSirtAlgorithm::initialize(CProjector2D* _pProjector,
 	m_pProjector = _pProjector;
 	m_pSinogram = _pSinogram;
 	m_pReconstruction = _pReconstruction;
+
+	m_fLambda = 1.0f;
 
 	// init data objects and data projectors
 	_init();
@@ -248,7 +255,7 @@ void CSirtAlgorithm::run(int _iNrIterations)
 			x = 1.0f / x;
 		else
 			x = 0.0f;
-		pfT[i] = x;
+		pfT[i] = m_fLambda * x;
 	}
 	pfT = m_pTotalRayLength->getData();
 	for (int i = 0; i < m_pTotalRayLength->getSize(); ++i) {
@@ -296,7 +303,7 @@ void CSirtAlgorithm::run(int _iNrIterations)
 		m_pTmpVolume->setData(0.0f);
 		pBackProjector->project();
 
-		// divide by pixel weights
+		// multiply with relaxation factor divided by pixel weights
 		(*m_pTmpVolume) *= (*m_pTotalPixelWeight);
 		(*m_pReconstruction) += (*m_pTmpVolume);
 

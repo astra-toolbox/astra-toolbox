@@ -59,7 +59,7 @@ namespace astra {
  * \astra_xml_item_option{MinConstraintValue, float, 0, Minimum constraint value.}
  * \astra_xml_item_option{UseMaxConstraint, bool, false, Use maximum value constraint.}
  * \astra_xml_item_option{MaxConstraintValue, float, 255, Maximum constraint value.}
- * \astra_xml_item_option{Lamda, float, 1, The relaxation factor.}
+ * \astra_xml_item_option{Relaxation, float, 1, The relaxation factor.}
  * \astra_xml_item_option{RayOrder, string, "sequential", the order in which the rays are updated. 'sequential' or 'custom'}
  * \astra_xml_item_option{RayOrderList, n by 2 vector of float, not used, if RayOrder='custom': use this ray order.  Each row consist of a projection id and detector id.}
  * 
@@ -73,7 +73,7 @@ namespace astra {
  *		cfg.option.UseMinConstraint = 'yes';\n 
  *		cfg.option.UseMaxConstraint = 'yes';\n
  *		cfg.option.MaxConstraintValue = 1024;\n
- *		cfg.option.Lamda = 0.7;\n
+ *		cfg.option.Relaxation = 0.7;\n
  *		cfg.option.RayOrder = 'custom';\n
  *		cfg.option.RayOrderList = [0\,0; 0\,2; 1\,0];\n
  *		alg_id = astra_mex_algorithm('create'\, cfg);\n

@@ -50,6 +50,8 @@ public:
 
 	virtual float computeDiffNorm();
 
+	void setRelaxation(float r) { fRelaxation = r; }
+
 protected:
 	void reset();
 	bool precomputeWeights();
@@ -78,6 +80,8 @@ protected:
 	// Geometry-specific precomputed data
 	float* D_lineWeight;
 	unsigned int linePitch;
+
+	float fRelaxation;
 };
 
 }

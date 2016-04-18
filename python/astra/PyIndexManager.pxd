@@ -23,20 +23,18 @@
 #
 # -----------------------------------------------------------------------
 
-def clipCircle(img):
-	cdef int i,j
-	cdef double x2,y2,mid,bnd
-	cdef long sz,sz2
-	sz = img.shape[0]
-	sz2 = sz*sz
-	bnd = sz2/4.
-	mid = (sz-1.)/2.
-	nDel=0
-	for i in range(sz):
-		for j in range(sz):
-			x2 = (i-mid)*(i-mid)
-			y2 = (j-mid)*(j-mid)
-			if x2+y2>bnd:
-				img[i,j]=0
-				nDel=nDel+1
-	return nDel
+from libcpp.string cimport string
+
+from .PyIncludes cimport *
+
+cdef extern from "astra/AstraObjectManager.h" namespace "astra":
+    cdef cppclass CAstraObjectManagerBase:
+        string getInfo(int)
+        void remove(int)
+        string getType()
+    cdef cppclass CAstraIndexManager:
+        CAstraObjectManagerBase* get(int)
+
+cdef extern from "astra/AstraObjectManager.h" namespace "astra::CAstraIndexManager":
+    cdef CAstraIndexManager* getSingletonPtr()
+
