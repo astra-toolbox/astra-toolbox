@@ -319,45 +319,40 @@ void genFilter(E_FBPFILTER _eFilter, float _fD, int _iProjectionCount,
 	}
 #else
 
-	float *pfRealIn = new float[_iFFTRealDetectorCount];
-	float *pfImagIn = new float[_iFFTRealDetectorCount];
-	float *pfRealOut = new float[_iFFTRealDetectorCount];
-	float *pfImagOut = new float[_iFFTRealDetectorCount];
+	float *pfData = new float[2*_iFFTRealDetectorCount];
+	int *ip = new int[int(2+sqrt(_iFFTRealDetectorCount)+1)];
+	ip[0]=0;
+	float32 *w = new float32[_iFFTRealDetectorCount/2];
 
 	for (int i = 0; i < _iFFTRealDetectorCount; ++i) {
-		pfImagIn[i] = 0.0f;
-		pfRealOut[i] = 0.0f;
-		pfImagOut[i] = 0.0f;
+		pfData[2*i+1] = 0.0f;
 
 		if (i & 1) {
 			int j = i;
 			if (2*j > _iFFTRealDetectorCount)
 				j = _iFFTRealDetectorCount - j;
 			float f = M_PI * j;
-			pfRealIn[i] = -1 / (f*f);
+			pfData[2*i] = -1 / (f*f);
 		} else {
-			pfRealIn[i] = 0.0f;
+			pfData[2*i] = 0.0f;
 		}
 	}
 
-	pfRealIn[0] = 0.25f;
+	pfData[0] = 0.25f;
 
-	fastTwoPowerFourierTransform1D(_iFFTRealDetectorCount, pfRealIn, pfImagIn,
-	                               pfRealOut, pfImagOut, 1, 1, false);
+	cdft(2*_iFFTRealDetectorCount, -1, pfData, ip, w);
 
 	for(int iDetectorIndex = 0; iDetectorIndex < _iFFTFourierDetectorCount; iDetectorIndex++)
 	{
 		float fRelIndex = (float)iDetectorIndex / (float)_iFFTRealDetectorCount;
 
-		pfFilt[iDetectorIndex] = 2.0f * pfRealOut[iDetectorIndex];
+		pfFilt[iDetectorIndex] = 2.0f * pfData[2*iDetectorIndex];
 		pfW[iDetectorIndex] = M_PI * 2.0f * fRelIndex;
 	}
 
-	delete[] pfRealIn;
-	delete[] pfImagIn;
-	delete[] pfRealOut;
-	delete[] pfImagOut;
-
+	delete[] pfData;
+	delete[] ip;
+	delete[] w;
 #endif
 
 	switch(_eFilter)
