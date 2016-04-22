@@ -30,7 +30,7 @@ cd build/linux
 ./autogen.sh   # when building a git version
 ./configure --with-cuda=/usr/local/cuda \
             --with-matlab=/usr/local/MATLAB/R2012a \
-            --with-python
+            --with-python \
             --prefix=/usr/local/astra
 make
 make install

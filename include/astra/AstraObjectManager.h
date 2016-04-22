@@ -60,7 +60,7 @@ public:
 };
 
 
-class CAstraIndexManager : public Singleton<CAstraIndexManager> {
+class _AstraExport CAstraIndexManager : public Singleton<CAstraIndexManager> {
 public:
 	CAstraIndexManager() : m_iLastIndex(0) { }
 

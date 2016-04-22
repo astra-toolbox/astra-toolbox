@@ -33,94 +33,50 @@ $Id$
 
 namespace astra {
 
-
-/**
- * Perform a 1D DFT or inverse DFT.
- *
- * @param iLength number of elements
- * @param pfRealIn real part of input
- * @param pfImaginaryIn imaginary part of input
- * @param pfRealOut real part of output
- * @param pfImaginaryOut imaginary part of output
- * @param iStrideIn distance between elements in pf*In
- * @param iStrideOut distance between elements in pf*Out
- * @param bInverse if true, perform an inverse DFT
- */
-
-void _AstraExport discreteFourierTransform1D(unsigned int iLength,
-                                const float32* pfRealIn,
-                                const float32* pfImaginaryIn,
-                                float32* pfRealOut,
-                                float32* pfImaginaryOut,
-                                unsigned int iStrideIn,
-                                unsigned int iStrideOut,
-                                bool bInverse);
-
-/**
- * Perform a 2D DFT or inverse DFT.
- *
- * @param iHeight number of rows
- * @param iWidth number of columns
- * @param pfRealIn real part of input
- * @param pfImaginaryIn imaginary part of input
- * @param pfRealOut real part of output
- * @param pfImaginaryOut imaginary part of output
- * @param bInverse if true, perform an inverse DFT
- */
-
-void _AstraExport discreteFourierTransform2D(unsigned int iHeight, unsigned int iWidth,
-                                const float32* pfRealIn,
-                                const float32* pfImaginaryIn,
-                                float32* pfRealOut,
-                                float32* pfImaginaryOut,
-                                bool bInverse);
-
-/**
- * Perform a 1D FFT or inverse FFT. The size must be a power of two.
- * This transform can be done in-place, so the input and output pointers
- * may point to the same data.
- *
- * @param iLength number of elements, must be a power of two
- * @param pfRealIn real part of input
- * @param pfImaginaryIn imaginary part of input
- * @param pfRealOut real part of output
- * @param pfImaginaryOut imaginary part of output
- * @param iStrideIn distance between elements in pf*In
- * @param iStrideOut distance between elements in pf*Out
- * @param bInverse if true, perform an inverse DFT
- */
-
-void _AstraExport fastTwoPowerFourierTransform1D(unsigned int iLength,
-                                    const float32* pfRealIn,
-                                    const float32* pfImaginaryIn,
-                                    float32* pfRealOut,
-                                    float32* pfImaginaryOut,
-                                    unsigned int iStrideIn,
-                                    unsigned int iStrideOut,
-                                    bool bInverse);
-
-/**
- * Perform a 2D FFT or inverse FFT. The size must be a power of two.
- * This transform can be done in-place, so the input and output pointers
- * may point to the same data.
- *
- * @param iHeight number of rows, must be a power of two
- * @param iWidth number of columns, must be a power of two
- * @param pfRealIn real part of input
- * @param pfImaginaryIn imaginary part of input
- * @param pfRealOut real part of output
- * @param pfImaginaryOut imaginary part of output
- * @param bInverse if true, perform an inverse DFT
- */
-
-void _AstraExport fastTwoPowerFourierTransform2D(unsigned int iHeight,
-                                    unsigned int iWidth,
-                                    const float32* pfRealIn,
-                                    const float32* pfImaginaryIn,
-                                    float32* pfRealOut,
-                                    float32* pfImaginaryOut,
-                                    bool bInverse);
-
+/*
+-------- Complex DFT (Discrete Fourier Transform) --------
+    [definition]
+        <case1>
+            X[k] = sum_j=0^n-1 x[j]*exp(2*pi*i*j*k/n), 0<=k<n
+        <case2>
+            X[k] = sum_j=0^n-1 x[j]*exp(-2*pi*i*j*k/n), 0<=k<n
+        (notes: sum_j=0^n-1 is a summation from j=0 to n-1)
+    [usage]
+        <case1>
+            ip[0] = 0; // first time only
+            cdft(2*n, 1, a, ip, w);
+        <case2>
+            ip[0] = 0; // first time only
+            cdft(2*n, -1, a, ip, w);
+    [parameters]
+        2*n            :data length (int)
+                        n >= 1, n = power of 2
+        a[0...2*n-1]   :input/output data (float32 *)
+                        input data
+                            a[2*j] = Re(x[j]), 
+                            a[2*j+1] = Im(x[j]), 0<=j<n
+                        output data
+                            a[2*k] = Re(X[k]), 
+                            a[2*k+1] = Im(X[k]), 0<=k<n
+        ip[0...*]      :work area for bit reversal (int *)
+                        length of ip >= 2+sqrt(n)
+                        strictly, 
+                        length of ip >= 
+                            2+(1<<(int)(log(n+0.5)/log(2))/2).
+                        ip[0],ip[1] are pointers of the cos/sin table.
+        w[0...n/2-1]   :cos/sin table (float32 *)
+                        w[],ip[] are initialized if ip[0] == 0.
+    [remark]
+        Inverse of 
+            cdft(2*n, -1, a, ip, w);
+        is 
+            cdft(2*n, 1, a, ip, w);
+            for (j = 0; j <= 2 * n - 1; j++) {
+                a[j] *= 1.0 / n;
+            }
+        .
+*/
+_AstraExport void cdft(int n, int isgn, float32 *a, int *ip, float32 *w);
 
 }
 

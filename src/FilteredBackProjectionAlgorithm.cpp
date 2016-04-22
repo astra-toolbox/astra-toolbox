@@ -274,60 +274,57 @@ void CFilteredBackProjectionAlgorithm::performFiltering(CFloat32ProjectionData2D
 		filter[iDetector] = (2.0f * (zpDetector - iDetector)) / zpDetector;
 
 
-	float32* pfRe = new float32[iAngleCount * zpDetector];
-	float32* pfIm = new float32[iAngleCount * zpDetector];
+	float32* pf = new float32[2 * iAngleCount * zpDetector];
+	int *ip = new int[int(2+sqrt((float)zpDetector)+1)];
+	ip[0]=0;
+	float32 *w = new float32[zpDetector/2];
 
 	// Copy and zero-pad data
 	for (int iAngle = 0; iAngle < iAngleCount; ++iAngle) {
-		float32* pfReRow = pfRe + iAngle * zpDetector;
-		float32* pfImRow = pfIm + iAngle * zpDetector;
+		float32* pfRow = pf + iAngle * 2 * zpDetector;
 		float32* pfDataRow = _pFilteredSinogram->getData() + iAngle * iDetectorCount;
 		for (int iDetector = 0; iDetector < iDetectorCount; ++iDetector) {
-			pfReRow[iDetector] = pfDataRow[iDetector];
-			pfImRow[iDetector] = 0.0f;
+			pfRow[2*iDetector] = pfDataRow[iDetector];
+			pfRow[2*iDetector+1] = 0.0f;
 		}
 		for (int iDetector = iDetectorCount; iDetector < zpDetector; ++iDetector) {
-			pfReRow[iDetector] = 0.0f;
-			pfImRow[iDetector] = 0.0f;
+			pfRow[2*iDetector] = 0.0f;
+			pfRow[2*iDetector+1] = 0.0f;
 		}
 	}
 
 	// in-place FFT
 	for (int iAngle = 0; iAngle < iAngleCount; ++iAngle) {
-		float32* pfReRow = pfRe + iAngle * zpDetector;
-		float32* pfImRow = pfIm + iAngle * zpDetector;
-
-		fastTwoPowerFourierTransform1D(zpDetector, pfReRow, pfImRow, pfReRow, pfImRow, 1, 1, false);
+		float32* pfRow = pf + iAngle * 2 * zpDetector;
+		cdft(2*zpDetector, -1, pfRow, ip, w);
 	}
 
 	// Filter
 	for (int iAngle = 0; iAngle < iAngleCount; ++iAngle) {
-		float32* pfReRow = pfRe + iAngle * zpDetector;
-		float32* pfImRow = pfIm + iAngle * zpDetector;
+		float32* pfRow = pf + iAngle * 2 * zpDetector;
 		for (int iDetector = 0; iDetector < zpDetector; ++iDetector) {
-			pfReRow[iDetector] *= filter[iDetector];
-			pfImRow[iDetector] *= filter[iDetector];
+			pfRow[2*iDetector] *= filter[iDetector];
+			pfRow[2*iDetector+1] *= filter[iDetector];
 		}
 	}
 
 	// in-place inverse FFT
 	for (int iAngle = 0; iAngle < iAngleCount; ++iAngle) {
-		float32* pfReRow = pfRe + iAngle * zpDetector;
-		float32* pfImRow = pfIm + iAngle * zpDetector;
-
-		fastTwoPowerFourierTransform1D(zpDetector, pfReRow, pfImRow, pfReRow, pfImRow, 1, 1, true);
+		float32* pfRow = pf + iAngle * 2 * zpDetector;
+		cdft(2*zpDetector, 1, pfRow, ip, w);
 	}
 
 	// Copy data back
 	for (int iAngle = 0; iAngle < iAngleCount; ++iAngle) {
-		float32* pfReRow = pfRe + iAngle * zpDetector;
+		float32* pfRow = pf + iAngle * 2 * zpDetector;
 		float32* pfDataRow = _pFilteredSinogram->getData() + iAngle * iDetectorCount;
 		for (int iDetector = 0; iDetector < iDetectorCount; ++iDetector)
-			pfDataRow[iDetector] = pfReRow[iDetector];
+			pfDataRow[iDetector] = pfRow[2*iDetector] / zpDetector;
 	}
 
-	delete[] pfRe;
-	delete[] pfIm;
+	delete[] pf;
+	delete[] w;
+	delete[] ip;
 	delete[] filter;
 }
 
