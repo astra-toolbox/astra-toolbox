@@ -53,7 +53,7 @@ def readDistributedData(dataformat, filepath, filename, imSize, dst_id):
     if MPI.COMM_WORLD.Get_size() > 1:
         sliceInfo = mpi.getObjectSliceInfo(dst_id)
     else:
-        sliceInfo = [0, dims[2], dims[2]]  #Note local and full are the same
+        sliceInfo = [0, dims[0], dims[0]]  #Note local and full are the same
 
 
     if sliceInfo == None:
@@ -79,7 +79,7 @@ def readDistributedData(dataformat, filepath, filename, imSize, dst_id):
                 #The data has to be downSamples to do this we have to read the fullset,
                 #reduce it and then select our slices.
                 img = np.fromfile(fileName, dtype=np.float32).reshape(imSize[1],imSize[0])
-                img = scipy.misc.imresize(img, (nSlicesFull,dims[0]))
+                img = scipy.misc.imresize(img, (nSlicesFull,dims[2]))
                 P[:, angle, :] = img[startSlice:startSlice+nSlicesLoc, :]
             else:
                 #No sampling required, jump the slices we do not need and only read our data
@@ -137,7 +137,7 @@ def writeDistributedData(dataformat, filepath, filename, src_id):
     if size > 1:
         sliceInfo = mpi.getObjectResponsibleSliceInfo(src_id)
     else:
-        sliceInfo = [0, dims[2], dims[2]]
+        sliceInfo = [0, dims[0], dims[0]]
 
 
     if sliceInfo == None:

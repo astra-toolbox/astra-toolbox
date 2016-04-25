@@ -551,7 +551,7 @@ def store(i,data):
 
 def dimensions(i):
     cdef CFloat32Data3D * pDataObject = getObject(i)
-    return (pDataObject.getWidth(),pDataObject.getHeight(),pDataObject.getDepth())
+    return (pDataObject.getDepth(),pDataObject.getHeight(),pDataObject.getWidth())
 
 def dimensions_global(i):
     #MPI code
@@ -563,8 +563,8 @@ def dimensions_global(i):
     res   = comm.allgather(local)
     #Combine the Z dimension over the processes
     z = 0
-    for x in res:  z += x[2]
-    return (res[0][0], res[0][1], z) #X, Y, Z, like dimensions()
+    for x in res:  z += x[0]
+    return (z, res[0][1], res[0][2]) #Z, Y, X, like dimensions()
 
 
 #Not a very useful function per se, more an example on how to get
@@ -585,8 +585,8 @@ def dimensions_global_volume_geometry(i):
       #Same order as dimensions()
       return(
           pGeometry.getGridSliceCount(),
-          pGeometry.getGridColCount(),
-          pGeometry.getGridRowCount()
+          pGeometry.getGridRowCount(),
+          pGeometry.getGridColCount()
         )
 
 
