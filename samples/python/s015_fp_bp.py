@@ -46,12 +46,12 @@ class astra_wrap(object):
     def matvec(self,v):
         sid, s = astra.create_sino(np.reshape(v,(vol_geom['GridRowCount'],vol_geom['GridColCount'])),self.proj_id)
         astra.data2d.delete(sid)
-        return s.flatten()
+        return s.ravel()
     
     def rmatvec(self,v):
         bid, b = astra.create_backprojection(np.reshape(v,(len(proj_geom['ProjectionAngles']),proj_geom['DetectorCount'],)),self.proj_id)
         astra.data2d.delete(bid)
-        return b.flatten()
+        return b.ravel()
 
 vol_geom = astra.create_vol_geom(256, 256)
 proj_geom = astra.create_proj_geom('parallel', 1.0, 384, np.linspace(0,np.pi,180,False))
@@ -65,7 +65,7 @@ proj_id = astra.create_projector('cuda',proj_geom,vol_geom)
 sinogram_id, sinogram = astra.create_sino(P, proj_id)
 
 # Reshape the sinogram into a vector
-b = sinogram.flatten()
+b = sinogram.ravel()
 
 # Call lsqr with ASTRA FP and BP
 import scipy.sparse.linalg
