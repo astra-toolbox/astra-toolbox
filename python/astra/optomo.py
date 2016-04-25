@@ -125,7 +125,7 @@ class OpTomo(scipy.sparse.linalg.LinearOperator):
 
         algorithm.delete(fp_id)
         self.data_mod.delete([vid,sid])
-        return s.flatten()
+        return s.ravel()
 
     def rmatvec(self,s):
         """Implements the transpose operator.
@@ -147,7 +147,7 @@ class OpTomo(scipy.sparse.linalg.LinearOperator):
 
         algorithm.delete(bp_id)
         self.data_mod.delete([vid,sid])
-        return v.flatten()
+        return v.ravel()
 
     def __mul__(self,v):
         """Provides easy forward operator by *.

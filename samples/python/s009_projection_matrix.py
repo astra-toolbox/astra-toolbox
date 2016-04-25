@@ -46,7 +46,7 @@ W = astra.matrix.get(matrix_id)
 # Manually use this projection matrix to do a projection:
 import scipy.io
 P = scipy.io.loadmat('phantom.mat')['phantom256']
-s = W.dot(P.flatten())
+s = W.dot(P.ravel())
 s = np.reshape(s, (len(proj_geom['ProjectionAngles']),proj_geom['DetectorCount']))
 
 import pylab
