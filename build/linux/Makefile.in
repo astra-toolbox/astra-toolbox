@@ -281,13 +281,15 @@ ifeq ($(python),yes)
 py: libastra.la
 	$(MKDIR) python/build
 	$(MKDIR) python/finalbuild
-	cd $(srcdir)/../../python; CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" $(PYTHON) builder.py build --build-base=$(abs_top_builddir)/python/build install \
+	# Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
+	cd $(srcdir)/../../python; CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" $(PYTHON) builder.py build --build-base=$(abs_top_builddir)/python/build install \
 	--install-base=$(abs_top_builddir)/python/finalbuild --install-headers=$(abs_top_builddir)/python/finalbuild --install-purelib=$(abs_top_builddir)/python/finalbuild \
 	--install-platlib=$(abs_top_builddir)/python/finalbuild --install-scripts=$(abs_top_builddir)/python/finalbuild --install-data=$(abs_top_builddir)/python/finalbuild
 
 python-root-install: libastra.la
 	$(MKDIR) python/build
-	cd $(srcdir)/../../python; CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" $(PYTHON) builder.py build --build-base=$(abs_top_builddir)/python/build install
+	# Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
+	cd $(srcdir)/../../python; CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" $(PYTHON) builder.py build --build-base=$(abs_top_builddir)/python/build install
 
 endif
 

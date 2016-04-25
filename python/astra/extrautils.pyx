@@ -22,6 +22,8 @@
 # along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #
 # -----------------------------------------------------------------------
+# distutils: language = c++
+
 
 def clipCircle(img):
 	cdef int i,j
