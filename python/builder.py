@@ -87,6 +87,6 @@ setup (name = 'PyASTRAToolbox',
        include_dirs=[np.get_include()],
        cmdclass = cmdclass,
        #ext_modules = [Extension("astra","astra/astra.pyx")],
-       packages=['astra'],
+       packages=['astra', 'astra.plugins'],
        requires=["numpy"],
 	)
