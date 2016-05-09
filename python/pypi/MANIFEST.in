@@ -1,3 +1,4 @@
+include requirements.txt
 recursive-include astra-toolbox *
 recursive-include astra *.pyx
 recursive-include astra *.pxd
