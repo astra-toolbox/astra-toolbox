@@ -151,6 +151,7 @@ protected:
 
 	int m_iGPUIndex;
 	int m_iVoxelSuperSampling;
+	int m_iFilterDataId;
 	bool m_bShortScan;
 
 	void initializeFromProjector();

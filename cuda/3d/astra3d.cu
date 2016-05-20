@@ -1311,7 +1311,7 @@ bool astraCudaFDK(float* pfVolume, const float* pfProjections,
                   const CVolumeGeometry3D* pVolGeom,
                   const CConeProjectionGeometry3D* pProjGeom,
                   bool bShortScan,
-                  int iGPUIndex, int iVoxelSuperSampling)
+                  int iGPUIndex, int iVoxelSuperSampling, const float* filter)
 {
 	SDimensions3D dims;
 
@@ -1369,7 +1369,7 @@ bool astraCudaFDK(float* pfVolume, const float* pfProjections,
 	// TODO: Offer interface for SrcZ, DetZ
 	ok &= FDK(D_volumeData, D_projData, fOriginSourceDistance,
 	          fOriginDetectorDistance, 0, 0, fDetUSize, fDetVSize,
-	          dims, pfAngles, bShortScan);
+	          dims, pfAngles, bShortScan, filter);
 
 	ok &= copyVolumeFromDevice(pfVolume, D_volumeData, dims, dims.iVolX);
 

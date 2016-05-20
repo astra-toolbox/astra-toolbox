@@ -314,7 +314,7 @@ _AstraExport bool astraCudaFDK(float* pfVolume, const float* pfProjections,
                   const CVolumeGeometry3D* pVolGeom,
                   const CConeProjectionGeometry3D* pProjGeom,
                   bool bShortScan,
-                  int iGPUIndex, int iVoxelSuperSampling);
+                  int iGPUIndex, int iVoxelSuperSampling, const float* filter);
 
 
 }

@@ -394,7 +394,8 @@ bool FDK(cudaPitchedPtr D_volumeData,
          cudaPitchedPtr D_projData,
          float fSrcOrigin, float fDetOrigin,
          float fSrcZ, float fDetZ, float fDetUSize, float fDetVSize,
-         const SDimensions3D& dims, const float* angles, bool bShortScan)
+         const SDimensions3D& dims, const float* angles, bool bShortScan,
+	     const float* filter)
 {
 	bool ok;
 	// Generate filter
@@ -412,7 +413,14 @@ bool FDK(cudaPitchedPtr D_volumeData,
 	cufftComplex *pHostFilter = new cufftComplex[dims.iProjAngles * iHalfFFTSize];
 	memset(pHostFilter, 0, sizeof(cufftComplex) * dims.iProjAngles * iHalfFFTSize);
 
-	genFilter(FILTER_RAMLAK, 1.0f, dims.iProjAngles, pHostFilter, iPaddedDetCount, iHalfFFTSize);
+	if (filter==NULL){
+		genFilter(FILTER_RAMLAK, 1.0f, dims.iProjAngles, pHostFilter, iPaddedDetCount, iHalfFFTSize);
+	}else{
+		for(int i=0;i<dims.iProjAngles * iHalfFFTSize;i++){
+			pHostFilter[i].x = filter[i];
+			pHostFilter[i].y = 0;
+		}
+	}
 
 
 	allocateComplexOnDevice(dims.iProjAngles, iHalfFFTSize, &D_filter);

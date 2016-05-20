@@ -43,7 +43,8 @@ bool FDK(cudaPitchedPtr D_volumeData,
          cudaPitchedPtr D_projData,
          float fSrcOrigin, float fDetOrigin,
          float fSrcZ, float fDetZ, float fDetUSize, float fDetVSize,
-         const SDimensions3D& dims, const float* angles, bool bShortScan);
+         const SDimensions3D& dims, const float* angles, bool bShortScan,
+         const float* filter);
 
 
 }
