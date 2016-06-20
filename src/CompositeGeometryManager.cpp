@@ -662,7 +662,9 @@ void CCompositeGeometryManager::CVolumePart::splitX(CCompositeGeometryManager::T
 		size_t m = std::min(maxSize / sliceSize, maxDim);
 		size_t blockSize = computeLinearSplit(m, div, sliceCount);
 
-		int rem = sliceCount % blockSize;
+		int rem = blockSize - (sliceCount % blockSize);
+		if (rem == blockSize)
+			rem = 0;
 
 		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
 
@@ -709,7 +711,9 @@ void CCompositeGeometryManager::CVolumePart::splitY(CCompositeGeometryManager::T
 		size_t m = std::min(maxSize / sliceSize, maxDim);
 		size_t blockSize = computeLinearSplit(m, div, sliceCount);
 
-		int rem = sliceCount % blockSize;
+		int rem = blockSize - (sliceCount % blockSize);
+		if (rem == blockSize)
+			rem = 0;
 
 		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
 
@@ -756,7 +760,9 @@ void CCompositeGeometryManager::CVolumePart::splitZ(CCompositeGeometryManager::T
 		size_t m = std::min(maxSize / sliceSize, maxDim);
 		size_t blockSize = computeLinearSplit(m, div, sliceCount);
 
-		int rem = sliceCount % blockSize;
+		int rem = blockSize - (sliceCount % blockSize);
+		if (rem == blockSize)
+			rem = 0;
 
 		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
 
@@ -870,7 +876,11 @@ void CCompositeGeometryManager::CProjectionPart::splitX(CCompositeGeometryManage
 		size_t m = std::min(maxSize / sliceSize, maxDim);
 		size_t blockSize = computeLinearSplit(m, div, sliceCount);
 
-		int rem = sliceCount % blockSize;
+		int rem = blockSize - (sliceCount % blockSize);
+		if (rem == blockSize)
+			rem = 0;
+
+		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
 
 		for (int x = -(rem / 2); x < sliceCount; x += blockSize) {
 			int newsubX = x;
@@ -912,7 +922,11 @@ void CCompositeGeometryManager::CProjectionPart::splitZ(CCompositeGeometryManage
 		size_t m = std::min(maxSize / sliceSize, maxDim);
 		size_t blockSize = computeLinearSplit(m, div, sliceCount);
 
-		int rem = sliceCount % blockSize;
+		int rem = blockSize - (sliceCount % blockSize);
+		if (rem == blockSize)
+			rem = 0;
+
+		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
 
 		for (int z = -(rem / 2); z < sliceCount; z += blockSize) {
 			int newsubZ = z;
