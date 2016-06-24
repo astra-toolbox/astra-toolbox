@@ -35,6 +35,7 @@ $Id$
 #include <fstream>
 
 #include "../../include/astra/Logging.h"
+#include "astra/Fourier.h"
 
 using namespace astra;
 
@@ -303,16 +304,48 @@ void genFilter(E_FBPFILTER _eFilter, float _fD, int _iProjectionCount,
 	float * pfFilt = new float[_iFFTFourierDetectorCount];
 	float * pfW = new float[_iFFTFourierDetectorCount];
 
+	// We cache one Fourier transform for repeated FBP's of the same size
+	static float *pfData = 0;
+	static int iFilterCacheSize = 0;
+
+	if (!pfData || iFilterCacheSize != _iFFTRealDetectorCount) {
+		// Compute filter in spatial domain
+
+		delete[] pfData;
+		pfData = new float[2*_iFFTRealDetectorCount];
+		int *ip = new int[int(2+sqrt(_iFFTRealDetectorCount)+1)];
+		ip[0] = 0;
+		float32 *w = new float32[_iFFTRealDetectorCount/2];
+
+		for (int i = 0; i < _iFFTRealDetectorCount; ++i) {
+			pfData[2*i+1] = 0.0f;
+
+			if (i & 1) {
+				int j = i;
+				if (2*j > _iFFTRealDetectorCount)
+					j = _iFFTRealDetectorCount - j;
+				float f = M_PI * j;
+				pfData[2*i] = -1 / (f*f);
+			} else {
+				pfData[2*i] = 0.0f;
+			}
+		}
+
+		pfData[0] = 0.25f;
+
+		cdft(2*_iFFTRealDetectorCount, -1, pfData, ip, w);
+		delete[] ip;
+		delete[] w;
+
+		iFilterCacheSize = _iFFTRealDetectorCount;
+	}
+
 	for(int iDetectorIndex = 0; iDetectorIndex < _iFFTFourierDetectorCount; iDetectorIndex++)
 	{
 		float fRelIndex = (float)iDetectorIndex / (float)_iFFTRealDetectorCount;
 
-		// filt = 2*( 0:(order/2) )./order;
-		pfFilt[iDetectorIndex] = 2.0f * fRelIndex;
-		//pfFilt[iDetectorIndex] = 1.0f;
-
-		// w = 2*pi*(0:size(filt,2)-1)/order
-		pfW[iDetectorIndex] = 3.1415f * 2.0f * fRelIndex;
+		pfFilt[iDetectorIndex] = 2.0f * pfData[2*iDetectorIndex];
+		pfW[iDetectorIndex] = M_PI * 2.0f * fRelIndex;
 	}
 
 	switch(_eFilter)
@@ -865,6 +898,5 @@ void downloadDebugFilterReal(float * _pfHostSinogram, int _iProjectionCount,
 
 	free(pfHostFilter);
 }
-
 
 #endif
