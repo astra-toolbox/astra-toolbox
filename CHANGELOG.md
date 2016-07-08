@@ -3,7 +3,36 @@ All notable changes to this project will be documented in this file.
 This project does _NOT_ adhere to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- Added OpTomo FP/BP functions with optional `out` argument.
+- Added an `AstraIndexManager` which allows modifying ASTRA objects without knowing their type.
+- Allow user to pass NVCCFLAGS to configure.
+- Added multi-GPU support to CompositeGeometryManager.
 
+### Changed
+- Changed `flatten` to `ravel` in Python code for slightly better performance.
+- Changed CPU FFT code to fix ringing problems for large (>2048 pixel) images.
+- Added relaxation factor option to SIRT, SART.
+- Encode Python `bool` as `int` in XML instead of `str`.
+- Split conda package into c++ lib and python parts.
+- Moved documentation to readthedocs.
+
+### Fixed
+- Fixed non-CUDA compilation.
+- Fixed projections parallel to XZ or YZ planes.
+- Fixed crash in Matlab when .mex files are unloaded.
+- Use the defined `CXX` variable for Python compilation as well.
+- Fixed output of `astra.data3d.dimensions`.
+- Fixed accumulating multiple raylengths in SART.
+- Fixed minor `cppcheck` warnings.
+- Matlab OpTomo: make output type match input type.
+- Replace boost::lexical_cast by stringstreams. This fixes problems with locales.
+- Removed dependency of libastra on libpython.
+- Fixed small Python errors.
+
+
+### Removed
+- Removed unused functions/files.
 
 ## [1.7.1beta] - 2015-12-23
 NB: This release has a beta tag as it contains two new big experimental features.
