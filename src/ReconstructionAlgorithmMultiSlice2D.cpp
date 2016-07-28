@@ -28,8 +28,6 @@ $Id$
 
 #include "astra/ReconstructionAlgorithmMultiSlice2D.h"
 
-#include <boost/lexical_cast.hpp>
-
 #include "astra/AstraObjectManager.h"
 
 using namespace std;
@@ -96,7 +94,7 @@ bool CReconstructionAlgorithmMultiSlice2D::initialize(const Config& _cfg)
 	// projector
 	XMLNode* node = _cfg.self->getSingleNode("ProjectorId");
 	ASTRA_CONFIG_CHECK(node, "Reconstruction2D", "No ProjectorId tag specified.");
-	int id = boost::lexical_cast<int>(node->getContent());
+	int id = node->getContentInt();
 	m_pProjector = CProjector2DManager::getSingleton().get(id);
 	ASTRA_DELETE(node);
 	CC.markNodeParsed("ProjectorId");
@@ -125,7 +123,7 @@ bool CReconstructionAlgorithmMultiSlice2D::initialize(const Config& _cfg)
 	// reconstruction masks
 	if (_cfg.self->hasOption("ReconstructionMaskId")) {
 		m_bUseReconstructionMask = true;
-		id = boost::lexical_cast<int>(_cfg.self->getOption("ReconstructionMaskId"));
+		id = _cfg.self->getOptionInt("ReconstructionMaskId");
 		m_pReconstructionMask = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 	}
 	CC.markOptionParsed("ReconstructionMaskId");
@@ -133,7 +131,7 @@ bool CReconstructionAlgorithmMultiSlice2D::initialize(const Config& _cfg)
 	// sinogram masks
 	if (_cfg.self->hasOption("SinogramMaskId")) {
 		m_bUseSinogramMask = true;
-		id = boost::lexical_cast<int>(_cfg.self->getOption("SinogramMaskId"));
+		id = _cfg.self->getOptionInt("SinogramMaskId");
 		m_pSinogramMask = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
 	}
 	CC.markOptionParsed("SinogramMaskId");

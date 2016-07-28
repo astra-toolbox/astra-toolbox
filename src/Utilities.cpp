@@ -28,101 +28,99 @@ $Id$
 
 #include "astra/Utilities.h"
 
-using namespace std;
-using namespace astra;
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
 
-//-----------------------------------------------------------------------------
-// Trim Whitespace Characters
-void StringUtil::trim(std::string& _sString, bool _bLeft, bool _bRight)
+#include <sstream>
+#include <locale>
+#include <iomanip>
+
+namespace astra {
+
+namespace StringUtil {
+
+int stringToInt(const std::string& s)
 {
-	// trim right
-	if (_bRight)
-		_sString.erase(_sString.find_last_not_of(" \t\r") + 1); 
+	int i;
+	std::istringstream iss(s);
+	iss.imbue(std::locale::classic());
+	iss >> i;
+	if (iss.fail() || !iss.eof())
+		throw bad_cast();
+	return i;
 
-	// trim left
-	if (_bLeft)
-		_sString.erase(0, _sString.find_first_not_of(" \t\r")); 
 }
-//-----------------------------------------------------------------------------
-// Split String
-vector<string> StringUtil::split(const string& _sString, const string& _sDelims)
+
+float stringToFloat(const std::string& s)
 {
-	std::vector<string> ret;
-
-	size_t start, pos;
-	start = 0;
-	do {
-		pos = _sString.find_first_of(_sDelims, start);
-		if (pos == start) {
-			// Do nothing
-			start = pos + 1;
-		} else if (pos == string::npos) {
-			// Copy the rest of the string
-			ret.push_back(_sString.substr(start));
-			break;
-		} else {
-			// Copy up to newt delimiter
-			ret.push_back(_sString.substr(start, pos - start));
-			start = pos + 1;
-		}
-
-		// Parse up to next real data (in case there are two delims after each other)
-		start = _sString.find_first_not_of(_sDelims, start);
-	} while (pos != string::npos);
-
-	return ret;
+	return (float)stringToDouble(s);
 }
-//-----------------------------------------------------------------------------
-// Cast string to int
-bool StringUtil::toInt(const string& _sString, int& _iValue)
-{
-	std::istringstream ss(_sString);
-	ss >> _iValue;
-	return !ss.fail();
-}
-//-----------------------------------------------------------------------------
-// Cast string to float
-bool StringUtil::toFloat32(const string& _sString, float32& _fValue)
-{
-	std::istringstream ss(_sString);
-	ss >> _fValue;
-	return !ss.fail();
-}
-//-----------------------------------------------------------------------------
-// Convert string to Lower Case
-void StringUtil::toLowerCase(std::string& _sString)
-{
-	std::transform(_sString.begin(),
-				   _sString.end(),		
-				   _sString.begin(),
-				   ::tolower);
-}
-//-----------------------------------------------------------------------------    
-// Convert string to Upper Case
-void StringUtil::toUpperCase(std::string& _sString) 
-{
-	std::transform(_sString.begin(),
-				   _sString.end(),
-				   _sString.begin(),
-				   ::toupper);
-}
-//-----------------------------------------------------------------------------
 
-
-
-
-//-----------------------------------------------------------------------------    
-// Get Extension
-string FileSystemUtil::getExtension(string& _sFilename)
+double stringToDouble(const std::string& s)
 {
-	string sExtension = "";
-	for (int i = _sFilename.length() - 1; 0 < i; i--) {
-		if (_sFilename[i] == '.') {
-			std::transform(sExtension.begin(),sExtension.end(),sExtension.begin(),::tolower);
-			return sExtension;
-		}
-		sExtension = _sFilename[i] + sExtension;
+	double f;
+	std::istringstream iss(s);
+	iss.imbue(std::locale::classic());
+	iss >> f;
+	if (iss.fail() || !iss.eof())
+		throw bad_cast();
+	return f;
+}
+
+template<> float stringTo(const std::string& s) { return stringToFloat(s); }
+template<> double stringTo(const std::string& s) { return stringToDouble(s); }
+
+std::vector<float> stringToFloatVector(const std::string &s)
+{
+	return stringToVector<float>(s);
+}
+
+std::vector<double> stringToDoubleVector(const std::string &s)
+{
+	return stringToVector<double>(s);
+}
+
+template<typename T>
+std::vector<T> stringToVector(const std::string& s)
+{
+	// split
+	std::vector<std::string> items;
+	boost::split(items, s, boost::is_any_of(",;"));
+
+	// init list
+	std::vector<T> out;
+	out.resize(items.size());
+
+	// loop elements
+	for (unsigned int i = 0; i < items.size(); i++) {
+		out[i] = stringTo<T>(items[i]);
 	}
-	return "";
+	return out;
 }
-//-----------------------------------------------------------------------------
+
+
+std::string floatToString(float f)
+{
+	std::ostringstream s;
+	s.imbue(std::locale::classic());
+	s << std::setprecision(9) << f;
+	return s.str();
+}
+
+std::string doubleToString(double f)
+{
+	std::ostringstream s;
+	s.imbue(std::locale::classic());
+	s << std::setprecision(17) << f;
+	return s.str();
+}
+
+
+template<> std::string toString(float f) { return floatToString(f); }
+template<> std::string toString(double f) { return doubleToString(f); }
+
+
+}
+
+}

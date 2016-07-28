@@ -49,7 +49,7 @@ namespace astra {
  *
  * The update step of pixel \f$v_j\f$ for projection \f$phi\f$ and iteration \f$k\f$ is given by:
  * \f[
- *	v_j^{(k+1)} = v_j^{(k)} + \frac{\sum_{p_i \in P_\phi} \left(  \lambda \frac{p_i - \sum_{r=1}^{N} w_{ir}v_r^{(k)}} {\sum_{r=1}^{N}w_{ir} }    \right)} {\sum_{p_i \in P_\phi}w_{ij}}
+ *	v_j^{(k+1)} = v_j^{(k)} + \lambda \frac{\sum_{p_i \in P_\phi} \left(  \frac{p_i - \sum_{r=1}^{N} w_{ir}v_r^{(k)}} {\sum_{r=1}^{N}w_{ir} }    \right)} {\sum_{p_i \in P_\phi}w_{ij}}
  * \f]
  *
  * \par XML Configuration
@@ -64,6 +64,7 @@ namespace astra {
  * \astra_xml_item_option{MaxConstraintValue, float, 255, Maximum constraint value.}
  * \astra_xml_item_option{ProjectionOrder, string, "sequential", the order in which the projections are updated. 'sequential', 'random' or 'custom'}
  * \astra_xml_item_option{ProjectionOrderList, vector of float, not used, if ProjectionOrder='custom': use this order.}
+ * \astra_xml_item_option{Relaxation, float, 1, The relaxation parameter.}
  *
  * \par MATLAB example
  * \astra_code{
@@ -76,7 +77,8 @@ namespace astra {
  *		cfg.option.UseMaxConstraint = 'yes';\n
  *		cfg.option.MaxConstraintValue = 1024;\n
  *		cfg.option.ProjectionOrder = 'custom';\n
-*		cfg.option.ProjectionOrderList = randperm(100);\n
+ *		cfg.option.ProjectionOrderList = randperm(100);\n
+ *		cfg.option.Relaxation = 1.0;\n
  *		alg_id = astra_mex_algorithm('create'\, cfg);\n
  *		astra_mex_algorithm('iterate'\, alg_id\, 10);\n
  *		astra_mex_algorithm('delete'\, alg_id);\n
@@ -215,6 +217,8 @@ protected:
 	//< Current index in the projection order array.
 	int m_iCurrentProjection;
 
+	//< Relaxation parameter
+	float m_fLambda;
 };
 
 // inline functions

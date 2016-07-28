@@ -33,16 +33,19 @@ namespace astraCUDA {
 
 _AstraExport bool FanBP(float* D_volumeData, unsigned int volumePitch,
            float* D_projData, unsigned int projPitch,
-           const SDimensions& dims, const SFanProjection* angles);
+           const SDimensions& dims, const SFanProjection* angles,
+           float fOutputScale);
 
 _AstraExport bool FanBP_SART(float* D_volumeData, unsigned int volumePitch,
                 float* D_projData, unsigned int projPitch,
                 unsigned int angle,
-                const SDimensions& dims, const SFanProjection* angles);
+                const SDimensions& dims, const SFanProjection* angles,
+                float fOutputScale);
 
 _AstraExport bool FanBP_FBPWeighted(float* D_volumeData, unsigned int volumePitch,
            float* D_projData, unsigned int projPitch,
-           const SDimensions& dims, const SFanProjection* angles);
+           const SDimensions& dims, const SFanProjection* angles,
+           float fOutputScale);
 
 
 }

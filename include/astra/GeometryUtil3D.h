@@ -43,6 +43,33 @@ struct SConeProjection {
 
 	// the V-edge of a detector pixel
 	double fDetVX, fDetVY, fDetVZ;
+
+
+
+
+	void translate(double dx, double dy, double dz) {
+		fSrcX += dx;
+		fSrcY += dy;
+		fSrcZ += dz;
+		fDetSX += dx;
+		fDetSY += dy;
+		fDetSZ += dz;
+
+	}
+	void scale(double factor) {
+		fSrcX *= factor;
+		fSrcY *= factor;
+		fSrcZ *= factor;
+		fDetSX *= factor;
+		fDetSY *= factor;
+		fDetSZ *= factor;
+		fDetUX *= factor;
+		fDetUY *= factor;
+		fDetUZ *= factor;
+		fDetVX *= factor;
+		fDetVY *= factor;
+		fDetVZ *= factor;
+	}
 };
 
 struct SPar3DProjection {
@@ -57,6 +84,29 @@ struct SPar3DProjection {
 
 	// the V-edge of a detector pixel
 	double fDetVX, fDetVY, fDetVZ;
+
+
+
+
+	void translate(double dx, double dy, double dz) {
+		fDetSX += dx;
+		fDetSY += dy;
+		fDetSZ += dz;
+	}
+	void scale(double factor) {
+		fRayX *= factor;
+		fRayY *= factor;
+		fRayZ *= factor;
+		fDetSX *= factor;
+		fDetSY *= factor;
+		fDetSZ *= factor;
+		fDetUX *= factor;
+		fDetUY *= factor;
+		fDetUZ *= factor;
+		fDetVX *= factor;
+		fDetVY *= factor;
+		fDetVZ *= factor;
+	}
 };
 
 void computeBP_UV_Coeffs(const SPar3DProjection& proj,
@@ -67,6 +117,26 @@ void computeBP_UV_Coeffs(const SConeProjection& proj,
                          double &fUX, double &fUY, double &fUZ, double &fUC,
                          double &fVX, double &fVY, double &fVZ, double &fVC,
                          double &fDX, double &fDY, double &fDZ, double &fDC);
+
+
+SConeProjection* genConeProjections(unsigned int iProjAngles,
+                                    unsigned int iProjU,
+                                    unsigned int iProjV,
+                                    double fOriginSourceDistance,
+                                    double fOriginDetectorDistance,
+                                    double fDetUSize,
+                                    double fDetVSize,
+                                    const float *pfAngles);
+
+SPar3DProjection* genPar3DProjections(unsigned int iProjAngles,
+                                      unsigned int iProjU,
+                                      unsigned int iProjV,
+                                      double fDetUSize,
+                                      double fDetVSize,
+                                      const float *pfAngles);
+
+
+
 
 }
 

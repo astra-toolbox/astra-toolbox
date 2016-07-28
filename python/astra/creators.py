@@ -57,20 +57,24 @@ This method can be called in a number of ways:
 ``create_vol_geom(N)``:
     :returns: A 2D volume geometry of size :math:`N \\times N`.
 
-``create_vol_geom((M, N))``:
-    :returns: A 2D volume geometry of size :math:`M \\times N`.
+``create_vol_geom((Y, X))``:
+    :returns: A 2D volume geometry of size :math:`Y \\times X`.
 
-``create_vol_geom(M, N)``:
-    :returns: A 2D volume geometry of size :math:`M \\times N`.
+``create_vol_geom(Y, X)``:
+    :returns: A 2D volume geometry of size :math:`Y \\times X`.
 
-``create_vol_geom(M, N, minx, maxx, miny, maxy)``:
-    :returns: A 2D volume geometry of size :math:`M \\times N`, windowed as :math:`minx \\leq x \\leq maxx` and :math:`miny \\leq y \\leq maxy`.
+``create_vol_geom(Y, X, minx, maxx, miny, maxy)``:
+    :returns: A 2D volume geometry of size :math:`Y \\times X`, windowed as :math:`minx \\leq x \\leq maxx` and :math:`miny \\leq y \\leq maxy`.
 
-``create_vol_geom((M, N, Z))``:
-    :returns: A 3D volume geometry of size :math:`M \\times N \\times Z`.
+``create_vol_geom((Y, X, Z))``:
+    :returns: A 3D volume geometry of size :math:`Y \\times X \\times Z`.
 
-``create_vol_geom(M, N, Z)``:
-    :returns: A 3D volume geometry of size :math:`M \\times N \\times Z`.
+``create_vol_geom(Y, X, Z)``:
+    :returns: A 3D volume geometry of size :math:`Y \\times X \\times Z`.
+
+``create_vol_geom(Y, X, Z, minx, maxx, miny, maxy, minz, maxz)``:
+    :returns: A 3D volume geometry of size :math:`Y \\times X \\times Z`, windowed as :math:`minx \\leq x \\leq maxx` and :math:`miny \\leq y \\leq maxy` and :math:`minz \\leq z \\leq maxz` .
+
 
 """
     vol_geom = {'option': {}}
@@ -122,6 +126,17 @@ This method can be called in a number of ways:
         vol_geom['GridRowCount'] = varargin[0]
         vol_geom['GridColCount'] = varargin[1]
         vol_geom['GridSliceCount'] = varargin[2]
+    # astra_create_vol_geom(row_count, col_count, slice_count, min_x, max_x, min_y, max_y, min_z, max_z)
+    elif len(varargin) == 9:
+        vol_geom['GridRowCount'] = varargin[0]
+        vol_geom['GridColCount'] = varargin[1]
+        vol_geom['GridSliceCount'] = varargin[2]
+        vol_geom['option']['WindowMinX'] = varargin[3]
+        vol_geom['option']['WindowMaxX'] = varargin[4]
+        vol_geom['option']['WindowMinY'] = varargin[5]
+        vol_geom['option']['WindowMaxY'] = varargin[6]
+        vol_geom['option']['WindowMinZ'] = varargin[7]
+        vol_geom['option']['WindowMaxZ'] = varargin[8]
     return vol_geom
 
 
@@ -148,7 +163,7 @@ This method can be called in a number of ways:
 :type V: :class:`numpy.ndarray`
 :returns: A parallel-beam projection geometry.
 
-``create_proj_geom('fanflat', det_width, det_count, angles, source_origin, source_det)``:
+``create_proj_geom('fanflat', det_width, det_count, angles, source_origin, origin_det)``:
 
 :param det_width: Size of a detector pixel.
 :type det_width: :class:`float`
@@ -157,7 +172,7 @@ This method can be called in a number of ways:
 :param angles: Array of angles in radians.
 :type angles: :class:`numpy.ndarray`
 :param source_origin: Position of the source.
-:param source_det: Position of the detector
+:param origin_det: Position of the detector
 :returns: A fan-beam projection geometry.
 
 ``create_proj_geom('fanflat_vec', det_count, V)``:
@@ -180,7 +195,7 @@ This method can be called in a number of ways:
 :type angles: :class:`numpy.ndarray`
 :returns: A parallel projection geometry.
 
-``create_proj_geom('cone', detector_spacing_x, detector_spacing_y, det_row_count, det_col_count, angles, source_origin, source_det)``:
+``create_proj_geom('cone', detector_spacing_x, detector_spacing_y, det_row_count, det_col_count, angles, source_origin, origin_det)``:
 
 :param detector_spacing_*: Distance between two adjacent detector pixels.
 :type detector_spacing_*: :class:`float`
@@ -192,8 +207,8 @@ This method can be called in a number of ways:
 :type angles: :class:`numpy.ndarray`
 :param source_origin: Distance between point source and origin.
 :type source_origin: :class:`float`
-:param source_det: Distance between the detector and origin.
-:type source_det: :class:`float`
+:param origin_det: Distance between the detector and origin.
+:type origin_det: :class:`float`
 :returns: A cone-beam projection geometry.
 
 ``create_proj_geom('cone_vec', det_row_count, det_col_count, V)``:
@@ -242,7 +257,7 @@ This method can be called in a number of ways:
         return {'type':'parallel_vec', 'DetectorCount':args[0], 'Vectors':args[1]}
     elif intype == 'fanflat':
         if len(args) < 5:
-            raise Exception('not enough variables: astra_create_proj_geom(fanflat, det_width, det_count, angles, source_origin, source_det)')
+            raise Exception('not enough variables: astra_create_proj_geom(fanflat, det_width, det_count, angles, source_origin, origin_det)')
         return {'type': 'fanflat', 'DetectorWidth': args[0], 'DetectorCount': args[1], 'ProjectionAngles': args[2], 'DistanceOriginSource': args[3], 'DistanceOriginDetector': args[4]}
     elif intype == 'fanflat_vec':
         if len(args) < 2:
@@ -256,7 +271,7 @@ This method can be called in a number of ways:
         return {'type':'parallel3d', 'DetectorSpacingX':args[0], 'DetectorSpacingY':args[1], 'DetectorRowCount':args[2], 'DetectorColCount':args[3],'ProjectionAngles':args[4]}
     elif intype == 'cone':
         if len(args) < 7:
-            raise Exception('not enough variables: astra_create_proj_geom(cone, detector_spacing_x, detector_spacing_y, det_row_count, det_col_count, angles, source_origin, source_det)')
+            raise Exception('not enough variables: astra_create_proj_geom(cone, detector_spacing_x, detector_spacing_y, det_row_count, det_col_count, angles, source_origin, origin_det)')
         return {'type':	'cone','DetectorSpacingX':args[0], 'DetectorSpacingY':args[1], 'DetectorRowCount':args[2],'DetectorColCount':args[3],'ProjectionAngles':args[4],'DistanceOriginSource':	args[5],'DistanceOriginDetector':args[6]}
     elif intype == 'cone_vec':
         if len(args) < 3:

@@ -28,13 +28,14 @@ $Id$
 
 #include "astra/CudaCglsAlgorithm3D.h"
 
-#include <boost/lexical_cast.hpp>
-
 #include "astra/AstraObjectManager.h"
 
+#include "astra/CudaProjector3D.h"
 #include "astra/ConeProjectionGeometry3D.h"
 #include "astra/ParallelVecProjectionGeometry3D.h"
 #include "astra/ConeVecProjectionGeometry3D.h"
+
+#include "astra/Logging.h"
 
 #include "../cuda/3d/astra3d.h"
 
@@ -89,6 +90,26 @@ bool CCudaCglsAlgorithm3D::_check()
 }
 
 //---------------------------------------------------------------------------------------
+void CCudaCglsAlgorithm3D::initializeFromProjector()
+{
+	m_iVoxelSuperSampling = 1;
+	m_iDetectorSuperSampling = 1;
+	m_iGPUIndex = -1;
+
+	CCudaProjector3D* pCudaProjector = dynamic_cast<CCudaProjector3D*>(m_pProjector);
+	if (!pCudaProjector) {
+		if (m_pProjector) {
+			ASTRA_WARN("non-CUDA Projector3D passed to CGLS3D_CUDA");
+		}
+	} else {
+		m_iVoxelSuperSampling = pCudaProjector->getVoxelSuperSampling();
+		m_iDetectorSuperSampling = pCudaProjector->getDetectorSuperSampling();
+		m_iGPUIndex = pCudaProjector->getGPUIndex();
+	}
+
+}
+
+//---------------------------------------------------------------------------------------
 // Initialize - Config
 bool CCudaCglsAlgorithm3D::initialize(const Config& _cfg)
 {
@@ -106,12 +127,20 @@ bool CCudaCglsAlgorithm3D::initialize(const Config& _cfg)
 		return false;
 	}
 
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
-	CC.markOptionParsed("GPUindex");
-	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", 1);
-	CC.markOptionParsed("DetectorSuperSampling");
-	m_iVoxelSuperSampling = (int)_cfg.self.getOptionNumerical("VoxelSuperSampling", 1);
+	initializeFromProjector();
+
+	// Deprecated options
+	m_iVoxelSuperSampling = (int)_cfg.self.getOptionNumerical("VoxelSuperSampling", m_iVoxelSuperSampling);
+	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", m_iDetectorSuperSampling);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", m_iGPUIndex);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
 	CC.markOptionParsed("VoxelSuperSampling");
+	CC.markOptionParsed("DetectorSuperSampling");
+	CC.markOptionParsed("GPUIndex");
+	if (!_cfg.self.hasOption("GPUIndex"))
+		CC.markOptionParsed("GPUindex");
+
+
 
 	m_pCgls = new AstraCGLS3d();
 
@@ -138,6 +167,8 @@ bool CCudaCglsAlgorithm3D::initialize(CProjector3D* _pProjector,
 	m_pProjector = _pProjector;
 	m_pSinogram = _pSinogram;
 	m_pReconstruction = _pReconstruction;
+
+	initializeFromProjector();
 
 	m_pCgls = new AstraCGLS3d;
 
@@ -171,9 +202,6 @@ void CCudaCglsAlgorithm3D::run(int _iNrIterations)
 	ASTRA_ASSERT(m_bIsInitialized);
 
 	const CProjectionGeometry3D* projgeom = m_pSinogram->getGeometry();
-	const CConeProjectionGeometry3D* conegeom = dynamic_cast<const CConeProjectionGeometry3D*>(projgeom);
-	const CParallelVecProjectionGeometry3D* parvec3dgeom = dynamic_cast<const CParallelVecProjectionGeometry3D*>(projgeom);
-	const CConeVecProjectionGeometry3D* conevec3dgeom = dynamic_cast<const CConeVecProjectionGeometry3D*>(projgeom);
 	const CVolumeGeometry3D& volgeom = *m_pReconstruction->getGeometry();
 
 	bool ok = true;
@@ -182,41 +210,7 @@ void CCudaCglsAlgorithm3D::run(int _iNrIterations)
 
 		ok &= m_pCgls->setGPUIndex(m_iGPUIndex);
 
-		ok &= m_pCgls->setReconstructionGeometry(volgeom.getGridColCount(),
-		                                         volgeom.getGridRowCount(),
-		                                         volgeom.getGridSliceCount());
-/*
-                                  unsigned int iProjAngles,
-                                  unsigned int iProjU,
-                                  unsigned int iProjV,
-                                  float fOriginSourceDistance,
-                                  float fOriginDetectorDistance,
-                                  float fDetUSize,
-                                  float fDetVSize,
-                                  const float *pfAngles)
-*/
-		if (conegeom) {
-			ok &= m_pCgls->setConeGeometry(conegeom->getProjectionCount(),
-			                               conegeom->getDetectorColCount(),
-			                               conegeom->getDetectorRowCount(),
-			                               conegeom->getOriginSourceDistance(),
-			                               conegeom->getOriginDetectorDistance(),
-			                               conegeom->getDetectorSpacingX(),
-			                               conegeom->getDetectorSpacingY(),
-			                               conegeom->getProjectionAngles());
-		} else if (parvec3dgeom) {
-			ok &= m_pCgls->setPar3DGeometry(parvec3dgeom->getProjectionCount(),
-			                                parvec3dgeom->getDetectorColCount(),
-			                                parvec3dgeom->getDetectorRowCount(),
-			                                parvec3dgeom->getProjectionVectors());
-		} else if (conevec3dgeom) {
-			ok &= m_pCgls->setConeGeometry(conevec3dgeom->getProjectionCount(),
-			                               conevec3dgeom->getDetectorColCount(),
-			                               conevec3dgeom->getDetectorRowCount(),
-			                               conevec3dgeom->getProjectionVectors());
-		} else {
-			ASTRA_ASSERT(false);
-		}
+		ok &= m_pCgls->setGeometry(&volgeom, projgeom);
 
 		ok &= m_pCgls->enableSuperSampling(m_iVoxelSuperSampling, m_iDetectorSuperSampling);
 

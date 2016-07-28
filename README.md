@@ -1,35 +1,36 @@
 # The ASTRA Toolbox
 
-The ASTRA Toolbox is a MATLAB toolbox of high-performance GPU primitives for 2D and 3D tomography.
+The ASTRA Toolbox is a MATLAB and Python toolbox of high-performance GPU primitives for 2D and 3D tomography.
 
 We support 2D parallel and fan beam geometries, and 3D parallel and cone beam.  All of them have highly flexible source/detector positioning.
 
 A large number of 2D and 3D algorithms are available, including FBP, SIRT, SART, CGLS.
 
-The basic forward and backward projection operations are GPU-accelerated, and directly callable from MATLAB to enable building new algorithms.
+The basic forward and backward projection operations are GPU-accelerated, and directly callable from MATLAB and Python to enable building new algorithms.
 
 
 
 ## Documentation / samples
 
-See the matlab code samples in samples/ and on http://sf.net/projects/astra-toolbox .
+See the MATLAB and Python code samples in samples/ and on http://sf.net/projects/astra-toolbox .
 
 
 ## Installation instructions
 
 ### Windows, binary
 
-Add the mex and tools subdirectories to your matlab path.
+Add the mex and tools subdirectories to your MATLAB path and the Python module to your Python path..
 
 ### Linux, from source
 
-Requirements: g++, boost, CUDA (driver+toolkit), matlab
+Requirements: g++, boost, CUDA (driver+toolkit), Matlab and/or Python (2.7 or 3.x)
 
 ```
 cd build/linux
 ./autogen.sh   # when building a git version
 ./configure --with-cuda=/usr/local/cuda \
             --with-matlab=/usr/local/MATLAB/R2012a \
+            --with-python \
             --prefix=/usr/local/astra
 make
 make install
@@ -37,6 +38,7 @@ make install
 Add /usr/local/astra/lib to your LD_LIBRARY_PATH.
 Add /usr/local/astra/matlab and its subdirectories (tools, mex)
   to your matlab path.
+Add /usr/local/astra/python to your PYTHONPATH.
 
 
 NB: Each matlab version only supports a specific range of g++ versions.

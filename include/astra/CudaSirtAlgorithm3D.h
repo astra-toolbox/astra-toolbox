@@ -50,7 +50,7 @@ class AstraSIRT3d;
  *
  * The update step of pixel \f$v_j\f$ for iteration \f$k\f$ is given by:
  * \f[
- *	v_j^{(k+1)} = v_j^{(k)} + \alpha \sum_{i=1}^{M} \left( \frac{w_{ij}\left( p_i - \sum_{r=1}^{N} w_{ir}v_r^{(k)}\right)}{\sum_{k=1}^{N} w_{ik}} \right) \frac{1}{\sum_{l=1}^{M}w_{lj}}
+ *	v_j^{(k+1)} = v_j^{(k)} + \lambda \sum_{i=1}^{M} \left( \frac{w_{ij}\left( p_i - \sum_{r=1}^{N} w_{ir}v_r^{(k)}\right)}{\sum_{k=1}^{N} w_{ik}} \right) \frac{1}{\sum_{l=1}^{M}w_{lj}}
  * \f]
  *
  * \par XML Configuration
@@ -175,6 +175,9 @@ protected:
 	bool m_bAstraSIRTInit;
 	int m_iDetectorSuperSampling;
 	int m_iVoxelSuperSampling;
+	float m_fLambda;
+
+	void initializeFromProjector();
 };
 
 // inline functions

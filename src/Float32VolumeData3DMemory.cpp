@@ -136,7 +136,6 @@ CFloat32VolumeData2D * CFloat32VolumeData3DMemory::fetchSliceZ(int _iSliceIndex)
 	CFloat32VolumeData2D* res = new CFloat32VolumeData2D(&volGeom);
 
 	// copy data
-	int iSliceCount = m_pGeometry->getGridSliceCount();
 	float * pfTargetData = res->getData();
 	for(int iRowIndex = 0; iRowIndex < iRowCount; iRowIndex++)
 	{

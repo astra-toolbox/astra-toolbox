@@ -8,7 +8,7 @@ bool mexIsInitialized=false;
  *
  */
 void logCallBack(const char *msg, size_t len){
-    mexPrintf(msg);
+    mexPrintf("%s",msg);
 }
 
 /**
@@ -17,8 +17,19 @@ void logCallBack(const char *msg, size_t len){
  */
 void initASTRAMex(){
     if(mexIsInitialized) return;
+
+    astra::running_in_matlab=true;
+
     if(!astra::CLogger::setCallbackScreen(&logCallBack)){
         mexErrMsgTxt("Error initializing mex functions.");
     }
+
     mexIsInitialized=true;
+
+
+    // If we have support for plugins, initialize them.
+    // (NB: Call this after setting mexIsInitialized, to avoid recursively
+    //      calling initASTRAMex)
+    mexEvalString("if exist('astra_mex_plugin_c') == 3; astra_mex_plugin_c('init'); end");
+
 }

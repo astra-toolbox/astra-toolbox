@@ -50,6 +50,8 @@ public:
 
 	virtual float computeDiffNorm();
 
+	void setRelaxation(float r) { fRelaxation = r; }
+
 protected:
 	void reset();
 	bool precomputeWeights();
@@ -59,7 +61,7 @@ protected:
 	                 unsigned int angle, float outputScale);
 	bool callBP_SART(float* D_volumeData, unsigned int volumePitch,
 	                 float* D_projData, unsigned int projPitch,
-	                 unsigned int angle);
+	                 unsigned int angle, float outputScale);
 
 
 	// projection angle variables
@@ -78,6 +80,8 @@ protected:
 	// Geometry-specific precomputed data
 	float* D_lineWeight;
 	unsigned int linePitch;
+
+	float fRelaxation;
 };
 
 }

@@ -28,8 +28,6 @@ $Id$
 
 #include "astra/ReconstructionAlgorithm2D.h"
 
-#include <boost/lexical_cast.hpp>
-
 #include "astra/AstraObjectManager.h"
 
 using namespace std;
@@ -85,29 +83,36 @@ bool CReconstructionAlgorithm2D::initialize(const Config& _cfg)
 	
 	// projector
 	XMLNode node = _cfg.self.getSingleNode("ProjectorId");
-	ASTRA_CONFIG_CHECK(node, "Reconstruction2D", "No ProjectorId tag specified.");
-	int id = boost::lexical_cast<int>(node.getContent());
-	m_pProjector = CProjector2DManager::getSingleton().get(id);
+	if (requiresProjector()) {
+		ASTRA_CONFIG_CHECK(node, "Reconstruction2D", "No ProjectorId tag specified.");
+	}
+	int id;
+	if (node) {
+		id = node.getContentInt();
+		m_pProjector = CProjector2DManager::getSingleton().get(id);
+	} else {
+		m_pProjector = 0;
+	}
 	CC.markNodeParsed("ProjectorId");
 
 	// sinogram data
 	node = _cfg.self.getSingleNode("ProjectionDataId");
 	ASTRA_CONFIG_CHECK(node, "Reconstruction2D", "No ProjectionDataId tag specified.");
-	id = boost::lexical_cast<int>(node.getContent());
+	id = node.getContentInt();
 	m_pSinogram = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
 	CC.markNodeParsed("ProjectionDataId");
 
 	// reconstruction data
 	node = _cfg.self.getSingleNode("ReconstructionDataId");
 	ASTRA_CONFIG_CHECK(node, "Reconstruction2D", "No ReconstructionDataId tag specified.");
-	id = boost::lexical_cast<int>(node.getContent());
+	id = node.getContentInt();
 	m_pReconstruction = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 	CC.markNodeParsed("ReconstructionDataId");
 
 	// fixed mask
 	if (_cfg.self.hasOption("ReconstructionMaskId")) {
 		m_bUseReconstructionMask = true;
-		id = boost::lexical_cast<int>(_cfg.self.getOption("ReconstructionMaskId"));
+		id = _cfg.self.getOptionInt("ReconstructionMaskId");
 		m_pReconstructionMask = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 		ASTRA_CONFIG_CHECK(m_pReconstructionMask, "Reconstruction2D", "Invalid ReconstructionMaskId.");
 	}
@@ -116,7 +121,7 @@ bool CReconstructionAlgorithm2D::initialize(const Config& _cfg)
 	// fixed mask
 	if (_cfg.self.hasOption("SinogramMaskId")) {
 		m_bUseSinogramMask = true;
-		id = boost::lexical_cast<int>(_cfg.self.getOption("SinogramMaskId"));
+		id = _cfg.self.getOptionInt("SinogramMaskId");
 		m_pSinogramMask = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
 		ASTRA_CONFIG_CHECK(m_pSinogramMask, "Reconstruction2D", "Invalid SinogramMaskId.");
 	}
@@ -205,18 +210,22 @@ void CReconstructionAlgorithm2D::setSinogramMask(CFloat32ProjectionData2D* _pMas
 bool CReconstructionAlgorithm2D::_check() 
 {
 	// check pointers
-	ASTRA_CONFIG_CHECK(m_pProjector, "Reconstruction2D", "Invalid Projector Object.");
+	if (requiresProjector())
+		ASTRA_CONFIG_CHECK(m_pProjector, "Reconstruction2D", "Invalid Projector Object.");
 	ASTRA_CONFIG_CHECK(m_pSinogram, "Reconstruction2D", "Invalid Projection Data Object.");
 	ASTRA_CONFIG_CHECK(m_pReconstruction, "Reconstruction2D", "Invalid Reconstruction Data Object.");
 
 	// check initializations
-	ASTRA_CONFIG_CHECK(m_pProjector->isInitialized(), "Reconstruction2D", "Projector Object Not Initialized.");
+	if (requiresProjector())
+		ASTRA_CONFIG_CHECK(m_pProjector->isInitialized(), "Reconstruction2D", "Projector Object Not Initialized.");
 	ASTRA_CONFIG_CHECK(m_pSinogram->isInitialized(), "Reconstruction2D", "Projection Data Object Not Initialized.");
 	ASTRA_CONFIG_CHECK(m_pReconstruction->isInitialized(), "Reconstruction2D", "Reconstruction Data Object Not Initialized.");
 
 	// check compatibility between projector and data classes
-	ASTRA_CONFIG_CHECK(m_pSinogram->getGeometry()->isEqual(m_pProjector->getProjectionGeometry()), "Reconstruction2D", "Projection Data not compatible with the specified Projector.");
-	ASTRA_CONFIG_CHECK(m_pReconstruction->getGeometry()->isEqual(m_pProjector->getVolumeGeometry()), "Reconstruction2D", "Reconstruction Data not compatible with the specified Projector.");
+	if (requiresProjector()) {
+		ASTRA_CONFIG_CHECK(m_pSinogram->getGeometry()->isEqual(m_pProjector->getProjectionGeometry()), "Reconstruction2D", "Projection Data not compatible with the specified Projector.");
+		ASTRA_CONFIG_CHECK(m_pReconstruction->getGeometry()->isEqual(m_pProjector->getVolumeGeometry()), "Reconstruction2D", "Reconstruction Data not compatible with the specified Projector.");
+	}
 
 	// success
 	return true;

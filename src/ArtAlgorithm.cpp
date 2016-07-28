@@ -28,8 +28,6 @@ $Id$
 
 #include "astra/ArtAlgorithm.h"
 
-#include <boost/lexical_cast.hpp>
-
 #include "astra/AstraObjectManager.h"
 
 using namespace std;
@@ -158,8 +156,12 @@ bool CArtAlgorithm::initialize(const Config& _cfg)
 		return false;
 	}
 
+	// "Lambda" is replaced by the more descriptive "Relaxation"
 	m_fLambda = _cfg.self.getOptionNumerical("Lambda", 1.0f);
-	CC.markOptionParsed("Lambda");
+	m_fLambda = _cfg.self.getOptionNumerical("Relaxation", m_fLambda);
+	if (!_cfg.self.hasOption("Relaxation"))
+		CC.markOptionParsed("Lambda");
+	CC.markOptionParsed("Relaxation");
 
 	// success
 	m_bIsInitialized = _check();
@@ -234,7 +236,7 @@ map<string,boost::any> CArtAlgorithm::getInformation()
 {
 	map<string, boost::any> res;
 	res["RayOrder"] = getInformation("RayOrder");
-	res["Lambda"] = getInformation("Lambda");
+	res["Relaxation"] = getInformation("Relaxation");
 	return mergeMap<string,boost::any>(CReconstructionAlgorithm2D::getInformation(), res);
 };
 
@@ -242,7 +244,7 @@ map<string,boost::any> CArtAlgorithm::getInformation()
 // Information - Specific
 boost::any CArtAlgorithm::getInformation(std::string _sIdentifier) 
 {
-	if (_sIdentifier == "Lambda")	{ return m_fLambda; }
+	if (_sIdentifier == "Relaxation")	{ return m_fLambda; }
 	if (_sIdentifier == "RayOrder") {
 		vector<float32> res;
 		for (int i = 0; i < m_iRayCount; i++) {

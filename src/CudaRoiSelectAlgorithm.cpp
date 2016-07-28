@@ -34,7 +34,6 @@ $Id$
 #include "../cuda/2d/algo.h"
 
 #include "astra/AstraObjectManager.h"
-#include <boost/lexical_cast.hpp>
 
 using namespace std;
 
@@ -68,7 +67,7 @@ bool CCudaRoiSelectAlgorithm::initialize(const Config& _cfg)
 	// reconstruction data
 	XMLNode node = _cfg.self.getSingleNode("DataId");
 	ASTRA_CONFIG_CHECK(node, "CudaRoiSelect", "No DataId tag specified.");
-	int id = boost::lexical_cast<int>(node.getContent());
+	int id = node.getContentInt();
 	m_pData = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 	CC.markNodeParsed("DataId");
 

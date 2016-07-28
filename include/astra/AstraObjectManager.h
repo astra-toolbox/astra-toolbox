@@ -52,17 +52,49 @@ namespace astra {
  * among all ObjectManagers.
  */
 
+class CAstraObjectManagerBase {
+public:
+	virtual std::string getInfo(int index) const =0;
+	virtual void remove(int index) =0;
+	virtual std::string getType() const =0;
+};
 
-class CAstraIndexManager {
-protected:
-	/** The index of the previously stored data object.
+
+class _AstraExport CAstraIndexManager : public Singleton<CAstraIndexManager> {
+public:
+	CAstraIndexManager() : m_iLastIndex(0) { }
+
+	int store(CAstraObjectManagerBase* m) {
+		m_table[++m_iLastIndex] = m;
+		return m_iLastIndex;
+	}
+
+	CAstraObjectManagerBase* get(int index) const {
+		std::map<int, CAstraObjectManagerBase*>::const_iterator i;
+		i = m_table.find(index);
+		if (i != m_table.end())
+			return i->second;
+		else
+			return 0;
+	}
+
+	void remove(int index) {
+		std::map<int, CAstraObjectManagerBase*>::iterator i;
+		i = m_table.find(index);
+		if (i != m_table.end())
+			m_table.erase(i);
+	}
+
+private:
+	/** The index last handed out
 	 */
-	static int m_iPreviousIndex;
+	int m_iLastIndex;
+	std::map<int, CAstraObjectManagerBase*> m_table;
 };
 
 
 template <typename T>
-class CAstraObjectManager : public Singleton<CAstraObjectManager<T> >, CAstraIndexManager {
+class CAstraObjectManager : public CAstraObjectManagerBase {
 
 public:
 
@@ -117,7 +149,11 @@ public:
 	 */
 	void clear();
 
-	/** Get info.
+	/** Get info of object.
+	 */
+	std::string getInfo(int index) const;
+
+	/** Get list with info of all managed objects.
 	 */
 	std::string info();
 
@@ -149,9 +185,9 @@ CAstraObjectManager<T>::~CAstraObjectManager()
 template <typename T>
 int CAstraObjectManager<T>::store(T* _pDataObject) 
 {
-	m_iPreviousIndex++;
-	m_mIndexToObject[m_iPreviousIndex] = _pDataObject;
-	return m_iPreviousIndex;
+	int iIndex = CAstraIndexManager::getSingleton().store(this);
+	m_mIndexToObject[iIndex] = _pDataObject;
+	return iIndex;
 }
 
 //----------------------------------------------------------------------------------------
@@ -180,15 +216,16 @@ T* CAstraObjectManager<T>::get(int _iIndex) const
 template <typename T>
 void CAstraObjectManager<T>::remove(int _iIndex)
 {
-	if (!hasIndex(_iIndex)) {
-		return;
-	}
 	// find data
 	typename map<int,T*>::iterator it = m_mIndexToObject.find(_iIndex);
+	if (it == m_mIndexToObject.end())
+		return;
 	// delete data
 	delete (*it).second;
 	// delete from map
-	m_mIndexToObject.erase(it);  
+	m_mIndexToObject.erase(it);
+
+	CAstraIndexManager::getSingleton().remove(_iIndex);
 }
 
 //----------------------------------------------------------------------------------------
@@ -220,19 +257,29 @@ void CAstraObjectManager<T>::clear()
 //----------------------------------------------------------------------------------------
 // Print info to string
 template <typename T>
+std::string CAstraObjectManager<T>::getInfo(int index) const {
+	typename map<int,T*>::const_iterator it = m_mIndexToObject.find(index);
+	if (it == m_mIndexToObject.end())
+		return "";
+	const T* pObject = it->second;
+	std::stringstream res;
+	res << index << " \t";
+	if (pObject->isInitialized()) {
+		res << "v     ";
+	} else {
+		res << "x     ";
+	}
+	res << pObject->description();
+	return res.str();
+}
+
+template <typename T>
 std::string CAstraObjectManager<T>::info() {
 	std::stringstream res;
 	res << "id  init  description" << std::endl;
 	res << "-----------------------------------------" << std::endl;
-	for (typename map<int,T*>::iterator it = m_mIndexToObject.begin(); it != m_mIndexToObject.end(); it++) {
-		res << (*it).first << " \t";
-		T* pObject = m_mIndexToObject[(*it).first];
-		if (pObject->isInitialized()) {
-			res << "v     ";
-		} else {
-			res << "x     ";
-		}
-		res << pObject->description() << endl;
+	for (typename map<int,T*>::const_iterator it = m_mIndexToObject.begin(); it != m_mIndexToObject.end(); it++) {
+		res << getInfo(it->first) << endl;
 	}
 	res << "-----------------------------------------" << std::endl;
 	return res.str();
@@ -247,42 +294,60 @@ std::string CAstraObjectManager<T>::info() {
  * assigned to each data object by which it can be accessed in the future.
  * Indices are always >= 1.
  */
-class _AstraExport CProjector2DManager : public CAstraObjectManager<CProjector2D>{};
+class _AstraExport CProjector2DManager : public Singleton<CProjector2DManager>, public CAstraObjectManager<CProjector2D>
+{
+	virtual std::string getType() const { return "projector2d"; }
+};
 
 /**
  * This class contains functionality to store 3D projector objects.  A unique index handle will be 
  * assigned to each data object by which it can be accessed in the future.
  * Indices are always >= 1.
  */
-class _AstraExport CProjector3DManager : public CAstraObjectManager<CProjector3D>{};
+class _AstraExport CProjector3DManager : public Singleton<CProjector3DManager>, public CAstraObjectManager<CProjector3D>
+{
+	virtual std::string getType() const { return "projector3d"; }
+};
 
 /**
  * This class contains functionality to store 2D data objects.  A unique index handle will be 
  * assigned to each data object by which it can be accessed in the future.
  * Indices are always >= 1.
  */
-class _AstraExport CData2DManager : public CAstraObjectManager<CFloat32Data2D>{};
+class _AstraExport CData2DManager : public Singleton<CData2DManager>, public CAstraObjectManager<CFloat32Data2D>
+{
+	virtual std::string getType() const { return "data2d"; }
+};
 
 /**
  * This class contains functionality to store 3D data objects.  A unique index handle will be 
  * assigned to each data object by which it can be accessed in the future.
  * Indices are always >= 1.
  */
-class _AstraExport CData3DManager : public CAstraObjectManager<CFloat32Data3D>{};
+class _AstraExport CData3DManager : public Singleton<CData3DManager>, public CAstraObjectManager<CFloat32Data3D>
+{
+	virtual std::string getType() const { return "data3d"; }
+};
 
 /**
  * This class contains functionality to store algorithm objects.  A unique index handle will be 
  * assigned to each data object by which it can be accessed in the future.
  * Indices are always >= 1.
  */
-class _AstraExport CAlgorithmManager : public CAstraObjectManager<CAlgorithm>{};
+class _AstraExport CAlgorithmManager : public Singleton<CAlgorithmManager>, public CAstraObjectManager<CAlgorithm>
+{
+	virtual std::string getType() const { return "algorithm"; }
+};
 
 /**
  * This class contains functionality to store matrix objects.  A unique index handle will be 
  * assigned to each data object by which it can be accessed in the future.
  * Indices are always >= 1.
  */
-class _AstraExport CMatrixManager : public CAstraObjectManager<CSparseMatrix>{};
+class _AstraExport CMatrixManager : public Singleton<CMatrixManager>, public CAstraObjectManager<CSparseMatrix>
+{
+	virtual std::string getType() const { return "matrix"; }
+};
 
 
 } // end namespace

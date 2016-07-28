@@ -50,7 +50,7 @@ pylab.figure(2)
 pylab.imshow(sinogram)
 
 # Run the lsqr linear solver
-output = scipy.sparse.linalg.lsqr(W, sinogram.flatten(), iter_lim=150)
+output = scipy.sparse.linalg.lsqr(W, sinogram.ravel(), iter_lim=150)
 rec = output[0].reshape([256, 256])
 
 pylab.figure(3)

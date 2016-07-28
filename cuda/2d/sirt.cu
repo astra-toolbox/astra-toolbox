@@ -50,6 +50,8 @@ SIRT::SIRT() : ReconAlgo()
 	D_minMaskData = 0;
 	D_maxMaskData = 0;
 
+	fRelaxation = 1.0f;
+
 	freeMinMaxMasks = false;
 }
 
@@ -82,6 +84,8 @@ void SIRT::reset()
 
 	useVolumeMask = false;
 	useSinogramMask = false;
+
+	fRelaxation = 1.0f;
 
 	ReconAlgo::reset();
 }
@@ -127,10 +131,10 @@ bool SIRT::precomputeWeights()
 
 	zeroVolumeData(D_pixelWeight, pixelPitch, dims);
 	if (useSinogramMask) {
-		callBP(D_pixelWeight, pixelPitch, D_smaskData, smaskPitch);
+		callBP(D_pixelWeight, pixelPitch, D_smaskData, smaskPitch, 1.0f);
 	} else {
 		processSino<opSet>(D_projData, 1.0f, projPitch, dims);
-		callBP(D_pixelWeight, pixelPitch, D_projData, projPitch);
+		callBP(D_pixelWeight, pixelPitch, D_projData, projPitch, 1.0f);
 	}
 	processVol<opInvert>(D_pixelWeight, pixelPitch, dims);
 
@@ -138,6 +142,9 @@ bool SIRT::precomputeWeights()
 		// scale pixel weights with mask to zero out masked pixels
 		processVol<opMul>(D_pixelWeight, D_maskData, pixelPitch, dims);
 	}
+
+	// Also fold the relaxation factor into pixel weights
+	processVol<opMul>(D_pixelWeight, fRelaxation, pixelPitch, dims);
 
 	return true;
 }
@@ -251,8 +258,9 @@ bool SIRT::iterate(unsigned int iterations)
 
 		zeroVolumeData(D_tmpData, tmpPitch, dims);
 
-		callBP(D_tmpData, tmpPitch, D_projData, projPitch);
+		callBP(D_tmpData, tmpPitch, D_projData, projPitch, 1.0f);
 
+		// pixel weights also contain the volume mask and relaxation factor
 		processVol<opAddMul>(D_volumeData, D_pixelWeight, D_tmpData, volumePitch, dims);
 
 		if (useMinConstraint)

@@ -29,7 +29,6 @@ $Id$
 #include "astra/FanFlatBeamStripKernelProjector2D.h"
 
 #include <cmath>
-#include <boost/lexical_cast.hpp>
 
 #include "astra/DataProjectorPolicies.h"
 

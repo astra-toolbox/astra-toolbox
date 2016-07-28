@@ -30,7 +30,6 @@ $Id$
 
 #include <cstring>
 #include <sstream>
-#include <boost/lexical_cast.hpp>
 
 using namespace std;
 
@@ -136,13 +135,13 @@ bool CFanFlatProjectionGeometry2D::initialize(const Config& _cfg)
 	// Required: DistanceOriginDetector
 	XMLNode node = _cfg.self.getSingleNode("DistanceOriginDetector");
 	ASTRA_CONFIG_CHECK(node, "FanFlatProjectionGeometry2D", "No DistanceOriginDetector tag specified.");
-	m_fOriginDetectorDistance = boost::lexical_cast<float32>(node.getContent());
+	m_fOriginDetectorDistance = node.getContentNumerical();
 	CC.markNodeParsed("DistanceOriginDetector");
 
 	// Required: DetectorOriginSource
 	node = _cfg.self.getSingleNode("DistanceOriginSource");
 	ASTRA_CONFIG_CHECK(node, "FanFlatProjectionGeometry2D", "No DistanceOriginSource tag specified.");
-	m_fOriginSourceDistance = boost::lexical_cast<float32>(node.getContent());
+	m_fOriginSourceDistance = node.getContentNumerical();
 	CC.markNodeParsed("DistanceOriginSource");
 
 	// success

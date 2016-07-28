@@ -70,37 +70,65 @@ void CLogger::disable()
 void CLogger::debug(const char *sfile, int sline, const char *fmt, ...)
 {
 	_assureIsInitialized();
-	va_list ap;
-	va_start(ap, fmt);
-	if(m_bEnabledScreen) clog_debug(sfile,sline,0,fmt,ap);
-	if(m_bEnabledFile && m_bFileProvided) clog_debug(sfile,sline,1,fmt,ap);
+	va_list ap, apf;
+	if(m_bEnabledScreen){
+        va_start(ap, fmt);
+        clog_debug(sfile,sline,0,fmt,ap);
+        va_end(ap);
+    }
+	if(m_bEnabledFile && m_bFileProvided){
+        va_start(apf, fmt);
+        clog_debug(sfile,sline,1,fmt,apf);
+        va_end(apf);
+    }
 }
 
 void CLogger::info(const char *sfile, int sline, const char *fmt, ...)
 {
 	_assureIsInitialized();
-	va_list ap;
-	va_start(ap, fmt);
-	if(m_bEnabledScreen) clog_info(sfile,sline,0,fmt,ap);
-	if(m_bEnabledFile && m_bFileProvided) clog_info(sfile,sline,1,fmt,ap);
+	va_list ap, apf;
+	if(m_bEnabledScreen){
+        va_start(ap, fmt);
+        clog_info(sfile,sline,0,fmt,ap);
+        va_end(ap);
+    }
+	if(m_bEnabledFile && m_bFileProvided){
+        va_start(apf, fmt);
+        clog_info(sfile,sline,1,fmt,apf);
+        va_end(apf);
+    }
 }
 
 void CLogger::warn(const char *sfile, int sline, const char *fmt, ...)
 {
 	_assureIsInitialized();
-	va_list ap;
-	va_start(ap, fmt);
-	if(m_bEnabledScreen) clog_warn(sfile,sline,0,fmt,ap);
-	if(m_bEnabledFile && m_bFileProvided) clog_warn(sfile,sline,1,fmt,ap);
+	va_list ap, apf;
+	if(m_bEnabledScreen){
+        va_start(ap, fmt);
+        clog_warn(sfile,sline,0,fmt,ap);
+        va_end(ap);
+    }
+	if(m_bEnabledFile && m_bFileProvided){
+        va_start(apf, fmt);
+        clog_warn(sfile,sline,1,fmt,apf);
+        va_end(apf);
+    }
 }
 
 void CLogger::error(const char *sfile, int sline, const char *fmt, ...)
 {
 	_assureIsInitialized();
-	va_list ap;
-	va_start(ap, fmt);
-	if(m_bEnabledScreen) clog_error(sfile,sline,0,fmt,ap);
-	if(m_bEnabledFile && m_bFileProvided) clog_error(sfile,sline,1,fmt,ap);
+	va_list ap, apf;
+	if(m_bEnabledScreen){
+        va_start(ap, fmt);
+        clog_error(sfile,sline,0,fmt,ap);
+        va_end(ap);
+    }
+	if(m_bEnabledFile && m_bFileProvided){
+        va_start(apf, fmt);
+        clog_error(sfile,sline,1,fmt,apf);
+        va_end(apf);
+    }
 }
 
 void CLogger::_setLevel(int id, log_level m_eLevel)

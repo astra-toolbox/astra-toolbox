@@ -21,14 +21,17 @@ all: $(TARGETS)
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 
-VPATH=../..
+srcdir=@srcdir@
+abs_top_builddir=@abs_top_builddir@
+
+VPATH=@VPATH_SRCDIR@/../..
 
 CPPFLAGS=@SAVED_CPPFLAGS@
 CXXFLAGS=@SAVED_CXXFLAGS@
+NVCCFLAGS=@SAVED_NVCCFLAGS@
 LDFLAGS=@SAVED_LDFLAGS@
 LIBS=@SAVED_LIBS@
 
-CPPFLAGS+=-I../.. -I../../include -I../../lib/include
 CXXFLAGS+=-g -O3 -Wall -Wshadow
 LIBS+=-lpthread
 LDFLAGS+=-g
@@ -37,7 +40,7 @@ CPPFLAGS+=@CPPFLAGS_OS@
 
 ifeq ($(cuda),yes)
 CPPFLAGS  += @CPPFLAGS_CUDA@ -DASTRA_CUDA
-NVCCFLAGS  = @NVCCFLAGS@ @CPPFLAGS_CUDA@ -I../.. -I../../include -DASTRA_CUDA
+NVCCFLAGS += @NVCCFLAGS_EXTRA@ @CPPFLAGS_CUDA@ -I$(srcdir)/../.. -I$(srcdir)/../../include -DASTRA_CUDA
 LDFLAGS   += @LDFLAGS_CUDA@
 LIBS      += -lcudart -lcufft
 NVCC       = @NVCC@
@@ -50,12 +53,20 @@ LDFLAGS+=-fopenmp
 endif
 
 ifeq ($(python),yes)
-PYCPPFLAGS  = ${CPPFLAGS}
-PYCPPFLAGS  += -I../include
-PYLDFLAGS = ${LDFLAGS}
-PYLDFLAGS   += -L../build/linux/.libs
 PYTHON      = @PYTHON@
+PYLIBDIR = $(shell $(PYTHON) -c 'from distutils.sysconfig import get_config_var; import six; six.print_(get_config_var("LIBDIR"))')
+PYINCDIR = $(shell $(PYTHON) -c 'from distutils.sysconfig import get_python_inc; import six; six.print_(get_python_inc())')
+PYLIBVER = `basename $(PYINCDIR)`
+CPPFLAGS += -DASTRA_PYTHON -I$(PYINCDIR)
+PYCPPFLAGS  := $(CPPFLAGS)
+PYCPPFLAGS  += -I../include
+PYLDFLAGS = $(LDFLAGS)
+PYLDFLAGS   += -L$(abs_top_builddir)/.libs
 endif
+
+# This is below where PYCPPFLAGS copies CPPFLAGS.  The python code is built
+# from a different directory, so these relative includes would be wrong.
+CPPFLAGS+=-I$(srcdir)/../.. -I$(srcdir)/../../include -I$(srcdir)/../../lib/include
 
 BOOST_CPPFLAGS=
 BOOST_LDFLAGS=
@@ -71,6 +82,7 @@ MKDIR=mkdir -p
 CXX=@CXX@
 LD=@CXX@
 SHELL=@SHELL@
+INSTALL_SH=$(SHELL) $(srcdir)/install-sh
 
 ifeq ($(matlab),yes)
 MEXFLAGS  = -cxx
@@ -81,6 +93,11 @@ MEX       = @MEX@
 
 ifeq ($(cuda),yes)
 MEXFLAGS += -DASTRA_CUDA
+endif
+
+ifeq ($(python),yes)
+MEXPYLDFLAGS='$$LDFLAGS $(LDFLAGS) -L$(PYLIBDIR)'
+MEXPYLIBS=$(MEXLIBS) -l$(PYLIBVER)
 endif
 
 endif
@@ -99,6 +116,7 @@ BASE_OBJECTS=\
 	src/AstraObjectManager.lo \
 	src/BackProjectionAlgorithm.lo \
 	src/CglsAlgorithm.lo \
+	src/CompositeGeometryManager.lo \
 	src/ConeProjectionGeometry3D.lo \
 	src/ConeVecProjectionGeometry3D.lo \
 	src/Config.lo \
@@ -133,6 +151,7 @@ BASE_OBJECTS=\
 	src/ParallelProjectionGeometry3D.lo \
 	src/ParallelVecProjectionGeometry3D.lo \
 	src/PlatformDepSystemCode.lo \
+	src/PluginAlgorithm.lo \
 	src/ProjectionGeometry2D.lo \
 	src/ProjectionGeometry3D.lo \
 	src/Projector2D.lo \
@@ -198,7 +217,8 @@ CUDA_OBJECTS=\
 	cuda/3d/sirt3d.lo \
 	cuda/3d/astra3d.lo \
 	cuda/3d/util3d.lo \
-	cuda/3d/arith3d.lo
+	cuda/3d/arith3d.lo \
+	cuda/3d/mem3d.lo
 
 ALL_OBJECTS=$(BASE_OBJECTS)
 ifeq ($(cuda),yes)
@@ -233,8 +253,12 @@ MATLAB_MEX=\
 	matlab/mex/astra_mex_projector_c.$(MEXSUFFIX) \
 	matlab/mex/astra_mex_projector3d_c.$(MEXSUFFIX) \
 	matlab/mex/astra_mex_log_c.$(MEXSUFFIX) \
-	matlab/mex/astra_mex_data3d_c.$(MEXSUFFIX)
+	matlab/mex/astra_mex_data3d_c.$(MEXSUFFIX) \
+	matlab/mex/astra_mex_direct_c.$(MEXSUFFIX)
 
+ifeq ($(python),yes)
+MATLAB_MEX+=matlab/mex/astra_mex_plugin_c.$(MEXSUFFIX)
+endif
 
 OBJECT_DIRS = src/ tests/ cuda/2d/ cuda/3d/ matlab/mex/ ./
 DEPDIRS = $(addsuffix $(DEPDIR),$(OBJECT_DIRS))
@@ -247,13 +271,27 @@ mex: $(MATLAB_MEX)
 
 %.$(MEXSUFFIX): %.o $(MATLAB_CXX_OBJECTS) libastra.la
 	$(MEX) LDFLAGS=$(MEXLDFLAGS) $(MEXFLAGS) $(LIBS) $(MEXLIBS) -lastra -output $* $*.o $(MATLAB_CXX_OBJECTS)
+
+ifeq ($(python),yes)
+matlab/mex/astra_mex_plugin_c.$(MEXSUFFIX): matlab/mex/astra_mex_plugin_c.o $(MATLAB_CXX_OBJECTS) libastra.la
+	$(MEX) LDFLAGS=$(MEXPYLDFLAGS) $(MEXFLAGS) $(LIBS) $(MEXPYLIBS) -lastra -output matlab/mex/astra_mex_plugin_c $< $(MATLAB_CXX_OBJECTS)
+endif
 endif
 
 ifeq ($(python),yes)
 py: libastra.la
-	cd ../../python; CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" $(PYTHON) builder.py install \
-	--install-base=./finalbuild --install-headers=./finalbuild --install-purelib=./finalbuild \
-	--install-platlib=./finalbuild --install-scripts=./finalbuild --install-data=./finalbuild
+	$(MKDIR) python/build
+	$(MKDIR) python/finalbuild
+	# Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
+	cd $(srcdir)/../../python; CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" $(PYTHON) builder.py build --build-base=$(abs_top_builddir)/python/build install \
+	--install-base=$(abs_top_builddir)/python/finalbuild --install-headers=$(abs_top_builddir)/python/finalbuild --install-purelib=$(abs_top_builddir)/python/finalbuild \
+	--install-platlib=$(abs_top_builddir)/python/finalbuild --install-scripts=$(abs_top_builddir)/python/finalbuild --install-data=$(abs_top_builddir)/python/finalbuild
+
+python-root-install: libastra.la
+	$(MKDIR) python/build
+	# Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
+	cd $(srcdir)/../../python; CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" $(PYTHON) builder.py build --build-base=$(abs_top_builddir)/python/build install
+
 endif
 
 
@@ -268,18 +306,25 @@ libastra.la: $(ALL_OBJECTS)
 	$(MKDIR) $(*D)/$(DEPDIR)
 	./libtool --mode=compile --tag=CXX $(CXX) -Wp,-MMD,"$(*D)/$(DEPDIR)/$(*F).d",-MQ,"$@",-MP $(CXXFLAGS) $(CPPFLAGS) -c $(<) -o $*.o
 
+gen_static_libs := `./libtool --features | grep -q 'disable static' && echo no || echo yes`
+
 ifeq ($(cuda),yes)
 %.lo: %.cu
 	@# Behave like libtool: compile both a PIC and a non-PIC object file
 	@$(MKDIR) $(*D)
-	$(NVCC) $(NVCCFLAGS) -c $(<) -o $*.o
 	@$(MKDIR) $(*D)/.libs
 	@$(MKDIR) $(*D)/$(DEPDIR)
-	@$(NVCC) $(NVCCFLAGS) -c $(<) -Xcompiler -fPIC -DPIC -o $(*D)/.libs/$(*F).o >/dev/null 2>&1
+	$(NVCC) $(NVCCFLAGS) -c $(<) -Xcompiler -fPIC -DPIC -o $(*D)/.libs/$(*F).o
+ifeq ($(gen_static_libs),yes)
+	@$(NVCC) $(NVCCFLAGS) -c $(<) -o $*.o >/dev/null 2>&1
+endif
 	@# Generate a .d file, and change the target name in it from .o to .lo
 	@$(NVCC) $(NVCCFLAGS) -M $(<) -odir $(*D) -o $(*D)/$(DEPDIR)/$(*F).d2
 	@sed '1s/\.o :/.lo :/' < $(*D)/$(DEPDIR)/$(*F).d2 > $(*D)/$(DEPDIR)/$(*F).d
 	@rm -f $(*D)/$(DEPDIR)/$(*F).d2
+	@# Generate empty targets for all dependencies listed in the .d file.
+	@# This mimics gcc's -MP option.
+	@for x in `cat $(*D)/$(DEPDIR)/$(*F).d`; do if test a$$x != a: -a a$$x != a\\; then echo -e "\n$$x:\n" >> $(*D)/$(DEPDIR)/$(*F).d; fi; done
 	@# Generate a fake libtool .lo file
 	@echo "# $*.lo - a libtool object file" > $*.lo
 	@echo "# Generated by" `./libtool --version | head -n 1` >> $*.lo
@@ -291,7 +336,11 @@ ifeq ($(cuda),yes)
 	@echo "pic_object='.libs/$(*F).o'" >> $*.lo
 	@echo >> $*.lo
 	@echo "# Name of the non-PIC object." >> $*.lo
+ifeq ($(gen_static_libs),yes)
 	@echo "non_pic_object='$(*F).o'" >> $*.lo
+else
+	@echo "non_pic_object=none" >> $*.lo
+endif
 	@# Remove generated .linkinfo file
 	@rm -f $(*F).linkinfo
 endif
@@ -314,33 +363,33 @@ clean:
 	rm -f $(addsuffix /*.d,$(DEPDIRS))
 	rm -f $(addsuffix /*,$(LIBDIRS))
 	rm -f $(TEST_OBJECTS) test.bin
-	rm -fr ../../python/finalbuild/
-	rm -fr ../../python/build/
-	rm -f ../../python/astra/*.cpp
-	rm -f ../../python/astra/*.c
+	rm -fr python/finalbuild/
+	rm -fr python/build/
+	rm -f $(srcdir)/../../python/astra/*.cpp
+	rm -f $(srcdir)/../../python/astra/*.c
 
 distclean: clean
-	rm -f config.guess config.sub ltmain.sh libtool install-sh
+	rm -f $(srcdir)/config.guess $(srcdir)/config.sub $(srcdir)/ltmain.sh libtool $(srcdir)/install-sh
 	rm -f config.log config.status
-	rm -f aclocal.m4
-	rm -rf autom4te.cache
-	rm -f configure Makefile
+	rm -f $(srcdir)/aclocal.m4
+	rm -rf $(srcdir)/autom4te.cache
+	rm -f $(srcdir)/configure Makefile
 
 install: install-libraries install-matlab install-python
 
 install-libraries: libastra.la
-	./install-sh -m 755 -d @libdir@
-	./libtool --mode=install ./install-sh -m 644 libastra.la @libdir@
+	$(INSTALL_SH) -m 755 -d @libdir@
+	./libtool --mode=install $(INSTALL_SH) -m 644 libastra.la @libdir@
 	./libtool --mode=finish @libdir@
 
 ifeq ($(matlab),yes)
 # TODO: This install location doesn't work well for /usr or /usr/local
 install-matlab: $(MATLAB_MEX)
-	./install-sh -m 755 -d @prefix@/matlab
-	./install-sh -m 755 -d @prefix@/matlab/mex
-	./install-sh -m 755 -d @prefix@/matlab/tools
-	./install-sh -m 644 $(MATLAB_MEX) @prefix@/matlab/mex
-	./install-sh -m 644 ../../matlab/tools/*.m @prefix@/matlab/tools
+	$(INSTALL_SH) -m 755 -d @prefix@/matlab
+	$(INSTALL_SH) -m 755 -d @prefix@/matlab/mex
+	$(INSTALL_SH) -m 755 -d @prefix@/matlab/tools
+	$(INSTALL_SH) -m 644 $(MATLAB_MEX) @prefix@/matlab/mex
+	$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/tools/*.m @prefix@/matlab/tools
 # TODO: docs
 else
 install-matlab:
@@ -349,11 +398,11 @@ endif
 ifeq ($(python),yes)
 # TODO: This install location doesn't work well for /usr or /usr/local
 install-python: py
-	./install-sh -m 755 -d @prefix@/python
-	./install-sh -m 755 -d @prefix@/python/astra
-	./install-sh -m 644 ../../python/finalbuild/astra/*.so @prefix@/python/astra
-	./install-sh -m 644 ../../python/finalbuild/astra/*.py @prefix@/python/astra
-	./install-sh -m 644 ../../python/finalbuild/*.egg-info @prefix@/python/
+	$(INSTALL_SH) -m 755 -d @prefix@/python
+	$(INSTALL_SH) -m 755 -d @prefix@/python/astra
+	$(INSTALL_SH) -m 644 python/finalbuild/astra/*.so @prefix@/python/astra
+	$(INSTALL_SH) -m 644 python/finalbuild/astra/*.py @prefix@/python/astra
+	$(INSTALL_SH) -m 644 python/finalbuild/*.egg-info @prefix@/python/
 	@echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 	@echo "To use ASTRA in Python, add @prefix@/python/ to your PYTHONPATH"
 	@echo "and @libdir@ to your LD_LIBRARY_PATH."
@@ -364,18 +413,21 @@ install-python:
 endif
 
 
-Makefile: Makefile.in config.status
+Makefile: $(srcdir)/Makefile.in config.status
 	CONFIG_HEADERS= CONFIG_LINKS= CONFIG_FILES=$@ $(SHELL) ./config.status
 
-config.status: configure
+config.status: $(srcdir)/configure
 	@echo "configure script has changed. Re-running it with last parameters"
 	$(SHELL) ./config.status --recheck
 
-configure: configure.ac
+$(srcdir)/configure: $(srcdir)/configure.ac
 	@echo "configure.ac has been changed. Regenerating configure script"
-	$(SHELL) ./autogen.sh
+	cd $(srcdir) && $(SHELL) ./autogen.sh
 
-.PHONY: all mex test clean distclean install install-libraries
+.PHONY: all mex test clean distclean install install-libraries py python-root-install install-python
 
 # don't remove intermediate files:
 .SECONDARY:
+
+# disable all implicit built-in rules
+.SUFFIXES:

@@ -61,9 +61,9 @@ $Id$
 // macro's
 
 #define ASTRA_TOOLBOXVERSION_MAJOR 1
-#define ASTRA_TOOLBOXVERSION_MINOR 5
+#define ASTRA_TOOLBOXVERSION_MINOR 7
 #define ASTRA_TOOLBOXVERSION ((ASTRA_TOOLBOXVERSION_MAJOR)*100 + (ASTRA_TOOLBOXVERSION_MINOR))
-#define ASTRA_TOOLBOXVERSION_STRING "1.5"
+#define ASTRA_TOOLBOXVERSION_STRING "1.7.1"
 
 
 #define ASTRA_ASSERT(a) assert(a)
@@ -146,6 +146,8 @@ namespace astra {
 	const float32 PIdiv2 = PI / 2;
 	const float32 PIdiv4 = PI / 4;
 	const float32 eps = 1e-7f;
+	
+	extern _AstraExport bool running_in_matlab;
 }
 
 //----------------------------------------------------------------------------------------

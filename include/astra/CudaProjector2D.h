@@ -121,9 +121,17 @@ public:
 	virtual std::string description() const;
 
 
+	Cuda2DProjectionKernel getProjectionKernel() const { return m_projectionKernel; }
+	int getVoxelSuperSampling() const { return m_iVoxelSuperSampling; }
+	int getDetectorSuperSampling() const { return m_iDetectorSuperSampling; }
+	int getGPUIndex() const { return m_iGPUIndex; }
+
 protected:
 
 	Cuda2DProjectionKernel m_projectionKernel;
+	int m_iVoxelSuperSampling;
+	int m_iDetectorSuperSampling;
+	int m_iGPUIndex;
 };
 
 //----------------------------------------------------------------------------------------

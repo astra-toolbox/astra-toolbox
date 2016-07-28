@@ -34,11 +34,12 @@ from . import algorithm
 from . import projector
 from . import projector3d
 from . import matrix
+from . import plugin
 from . import log
 from .optomo import OpTomo
 
 import os
-try:
-    astra.set_gpu_index(int(os.environ['ASTRA_GPU_INDEX']))
-except KeyError:
-    pass
+
+if 'ASTRA_GPU_INDEX' in os.environ:
+    L = [ int(x) for x in os.environ['ASTRA_GPU_INDEX'].split(',') ]
+    astra.set_gpu_index(L)

@@ -36,8 +36,13 @@ $Id$
 #include "mexInitFunctions.h"
 
 #include "astra/Globals.h"
+#include "astra/AstraObjectManager.h"
 
+#ifdef ASTRA_CUDA
 #include "../cuda/2d/darthelper.h"
+#include "astra/CompositeGeometryManager.h"
+#endif
+
 
 using namespace std;
 using namespace astra;
@@ -50,16 +55,19 @@ using namespace astra;
  */
 void astra_mex_credits(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 { 
-	mexPrintf("All Scale Tomographic Reconstruction Antwerp Toolbox (ASTRA-Toolbox) was developed at the University of Antwerp by\n");
+	mexPrintf("The ASTRA Toolbox has been developed at the University of Antwerp and CWI, Amsterdam by\n");
 	mexPrintf(" * Prof. dr. Joost Batenburg\n");
-	mexPrintf(" * Andrei Dabravolski\n");
-	mexPrintf(" * Gert Merckx\n");
-	mexPrintf(" * Willem Jan Palenstijn\n");
-	mexPrintf(" * Tom Roelandts\n");
 	mexPrintf(" * Prof. dr. Jan Sijbers\n");
-	mexPrintf(" * dr. Wim van Aarle\n");
-	mexPrintf(" * Sander van der Maar\n");
-	mexPrintf(" * dr. Gert Van Gompel\n");
+	mexPrintf(" * Dr. Jeroen Bedorf\n");
+	mexPrintf(" * Dr. Folkert Bleichrodt\n");
+	mexPrintf(" * Dr. Andrei Dabravolski\n");
+	mexPrintf(" * Dr. Willem Jan Palenstijn\n");
+	mexPrintf(" * Dr. Tom Roelandts\n");
+	mexPrintf(" * Dr. Wim van Aarle\n");
+	mexPrintf(" * Dr. Gert Van Gompel\n");
+	mexPrintf(" * Sander van der Maar, MSc.\n");
+	mexPrintf(" * Gert Merckx, MSc.\n");
+	mexPrintf(" * Daan Pelt, MSc.\n");
 }
 
 //-----------------------------------------------------------------------------------------
@@ -80,12 +88,46 @@ void astra_mex_use_cuda(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs
  * Set active GPU
  */
 void astra_mex_set_gpu_index(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
-{ 
+{
 #ifdef ASTRA_CUDA
-	if (nrhs >= 2) {
-		bool ret = astraCUDA::setGPUIndex((int)mxGetScalar(prhs[1]));
-		if (!ret)
-			mexPrintf("Failed to set GPU %d\n", (int)mxGetScalar(prhs[1]));
+	bool usage = false;
+	if (nrhs != 2 && nrhs != 4) {
+		usage = true;
+	}
+
+	astra::SGPUParams params;
+	params.memory = 0;
+
+	if (!usage && nrhs >= 4) {
+		std::string s = mexToString(prhs[2]);
+		if (s != "memory") {
+			usage = true;
+		} else {
+			params.memory = (size_t)mxGetScalar(prhs[3]);
+		}
+	}
+
+	if (!usage && nrhs >= 2) {
+		int n = mxGetN(prhs[1]) * mxGetM(prhs[1]);
+		params.GPUIndices.resize(n);
+		double* pdMatlabData = mxGetPr(prhs[1]);
+		for (int i = 0; i < n; ++i)
+			params.GPUIndices[i] = (int)pdMatlabData[i];
+
+
+		astra::CCompositeGeometryManager::setGlobalGPUParams(params);
+
+
+		// Set first GPU
+		if (n >= 1) {
+			bool ret = astraCUDA::setGPUIndex((int)pdMatlabData[0]);
+			if (!ret)
+				mexPrintf("Failed to set GPU %d\n", (int)pdMatlabData[0]);
+		}
+	}
+
+	if (usage) {
+		mexPrintf("Usage: astra_mex('set_gpu_index', index/indices [, 'memory', memory])");
 	}
 #endif
 }
@@ -100,16 +142,57 @@ void astra_mex_version(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[
 	if (1 <= nlhs) {
 		plhs[0] = mxCreateDoubleScalar(astra::getVersion());
 	} else {
-		mexPrintf("astra toolbox version %s\n", astra::getVersionString());
+		mexPrintf("ASTRA Toolbox version %s\n", astra::getVersionString());
 	}
 }
+
+//-----------------------------------------------------------------------------------------
+
+void astra_mex_info(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
+{
+	if (nrhs < 2) {
+		mexErrMsgTxt("Usage: astra_mex('info', index/indices);\n");
+		return;
+	}
+
+	for (int i = 1; i < nrhs; i++) {
+		int iDataID = (int)(mxGetScalar(prhs[i]));
+		CAstraObjectManagerBase *ptr;
+		ptr = CAstraIndexManager::getSingleton().get(iDataID);
+		if (ptr) {
+			mexPrintf("%s\t%s\n", ptr->getType().c_str(), ptr->getInfo(iDataID).c_str());
+		}
+	}
+
+}
+
+//-----------------------------------------------------------------------------------------
+
+void astra_mex_delete(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
+{
+	if (nrhs < 2) {
+		mexErrMsgTxt("Usage: astra_mex('delete', index/indices);\n");
+		return;
+	}
+
+	for (int i = 1; i < nrhs; i++) {
+		int iDataID = (int)(mxGetScalar(prhs[i]));
+		CAstraObjectManagerBase *ptr;
+		ptr = CAstraIndexManager::getSingleton().get(iDataID);
+		if (ptr)
+			ptr->remove(iDataID);
+	}
+
+}
+
+
 
 //-----------------------------------------------------------------------------------------
 
 static void printHelp()
 {
 	mexPrintf("Please specify a mode of operation.\n");
-	mexPrintf("   Valid modes: version, use_cuda, credits\n");
+	mexPrintf("   Valid modes: version, use_cuda, credits, set_gpu_index, info, delete\n");
 }
 
 //-----------------------------------------------------------------------------------------
@@ -140,6 +223,10 @@ void mexFunction(int nlhs, mxArray* plhs[],
 		astra_mex_credits(nlhs, plhs, nrhs, prhs); 
 	} else if (sMode == std::string("set_gpu_index")) {
 		astra_mex_set_gpu_index(nlhs, plhs, nrhs, prhs);
+	} else if (sMode == std::string("info")) {
+		astra_mex_info(nlhs, plhs, nrhs, prhs);
+	} else if (sMode == std::string("delete")) {
+		astra_mex_delete(nlhs, plhs, nrhs, prhs);
 	} else {
 		printHelp();
 	}

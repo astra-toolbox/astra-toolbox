@@ -35,7 +35,6 @@ $Id$
 #include "../cuda/2d/arith.h"
 
 #include "astra/AstraObjectManager.h"
-#include <boost/lexical_cast.hpp>
 
 using namespace std;
 
@@ -77,8 +76,8 @@ bool CCudaDataOperationAlgorithm::initialize(const Config& _cfg)
 	node = _cfg.self.getSingleNode("DataId");
 	ASTRA_CONFIG_CHECK(node, "CCudaDataOperationAlgorithm", "No DataId tag specified.");
 	vector<string> data = node.getContentArray();
-	for (vector<string>::iterator it = data.begin(); it != data.end(); it++){
-		int id = boost::lexical_cast<int>(*it);
+	for (vector<string>::iterator it = data.begin(); it != data.end(); ++it){
+		int id = StringUtil::stringToInt(*it);
 		m_pData.push_back(dynamic_cast<CFloat32Data2D*>(CData2DManager::getSingleton().get(id)));
 	}
 	CC.markNodeParsed("DataId");
@@ -97,7 +96,7 @@ bool CCudaDataOperationAlgorithm::initialize(const Config& _cfg)
 		CC.markOptionParsed("GPUIndex");
 
 	if (_cfg.self.hasOption("MaskId")) {
-		int id = boost::lexical_cast<int>(_cfg.self.getOption("MaskId"));
+		int id = _cfg.self.getOptionInt("MaskId");
 		m_pMask = dynamic_cast<CFloat32Data2D*>(CData2DManager::getSingleton().get(id));
 	}
 	CC.markOptionParsed("MaskId");

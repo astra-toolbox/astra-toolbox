@@ -85,6 +85,9 @@ protected:
 	AstraFBP* m_pFBP;
 
 	bool m_bAstraFBPInit;
+
+	void initializeFromProjector();
+	virtual bool requiresProjector() const { return false; }
 };
 
 // inline functions

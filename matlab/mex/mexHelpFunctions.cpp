@@ -31,9 +31,9 @@ $Id$
  *  \brief Contains some functions for interfacing matlab with c data structures
  */
 #include "mexHelpFunctions.h"
+#include "astra/Utilities.h"
 
 #include <algorithm>
-#include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
@@ -58,7 +58,7 @@ string mexToString(const mxArray* pInput)
 
 	// is scalar?
 	if (mxIsNumeric(pInput) && mxGetM(pInput)*mxGetN(pInput) == 1) {
-		return boost::lexical_cast<string>(mxGetScalar(pInput));
+		return StringUtil::doubleToString(mxGetScalar(pInput));
 	}
 
 	return "";
@@ -336,7 +336,11 @@ mxArray* XMLNodeToStruct(astra::XMLNode node)
 
 		// option
 		if (subnode.getName() == "Option") {
-			mOptions[subnode.getAttribute("key")] = stringToMxArray(subnode.getAttribute("value"));
+			if(subnode.hasAttribute("value")){
+				mOptions[subnode.getAttribute("key")] = stringToMxArray(subnode.getAttribute("value"));
+			}else{
+				mOptions[subnode.getAttribute("key")] = stringToMxArray(subnode.getContent());
+			}
 		}
 
 		// regular content
@@ -374,7 +378,7 @@ mxArray* stringToMxArray(std::string input)
 			boost::split(col_strings, row_strings[row], boost::is_any_of(","));
 			// check size
 			for (unsigned int col = 0; col < col_strings.size(); col++) {
-				out[col*rows + row] = boost::lexical_cast<float32>(col_strings[col]);
+				out[col*rows + row] = StringUtil::stringToFloat(col_strings[col]);
 			}
 		}
 		return pMatrix;
@@ -393,7 +397,7 @@ mxArray* stringToMxArray(std::string input)
 
 		// loop elements
 		for (unsigned int i = 0; i < items.size(); i++) {
-			out[i] = boost::lexical_cast<float32>(items[i]);
+			out[i] = StringUtil::stringToFloat(items[i]);
 		}
 		return pVector;
 	}

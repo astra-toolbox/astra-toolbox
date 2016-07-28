@@ -31,89 +31,63 @@ $Id$
 
 #include <string>
 #include <vector>
-#include <algorithm>
-#include <sstream>
 #include <map>
 
 #include "Globals.h"
 
 namespace astra {
 
-/**
- * This class contains some usefull static utility functions for std strings.
- */
-class StringUtil {
 
+
+namespace StringUtil {
+
+// Exception thrown by functions below
+class bad_cast : public std::exception {
 public:
-	/**
-	 * Removes whitespace characters such as spaces and tabs at the extremas.
-	 * Optionally you can specify which extrema to trim (default=both) 
-	 *
-	 * @param _sString The string to trim.
-	 * @param _bLeft Trim the left extrema?  Default = true.
-	 * @param _bRight Trim the right extrema?  Default = true.
-	 */
-	static void trim(std::string& _sString, bool _bLeft = true, bool _bRight = true);
-
-	/**
-	 * Returns a vector of strings that contains all the substrings delimited by 
-	 * the characters in _sDelims.
-	 *
-	 * @param _sString The string to split.
-	 * @param _sDelims The delimiter string.
-	 * @return Vector of strings.
-	 */
-	static std::vector<std::string> split(const std::string& _sString, const std::string& _sDelims);
-
-	/**
-	 * Cast a string to an integer.
-	 *
-	 * @param _sString The string to cast.
-	 * @param _iValue Output integer parameter.
-	 * @return success?
-	 */
-	static bool toInt(const std::string& _sString, int& _iValue);
-
-	/**
-	 * Cast a string to a float32.
-	 *
-	 * @param _sString The string to cast.
-	 * @param _fValue Output float32 parameter.
-	 * @return success?
-	 */
-	static bool toFloat32(const std::string& _sString, float32& _fValue);
-
-	/**
-	 * Convert a string to lower case.
-	 *
-	 * @param _sString The string to convert.
-	 */
-	static void toLowerCase(std::string& _sString);
-	
-	/**
-	 * Convert a string to upper case.
-	 *
-	 * @param _sString The string to convert.
-	 */
-	static void toUpperCase(std::string& _sString);
+	bad_cast() { }
 };
 
-/**
- * This class contains some usefull static utility functions for std strings.
- */
-class FileSystemUtil {
 
-public:
-	/**
-	 * Get the extensions of a filename.  Always in lower case.
-	 *
-	 * @param _sFilename file to get extensions from.
-	 * @return Extension (lower case).  Empty string if filename is a directory or not a valid file format.
-	 */
-	static std::string getExtension(std::string& _sFilename);
+//< Parse string as int.
+//< Throw exception on failure.
+_AstraExport int stringToInt(const std::string& s);
+
+//< Parse string as float.
+//< Throw exception on failure.
+_AstraExport float stringToFloat(const std::string& s);
+
+//< Parse string as double.
+//< Throw exception on failure.
+_AstraExport double stringToDouble(const std::string& s);
+
+template<typename T>
+_AstraExport T stringTo(const std::string& s);
+
+//< Parse comma/semicolon-separated string as float vector.
+//< Throw exception on failure.
+_AstraExport std::vector<float> stringToFloatVector(const std::string& s);
+
+//< Parse comma/semicolon-separated string as double vector.
+//< Throw exception on failure.
+_AstraExport std::vector<double> stringToDoubleVector(const std::string& s);
+
+template<typename T>
+_AstraExport std::vector<T> stringToVector(const std::string& s);
 
 
-};
+
+//< Generate string from float.
+_AstraExport std::string floatToString(float f);
+
+//< Generate string from double.
+_AstraExport std::string doubleToString(double f);
+
+template<typename T>
+_AstraExport std::string toString(T f);
+
+}
+
+
 
 
 template<typename T, typename S>

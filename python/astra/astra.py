@@ -49,10 +49,30 @@ def version(printToScreen=False):
     """
     return a.version(printToScreen)
 
-def set_gpu_index(idx):
+def set_gpu_index(idx, memory=0):
     """Set default GPU index to use.
     
     :param idx: GPU index
     :type idx: :class:`int`
     """
-    a.set_gpu_index(idx)
+    a.set_gpu_index(idx, memory)
+
+def delete(ids):
+    """Delete an astra object.
+    
+    :param ids: ID or list of ID's to delete.
+    :type ids: :class:`int` or :class:`list`
+    
+    """
+    return a.delete(ids)
+
+def info(ids):
+    """Print info about an astra object.
+    
+    :param ids: ID or list of ID's to show.
+    :type ids: :class:`int` or :class:`list`
+    
+    """
+    return a.info(ids)
+
+

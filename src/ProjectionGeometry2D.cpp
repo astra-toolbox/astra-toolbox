@@ -28,8 +28,6 @@ $Id$
 
 #include "astra/ProjectionGeometry2D.h"
 
-#include <boost/lexical_cast.hpp>
-
 using namespace std;
 
 namespace astra
@@ -123,13 +121,13 @@ bool CProjectionGeometry2D::initialize(const Config& _cfg)
 	// Required: DetectorWidth
 	XMLNode node = _cfg.self.getSingleNode("DetectorWidth");
 	ASTRA_CONFIG_CHECK(node, "ProjectionGeometry2D", "No DetectorWidth tag specified.");
-	m_fDetectorWidth = boost::lexical_cast<float32>(node.getContent());
+	m_fDetectorWidth = node.getContentNumerical();
 	CC.markNodeParsed("DetectorWidth");
 
 	// Required: DetectorCount
 	node = _cfg.self.getSingleNode("DetectorCount");
 	ASTRA_CONFIG_CHECK(node, "ProjectionGeometry2D", "No DetectorCount tag specified.");
-	m_iDetectorCount = boost::lexical_cast<int>(node.getContent());
+	m_iDetectorCount = node.getContentInt();
 	CC.markNodeParsed("DetectorCount");
 
 	// Required: ProjectionAngles

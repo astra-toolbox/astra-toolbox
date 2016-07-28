@@ -28,8 +28,6 @@ $Id$
 
 #include "astra/FilteredBackProjectionAlgorithm.h"
 
-#include <boost/lexical_cast.hpp>
-
 #include <iostream>
 #include <iomanip>
 #include <math.h>
@@ -96,19 +94,19 @@ bool CFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 	// projector
 	XMLNode node = _cfg.self.getSingleNode("ProjectorId");
 	ASTRA_CONFIG_CHECK(node, "FilteredBackProjection", "No ProjectorId tag specified.");
-	int id = boost::lexical_cast<int>(node.getContent());
+	int id = node.getContentInt();
 	m_pProjector = CProjector2DManager::getSingleton().get(id);
 
 	// sinogram data
 	node = _cfg.self.getSingleNode("ProjectionDataId");
 	ASTRA_CONFIG_CHECK(node, "FilteredBackProjection", "No ProjectionDataId tag specified.");
-	id = boost::lexical_cast<int>(node.getContent());
+	id = node.getContentInt();
 	m_pSinogram = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
 
 	// volume data
 	node = _cfg.self.getSingleNode("ReconstructionDataId");
 	ASTRA_CONFIG_CHECK(node, "FilteredBackProjection", "No ReconstructionDataId tag specified.");
-	id = boost::lexical_cast<int>(node.getContent());
+	id = node.getContentInt();
 	m_pReconstruction = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 
 	node = _cfg.self.getSingleNode("ProjectionIndex");
@@ -119,12 +117,10 @@ bool CFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 		int angleCount = projectionIndex.size();
 		int detectorCount = m_pProjector->getProjectionGeometry()->getDetectorCount();
 
+		// TODO: There is no need to allocate this. Better just
+		// create the CFloat32ProjectionData2D object directly, and use its
+		// memory.
 		float32 * sinogramData2D = new float32[angleCount* detectorCount];
-		float32 ** sinogramData = new float32*[angleCount];
-		for (int i = 0; i < angleCount; i++)
-		{
-			sinogramData[i] = &(sinogramData2D[i * detectorCount]);
-		}
 
 		float32 * projectionAngles = new float32[angleCount];
 		float32 detectorWidth = m_pProjector->getProjectionGeometry()->getDetectorWidth();
@@ -132,6 +128,8 @@ bool CFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 		for (int i = 0; i < angleCount; i ++) {
 			if (projectionIndex[i] > m_pProjector->getProjectionGeometry()->getProjectionAngleCount() -1 )
 			{
+				delete[] sinogramData2D;
+				delete[] projectionAngles;
 				ASTRA_ERROR("Invalid Projection Index");
 				return false;
 			} else {
@@ -141,7 +139,6 @@ bool CFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 				{
 					sinogramData2D[i*detectorCount+ iDetector] = m_pSinogram->getData2D()[orgIndex][iDetector];
 				}
-//				sinogramData[i] = m_pSinogram->getSingleProjectionData(projectionIndex[i]);
 				projectionAngles[i] = m_pProjector->getProjectionGeometry()->getProjectionAngle((int)projectionIndex[i] );
 
 			}
@@ -150,6 +147,9 @@ bool CFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 		CParallelProjectionGeometry2D * pg = new CParallelProjectionGeometry2D(angleCount, detectorCount,detectorWidth,projectionAngles);
 		m_pProjector = new CParallelBeamLineKernelProjector2D(pg,m_pReconstruction->getGeometry());
 		m_pSinogram = new CFloat32ProjectionData2D(pg, sinogramData2D);
+
+		delete[] sinogramData2D;
+		delete[] projectionAngles;
 	}
 
 	// TODO: check that the angles are linearly spaced between 0 and pi
@@ -274,60 +274,57 @@ void CFilteredBackProjectionAlgorithm::performFiltering(CFloat32ProjectionData2D
 		filter[iDetector] = (2.0f * (zpDetector - iDetector)) / zpDetector;
 
 
-	float32* pfRe = new float32[iAngleCount * zpDetector];
-	float32* pfIm = new float32[iAngleCount * zpDetector];
+	float32* pf = new float32[2 * iAngleCount * zpDetector];
+	int *ip = new int[int(2+sqrt((float)zpDetector)+1)];
+	ip[0]=0;
+	float32 *w = new float32[zpDetector/2];
 
 	// Copy and zero-pad data
 	for (int iAngle = 0; iAngle < iAngleCount; ++iAngle) {
-		float32* pfReRow = pfRe + iAngle * zpDetector;
-		float32* pfImRow = pfIm + iAngle * zpDetector;
+		float32* pfRow = pf + iAngle * 2 * zpDetector;
 		float32* pfDataRow = _pFilteredSinogram->getData() + iAngle * iDetectorCount;
 		for (int iDetector = 0; iDetector < iDetectorCount; ++iDetector) {
-			pfReRow[iDetector] = pfDataRow[iDetector];
-			pfImRow[iDetector] = 0.0f;
+			pfRow[2*iDetector] = pfDataRow[iDetector];
+			pfRow[2*iDetector+1] = 0.0f;
 		}
 		for (int iDetector = iDetectorCount; iDetector < zpDetector; ++iDetector) {
-			pfReRow[iDetector] = 0.0f;
-			pfImRow[iDetector] = 0.0f;
+			pfRow[2*iDetector] = 0.0f;
+			pfRow[2*iDetector+1] = 0.0f;
 		}
 	}
 
 	// in-place FFT
 	for (int iAngle = 0; iAngle < iAngleCount; ++iAngle) {
-		float32* pfReRow = pfRe + iAngle * zpDetector;
-		float32* pfImRow = pfIm + iAngle * zpDetector;
-
-		fastTwoPowerFourierTransform1D(zpDetector, pfReRow, pfImRow, pfReRow, pfImRow, 1, 1, false);
+		float32* pfRow = pf + iAngle * 2 * zpDetector;
+		cdft(2*zpDetector, -1, pfRow, ip, w);
 	}
 
 	// Filter
 	for (int iAngle = 0; iAngle < iAngleCount; ++iAngle) {
-		float32* pfReRow = pfRe + iAngle * zpDetector;
-		float32* pfImRow = pfIm + iAngle * zpDetector;
+		float32* pfRow = pf + iAngle * 2 * zpDetector;
 		for (int iDetector = 0; iDetector < zpDetector; ++iDetector) {
-			pfReRow[iDetector] *= filter[iDetector];
-			pfImRow[iDetector] *= filter[iDetector];
+			pfRow[2*iDetector] *= filter[iDetector];
+			pfRow[2*iDetector+1] *= filter[iDetector];
 		}
 	}
 
 	// in-place inverse FFT
 	for (int iAngle = 0; iAngle < iAngleCount; ++iAngle) {
-		float32* pfReRow = pfRe + iAngle * zpDetector;
-		float32* pfImRow = pfIm + iAngle * zpDetector;
-
-		fastTwoPowerFourierTransform1D(zpDetector, pfReRow, pfImRow, pfReRow, pfImRow, 1, 1, true);
+		float32* pfRow = pf + iAngle * 2 * zpDetector;
+		cdft(2*zpDetector, 1, pfRow, ip, w);
 	}
 
 	// Copy data back
 	for (int iAngle = 0; iAngle < iAngleCount; ++iAngle) {
-		float32* pfReRow = pfRe + iAngle * zpDetector;
+		float32* pfRow = pf + iAngle * 2 * zpDetector;
 		float32* pfDataRow = _pFilteredSinogram->getData() + iAngle * iDetectorCount;
 		for (int iDetector = 0; iDetector < iDetectorCount; ++iDetector)
-			pfDataRow[iDetector] = pfReRow[iDetector];
+			pfDataRow[iDetector] = pfRow[2*iDetector] / zpDetector;
 	}
 
-	delete[] pfRe;
-	delete[] pfIm;
+	delete[] pf;
+	delete[] w;
+	delete[] ip;
 	delete[] filter;
 }
 

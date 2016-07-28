@@ -1,6 +1,8 @@
 from __future__ import print_function
 import sys
 import os
+import codecs
+import six
 
 vcppguid = "8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942" # C++ project
 siguid = "2150E333-8FDC-42A3-9474-1A3956D46DE8" # project group 
@@ -24,6 +26,7 @@ P4 = create_mex_project("astra_mex_matrix", "9D041710-2119-4230-BCF2-5FBE753FDE4
 P5 = create_mex_project("astra_mex_projector", "4DD6056F-8EEE-4C9A-B2A9-923F01A32E97", "4DD6056F-8EEE-4C9A-B2A9-923F01A32E97")
 P6 = create_mex_project("astra_mex_projector3d", "F94CCD79-AA11-42DF-AC8A-6C9D2238A883", "F94CCD79-AA11-42DF-AC8A-6C9D2238A883")
 P7 = create_mex_project("astra_mex_log", "03B833F5-4FD6-4FBE-AAF4-E3305CD56D2E", "CA2840B3-DA68-41B5-AC57-F5DFD20ED8F8")
+P8 = create_mex_project("astra_mex_direct", "0F68F4E2-BE1B-4A9A-B101-AECF4C069CC7", "85FE09A6-FA49-4314-A2B1-59D77C7442A8")
 
 F_astra_mex = { "type": siguid,
                 "name": "astra_mex",
@@ -31,7 +34,7 @@ F_astra_mex = { "type": siguid,
                 "file09": "astra_mex",
                 "uuid11": "5E99A109-374E-4102-BE9B-99BA1FA8AA30",
                 "uuid09": "33EF0AC5-B475-40BF-BAE5-67075B204D10",
-                "entries": [ P0, P1, P2, P3, P4, P5, P6, P7 ] }
+                "entries": [ P0, P1, P2, P3, P4, P5, P6, P7, P8 ] }
 
 
 P0["files"] = [
@@ -98,6 +101,18 @@ P7["files"] = [
 "mexInitFunctions.cpp",
 "mexInitFunctions.h",
 ]
+P8["files"] = [
+"astra_mex_direct_c.cpp",
+"mexHelpFunctions.cpp",
+"mexHelpFunctions.h",
+"mexCopyDataHelpFunctions.cpp",
+"mexCopyDataHelpFunctions.h",
+"mexDataManagerHelpFunctions.cpp",
+"mexDataManagerHelpFunctions.h",
+"mexInitFunctions.cpp",
+"mexInitFunctions.h",
+]
+
 
 
 
@@ -155,6 +170,7 @@ P_astra["filters"]["CUDA\\cuda source"] = [
 "cuda\\3d\\cone_fp.cu",
 "cuda\\3d\\darthelper3d.cu",
 "cuda\\3d\\fdk.cu",
+"cuda\\3d\\mem3d.cu",
 "cuda\\3d\\par3d_bp.cu",
 "cuda\\3d\\par3d_fp.cu",
 "cuda\\3d\\sirt3d.cu",
@@ -169,6 +185,7 @@ P_astra["filters"]["Algorithms\\source"] = [
 "src\\CglsAlgorithm.cpp",
 "src\\FilteredBackProjectionAlgorithm.cpp",
 "src\\ForwardProjectionAlgorithm.cpp",
+"src\\PluginAlgorithm.cpp",
 "src\\ReconstructionAlgorithm2D.cpp",
 "src\\ReconstructionAlgorithm3D.cpp",
 "src\\SartAlgorithm.cpp",
@@ -192,6 +209,7 @@ P_astra["filters"]["Global &amp; Other\\source"] = [
 "1546cb47-7e5b-42c2-b695-ef172024c14b",
 "src\\AstraObjectFactory.cpp",
 "src\\AstraObjectManager.cpp",
+"src\\CompositeGeometryManager.cpp",
 "src\\Config.cpp",
 "src\\Fourier.cpp",
 "src\\Globals.cpp",
@@ -282,6 +300,7 @@ P_astra["filters"]["CUDA\\cuda headers"] = [
 "cuda\\3d\\darthelper3d.h",
 "cuda\\3d\\dims3d.h",
 "cuda\\3d\\fdk.h",
+"cuda\\3d\\mem3d.h",
 "cuda\\3d\\par3d_bp.h",
 "cuda\\3d\\par3d_fp.h",
 "cuda\\3d\\sirt3d.h",
@@ -299,6 +318,7 @@ P_astra["filters"]["Algorithms\\headers"] = [
 "include\\astra\\CudaBackProjectionAlgorithm3D.h",
 "include\\astra\\FilteredBackProjectionAlgorithm.h",
 "include\\astra\\ForwardProjectionAlgorithm.h",
+"include\\astra\\PluginAlgorithm.h",
 "include\\astra\\ReconstructionAlgorithm2D.h",
 "include\\astra\\ReconstructionAlgorithm3D.h",
 "include\\astra\\SartAlgorithm.h",
@@ -323,6 +343,7 @@ P_astra["filters"]["Global &amp; Other\\headers"] = [
 "include\\astra\\AstraObjectFactory.h",
 "include\\astra\\AstraObjectManager.h",
 "include\\astra\\clog.h",
+"include\\astra\\CompositeGeometryManager.h",
 "include\\astra\\Config.h",
 "include\\astra\\Fourier.h",
 "include\\astra\\Globals.h",
@@ -407,9 +428,12 @@ for f in P_astra["filters"]:
   P_astra["files"].extend(P_astra["filters"][f][1:])
 P_astra["files"].sort()
 
-projects = [ P_astra, F_astra_mex, P0, P1, P2, P3, P4, P5, P6, P7 ]
+projects = [ P_astra, F_astra_mex, P0, P1, P2, P3, P4, P5, P6, P7, P8 ]
 
-bom = "\xef\xbb\xbf"
+if six.PY2:
+  bom = "\xef\xbb\xbf"
+else:
+  bom = codecs.BOM_UTF8.decode("utf-8")
 
 class Configuration:
   def __init__(self, debug, cuda, x64):
@@ -946,10 +970,11 @@ def write_main_project09():
       print('\t\t\t\tRuntime="3"', file=F) # MDD
     else:
       print('\t\t\t\tRuntime="2"', file=F) # MD
+    print('\t\t\t\tExtraCppOptions="-Iinclude -Ilib/include"', file=F)
     if c.cuda:
-      print('\t\t\t\tDefines="-DASTRA_CUDA -DDLL_EXPORTS"', file=F)
+      print('\t\t\t\tDefines="ASTRA_CUDA;DLL_EXPORTS"', file=F)
     else: # This 'else' doesn't make much sense
-      print('\t\t\t\tDefines="-DDLL_EXPORTS"', file=F)
+      print('\t\t\t\tDefines="DLL_EXPORTS"', file=F)
     # TODO!!!
     print('\t\t\t/>', file=F)
     print('\t\t</Configuration>', file=F)
@@ -1110,6 +1135,7 @@ if sys.argv[1] in ["vc11", "all"]:
   write_mex_project11(P5)
   write_mex_project11(P6)
   write_mex_project11(P7)
+  write_mex_project11(P8)
 
 if sys.argv[1] in ["vc09", "all"]:
   # HACK
@@ -1125,3 +1151,4 @@ if sys.argv[1] in ["vc09", "all"]:
   write_mex_project09(P5)
   write_mex_project09(P6)
   write_mex_project09(P7)
+  write_mex_project09(P8)

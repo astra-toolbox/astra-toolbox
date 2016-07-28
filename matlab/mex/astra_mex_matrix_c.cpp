@@ -112,7 +112,7 @@ static bool matlab_to_astra(const mxArray* _rhs, CSparseMatrix* _pMatrix)
 	mwIndex *colStarts = mxGetJc(_rhs);
 	mwIndex *rowIndices = mxGetIr(_rhs);
 	double *floatValues = 0;
-	bool *boolValues = 0;
+	mxLogical *boolValues = 0;
 	bool bLogical = mxIsLogical(_rhs);
 	if (bLogical)
 		boolValues = mxGetLogicals(_rhs);

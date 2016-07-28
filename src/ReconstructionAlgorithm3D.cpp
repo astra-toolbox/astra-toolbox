@@ -28,8 +28,6 @@ $Id$
 
 #include "astra/ReconstructionAlgorithm3D.h"
 
-#include <boost/lexical_cast.hpp>
-
 #include "astra/AstraObjectManager.h"
 
 using namespace std;
@@ -106,33 +104,37 @@ bool CReconstructionAlgorithm3D::initialize(const Config& _cfg)
 
 	XMLNode node;
 	int id;
-#if 0
+
 	// projector
-	node = _cfg.self->getSingleNode("ProjectorId");
-	ASTRA_CONFIG_CHECK(node, "Reconstruction3D", "No ProjectorId tag specified.");
-	id = boost::lexical_cast<int>(node->getContent());
-	m_pProjector = CProjector3DManager::getSingleton().get(id);
-	ASTRA_DELETE(node);
-#endif
+	node = _cfg.self.getSingleNode("ProjectorId");
+	m_pProjector = 0;
+	if (node) {
+		id = node.getContentInt();
+		m_pProjector = CProjector3DManager::getSingleton().get(id);
+		if (!m_pProjector) {
+			// TODO: Report
+		}
+	}
+	CC.markNodeParsed("ProjectorId");
 
 	// sinogram data
 	node = _cfg.self.getSingleNode("ProjectionDataId");
 	ASTRA_CONFIG_CHECK(node, "Reconstruction3D", "No ProjectionDataId tag specified.");
-	id = boost::lexical_cast<int>(node.getContent());
+	id = node.getContentInt();
 	m_pSinogram = dynamic_cast<CFloat32ProjectionData3D*>(CData3DManager::getSingleton().get(id));
 	CC.markNodeParsed("ProjectionDataId");
 
 	// reconstruction data
 	node = _cfg.self.getSingleNode("ReconstructionDataId");
 	ASTRA_CONFIG_CHECK(node, "Reconstruction3D", "No ReconstructionDataId tag specified.");
-	id = boost::lexical_cast<int>(node.getContent());
+	id = node.getContentInt();
 	m_pReconstruction = dynamic_cast<CFloat32VolumeData3D*>(CData3DManager::getSingleton().get(id));
 	CC.markNodeParsed("ReconstructionDataId");
 
 	// fixed mask
 	if (_cfg.self.hasOption("ReconstructionMaskId")) {
 		m_bUseReconstructionMask = true;
-		id = boost::lexical_cast<int>(_cfg.self.getOption("ReconstructionMaskId"));
+		id = _cfg.self.getOptionInt("ReconstructionMaskId");
 		m_pReconstructionMask = dynamic_cast<CFloat32VolumeData3D*>(CData3DManager::getSingleton().get(id));
 	}
 	CC.markOptionParsed("ReconstructionMaskId");
@@ -140,9 +142,10 @@ bool CReconstructionAlgorithm3D::initialize(const Config& _cfg)
 	// fixed mask
 	if (_cfg.self.hasOption("SinogramMaskId")) {
 		m_bUseSinogramMask = true;
-		id = boost::lexical_cast<int>(_cfg.self.getOption("SinogramMaskId"));
+		id = _cfg.self.getOptionInt("SinogramMaskId");
 		m_pSinogramMask = dynamic_cast<CFloat32ProjectionData3D*>(CData3DManager::getSingleton().get(id));
 	}
+	CC.markOptionParsed("SinogramMaskId");
 
 	// Constraints - NEW
 	if (_cfg.self.hasOption("MinConstraint")) {

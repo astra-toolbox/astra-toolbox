@@ -53,6 +53,8 @@ public:
 	bool uploadMinMaxMasks(const float* minMaskData, const float* maxMaskData,
 	                       unsigned int pitch);
 
+	void setRelaxation(float r) { fRelaxation = r; }
+
 	virtual bool iterate(unsigned int iterations);
 
 	virtual float computeDiffNorm();
@@ -81,6 +83,8 @@ protected:
 	unsigned int minMaskPitch;
 	float* D_maxMaskData;
 	unsigned int maxMaskPitch;
+
+	float fRelaxation;
 };
 
 bool doSIRT(float* D_volumeData, unsigned int volumePitch,

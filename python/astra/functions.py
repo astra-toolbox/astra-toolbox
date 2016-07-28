@@ -115,7 +115,7 @@ def add_noise_to_sino(sinogram_in, I0, seed=None):
     sinogram_out = -max_sinogramRaw * np.log(sinogramCT_D)
 
     if not isinstance(sinogram_in, np.ndarray):
-        at.data2d.store(sinogram_in, sinogram_out)
+        data2d.store(sinogram_in, sinogram_out)
 
     if not seed==None:
         np.random.set_state(curstate)

@@ -712,12 +712,14 @@ SIRTBPPolicy::SIRTBPPolicy()
 SIRTBPPolicy::SIRTBPPolicy(CFloat32VolumeData2D* _pReconstruction, 
 						   CFloat32ProjectionData2D* _pSinogram, 
 						   CFloat32VolumeData2D* _pTotalPixelWeight, 
-						   CFloat32ProjectionData2D* _pTotalRayLength) 
+						   CFloat32ProjectionData2D* _pTotalRayLength,
+						   float _fRelaxation)
 {
 	m_pReconstruction = _pReconstruction;
 	m_pSinogram = _pSinogram;
 	m_pTotalPixelWeight = _pTotalPixelWeight;
 	m_pTotalRayLength = _pTotalRayLength;
+	m_fRelaxation = _fRelaxation;
 }
 //----------------------------------------------------------------------------------------	
 SIRTBPPolicy::~SIRTBPPolicy() 
@@ -739,7 +741,7 @@ void SIRTBPPolicy::addWeight(int _iRayIndex, int _iVolumeIndex, float32 _fWeight
 {
 	float32 fGammaBeta = m_pTotalPixelWeight->getData()[_iVolumeIndex] * m_pTotalRayLength->getData()[_iRayIndex];
 	if ((fGammaBeta > 0.001f) || (fGammaBeta < -0.001f)) {
-		m_pReconstruction->getData()[_iVolumeIndex] += _fWeight * m_pSinogram->getData()[_iRayIndex] / fGammaBeta;
+		m_pReconstruction->getData()[_iVolumeIndex] += _fWeight * m_fRelaxation * m_pSinogram->getData()[_iRayIndex] / fGammaBeta;
 	}
 }
 //----------------------------------------------------------------------------------------

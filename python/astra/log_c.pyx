@@ -1,28 +1,28 @@
-#-----------------------------------------------------------------------
-#Copyright 2013 Centrum Wiskunde & Informatica, Amsterdam
+# -----------------------------------------------------------------------
+# Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+#            2013-2016, CWI, Amsterdam
 #
-#Author: Daniel M. Pelt
-#Contact: D.M.Pelt@cwi.nl
-#Website: http://dmpelt.github.io/pyastratoolbox/
+# Contact: astra@uantwerpen.be
+# Website: http://sf.net/projects/astra-toolbox
+#
+# This file is part of the ASTRA Toolbox.
 #
 #
-#This file is part of the Python interface to the
-#All Scale Tomographic Reconstruction Antwerp Toolbox ("ASTRA Toolbox").
+# The ASTRA Toolbox is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
-#The Python interface to the ASTRA Toolbox is free software: you can redistribute it and/or modify
-#it under the terms of the GNU General Public License as published by
-#the Free Software Foundation, either version 3 of the License, or
-#(at your option) any later version.
+# The ASTRA Toolbox is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
 #
-#The Python interface to the ASTRA Toolbox is distributed in the hope that it will be useful,
-#but WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-#GNU General Public License for more details.
+# You should have received a copy of the GNU General Public License
+# along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #
-#You should have received a copy of the GNU General Public License
-#along with the Python interface to the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
+# -----------------------------------------------------------------------
 #
-#-----------------------------------------------------------------------
 # distutils: language = c++
 # distutils: libraries = astra
 
@@ -53,19 +53,19 @@ cdef extern from "astra/Logging.h" namespace "astra::CLogger":
 
 def log_debug(sfile, sline, message):
     cstr = list(map(six.b,(sfile,message)))
-    debug(cstr[0],sline,cstr[1])
+    debug(cstr[0],sline,"%s",<char*>cstr[1])
 
 def log_info(sfile, sline, message):
     cstr = list(map(six.b,(sfile,message)))
-    info(cstr[0],sline,cstr[1])
+    info(cstr[0],sline,"%s",<char*>cstr[1])
 
 def log_warn(sfile, sline, message):
     cstr = list(map(six.b,(sfile,message)))
-    warn(cstr[0],sline,cstr[1])
+    warn(cstr[0],sline,"%s",<char*>cstr[1])
 
 def log_error(sfile, sline, message):
     cstr = list(map(six.b,(sfile,message)))
-    error(cstr[0],sline,cstr[1])
+    error(cstr[0],sline,"%s",<char*>cstr[1])
 
 def log_enable():
     enable()

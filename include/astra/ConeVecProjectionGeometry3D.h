@@ -148,9 +148,16 @@ public:
 
 	const SConeProjection* getProjectionVectors() const { return m_pProjectionAngles; }
 
-	virtual void projectPoint(float32 fX, float32 fY, float32 fZ,
+	virtual void projectPoint(double fX, double fY, double fZ,
 	                          int iAngleIndex,
-	                          float32 &fU, float32 &fV) const;
+	                          double &fU, double &fV) const;
+	virtual void backprojectPointX(int iAngleIndex, double fU, double fV,
+	                               double fX, double &fY, double &fZ) const;
+	virtual void backprojectPointY(int iAngleIndex, double fU, double fV,
+	                               double fY, double &fX, double &fZ) const;
+	virtual void backprojectPointZ(int iAngleIndex, double fU, double fV,
+	                               double fZ, double &fX, double &fY) const;
+
 };
 
 } // namespace astra

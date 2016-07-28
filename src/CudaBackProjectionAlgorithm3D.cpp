@@ -28,14 +28,16 @@ $Id$
 
 #include "astra/CudaBackProjectionAlgorithm3D.h"
 
-#include <boost/lexical_cast.hpp>
-
 #include "astra/AstraObjectManager.h"
 
+#include "astra/CudaProjector3D.h"
 #include "astra/ConeProjectionGeometry3D.h"
 #include "astra/ParallelProjectionGeometry3D.h"
 #include "astra/ParallelVecProjectionGeometry3D.h"
 #include "astra/ConeVecProjectionGeometry3D.h"
+#include "astra/CompositeGeometryManager.h"
+
+#include "astra/Logging.h"
 
 #include "../cuda/3d/astra3d.h"
 
@@ -86,6 +88,24 @@ bool CCudaBackProjectionAlgorithm3D::_check()
 }
 
 //---------------------------------------------------------------------------------------
+void CCudaBackProjectionAlgorithm3D::initializeFromProjector()
+{
+	m_iVoxelSuperSampling = 1;
+	m_iGPUIndex = -1;
+
+	CCudaProjector3D* pCudaProjector = dynamic_cast<CCudaProjector3D*>(m_pProjector);
+	if (!pCudaProjector) {
+		if (m_pProjector) {
+			ASTRA_WARN("non-CUDA Projector3D passed to BP3D_CUDA");
+		}
+	} else {
+		m_iVoxelSuperSampling = pCudaProjector->getVoxelSuperSampling();
+		m_iGPUIndex = pCudaProjector->getGPUIndex();
+	}
+
+}
+
+//---------------------------------------------------------------------------------------
 // Initialize - Config
 bool CCudaBackProjectionAlgorithm3D::initialize(const Config& _cfg)
 {
@@ -102,21 +122,21 @@ bool CCudaBackProjectionAlgorithm3D::initialize(const Config& _cfg)
 		return false;
 	}
 
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
-	CC.markOptionParsed("GPUindex");
-	m_iVoxelSuperSampling = (int)_cfg.self.getOptionNumerical("VoxelSuperSampling", 1);
-	CC.markOptionParsed("VoxelSuperSampling");
+	initializeFromProjector();
 
-	CFloat32ProjectionData3DMemory* pSinoMem = dynamic_cast<CFloat32ProjectionData3DMemory*>(m_pSinogram);
-	ASTRA_ASSERT(pSinoMem);
-	const CProjectionGeometry3D* projgeom = pSinoMem->getGeometry();
-const CParallelProjectionGeometry3D* par3dgeom = dynamic_cast<const CParallelProjectionGeometry3D*>(projgeom);
-	const CParallelVecProjectionGeometry3D* parvec3dgeom = dynamic_cast<const CParallelVecProjectionGeometry3D*>(projgeom);
-	if (parvec3dgeom || par3dgeom) {
-		// This option is only supported for Par3D currently
-		m_bSIRTWeighting = _cfg.self.getOptionBool("SIRTWeighting", false);
-		CC.markOptionParsed("SIRTWeighting");
-	}
+	// Deprecated options
+	m_iVoxelSuperSampling = (int)_cfg.self.getOptionNumerical("VoxelSuperSampling", m_iVoxelSuperSampling);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", m_iGPUIndex);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
+	CC.markOptionParsed("VoxelSuperSampling");
+	CC.markOptionParsed("GPUIndex");
+	if (!_cfg.self.hasOption("GPUIndex"))
+		CC.markOptionParsed("GPUindex");
+
+
+
+	m_bSIRTWeighting = _cfg.self.getOptionBool("SIRTWeighting", false);
+	CC.markOptionParsed("SIRTWeighting");
 
 	// success
 	m_bIsInitialized = _check();
@@ -138,6 +158,8 @@ bool CCudaBackProjectionAlgorithm3D::initialize(CProjector3D* _pProjector,
 	m_pProjector = _pProjector;
 	m_pSinogram = _pSinogram;
 	m_pReconstruction = _pReconstruction;
+
+	initializeFromProjector();
 
 	// success
 	m_bIsInitialized = _check();
@@ -172,88 +194,24 @@ void CCudaBackProjectionAlgorithm3D::run(int _iNrIterations)
 	ASTRA_ASSERT(pReconMem);
 
 	const CProjectionGeometry3D* projgeom = pSinoMem->getGeometry();
-	const CConeProjectionGeometry3D* conegeom = dynamic_cast<const CConeProjectionGeometry3D*>(projgeom);
-	const CParallelProjectionGeometry3D* par3dgeom = dynamic_cast<const CParallelProjectionGeometry3D*>(projgeom);
-	const CConeVecProjectionGeometry3D* conevecgeom = dynamic_cast<const CConeVecProjectionGeometry3D*>(projgeom);
-	const CParallelVecProjectionGeometry3D* parvec3dgeom = dynamic_cast<const CParallelVecProjectionGeometry3D*>(projgeom);
 	const CVolumeGeometry3D& volgeom = *pReconMem->getGeometry();
 
-	if (conegeom) {
-		astraCudaConeBP(pReconMem->getData(), pSinoMem->getDataConst(),
-		                volgeom.getGridColCount(),
-		                volgeom.getGridRowCount(),
-		                volgeom.getGridSliceCount(),
-		                conegeom->getProjectionCount(),
-		                conegeom->getDetectorColCount(),
-		                conegeom->getDetectorRowCount(),
-		                conegeom->getOriginSourceDistance(),
-		                conegeom->getOriginDetectorDistance(),
-		                conegeom->getDetectorSpacingX(),
-		                conegeom->getDetectorSpacingY(),
-		                conegeom->getProjectionAngles(),
-		                m_iGPUIndex, m_iVoxelSuperSampling);
-	} else if (par3dgeom) {
-		if (!m_bSIRTWeighting) {
-			astraCudaPar3DBP(pReconMem->getData(), pSinoMem->getDataConst(),
-			                 volgeom.getGridColCount(),
-			                 volgeom.getGridRowCount(),
-			                 volgeom.getGridSliceCount(),
-			                 par3dgeom->getProjectionCount(),
-			                 par3dgeom->getDetectorColCount(),
-			                 par3dgeom->getDetectorRowCount(),
-			                 par3dgeom->getDetectorSpacingX(),
-			                 par3dgeom->getDetectorSpacingY(),
-			                 par3dgeom->getProjectionAngles(),
-			                 m_iGPUIndex, m_iVoxelSuperSampling);
-		} else {
-			astraCudaPar3DBP_SIRTWeighted(pReconMem->getData(),
-			                 pSinoMem->getDataConst(),
-			                 volgeom.getGridColCount(),
-			                 volgeom.getGridRowCount(),
-			                 volgeom.getGridSliceCount(),
-			                 par3dgeom->getProjectionCount(),
-			                 par3dgeom->getDetectorColCount(),
-			                 par3dgeom->getDetectorRowCount(),
-			                 par3dgeom->getDetectorSpacingX(),
-			                 par3dgeom->getDetectorSpacingY(),
-			                 par3dgeom->getProjectionAngles(),
-			                 m_iGPUIndex, m_iVoxelSuperSampling);
-		}
-	} else if (parvec3dgeom) {
-		if (!m_bSIRTWeighting) {
-			astraCudaPar3DBP(pReconMem->getData(), pSinoMem->getDataConst(),
-			                 volgeom.getGridColCount(),
-			                 volgeom.getGridRowCount(),
-			                 volgeom.getGridSliceCount(),
-			                 parvec3dgeom->getProjectionCount(),
-			                 parvec3dgeom->getDetectorColCount(),
-			                 parvec3dgeom->getDetectorRowCount(),
-			                 parvec3dgeom->getProjectionVectors(),
-			                 m_iGPUIndex, m_iVoxelSuperSampling);
-		} else {
-			astraCudaPar3DBP_SIRTWeighted(pReconMem->getData(),
-			                 pSinoMem->getDataConst(),
-			                 volgeom.getGridColCount(),
-			                 volgeom.getGridRowCount(),
-			                 volgeom.getGridSliceCount(),
-			                 parvec3dgeom->getProjectionCount(),
-			                 parvec3dgeom->getDetectorColCount(),
-			                 parvec3dgeom->getDetectorRowCount(),
-			                 parvec3dgeom->getProjectionVectors(),
-			                 m_iGPUIndex, m_iVoxelSuperSampling);
-		}
-	} else if (conevecgeom) {
-		astraCudaConeBP(pReconMem->getData(), pSinoMem->getDataConst(),
-		                volgeom.getGridColCount(),
-		                volgeom.getGridRowCount(),
-		                volgeom.getGridSliceCount(),
-		                conevecgeom->getProjectionCount(),
-		                conevecgeom->getDetectorColCount(),
-		                conevecgeom->getDetectorRowCount(),
-		                conevecgeom->getProjectionVectors(),
-		                m_iGPUIndex, m_iVoxelSuperSampling);
+	if (m_bSIRTWeighting) {
+		astraCudaBP_SIRTWeighted(pReconMem->getData(),
+		                         pSinoMem->getDataConst(),
+		                         &volgeom, projgeom,
+		                         m_iGPUIndex, m_iVoxelSuperSampling);
 	} else {
-		ASTRA_ASSERT(false);
+
+#if 1
+		CCompositeGeometryManager cgm;
+
+		cgm.doBP(m_pProjector, pReconMem, pSinoMem);
+#else
+		astraCudaBP(pReconMem->getData(), pSinoMem->getDataConst(),
+		            &volgeom, projgeom,
+		            m_iGPUIndex, m_iVoxelSuperSampling);
+#endif
 	}
 
 }

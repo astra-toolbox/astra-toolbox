@@ -36,12 +36,12 @@ namespace astraCUDA {
 _AstraExport bool BP(float* D_volumeData, unsigned int volumePitch,
         float* D_projData, unsigned int projPitch,
         const SDimensions& dims, const float* angles,
-        const float* TOffsets);
+        const float* TOffsets, float fOutputScale);
 
 _AstraExport bool BP_SART(float* D_volumeData, unsigned int volumePitch,
              float* D_projData, unsigned int projPitch,
              unsigned int angle, const SDimensions& dims,
-             const float* angles, const float* TOffsets);
+             const float* angles, const float* TOffsets, float fOutputScale);
 
 }
 

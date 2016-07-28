@@ -29,7 +29,6 @@ $Id$
 #include "astra/ParallelBeamBlobKernelProjector2D.h"
 
 #include <cmath>
-#include <boost/lexical_cast.hpp>
 
 #include "astra/DataProjectorPolicies.h"
 
@@ -134,17 +133,17 @@ bool CParallelBeamBlobKernelProjector2D::initialize(const Config& _cfg)
 		// Required: KernelSize
 		XMLNode node2 = node.getSingleNode("KernelSize");
 		ASTRA_CONFIG_CHECK(node2, "BlobProjector", "No Kernel/KernelSize tag specified.");
-		m_fBlobSize = boost::lexical_cast<float32>(node2.getContent());
+		m_fBlobSize = node2.getContentNumerical();
 
 		// Required: SampleRate
 		node2 = node.getSingleNode("SampleRate");
 		ASTRA_CONFIG_CHECK(node2, "BlobProjector", "No Kernel/SampleRate tag specified.");
-		m_fBlobSampleRate = boost::lexical_cast<float32>(node2.getContent());
+		m_fBlobSampleRate = node2.getContentNumerical();
 	
 		// Required: SampleCount
 		node2 = node.getSingleNode("SampleCount");
 		ASTRA_CONFIG_CHECK(node2, "BlobProjector", "No Kernel/SampleCount tag specified.");
-		m_iBlobSampleCount = boost::lexical_cast<int>(node2.getContent());
+		m_iBlobSampleCount = node2.getContentInt();
 	
 		// Required: KernelValues
 		node2 = node.getSingleNode("KernelValues");

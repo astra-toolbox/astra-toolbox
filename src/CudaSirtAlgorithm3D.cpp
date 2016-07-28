@@ -28,14 +28,15 @@ $Id$
 
 #include "astra/CudaSirtAlgorithm3D.h"
 
-#include <boost/lexical_cast.hpp>
-
 #include "astra/AstraObjectManager.h"
 
 #include "astra/ConeProjectionGeometry3D.h"
 #include "astra/ParallelProjectionGeometry3D.h"
 #include "astra/ParallelVecProjectionGeometry3D.h"
 #include "astra/ConeVecProjectionGeometry3D.h"
+#include "astra/CudaProjector3D.h"
+
+#include "astra/Logging.h"
 
 #include "../cuda/3d/astra3d.h"
 
@@ -55,6 +56,7 @@ CCudaSirtAlgorithm3D::CCudaSirtAlgorithm3D()
 	m_iGPUIndex = -1;
 	m_iVoxelSuperSampling = 1;
 	m_iDetectorSuperSampling = 1;
+	m_fLambda = 1.0f;
 }
 
 //----------------------------------------------------------------------------------------
@@ -89,7 +91,27 @@ bool CCudaSirtAlgorithm3D::_check()
 	return true;
 }
 
-//---------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------
+void CCudaSirtAlgorithm3D::initializeFromProjector()
+{
+	m_iVoxelSuperSampling = 1;
+	m_iDetectorSuperSampling = 1;
+	m_iGPUIndex = -1;
+
+	CCudaProjector3D* pCudaProjector = dynamic_cast<CCudaProjector3D*>(m_pProjector);
+	if (!pCudaProjector) {
+		if (m_pProjector) {
+			ASTRA_WARN("non-CUDA Projector3D passed to SIRT3D_CUDA");
+		}
+	} else {
+		m_iVoxelSuperSampling = pCudaProjector->getVoxelSuperSampling();
+		m_iDetectorSuperSampling = pCudaProjector->getDetectorSuperSampling();
+		m_iGPUIndex = pCudaProjector->getGPUIndex();
+	}
+
+}
+
+//--------------------------------------------------------------------------------------
 // Initialize - Config
 bool CCudaSirtAlgorithm3D::initialize(const Config& _cfg)
 {
@@ -107,12 +129,23 @@ bool CCudaSirtAlgorithm3D::initialize(const Config& _cfg)
 		return false;
 	}
 
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
-	CC.markOptionParsed("GPUindex");
-	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", 1);
-	CC.markOptionParsed("DetectorSuperSampling");
-	m_iVoxelSuperSampling = (int)_cfg.self.getOptionNumerical("VoxelSuperSampling", 1);
+	m_fLambda = _cfg.self.getOptionNumerical("Relaxation");
+
+	initializeFromProjector();
+
+	// Deprecated options
+	m_iVoxelSuperSampling = (int)_cfg.self.getOptionNumerical("VoxelSuperSampling", m_iVoxelSuperSampling);
+	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", m_iDetectorSuperSampling);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", m_iGPUIndex);
+	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
+
 	CC.markOptionParsed("VoxelSuperSampling");
+	CC.markOptionParsed("DetectorSuperSampling");
+	CC.markOptionParsed("GPUIndex");
+	if (!_cfg.self.hasOption("GPUIndex"))
+		CC.markOptionParsed("GPUindex");
+
+
 
 	m_pSirt = new AstraSIRT3d();
 
@@ -134,6 +167,8 @@ bool CCudaSirtAlgorithm3D::initialize(CProjector3D* _pProjector,
 	if (m_bIsInitialized) {
 		clear();
 	}
+
+	m_fLambda = 1.0f;
 
 	// required classes
 	m_pProjector = _pProjector;
@@ -172,10 +207,6 @@ void CCudaSirtAlgorithm3D::run(int _iNrIterations)
 	ASTRA_ASSERT(m_bIsInitialized);
 
 	const CProjectionGeometry3D* projgeom = m_pSinogram->getGeometry();
-	const CConeProjectionGeometry3D* conegeom = dynamic_cast<const CConeProjectionGeometry3D*>(projgeom);
-	const CParallelProjectionGeometry3D* par3dgeom = dynamic_cast<const CParallelProjectionGeometry3D*>(projgeom);
-	const CParallelVecProjectionGeometry3D* parvec3dgeom = dynamic_cast<const CParallelVecProjectionGeometry3D*>(projgeom);
-	const CConeVecProjectionGeometry3D* conevec3dgeom = dynamic_cast<const CConeVecProjectionGeometry3D*>(projgeom);
 	const CVolumeGeometry3D& volgeom = *m_pReconstruction->getGeometry();
 
 	bool ok = true;
@@ -184,39 +215,7 @@ void CCudaSirtAlgorithm3D::run(int _iNrIterations)
 
 		ok &= m_pSirt->setGPUIndex(m_iGPUIndex);
 
-		ok &= m_pSirt->setReconstructionGeometry(volgeom.getGridColCount(),
-		                                         volgeom.getGridRowCount(),
-		                                         volgeom.getGridSliceCount());
-
-		if (conegeom) {
-			ok &= m_pSirt->setConeGeometry(conegeom->getProjectionCount(),
-			                               conegeom->getDetectorColCount(),
-			                               conegeom->getDetectorRowCount(),
-			                               conegeom->getOriginSourceDistance(),
-			                               conegeom->getOriginDetectorDistance(),
-			                               conegeom->getDetectorSpacingX(),
-			                               conegeom->getDetectorSpacingY(),
-			                               conegeom->getProjectionAngles());
-		} else if (par3dgeom) {
-			ok &= m_pSirt->setPar3DGeometry(par3dgeom->getProjectionCount(),
-			                                par3dgeom->getDetectorColCount(),
-			                                par3dgeom->getDetectorRowCount(),
-			                                par3dgeom->getDetectorSpacingX(),
-			                                par3dgeom->getDetectorSpacingY(),
-			                                par3dgeom->getProjectionAngles());
-		} else if (parvec3dgeom) {
-			ok &= m_pSirt->setPar3DGeometry(parvec3dgeom->getProjectionCount(),
-			                                parvec3dgeom->getDetectorColCount(),
-			                                parvec3dgeom->getDetectorRowCount(),
-			                                parvec3dgeom->getProjectionVectors());
-		} else if (conevec3dgeom) {
-			ok &= m_pSirt->setConeGeometry(conevec3dgeom->getProjectionCount(),
-			                               conevec3dgeom->getDetectorColCount(),
-			                               conevec3dgeom->getDetectorRowCount(),
-			                               conevec3dgeom->getProjectionVectors());
-		} else {
-			ASTRA_ASSERT(false);
-		}
+		ok &= m_pSirt->setGeometry(&volgeom, projgeom);
 
 		ok &= m_pSirt->enableSuperSampling(m_iVoxelSuperSampling, m_iDetectorSuperSampling);
 
@@ -230,6 +229,8 @@ void CCudaSirtAlgorithm3D::run(int _iNrIterations)
 		ok &= m_pSirt->init();
 
 		ASTRA_ASSERT(ok);
+
+		m_pSirt->setRelaxation(m_fLambda);
 
 		m_bAstraSIRTInit = true;
 
