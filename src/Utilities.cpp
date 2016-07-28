@@ -28,10 +28,6 @@ $Id$
 
 #include "astra/Utilities.h"
 
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/classification.hpp>
-
 #include <sstream>
 #include <locale>
 #include <iomanip>
@@ -84,18 +80,16 @@ std::vector<double> stringToDoubleVector(const std::string &s)
 template<typename T>
 std::vector<T> stringToVector(const std::string& s)
 {
-	// split
-	std::vector<std::string> items;
-	boost::split(items, s, boost::is_any_of(",;"));
-
-	// init list
 	std::vector<T> out;
-	out.resize(items.size());
+	size_t current = 0;
+	size_t next;
+	do {
+		next = s.find_first_of(",;", current);
+		std::string t = s.substr(current, next - current);
+		out.push_back(stringTo<T>(t));
+		current = next + 1;
+	} while (next != std::string::npos);
 
-	// loop elements
-	for (unsigned int i = 0; i < items.size(); i++) {
-		out[i] = stringTo<T>(items[i]);
-	}
 	return out;
 }
 
@@ -120,6 +114,18 @@ std::string doubleToString(double f)
 template<> std::string toString(float f) { return floatToString(f); }
 template<> std::string toString(double f) { return doubleToString(f); }
 
+void splitString(std::vector<std::string> &items, const std::string& s,
+                 const char *delim)
+{
+	items.clear();
+	size_t current = 0;
+	size_t next;
+	do {
+		next = s.find_first_of(",;", current);
+		items.push_back(s.substr(current, next - current));
+		current = next + 1;
+	} while (next != std::string::npos);
+}
 
 }
 
