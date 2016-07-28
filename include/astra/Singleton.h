@@ -45,11 +45,7 @@ class Singleton {
 	public:
 
 		// constructor
-		Singleton() {
-			assert(!m_singleton);
-			int offset = (uintptr_t)(T*)1 - (uintptr_t)(Singleton<T>*)(T*)1;
-			m_singleton = (T*)((uintptr_t)this + offset);
-		};
+		Singleton() { }
 
 		// destructor
 		virtual ~Singleton() {
