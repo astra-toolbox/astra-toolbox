@@ -402,16 +402,13 @@ mxArray* stringToMxArray(std::string input)
 		return pVector;
 	}
 	
-	// number
-	char* end;
-	double content = ::strtod(input.c_str(), &end);
-	bool isnumber = !*end;
-	if (isnumber) {
-		return mxCreateDoubleScalar(content);
+	try {
+		// number
+		return mxCreateDoubleScalar(StringUtil::stringToDouble(input));
+	} catch (const StringUtil::bad_cast &) {
+		// string
+		return mxCreateString(input.c_str());
 	}
-	
-	// string
-	return mxCreateString(input.c_str());
 }
 //-----------------------------------------------------------------------------------------
 // turn a c++ map into a matlab struct
