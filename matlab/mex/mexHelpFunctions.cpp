@@ -33,11 +33,6 @@ $Id$
 #include "mexHelpFunctions.h"
 #include "astra/Utilities.h"
 
-#include <algorithm>
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/classification.hpp>
-
 using namespace std;
 using namespace astra;
 
@@ -362,8 +357,8 @@ mxArray* stringToMxArray(std::string input)
 		// split rows
 		std::vector<std::string> row_strings;
 		std::vector<std::string> col_strings;
-		boost::split(row_strings, input, boost::is_any_of(";"));
-		boost::split(col_strings, row_strings[0], boost::is_any_of(","));
+		StringUtil::splitString(row_strings, input, ";");
+		StringUtil::splitString(col_strings, row_strings[0], ",");
 
 		// get dimensions
 		int rows = row_strings.size();
@@ -375,7 +370,7 @@ mxArray* stringToMxArray(std::string input)
 
 		// loop elements
 		for (unsigned int row = 0; row < rows; row++) {
-			boost::split(col_strings, row_strings[row], boost::is_any_of(","));
+			StringUtil::splitString(col_strings, row_strings[row], ",");
 			// check size
 			for (unsigned int col = 0; col < col_strings.size(); col++) {
 				out[col*rows + row] = StringUtil::stringToFloat(col_strings[col]);
@@ -389,7 +384,7 @@ mxArray* stringToMxArray(std::string input)
 
 		// split
 		std::vector<std::string> items;
-		boost::split(items, input, boost::is_any_of(","));
+		StringUtil::splitString(items, input, ",");
 
 		// init matrix
 		mxArray* pVector = mxCreateDoubleMatrix(1, items.size(), mxREAL);
@@ -402,16 +397,13 @@ mxArray* stringToMxArray(std::string input)
 		return pVector;
 	}
 	
-	// number
-	char* end;
-	double content = ::strtod(input.c_str(), &end);
-	bool isnumber = !*end;
-	if (isnumber) {
-		return mxCreateDoubleScalar(content);
+	try {
+		// number
+		return mxCreateDoubleScalar(StringUtil::stringToDouble(input));
+	} catch (const StringUtil::bad_cast &) {
+		// string
+		return mxCreateString(input.c_str());
 	}
-	
-	// string
-	return mxCreateString(input.c_str());
 }
 //-----------------------------------------------------------------------------------------
 // turn a c++ map into a matlab struct
