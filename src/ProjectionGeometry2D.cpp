@@ -45,11 +45,10 @@ CProjectionGeometry2D::CProjectionGeometry2D() : configCheckData(0)
 CProjectionGeometry2D::CProjectionGeometry2D(int _iAngleCount, 
 											 int _iDetectorCount, 
 											 float32 _fDetectorWidth, 
-											 const float32* _pfProjectionAngles,
-											 const float32* _pfExtraDetectorOffsets) : configCheckData(0)
+											 const float32* _pfProjectionAngles) : configCheckData(0)
 {
 	_clear();
-	_initialize(_iAngleCount, _iDetectorCount, _fDetectorWidth, _pfProjectionAngles,_pfExtraDetectorOffsets);
+	_initialize(_iAngleCount, _iDetectorCount, _fDetectorWidth, _pfProjectionAngles);
 }
 
 //----------------------------------------------------------------------------------------
@@ -156,8 +155,7 @@ bool CProjectionGeometry2D::initialize(const Config& _cfg)
 bool CProjectionGeometry2D::_initialize(int _iProjectionAngleCount, 
 									    int _iDetectorCount, 
 									    float32 _fDetectorWidth, 
-									    const float32* _pfProjectionAngles,
-										const float32* _pfExtraDetectorOffsets)
+									    const float32* _pfProjectionAngles)
 {
 	if (m_bInitialized) {
 		clear();

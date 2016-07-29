@@ -29,6 +29,8 @@ $Id$
 #ifndef FBP_FILTERS_H
 #define FBP_FILTERS_H
 
+namespace astra {
+
 enum E_FBPFILTER
 {
 	FILTER_NONE,			//< no filter (regular BP)
@@ -54,5 +56,7 @@ enum E_FBPFILTER
 	FILTER_RPROJECTION,		//< projection filter in real space (as opposed to fourier space)
 	FILTER_RSINOGRAM,		//< sinogram filter in real space
 };
+
+}
 
 #endif /* FBP_FILTERS_H */

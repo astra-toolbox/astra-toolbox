@@ -1077,6 +1077,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\include\astra\ParallelVecProjectionGeometry2D.h"
+					>
+				</File>
+				<File
 					RelativePath=".\include\astra\ParallelVecProjectionGeometry3D.h"
 					>
 				</File>
@@ -1121,6 +1125,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\GeometryUtil2D.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\src\GeometryUtil3D.cpp"
 					>
 				</File>
@@ -1130,6 +1138,10 @@
 				</File>
 				<File
 					RelativePath=".\src\ParallelProjectionGeometry3D.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\ParallelVecProjectionGeometry2D.cpp"
 					>
 				</File>
 				<File
@@ -2185,6 +2197,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\cuda\2d\fbp.h"
+					>
+				</File>
+				<File
 					RelativePath=".\cuda\2d\fft.h"
 					>
 				</File>
@@ -2522,6 +2538,42 @@
 				</File>
 				<File
 					RelativePath=".\cuda\2d\fan_fp.cu"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="Cudart Build Rule"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|x64"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="Cudart Build Rule"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="Cudart Build Rule"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|x64"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="Cudart Build Rule"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\cuda\2d\fbp.cu"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"

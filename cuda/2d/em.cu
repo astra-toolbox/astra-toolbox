@@ -170,34 +170,6 @@ float EM::computeDiffNorm()
 }
 
 
-bool doEM(float* D_volumeData, unsigned int volumePitch,
-          float* D_sinoData, unsigned int sinoPitch,
-          const SDimensions& dims, const float* angles,
-          const float* TOffsets, unsigned int iterations)
-{
-	EM em;
-	bool ok = true;
-
-	ok &= em.setGeometry(dims, angles);
-	if (TOffsets)
-		ok &= em.setTOffsets(TOffsets);
-
-	if (!ok)
-		return false;
-
-	ok = em.init();
-	if (!ok)
-		return false;
-
-	ok &= em.setBuffers(D_volumeData, volumePitch, D_sinoData, sinoPitch);
-	if (!ok)
-		return false;
-
-	ok = em.iterate(iterations);
-
-	return ok;
-}
-
 }
 
 #ifdef STANDALONE

@@ -64,6 +64,8 @@ using namespace astra;
   } } while (0)
 
 
+namespace astraCUDA {
+
 __global__ static void applyFilter_kernel(int _iProjectionCount,
                                           int _iFreqBinCount,
                                           cufftComplex * _pSinogram,
@@ -276,11 +278,11 @@ bool runCudaIFFT(int _iProjectionCount, const cufftComplex* _pDevSourceComplex,
 // Because the input is real, the Fourier transform is symmetric.
 // CUFFT only outputs the first half (ignoring the redundant second half),
 // and expects the same as input for the IFFT.
-int calcFFTFourSize(int _iFFTRealSize)
+int calcFFTFourierSize(int _iFFTRealSize)
 {
-	int iFFTFourSize = _iFFTRealSize / 2 + 1;
+	int iFFTFourierSize = _iFFTRealSize / 2 + 1;
 
-	return iFFTFourSize;
+	return iFFTFourierSize;
 }
 
 void genIdenFilter(int _iProjectionCount, cufftComplex * _pFilter,
@@ -694,6 +696,10 @@ void genFilter(E_FBPFILTER _eFilter, float _fD, int _iProjectionCount,
 	delete[] pfFilt;
 	delete[] pfW;
 }
+
+
+}
+
 
 #ifdef STANDALONE
 

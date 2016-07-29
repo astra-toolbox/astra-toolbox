@@ -33,6 +33,7 @@ $Id$
 #include "astra/AstraObjectManager.h"
 #include "astra/CudaProjector2D.h"
 #include "../cuda/2d/astra.h"
+#include "../cuda/2d/fbp.h"
 
 #include "astra/Logging.h"
 
@@ -44,8 +45,7 @@ string CCudaFilteredBackProjectionAlgorithm::type = "FBP_CUDA";
 CCudaFilteredBackProjectionAlgorithm::CCudaFilteredBackProjectionAlgorithm()
 {
 	m_bIsInitialized = false;
-	CReconstructionAlgorithm2D::_clear();
-	m_pFBP = 0;
+	CCudaReconstructionAlgorithm2D::_clear();
 	m_pfFilter = NULL;
 	m_fFilterParameter = -1.0f;
 	m_fFilterD = 1.0f;
@@ -53,35 +53,8 @@ CCudaFilteredBackProjectionAlgorithm::CCudaFilteredBackProjectionAlgorithm()
 
 CCudaFilteredBackProjectionAlgorithm::~CCudaFilteredBackProjectionAlgorithm()
 {
-	if(m_pfFilter != NULL)
-	{
-		delete [] m_pfFilter;
-		m_pfFilter = NULL;
-	}
-
-	if(m_pFBP != NULL)
-	{
-		delete m_pFBP;
-		m_pFBP = NULL;
-	}
-}
-
-void CCudaFilteredBackProjectionAlgorithm::initializeFromProjector()
-{
-	m_iPixelSuperSampling = 1;
-	m_iGPUIndex = -1;
-
-	// Projector
-	CCudaProjector2D* pCudaProjector = dynamic_cast<CCudaProjector2D*>(m_pProjector);
-	if (!pCudaProjector) {
-		if (m_pProjector) {
-			ASTRA_WARN("non-CUDA Projector2D passed to FBP_CUDA");
-		}
-	} else {
-		m_iPixelSuperSampling = pCudaProjector->getVoxelSuperSampling();
-		m_iGPUIndex = pCudaProjector->getGPUIndex();
-	}
-
+	delete[] m_pfFilter;
+	m_pfFilter = NULL;
 }
 
 bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
@@ -92,54 +65,28 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 	// if already initialized, clear first
 	if (m_bIsInitialized)
 	{
+#warning FIXME Necessary?
 		clear();
 	}
 
-	// Projector
-	XMLNode node = _cfg.self.getSingleNode("ProjectorId");
-	CCudaProjector2D* pCudaProjector = 0;
-	if (node) {
-		int id = node.getContentInt();
-		CProjector2D *projector = CProjector2DManager::getSingleton().get(id);
-		pCudaProjector = dynamic_cast<CCudaProjector2D*>(projector);
-		if (!pCudaProjector) {
-			ASTRA_WARN("non-CUDA Projector2D passed");
-		}
-	}
-	CC.markNodeParsed("ProjectorId");
+	m_bIsInitialized = CCudaReconstructionAlgorithm2D::initialize(_cfg);
+	if (!m_bIsInitialized)
+		return false;
 
-
-	// sinogram data
-	node = _cfg.self.getSingleNode("ProjectionDataId");
-	ASTRA_CONFIG_CHECK(node, "CudaFBP", "No ProjectionDataId tag specified.");
-	int id = node.getContentInt();
-	m_pSinogram = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
-	CC.markNodeParsed("ProjectionDataId");
-
-	// reconstruction data
-	node = _cfg.self.getSingleNode("ReconstructionDataId");
-	ASTRA_CONFIG_CHECK(node, "CudaFBP", "No ReconstructionDataId tag specified.");
-	id = node.getContentInt();
-	m_pReconstruction = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
-	CC.markNodeParsed("ReconstructionDataId");
 
 	// filter type
-	node = _cfg.self.getSingleNode("FilterType");
+	XMLNode node = _cfg.self.getSingleNode("FilterType");
 	if (node)
-	{
 		m_eFilter = _convertStringToFilter(node.getContent().c_str());
-	}
 	else
-	{
 		m_eFilter = FILTER_RAMLAK;
-	}
 	CC.markNodeParsed("FilterType");
 
 	// filter
 	node = _cfg.self.getSingleNode("FilterSinogramId");
 	if (node)
 	{
-		id = node.getContentInt();
+		int id = node.getContentInt();
 		const CFloat32ProjectionData2D * pFilterData = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
 		m_iFilterWidth = pFilterData->getGeometry()->getDetectorCount();
 		int iFilterProjectionCount = pFilterData->getGeometry()->getProjectionAngleCount();
@@ -188,20 +135,9 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 
 	initializeFromProjector();
 
-	// Deprecated options
-	m_iPixelSuperSampling = (int)_cfg.self.getOptionNumerical("PixelSuperSampling", m_iPixelSuperSampling);
-	CC.markOptionParsed("PixelSuperSampling");
 
-	// GPU number
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
-	CC.markOptionParsed("GPUIndex");
-	if (!_cfg.self.hasOption("GPUIndex"))
-		CC.markOptionParsed("GPUindex");
-
-
-	m_pFBP = new AstraFBP;
-	m_bAstraFBPInit = false;
+	m_pAlgo = new astraCUDA::FBP();
+	m_bAlgoInit = false;
 
 	return check();
 }
@@ -226,9 +162,8 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(CFloat32ProjectionData2D *
 	// success
 	m_bIsInitialized = true;
 
-	m_pFBP = new AstraFBP;
-
-	m_bAstraFBPInit = false;
+	m_pAlgo = new astraCUDA::FBP();
+	m_bAlgoInit = false;
 
 	if(_pfFilter != NULL)
 	{
@@ -256,106 +191,25 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(CFloat32ProjectionData2D *
 	return check();
 }
 
-void CCudaFilteredBackProjectionAlgorithm::run(int _iNrIterations /* = 0 */)
+
+void CCudaFilteredBackProjectionAlgorithm::initCUDAAlgorithm()
 {
-	// check initialized
-	ASTRA_ASSERT(m_bIsInitialized);
+	CCudaReconstructionAlgorithm2D::initCUDAAlgorithm();
 
-	if (!m_bAstraFBPInit) {
+	astraCUDA::FBP* pFBP = dynamic_cast<astraCUDA::FBP*>(m_pAlgo);
 
-		const CVolumeGeometry2D& volgeom = *m_pReconstruction->getGeometry();
-		const CParallelProjectionGeometry2D* parprojgeom = dynamic_cast<CParallelProjectionGeometry2D*>(m_pSinogram->getGeometry());
-		const CFanFlatProjectionGeometry2D* fanprojgeom = dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pSinogram->getGeometry());
-
-		bool ok = true;
-
-		// TODO: non-square pixels?
-		ok &= m_pFBP->setReconstructionGeometry(volgeom.getGridColCount(),
-		                                         volgeom.getGridRowCount(),
-		                                         volgeom.getPixelLengthX());
-		int iDetectorCount;
-		if (parprojgeom) {
-
-			float *offsets, *angles, detSize, outputScale;
-
-			ok = convertAstraGeometry(&volgeom, parprojgeom, offsets, angles, detSize, outputScale);
-
-
-			ok &= m_pFBP->setProjectionGeometry(parprojgeom->getProjectionAngleCount(),
-			                                     parprojgeom->getDetectorCount(),
-			                                     angles,
-			                                     parprojgeom->getDetectorWidth());
-			iDetectorCount = parprojgeom->getDetectorCount();
-
-			// TODO: Are detSize and outputScale handled correctly?
-
-			if (offsets)
-				ok &= m_pFBP->setTOffsets(offsets);
-			ASTRA_ASSERT(ok);
-
-			delete[] offsets;
-			delete[] angles;
-
-		} else if (fanprojgeom) {
-
-			astraCUDA::SFanProjection* projs;
-			float outputScale;
-
-			// FIXME: Implement this, and clean up the interface to AstraFBP.
-			if (abs(volgeom.getWindowMinX() + volgeom.getWindowMaxX()) > 0.00001 * volgeom.getPixelLengthX()) {
-				// Off-center volume geometry isn't supported yet
-				ASTRA_ASSERT(false);
-			}
-			if (abs(volgeom.getWindowMinY() + volgeom.getWindowMaxY()) > 0.00001 * volgeom.getPixelLengthY()) {
-				// Off-center volume geometry isn't supported yet
-				ASTRA_ASSERT(false);
-			}
-
-			ok = convertAstraGeometry(&volgeom, fanprojgeom, projs, outputScale);
-
-			// CHECKME: outputScale?
-
-			ok &= m_pFBP->setFanGeometry(fanprojgeom->getProjectionAngleCount(),
-			                             fanprojgeom->getDetectorCount(),
-			                             projs,
-			                             fanprojgeom->getProjectionAngles(),
-			                             fanprojgeom->getOriginSourceDistance(),
-			                             fanprojgeom->getOriginDetectorDistance(),
-
-		                                     fanprojgeom->getDetectorWidth(),
-			                             m_bShortScan);
-
-			iDetectorCount = fanprojgeom->getDetectorCount();
-
-			delete[] projs;
-		} else {
-			assert(false);
-		}
-
-		ok &= m_pFBP->setPixelSuperSampling(m_iPixelSuperSampling);
-
+	bool ok = pFBP->setFilter(m_eFilter, m_pfFilter, m_iFilterWidth, m_fFilterD, m_fFilterParameter);
+	if (!ok) {
+		ASTRA_ERROR("CCudaFilteredBackProjectionAlgorithm: Failed to set filter");
 		ASTRA_ASSERT(ok);
-
-		ok &= m_pFBP->init(m_iGPUIndex);
-		ASTRA_ASSERT(ok);
-
-		ok &= m_pFBP->setSinogram(m_pSinogram->getDataConst(), iDetectorCount);
-		ASTRA_ASSERT(ok);
-
-		ok &= m_pFBP->setFilter(m_eFilter, m_pfFilter, m_iFilterWidth, m_fFilterD, m_fFilterParameter);
-		ASTRA_ASSERT(ok);
-
-		m_bAstraFBPInit = true;
 	}
 
-	bool ok = m_pFBP->run();
-	ASTRA_ASSERT(ok);
-
-	const CVolumeGeometry2D& volgeom = *m_pReconstruction->getGeometry();
-	ok &= m_pFBP->getReconstruction(m_pReconstruction->getData(), volgeom.getGridColCount());
-
-	ASTRA_ASSERT(ok);
+	ok &= pFBP->setShortScan(m_bShortScan);
+	if (!ok) {
+		ASTRA_ERROR("CCudaFilteredBackProjectionAlgorithm: Failed to set short-scan mode");
+	}
 }
+
 
 bool CCudaFilteredBackProjectionAlgorithm::check()
 {
@@ -393,16 +247,6 @@ static int calcNextPowerOfTwo(int _iValue)
 	}
 
 	return iOutput;
-}
-
-int CCudaFilteredBackProjectionAlgorithm::calcIdealRealFilterWidth(int _iDetectorCount)
-{
-	return calcNextPowerOfTwo(_iDetectorCount);
-}
-
-int CCudaFilteredBackProjectionAlgorithm::calcIdealFourierFilterWidth(int _iDetectorCount)
-{
-	return (calcNextPowerOfTwo(_iDetectorCount) / 2 + 1);
 }
 
 static bool stringCompareLowerCase(const char * _stringA, const char * _stringB)
@@ -518,12 +362,3 @@ E_FBPFILTER CCudaFilteredBackProjectionAlgorithm::_convertStringToFilter(const c
 	return output;
 }
 
-void CCudaFilteredBackProjectionAlgorithm::testGenFilter(E_FBPFILTER _eFilter, float _fD, int _iProjectionCount, cufftComplex * _pFilter, int _iFFTRealDetectorCount, int _iFFTFourierDetectorCount)
-{
-	genFilter(_eFilter, _fD, _iProjectionCount, _pFilter, _iFFTRealDetectorCount, _iFFTFourierDetectorCount);
-}
-
-int CCudaFilteredBackProjectionAlgorithm::getGPUCount()
-{
-	return 0;
-}

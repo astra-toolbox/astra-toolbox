@@ -250,69 +250,14 @@ bool CCudaReconstructionAlgorithm2D::setupGeometry()
 	ok = m_pAlgo->setGPUIndex(m_iGPUIndex);
 	if (!ok) return false;
 
-	astraCUDA::SDimensions dims;
-
 	const CVolumeGeometry2D& volgeom = *m_pReconstruction->getGeometry();
+	const CProjectionGeometry2D& projgeom = *m_pSinogram->getGeometry();
 
-	// TODO: non-square pixels?
-	dims.iVolWidth = volgeom.getGridColCount();
-	dims.iVolHeight = volgeom.getGridRowCount();
-	float fPixelSize = volgeom.getPixelLengthX();
-
-	dims.iRaysPerDet = m_iDetectorSuperSampling;
-	dims.iRaysPerPixelDim = m_iPixelSuperSampling;
-
-
-	const CParallelProjectionGeometry2D* parProjGeom = dynamic_cast<CParallelProjectionGeometry2D*>(m_pSinogram->getGeometry());
-	const CFanFlatProjectionGeometry2D* fanProjGeom = dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pSinogram->getGeometry());
-	const CFanFlatVecProjectionGeometry2D* fanVecProjGeom = dynamic_cast<CFanFlatVecProjectionGeometry2D*>(m_pSinogram->getGeometry());
-
-	if (parProjGeom) {
-
-		float *offsets, *angles, detSize, outputScale;
-
-		ok = convertAstraGeometry(&volgeom, parProjGeom, offsets, angles, detSize, outputScale);
-
-		dims.iProjAngles = parProjGeom->getProjectionAngleCount();
-		dims.iProjDets = parProjGeom->getDetectorCount();
-		dims.fDetScale = parProjGeom->getDetectorWidth() / fPixelSize;
-
-		ok = m_pAlgo->setGeometry(dims, parProjGeom->getProjectionAngles());
-		ok &= m_pAlgo->setTOffsets(offsets);
-
-		// CHECKME: outputScale? detSize?
-
-		delete[] offsets;
-		delete[] angles;
-
-	} else if (fanProjGeom || fanVecProjGeom) {
-
-		astraCUDA::SFanProjection* projs;
-		float outputScale;
-
-		if (fanProjGeom) {
-			ok = convertAstraGeometry(&volgeom, fanProjGeom, projs, outputScale);
-		} else {
-			ok = convertAstraGeometry(&volgeom, fanVecProjGeom, projs, outputScale);
-		}
-
-		dims.iProjAngles = m_pSinogram->getGeometry()->getProjectionAngleCount();
-		dims.iProjDets = m_pSinogram->getGeometry()->getDetectorCount();
-		dims.fDetScale = m_pSinogram->getGeometry()->getDetectorWidth() / fPixelSize;
-
-		ok = m_pAlgo->setFanGeometry(dims, projs);
-
-		// CHECKME: outputScale?
-
-		delete[] projs;
-
-	} else {
-
-		ASTRA_ASSERT(false);
-
-	}
+	ok = m_pAlgo->setGeometry(&volgeom, &projgeom);
 	if (!ok) return false;
 
+	ok = m_pAlgo->setSuperSampling(m_iDetectorSuperSampling, m_iPixelSuperSampling);
+	if (!ok) return false;
 
 	if (m_bUseReconstructionMask)
 		ok &= m_pAlgo->enableVolumeMask();

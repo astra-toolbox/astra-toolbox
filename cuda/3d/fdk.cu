@@ -353,7 +353,7 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 	// The filtering is a regular ramp filter per detector line.
 
 	int iPaddedDetCount = calcNextPowerOfTwo(2 * dims.iProjU);
-	int iHalfFFTSize = calcFFTFourSize(iPaddedDetCount);
+	int iHalfFFTSize = astraCUDA::calcFFTFourierSize(iPaddedDetCount);
 	int projPitch = D_projData.pitch/sizeof(float);
 	
 
@@ -361,22 +361,22 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 	float* D_sinoData = (float*)D_projData.ptr;
 
 	cufftComplex * D_sinoFFT = NULL;
-	allocateComplexOnDevice(dims.iProjAngles, iHalfFFTSize, &D_sinoFFT);
+	astraCUDA::allocateComplexOnDevice(dims.iProjAngles, iHalfFFTSize, &D_sinoFFT);
 
 	bool ok = true;
 
 	for (int v = 0; v < dims.iProjV; ++v) {
 
-		ok = runCudaFFT(dims.iProjAngles, D_sinoData, projPitch,
+		ok = astraCUDA::runCudaFFT(dims.iProjAngles, D_sinoData, projPitch,
 		                dims.iProjU, iPaddedDetCount, iHalfFFTSize,
 		                D_sinoFFT);
 
 		if (!ok) break;
 
-		applyFilter(dims.iProjAngles, iHalfFFTSize, D_sinoFFT, D_filter);
+		astraCUDA::applyFilter(dims.iProjAngles, iHalfFFTSize, D_sinoFFT, D_filter);
 
 
-		ok = runCudaIFFT(dims.iProjAngles, D_sinoFFT, D_sinoData, projPitch,
+		ok = astraCUDA::runCudaIFFT(dims.iProjAngles, D_sinoFFT, D_sinoData, projPitch,
 		                 dims.iProjU, iPaddedDetCount, iHalfFFTSize);
 
 		if (!ok) break;
@@ -384,7 +384,7 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 		D_sinoData += (dims.iProjAngles * projPitch);
 	}
 
-	freeComplexOnDevice(D_sinoFFT);
+	astraCUDA::freeComplexOnDevice(D_sinoFFT);
 
 	return ok;
 }
@@ -401,7 +401,7 @@ bool FDK(cudaPitchedPtr D_volumeData,
 	// TODO: Check errors
 	cufftComplex * D_filter;
 	int iPaddedDetCount = calcNextPowerOfTwo(2 * dims.iProjU);
-	int iHalfFFTSize = calcFFTFourSize(iPaddedDetCount);
+	int iHalfFFTSize = astraCUDA::calcFFTFourierSize(iPaddedDetCount);
 
 	ok = FDK_PreWeight(D_projData, fSrcOrigin, fDetOrigin,
 	                fSrcZ, fDetZ, fDetUSize, fDetVSize,
@@ -412,11 +412,11 @@ bool FDK(cudaPitchedPtr D_volumeData,
 	cufftComplex *pHostFilter = new cufftComplex[dims.iProjAngles * iHalfFFTSize];
 	memset(pHostFilter, 0, sizeof(cufftComplex) * dims.iProjAngles * iHalfFFTSize);
 
-	genFilter(FILTER_RAMLAK, 1.0f, dims.iProjAngles, pHostFilter, iPaddedDetCount, iHalfFFTSize);
+	astraCUDA::genFilter(astra::FILTER_RAMLAK, 1.0f, dims.iProjAngles, pHostFilter, iPaddedDetCount, iHalfFFTSize);
 
 
-	allocateComplexOnDevice(dims.iProjAngles, iHalfFFTSize, &D_filter);
-	uploadComplexArrayToDevice(dims.iProjAngles, iHalfFFTSize, pHostFilter, D_filter);
+	astraCUDA::allocateComplexOnDevice(dims.iProjAngles, iHalfFFTSize, &D_filter);
+	astraCUDA::uploadComplexArrayToDevice(dims.iProjAngles, iHalfFFTSize, pHostFilter, D_filter);
 
 	delete [] pHostFilter;
 
@@ -430,7 +430,7 @@ bool FDK(cudaPitchedPtr D_volumeData,
 	                bShortScan, dims, angles);
 
 	// Clean up filter
-	freeComplexOnDevice(D_filter);
+	astraCUDA::freeComplexOnDevice(D_filter);
 
 
 	if (!ok)

@@ -30,6 +30,7 @@ $Id$
 #include <cassert>
 #include <iostream>
 #include <list>
+#include <cmath>
 
 #include "util.h"
 #include "arith.h"
@@ -51,6 +52,7 @@ namespace astraCUDA {
 static const unsigned g_MaxAngles = 2560;
 __constant__ float gC_angle[g_MaxAngles];
 __constant__ float gC_angle_offset[g_MaxAngles];
+__constant__ float gC_angle_detsize[g_MaxAngles];
 
 
 // optimization parameters
@@ -61,10 +63,6 @@ static const unsigned int g_blockSlices = 64;
 // fixed point scaling factor
 #define fPREC_FACTOR 16.0f
 #define iPREC_FACTOR 16
-
-
-// if necessary, a buffer of zeroes of size g_MaxAngles
-static float* g_pfZeroes = 0;
 
 
 static bool bindVolumeDataTexture(float* data, cudaArray*& dataArray, unsigned int pitch, unsigned int width, unsigned int height)
@@ -89,209 +87,6 @@ static bool bindVolumeDataTexture(float* data, cudaArray*& dataArray, unsigned i
 	return true;
 }
 
-// projection for angles that are roughly horizontal
-// theta between 45 and 135 degrees
-__global__ void FPhorizontal(float* D_projData, unsigned int projPitch, unsigned int startSlice, unsigned int startAngle, unsigned int endAngle, int regionOffset, const SDimensions dims, float outputScale)
-{
-	const int relDet = threadIdx.x;
-	const int relAngle = threadIdx.y;
-
-	int angle = startAngle + blockIdx.x * g_anglesPerBlock + relAngle;
-
-	if (angle >= endAngle)
-		return;
-
-	const float theta = gC_angle[angle];
-	const float cos_theta = __cosf(theta);
-	const float sin_theta = __sinf(theta);
-
-	// compute start detector for this block/angle:
-	// (The same for all threadIdx.x)
-	// -------------------------------------
-
-	const int midSlice = startSlice + g_blockSlices / 2;
-
-	// ASSUMPTION: fDetScale >= 1.0f
-	// problem: detector regions get skipped because slice blocks aren't large
-	// enough
-	const unsigned int g_blockSliceSize = g_detBlockSize;
-
-	// project (midSlice,midRegion) on this thread's detector
-
-	const float fBase = 0.5f*dims.iProjDets - 0.5f +
-		(
-		    (midSlice - 0.5f*dims.iVolWidth + 0.5f) * cos_theta
-		  - (g_blockSliceSize/2 - 0.5f*dims.iVolHeight + 0.5f) * sin_theta
-		  + gC_angle_offset[angle]
-		) / dims.fDetScale;
-	int iBase = (int)floorf(fBase * fPREC_FACTOR);
-	int iInc = (int)floorf(g_blockSliceSize * sin_theta / dims.fDetScale * -fPREC_FACTOR);
-
-	// ASSUMPTION: 16 > regionOffset / fDetScale
-	const int detRegion = (iBase + (blockIdx.y - regionOffset)*iInc + 16*iPREC_FACTOR*g_detBlockSize) / (iPREC_FACTOR * g_detBlockSize) - 16;
-	const int detPrevRegion = (iBase + (blockIdx.y - regionOffset - 1)*iInc + 16*iPREC_FACTOR*g_detBlockSize) / (iPREC_FACTOR * g_detBlockSize) - 16;
-
-	if (blockIdx.y > 0 && detRegion == detPrevRegion)
-		return;
-
-	const int detector = detRegion * g_detBlockSize + relDet;
-
-	// Now project the part of the ray to angle,detector through
-	// slices startSlice to startSlice+g_blockSlices-1
-
-	if (detector < 0 || detector >= dims.iProjDets)
-		return;
-
-	const float fDetStep = -dims.fDetScale / sin_theta;
-	float fSliceStep = cos_theta / sin_theta;
-	float fDistCorr;
-	if (sin_theta > 0.0f)
-		fDistCorr = -fDetStep;
-	else
-		fDistCorr = fDetStep;
-	fDistCorr *= outputScale;
-
-	float fVal = 0.0f;
-	// project detector on slice
-	float fP = (detector - 0.5f*dims.iProjDets + 0.5f - gC_angle_offset[angle]) * fDetStep + (startSlice - 0.5f*dims.iVolWidth + 0.5f) * fSliceStep + 0.5f*dims.iVolHeight - 0.5f + 0.5f;
-	float fS = startSlice + 0.5f;
-	int endSlice = startSlice + g_blockSlices;
-	if (endSlice > dims.iVolWidth)
-		endSlice = dims.iVolWidth;
-
-	if (dims.iRaysPerDet > 1) {
-
-		fP += (-0.5f*dims.iRaysPerDet + 0.5f)/dims.iRaysPerDet * fDetStep;
-		const float fSubDetStep = fDetStep / dims.iRaysPerDet;
-		fDistCorr /= dims.iRaysPerDet;
-
-		fSliceStep -= dims.iRaysPerDet * fSubDetStep;
-
-		for (int slice = startSlice; slice < endSlice; ++slice)
-		{
-			for (int iSubT = 0; iSubT < dims.iRaysPerDet; ++iSubT) {
-				fVal += tex2D(gT_volumeTexture, fS, fP);
-				fP += fSubDetStep;
-			}
-			fP += fSliceStep;
-			fS += 1.0f;
-		}
-
-	} else {
-
-		for (int slice = startSlice; slice < endSlice; ++slice)
-		{
-			fVal += tex2D(gT_volumeTexture, fS, fP);
-			fP += fSliceStep;
-			fS += 1.0f;
-		}
-
-
-	}
-
-	D_projData[angle*projPitch+detector] += fVal * fDistCorr;
-}
-
-// projection for angles that are roughly vertical
-// theta between 0 and 45, or 135 and 180 degrees
-__global__ void FPvertical(float* D_projData, unsigned int projPitch, unsigned int startSlice, unsigned int startAngle, unsigned int endAngle, int regionOffset, const SDimensions dims, float outputScale)
-{
-	const int relDet = threadIdx.x;
-	const int relAngle = threadIdx.y;
-
-	int angle = startAngle + blockIdx.x * g_anglesPerBlock + relAngle;
-
-	if (angle >= endAngle)
-		return;
-
-	const float theta = gC_angle[angle];
-	const float cos_theta = __cosf(theta);
-	const float sin_theta = __sinf(theta);
-
-	// compute start detector for this block/angle:
-	// (The same for all threadIdx.x)
-	// -------------------------------------
-
-	const int midSlice = startSlice + g_blockSlices / 2;
-
-	// project (midSlice,midRegion) on this thread's detector
-
-	// ASSUMPTION: fDetScale >= 1.0f
-	// problem: detector regions get skipped because slice blocks aren't large
-	// enough
-	const unsigned int g_blockSliceSize = g_detBlockSize;
-
-	const float fBase = 0.5f*dims.iProjDets - 0.5f +
-		(
-		    (g_blockSliceSize/2 - 0.5f*dims.iVolWidth + 0.5f) * cos_theta
-		  - (midSlice - 0.5f*dims.iVolHeight + 0.5f) * sin_theta
-		  + gC_angle_offset[angle]
-		) / dims.fDetScale;
-	int iBase = (int)floorf(fBase * fPREC_FACTOR);
-	int iInc = (int)floorf(g_blockSliceSize * cos_theta / dims.fDetScale * fPREC_FACTOR);
-
-	// ASSUMPTION: 16 > regionOffset / fDetScale
-	const int detRegion = (iBase + (blockIdx.y - regionOffset)*iInc + 16*iPREC_FACTOR*g_detBlockSize) / (iPREC_FACTOR * g_detBlockSize) - 16;
-	const int detPrevRegion = (iBase + (blockIdx.y - regionOffset-1)*iInc + 16*iPREC_FACTOR*g_detBlockSize) / (iPREC_FACTOR * g_detBlockSize) - 16;
-
-	if (blockIdx.y > 0 && detRegion == detPrevRegion)
-		return;
-
-	const int detector = detRegion * g_detBlockSize + relDet;
-
-	// Now project the part of the ray to angle,detector through
-	// slices startSlice to startSlice+g_blockSlices-1
-
-	if (detector < 0 || detector >= dims.iProjDets)
-		return;
-
-	const float fDetStep = dims.fDetScale / cos_theta;
-	float fSliceStep = sin_theta / cos_theta;
-	float fDistCorr;
-	if (cos_theta < 0.0f)
-		fDistCorr = -fDetStep;
-	else
-		fDistCorr = fDetStep;
-	fDistCorr *= outputScale;
-
-	float fVal = 0.0f;
-	float fP = (detector - 0.5f*dims.iProjDets + 0.5f - gC_angle_offset[angle]) * fDetStep + (startSlice - 0.5f*dims.iVolHeight + 0.5f) * fSliceStep + 0.5f*dims.iVolWidth - 0.5f + 0.5f;
-	float fS = startSlice+0.5f;
-	int endSlice = startSlice + g_blockSlices;
-	if (endSlice > dims.iVolHeight)
-		endSlice = dims.iVolHeight;
-
-	if (dims.iRaysPerDet > 1) {
-
-		fP += (-0.5f*dims.iRaysPerDet + 0.5f)/dims.iRaysPerDet * fDetStep;
-		const float fSubDetStep = fDetStep / dims.iRaysPerDet;
-		fDistCorr /= dims.iRaysPerDet;
-
-		fSliceStep -= dims.iRaysPerDet * fSubDetStep;
-
-		for (int slice = startSlice; slice < endSlice; ++slice)
-		{
-			for (int iSubT = 0; iSubT < dims.iRaysPerDet; ++iSubT) {
-				fVal += tex2D(gT_volumeTexture, fP, fS);
-				fP += fSubDetStep;
-			}
-			fP += fSliceStep;
-			fS += 1.0f;
-		}
-
-	} else {
-
-		for (int slice = startSlice; slice < endSlice; ++slice)
-		{
-			fVal += tex2D(gT_volumeTexture, fP, fS);
-			fP += fSliceStep;
-			fS += 1.0f;
-		}
-
-	}
-
-	D_projData[angle*projPitch+detector] += fVal * fDistCorr;
-}
 
 // projection for angles that are roughly horizontal
 // (detector roughly vertical)
@@ -320,7 +115,7 @@ __global__ void FPhorizontal_simple(float* D_projData, unsigned int projPitch, u
 	if (detector < 0 || detector >= dims.iProjDets)
 		return;
 
-	const float fDetStep = -dims.fDetScale / sin_theta;
+	const float fDetStep = -gC_angle_detsize[angle] / sin_theta;
 	float fSliceStep = cos_theta / sin_theta;
 	float fDistCorr;
 	if (sin_theta > 0.0f)
@@ -398,7 +193,7 @@ __global__ void FPvertical_simple(float* D_projData, unsigned int projPitch, uns
 	if (detector < 0 || detector >= dims.iProjDets)
 		return;
 
-	const float fDetStep = dims.fDetScale / cos_theta;
+	const float fDetStep = gC_angle_detsize[angle] / cos_theta;
 	float fSliceStep = sin_theta / cos_theta;
 	float fDistCorr;
 	if (cos_theta < 0.0f)
@@ -448,28 +243,65 @@ __global__ void FPvertical_simple(float* D_projData, unsigned int projPitch, uns
 
 
 
+
+// Coordinates of center of detector pixel number t:
+// x = (t - 0.5*nDets + 0.5 - fOffset) * fSize * cos(fAngle)
+// y = - (t - 0.5*nDets + 0.5 - fOffset) * fSize * sin(fAngle)
+
+
+static void convertAndUploadAngles(const SParProjection *projs, unsigned int nth, unsigned int ndets)
+{
+	float *angles = new float[nth];
+	float *offset = new float[nth];
+	float *detsizes = new float[nth];
+
+	for (int i = 0; i < nth; ++i) {
+
+#warning TODO: Replace by getParParamaters
+
+		// Take part of DetU orthogonal to Ray
+		double ux = projs[i].fDetUX;
+		double uy = projs[i].fDetUY;
+
+		double t = (ux * projs[i].fRayX + uy * projs[i].fRayY) / (projs[i].fRayX * projs[i].fRayX + projs[i].fRayY * projs[i].fRayY);
+
+		ux -= t * projs[i].fRayX;
+		uy -= t * projs[i].fRayY;
+
+		double angle = atan2(uy, ux);
+
+		angles[i] = angle;
+
+		double norm2 = uy * uy + ux * ux;
+
+		detsizes[i] = sqrt(norm2);
+
+		// CHECKME: SIGNS?
+		offset[i] = -0.5*ndets - (projs[i].fDetSY*uy + projs[i].fDetSX*ux) / norm2;
+	}
+
+	cudaMemcpyToSymbol(gC_angle, angles, nth*sizeof(float), 0, cudaMemcpyHostToDevice); 
+	cudaMemcpyToSymbol(gC_angle_offset, offset, nth*sizeof(float), 0, cudaMemcpyHostToDevice); 
+	cudaMemcpyToSymbol(gC_angle_detsize, detsizes, nth*sizeof(float), 0, cudaMemcpyHostToDevice); 
+}
+
+
+
 bool FP_simple_internal(float* D_volumeData, unsigned int volumePitch,
                float* D_projData, unsigned int projPitch,
-               const SDimensions& dims, const float* angles,
-               const float* TOffsets, float outputScale)
+               const SDimensions& dims, const SParProjection* angles,
+               float outputScale)
 {
-	// TODO: load angles into constant memory in smaller blocks
 	assert(dims.iProjAngles <= g_MaxAngles);
+
+	assert(angles);
 
 	cudaArray* D_dataArray;
 	bindVolumeDataTexture(D_volumeData, D_dataArray, volumePitch, dims.iVolWidth, dims.iVolHeight);
 
-	cudaMemcpyToSymbol(gC_angle, angles, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice);
 
-	if (TOffsets) {
-		cudaMemcpyToSymbol(gC_angle_offset, TOffsets, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice);
-	} else {
-		if (!g_pfZeroes) {
-			g_pfZeroes = new float[g_MaxAngles];
-			memset(g_pfZeroes, 0, g_MaxAngles * sizeof(float));
-		}
-		cudaMemcpyToSymbol(gC_angle_offset, g_pfZeroes, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice);
-	}
+	convertAndUploadAngles(angles, dims.iProjAngles, dims.iProjDets);
+
 
 	dim3 dimBlock(g_detBlockSize, g_anglesPerBlock); // detector block size, angles
 
@@ -492,7 +324,7 @@ bool FP_simple_internal(float* D_volumeData, unsigned int volumePitch,
 		// Maybe we should detect corner cases and put them in the optimal
 		// group of angles.
 		if (a != dims.iProjAngles)
-			vertical = (fabsf(sinf(angles[a])) <= fabsf(cosf(angles[a])));
+			vertical = (fabsf(angles[a].fRayX) <= fabsf(angles[a].fRayY));
 		if (a == dims.iProjAngles || vertical != blockVertical) {
 			// block done
 
@@ -536,8 +368,8 @@ bool FP_simple_internal(float* D_volumeData, unsigned int volumePitch,
 
 bool FP_simple(float* D_volumeData, unsigned int volumePitch,
                float* D_projData, unsigned int projPitch,
-               const SDimensions& dims, const float* angles,
-               const float* TOffsets, float outputScale)
+               const SDimensions& dims, const SParProjection* angles,
+               float outputScale)
 {
 	for (unsigned int iAngle = 0; iAngle < dims.iProjAngles; iAngle += g_MaxAngles) {
 		SDimensions subdims = dims;
@@ -550,7 +382,7 @@ bool FP_simple(float* D_volumeData, unsigned int volumePitch,
 		ret = FP_simple_internal(D_volumeData, volumePitch,
 		                         D_projData + iAngle * projPitch, projPitch,
 		                         subdims, angles + iAngle,
-		                         TOffsets ? TOffsets + iAngle : 0, outputScale);
+		                         outputScale);
 		if (!ret)
 			return false;
 	}
@@ -559,106 +391,12 @@ bool FP_simple(float* D_volumeData, unsigned int volumePitch,
 
 bool FP(float* D_volumeData, unsigned int volumePitch,
         float* D_projData, unsigned int projPitch,
-        const SDimensions& dims, const float* angles,
-        const float* TOffsets, float outputScale)
+        const SDimensions& dims, const SParProjection* angles,
+        float outputScale)
 {
 	return FP_simple(D_volumeData, volumePitch, D_projData, projPitch,
-	                 dims, angles, TOffsets, outputScale);
+	                 dims, angles, outputScale);
 
-	// TODO: Fix bug in this non-simple FP with large detscale and TOffsets
-#if 0
-
-	// TODO: load angles into constant memory in smaller blocks
-	assert(dims.iProjAngles <= g_MaxAngles);
-
-	// TODO: compute region size dynamically to resolve these two assumptions
-	// ASSUMPTION: 16 > regionOffset / fDetScale
-	const unsigned int g_blockSliceSize = g_detBlockSize;
-	assert(16 > (g_blockSlices / g_blockSliceSize) / dims.fDetScale);
-	// ASSUMPTION: fDetScale >= 1.0f
-	assert(dims.fDetScale > 0.9999f);
-
-	cudaArray* D_dataArray;
-	bindVolumeDataTexture(D_volumeData, D_dataArray, volumePitch, dims.iVolWidth, dims.iVolHeight);
-
-	cudaMemcpyToSymbol(gC_angle, angles, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice);
-
-	if (TOffsets) {
-		cudaMemcpyToSymbol(gC_angle_offset, TOffsets, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice);
-	} else {
-		if (!g_pfZeroes) {
-			g_pfZeroes = new float[g_MaxAngles];
-			memset(g_pfZeroes, 0, g_MaxAngles * sizeof(float));
-		}
-		cudaMemcpyToSymbol(gC_angle_offset, g_pfZeroes, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice);
-	}
-
-	int regionOffset = g_blockSlices / g_blockSliceSize;
-
-	dim3 dimBlock(g_detBlockSize, g_anglesPerBlock); // region size, angles
-
-	std::list<cudaStream_t> streams;
-
-
-	// Run over all angles, grouping them into groups of the same
-	// orientation (roughly horizontal vs. roughly vertical).
-	// Start a stream of grids for each such group.
-
-	// TODO: Check if it's worth it to store this info instead
-	// of recomputing it every FP.
-
-	unsigned int blockStart = 0;
-	unsigned int blockEnd = 0;
-	bool blockVertical = false;
-	for (unsigned int a = 0; a <= dims.iProjAngles; ++a) {
-		bool vertical;
-		// TODO: Having <= instead of < below causes a 5% speedup.
-		// Maybe we should detect corner cases and put them in the optimal
-		// group of angles.
-		if (a != dims.iProjAngles)
-			vertical = (fabsf(sinf(angles[a])) <= fabsf(cosf(angles[a])));
-		if (a == dims.iProjAngles || vertical != blockVertical) {
-			// block done
-
-			blockEnd = a;
-			if (blockStart != blockEnd) {
-				unsigned int length = dims.iVolHeight;
-				if (blockVertical)
-					length = dims.iVolWidth;
-				dim3 dimGrid((blockEnd-blockStart+g_anglesPerBlock-1)/g_anglesPerBlock,
-				             (length+g_blockSliceSize-1)/g_blockSliceSize+2*regionOffset); // angle blocks, regions
-				// TODO: check if we can't immediately
-				//       destroy the stream after use
-				cudaStream_t stream;
-				cudaStreamCreate(&stream);
-				streams.push_back(stream);
-				//printf("angle block: %d to %d, %d\n", blockStart, blockEnd, blockVertical);
-				if (!blockVertical)
-					for (unsigned int i = 0; i < dims.iVolWidth; i += g_blockSlices)
-						FPhorizontal<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, i, blockStart, blockEnd, regionOffset, dims, outputScale);
-				else
-					for (unsigned int i = 0; i < dims.iVolHeight; i += g_blockSlices)
-						FPvertical<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, i, blockStart, blockEnd, regionOffset, dims, outputScale);
-			}
-			blockVertical = vertical;
-			blockStart = a;
-		}
-	}
-
-	for (std::list<cudaStream_t>::iterator iter = streams.begin(); iter != streams.end(); ++iter)
-		cudaStreamDestroy(*iter);
-
-	streams.clear();
-
-	cudaThreadSynchronize();
-
-	cudaTextForceKernelsCompletion();
-
-	cudaFreeArray(D_dataArray);
-		
-
-	return true;
-#endif
 }
 
 

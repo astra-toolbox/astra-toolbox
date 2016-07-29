@@ -9,7 +9,7 @@
 % -----------------------------------------------------------------------
 
 vol_geom = astra_create_vol_geom(256, 256);
-proj_geom = astra_create_proj_geom('parallel', 1.0, 384, linspace2(0,pi,180));
+proj_geom = astra_create_proj_geom('fanflat', 1.0, 384, linspace2(0,2*pi,1800), 500, 0);
 
 % As before, create a sinogram from a phantom
 P = phantom(256);

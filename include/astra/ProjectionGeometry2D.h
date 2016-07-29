@@ -90,8 +90,7 @@ protected:
 	CProjectionGeometry2D(int _iProjectionAngleCount, 
 						  int _iDetectorCount, 
 						  float32 _fDetectorWidth, 
-						  const float32* _pfProjectionAngles,
-						  const float32* _pfExtraDetectorOffsets = 0);
+						  const float32* _pfProjectionAngles);
 
 	/** Copy constructor. 
 	 */
@@ -117,8 +116,7 @@ protected:
 	bool _initialize(int _iProjectionAngleCount,
 					 int _iDetectorCount,
 					 float32 _fDetectorWidth,
-					 const float32* _pfProjectionAngles,
-					 const float32* _pfExtraDetectorOffsets = 0);
+					 const float32* _pfProjectionAngles);
 
 public:
 

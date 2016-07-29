@@ -34,7 +34,9 @@ $Id$
 
 namespace astraCUDA {
 
+using astra::SParProjection;
 using astra::SFanProjection;
+
 
 
 struct SDimensions {
@@ -47,9 +49,6 @@ struct SDimensions {
 
 	// Number of detector pixels
 	unsigned int iProjDets;
-
-	// size of detector compared to volume pixels
-	float fDetScale;
 
 	// in FP, number of rays to trace per detector pixel.
 	// This should usually be set to 1.
