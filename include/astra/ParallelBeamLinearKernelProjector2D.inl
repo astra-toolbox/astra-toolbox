@@ -234,4 +234,7 @@ void CParallelBeamLinearKernelProjector2D::projectBlock_internal(int _iProjFrom,
 	
 		} // end loop detector
 	} // end loop angles
+
+	if (dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry))
+		delete pVecProjectionGeometry;
 }
