@@ -124,6 +124,14 @@ if __name__=='__main__':
     # We can also use OpTomo to call the plugin
     rec_op = W.reconstruct('LANDWEBER-PLUGIN', sinogram, 100, extraOptions={'Relaxation':1.5})
 
+
+    # ASTRA also comes with built-in plugins:
+    astra.plugin.register(astra.plugins.SIRTPlugin)
+    astra.plugin.register(astra.plugins.CGLSPlugin)
+    rec_sirt = W.reconstruct('SIRT-PLUGIN', sinogram, 100, extraOptions={'Relaxation':1.5})
+    rec_cgls = W.reconstruct('CGLS-PLUGIN', sinogram, 100)
+
+
     import pylab as pl
     pl.gray()
     pl.figure(1)
@@ -132,6 +140,10 @@ if __name__=='__main__':
     pl.imshow(rec_rel,vmin=0,vmax=1)
     pl.figure(3)
     pl.imshow(rec_op,vmin=0,vmax=1)
+    pl.figure(4)
+    pl.imshow(rec_sirt,vmin=0,vmax=1)
+    pl.figure(5)
+    pl.imshow(rec_cgls,vmin=0,vmax=1)
     pl.show()
 
     # Clean up.
