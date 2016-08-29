@@ -25,4 +25,5 @@
 
 
 from .sirt import SIRTPlugin
+from .cgls import CGLSPlugin
 
