@@ -269,20 +269,32 @@ bool TV::iterate(unsigned int iterations)
 		// ----------------------
 		// p = proj_linf(p + sigma*gradient(x_tilde), Lambda)
 		gradientOperator(D_dualp, D_xTilde, sigma, 1);
-		projLinf(D_dualp, lambdaTV) // projection is done after for readability, but it can be merged with the previous kernel
+		projLinf(D_dualp, lambdaTV)
 
 		// q = (q + sigma*P(x_tilde) - sigma*data)/(1.0 + sigma)
-		callFP(D_volumeData, volumePitch, D_dualq, projPitch, sigma);
-		processSino<opAddScaled>(D_dualq, D_sinoData, -sigma, dims);
-		processSino<opMul>(D_dualq, 1.0/(1.0+sigma), projPitch, dims);
+		callFP(D_xTilde, volumePitch, D_sinoTmp, sinoTmpPitch, 1.0f);       // q' = P(xtilde)
+		processSino<opAddScaled>(D_sinoTmp, D_sinoData, -1.0f, dims);       // q' -= data
+        processSino<opAddScaled>(D_dualq, D_sinoTmp, sigma, dims);          // q = q + sigma*q'
+		processSino<opMul>(D_dualq, 1.0f/(1.0f+sigma), dualqPitch, dims);   // q /= 1+sigma
 
 
 		// Update primal variables
 		// ------------------------
-		duplicateVolumeData(D_xold, D_x, volumePitch, dims);
-		// x = x + tau*div(p) - tau*Kadj(q) ; possibly with positivity constraint
-		divergenceOperator(D_x, D_dualp, tau, 1);
+		duplicateVolumeData(D_xold, D_x, xoldPitch, dims);
+		// x = x + tau*div(p) - tau*P^T(q) ; possibly with positivity constraint
+        callBP(D_sliceTmp, tmpPitch, D_dualq, projPitch, -1.0f);            // x' = -P^T(q)
+		divergenceOperator(D_sliceTmp, D_dualp, 1.0f, 1);                   // x' += div(p)
+        processVol<opAddScaled>(D_x, tau, D_sliceTmp, xPitch, dims);        // x = x + tau*x'
 
+        // Update step
+        // ------------
+        // x_tilde = x + theta*(x - x_old) = (1+theta)*x - theta*x_old
+        duplicateVolumeData(D_xTilde, D_x, xtildePitch, dims);
+        processVol<opMul>(D_xTilde, 1.0f+theta, xtildePitch, dims);
+        processVol<opAddScaled>(D_xTilde, -theta, D_xold, xtildePitch, dims);
+        // TODO: this in two steps ? maybe x_tilde can be used previously as sliceTmp
+
+        // <========
 
 
 		// copy sinogram to projection data
