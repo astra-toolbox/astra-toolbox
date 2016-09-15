@@ -168,6 +168,7 @@ bool TV::uploadMinMaxMasks(const float* pfMinMaskData, const float* pfMaxMaskDat
 __global__ void projLinfKernel(float* dst, float2* src, const SDimensions dims, float radius) {
 	int gidx = threadIdx.x + blockIdx.x*blockDim.x;
 	int gidy = threadIdx.y + blockIdx.y*blockDim.y;
+    int sizeX = dims.iVolWidth, sizeY = dims.iVolHeight;
 
 	if (gidx < sizeX && gidy < sizeY) {
 		int idx = gidy*sizeX+gidx;
@@ -189,15 +190,69 @@ bool TV::projLinf(float2* D_gradData, float* D_data, float radius) {
 }
 
 
-// gradientOperator(dst, src, alpha, 0)  computes  dst = gradient(src)
-// gradientOperator(dst, src, alpha, 1)  computes  dst = dst + alpha*gradient(src)
-bool TV::gradientOperator(float2* D_gradData, float* D_data, float alpha, int doUpdate) {
+
+__global__ void gradientKernel2D(float2* dst, float* src, const SDimensions dims, float alpha, int doUpdate) {
+    int gidx = threadIdx.x + blockIdx.x*blockDim.x;
+    int gidy = threadIdx.y + blockIdx.y*blockDim.y;
+    int sizeX = dims.iVolWidth, sizeY = dims.iVolHeight;
+    float val_x = 0, val_y = 0;
+
+    if (gidx < sizeX && gidy < sizeY) {
+        if (gidx == sizeX-1) val_y = 0;
+        else val_y = src[(gidy)*sizeX+gidx+1] - src[gidy*sizeX+gidx];
+        if (gidy == sizeY-1) val_x = 0;
+        else val_x = src[(gidy+1)*sizeX+gidx] - src[gidy*sizeX+gidx];
+
+        if (doUpdate) {
+            val_x = alpha*val_x + dst[gidy*sizeX+gidx].x;
+            val_y = alpha*val_y + dst[gidy*sizeX+gidx].y;
+        }
+
+        slice_grad[(gidy)*sizeX+gidx].x = val_x;
+        slice_grad[(gidy)*sizeX+gidx].y = val_y;
+    }
 }
 
 
-// divergenceOperator(dst, src, alpha, 0)  computes  dst = gradient(src)
-// divergenceOperator(dst, src, alpha, 1)  computes  dst = dst + alpha*gradient(src)
+// gradientOperator(dst, src, alpha, 0)  computes  dst = gradient(src)
+// gradientOperator(dst, src, alpha, 1)  computes  dst = dst + alpha*gradient(src)
+bool TV::gradientOperator(float2* D_gradData, float* D_data, float alpha, int doUpdate) {
+    dim3 nBlocks, nThreadsPerBlock;
+    blk = dim3(threadsPerBlock, threadsPerBlock, 1);
+    grd = dim3(iDivUp(dims.iVolWidth, threadsPerBlock), iDivUp(dims.iVolHeight, threadsPerBlock), 1);
+
+    gradientKernel2D<<<grd, blk>>>(D_gradData, D_data, dims, alpha, doUpdate);
+    return True;
+}
+
+
+__global__ void divergenceKernel2D(float* dst, float2* src, const SDimensions dims, float alpha, int doUpdate) {
+    int gidx = threadIdx.x + blockIdx.x*blockDim.x;
+    int gidy = threadIdx.y + blockIdx.y*blockDim.y;
+    int sizeX = dims.iVolWidth, sizeY = dims.iVolHeight;
+    float val_x = 0, val_y = 0;
+
+    if (gidx < sizeX && gidy < sizeY) {
+        if (gidx == 0) val_y = slice_grad[(gidy)*sizeX+gidx].y;
+        else val_y = src[(gidy)*sizeX+gidx].y - src[(gidy)*sizeX+gidx-1].y;
+        if (gidy == 0) val_x = slice_grad[(gidy)*sizeX+gidx].x;
+        else val_x = src[(gidy)*sizeX+gidx].x - src[(gidy-1)*sizeX+gidx].x;
+
+        if (doUpdate) dst[(gidy)*sizeX+gidx] += alpha*(val_x + val_y);
+        else dst[(gidy)*sizeX+gidx] = val_x + val_y;
+    }
+}
+
+
+// divergenceOperator(dst, src, alpha, 0)  computes  dst = div(src)
+// divergenceOperator(dst, src, alpha, 1)  computes  dst = dst + alpha*div(src)
 bool TV::divergenceOperator(float* D_data, float2* D_gradData, float alpha, int doUpdate) {
+    dim3 nBlocks, nThreadsPerBlock;
+    blk = dim3(threadsPerBlock, threadsPerBlock, 1);
+    grd = dim3(iDivUp(dims.iVolWidth, threadsPerBlock), iDivUp(dims.iVolHeight, threadsPerBlock), 1);
+
+    divergenceKernel2D<<<grd, blk>>>(D_data, D_gradData, dims, alpha, doUpdate);
+    return True;
 }
 
 
