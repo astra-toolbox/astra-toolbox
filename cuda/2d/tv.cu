@@ -39,6 +39,18 @@ $Id$
 
 namespace astraCUDA {
 
+
+// optimization parameters
+static const unsigned int threadsPerBlock = 16;
+
+
+static int iDivUp(int a, int b){
+	return (a % b != 0) ? (a / b + 1) : (a / b);
+}
+
+
+
+
 TV::TV() : ReconAlgo()
 {
 	D_projData = 0;
@@ -148,6 +160,49 @@ bool TV::uploadMinMaxMasks(const float* pfMinMaskData, const float* pfMaxMaskDat
 }
 */
 
+
+
+
+
+
+__global__ void projLinfKernel(float* dst, float2* src, const SDimensions dims, float radius) {
+	int gidx = threadIdx.x + blockIdx.x*blockDim.x;
+	int gidy = threadIdx.y + blockIdx.y*blockDim.y;
+
+	if (gidx < sizeX && gidy < sizeY) {
+		int idx = gidy*sizeX+gidx;
+		float val_x = src[idx].x;
+		float val_y = src[idx].y;
+
+		dst[idx].x = copysignf(min(fabsf(val_x), radius), val_x);
+		dst[idx].y = copysignf(min(fabsf(val_y), radius), val_y);
+	}
+}
+
+bool TV::projLinf(float2* D_gradData, float* D_data, float radius) {
+	dim3 nBlocks, nThreadsPerBlock;
+	blk = dim3(threadsPerBlock, threadsPerBlock, 1);
+	grd = dim3(iDivUp(dims.iVolWidth, threadsPerBlock), iDivUp(dims.iVolHeight, threadsPerBlock), 1);
+
+	projLinfKernel<<<grd, blk>>>(D_Data, D_gradData, dims, radius)
+	return true;
+}
+
+
+// gradientOperator(dst, src, alpha, 0)  computes  dst = gradient(src)
+// gradientOperator(dst, src, alpha, 1)  computes  dst = dst + alpha*gradient(src)
+bool TV::gradientOperator(float2* D_gradData, float* D_data, float alpha, int doUpdate) {
+}
+
+
+// divergenceOperator(dst, src, alpha, 0)  computes  dst = gradient(src)
+// divergenceOperator(dst, src, alpha, 1)  computes  dst = dst + alpha*gradient(src)
+bool TV::divergenceOperator(float* D_data, float2* D_gradData, float alpha, int doUpdate) {
+}
+
+
+
+
 bool TV::iterate(unsigned int iterations)
 {
 	shouldAbort = false;
@@ -155,17 +210,31 @@ bool TV::iterate(unsigned int iterations)
 	// iteration
 	for (unsigned int iter = 0; iter < iterations && !shouldAbort; ++iter) {
 
+		// Update dual variables
+		// ----------------------
+		// p = proj_linf(p + sigma*gradient(x_tilde), Lambda)
+		gradientOperator(D_dualp, D_xTilde, sigma, 1);
+		projLinf(D_dualp, lambdaTV) // projection is done after for readability, but it can be merged with the previous kernel
+
+		// q = (q + sigma*P(x_tilde) - sigma*data)/(1.0 + sigma)
+		callFP(D_volumeData, volumePitch, D_dualq, projPitch, sigma);
+		processSino<opAddScaled>(D_dualq, D_sinoData, -sigma, dims);
+		processSino<opMul>(D_dualq, 1.0/(1.0+sigma), projPitch, dims);
+
+
+		// Update primal variables
+		// ------------------------
+		duplicateVolumeData(D_xold, D_x, volumePitch, dims);
+		// x = x + tau*div(p) - tau*Kadj(q) ; possibly with positivity constraint
+		divergenceOperator(D_x, D_dualp, tau, 1);
+
+
+
 		// copy sinogram to projection data
 		duplicateProjectionData(D_projData, D_sinoData, projPitch, dims);
 
 		// do FP, subtracting projection from sinogram
-		if (useVolumeMask) {
-				duplicateVolumeData(D_tmpData, D_volumeData, volumePitch, dims);
-				processVol<opMul>(D_tmpData, D_maskData, tmpPitch, dims);
-				callFP(D_tmpData, tmpPitch, D_projData, projPitch, -1.0f);
-		} else {
-				callFP(D_volumeData, volumePitch, D_projData, projPitch, -1.0f);
-		}
+		callFP(D_volumeData, volumePitch, D_projData, projPitch, -1.0f);
 
 		processSino<opMul>(D_projData, D_lineWeight, projPitch, dims);
 
