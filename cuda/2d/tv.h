@@ -53,24 +53,32 @@ public:
 
 	virtual bool iterate(unsigned int iterations);
 
+	// TODO: declare additional methods here
+
 	virtual float computeDiffNorm();
 
 protected:
 	void reset();
 
- 	// Temporary buffers
-	float* D_projData;
-	unsigned int projPitch;
-
-	float* D_tmpData;
+	// Slice-like buffers
+	float* D_x;
+	float* D_xTilde;
+	float* D_xold;
+	float* D_sliceTmp;
+	unsigned int xPitch;
+	unsigned int xtildePitch;
+	unsigned int xoldPitch;
 	unsigned int tmpPitch;
 
-	// Geometry-specific precomputed data
-	float* D_lineWeight;
-	unsigned int linePitch;
+	// Slice gradient-like buffers
+	float2* D_dualp;
+	unsigned int dualpPitch;
 
-	float* D_pixelWeight;
-	unsigned int pixelPitch;
+	// Sinogram-like buffers
+	float* D_dualq;
+	float* D_sinoTmp;
+	unsigned int dualqPitch;
+	unsigned int sinoTmpPitch;
 
 	// Masks
 	bool freeMinMaxMasks;
@@ -79,7 +87,12 @@ protected:
 	float* D_maxMaskData;
 	unsigned int maxMaskPitch;
 
-	float fRelaxation;
+	float fLambda; // fRelaxation in sirt
+
+	// Algorithm-related parameters
+	int nIterComputeNorm;
+	float normFactor;
+
 };
 
 bool doTV(float* D_volumeData, unsigned int volumePitch,

@@ -104,17 +104,33 @@ void TV::reset()
 
 bool TV::init()
 {
-	allocateVolumeData(D_pixelWeight, pixelPitch, dims);
-	zeroVolumeData(D_pixelWeight, pixelPitch, dims);
 
-	allocateVolumeData(D_tmpData, tmpPitch, dims);
-	zeroVolumeData(D_tmpData, tmpPitch, dims);
+    allocateVolumeData(D_x, xPitch, dims);
+	zeroVolumeData(D_x, xPitch, dims);
 
-	allocateProjectionData(D_projData, projPitch, dims);
-	zeroProjectionData(D_projData, projPitch, dims);
+    allocateVolumeData(D_xold, xoldPitch, dims);
+	zeroVolumeData(D_xold, xoldPitch, dims);
 
-	allocateProjectionData(D_lineWeight, linePitch, dims);
-	zeroProjectionData(D_lineWeight, linePitch, dims);
+    allocateVolumeData(sliceTmp, tmpPitch, dims);
+	zeroVolumeData(sliceTmp, tmpPitch, dims);
+
+    allocateVolumeData(D_xTilde, xtildePitch, dims);
+	zeroVolumeData(D_pixelWeight, xtildePitch, dims);
+
+    int nels = dims.iVolWidth * dims.iVolHeight;
+    cudaMalloc(&D_dualp, nels*sizeof(float2));
+    cudaMemset(D_dualp, 0, nels*sizeof(float2));
+
+	allocateProjectionData(D_sinoTmp, sinoTmpPitch, dims);
+	zeroProjectionData(D_sinoTmp, sinoTmpPitch, dims);
+
+	allocateProjectionData(D_dualq, dualqPitch, dims);
+	zeroProjectionData(D_dualq, dualqPitch, dims);
+
+
+    nIterComputeNorm = 20;
+    normFactor = 1.2f;
+
 
 	// TODO: check if allocations succeeded
 	return true;
@@ -257,14 +273,49 @@ bool TV::divergenceOperator(float* D_data, float2* D_gradData, float alpha, int 
 
 
 
+// Compute the norm of the operator K = [grad, P]
+// using ||K|| = sqrt(max_eigen(K^T * K))
+float TV::computeOperatorNorm() {
+    float norm = -1.0f;
 
+    zeroVolumeData(D_sliceTmp, tmpPitch, dims);
+    callBP(D_sliceTmp, tmpPitch, D_sinoData, sinoPitch, 1.0f);
+
+    // power method for computing max eigenval of P^T P
+    for (unsigned int iter = 0 ; iter < nIterComputeNorm; ++iter) {
+        // x := P^T(P(x)) - div(grad(x))
+        zeroProjectionData(D_sinoTmp, sinoTmpPitch, dims);
+        callFP(D_sliceTmp, tmpPitch, D_sinoTmp, sinoTmpPitch, 1.0f);
+        zeroVolumeData(D_sliceTmp, tmpPitch, dims);
+        callBP(D_sliceTmp, tmpPitch, D_sinoTmp, sinoTmpPitch, 1.0f);
+        gradientOperator(D_dualp, D_sliceTmp);
+        divergenceOperator(D_sliceTmp, D_dualp, -1.0f, 1); // TODO: what is computed is div or -div ? In the latter case: put alpha=+1
+
+        // Compute norm and scale x
+        norm = dotProduct2D(D_sliceTmp, tmpPitch, dims.iVolWidth, dims.iVolHeight); // TODO: check
+        norm = sqrt(norm);
+        processVol<opMul>(D_sliceTmp, 1.0f/norm, tmpPitch, dims);
+    }
+    if (norm < 0) return -1.0f;     // something went wrong
+    else return sqrt(norm);
+}
+
+
+
+
+
+
+// TODO: implement volume mask
+// TODO: implement either use_fbp in iterations, or preconditioned CP
 bool TV::iterate(unsigned int iterations)
 {
-	shouldAbort = false;
+    // Compute the primal and dual steps, for non-preconditionned CP
+    L = computeOperatorNorm();  //TODO: abort if norm is negative
+    float sigma = 1.0f/L;       // dual step
+    float tau = 1.0f/L;         // primal step
 
 	// iteration
-	for (unsigned int iter = 0; iter < iterations && !shouldAbort; ++iter) {
-
+	for (unsigned int iter = 0; iter < iterations; ++iter) {
 		// Update dual variables
 		// ----------------------
 		// p = proj_linf(p + sigma*gradient(x_tilde), Lambda)
@@ -272,19 +323,26 @@ bool TV::iterate(unsigned int iterations)
 		projLinf(D_dualp, lambdaTV)
 
 		// q = (q + sigma*P(x_tilde) - sigma*data)/(1.0 + sigma)
-		callFP(D_xTilde, volumePitch, D_sinoTmp, sinoTmpPitch, 1.0f);       // q' = P(xtilde)
-		processSino<opAddScaled>(D_sinoTmp, D_sinoData, -1.0f, dims);       // q' -= data
-        processSino<opAddScaled>(D_dualq, D_sinoTmp, sigma, dims);          // q = q + sigma*q'
-		processSino<opMul>(D_dualq, 1.0f/(1.0f+sigma), dualqPitch, dims);   // q /= 1+sigma
-
+        callFP(D_xTilde, xtildePitch, D_dualq, dualqPitch, sigma);          // q = q + sigma*P(xtilde)
+        processSino<opAddScaled>(D_dualq, D_sinoData, -sigma, dims);        // q -= sigma*data
+        processSino<opMul>(D_dualq, 1.0f/(1.0f+sigma), dualqPitch, dims);   // q /= 1+sigma
 
 		// Update primal variables
 		// ------------------------
-		duplicateVolumeData(D_xold, D_x, xoldPitch, dims);
-		// x = x + tau*div(p) - tau*P^T(q) ; possibly with positivity constraint
-        callBP(D_sliceTmp, tmpPitch, D_dualq, projPitch, -1.0f);            // x' = -P^T(q)
-		divergenceOperator(D_sliceTmp, D_dualp, 1.0f, 1);                   // x' += div(p)
-        processVol<opAddScaled>(D_x, tau, D_sliceTmp, xPitch, dims);        // x = x + tau*x'
+		// x = x + tau*div(p) - tau*P^T(q)
+        callBP(D_x, xPitch, D_dualq, dualqPitch, -tau);                     // x = x - tau*P^T(q)
+        divergenceOperator(D_x, D_dualp, tau, 1);                           // x += tau*div(p)
+
+        // Extra constraints (if any)
+        // --------------------------
+		if (useMinConstraint)
+			processVol<opClampMin>(D_x, fMinConstraint, xPitch, dims);
+		if (useMaxConstraint)
+			processVol<opClampMax>(D_x, fMaxConstraint, xPitch, dims);
+		if (D_minMaskData)
+			processVol<opClampMinMask>(D_x, D_minMaskData, xPitch, dims);
+		if (D_maxMaskData)
+			processVol<opClampMaxMask>(D_x, D_maxMaskData, xPitch, dims);
 
         // Update step
         // ------------
@@ -294,32 +352,6 @@ bool TV::iterate(unsigned int iterations)
         processVol<opAddScaled>(D_xTilde, -theta, D_xold, xtildePitch, dims);
         // TODO: this in two steps ? maybe x_tilde can be used previously as sliceTmp
 
-        // <========
-
-
-		// copy sinogram to projection data
-		duplicateProjectionData(D_projData, D_sinoData, projPitch, dims);
-
-		// do FP, subtracting projection from sinogram
-		callFP(D_volumeData, volumePitch, D_projData, projPitch, -1.0f);
-
-		processSino<opMul>(D_projData, D_lineWeight, projPitch, dims);
-
-		zeroVolumeData(D_tmpData, tmpPitch, dims);
-
-		callBP(D_tmpData, tmpPitch, D_projData, projPitch, 1.0f);
-
-		// pixel weights also contain the volume mask and relaxation factor
-		processVol<opAddMul>(D_volumeData, D_pixelWeight, D_tmpData, volumePitch, dims);
-
-		if (useMinConstraint)
-			processVol<opClampMin>(D_volumeData, fMinConstraint, volumePitch, dims);
-		if (useMaxConstraint)
-			processVol<opClampMax>(D_volumeData, fMaxConstraint, volumePitch, dims);
-		if (D_minMaskData)
-			processVol<opClampMinMask>(D_volumeData, D_minMaskData, volumePitch, dims);
-		if (D_maxMaskData)
-			processVol<opClampMaxMask>(D_volumeData, D_maxMaskData, volumePitch, dims);
 	}
 
 	return true;
