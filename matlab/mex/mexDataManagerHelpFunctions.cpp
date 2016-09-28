@@ -79,7 +79,7 @@ public:
 		m_pLink = mxCreateSharedDataCopy(_pArray);
 		//fprintf(stderr, "SharedDataCopy:\narray: %p\tdata: %p\n", (void*)m_pLink, (void*)mxGetData(m_pLink));
 		mexMakeArrayPersistent(m_pLink);
-		m_fPtr = (float *)mxGetData(m_pLink);
+		m_fPtr = (float *)mxGetData(_pArray);
 		m_fPtr += iOffset;
 	}
 	virtual ~CFloat32CustomMemoryMatlab3D() {

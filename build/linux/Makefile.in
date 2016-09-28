@@ -5,6 +5,7 @@ boostutf=@HAVEBOOSTUTF@
 
 
 MATLAB_ROOT=@MATLAB_ROOT@
+octave=@HAVEOCTAVE@
 
 TARGETS=libastra.la
 
@@ -14,6 +15,10 @@ endif
 
 ifeq ($(python),yes)
 TARGETS+=py
+endif
+
+ifeq ($(octave),yes)
+TARGETS+=oct
 endif
 
 all: $(TARGETS)
@@ -44,6 +49,16 @@ NVCCFLAGS += @NVCCFLAGS_EXTRA@ @CPPFLAGS_CUDA@ -I$(srcdir)/../.. -I$(srcdir)/../
 LDFLAGS   += @LDFLAGS_CUDA@
 LIBS      += -lcudart -lcufft
 NVCC       = @NVCC@
+endif
+
+ifeq ($(octave),yes)
+OCTLDFLAGS:=$(LDFLAGS)
+CPPFLAGS += @OCTAVE_CPPFLAGS@
+ifeq ($(cuda),yes)
+OCTFLAGS=-DASTRA_CUDA
+else
+OCTFLAGS=
+endif
 endif
 
 ifeq ($(matlab),yes)
@@ -259,6 +274,20 @@ ifeq ($(python),yes)
 MATLAB_MEX+=matlab/mex/astra_mex_plugin_c.$(MEXSUFFIX)
 endif
 
+OCTAVE_CXX_OBJECTS=\
+	matlab/mex/octave_support.o
+
+OCTAVE_MEX=\
+	matlab/mex/astra_mex_algorithm_c.mex \
+	matlab/mex/astra_mex_data2d_c.mex \
+	matlab/mex/astra_mex_c.mex \
+	matlab/mex/astra_mex_matrix_c.mex \
+	matlab/mex/astra_mex_projector_c.mex \
+	matlab/mex/astra_mex_projector3d_c.mex \
+	matlab/mex/astra_mex_log_c.mex \
+	matlab/mex/astra_mex_data3d_c.mex \
+	matlab/mex/astra_mex_direct_c.mex
+
 OBJECT_DIRS = src/ tests/ cuda/2d/ cuda/3d/ matlab/mex/ ./
 DEPDIRS = $(addsuffix $(DEPDIR),$(OBJECT_DIRS))
 -include $(wildcard $(addsuffix /*.d,$(DEPDIRS)))
@@ -293,6 +322,13 @@ python-root-install: libastra.la
 
 endif
 
+
+ifeq ($(octave),yes)
+oct: $(OCTAVE_MEX)
+
+%.mex: %.o $(MATLAB_CXX_OBJECTS) $(OCTAVE_CXX_OBJECTS) libastra.la
+	mkoctfile --mex $(OCTFLAGS) $(OCTLDFLAGS) $(LIBS) -L.libs -lastra --output $* $*.o $(MATLAB_CXX_OBJECTS) $(OCTAVE_CXX_OBJECTS)
+endif
 
 libastra.la: $(ALL_OBJECTS)
 	./libtool --mode=link --tag=CXX $(LD) -rpath $(LIBDIR) -o $@ $(LDFLAGS) $(LIBS) $+
@@ -374,7 +410,7 @@ distclean: clean
 	rm -rf $(srcdir)/autom4te.cache
 	rm -f $(srcdir)/configure Makefile
 
-install: install-libraries install-matlab install-python
+install: install-libraries install-matlab install-python install-octave
 
 install-libraries: libastra.la
 	$(INSTALL_SH) -m 755 -d @libdir@
@@ -411,6 +447,19 @@ install-python: py
 # TODO: docs
 else
 install-python:
+endif
+
+ifeq ($(octave),yes)
+# TODO: This install location doesn't work well for /usr or /usr/local
+install-octave: $(OCTAVE_MEX)
+	$(INSTALL_SH) -m 755 -d @prefix@/octave
+	$(INSTALL_SH) -m 755 -d @prefix@/octave/mex
+	$(INSTALL_SH) -m 755 -d @prefix@/octave/tools
+	$(INSTALL_SH) -m 644 $(OCTAVE_MEX) @prefix@/octave/mex
+	$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/tools/*.m @prefix@/octave/tools
+# TODO: docs
+else
+install-octave:
 endif
 
 
