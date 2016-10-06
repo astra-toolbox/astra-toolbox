@@ -197,6 +197,69 @@ bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div
 	return true;
 }
 
+
+static std::pair<double, double> reduceProjectionVertical(const CVolumeGeometry3D* pVolGeom, const CProjectionGeometry3D* pProjGeom)
+{
+	double vmin_g, vmax_g;
+
+	// reduce self to only cover intersection with projection of VolumePart
+	// (Project corners of volume, take bounding box)
+
+	for (int i = 0; i < pProjGeom->getProjectionCount(); ++i) {
+
+		double vol_u[8];
+		double vol_v[8];
+
+		double pixx = pVolGeom->getPixelLengthX();
+		double pixy = pVolGeom->getPixelLengthY();
+		double pixz = pVolGeom->getPixelLengthZ();
+
+		// TODO: Is 0.5 sufficient?
+		double xmin = pVolGeom->getWindowMinX() - 0.5 * pixx;
+		double xmax = pVolGeom->getWindowMaxX() + 0.5 * pixx;
+		double ymin = pVolGeom->getWindowMinY() - 0.5 * pixy;
+		double ymax = pVolGeom->getWindowMaxY() + 0.5 * pixy;
+		double zmin = pVolGeom->getWindowMinZ() - 0.5 * pixz;
+		double zmax = pVolGeom->getWindowMaxZ() + 0.5 * pixz;
+
+		pProjGeom->projectPoint(xmin, ymin, zmin, i, vol_u[0], vol_v[0]);
+		pProjGeom->projectPoint(xmin, ymin, zmax, i, vol_u[1], vol_v[1]);
+		pProjGeom->projectPoint(xmin, ymax, zmin, i, vol_u[2], vol_v[2]);
+		pProjGeom->projectPoint(xmin, ymax, zmax, i, vol_u[3], vol_v[3]);
+		pProjGeom->projectPoint(xmax, ymin, zmin, i, vol_u[4], vol_v[4]);
+		pProjGeom->projectPoint(xmax, ymin, zmax, i, vol_u[5], vol_v[5]);
+		pProjGeom->projectPoint(xmax, ymax, zmin, i, vol_u[6], vol_v[6]);
+		pProjGeom->projectPoint(xmax, ymax, zmax, i, vol_u[7], vol_v[7]);
+
+		double vmin = vol_v[0];
+		double vmax = vol_v[0];
+
+		for (int j = 1; j < 8; ++j) {
+			if (vol_v[j] < vmin)
+				vmin = vol_v[j];
+			if (vol_v[j] > vmax)
+				vmax = vol_v[j];
+		}
+
+		if (i == 0 || vmin < vmin_g)
+			vmin_g = vmin;
+		if (i == 0 || vmax > vmax_g)
+			vmax_g = vmax;
+	}
+
+	if (vmin_g < -1.0)
+		vmin_g = -1.0;
+	if (vmax_g > pProjGeom->getDetectorRowCount())
+		vmax_g = pProjGeom->getDetectorRowCount();
+
+	if (vmin_g >= vmax_g)
+		vmin_g = vmax_g = 0.0;
+
+	return std::pair<double, double>(vmin_g, vmax_g);
+
+}
+
+
 CCompositeGeometryManager::CPart::CPart(const CPart& other)
 {
 	eType = other.eType;
@@ -237,119 +300,135 @@ size_t CCompositeGeometryManager::CPart::getSize()
 }
 
 
+static bool testVolumeRange(const std::pair<double, double>& fullRange,
+                            const CVolumeGeometry3D *pVolGeom,
+							const CProjectionGeometry3D *pProjGeom,
+							int zmin, int zmax)
+{
+	double pixz = pVolGeom->getPixelLengthZ();
+
+	CVolumeGeometry3D test(pVolGeom->getGridColCount(),
+	                       pVolGeom->getGridRowCount(),
+	                       zmax - zmin,
+	                       pVolGeom->getWindowMinX(),
+	                       pVolGeom->getWindowMinY(),
+	                       pVolGeom->getWindowMinZ() + zmin * pixz,
+	                       pVolGeom->getWindowMaxX(),
+	                       pVolGeom->getWindowMaxY(),
+	                       pVolGeom->getWindowMinZ() + zmax * pixz);
+
+
+	std::pair<double, double> subRange = reduceProjectionVertical(&test, pProjGeom);
+
+	// empty
+	if (subRange.first == subRange.second)
+		return true;
+
+	// fully outside of fullRange
+	if (subRange.first >= fullRange.second || subRange.second <= fullRange.first)
+		return true;
+
+	return false;
+}
+
 
 CCompositeGeometryManager::CPart* CCompositeGeometryManager::CVolumePart::reduce(const CPart *_other)
 {
 	const CProjectionPart *other = dynamic_cast<const CProjectionPart *>(_other);
 	assert(other);
 
-	// TODO: Is 0.5 sufficient?
-	double umin = -0.5;
-	double umax = other->pGeom->getDetectorColCount() + 0.5;
-	double vmin = -0.5;
-	double vmax = other->pGeom->getDetectorRowCount() + 0.5;
 
-	double uu[4];
-	double vv[4];
-	uu[0] = umin; vv[0] = vmin;
-	uu[1] = umin; vv[1] = vmax;
-	uu[2] = umax; vv[2] = vmin;
-	uu[3] = umax; vv[3] = vmax;
+	std::pair<double, double> fullRange = reduceProjectionVertical(pGeom, other->pGeom);
 
-	double pixx = pGeom->getPixelLengthX();
-	double pixy = pGeom->getPixelLengthY();
-	double pixz = pGeom->getPixelLengthZ();
+	int top_slice = 0, bottom_slice = 0;
 
-	double xmin = pGeom->getWindowMinX() - 0.5 * pixx;
-	double xmax = pGeom->getWindowMaxX() + 0.5 * pixx;
-	double ymin = pGeom->getWindowMinY() - 0.5 * pixy;
-	double ymax = pGeom->getWindowMaxY() + 0.5 * pixy;
+	if (fullRange.first < fullRange.second) {
 
-	// NB: Flipped
-	double zmax = pGeom->getWindowMinZ() - 2.5 * pixz;
-	double zmin = pGeom->getWindowMaxZ() + 2.5 * pixz;
 
-	// TODO: This isn't as tight as it could be.
-	// In particular it won't detect the detector being
-	// missed entirely on the u side.
+		// TOP SLICE
 
-	for (int i = 0; i < other->pGeom->getProjectionCount(); ++i) {
-		for (int j = 0; j < 4; ++j) {
-			double px, py, pz;
+		int zmin = 0;
+		int zmax = pGeom->getGridSliceCount()-1; // (Don't try empty region)
 
-			other->pGeom->backprojectPointX(i, uu[j], vv[j], xmin, py, pz);
-			//ASTRA_DEBUG("%f %f (%f - %f)", py, pz, ymin, ymax);
-			if (pz < zmin) zmin = pz;
-			if (pz > zmax) zmax = pz;
-			other->pGeom->backprojectPointX(i, uu[j], vv[j], xmax, py, pz);
-			//ASTRA_DEBUG("%f %f (%f - %f)", py, pz, ymin, ymax);
-			if (pz < zmin) zmin = pz;
-			if (pz > zmax) zmax = pz;
+		// Setting top slice to zmin is always valid.
 
-			other->pGeom->backprojectPointY(i, uu[j], vv[j], ymin, px, pz);
-			//ASTRA_DEBUG("%f %f (%f - %f)", px, pz, xmin, xmax);
-			if (pz < zmin) zmin = pz;
-			if (pz > zmax) zmax = pz;
-			other->pGeom->backprojectPointY(i, uu[j], vv[j], ymax, px, pz);
-			//ASTRA_DEBUG("%f %f (%f - %f)", px, pz, xmin, xmax);
-			if (pz < zmin) zmin = pz;
-			if (pz > zmax) zmax = pz;
+		while (zmin < zmax) {
+			int zmid = (zmin + zmax + 1) / 2;
+
+			bool ok = testVolumeRange(fullRange, pGeom, other->pGeom,
+			                          0, zmid);
+
+			ASTRA_DEBUG("binsearch min: [%d,%d], %d, %s", zmin, zmax, zmid, ok ? "ok" : "removed too much");
+
+			if (ok)
+				zmin = zmid;
+			else
+				zmax = zmid - 1;
 		}
+
+		top_slice = zmin;
+
+
+		// BOTTOM SLICE
+
+		zmin = top_slice + 1; // (Don't try empty region)
+		zmax = pGeom->getGridSliceCount();
+
+		// Setting bottom slice to zmax is always valid
+
+		while (zmin < zmax) {
+			int zmid = (zmin + zmax) / 2;
+
+			bool ok = testVolumeRange(fullRange, pGeom, other->pGeom,
+			                          zmid, pGeom->getGridSliceCount());
+
+			ASTRA_DEBUG("binsearch max: [%d,%d], %d, %s", zmin, zmax, zmid, ok ? "ok" : "removed too much");
+
+			if (ok)
+				zmax = zmid;
+			else
+				zmin = zmid + 1;
+
+		}
+
+		bottom_slice = zmax;
+
 	}
 
-	//ASTRA_DEBUG("coord extent: %f - %f", zmin, zmax);
+	ASTRA_DEBUG("found extent: %d - %d", top_slice, bottom_slice);
 
-	// Clip both zmin and zmax to get rid of extreme (or infinite) values
-	// NB: When individual pz values are +/-Inf, the sign is determined
-	// by ray direction and on which side of the face the ray passes.
-	if (zmin < pGeom->getWindowMinZ() - 2*pixz)
-		zmin = pGeom->getWindowMinZ() - 2*pixz;
-	if (zmin > pGeom->getWindowMaxZ() + 2*pixz)
-		zmin = pGeom->getWindowMaxZ() + 2*pixz;
-	if (zmax < pGeom->getWindowMinZ() - 2*pixz)
-		zmax = pGeom->getWindowMinZ() - 2*pixz;
-	if (zmax > pGeom->getWindowMaxZ() + 2*pixz)
-		zmax = pGeom->getWindowMaxZ() + 2*pixz;
+	top_slice -= 1;
+	if (top_slice < 0)
+		top_slice = 0;
+	bottom_slice += 1;
+	if (bottom_slice >= pGeom->getGridSliceCount())
+		bottom_slice = pGeom->getGridSliceCount();
 
-	zmin = (zmin - pixz - pGeom->getWindowMinZ()) / pixz;
-	zmax = (zmax + pixz - pGeom->getWindowMinZ()) / pixz;
+	ASTRA_DEBUG("adjusted extent: %d - %d", top_slice, bottom_slice);
 
-	int _zmin = (int)floor(zmin);
-	int _zmax = (int)ceil(zmax);
-
-	//ASTRA_DEBUG("index extent: %d - %d", _zmin, _zmax);
-
-	if (_zmin < 0)
-		_zmin = 0;
-	if (_zmax > pGeom->getGridSliceCount())
-		_zmax = pGeom->getGridSliceCount();
-
-	if (_zmax <= _zmin) {
-		_zmin = _zmax = 0;
-	}
-	//ASTRA_DEBUG("adjusted extent: %d - %d", _zmin, _zmax);
+	double pixz = pGeom->getPixelLengthZ();
 
 	CVolumePart *sub = new CVolumePart();
 	sub->subX = this->subX;
 	sub->subY = this->subY;
-	sub->subZ = this->subZ + _zmin;
+	sub->subZ = this->subZ + top_slice;
 	sub->pData = pData;
 
-	if (_zmin == _zmax) {
+	if (top_slice == bottom_slice) {
 		sub->pGeom = 0;
 	} else {
 		sub->pGeom = new CVolumeGeometry3D(pGeom->getGridColCount(),
 		                                   pGeom->getGridRowCount(),
-		                                   _zmax - _zmin,
+		                                   bottom_slice - top_slice,
 		                                   pGeom->getWindowMinX(),
 		                                   pGeom->getWindowMinY(),
-		                                   pGeom->getWindowMinZ() + _zmin * pixz,
+		                                   pGeom->getWindowMinZ() + top_slice * pixz,
 		                                   pGeom->getWindowMaxX(),
 		                                   pGeom->getWindowMaxY(),
-		                                   pGeom->getWindowMinZ() + _zmax * pixz);
+		                                   pGeom->getWindowMinZ() + bottom_slice * pixz);
 	}
 
-	ASTRA_DEBUG("Reduce volume from %d - %d to %d - %d", this->subZ, this->subZ +  pGeom->getGridSliceCount(), this->subZ + _zmin, this->subZ + _zmax);
+	ASTRA_DEBUG("Reduce volume from %d - %d to %d - %d ( %f - %f )", this->subZ, this->subZ +  pGeom->getGridSliceCount(), this->subZ + top_slice, this->subZ + bottom_slice, pGeom->getWindowMinZ() + top_slice * pixz, pGeom->getWindowMinZ() + bottom_slice * pixz);
 
 	return sub;
 }
@@ -584,7 +663,9 @@ void CCompositeGeometryManager::CVolumePart::splitX(CCompositeGeometryManager::T
 		size_t m = std::min(maxSize / sliceSize, maxDim);
 		size_t blockSize = computeLinearSplit(m, div, sliceCount);
 
-		int rem = sliceCount % blockSize;
+		int rem = blockSize - (sliceCount % blockSize);
+		if (rem == blockSize)
+			rem = 0;
 
 		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
 
@@ -631,7 +712,9 @@ void CCompositeGeometryManager::CVolumePart::splitY(CCompositeGeometryManager::T
 		size_t m = std::min(maxSize / sliceSize, maxDim);
 		size_t blockSize = computeLinearSplit(m, div, sliceCount);
 
-		int rem = sliceCount % blockSize;
+		int rem = blockSize - (sliceCount % blockSize);
+		if (rem == blockSize)
+			rem = 0;
 
 		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
 
@@ -678,7 +761,9 @@ void CCompositeGeometryManager::CVolumePart::splitZ(CCompositeGeometryManager::T
 		size_t m = std::min(maxSize / sliceSize, maxDim);
 		size_t blockSize = computeLinearSplit(m, div, sliceCount);
 
-		int rem = sliceCount % blockSize;
+		int rem = blockSize - (sliceCount % blockSize);
+		if (rem == blockSize)
+			rem = 0;
 
 		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
 
@@ -743,62 +828,16 @@ void CCompositeGeometryManager::CProjectionPart::getDims(size_t &x, size_t &y, s
 }
 
 
+
 CCompositeGeometryManager::CPart* CCompositeGeometryManager::CProjectionPart::reduce(const CPart *_other)
 {
 	const CVolumePart *other = dynamic_cast<const CVolumePart *>(_other);
 	assert(other);
 
-	double vmin_g, vmax_g;
-
-	// reduce self to only cover intersection with projection of VolumePart
-	// (Project corners of volume, take bounding box)
-
-	for (int i = 0; i < pGeom->getProjectionCount(); ++i) {
-
-		double vol_u[8];
-		double vol_v[8];
-
-		double pixx = other->pGeom->getPixelLengthX();
-		double pixy = other->pGeom->getPixelLengthY();
-		double pixz = other->pGeom->getPixelLengthZ();
-
-		// TODO: Is 0.5 sufficient?
-		double xmin = other->pGeom->getWindowMinX() - 0.5 * pixx;
-		double xmax = other->pGeom->getWindowMaxX() + 0.5 * pixx;
-		double ymin = other->pGeom->getWindowMinY() - 0.5 * pixy;
-		double ymax = other->pGeom->getWindowMaxY() + 0.5 * pixy;
-		double zmin = other->pGeom->getWindowMinZ() - 0.5 * pixz;
-		double zmax = other->pGeom->getWindowMaxZ() + 0.5 * pixz;
-
-		pGeom->projectPoint(xmin, ymin, zmin, i, vol_u[0], vol_v[0]);
-		pGeom->projectPoint(xmin, ymin, zmax, i, vol_u[1], vol_v[1]);
-		pGeom->projectPoint(xmin, ymax, zmin, i, vol_u[2], vol_v[2]);
-		pGeom->projectPoint(xmin, ymax, zmax, i, vol_u[3], vol_v[3]);
-		pGeom->projectPoint(xmax, ymin, zmin, i, vol_u[4], vol_v[4]);
-		pGeom->projectPoint(xmax, ymin, zmax, i, vol_u[5], vol_v[5]);
-		pGeom->projectPoint(xmax, ymax, zmin, i, vol_u[6], vol_v[6]);
-		pGeom->projectPoint(xmax, ymax, zmax, i, vol_u[7], vol_v[7]);
-
-		double vmin = vol_v[0];
-		double vmax = vol_v[0];
-
-		for (int j = 1; j < 8; ++j) {
-			if (vol_v[j] < vmin)
-				vmin = vol_v[j];
-			if (vol_v[j] > vmax)
-				vmax = vol_v[j];
-		}
-
-		if (i == 0 || vmin < vmin_g)
-			vmin_g = vmin;
-		if (i == 0 || vmax > vmax_g)
-			vmax_g = vmax;
-	}
-
-	// fprintf(stderr, "v extent: %f %f\n", vmin_g, vmax_g);
-
-	int _vmin = (int)floor(vmin_g - 1.0f);
-	int _vmax = (int)ceil(vmax_g + 1.0f);
+	std::pair<double, double> r = reduceProjectionVertical(other->pGeom, pGeom);
+	// fprintf(stderr, "v extent: %f %f\n", r.first, r.second);
+	int _vmin = (int)floor(r.first - 1.0);
+	int _vmax = (int)ceil(r.second + 1.0);
 	if (_vmin < 0)
 		_vmin = 0;
 	if (_vmax > pGeom->getDetectorRowCount())
@@ -838,7 +877,11 @@ void CCompositeGeometryManager::CProjectionPart::splitX(CCompositeGeometryManage
 		size_t m = std::min(maxSize / sliceSize, maxDim);
 		size_t blockSize = computeLinearSplit(m, div, sliceCount);
 
-		int rem = sliceCount % blockSize;
+		int rem = blockSize - (sliceCount % blockSize);
+		if (rem == blockSize)
+			rem = 0;
+
+		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
 
 		for (int x = -(rem / 2); x < sliceCount; x += blockSize) {
 			int newsubX = x;
@@ -880,7 +923,11 @@ void CCompositeGeometryManager::CProjectionPart::splitZ(CCompositeGeometryManage
 		size_t m = std::min(maxSize / sliceSize, maxDim);
 		size_t blockSize = computeLinearSplit(m, div, sliceCount);
 
-		int rem = sliceCount % blockSize;
+		int rem = blockSize - (sliceCount % blockSize);
+		if (rem == blockSize)
+			rem = 0;
+
+		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
 
 		for (int z = -(rem / 2); z < sliceCount; z += blockSize) {
 			int newsubZ = z;

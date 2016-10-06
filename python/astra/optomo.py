@@ -111,21 +111,7 @@ class OpTomo(scipy.sparse.linalg.LinearOperator):
         :param v: Volume to forward project.
         :type v: :class:`numpy.ndarray`
         """
-        v = self.__checkArray(v, self.vshape)
-        vid = self.data_mod.link('-vol',self.vg,v)
-        s = np.zeros(self.sshape,dtype=np.float32)
-        sid = self.data_mod.link('-sino',self.pg,s)
-
-        cfg = creators.astra_dict('FP'+self.appendString)
-        cfg['ProjectionDataId'] = sid
-        cfg['VolumeDataId'] = vid
-        cfg['ProjectorId'] = self.proj_id
-        fp_id = algorithm.create(cfg)
-        algorithm.run(fp_id)
-
-        algorithm.delete(fp_id)
-        self.data_mod.delete([vid,sid])
-        return s.flatten()
+        return self.FP(v, out=None).ravel()
 
     def rmatvec(self,s):
         """Implements the transpose operator.
@@ -133,21 +119,7 @@ class OpTomo(scipy.sparse.linalg.LinearOperator):
         :param s: The projection data.
         :type s: :class:`numpy.ndarray`
         """
-        s = self.__checkArray(s, self.sshape)
-        sid = self.data_mod.link('-sino',self.pg,s)
-        v = np.zeros(self.vshape,dtype=np.float32)
-        vid = self.data_mod.link('-vol',self.vg,v)
-
-        cfg = creators.astra_dict('BP'+self.appendString)
-        cfg['ProjectionDataId'] = sid
-        cfg['ReconstructionDataId'] = vid
-        cfg['ProjectorId'] = self.proj_id
-        bp_id = algorithm.create(cfg)
-        algorithm.run(bp_id)
-
-        algorithm.delete(bp_id)
-        self.data_mod.delete([vid,sid])
-        return v.flatten()
+        return self.BP(s, out=None).ravel()
 
     def __mul__(self,v):
         """Provides easy forward operator by *.
@@ -188,6 +160,70 @@ class OpTomo(scipy.sparse.linalg.LinearOperator):
         algorithm.delete(alg_id)
         self.data_mod.delete([vid,sid])
         return v
+
+    def FP(self,v,out=None):
+        """Perform forward projection.
+
+        Output must have the right 2D/3D shape. Input may also be flattened.
+
+        Output must also be contiguous and float32. This isn't required for the
+        input, but it is more efficient if it is.
+
+        :param v: Volume to forward project.
+        :type v: :class:`numpy.ndarray`
+        :param out: Array to store result in.
+        :type out: :class:`numpy.ndarray`
+        """
+
+        v = self.__checkArray(v, self.vshape)
+        vid = self.data_mod.link('-vol',self.vg,v)
+        if out is None:
+            out = np.zeros(self.sshape,dtype=np.float32)
+        sid = self.data_mod.link('-sino',self.pg,out)
+
+        cfg = creators.astra_dict('FP'+self.appendString)
+        cfg['ProjectionDataId'] = sid
+        cfg['VolumeDataId'] = vid
+        cfg['ProjectorId'] = self.proj_id
+        fp_id = algorithm.create(cfg)
+        algorithm.run(fp_id)
+
+        algorithm.delete(fp_id)
+        self.data_mod.delete([vid,sid])
+        return out
+
+    def BP(self,s,out=None):
+        """Perform backprojection.
+
+        Output must have the right 2D/3D shape. Input may also be flattened.
+
+        Output must also be contiguous and float32. This isn't required for the
+        input, but it is more efficient if it is.
+
+        :param : The projection data.
+        :type s: :class:`numpy.ndarray`
+        :param out: Array to store result in.
+        :type out: :class:`numpy.ndarray`
+        """
+        s = self.__checkArray(s, self.sshape)
+        sid = self.data_mod.link('-sino',self.pg,s)
+        if out is None:
+            out = np.zeros(self.vshape,dtype=np.float32)
+        vid = self.data_mod.link('-vol',self.vg,out)
+
+        cfg = creators.astra_dict('BP'+self.appendString)
+        cfg['ProjectionDataId'] = sid
+        cfg['ReconstructionDataId'] = vid
+        cfg['ProjectorId'] = self.proj_id
+        bp_id = algorithm.create(cfg)
+        algorithm.run(bp_id)
+
+        algorithm.delete(bp_id)
+        self.data_mod.delete([vid,sid])
+        return out
+
+
+
 
 class OpTomoTranspose(scipy.sparse.linalg.LinearOperator):
     """This object provides the transpose operation (``.T``) of the OpTomo object.

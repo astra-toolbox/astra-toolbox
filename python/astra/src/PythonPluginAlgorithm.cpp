@@ -31,8 +31,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/Logging.h"
 #include "astra/Utilities.h"
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/split.hpp>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -146,7 +144,7 @@ CPythonPluginAlgorithmFactory::~CPythonPluginAlgorithmFactory(){
 
 PyObject * getClassFromString(std::string str){
     std::vector<std::string> items;
-    boost::split(items, str, boost::is_any_of("."));
+    StringUtil::splitString(items, str, ".");
     PyObject *pyclass = PyImport_ImportModule(items[0].c_str());
     if(pyclass==NULL){
         logPythonError();
@@ -303,10 +301,10 @@ PyObject * pyStringFromString(std::string str){
 PyObject* stringToPythonValue(std::string str){
     if(str.find(";")!=std::string::npos){
         std::vector<std::string> rows, row;
-        boost::split(rows, str, boost::is_any_of(";"));
+        StringUtil::splitString(rows, str, ";");
         PyObject *mat = PyList_New(rows.size());
         for(unsigned int i=0; i<rows.size(); i++){
-            boost::split(row, rows[i], boost::is_any_of(","));
+            StringUtil::splitString(row, rows[i], ",");
             PyObject *rowlist = PyList_New(row.size());
             for(unsigned int j=0;j<row.size();j++){
                 PyList_SetItem(rowlist, j, PyFloat_FromDouble(StringUtil::stringToDouble(row[j])));
@@ -317,7 +315,7 @@ PyObject* stringToPythonValue(std::string str){
     }
     if(str.find(",")!=std::string::npos){
         std::vector<std::string> vec;
-        boost::split(vec, str, boost::is_any_of(","));
+        StringUtil::splitString(vec, str, ",");
         PyObject *veclist = PyList_New(vec.size());
         for(unsigned int i=0;i<vec.size();i++){
             PyList_SetItem(veclist, i, PyFloat_FromDouble(StringUtil::stringToDouble(vec[i])));

@@ -264,7 +264,7 @@ def store(i,data):
 
 def dimensions(i):
     cdef CFloat32Data3D * pDataObject = getObject(i)
-    return (pDataObject.getWidth(),pDataObject.getHeight(),pDataObject.getDepth())
+    return (pDataObject.getDepth(),pDataObject.getHeight(),pDataObject.getWidth())
 
 def delete(ids):
     try:

@@ -76,7 +76,7 @@ namespace astra {
             }
         .
 */
-void cdft(int n, int isgn, float32 *a, int *ip, float32 *w);
+_AstraExport void cdft(int n, int isgn, float32 *a, int *ip, float32 *w);
 
 }
 

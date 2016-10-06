@@ -275,7 +275,7 @@ void CFilteredBackProjectionAlgorithm::performFiltering(CFloat32ProjectionData2D
 
 
 	float32* pf = new float32[2 * iAngleCount * zpDetector];
-	int *ip = new int[int(2+sqrt(zpDetector)+1)];
+	int *ip = new int[int(2+sqrt((float)zpDetector)+1)];
 	ip[0]=0;
 	float32 *w = new float32[zpDetector/2];
 
