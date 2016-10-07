@@ -56,19 +56,19 @@ struct SConeProjection {
 		fDetSZ += dz;
 
 	}
-	void scale(double factor) {
-		fSrcX *= factor;
-		fSrcY *= factor;
-		fSrcZ *= factor;
-		fDetSX *= factor;
-		fDetSY *= factor;
-		fDetSZ *= factor;
-		fDetUX *= factor;
-		fDetUY *= factor;
-		fDetUZ *= factor;
-		fDetVX *= factor;
-		fDetVY *= factor;
-		fDetVZ *= factor;
+	void scale(double fx, double fy, double fz) {
+		fSrcX *= fx;
+		fSrcY *= fy;
+		fSrcZ *= fz;
+		fDetSX *= fx;
+		fDetSY *= fy;
+		fDetSZ *= fz;
+		fDetUX *= fx;
+		fDetUY *= fy;
+		fDetUZ *= fz;
+		fDetVX *= fx;
+		fDetVY *= fy;
+		fDetVZ *= fz;
 	}
 };
 
@@ -93,19 +93,19 @@ struct SPar3DProjection {
 		fDetSY += dy;
 		fDetSZ += dz;
 	}
-	void scale(double factor) {
-		fRayX *= factor;
-		fRayY *= factor;
-		fRayZ *= factor;
-		fDetSX *= factor;
-		fDetSY *= factor;
-		fDetSZ *= factor;
-		fDetUX *= factor;
-		fDetUY *= factor;
-		fDetUZ *= factor;
-		fDetVX *= factor;
-		fDetVY *= factor;
-		fDetVZ *= factor;
+	void scale(double fx, double fy, double fz) {
+		fRayX *= fx;
+		fRayY *= fy;
+		fRayZ *= fz;
+		fDetSX *= fx;
+		fDetSY *= fy;
+		fDetSZ *= fz;
+		fDetUX *= fx;
+		fDetUY *= fy;
+		fDetUZ *= fz;
+		fDetVX *= fx;
+		fDetVY *= fy;
+		fDetVZ *= fz;
 	}
 };
 

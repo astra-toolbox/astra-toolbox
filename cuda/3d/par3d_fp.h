@@ -34,17 +34,17 @@ namespace astraCUDA3d {
 _AstraExport bool Par3DFP_Array(cudaArray *D_volArray,
                    cudaPitchedPtr D_projData,
                    const SDimensions3D& dims, const SPar3DProjection* angles,
-                   float fOutputScale);
+                   const SProjectorParams3D& params);
 
 _AstraExport bool Par3DFP(cudaPitchedPtr D_volumeData,
             cudaPitchedPtr D_projData,
             const SDimensions3D& dims, const SPar3DProjection* angles,
-            float fOutputScale);
+            const SProjectorParams3D& params);
 
 _AstraExport bool Par3DFP_SumSqW(cudaPitchedPtr D_volumeData,
                     cudaPitchedPtr D_projData,
                     const SDimensions3D& dims, const SPar3DProjection* angles,
-                    float fOutputScale);
+                    const SProjectorParams3D& params);
 
 }
 

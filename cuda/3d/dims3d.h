@@ -37,6 +37,13 @@ namespace astraCUDA3d {
 using astra::SConeProjection;
 using astra::SPar3DProjection;
 
+
+enum Cuda3DProjectionKernel {
+	ker3d_default = 0,
+	ker3d_sum_square_weights
+};
+
+
 struct SDimensions3D {
 	unsigned int iVolX;
 	unsigned int iVolY;
@@ -44,8 +51,23 @@ struct SDimensions3D {
 	unsigned int iProjAngles;
 	unsigned int iProjU; // number of detectors in the U direction
 	unsigned int iProjV; // number of detectors in the V direction
+};
+
+struct SProjectorParams3D {
+	SProjectorParams3D() :
+	    iRaysPerDetDim(1), iRaysPerVoxelDim(1),
+	    fOutputScale(1.0f),
+	    fVolScaleX(1.0f), fVolScaleY(1.0f), fVolScaleZ(1.0f),
+	    ker(ker3d_default)
+	{ }
+
 	unsigned int iRaysPerDetDim;
 	unsigned int iRaysPerVoxelDim;
+	float fOutputScale;
+	float fVolScaleX;
+	float fVolScaleY;
+	float fVolScaleZ;
+	Cuda3DProjectionKernel ker;
 };
 
 }

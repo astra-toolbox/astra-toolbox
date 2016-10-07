@@ -37,11 +37,6 @@ namespace astra {
 // TODO: Switch to a class hierarchy as with the 2D algorithms
 
 
-enum Cuda3DProjectionKernel {
-	ker3d_default = 0,
-	ker3d_sum_square_weights
-};
-
 class CProjectionGeometry3D;
 class CParallelProjectionGeometry3D;
 class CParallelVecProjectionGeometry3D;
@@ -49,6 +44,10 @@ class CConeProjectionGeometry3D;
 class CConeVecProjectionGeometry3D;
 class CVolumeGeometry3D;
 class AstraSIRT3d_internal;
+
+using astraCUDA3d::Cuda3DProjectionKernel;
+using astraCUDA3d::ker3d_default;
+using astraCUDA3d::ker3d_sum_square_weights;
 
 
 class _AstraExport AstraSIRT3d {
@@ -291,7 +290,7 @@ bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
                           const CProjectionGeometry3D* pProjGeom,
                           SPar3DProjection*& pParProjs,
                           SConeProjection*& pConeProjs,
-                          float& fOutputScale);
+                          astraCUDA3d::SProjectorParams3D& params);
 
 _AstraExport bool astraCudaFP(const float* pfVolume, float* pfProjections,
                       const CVolumeGeometry3D* pVolGeom,
