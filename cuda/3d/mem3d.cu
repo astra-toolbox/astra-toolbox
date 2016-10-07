@@ -38,6 +38,7 @@ $Id$
 #include "cone_bp.h"
 #include "par3d_fp.h"
 #include "par3d_bp.h"
+#include "fdk.h"
 
 #include "astra/Logging.h"
 
@@ -193,17 +194,17 @@ bool copyFromGPUMemory(float *dst, MemHandle3D src, const SSubDimensions3D &pos)
 bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, int iDetectorSuperSampling, astra::Cuda3DProjectionKernel projKernel)
 {
 	SDimensions3D dims;
+	SProjectorParams3D params;
 
 	bool ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
 	if (!ok)
 		return false;
 
 #if 1
-	dims.iRaysPerDetDim = iDetectorSuperSampling;
+	params.iRaysPerDetDim = iDetectorSuperSampling;
 	if (iDetectorSuperSampling == 0)
 		return false;
 #else
-	dims.iRaysPerDetDim = 1;
 	astra::Cuda3DProjectionKernel projKernel = astra::ker3d_default;
 #endif
 
@@ -211,11 +212,9 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, con
 	SPar3DProjection* pParProjs;
 	SConeProjection* pConeProjs;
 
-	float outputScale = 1.0f;
-
 	ok = convertAstraGeometry(pVolGeom, pProjGeom,
 	                          pParProjs, pConeProjs,
-	                          outputScale);
+	                          params);
 
 	if (pParProjs) {
 #if 0
@@ -230,10 +229,10 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, con
 
 		switch (projKernel) {
 		case astra::ker3d_default:
-			ok &= Par3DFP(volData.d->ptr, projData.d->ptr, dims, pParProjs, outputScale);
+			ok &= Par3DFP(volData.d->ptr, projData.d->ptr, dims, pParProjs, params);
 			break;
 		case astra::ker3d_sum_square_weights:
-			ok &= Par3DFP_SumSqW(volData.d->ptr, projData.d->ptr, dims, pParProjs, outputScale*outputScale);
+			ok &= Par3DFP_SumSqW(volData.d->ptr, projData.d->ptr, dims, pParProjs, params);
 			break;
 		default:
 			ok = false;
@@ -241,7 +240,7 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, con
 	} else {
 		switch (projKernel) {
 		case astra::ker3d_default:
-			ok &= ConeFP(volData.d->ptr, projData.d->ptr, dims, pConeProjs, outputScale);
+			ok &= ConeFP(volData.d->ptr, projData.d->ptr, dims, pConeProjs, params);
 			break;
 		default:
 			ok = false;
@@ -254,32 +253,56 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, con
 bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, int iVoxelSuperSampling)
 {
 	SDimensions3D dims;
+	SProjectorParams3D params;
 
 	bool ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
 	if (!ok)
 		return false;
 
 #if 1
-	dims.iRaysPerVoxelDim = iVoxelSuperSampling;
-#else
-	dims.iRaysPerVoxelDim = 1;
+	params.iRaysPerVoxelDim = iVoxelSuperSampling;
 #endif
 
 	SPar3DProjection* pParProjs;
 	SConeProjection* pConeProjs;
 
-	float outputScale = 1.0f;
+	ok = convertAstraGeometry(pVolGeom, pProjGeom,
+	                          pParProjs, pConeProjs,
+	                          params);
+
+	if (pParProjs)
+		ok &= Par3DBP(volData.d->ptr, projData.d->ptr, dims, pParProjs, params);
+	else
+		ok &= ConeBP(volData.d->ptr, projData.d->ptr, dims, pConeProjs, params);
+
+	return ok;
+
+}
+
+bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, bool bShortScan)
+{
+	SDimensions3D dims;
+	SProjectorParams3D params;
+
+	bool ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
+	if (!ok)
+		return false;
+
+	SPar3DProjection* pParProjs;
+	SConeProjection* pConeProjs;
 
 	ok = convertAstraGeometry(pVolGeom, pProjGeom,
 	                          pParProjs, pConeProjs,
-	                          outputScale);
+	                          params);
 
-	if (pParProjs)
-		ok &= Par3DBP(volData.d->ptr, projData.d->ptr, dims, pParProjs, outputScale);
-	else
-		ok &= ConeBP(volData.d->ptr, projData.d->ptr, dims, pConeProjs, outputScale);
+	if (!ok || !pConeProjs)
+		return false;
+
+	ok &= FDK(volData.d->ptr, projData.d->ptr, pConeProjs, dims, params, bShortScan);
 
 	return ok;
+
+
 
 }
 

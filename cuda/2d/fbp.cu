@@ -297,10 +297,9 @@ bool FBP::iterate(unsigned int iterations)
 		dims3d.iProjAngles = dims.iProjAngles;
 		dims3d.iProjU = dims.iProjDets;
 		dims3d.iProjV = 1;
-		dims3d.iRaysPerDetDim = dims3d.iRaysPerVoxelDim = 1;
 
 		astraCUDA3d::FDK_PreWeight(tmp, fOriginSource,
-		              fOriginDetector, 0.0f, 0.0f,
+		              fOriginDetector, 0.0f,
 		              fDetSize, 1.0f,
 		              m_bShortScan, dims3d, pfAngles);
 	} else {

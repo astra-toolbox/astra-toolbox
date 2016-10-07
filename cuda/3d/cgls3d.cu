@@ -242,7 +242,7 @@ bool doCGLS(cudaPitchedPtr& D_volumeData,
 	CGLS cgls;
 	bool ok = true;
 
-	ok &= cgls.setConeGeometry(dims, angles, 1.0f);
+	ok &= cgls.setConeGeometry(dims, angles, SProjectorParams3D());
 	if (D_maskData.ptr)
 		ok &= cgls.enableVolumeMask();
 
