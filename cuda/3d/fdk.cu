@@ -62,7 +62,7 @@ static const unsigned int g_anglesPerWeightBlock = 16;
 static const unsigned int g_detBlockU = 32;
 static const unsigned int g_detBlockV = 32;
 
-static const unsigned g_MaxAngles = 2048;
+static const unsigned g_MaxAngles = 12000;
 
 __constant__ float gC_angle_sin[g_MaxAngles];
 __constant__ float gC_angle_cos[g_MaxAngles];
