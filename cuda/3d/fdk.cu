@@ -46,17 +46,7 @@ $Id$
 
 #include "../../include/astra/Logging.h"
 
-typedef texture<float, 3, cudaReadModeElementType> texture3D;
-
-static texture3D gT_coneProjTexture;
-
 namespace astraCUDA3d {
-
-static const unsigned int g_volBlockZ = 16;
-
-static const unsigned int g_anglesPerBlock = 64;
-static const unsigned int g_volBlockX = 32;
-static const unsigned int g_volBlockY = 16;
 
 static const unsigned int g_anglesPerWeightBlock = 16;
 static const unsigned int g_detBlockU = 32;
@@ -64,29 +54,10 @@ static const unsigned int g_detBlockV = 32;
 
 static const unsigned g_MaxAngles = 12000;
 
-__constant__ float gC_angle_sin[g_MaxAngles];
-__constant__ float gC_angle_cos[g_MaxAngles];
 __constant__ float gC_angle[g_MaxAngles];
 
 
 // per-detector u/v shifts?
-
-static bool bindProjDataTexture(const cudaArray* array)
-{
-	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
-
-	gT_coneProjTexture.addressMode[0] = cudaAddressModeBorder;
-	gT_coneProjTexture.addressMode[1] = cudaAddressModeBorder;
-	gT_coneProjTexture.addressMode[2] = cudaAddressModeBorder;
-	gT_coneProjTexture.filterMode = cudaFilterModeLinear;
-	gT_coneProjTexture.normalized = false;
-
-	cudaBindTextureToArray(gT_coneProjTexture, array, channelDesc);
-
-	// TODO: error value?
-
-	return true;
-}
 
 
 __global__ void devFDK_preweight(void* D_projData, unsigned int projPitch, unsigned int startAngle, unsigned int endAngle, float fSrcOrigin, float fDetOrigin, float fZShift, float fDetUSize, float fDetVSize, const SDimensions3D dims)
