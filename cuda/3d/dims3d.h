@@ -58,7 +58,8 @@ struct SProjectorParams3D {
 	    iRaysPerDetDim(1), iRaysPerVoxelDim(1),
 	    fOutputScale(1.0f),
 	    fVolScaleX(1.0f), fVolScaleY(1.0f), fVolScaleZ(1.0f),
-	    ker(ker3d_default)
+	    ker(ker3d_default),
+	    bFDKWeighting(false)
 	{ }
 
 	unsigned int iRaysPerDetDim;
@@ -68,6 +69,7 @@ struct SProjectorParams3D {
 	float fVolScaleY;
 	float fVolScaleZ;
 	Cuda3DProjectionKernel ker;
+	bool bFDKWeighting;
 };
 
 }

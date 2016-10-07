@@ -309,13 +309,6 @@ _AstraExport bool astraCudaBP_SIRTWeighted(float* pfVolume, const float* pfProje
                       const CProjectionGeometry3D* pProjGeom,
                       int iGPUIndex, int iVoxelSuperSampling);
 
-_AstraExport bool astraCudaFDK(float* pfVolume, const float* pfProjections,
-                  const CVolumeGeometry3D* pVolGeom,
-                  const CConeProjectionGeometry3D* pProjGeom,
-                  bool bShortScan,
-                  int iGPUIndex, int iVoxelSuperSampling);
-
-
 }
 
 

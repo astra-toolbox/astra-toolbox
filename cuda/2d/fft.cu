@@ -35,7 +35,7 @@ $Id$
 #include <fstream>
 
 #include "../../include/astra/Logging.h"
-#include "astra/Fourier.h"
+#include "../../include/astra/Fourier.h"
 
 using namespace astra;
 

@@ -77,6 +77,7 @@ bool bindProjDataTexture(const cudaArray* array)
 
 
 //__launch_bounds__(32*16, 4)
+template<bool FDKWEIGHT>
 __global__ void dev_cone_BP(void* D_volData, unsigned int volPitch, int startAngle,
                             int angleOffset, const astraCUDA3d::SDimensions3D dims,
                             float fOutputScale)
@@ -134,7 +135,10 @@ __global__ void dev_cone_BP(void* D_volData, unsigned int volPitch, int startAng
 				fU = fUNum * fr;
 				fV = fVNum * fr;
 				float fVal = tex3D(gT_coneProjTexture, fU, fAngle, fV);
-				Z[idx] += fVal; // fr*fr*fVal;
+				if (FDKWEIGHT)
+					Z[idx] += fr*fr*fVal;
+				else
+					Z[idx] += fVal;
 
 				fUNum += fCu.z;
 				fVNum += fCv.z;
@@ -297,8 +301,10 @@ bool ConeBP_Array(cudaPitchedPtr D_volumeData,
 
 		for (unsigned int i = 0; i < angleCount; i += g_anglesPerBlock) {
 		// printf("Calling BP: %d, %dx%d, %dx%d to %p\n", i, dimBlock.x, dimBlock.y, dimGrid.x, dimGrid.y, (void*)D_volumeData.ptr); 
-			if (params.iRaysPerVoxelDim == 1)
-				dev_cone_BP<<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, fOutputScale);
+			if (params.bFDKWeighting)
+				dev_cone_BP<true><<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, fOutputScale);
+			else if (params.iRaysPerVoxelDim == 1)
+				dev_cone_BP<false><<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, fOutputScale);
 			else
 				dev_cone_BP_SS<<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, params.iRaysPerVoxelDim, fOutputScale);
 		}
