@@ -32,6 +32,7 @@ $Id$
 
 #include "astra/CudaProjector3D.h"
 #include "astra/ConeProjectionGeometry3D.h"
+#include "astra/CompositeGeometryManager.h"
 
 #include "astra/Logging.h"
 
@@ -83,6 +84,17 @@ bool CCudaFDKAlgorithm3D::_check()
 
 	const CProjectionGeometry3D* projgeom = m_pSinogram->getGeometry();
 	ASTRA_CONFIG_CHECK(dynamic_cast<const CConeProjectionGeometry3D*>(projgeom), "CUDA_FDK", "Error setting FDK geometry");
+
+
+	const CVolumeGeometry3D* volgeom = m_pReconstruction->getGeometry();
+	bool cube = true;
+	if (abs(volgeom->getPixelLengthX() / volgeom->getPixelLengthY() - 1.0) > 0.00001)
+		cube = false;
+	if (abs(volgeom->getPixelLengthX() / volgeom->getPixelLengthZ() - 1.0) > 0.00001)
+		cube = false;
+	ASTRA_CONFIG_CHECK(cube, "CUDA_FDK", "Voxels must be cubes for FDK");
+
+
 
 	return true;
 }
@@ -219,20 +231,28 @@ void CCudaFDKAlgorithm3D::run(int _iNrIterations)
 	CFloat32VolumeData3DMemory* pReconMem = dynamic_cast<CFloat32VolumeData3DMemory*>(m_pReconstruction);
 	ASTRA_ASSERT(pReconMem);
 
-
-	bool ok = true;
-	
 	const float *filter = NULL;
-	if(m_iFilterDataId!=-1){
-		const CFloat32ProjectionData2D * pFilterData = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(m_iFilterDataId));
-		filter = pFilterData->getDataConst();
+	if (m_iFilterDataId != -1) {
+		const CFloat32ProjectionData2D *pFilterData = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(m_iFilterDataId));
+		if (pFilterData)
+			filter = pFilterData->getDataConst();
 	}
 
+#if 0
+	bool ok = true;
+	
 	ok = astraCudaFDK(pReconMem->getData(), pSinoMem->getDataConst(),
 	                  &volgeom, conegeom,
 	                  m_bShortScan, m_iGPUIndex, m_iVoxelSuperSampling, filter);
 
 	ASTRA_ASSERT(ok);
+#endif
+
+	CCompositeGeometryManager cgm;
+
+	cgm.doFDK(m_pProjector, pReconMem, pSinoMem, m_bShortScan, filter);
+
+
 
 }
 //----------------------------------------------------------------------------------------

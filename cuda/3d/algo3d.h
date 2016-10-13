@@ -39,8 +39,8 @@ public:
 	ReconAlgo3D();
 	~ReconAlgo3D();
 
-	bool setConeGeometry(const SDimensions3D& dims, const SConeProjection* projs, float fOutputScale);
-	bool setPar3DGeometry(const SDimensions3D& dims, const SPar3DProjection* projs, float fOutputScale);
+	bool setConeGeometry(const SDimensions3D& dims, const SConeProjection* projs, const SProjectorParams3D& params);
+	bool setPar3DGeometry(const SDimensions3D& dims, const SPar3DProjection* projs, const SProjectorParams3D& params);
 
 	void signalAbort() { shouldAbort = true; }
 
@@ -55,6 +55,7 @@ protected:
 	            float outputScale);
 
 	SDimensions3D dims;
+	SProjectorParams3D params;
 	SConeProjection* coneProjs;
 	SPar3DProjection* par3DProjs;
 

@@ -85,6 +85,9 @@ _AstraExport std::string doubleToString(double f);
 template<typename T>
 _AstraExport std::string toString(T f);
 
+
+_AstraExport void splitString(std::vector<std::string> &items, const std::string& s, const char *delim);
+
 }
 
 
