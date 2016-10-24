@@ -94,9 +94,11 @@ Install by copying AstraCuda32.dll or AstraCuda64.dll from bin/ and
 References:
 ------------
 
-If you use the ASTRA Toolbox for your research, we would appreciate it if you would refer to the following paper:
+If you use the ASTRA Toolbox for your research, we would appreciate it if you would refer to the following papers:
 
-W. van Aarle, W. J. Palenstijn, J. De Beenhouwer, T. Altantzis, S. Bals,  K J. Batenburg, and J. Sijbers, "The ASTRA Toolbox: A platform for advanced algorithm development in electron tomography", Ultramicroscopy (2015), http://dx.doi.org/10.1016/j.ultramic.2015.05.002
+W. Van Aarle, W J. Palenstijn, J. Cant, E. Janssens, F. Bleichrodt, A. Dabravolski, J. De Beenhouwer, K. J. Batenburg, and J. Sijbers, "Fast and Flexible X-ray Tomography Using the ASTRA Toolbox", Optics Express, vol. 24, no. 22, pp. 25129-25147, 2016
+
+W. Van Aarle, W J. Palenstijn, J. De Beenhouwer, T. Altantzis, S. Bals, K. J. Batenburg, and J. Sijbers, "The ASTRA Toolbox: a platform for advanced algorithm development in electron tomography", Ultramicroscopy, vol. 157, pp. 35–47, 2015
 
 Additionally, if you use parallel beam GPU code, we would appreciate it if you would refer to the following paper:
 
