@@ -53,8 +53,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 #include <fstream>
 #include <math.h>
-#include <boost/static_assert.hpp>
-#include <boost/throw_exception.hpp>
 
 //----------------------------------------------------------------------------------------
 // macro's
@@ -226,16 +224,6 @@ namespace astra {
 		int m_iDetectorIndex;
 		int m_iSliceIndex;
 	};
-}
-//----------------------------------------------------------------------------------------
-// some toys
-
-// safe reinterpret cast
-template <class To, class From>
-To safe_reinterpret_cast(From from)
-{
-	BOOST_STATIC_ASSERT(sizeof(From) <= sizeof(To));
-	return reinterpret_cast<To>(from);
 }
 
 //----------------------------------------------------------------------------------------

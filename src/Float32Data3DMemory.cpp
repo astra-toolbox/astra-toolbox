@@ -27,6 +27,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/Float32Data3DMemory.h"
 #include <iostream>
+#include <cstdlib>
 
 namespace astra {
 
