@@ -77,11 +77,10 @@ class SIRT3DPlugin(astra.plugin.base):
     """
     @staticmethod 
     def opInvert(data_id):
-        import numpy as np
-        data    = astra.data3d.get_shared_local(data_id)
-        opInv   = np.vectorize( lambda x : 1.0 / x if (x > 0.000001 ) else 0.0 )
-        data[:] = opInv(data)
-
+        import numexpr
+        data = astra.data3d.get_shared_local(data_id)
+        thr = np.float32(0.000001)
+        numexpr.evaluate("where(data > thr, 1 / data, 0)", out=data)
     
     """
         The opAddScaledMulscalar method adds the values of an multiplied astra.data3d
@@ -89,9 +88,13 @@ class SIRT3DPlugin(astra.plugin.base):
     """
     @staticmethod 
     def opAddScaledMulScalar(dst_id, src_id, scale, scale2):
+        import numexpr
         dst     = astra.data3d.get_shared_local(dst_id)
         src     = astra.data3d.get_shared_local(src_id)
-        dst[:]  = (dst*scale2) +  src*scale
+        scale   = np.float32(scale)
+        scale2  = np.float32(scale2)
+        numexpr.evaluate("dst*scale2 + src*scale", out=dst)
+        #dst[:]  = (dst*scale2) +  src*scale
 
     """
         The opMul method multiplies two astra.data3d objects. 
@@ -110,10 +113,11 @@ class SIRT3DPlugin(astra.plugin.base):
     """
     @staticmethod 
     def opAddMul(dst_id, src_id1, src_id2):
+        import numexpr
         dst     = astra.data3d.get_shared_local(dst_id)
         src1    = astra.data3d.get_shared_local(src_id1)
         src2    = astra.data3d.get_shared_local(src_id2)
-        dst[:] += src1*src2
+        numexpr.evaluate("dst + src1*src2", out=dst)
 
 
     """
