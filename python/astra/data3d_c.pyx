@@ -526,7 +526,6 @@ def get_shared(i):
 
 def get_shared_local(i):
     cdef CFloat32Data3DMemory * pDataObject = dynamic_cast_mem(getObject(i))
-    outArr = np.empty((pDataObject.getDepth(),pDataObject.getHeight(), pDataObject.getWidth()),dtype=np.float32,order='C')
     cdef np.npy_intp shape[3]
     shape[0] = <np.npy_intp> pDataObject.getDepth()
     shape[1] = <np.npy_intp> pDataObject.getHeight()
