@@ -26,6 +26,7 @@ class SIRT3DPlugin(astra.plugin.base):
     def initialize(self,cfg): 
         self.rec_id = cfg['ReconstructionDataId']
         self.prj_id = cfg['ProjectionDataId']
+        self.precomputed = False
        
     def run(self, iters):
         #Retrieve the geometry and use it to allocate temporary buffers
@@ -55,6 +56,9 @@ class SIRT3DPlugin(astra.plugin.base):
 
             
     def precomputeWeights(self,pw_id, tmpV_id, prjD_id, lw_id):
+        if self.precomputed:
+            return
+
         #Compute and invert the lineweights
         astra.data3d.store(lw_id, 0)
         astra.data3d.store(tmpV_id, 1)
@@ -66,6 +70,7 @@ class SIRT3DPlugin(astra.plugin.base):
         astra.data3d.store(prjD_id, 1)
         self.performBP(prjD_id, pw_id)
         mpi.run(self.opInvert, [pw_id])
+        self.precomputed = True
 
 
 
