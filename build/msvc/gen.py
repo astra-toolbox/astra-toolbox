@@ -567,7 +567,7 @@ def write_project11_start(P, F):
   print('  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />', file=F)
   print('  <ImportGroup Label="ExtensionSettings">', file=F)
   if "mex" not in P["name"]:
-    print('    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.props" />', file=F)
+    print('    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 8.0.props" />', file=F)
   print('  </ImportGroup>', file=F)
   for c in configs:
     print('''  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='%s'">''' % (c.name(), ), file=F)
@@ -614,7 +614,7 @@ def write_project11_end(P, F):
   print('  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />', file=F)
   print('  <ImportGroup Label="ExtensionTargets">', file=F)
   if "mex" not in P["name"]:
-    print('    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.targets" />', file=F)
+    print('    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 8.0.targets" />', file=F)
   print('  </ImportGroup>', file=F)
   print('</Project>', end="", file=F)
 
