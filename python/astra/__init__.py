@@ -35,6 +35,7 @@ from . import projector
 from . import projector3d
 from . import matrix
 from . import plugin
+from . import plugins
 from . import log
 from .optomo import OpTomo
 

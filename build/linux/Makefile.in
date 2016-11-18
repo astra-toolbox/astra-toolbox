@@ -399,8 +399,10 @@ ifeq ($(python),yes)
 install-python: py
 	$(INSTALL_SH) -m 755 -d @prefix@/python
 	$(INSTALL_SH) -m 755 -d @prefix@/python/astra
+	$(INSTALL_SH) -m 755 -d @prefix@/python/astra/plugins
 	$(INSTALL_SH) -m 644 python/finalbuild/astra/*.so @prefix@/python/astra
 	$(INSTALL_SH) -m 644 python/finalbuild/astra/*.py @prefix@/python/astra
+	$(INSTALL_SH) -m 644 python/finalbuild/astra/plugins/*.py @prefix@/python/astra/plugins
 	$(INSTALL_SH) -m 644 python/finalbuild/*.egg-info @prefix@/python/
 	@echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 	@echo "To use ASTRA in Python, add @prefix@/python/ to your PYTHONPATH"
