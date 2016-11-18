@@ -42,10 +42,10 @@ $Id$
 #ifdef USE_MATLAB_UNDOCUMENTED
 extern "C" {
 mxArray *mxCreateSharedDataCopy(const mxArray *pr);
-bool mxUnshareArray(const mxArray *pr, const bool noDeepCopy);
-mxArray *mxUnreference(const mxArray *pr);
+bool mxUnshareArray(mxArray *pr, bool noDeepCopy);
+mxArray *mxUnreference(mxArray *pr);
 #if 0
-// Unsupported in Matlab R2014b
+// Unsupported in Matlab R2014b and later
 bool mxIsSharedArray(const mxArray *pr);
 #endif
 }
@@ -66,12 +66,12 @@ public:
 		// First unshare the input array, so that we may modify it.
 		if (bUnshare) {
 #if 0
-			// Unsupported in Matlab R2014b
+			// Unsupported in Matlab R2014b and later
 			if (mxIsSharedArray(_pArray)) {
 				fprintf(stderr, "Performance note: unsharing shared array in link\n");
 			}
 #endif
-			mxUnshareArray(_pArray, false);
+			mxUnshareArray(const_cast<mxArray*>(_pArray), false);
 			//fprintf(stderr, "Unshared:\narray: %p\tdata: %p\n", (void*)_pArray, (void*)mxGetData(_pArray));
 		}
 		// Then create a (persistent) copy so the data won't be deleted
@@ -79,7 +79,7 @@ public:
 		m_pLink = mxCreateSharedDataCopy(_pArray);
 		//fprintf(stderr, "SharedDataCopy:\narray: %p\tdata: %p\n", (void*)m_pLink, (void*)mxGetData(m_pLink));
 		mexMakeArrayPersistent(m_pLink);
-		m_fPtr = (float *)mxGetData(m_pLink);
+		m_fPtr = (float *)mxGetData(_pArray);
 		m_fPtr += iOffset;
 	}
 	virtual ~CFloat32CustomMemoryMatlab3D() {
