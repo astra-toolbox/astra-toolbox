@@ -1,0 +1,145 @@
+@echo off
+
+cd /D %~dp0
+cd ..\..
+
+set R=%CD%
+
+call "%~dp0build_env.bat"
+
+rd /s /q release
+
+mkdir release
+cd release
+mkdir src
+mkdir matlab
+mkdir python27
+mkdir python35
+
+cd src
+git clone https://github.com/astra-toolbox/astra-toolbox astra-%B_RELEASE%
+cd astra-%B_RELEASE%
+git checkout %B_RELEASE_TAG%
+rd /s /q .git
+
+pause
+
+cd %R%\release\matlab
+mkdir astra-%B_RELEASE%
+cd astra-%B_RELEASE%
+xcopy /e /i %R%\samples\matlab samples
+xcopy /e /i %R%\matlab\algorithms algorithms
+xcopy /e /i %R%\matlab\tools tools
+copy %R%\NEWS.txt .
+copy %R%\README.txt .
+copy %R%\COPYING COPYING.txt
+
+copy %B_VCREDIST% .
+
+mkdir mex
+copy %R%\bin\x64\Release_CUDA\*.mexw64 mex
+copy %R%\bin\x64\Release_CUDA\AstraCuda64.dll mex
+copy %R%\bin\x64\Release_CUDA\AstraCuda64.lib mex
+copy "%CUDA_PATH%\bin\cudart64_80.dll" mex
+copy "%CUDA_PATH%\bin\cufft64_80.dll" mex
+
+pause
+
+rem -------------------------------------------------------------------
+
+cd %R%\release\python27
+mkdir astra-%B_RELEASE%
+cd astra-%B_RELEASE%
+xcopy /e /i %R%\samples\python samples
+copy %R%\NEWS.txt .
+copy %R%\COPYING COPYING.txt
+
+copy %B_VCREDIST% .
+
+mkdir astra
+call "%B_WINPYTHON27%\scripts\env.bat"
+copy %WINPYDIR%\lib\site-packages\astra\*.* astra
+copy %R%\bin\x64\Release_CUDA\AstraCuda64.lib astra
+copy "%CUDA_PATH%\bin\cudart64_80.dll" astra
+copy "%CUDA_PATH%\bin\cufft64_80.dll" astra
+
+(
+echo -----------------------------------------------------------------------
+echo This file is part of the ASTRA Toolbox
+echo.
+echo Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+echo            2014-2016, CWI, Amsterdam
+echo            http://visielab.uantwerpen.be/ and http://www.cwi.nl/
+echo License: Open Source under GPLv3
+echo Contact: astra@uantwerpen.be
+echo Website: http://www.astra-toolbox.com/
+echo -----------------------------------------------------------------------
+echo.
+echo.
+echo This directory contains pre-built Python modules for the ASTRA Toolbox.
+echo.
+echo It has been built with WinPython-64bit-%B_WP27%.
+echo.
+echo To use it, move the astra\ directory to your existing site-packages directory.
+echo Its exact location depends on your Python installation, but should look
+echo similar to %B_README_WP27% .
+echo.
+echo Sample code can be found in the samples\ directory.
+) > README.txt
+
+pause
+
+rem -------------------------------------------------------------------
+
+cd %R%\release\python35
+mkdir astra-%B_RELEASE%
+cd astra-%B_RELEASE%
+xcopy /e /i %R%\samples\python samples
+copy %R%\NEWS.txt .
+copy %R%\COPYING COPYING.txt
+
+copy %B_VCREDIST% .
+
+mkdir astra
+call "%B_WINPYTHON35%\scripts\env.bat"
+copy %WINPYDIR%\lib\site-packages\astra\*.* astra
+copy %R%\bin\x64\Release_CUDA\AstraCuda64.lib astra
+copy "%CUDA_PATH%\bin\cudart64_80.dll" astra
+copy "%CUDA_PATH%\bin\cufft64_80.dll" astra
+
+(
+echo -----------------------------------------------------------------------
+echo This file is part of the ASTRA Toolbox
+echo.
+echo Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+echo            2014-2016, CWI, Amsterdam
+echo            http://visielab.uantwerpen.be/ and http://www.cwi.nl/
+echo License: Open Source under GPLv3
+echo Contact: astra@uantwerpen.be
+echo Website: http://www.astra-toolbox.com/
+echo -----------------------------------------------------------------------
+echo.
+echo.
+echo This directory contains pre-built Python modules for the ASTRA Toolbox.
+echo.
+echo It has been built with WinPython-64bit-%B_WP35%.
+echo.
+echo To use it, move the astra\ directory to your existing site-packages directory.
+echo Its exact location depends on your Python installation, but should look
+echo similar to %B_README_WP35% .
+echo.
+echo Sample code can be found in the samples\ directory.
+) > README.txt
+
+pause
+
+cd %R%\release\matlab
+python -c "import shutil; shutil.make_archive('astra-%B_RELEASE%-matlab-win-x64', 'zip', 'astra-%B_RELEASE%')"
+cd %R%\release\python27
+python -c "import shutil; shutil.make_archive('astra-%B_RELEASE%-python27-win-x64', 'zip', 'astra-%B_RELEASE%')"
+cd %R%\release\python35
+python -c "import shutil; shutil.make_archive('astra-%B_RELEASE%-python35-win-x64', 'zip', 'astra-%B_RELEASE%')"
+cd %R%\release\src
+python -c "import shutil; shutil.make_archive('astra-%B_RELEASE%', 'zip', 'astra-%B_RELEASE%')"
+
+pause
