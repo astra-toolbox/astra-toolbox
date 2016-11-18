@@ -690,7 +690,7 @@ def write_main_project11():
       else:
         print('      <TargetMachinePlatform>32</TargetMachinePlatform>', file=F)
       print('      <GenerateLineInfo>true</GenerateLineInfo>', file=F)
-      print('      <CodeGeneration>compute_20,sm_20;compute_30,sm_30;compute_30,sm_35;compute_30,compute_30</CodeGeneration>', file=F)
+      print('      <CodeGeneration>compute_20,sm_20;compute_30,sm_30;compute_35,sm_35;compute_50,sm_50;compute_60,sm_60;compute_60,compute_60</CodeGeneration>', file=F)
       print('    </CudaCompile>', file=F)
     print('  </ItemDefinitionGroup>', file=F)
   write_project11_end(P, F)
