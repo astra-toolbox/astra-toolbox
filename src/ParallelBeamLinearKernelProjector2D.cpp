@@ -29,6 +29,7 @@ $Id$
 #include "astra/ParallelBeamLinearKernelProjector2D.h"
 
 #include <cmath>
+#include <algorithm>
 
 #include "astra/DataProjectorPolicies.h"
 
