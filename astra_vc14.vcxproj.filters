@@ -1,0 +1,766 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CudaCompile Include="cuda\2d\algo.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\2d\arith.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\2d\astra.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\2d\cgls.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\2d\darthelper.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\2d\em.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\2d\fan_bp.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\2d\fan_fp.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\2d\fft.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\2d\par_bp.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\2d\par_fp.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\2d\sart.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\2d\sirt.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\2d\util.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\3d\algo3d.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\3d\arith3d.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\3d\astra3d.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\3d\cgls3d.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\3d\cone_bp.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\3d\cone_fp.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\3d\darthelper3d.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\3d\fdk.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\3d\mem3d.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\3d\par3d_bp.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\3d\par3d_fp.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\3d\sirt3d.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda\3d\util3d.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Algorithm.cpp">
+      <Filter>Algorithms\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ArtAlgorithm.cpp">
+      <Filter>Algorithms\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AsyncAlgorithm.cpp">
+      <Filter>Algorithms\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\BackProjectionAlgorithm.cpp">
+      <Filter>Algorithms\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CglsAlgorithm.cpp">
+      <Filter>Algorithms\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FilteredBackProjectionAlgorithm.cpp">
+      <Filter>Algorithms\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ForwardProjectionAlgorithm.cpp">
+      <Filter>Algorithms\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PluginAlgorithm.cpp">
+      <Filter>Algorithms\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ReconstructionAlgorithm2D.cpp">
+      <Filter>Algorithms\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ReconstructionAlgorithm3D.cpp">
+      <Filter>Algorithms\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SartAlgorithm.cpp">
+      <Filter>Algorithms\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SirtAlgorithm.cpp">
+      <Filter>Algorithms\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Float32Data.cpp">
+      <Filter>Data Structures\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Float32Data2D.cpp">
+      <Filter>Data Structures\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Float32Data3D.cpp">
+      <Filter>Data Structures\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Float32Data3DMemory.cpp">
+      <Filter>Data Structures\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Float32ProjectionData2D.cpp">
+      <Filter>Data Structures\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Float32ProjectionData3D.cpp">
+      <Filter>Data Structures\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Float32ProjectionData3DMemory.cpp">
+      <Filter>Data Structures\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Float32VolumeData2D.cpp">
+      <Filter>Data Structures\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Float32VolumeData3D.cpp">
+      <Filter>Data Structures\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Float32VolumeData3DMemory.cpp">
+      <Filter>Data Structures\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SparseMatrix.cpp">
+      <Filter>Data Structures\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AstraObjectFactory.cpp">
+      <Filter>Global &amp; Other\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AstraObjectManager.cpp">
+      <Filter>Global &amp; Other\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CompositeGeometryManager.cpp">
+      <Filter>Global &amp; Other\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Config.cpp">
+      <Filter>Global &amp; Other\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Fourier.cpp">
+      <Filter>Global &amp; Other\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Globals.cpp">
+      <Filter>Global &amp; Other\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Logging.cpp">
+      <Filter>Global &amp; Other\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PlatformDepSystemCode.cpp">
+      <Filter>Global &amp; Other\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utilities.cpp">
+      <Filter>Global &amp; Other\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\XMLDocument.cpp">
+      <Filter>Global &amp; Other\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\XMLNode.cpp">
+      <Filter>Global &amp; Other\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ConeProjectionGeometry3D.cpp">
+      <Filter>Geometries\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ConeVecProjectionGeometry3D.cpp">
+      <Filter>Geometries\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FanFlatProjectionGeometry2D.cpp">
+      <Filter>Geometries\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FanFlatVecProjectionGeometry2D.cpp">
+      <Filter>Geometries\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GeometryUtil3D.cpp">
+      <Filter>Geometries\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ParallelProjectionGeometry2D.cpp">
+      <Filter>Geometries\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ParallelProjectionGeometry3D.cpp">
+      <Filter>Geometries\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ParallelVecProjectionGeometry3D.cpp">
+      <Filter>Geometries\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ProjectionGeometry2D.cpp">
+      <Filter>Geometries\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ProjectionGeometry3D.cpp">
+      <Filter>Geometries\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SparseMatrixProjectionGeometry2D.cpp">
+      <Filter>Geometries\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\VolumeGeometry2D.cpp">
+      <Filter>Geometries\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\VolumeGeometry3D.cpp">
+      <Filter>Geometries\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DataProjector.cpp">
+      <Filter>Projectors\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DataProjectorPolicies.cpp">
+      <Filter>Projectors\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FanFlatBeamLineKernelProjector2D.cpp">
+      <Filter>Projectors\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FanFlatBeamStripKernelProjector2D.cpp">
+      <Filter>Projectors\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ParallelBeamBlobKernelProjector2D.cpp">
+      <Filter>Projectors\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ParallelBeamLinearKernelProjector2D.cpp">
+      <Filter>Projectors\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ParallelBeamLineKernelProjector2D.cpp">
+      <Filter>Projectors\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ParallelBeamStripKernelProjector2D.cpp">
+      <Filter>Projectors\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Projector2D.cpp">
+      <Filter>Projectors\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Projector3D.cpp">
+      <Filter>Projectors\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SparseMatrixProjector2D.cpp">
+      <Filter>Projectors\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CudaBackProjectionAlgorithm.cpp">
+      <Filter>CUDA\astra source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CudaBackProjectionAlgorithm3D.cpp">
+      <Filter>CUDA\astra source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CudaCglsAlgorithm.cpp">
+      <Filter>CUDA\astra source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CudaCglsAlgorithm3D.cpp">
+      <Filter>CUDA\astra source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CudaDartMaskAlgorithm.cpp">
+      <Filter>CUDA\astra source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CudaDartMaskAlgorithm3D.cpp">
+      <Filter>CUDA\astra source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CudaDartSmoothingAlgorithm.cpp">
+      <Filter>CUDA\astra source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CudaDartSmoothingAlgorithm3D.cpp">
+      <Filter>CUDA\astra source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CudaDataOperationAlgorithm.cpp">
+      <Filter>CUDA\astra source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CudaEMAlgorithm.cpp">
+      <Filter>CUDA\astra source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CudaFDKAlgorithm3D.cpp">
+      <Filter>CUDA\astra source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CudaFilteredBackProjectionAlgorithm.cpp">
+      <Filter>CUDA\astra source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CudaForwardProjectionAlgorithm.cpp">
+      <Filter>CUDA\astra source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CudaForwardProjectionAlgorithm3D.cpp">
+      <Filter>CUDA\astra source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CudaProjector2D.cpp">
+      <Filter>CUDA\astra source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CudaProjector3D.cpp">
+      <Filter>CUDA\astra source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CudaReconstructionAlgorithm2D.cpp">
+      <Filter>CUDA\astra source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CudaRoiSelectAlgorithm.cpp">
+      <Filter>CUDA\astra source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CudaSartAlgorithm.cpp">
+      <Filter>CUDA\astra source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CudaSirtAlgorithm.cpp">
+      <Filter>CUDA\astra source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CudaSirtAlgorithm3D.cpp">
+      <Filter>CUDA\astra source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\astra\Algorithm.h">
+      <Filter>Algorithms\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\AlgorithmTypelist.h">
+      <Filter>Algorithms\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\ArtAlgorithm.h">
+      <Filter>Algorithms\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\AsyncAlgorithm.h">
+      <Filter>Algorithms\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\BackProjectionAlgorithm.h">
+      <Filter>Algorithms\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\CglsAlgorithm.h">
+      <Filter>Algorithms\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\CudaBackProjectionAlgorithm.h">
+      <Filter>Algorithms\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\CudaBackProjectionAlgorithm3D.h">
+      <Filter>Algorithms\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\FilteredBackProjectionAlgorithm.h">
+      <Filter>Algorithms\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\ForwardProjectionAlgorithm.h">
+      <Filter>Algorithms\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\PluginAlgorithm.h">
+      <Filter>Algorithms\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\ReconstructionAlgorithm2D.h">
+      <Filter>Algorithms\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\ReconstructionAlgorithm3D.h">
+      <Filter>Algorithms\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\SartAlgorithm.h">
+      <Filter>Algorithms\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\SirtAlgorithm.h">
+      <Filter>Algorithms\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\Float32Data.h">
+      <Filter>Data Structures\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\Float32Data2D.h">
+      <Filter>Data Structures\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\Float32Data3D.h">
+      <Filter>Data Structures\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\Float32Data3DMemory.h">
+      <Filter>Data Structures\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\Float32ProjectionData2D.h">
+      <Filter>Data Structures\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\Float32ProjectionData3D.h">
+      <Filter>Data Structures\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\Float32ProjectionData3DMemory.h">
+      <Filter>Data Structures\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\Float32VolumeData2D.h">
+      <Filter>Data Structures\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\Float32VolumeData3D.h">
+      <Filter>Data Structures\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\Float32VolumeData3DMemory.h">
+      <Filter>Data Structures\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\SparseMatrix.h">
+      <Filter>Data Structures\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\AstraObjectFactory.h">
+      <Filter>Global &amp; Other\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\AstraObjectManager.h">
+      <Filter>Global &amp; Other\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\clog.h">
+      <Filter>Global &amp; Other\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\CompositeGeometryManager.h">
+      <Filter>Global &amp; Other\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\Config.h">
+      <Filter>Global &amp; Other\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\Fourier.h">
+      <Filter>Global &amp; Other\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\Globals.h">
+      <Filter>Global &amp; Other\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\Logging.h">
+      <Filter>Global &amp; Other\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\PlatformDepSystemCode.h">
+      <Filter>Global &amp; Other\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\Singleton.h">
+      <Filter>Global &amp; Other\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\TypeList.h">
+      <Filter>Global &amp; Other\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\Utilities.h">
+      <Filter>Global &amp; Other\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\Vector3D.h">
+      <Filter>Global &amp; Other\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\XMLDocument.h">
+      <Filter>Global &amp; Other\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\XMLNode.h">
+      <Filter>Global &amp; Other\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\ConeProjectionGeometry3D.h">
+      <Filter>Geometries\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\ConeVecProjectionGeometry3D.h">
+      <Filter>Geometries\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\FanFlatProjectionGeometry2D.h">
+      <Filter>Geometries\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\FanFlatVecProjectionGeometry2D.h">
+      <Filter>Geometries\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\GeometryUtil2D.h">
+      <Filter>Geometries\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\GeometryUtil3D.h">
+      <Filter>Geometries\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\ParallelProjectionGeometry2D.h">
+      <Filter>Geometries\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\ParallelProjectionGeometry3D.h">
+      <Filter>Geometries\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\ParallelVecProjectionGeometry3D.h">
+      <Filter>Geometries\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\ProjectionGeometry2D.h">
+      <Filter>Geometries\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\ProjectionGeometry3D.h">
+      <Filter>Geometries\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\SparseMatrixProjectionGeometry2D.h">
+      <Filter>Geometries\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\VolumeGeometry2D.h">
+      <Filter>Geometries\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\VolumeGeometry3D.h">
+      <Filter>Geometries\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\DataProjector.h">
+      <Filter>Projectors\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\DataProjectorPolicies.h">
+      <Filter>Projectors\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\FanFlatBeamLineKernelProjector2D.h">
+      <Filter>Projectors\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\FanFlatBeamStripKernelProjector2D.h">
+      <Filter>Projectors\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\ParallelBeamBlobKernelProjector2D.h">
+      <Filter>Projectors\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\ParallelBeamLinearKernelProjector2D.h">
+      <Filter>Projectors\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\ParallelBeamLineKernelProjector2D.h">
+      <Filter>Projectors\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\ParallelBeamStripKernelProjector2D.h">
+      <Filter>Projectors\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\Projector2D.h">
+      <Filter>Projectors\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\Projector3D.h">
+      <Filter>Projectors\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\ProjectorTypelist.h">
+      <Filter>Projectors\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\SparseMatrixProjector2D.h">
+      <Filter>Projectors\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\CudaCglsAlgorithm.h">
+      <Filter>CUDA\astra headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\CudaCglsAlgorithm3D.h">
+      <Filter>CUDA\astra headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\CudaDartMaskAlgorithm.h">
+      <Filter>CUDA\astra headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\CudaDartMaskAlgorithm3D.h">
+      <Filter>CUDA\astra headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\CudaDartSmoothingAlgorithm.h">
+      <Filter>CUDA\astra headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\CudaDartSmoothingAlgorithm3D.h">
+      <Filter>CUDA\astra headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\CudaDataOperationAlgorithm.h">
+      <Filter>CUDA\astra headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\CudaEMAlgorithm.h">
+      <Filter>CUDA\astra headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\CudaFDKAlgorithm3D.h">
+      <Filter>CUDA\astra headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\CudaFilteredBackProjectionAlgorithm.h">
+      <Filter>CUDA\astra headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\CudaForwardProjectionAlgorithm.h">
+      <Filter>CUDA\astra headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\CudaForwardProjectionAlgorithm3D.h">
+      <Filter>CUDA\astra headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\CudaProjector2D.h">
+      <Filter>CUDA\astra headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\CudaProjector3D.h">
+      <Filter>CUDA\astra headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\CudaReconstructionAlgorithm2D.h">
+      <Filter>CUDA\astra headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\CudaRoiSelectAlgorithm.h">
+      <Filter>CUDA\astra headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\CudaSartAlgorithm.h">
+      <Filter>CUDA\astra headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\CudaSirtAlgorithm.h">
+      <Filter>CUDA\astra headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\CudaSirtAlgorithm3D.h">
+      <Filter>CUDA\astra headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\algo.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\arith.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\astra.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\cgls.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\darthelper.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\dims.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\em.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\fan_bp.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\fan_fp.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\fbp_filters.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\fft.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\par_bp.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\par_fp.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\sart.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\sirt.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\2d\util.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\algo3d.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\arith3d.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\astra3d.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\cgls3d.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\cone_bp.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\cone_fp.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\darthelper3d.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\dims3d.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\fdk.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\mem3d.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\par3d_bp.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\par3d_fp.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\sirt3d.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda\3d\util3d.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="include\astra\DataProjectorPolicies.inl">
+      <Filter>Projectors\inline</Filter>
+    </None>
+    <None Include="include\astra\FanFlatBeamLineKernelProjector2D.inl">
+      <Filter>Projectors\inline</Filter>
+    </None>
+    <None Include="include\astra\FanFlatBeamStripKernelProjector2D.inl">
+      <Filter>Projectors\inline</Filter>
+    </None>
+    <None Include="include\astra\ParallelBeamBlobKernelProjector2D.inl">
+      <Filter>Projectors\inline</Filter>
+    </None>
+    <None Include="include\astra\ParallelBeamLinearKernelProjector2D.inl">
+      <Filter>Projectors\inline</Filter>
+    </None>
+    <None Include="include\astra\ParallelBeamLineKernelProjector2D.inl">
+      <Filter>Projectors\inline</Filter>
+    </None>
+    <None Include="include\astra\ParallelBeamStripKernelProjector2D.inl">
+      <Filter>Projectors\inline</Filter>
+    </None>
+    <None Include="include\astra\SparseMatrixProjector2D.inl">
+      <Filter>Projectors\inline</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Algorithms">
+      <UniqueIdentifier>{262b0d17-774a-4cb1-b51a-b358d2d02791}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Data Structures">
+      <UniqueIdentifier>{76d6d672-670b-4454-b3ab-10dc8f9b8710}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Projectors">
+      <UniqueIdentifier>{77a581a9-60da-4265-97c0-80cdf97408c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CUDA">
+      <UniqueIdentifier>{c1af0e56-5fcc-4e75-b5db-88eeb4148185}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Global &amp; Other">
+      <UniqueIdentifier>{72fbe846-10ef-4c52-88df-13bd66c4cbfc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Geometries">
+      <UniqueIdentifier>{7ef37c12-c98c-4dd6-938d-12f49279eae0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Algorithms\headers">
+      <UniqueIdentifier>{a76ffd6d-3895-4365-b27e-fc9a72f2ed75}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Algorithms\source">
+      <UniqueIdentifier>{9df653ab-26c3-4bec-92a2-3dda22fda761}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Data Structures\headers">
+      <UniqueIdentifier>{444c44b0-6454-483a-be26-7cb9c8ab0b98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Data Structures\source">
+      <UniqueIdentifier>{95346487-8185-487b-a794-3e7fb5fcbd4c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Global &amp; Other\headers">
+      <UniqueIdentifier>{1c52efc8-a77e-4c72-b9be-f6429a87e6d7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Global &amp; Other\source">
+      <UniqueIdentifier>{1546cb47-7e5b-42c2-b695-ef172024c14b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Geometries\headers">
+      <UniqueIdentifier>{eddb31ba-0db7-4ab1-a490-36623aaf8901}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Geometries\source">
+      <UniqueIdentifier>{dc27bff7-4256-4311-a131-47612a44af20}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Projectors\headers">
+      <UniqueIdentifier>{91ae2cfd-6b45-46eb-ad99-2f16e5ce4b1e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Projectors\inline">
+      <UniqueIdentifier>{0daffd63-ba49-4a5f-8d7a-5322e0e74f22}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Projectors\source">
+      <UniqueIdentifier>{2d60e3c8-7874-4cee-b139-991ac15e811d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CUDA\astra headers">
+      <UniqueIdentifier>{bd4e1f94-2f56-4db6-b946-20c29d65a351}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CUDA\astra source">
+      <UniqueIdentifier>{bbef012e-598a-456f-90d8-416bdcb4221c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CUDA\cuda headers">
+      <UniqueIdentifier>{4e17872e-db7d-41bc-9760-fad1c253b583}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CUDA\cuda source">
+      <UniqueIdentifier>{04a878ed-77b4-4525-9bc2-38ccd65282c5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
