@@ -74,7 +74,7 @@ for m in ext_modules:
   if m.name == 'astra.plugin_c':
     m.sources.append('astra/src/PythonPluginAlgorithm.cpp')
 
-setup (name = 'PyASTRAToolbox',
+setup (name = 'astra-toolbox',
        version = '1.7.1',
        description = 'Python interface to the ASTRA-Toolbox',
        author='D.M. Pelt',
