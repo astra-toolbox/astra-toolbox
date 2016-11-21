@@ -24,7 +24,7 @@ dnl
 dnl -----------------------------------------------------------------------
 dnl $Id$
 
-AC_INIT(astra_toolbox, 1.7.1)
+AC_INIT(astra, 1.7.1)
 AC_CONFIG_SRCDIR([Makefile.in])
 LT_INIT([disable-static])
 
@@ -274,6 +274,15 @@ AC_SUBST(CPPFLAGS_OS)
 VPATH_SRCDIR="$srcdir"
 AC_SUBST(VPATH_SRCDIR)
 
+
+# Installation type
+AC_ARG_WITH(install-type, [[  --with-install-type=prefix|module|dir  type of installation (default prefix)]],,with_install_type=prefix)
+
+INSTALL_TYPE=$with_install_type
+AC_SUBST(INSTALL_TYPE)
+
+
+
 # TODO:
 
 # Detection of tools:
@@ -299,4 +308,5 @@ echo "  Octave : $HAVEOCTAVE"
 echo "  Python : $HAVEPYTHON"
 echo
 echo "  prefix : $prefix"
+echo "  install: $with_install_type"
 echo

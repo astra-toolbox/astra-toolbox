@@ -1,11 +1,18 @@
+install_type=@INSTALL_TYPE@
+
 cuda=@HAVECUDA@
 matlab=@HAVEMATLAB@
 python=@HAVEPYTHON@
 boostutf=@HAVEBOOSTUTF@
 
-
 MATLAB_ROOT=@MATLAB_ROOT@
 octave=@HAVEOCTAVE@
+
+MKDIR=mkdir -p
+CXX=@CXX@
+LD=@CXX@
+SHELL=@SHELL@
+INSTALL_SH=$(SHELL) $(srcdir)/install-sh
 
 TARGETS=libastra.la
 
@@ -25,6 +32,7 @@ all: $(TARGETS)
 
 prefix=@prefix@
 exec_prefix=@exec_prefix@
+datarootdir=@datarootdir@
 
 srcdir=@srcdir@
 abs_top_builddir=@abs_top_builddir@
@@ -43,6 +51,8 @@ LDFLAGS+=-g
 
 CPPFLAGS+=@CPPFLAGS_OS@
 
+BOOSTUTF_LIBS=@LIBS_BOOSTUTF@
+
 ifeq ($(cuda),yes)
 CPPFLAGS  += @CPPFLAGS_CUDA@ -DASTRA_CUDA
 NVCCFLAGS += @NVCCFLAGS_EXTRA@ @CPPFLAGS_CUDA@ -I$(srcdir)/../.. -I$(srcdir)/../../include -DASTRA_CUDA
@@ -51,58 +61,38 @@ LIBS      += -lcudart -lcufft
 NVCC       = @NVCC@
 endif
 
-ifeq ($(octave),yes)
-OCTLDFLAGS:=$(LDFLAGS)
-CPPFLAGS += @OCTAVE_CPPFLAGS@
-ifeq ($(cuda),yes)
-OCTFLAGS=-DASTRA_CUDA
-else
-OCTFLAGS=
-endif
-endif
-
 ifeq ($(matlab),yes)
+# TODO: Do we also want -fopenmp for octave?
 CPPFLAGS+=-I$(MATLAB_ROOT)/extern/include -DMATLAB_MEX_FILE
 CXXFLAGS+=-fopenmp
 LDFLAGS+=-fopenmp
 endif
 
+# MODLDFLAGS are the base LDFLAGS for matlab, octave, python modules
+MODLDFLAGS=$(LDFLAGS) -L$(abs_top_builddir)/.libs
+ifeq ($(install_type),module)
+MODLDFLAGS+=-Wl,-rpath,'\$$ORIGIN'
+endif
+
 ifeq ($(python),yes)
 PYTHON      = @PYTHON@
-PYLIBDIR = $(shell $(PYTHON) -c 'from distutils.sysconfig import get_config_var; import six; six.print_(get_config_var("LIBDIR"))')
-PYINCDIR = $(shell $(PYTHON) -c 'from distutils.sysconfig import get_python_inc; import six; six.print_(get_python_inc())')
+PYLIBDIR := $(shell $(PYTHON) -c 'from distutils.sysconfig import get_config_var; import six; six.print_(get_config_var("LIBDIR"))')
+PYINCDIR := $(shell $(PYTHON) -c 'from distutils.sysconfig import get_python_inc; import six; six.print_(get_python_inc())')
 PYLIBVER = `basename $(PYINCDIR)`
 CPPFLAGS += -DASTRA_PYTHON -I$(PYINCDIR)
 PYCPPFLAGS  := $(CPPFLAGS)
 PYCPPFLAGS  += -I../include
-PYLDFLAGS = $(LDFLAGS)
-PYLDFLAGS   += -L$(abs_top_builddir)/.libs
+PYLDFLAGS = $(MODLDFLAGS)
 endif
 
 # This is below where PYCPPFLAGS copies CPPFLAGS.  The python code is built
 # from a different directory, so these relative includes would be wrong.
 CPPFLAGS+=-I$(srcdir)/../.. -I$(srcdir)/../../include -I$(srcdir)/../../lib/include
 
-BOOST_CPPFLAGS=
-BOOST_LDFLAGS=
-
-BOOSTUTF_LIBS=@LIBS_BOOSTUTF@
-
-
-CPPFLAGS+=$(BOOST_CPPFLAGS)
-LDFLAGS+=$(BOOST_LDFLAGS)
-
-
-MKDIR=mkdir -p
-CXX=@CXX@
-LD=@CXX@
-SHELL=@SHELL@
-INSTALL_SH=$(SHELL) $(srcdir)/install-sh
-
 ifeq ($(matlab),yes)
 MEXFLAGS  = -cxx
-MEXLDFLAGS='$$LDFLAGS $(LDFLAGS)'
-MEXLIBS   = -L.libs -lut
+MEXLDFLAGS=\$$LDFLAGS $(MODLDFLAGS)
+MEXLIBS   = -lut
 MEXSUFFIX = @MEXSUFFIX@
 MEX       = @MEX@
 
@@ -111,13 +101,23 @@ MEXFLAGS += -DASTRA_CUDA
 endif
 
 ifeq ($(python),yes)
-MEXPYLDFLAGS='$$LDFLAGS $(LDFLAGS) -L$(PYLIBDIR)'
+# TODO: Why PYLIBDIR?
+MEXPYLDFLAGS=\$$LDFLAGS $(MODLDFLAGS) -L$(PYLIBDIR)
 MEXPYLIBS=$(MEXLIBS) -l$(PYLIBVER)
 endif
 
 endif
 
-LIBDIR=/usr/local/lib
+
+ifeq ($(octave),yes)
+OCTLDFLAGS:=$(MODLDFLAGS)
+CPPFLAGS += @OCTAVE_CPPFLAGS@
+ifeq ($(cuda),yes)
+OCTFLAGS=-DASTRA_CUDA
+else
+OCTFLAGS=
+endif
+endif
 
 DEPDIR=.deps
 
@@ -293,28 +293,28 @@ DEPDIRS = $(addsuffix $(DEPDIR),$(OBJECT_DIRS))
 -include $(wildcard $(addsuffix /*.d,$(DEPDIRS)))
 LIBDIRS = $(addsuffix .libs,./ src/ cuda/2d/ cuda/3d/)
 
+SONAME=$(shell . ${abs_top_builddir}/libastra.la; echo $$dlname)
 
 ifeq ($(matlab),yes)
 mex: $(MATLAB_MEX)
 
 %.$(MEXSUFFIX): %.o $(MATLAB_CXX_OBJECTS) libastra.la
-	$(MEX) LDFLAGS=$(MEXLDFLAGS) $(MEXFLAGS) $(LIBS) $(MEXLIBS) -lastra -output $* $*.o $(MATLAB_CXX_OBJECTS)
+	$(MEX) LDFLAGS="$(MEXLDFLAGS)" $(MEXFLAGS) $(LIBS) $(MEXLIBS) -lastra -output $* $*.o $(MATLAB_CXX_OBJECTS)
 
 ifeq ($(python),yes)
 matlab/mex/astra_mex_plugin_c.$(MEXSUFFIX): matlab/mex/astra_mex_plugin_c.o $(MATLAB_CXX_OBJECTS) libastra.la
-	$(MEX) LDFLAGS=$(MEXPYLDFLAGS) $(MEXFLAGS) $(LIBS) $(MEXPYLIBS) -lastra -output matlab/mex/astra_mex_plugin_c $< $(MATLAB_CXX_OBJECTS)
+	$(MEX) LDFLAGS="$(MEXPYLDFLAGS)" $(MEXFLAGS) $(LIBS) $(MEXPYLIBS) -lastra -output matlab/mex/astra_mex_plugin_c $< $(MATLAB_CXX_OBJECTS)
 endif
 endif
 
 ifeq ($(python),yes)
 py: libastra.la
 	$(MKDIR) python/build
-	# Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
-	cd $(srcdir)/../../python; CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" $(PYTHON) builder.py build --build-base=$(abs_top_builddir)/python/build
-
-python-root-install: py
-	# Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
-	cd $(srcdir)/../../python; CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" $(PYTHON) builder.py build --build-base=$(abs_top_builddir)/python/build install
+# TODO: Avoid writing into source dir
+	ln -s $(abs_top_builddir)/.libs/$(SONAME) $(srcdir)/../../python/astra
+# Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
+	cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS='${PYLDFLAGS}' $(PYTHON) builder.py build --build-base=$(abs_top_builddir)/python/build
+	rm $(srcdir)/../../python/astra/$(SONAME)
 
 endif
 
@@ -327,7 +327,7 @@ oct: $(OCTAVE_MEX)
 endif
 
 libastra.la: $(ALL_OBJECTS)
-	./libtool --mode=link --tag=CXX $(LD) -rpath $(LIBDIR) -o $@ $(LDFLAGS) $(LIBS) $+
+	./libtool --mode=link --tag=CXX $(LD) -rpath @libdir@ -o $@ $(LDFLAGS) $(LIBS) $+
 
 %.o: %.cpp
 	$(MKDIR) $(*D)/$(DEPDIR)
@@ -406,32 +406,64 @@ distclean: clean
 	rm -rf $(srcdir)/autom4te.cache
 	rm -f $(srcdir)/configure Makefile
 
-install: install-libraries install-matlab install-python install-octave
-
 install-libraries: libastra.la
 	$(INSTALL_SH) -m 755 -d @libdir@
 	./libtool --mode=install $(INSTALL_SH) -m 644 libastra.la @libdir@
 	./libtool --mode=finish @libdir@
 
-ifeq ($(matlab),yes)
-# TODO: This install location doesn't work well for /usr or /usr/local
-install-matlab: $(MATLAB_MEX)
-	$(INSTALL_SH) -m 755 -d @prefix@/matlab
-	$(INSTALL_SH) -m 755 -d @prefix@/matlab/mex
-	$(INSTALL_SH) -m 755 -d @prefix@/matlab/tools
-	$(INSTALL_SH) -m 644 $(MATLAB_MEX) @prefix@/matlab/mex
-	$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/tools/*.m @prefix@/matlab/tools
-# TODO: docs
-else
-install-matlab:
+
+# ------------------------
+# INSTALLATION
+# ------------------------
+
+ifeq ($(install_type),prefix)
+# libraries into @libdir@, python into site-packages, mex into @datadir@
+install: install-libraries install-matlab python-root-install install-octave
+
+PYPKGDATA=
+MATLABBASE=@datadir@/astra/matlab
+OCTAVEBASE=@datadir@/astra/octave
 endif
+
+ifeq ($(install_type),dir)
+# everything into @prefix@
+install: install-libraries install-matlab install-python install-octave
+
+PYPKGDATA=
+MATLABBASE=@prefix@/matlab
+OCTAVEBASE=@prefix@/octave
+PYTHONBASE=@prefix@/python
+endif
+
+ifeq ($(install_type),module)
+# python into site-packages, mex into @datadir@
+# library copied into python/mex directories
+# modules built with rpath=$ORIGIN
+install: install-matlab python-root-install install-octave
+
+PYPKGDATA=$(SONAME)
+MATLABBASE=@prefix@/matlab
+OCTAVEBASE=@prefix@/octave
+
+install-matlab-so: libastra.la
+	$(INSTALL_SH) -m 755 -d $(MATLABBASE)/mex
+	$(INSTALL_SH) -m 644 $(abs_top_builddir)/.libs/$(SONAME) $(MATLABBASE)/mex
+install-octave-so: libastra.la
+	$(INSTALL_SH) -m 755 -d $(OCTAVEBASE)/mex
+	$(INSTALL_SH) -m 644 $(abs_top_builddir)/.libs/$(SONAME) $(OCTAVEBASE)/mex
+else
+install-matlab-so:
+install-octave-so:
+endif
+
+
 
 ifeq ($(python),yes)
 # TODO: This install location doesn't work well for /usr or /usr/local
 install-python: py
 	$(MKDIR) python/finalbuild
 	# Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
-	cd $(srcdir)/../../python; CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" $(PYTHON) builder.py build --build-base=$(abs_top_builddir)/python/build install \
+	cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" $(PYTHON) builder.py build --build-base=$(abs_top_builddir)/python/build install \
 	--install-base=$(abs_top_builddir)/python/finalbuild --install-headers=$(abs_top_builddir)/python/finalbuild --install-purelib=$(abs_top_builddir)/python/finalbuild \
 	--install-platlib=$(abs_top_builddir)/python/finalbuild --install-scripts=$(abs_top_builddir)/python/finalbuild --install-data=$(abs_top_builddir)/python/finalbuild
 	$(INSTALL_SH) -m 755 -d @prefix@/python
@@ -441,23 +473,36 @@ install-python: py
 	$(INSTALL_SH) -m 644 python/finalbuild/astra/*.py @prefix@/python/astra
 	$(INSTALL_SH) -m 644 python/finalbuild/astra/plugins/*.py @prefix@/python/astra/plugins
 	$(INSTALL_SH) -m 644 python/finalbuild/*.egg-info @prefix@/python/
-	@echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-	@echo "To use ASTRA in Python, add @prefix@/python/ to your PYTHONPATH"
-	@echo "and @libdir@ to your LD_LIBRARY_PATH."
-	@echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 # TODO: docs
+
+python-root-install: py
+# Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
+	cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" $(PYTHON) builder.py build --build-base=$(abs_top_builddir)/python/build install
 else
+python-root-install:
 install-python:
 endif
 
+ifeq ($(matlab),yes)
+install-matlab: $(MATLAB_MEX) install-matlab-so
+	$(INSTALL_SH) -m 755 -d $(MATLABBASE)
+	$(INSTALL_SH) -m 755 -d $(MATLABBASE)/mex
+	$(INSTALL_SH) -m 755 -d $(MATLABBASE)/tools
+	$(INSTALL_SH) -m 644 $(MATLAB_MEX) $(MATLABBASE)/mex
+	$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/tools/*.m $(MATLABBASE)/tools
+# TODO: docs
+else
+install-matlab:
+endif
+
+
 ifeq ($(octave),yes)
-# TODO: This install location doesn't work well for /usr or /usr/local
-install-octave: $(OCTAVE_MEX)
-	$(INSTALL_SH) -m 755 -d @prefix@/octave
-	$(INSTALL_SH) -m 755 -d @prefix@/octave/mex
-	$(INSTALL_SH) -m 755 -d @prefix@/octave/tools
-	$(INSTALL_SH) -m 644 $(OCTAVE_MEX) @prefix@/octave/mex
-	$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/tools/*.m @prefix@/octave/tools
+install-octave: $(OCTAVE_MEX) install-octave-so
+	$(INSTALL_SH) -m 755 -d $(OCTAVEBASE)
+	$(INSTALL_SH) -m 755 -d $(OCTAVEBASE)/mex
+	$(INSTALL_SH) -m 755 -d $(OCTAVEBASE)/tools
+	$(INSTALL_SH) -m 644 $(OCTAVE_MEX) $(OCTAVEBASE)/mex
+	$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/tools/*.m $(OCTAVEBASE)/tools
 # TODO: docs
 else
 install-octave:
@@ -475,7 +520,7 @@ $(srcdir)/configure: $(srcdir)/configure.ac
 	@echo "configure.ac has been changed. Regenerating configure script"
 	cd $(srcdir) && $(SHELL) ./autogen.sh
 
-.PHONY: all mex test clean distclean install install-libraries py python-root-install install-python install-octave
+.PHONY: all mex test clean distclean install install-libraries py python-root-install install-python install-octave install-matlab-so install-octave-so
 
 # don't remove intermediate files:
 .SECONDARY:

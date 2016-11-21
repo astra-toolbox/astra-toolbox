@@ -64,6 +64,14 @@ if cfgHasToBeUpdated:
     cfg.write(cfgToWrite)
     cfg.close()
 
+
+pkgdata = { }
+try:
+    if os.environ['ASTRA_INSTALL_LIBRARY_AS_DATA']:
+        pkgdata['astra'] = [os.environ['ASTRA_INSTALL_LIBRARY_AS_DATA']]
+except KeyError:
+    pass
+
 cmdclass = { }
 ext_modules = [ ]
 
@@ -88,5 +96,6 @@ setup (name = 'astra-toolbox',
        cmdclass = cmdclass,
        #ext_modules = [Extension("astra","astra/astra.pyx")],
        packages=['astra', 'astra.plugins'],
+       package_data=pkgdata,
        requires=["numpy"],
 	)
