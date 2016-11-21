@@ -474,7 +474,7 @@ $(srcdir)/configure: $(srcdir)/configure.ac
 	@echo "configure.ac has been changed. Regenerating configure script"
 	cd $(srcdir) && $(SHELL) ./autogen.sh
 
-.PHONY: all mex test clean distclean install install-libraries py python-root-install install-python
+.PHONY: all mex test clean distclean install install-libraries py python-root-install install-python install-octave
 
 # don't remove intermediate files:
 .SECONDARY:
