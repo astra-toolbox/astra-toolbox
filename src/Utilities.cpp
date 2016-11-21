@@ -121,7 +121,7 @@ void splitString(std::vector<std::string> &items, const std::string& s,
 	size_t current = 0;
 	size_t next;
 	do {
-		next = s.find_first_of(",;", current);
+		next = s.find_first_of(delim, current);
 		items.push_back(s.substr(current, next - current));
 		current = next + 1;
 	} while (next != std::string::npos);
