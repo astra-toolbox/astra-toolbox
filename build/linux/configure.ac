@@ -141,6 +141,8 @@ if test x"$HAVECUDA" = xyes; then
   AC_MSG_RESULT([$NVCCARCHS])
 fi
 
+AC_ARG_VAR(NVCCFLAGS, [CUDA nvcc flags])
+
 
 AC_SUBST(HAVECUDA)
 AC_SUBST(LDFLAGS_CUDA)
