@@ -127,7 +127,7 @@ bool TV::init()
 	zeroVolumeData(D_sliceTmp, tmpPitch, dims);
 
     allocateVolumeData(D_xTilde, xtildePitch, dims);
-	//~ zeroVolumeData(D_pixelWeight, xtildePitch, dims);
+	zeroVolumeData(D_xTilde, xtildePitch, dims);
 
     int nels = dims.iVolWidth * dims.iVolHeight;
     cudaMalloc(&D_dualp, 2*nels*sizeof(float));
@@ -308,6 +308,9 @@ float TV::computeOperatorNorm() {
         norm = sqrt(norm);
         processVol<opMul>(D_sliceTmp, 1.0f/norm, tmpPitch, dims);
     }
+    //
+    cudaMemset(D_dualp, 0, 2*dims.iVolHeight*dims.iVolWidth*sizeof(float));
+    //
     if (norm < 0) return -1.0f;     // something went wrong
     else return sqrt(norm);
 }
@@ -315,6 +318,22 @@ float TV::computeOperatorNorm() {
 
 
 
+/// DEBUG -------------------------
+
+void write_device_array(float* data, int nels, char* fname) {
+
+	float* hdata = (float*) calloc(nels, sizeof(float));
+	cudaMemcpy(hdata, data, nels*sizeof(float), cudaMemcpyDeviceToHost);
+
+	FILE* fid = fopen(fname, "wb");
+	fwrite(hdata, sizeof(float), nels, fid);
+	fclose(fid);
+
+	free(hdata);
+
+}
+
+/// ----------------------------
 
 
 // TODO: implement volume mask
@@ -327,19 +346,39 @@ bool TV::iterate(unsigned int iterations)
     float tau = 1.0f/L;         	  // primal step
     float theta = 1.;				  // C-P relaxation parameter
 
+	printf("L = %f, sigma = %f\n", L, sigma);
+
 	// iteration
 	for (unsigned int iter = 0; iter < iterations; ++iter) {
+
+		printf("Iteration %d\n", iter); /// DEBUG
+
 		// Update dual variables
 		// ----------------------
 		// p = proj_linf(p + sigma*gradient(x_tilde), Lambda)
+		/// DEBUG
+		// dims.iVolWidth = 1024; dims.iVolHeight = 1024; dims.iProjAngles = 512; dims.iProjDets = 1536;
+		//~ cudaMemset(D_dualp, 0, sizeof(float)*dims.iVolHeight*dims.iVolWidth);
+
+		write_device_array(D_dualp, dims.iVolHeight*dims.iVolWidth, "p0.dat"); /// DEBUG
+		write_device_array(D_dualp, dims.iVolHeight*dims.iVolWidth, "p1.dat"); /// DEBUG
+		/// -----
 		gradientOperator(D_dualp, D_xTilde, sigma, 1);
+
+
 		projLinf(D_dualp, D_dualp, fRegularization); // *sigma
+
 
 		// q = (q + sigma*P(x_tilde) - sigma*data)/(1.0 + sigma)
         callFP(D_xTilde, xtildePitch, D_dualq, dualqPitch, sigma);          // q = q + sigma*P(xtilde)
         processSino<opAddScaled>(D_dualq, D_sinoData, -sigma, 				// q -= sigma*data
 								 dualqPitch, dims);
         processSino<opMul>(D_dualq, 1.0f/(1.0f+sigma), dualqPitch, dims);   // q /= 1+sigma
+        /// DEBUG
+		// dims.iVolWidth = 1024; dims.iVolHeight = 1024; dims.iProjAngles = 512; dims.iProjDets = 1536;
+		write_device_array(D_dualq, dims.iProjDets*dims.iProjAngles, "sino_a.dat"); /// DEBUG
+		/// -----
+
 
 		// Update primal variables
 		// ------------------------
