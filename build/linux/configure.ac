@@ -302,11 +302,46 @@ AC_OUTPUT
 
 echo
 echo "Summary of ASTRA Toolbox build options:"
-echo "  CUDA   : $HAVECUDA"
-echo "  Matlab : $HAVEMATLAB"
-echo "  Octave : $HAVEOCTAVE"
-echo "  Python : $HAVEPYTHON"
+echo "  CUDA  : $HAVECUDA"
+echo "  Matlab: $HAVEMATLAB"
+echo "  Octave: $HAVEOCTAVE"
+echo "  Python: $HAVEPYTHON"
 echo
-echo "  prefix : $prefix"
-echo "  install: $with_install_type"
-echo
+echo "Installation type: $with_install_type"
+case $with_install_type in
+  prefix)
+    echo   "  Library     : "$(eval echo `eval echo $libdir`)
+    if test $HAVEMATLAB = yes; then
+      echo "  Matlab files: "$(eval echo `eval echo $datadir`)"/astra/matlab"
+    fi
+    if test $HAVEOCTAVE = yes; then
+      echo "  Octave files: "$(eval echo `eval echo $datadir`)"/astra/octave"
+    fi
+    if test $HAVEPYTHON = yes; then
+      echo "  Python files to site-packages"
+    fi
+    ;;
+  dir)
+    echo   "  Library     : "$(eval echo `eval echo $libdir`)
+    if test $HAVEMATLAB = yes; then
+      echo "  Matlab files: $prefix/matlab"
+    fi
+    if test $HAVEOCTAVE = yes; then
+      echo "  Octave files: $prefix/octave"
+    fi
+    if test $HAVEPYTHON = yes; then
+      echo "  Python files: $prefix/python"
+    fi
+    ;;
+  module)
+    echo   "  Library into Matlab/Octave/Python module directories"
+    if test $HAVEMATLAB = yes; then
+      echo "  Matlab files: $prefix/matlab"
+    fi
+    if test $HAVEOCTAVE = yes; then
+      echo "  Octave files: $prefix/octave"
+    fi
+    if test $HAVEPYTHON = yes; then
+      echo "  Python files to site-packages"
+    fi
+esac
