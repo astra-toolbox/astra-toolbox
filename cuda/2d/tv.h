@@ -41,7 +41,6 @@ public:
 
 	virtual bool init();
 
-	/*
 	// Set min/max masks to existing GPU memory buffers
 	bool setMinMaxMasks(float* D_minMaskData, float* D_maxMaskData,
 	                    unsigned int pitch);
@@ -49,7 +48,9 @@ public:
 	// Set min/max masks from RAM buffers
 	bool uploadMinMaxMasks(const float* minMaskData, const float* maxMaskData,
 	                       unsigned int pitch);
-	*/
+
+
+	void setRegularization(float r) { fRegularization = r; }
 
 	virtual bool iterate(unsigned int iterations);
 
@@ -79,7 +80,7 @@ protected:
 	float* D_maxMaskData;
 	unsigned int maxMaskPitch;
 
-	float fRelaxation;
+	float fRegularization;
 };
 
 bool doTV(float* D_volumeData, unsigned int volumePitch,

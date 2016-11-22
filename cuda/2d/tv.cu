@@ -62,7 +62,7 @@ TV::TV() : ReconAlgo()
 	D_minMaskData = 0;
 	D_maxMaskData = 0;
 
-	fRelaxation = 1.0f;
+	fRegularization = 1.0f;
 
 	freeMinMaxMasks = false;
 }
@@ -97,7 +97,7 @@ void TV::reset()
 	useVolumeMask = false;
 	useSinogramMask = false;
 
-	fRelaxation = 1.0f;
+	fRegularization = 1.0f;
 
 	ReconAlgo::reset();
 }
@@ -120,7 +120,7 @@ bool TV::init()
 	return true;
 }
 
-/*
+
 bool TV::setMinMaxMasks(float* D_minMaskData_, float* D_maxMaskData_,
 	                      unsigned int iPitch)
 {
@@ -158,7 +158,7 @@ bool TV::uploadMinMaxMasks(const float* pfMinMaskData, const float* pfMaxMaskDat
 
 	return true;
 }
-*/
+
 
 
 
@@ -227,6 +227,7 @@ bool TV::iterate(unsigned int iterations)
 		duplicateVolumeData(D_xold, D_x, volumePitch, dims);
 		// x = x + tau*div(p) - tau*Kadj(q) ; possibly with positivity constraint
 		divergenceOperator(D_x, D_dualp, tau, 1);
+		callBP(D_dualq, tmpPitch, D_projData, projPitch, 1.0f);
 
 
 
