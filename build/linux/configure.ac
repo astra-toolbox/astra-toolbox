@@ -179,8 +179,8 @@ AC_SUBST(HAVEMATLAB)
 
 # octave
 
-AC_ARG_ENABLE(octave, [[  --disable-octave      disable Octave support]])
-if test x"$enable_octave" != xno; then
+AC_ARG_ENABLE(octave, [[  --enable-octave         enable Octave support]])
+if test x"$enable_octave" = xyes; then
   AC_PATH_PROG([HAVEOCTAVE], [octave-config], [no], [$PATH])
   AC_MSG_CHECKING([for octave])
   if test x"HAVEOCTAVE" != xno -a $HAVEMATLAB = yes; then
