@@ -117,6 +117,12 @@ OCTFLAGS=-DASTRA_CUDA
 else
 OCTFLAGS=
 endif
+ifeq ($(python),yes)
+OCTPYLIBS=-l$(PYLIBVER)
+else
+OCTPYLIBS=
+endif
+
 endif
 
 DEPDIR=.deps
@@ -270,10 +276,6 @@ MATLAB_MEX=\
 	matlab/mex/astra_mex_data3d_c.$(MEXSUFFIX) \
 	matlab/mex/astra_mex_direct_c.$(MEXSUFFIX)
 
-ifeq ($(python),yes)
-MATLAB_MEX+=matlab/mex/astra_mex_plugin_c.$(MEXSUFFIX)
-endif
-
 OCTAVE_CXX_OBJECTS=\
 	matlab/mex/octave_support.o
 
@@ -287,6 +289,12 @@ OCTAVE_MEX=\
 	matlab/mex/astra_mex_log_c.mex \
 	matlab/mex/astra_mex_data3d_c.mex \
 	matlab/mex/astra_mex_direct_c.mex
+
+ifeq ($(python),yes)
+MATLAB_MEX+=matlab/mex/astra_mex_plugin_c.$(MEXSUFFIX)
+OCTAVE_MEX+=matlab/mex/astra_mex_plugin_c.mex
+endif
+
 
 OBJECT_DIRS = src/ tests/ cuda/2d/ cuda/3d/ matlab/mex/ ./
 DEPDIRS = $(addsuffix $(DEPDIR),$(OBJECT_DIRS))
@@ -323,7 +331,12 @@ ifeq ($(octave),yes)
 oct: $(OCTAVE_MEX)
 
 %.mex: %.o $(MATLAB_CXX_OBJECTS) $(OCTAVE_CXX_OBJECTS) libastra.la
-	mkoctfile --mex $(OCTFLAGS) $(OCTLDFLAGS) $(LIBS) -L.libs -lastra --output $* $*.o $(MATLAB_CXX_OBJECTS) $(OCTAVE_CXX_OBJECTS)
+	mkoctfile --mex $(OCTFLAGS) $(OCTLDFLAGS) $(LIBS) -lastra --output $* $*.o $(MATLAB_CXX_OBJECTS) $(OCTAVE_CXX_OBJECTS)
+
+ifeq ($(python),yes)
+matlab/mex/astra_mex_plugin_c.mex: matlab/mex/astra_mex_plugin_c.o $(MATLAB_CXX_OBJECTS) $(OCTAVE_CXX_OBJECTS) libastra.la
+	mkoctfile --mex $(OCTFLAGS) $(OCTLDFLAGS) $(LIBS) $(OCTPYLIBS) -lastra --output matlab/mex/astra_mex_plugin_c $< $(MATLAB_CXX_OBJECTS) $(OCTAVE_CXX_OBJECTS)
+endif
 endif
 
 libastra.la: $(ALL_OBJECTS)
