@@ -19,33 +19,55 @@ See the MATLAB and Python code samples in samples/ and on http://sf.net/projects
 
 ### Windows, binary
 
-Add the mex and tools subdirectories to your MATLAB path and the Python module to your Python path..
+Add the mex and tools subdirectories to your MATLAB path, or copy
+the Python astra module to your Python site-packages directory.
 
 ### Linux, from source
 
-Requirements: g++, boost, CUDA (driver+toolkit), Matlab and/or Python (2.7 or 3.x)
+#### For Matlab
+
+Requirements: g++, boost, CUDA (5.5 or higher), Matlab (R2012a or higher)
 
 ```
 cd build/linux
 ./autogen.sh   # when building a git version
 ./configure --with-cuda=/usr/local/cuda \
             --with-matlab=/usr/local/MATLAB/R2012a \
-            --with-python \
-            --prefix=/usr/local/astra
+            --prefix=$HOME/astra \
+            --with-install-type=module
 make
 make install
 ```
-Add /usr/local/astra/lib to your LD_LIBRARY_PATH.
-Add /usr/local/astra/matlab and its subdirectories (tools, mex)
-  to your matlab path.
-Add /usr/local/astra/python to your PYTHONPATH.
+Add $HOME/astra/matlab and its subdirectories (tools, mex) to your matlab path.
+
+If you want to build the Octave interface instead of the Matlab interface,
+specify --enable-octave instead of --with-matlab=... . The Octave files
+will be installed into $HOME/astra/octave .
 
 
 NB: Each matlab version only supports a specific range of g++ versions.
 Despite this, if you have a newer g++ and if you get errors related to missing
 GLIBCXX_3.4.xx symbols, it is often possible to work around this requirement
 by deleting the version of libstdc++ supplied by matlab in
-MATLAB_PATH/bin/glnx86 or MATLAB_PATH/bin/glnxa64 (at your own risk).
+MATLAB_PATH/bin/glnx86 or MATLAB_PATH/bin/glnxa64 (at your own risk),
+or setting LD_PRELOAD=/usr/lib64/libstdc++.so.6 (or similar) when starting
+matlab.
+
+#### For Python
+
+Requirements: g++, boost, CUDA (5.5 or higher), Python (2.7 or 3.x)
+
+```
+cd build/linux
+./autogen.sh   # when building a git version
+./configure --with-cuda=/usr/local/cuda \
+            --with-python \
+            --with-install-type=module
+make
+make install
+```
+
+This will install Astra into your current Python environment.
 
 
 ### Windows, from source using Visual Studio 2008
