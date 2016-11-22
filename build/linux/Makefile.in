@@ -462,7 +462,6 @@ endif
 
 
 ifeq ($(python),yes)
-# TODO: This install location doesn't work well for /usr or /usr/local
 install-python: py
 	$(MKDIR) python/finalbuild
 	# Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
