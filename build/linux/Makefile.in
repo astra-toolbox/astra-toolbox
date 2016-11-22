@@ -83,6 +83,7 @@ CPPFLAGS += -DASTRA_PYTHON -I$(PYINCDIR)
 PYCPPFLAGS  := $(CPPFLAGS)
 PYCPPFLAGS  += -I../include
 PYLDFLAGS = $(MODLDFLAGS)
+MODPYLIBS=-l$(PYLIBVER)
 endif
 
 # This is below where PYCPPFLAGS copies CPPFLAGS.  The python code is built
@@ -100,12 +101,6 @@ ifeq ($(cuda),yes)
 MEXFLAGS += -DASTRA_CUDA
 endif
 
-ifeq ($(python),yes)
-# TODO: Why PYLIBDIR?
-MEXPYLDFLAGS=\$$LDFLAGS $(MODLDFLAGS) -L$(PYLIBDIR)
-MEXPYLIBS=$(MEXLIBS) -l$(PYLIBVER)
-endif
-
 endif
 
 
@@ -117,13 +112,9 @@ OCTFLAGS=-DASTRA_CUDA
 else
 OCTFLAGS=
 endif
-ifeq ($(python),yes)
-OCTPYLIBS=-l$(PYLIBVER)
-else
-OCTPYLIBS=
-endif
 
 endif
+
 
 DEPDIR=.deps
 
@@ -311,7 +302,7 @@ mex: $(MATLAB_MEX)
 
 ifeq ($(python),yes)
 matlab/mex/astra_mex_plugin_c.$(MEXSUFFIX): matlab/mex/astra_mex_plugin_c.o $(MATLAB_CXX_OBJECTS) libastra.la
-	$(MEX) LDFLAGS="$(MEXPYLDFLAGS)" $(MEXFLAGS) $(LIBS) $(MEXPYLIBS) -lastra -output matlab/mex/astra_mex_plugin_c $< $(MATLAB_CXX_OBJECTS)
+	$(MEX) LDFLAGS="$(MEXLDFLAGS)" $(MEXFLAGS) $(LIBS) $(MEXLIBS) $(MODPYLIBS) -lastra -output matlab/mex/astra_mex_plugin_c $< $(MATLAB_CXX_OBJECTS)
 endif
 endif
 
@@ -335,7 +326,7 @@ oct: $(OCTAVE_MEX)
 
 ifeq ($(python),yes)
 matlab/mex/astra_mex_plugin_c.mex: matlab/mex/astra_mex_plugin_c.o $(MATLAB_CXX_OBJECTS) $(OCTAVE_CXX_OBJECTS) libastra.la
-	mkoctfile --mex $(OCTFLAGS) $(OCTLDFLAGS) $(LIBS) $(OCTPYLIBS) -lastra --output matlab/mex/astra_mex_plugin_c $< $(MATLAB_CXX_OBJECTS) $(OCTAVE_CXX_OBJECTS)
+	mkoctfile --mex $(OCTFLAGS) $(OCTLDFLAGS) $(LIBS) $(MODPYLIBS) -lastra --output matlab/mex/astra_mex_plugin_c $< $(MATLAB_CXX_OBJECTS) $(OCTAVE_CXX_OBJECTS)
 endif
 endif
 
