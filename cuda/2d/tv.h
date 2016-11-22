@@ -41,7 +41,6 @@ public:
 
 	virtual bool init();
 
-	/*
 	// Set min/max masks to existing GPU memory buffers
 	bool setMinMaxMasks(float* D_minMaskData, float* D_maxMaskData,
 	                    unsigned int pitch);
@@ -49,29 +48,37 @@ public:
 	// Set min/max masks from RAM buffers
 	bool uploadMinMaxMasks(const float* minMaskData, const float* maxMaskData,
 	                       unsigned int pitch);
-	*/
+
+
+	void setRegularization(float r) { fRegularization = r; }
 
 	virtual bool iterate(unsigned int iterations);
 
 	// TODO: declare additional methods here
 
 	virtual float computeDiffNorm();
+	bool projLinf(float* D_gradData, float* D_data, float radius);
+	bool gradientOperator(float* D_gradData, float* D_data, float alpha, int doUpdate);
+	bool divergenceOperator(float* D_data, float* D_gradData, float alpha, int doUpdate);
+	float computeOperatorNorm();
 
 protected:
 	void reset();
 
 	// Slice-like buffers
+	float* D_projData;
 	float* D_x;
 	float* D_xTilde;
 	float* D_xold;
 	float* D_sliceTmp;
+	unsigned int projPitch;
 	unsigned int xPitch;
 	unsigned int xtildePitch;
 	unsigned int xoldPitch;
 	unsigned int tmpPitch;
 
 	// Slice gradient-like buffers
-	float2* D_dualp;
+	float* D_dualp;
 	unsigned int dualpPitch;
 
 	// Sinogram-like buffers
@@ -87,12 +94,10 @@ protected:
 	float* D_maxMaskData;
 	unsigned int maxMaskPitch;
 
-	float fLambda; // fRelaxation in sirt
-
+	float fRegularization;
 	// Algorithm-related parameters
 	int nIterComputeNorm;
 	float normFactor;
-
 };
 
 bool doTV(float* D_volumeData, unsigned int volumePitch,
