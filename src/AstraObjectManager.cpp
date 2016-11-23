@@ -31,13 +31,13 @@ $Id$
 
 namespace astra {
 
-DEFINE_SINGLETON(CProjector2DManager);
-DEFINE_SINGLETON(CProjector3DManager);
-DEFINE_SINGLETON(CData2DManager);
-DEFINE_SINGLETON(CData3DManager);
-DEFINE_SINGLETON(CAlgorithmManager);
-DEFINE_SINGLETON(CMatrixManager);
+DEFINE_SINGLETON(CProjector2DManager)
+DEFINE_SINGLETON(CProjector3DManager)
+DEFINE_SINGLETON(CData2DManager)
+DEFINE_SINGLETON(CData3DManager)
+DEFINE_SINGLETON(CAlgorithmManager)
+DEFINE_SINGLETON(CMatrixManager)
 
-DEFINE_SINGLETON(CAstraIndexManager);
+DEFINE_SINGLETON(CAstraIndexManager)
 
 } // end namespace

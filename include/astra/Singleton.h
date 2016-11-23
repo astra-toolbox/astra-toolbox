@@ -82,15 +82,15 @@ class Singleton {
 // libastra. This situation would cause issues when .mex files are unloaded.
 
 #define DEFINE_SINGLETON(T) \
-template<> void Singleton<T >::construct() { assert(!m_singleton); m_singleton = new T(); } \
-template<> T* Singleton<T >::m_singleton = 0
+template<> T* Singleton<T >::m_singleton = 0; \
+template<> void Singleton<T >::construct() { assert(!m_singleton); m_singleton = new T(); }
 
 
 // This is a hack to support statements like
 // DEFINE_SINGLETON2(CTemplatedClass<C1, C2>);
 #define DEFINE_SINGLETON2(A,B) \
-template<> void Singleton<A,B >::construct() { assert(!m_singleton); m_singleton = new A,B(); } \
-template<> A,B* Singleton<A,B >::m_singleton = 0
+template<> A,B* Singleton<A,B >::m_singleton = 0; \
+template<> void Singleton<A,B >::construct() { assert(!m_singleton); m_singleton = new A,B(); }
 
 } // end namespace
 
