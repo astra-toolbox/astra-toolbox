@@ -4,13 +4,19 @@ package:
 
 source:
   git_url: https://github.com/astra-toolbox/astra-toolbox.git
-  #git_tag: v1.7.1 # Change to 1.8 after release
+  git_rev: master  # for testing
+  # git_tag: 1.8  # TODO: change to this for next release
 
 build:
   number: 0
   script_env:
+    - CC
+    - CXX
     - CUDA_ROOT
-    - MAKEOPTS
+
+requirements:
+  build:
+    - boost
 
 about:
   home: http://www.astra-toolbox.com

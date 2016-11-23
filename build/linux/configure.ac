@@ -228,8 +228,8 @@ if test x"$with_python" != x -a x"$with_python" != xno; then
   AC_MSG_CHECKING(for Cython module)
   ASTRA_TRY_PYTHON([
 import Cython
-from distutils.version import LooseVersion
-assert(LooseVersion(Cython.__version__)>=LooseVersion("0.13"))
+from pkg_resources import parse_version
+assert(parse_version(Cython.__version__) >= parse_version("0.13"))
 ],,HAVEPYTHON=no)
   if test x$HAVEPYTHON = xno; then
     AC_MSG_RESULT(no)
