@@ -57,9 +57,10 @@ public:
 	// TODO: declare additional methods here
 
 	virtual float computeDiffNorm();
-	bool projLinf(float* D_gradData, float* D_data, float radius);
-	bool gradientOperator(float* D_gradData, float* D_data, float alpha, int doUpdate);
-	bool divergenceOperator(float* D_data, float* D_gradData, float alpha, int doUpdate);
+	bool projLinf(float* D_gradData, float* D_data, unsigned int pitch, float radius);
+	bool gradientOperator(float* D_gradData, float* D_data, unsigned int pitch, float alpha, int doUpdate);
+	bool divergenceOperator(float* D_data, float* D_gradData, unsigned int pitch, float alpha, int doUpdate);
+	bool signOperator(float* D_dst, float* D_src, unsigned int pitch, int nz);
 	float computeOperatorNorm();
 
 protected:
@@ -71,11 +72,15 @@ protected:
 	float* D_xTilde;
 	float* D_xold;
 	float* D_sliceTmp;
+	float* D_gradTmp; //
+	float* D_gradTmp2; //
 	unsigned int projPitch;
 	unsigned int xPitch;
 	unsigned int xtildePitch;
 	unsigned int xoldPitch;
 	unsigned int tmpPitch;
+	unsigned int gradTmpPitch;
+	unsigned int gradTmp2Pitch;
 
 	// Slice gradient-like buffers
 	float* D_dualp;
