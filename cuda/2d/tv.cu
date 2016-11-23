@@ -357,24 +357,6 @@ float TV::computeOperatorNorm() {
 
 
 
-/// DEBUG -------------------------
-
-void write_device_array(float* data, int nels, char* fname) {
-
-	float* hdata = (float*) calloc(nels, sizeof(float));
-	cudaMemcpy(hdata, data, nels*sizeof(float), cudaMemcpyDeviceToHost);
-
-	FILE* fid = fopen(fname, "wb");
-	fwrite(hdata, sizeof(float), nels, fid);
-	fclose(fid);
-
-	free(hdata);
-
-}
-
-/// ----------------------------
-
-
 // TODO: implement volume mask
 // TODO: implement either use_fbp in iterations, or preconditioned CP
 // TODO: use less buffers (for eg use D_x = D_volumeData ?)
@@ -386,36 +368,19 @@ bool TV::iterate(unsigned int iterations)
     float tau = 1.0f/L;         	  // primal step
     float theta = 1.;				  // C-P relaxation parameter
 
-	printf("L = %f, sigma = %f\n", L, sigma);
-	fRegularization = 10.0; /// DEBUG
-	printf("Lambda = %f\n", fRegularization);
-
 	// iteration
 	for (unsigned int iter = 0; iter < iterations; ++iter) {
-
-		printf("Iteration %d\n", iter); /// DEBUG
 
 		// Update dual variables
 		// ----------------------
 		// p = proj_linf(p + sigma*gradient(x_tilde), Lambda)
-		/// DEBUG
-		/// write_device_array(D_dualp, dims.iVolHeight*dims.iVolWidth, "p0.dat"); /// DEBUG
-		/// write_device_array(D_dualp, dims.iVolHeight*dims.iVolWidth, "p1.dat"); /// DEBUG
-		/// -----
 		gradientOperator(D_dualp, D_xTilde, dualpPitch, sigma, 1);
-
 		projLinf(D_dualp, D_dualp, dualpPitch, fRegularization); // *sigma
-
-
 		// q = (q + sigma*P(x_tilde) - sigma*data)/(1.0 + sigma)
         callFP(D_xTilde, xtildePitch, D_dualq, dualqPitch, sigma);          // q = q + sigma*P(xtilde)
         processSino<opAddScaled>(D_dualq, D_sinoData, -sigma, 				// q -= sigma*data
 								 dualqPitch, dims);
         processSino<opMul>(D_dualq, 1.0f/(1.0f+sigma), dualqPitch, dims);   // q /= 1+sigma
-        /// DEBUG
-		/// write_device_array(D_dualq, dims.iProjDets*dims.iProjAngles, "sino_a.dat"); /// DEBUG
-		/// -----
-
 
 		// Update primal variables
 		// ------------------------

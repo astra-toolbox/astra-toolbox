@@ -92,9 +92,6 @@ void SIRT::reset()
 
 bool SIRT::init()
 {
-
-	// TODO allocate primal and dual variables, declare them in header (and their pitch)
-
 	allocateVolumeData(D_pixelWeight, pixelPitch, dims);
 	zeroVolumeData(D_pixelWeight, pixelPitch, dims);
 
