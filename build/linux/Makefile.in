@@ -450,10 +450,10 @@ OCTAVEBASE=@prefix@/octave
 
 install-matlab-so: libastra.la
 	$(INSTALL_SH) -m 755 -d $(MATLABBASE)/mex
-	$(INSTALL_SH) -m 644 $(abs_top_builddir)/.libs/$(SONAME) $(MATLABBASE)/mex
+	$(INSTALL_SH) -m 755 $(abs_top_builddir)/.libs/$(SONAME) $(MATLABBASE)/mex
 install-octave-so: libastra.la
 	$(INSTALL_SH) -m 755 -d $(OCTAVEBASE)/mex
-	$(INSTALL_SH) -m 644 $(abs_top_builddir)/.libs/$(SONAME) $(OCTAVEBASE)/mex
+	$(INSTALL_SH) -m 755 $(abs_top_builddir)/.libs/$(SONAME) $(OCTAVEBASE)/mex
 else
 install-matlab-so:
 install-octave-so:
@@ -471,7 +471,7 @@ install-python: py
 	$(INSTALL_SH) -m 755 -d @prefix@/python
 	$(INSTALL_SH) -m 755 -d @prefix@/python/astra
 	$(INSTALL_SH) -m 755 -d @prefix@/python/astra/plugins
-	$(INSTALL_SH) -m 644 python/finalbuild/astra/*.so @prefix@/python/astra
+	$(INSTALL_SH) -m 755 python/finalbuild/astra/*.so @prefix@/python/astra
 	$(INSTALL_SH) -m 644 python/finalbuild/astra/*.py @prefix@/python/astra
 	$(INSTALL_SH) -m 644 python/finalbuild/astra/plugins/*.py @prefix@/python/astra/plugins
 	$(INSTALL_SH) -m 644 python/finalbuild/*.egg-info @prefix@/python/
@@ -490,7 +490,7 @@ install-matlab: $(MATLAB_MEX) install-matlab-so
 	$(INSTALL_SH) -m 755 -d $(MATLABBASE)
 	$(INSTALL_SH) -m 755 -d $(MATLABBASE)/mex
 	$(INSTALL_SH) -m 755 -d $(MATLABBASE)/tools
-	$(INSTALL_SH) -m 644 $(MATLAB_MEX) $(MATLABBASE)/mex
+	$(INSTALL_SH) -m 755 $(MATLAB_MEX) $(MATLABBASE)/mex
 	$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/tools/*.m $(MATLABBASE)/tools
 # TODO: docs
 else
@@ -503,7 +503,7 @@ install-octave: $(OCTAVE_MEX) install-octave-so
 	$(INSTALL_SH) -m 755 -d $(OCTAVEBASE)
 	$(INSTALL_SH) -m 755 -d $(OCTAVEBASE)/mex
 	$(INSTALL_SH) -m 755 -d $(OCTAVEBASE)/tools
-	$(INSTALL_SH) -m 644 $(OCTAVE_MEX) $(OCTAVEBASE)/mex
+	$(INSTALL_SH) -m 755 $(OCTAVE_MEX) $(OCTAVEBASE)/mex
 	$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/tools/*.m $(OCTAVEBASE)/tools
 # TODO: docs
 else
