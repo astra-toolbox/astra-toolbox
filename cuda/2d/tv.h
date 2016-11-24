@@ -52,7 +52,8 @@ public:
 
 	void setRegularization(float r) { fRegularization = r; }
 
-	virtual bool iterate(unsigned int iterations);
+	virtual bool iterate(unsigned int iterations); // preconditioned
+	bool iterate_old(unsigned int iterations); // not preconditioned
 
 	// TODO: declare additional methods here
 
@@ -60,6 +61,9 @@ public:
 	bool projLinf(float* D_gradData, float* D_data, unsigned int pitch, float radius);
 	bool gradientOperator(float* D_gradData, float* D_data, unsigned int pitch, float alpha, int doUpdate);
 	bool divergenceOperator(float* D_data, float* D_gradData, unsigned int pitch, float alpha, int doUpdate);
+	bool callUpdateDualq1(float* D_out, unsigned int outPitch, float* D_in1, unsigned int in1Pitch, float* D_in2, unsigned int in2Pitch);
+	bool callUpdateDualq2(float* D_out, unsigned int outPitch, float* D_in, unsigned int inPitch);
+	bool computeDiagonalPreconditioners();
 	bool signOperator(float* D_dst, float* D_src, unsigned int pitch, int nz);
 	float computeOperatorNorm();
 
@@ -67,30 +71,30 @@ protected:
 	void reset();
 
 	// Slice-like buffers
-	float* D_projData;
 	float* D_x;
 	float* D_xTilde;
 	float* D_xold;
-	float* D_sliceTmp;
-	float* D_gradTmp; //
-	float* D_gradTmp2; //
-	unsigned int projPitch;
+	float* D_tau;
+	float* D_sigma;
 	unsigned int xPitch;
 	unsigned int xtildePitch;
 	unsigned int xoldPitch;
-	unsigned int tmpPitch;
-	unsigned int gradTmpPitch;
-	unsigned int gradTmp2Pitch;
+	unsigned int tauPitch;
+	unsigned int sigmaPitch;
 
 	// Slice gradient-like buffers
 	float* D_dualp;
 	unsigned int dualpPitch;
+	float* D_gradTmp; //
+	float* D_gradTmp2; //
+	unsigned int gradTmpPitch;
+	unsigned int gradTmp2Pitch;
 
 	// Sinogram-like buffers
+	float* D_projData;
 	float* D_dualq;
-	float* D_sinoTmp;
+	unsigned int projPitch;
 	unsigned int dualqPitch;
-	unsigned int sinoTmpPitch;
 
 	// Masks
 	bool freeMinMaxMasks;
@@ -103,6 +107,9 @@ protected:
 	// Algorithm-related parameters
 	int nIterComputeNorm;
 	float normFactor;
+
+	// Misc.
+	SDimensions dimsGrad;
 };
 
 bool doTV(float* D_volumeData, unsigned int volumePitch,

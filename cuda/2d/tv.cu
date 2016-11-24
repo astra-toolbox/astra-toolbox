@@ -55,12 +55,12 @@ TV::TV() : ReconAlgo()
 	//~ D_x = 0;
 	D_xTilde = 0;
 	D_xold = 0;
-	D_sliceTmp = 0;
 	D_dualp = 0;
 	D_dualq = 0;
-	D_sinoTmp = 0;
 	D_gradTmp = 0; //
 	D_gradTmp2 = 0; //
+	D_sigma = 0;
+	D_tau = 0;
 
 	D_minMaskData = 0;
 	D_maxMaskData = 0;
@@ -68,6 +68,8 @@ TV::TV() : ReconAlgo()
 	normFactor = 1.2;
 	fRegularization = 1.0f;
 	freeMinMaxMasks = false;
+
+	dimsGrad = dims;
 }
 
 
@@ -82,12 +84,12 @@ void TV::reset()
 	//~ cudaFree(D_x);
 	cudaFree(D_xTilde);
 	cudaFree(D_xold);
-	cudaFree(D_sliceTmp);
 	cudaFree(D_dualp);
 	cudaFree(D_dualq);
-	cudaFree(D_sinoTmp);
 	cudaFree(D_gradTmp); //
 	cudaFree(D_gradTmp2); //
+	cudaFree(D_tau);
+	cudaFree(D_sigma);
 
 	if (freeMinMaxMasks) {
 		cudaFree(D_minMaskData);
@@ -98,14 +100,14 @@ void TV::reset()
 	//~ D_x = 0;
 	D_xTilde = 0;
 	D_xold = 0;
-	D_sliceTmp = 0;
 	D_dualp = 0;
 	D_dualq = 0;
-	D_sinoTmp = 0;
 	D_minMaskData = 0;
 	D_maxMaskData = 0;
 	D_gradTmp = 0; //
 	D_gradTmp2 = 0; //
+	D_sigma = 0;
+	D_tau = 0;
 
 
 	freeMinMaxMasks = false;
@@ -128,20 +130,20 @@ bool TV::init()
     allocateVolumeData(D_xold, xoldPitch, dims);
 	zeroVolumeData(D_xold, xoldPitch, dims);
 
-    allocateVolumeData(D_sliceTmp, tmpPitch, dims);
-	zeroVolumeData(D_sliceTmp, tmpPitch, dims);
-
     allocateVolumeData(D_xTilde, xtildePitch, dims);
 	zeroVolumeData(D_xTilde, xtildePitch, dims);
 
-	allocateProjectionData(D_sinoTmp, sinoTmpPitch, dims);
-	zeroProjectionData(D_sinoTmp, sinoTmpPitch, dims);
+	allocateVolumeData(D_tau, tauPitch, dims);
+	zeroVolumeData(D_tau, tauPitch, dims);
 
 	allocateProjectionData(D_dualq, dualqPitch, dims);
 	zeroProjectionData(D_dualq, dualqPitch, dims);
 
+	allocateProjectionData(D_sigma, sigmaPitch, dims);
+	zeroProjectionData(D_sigma, sigmaPitch, dims);
+
 	// if float2 cannot be used, we use a buffer with height*2
-    SDimensions dimsGrad = dims;
+    dimsGrad = dims;
     dimsGrad.iVolHeight *= 2;
     allocateVolumeData(D_dualp, dualpPitch, dimsGrad);
 	zeroVolumeData(D_dualp, dualpPitch, dimsGrad);
@@ -278,8 +280,6 @@ __global__ void divergenceKernel2D(float* dst, float* src, const SDimensions dim
         else dst[(gidy)*pitch+gidx] = val_x + val_y;
     }
 }
-
-
 // divergenceOperator(dst, src, alpha, 0)  computes  dst = div(src)
 // divergenceOperator(dst, src, alpha, 1)  computes  dst = dst + alpha*div(src)
 bool TV::divergenceOperator(float* D_data, float* D_gradData, unsigned int pitch, float alpha, int doUpdate) {
@@ -329,26 +329,28 @@ bool TV::signOperator(float* D_dst, float* D_src, unsigned int pitch, int nz) {
 float TV::computeOperatorNorm() {
     float norm = -1.0f;
 
-    zeroVolumeData(D_sliceTmp, tmpPitch, dims);
-    callBP(D_sliceTmp, tmpPitch, D_sinoData, sinoPitch, 1.0f);
+    zeroVolumeData(D_x, xPitch, dims);
+    callBP(D_x, xPitch, D_sinoData, sinoPitch, 1.0f);
 
     // power method for computing max eigenval of P^T P
     for (unsigned int iter = 0 ; iter < nIterComputeNorm; ++iter) {
         // x := P^T(P(x)) - div(grad(x))
-        zeroProjectionData(D_sinoTmp, sinoTmpPitch, dims);
-        callFP(D_sliceTmp, tmpPitch, D_sinoTmp, sinoTmpPitch, 1.0f);
-        zeroVolumeData(D_sliceTmp, tmpPitch, dims);
-        callBP(D_sliceTmp, tmpPitch, D_sinoTmp, sinoTmpPitch, 1.0f);
-        gradientOperator(D_dualp, D_sliceTmp, tmpPitch, 1.0, 0);
-        divergenceOperator(D_sliceTmp, D_dualp, tmpPitch, -1.0f, 1); // TODO: what is computed is div or -div ? In the latter case: put alpha=+1
+        zeroProjectionData(D_dualq, dualqPitch, dims);
+        callFP(D_x, xPitch, D_dualq, dualqPitch, 1.0f);
+        zeroVolumeData(D_x, xPitch, dims);
+        callBP(D_x, xPitch, D_dualq, dualqPitch, 1.0f);
+        gradientOperator(D_dualp, D_x, xPitch, 1.0, 0);
+        divergenceOperator(D_x, D_dualp, xPitch, -1.0f, 1); // CHECKME
 
         // Compute norm and scale x
-        norm = dotProduct2D(D_sliceTmp, tmpPitch, dims.iVolWidth, dims.iVolHeight); // TODO: check
+        norm = dotProduct2D(D_x, xPitch, dims.iVolWidth, dims.iVolHeight); // TODO: check
         norm = sqrt(norm);
-        processVol<opMul>(D_sliceTmp, 1.0f/norm, tmpPitch, dims);
+        processVol<opMul>(D_x, 1.0f/norm, xPitch, dims);
     }
     //
-    cudaMemset(D_dualp, 0, 2*dims.iVolHeight*tmpPitch*sizeof(float));
+    zeroVolumeData(D_dualp, dualpPitch, dimsGrad);
+    zeroVolumeData(D_x, xPitch, dimsGrad);
+	zeroProjectionData(D_dualq, dualqPitch, dims);
     //
     if (norm < 0) return -1.0f;     // something went wrong
     else return sqrt(norm);
@@ -357,10 +359,193 @@ float TV::computeOperatorNorm() {
 
 
 
-// TODO: implement volume mask
-// TODO: implement either use_fbp in iterations, or preconditioned CP
-// TODO: use less buffers (for eg use D_x = D_volumeData ?)
+
+
+__global__ void updateDualq1Kernel(float* out, unsigned int outPitch,
+								  float* in1, unsigned int in1Pitch,
+								  float* in2, unsigned int in2Pitch,
+								  const SDimensions dims)
+{
+    unsigned int gidx = threadIdx.x + blockIdx.x*blockDim.x;
+    unsigned int gidy = threadIdx.y + blockIdx.y*blockDim.y;
+    unsigned int sizeX = dims.iProjDets, sizeY = dims.iProjAngles;
+    if (gidx < sizeX && gidy < sizeY) {
+		// TODO: check ?
+		out[gidy*outPitch + gidx] = out[gidy*outPitch + gidx] / in1[gidy*in1Pitch + gidx] - in2[gidy*in2Pitch + gidx];
+	}
+}
+
+/// Compute out = out/in1 - in2  (sinogram-like buffers)
+bool TV::callUpdateDualq1(float* D_out, unsigned int outPitch,
+					     float* D_in1, unsigned int in1Pitch,
+					     float* D_in2, unsigned int in2Pitch)
+{
+    dim3 nBlocks, nThreadsPerBlock;
+    nThreadsPerBlock = dim3(threadsPerBlock, threadsPerBlock, 1);
+    nBlocks = dim3(iDivUp(dims.iProjDets, threadsPerBlock), iDivUp(dims.iProjAngles, threadsPerBlock), 1);
+
+    updateDualq1Kernel<<<nBlocks, nThreadsPerBlock>>>(D_out, outPitch, D_in1, in1Pitch, D_in2, in2Pitch, dims);
+    return true;
+}
+
+
+
+
+
+
+
+__global__ void updateDualq2Kernel(float* out, unsigned int outPitch,
+								  float* in, unsigned int inPitch,
+								  const SDimensions dims)
+{
+    unsigned int gidx = threadIdx.x + blockIdx.x*blockDim.x;
+    unsigned int gidy = threadIdx.y + blockIdx.y*blockDim.y;
+    unsigned int sizeX = dims.iProjDets, sizeY = dims.iProjAngles;
+    if (gidx < sizeX && gidy < sizeY) {
+		// TODO: check ?
+		out[gidy*outPitch + gidx] = in[gidy*inPitch + gidx]*out[gidy*outPitch + gidx] / (1.0f + in[gidy*inPitch + gidx]);
+	}
+}
+
+/// Compute out = in*out/(1+in)  (sinogram-like buffers)
+bool TV::callUpdateDualq2(float* D_out, unsigned int outPitch,
+					     float* D_in, unsigned int inPitch)
+{
+    dim3 nBlocks, nThreadsPerBlock;
+    nThreadsPerBlock = dim3(threadsPerBlock, threadsPerBlock, 1);
+    nBlocks = dim3(iDivUp(dims.iProjDets, threadsPerBlock), iDivUp(dims.iProjAngles, threadsPerBlock), 1);
+
+    updateDualq2Kernel<<<nBlocks, nThreadsPerBlock>>>(D_out, outPitch, D_in, inPitch, dims);
+    return true;
+}
+
+
+
+
+
+
+/**
+ * Compute the diagonal preconditioners "Sigma" and "Tau" described in [1].
+ *
+ * Here alpha = 1 is used in [1], as the sum of the projection operator
+ * absolute values consists in projecting/backprojecting "ones".
+ *
+ * Sigma (resp. Tau) is the sum of the operator absolute values
+ * along the columns (resp. lines).
+ * The operator considered here is K = [D, P]^T where D is the discrete
+ * gradient operator, and P is the projection operator:
+ *
+ *  	| D |		  	      | Sigma_D |
+ * K =  | P |   -->   Sigma = | Sigma_P |
+ *
+ *        |
+ * 	      v
+ *
+ *	 Tau = Tau_D + Tau_P
+ *
+ * For computational convenience (see iterate()), the returned Sigma
+ * is Sigma_P.
+ *
+ * [1] Pock, Thomas and Chambolle, Antonin, "Diagonal preconditioning for
+ * first order primal-dual algorithms in convex optimization", 2011,
+ * International Conference on Computer Vision, pp 1762-1769
+ */
+bool TV::computeDiagonalPreconditioners() {
+
+	// Project a slice of "ones" to get the sum of projector columns
+	zeroVolumeData(D_xTilde, xtildePitch, dims);
+	processVol<opAdd>(D_xTilde, 1.0, xtildePitch, dims);
+	zeroProjectionData(D_sigma, sigmaPitch, dims);
+	callFP(D_xTilde, xtildePitch, D_sigma, sigmaPitch, 1);
+	//~ processSino<opAdd>(D_sigma, 2.0, sigmaPitch, dims); // sum of columns of gradient is 2
+	processSino<opInvert>(D_sigma, sigmaPitch, dims);
+
+	// Backproject a sinogram of "ones" to get the sum of projector lines
+	zeroProjectionData(D_dualq, dualqPitch, dims);
+	processSino<opAdd>(D_dualq, 1.0, dualqPitch, dims);
+	callBP(D_tau, tauPitch, D_dualq, dualqPitch, 1);
+	processVol<opAdd>(D_tau, 2.0, tauPitch, dims); // sum of lines of gradient is 2
+	processVol<opInvert>(D_tau, tauPitch, dims);
+
+	//
+	zeroVolumeData(D_xTilde, xtildePitch, dims);
+	zeroProjectionData(D_dualq, dualqPitch, dims);
+	//
+
+	return true;
+}
+
+
+
+
 bool TV::iterate(unsigned int iterations)
+{
+    // Compute the primal and dual steps, for non-preconditionned CP
+    float theta = 1.;				  	// C-P relaxation parameter
+    float sigma_grad = 0.5;				// Diagonal preconditioner, gradient part
+	computeDiagonalPreconditioners();
+
+
+	// iteration
+	for (unsigned int iter = 0; iter < iterations; ++iter) {
+
+		// Update dual variables
+		// ----------------------
+		// p = proj_linf(p + sigma*gradient(x_tilde), Lambda)
+		gradientOperator(D_dualp, D_xTilde, dualpPitch, sigma_grad, 1);
+		projLinf(D_dualp, D_dualp, dualpPitch, fRegularization); // *sigma
+		// q = (q + sigma*P(x_tilde) - sigma*data)/(1.0 + sigma)
+		// q = (q/sigma + P(x_tilde) - data)*sigma / (1+sigma)
+		callUpdateDualq1(D_dualq, dualqPitch, D_sigma, sigmaPitch, 		// q = q/sigma - data
+						 D_sinoData, sinoPitch);
+		callFP(D_xTilde, xtildePitch, D_dualq, dualqPitch, 1);      	// q += P(xtilde)
+		callUpdateDualq2(D_dualq, dualqPitch, D_sigma, sigmaPitch);		// q *= sigma/(1+sigma)
+
+		// Update primal variables
+		// ------------------------
+		duplicateVolumeData(D_xold, D_x, xPitch, dims);
+		// x = x + tau*div(p) - tau*P^T(q)
+		divergenceOperator(D_xTilde, D_dualp, xtildePitch, 0, 0);		// tmp = div(p)
+		callBP(D_xTilde, xtildePitch, D_dualq, dualqPitch, -1);			// tmp -= P^T(q)
+		processVol<opMul>(D_xTilde, D_tau, xtildePitch, dims);			// tmp *= tau
+		processVol<opAddScaled>(D_x, D_xTilde, 1.0, xPitch, dims);		// x += tmp
+
+        // Extra constraints (if any)
+        // --------------------------
+		if (useMinConstraint)
+			processVol<opClampMin>(D_x, fMinConstraint, xPitch, dims);
+		if (useMaxConstraint)
+			processVol<opClampMax>(D_x, fMaxConstraint, xPitch, dims);
+		if (D_minMaskData)
+			processVol<opClampMinMask>(D_x, D_minMaskData, xPitch, dims);
+		if (D_maxMaskData)
+			processVol<opClampMaxMask>(D_x, D_maxMaskData, xPitch, dims);
+
+        // Update step
+        // ------------
+        // x_tilde = x + theta*(x - x_old) = (1+theta)*x - theta*x_old
+        duplicateVolumeData(D_xTilde, D_x, xtildePitch, dims);
+        processVol<opMul>(D_xTilde, 1.0f+theta, xtildePitch, dims);
+        processVol<opAddScaled>(D_xTilde, D_xold, -theta, xtildePitch, dims);
+        // TODO: this in two steps ?
+
+	}
+
+	 duplicateVolumeData(D_volumeData, D_x, volumePitch, dims);
+
+	return true;
+}
+
+
+
+
+
+
+
+
+
+
+bool TV::iterate_old(unsigned int iterations)
 {
     // Compute the primal and dual steps, for non-preconditionned CP
     float L = computeOperatorNorm();  //TODO: abort if norm is negative
@@ -414,6 +599,12 @@ bool TV::iterate(unsigned int iterations)
 
 	return true;
 }
+
+
+
+
+
+
 
 /// Compute  0.5 * ||P(x) - data||_2^2  + Lambda*TV(x)
 float TV::computeDiffNorm()
