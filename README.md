@@ -70,21 +70,30 @@ make install
 This will install Astra into your current Python environment.
 
 
-### Windows, from source using Visual Studio 2008
+### Windows, from source using Visual Studio 2015
 
-Requirements: Visual Studio 2008, boost, CUDA (driver+toolkit), matlab.
-Note that a .zip with all required (and precompiled) boost files is
-  available from our website.
+Requirements: Visual Studio 2015 (full or community), boost (recent), CUDA 8.0,
+              Matlab (R2012a or higher) and/or WinPython 2.7/3.x.
+
+Using the Visual Studio IDE:
 
 Set the environment variable MATLAB_ROOT to your matlab install location.
-Open astra_vc08.sln in Visual Studio.
-Select the appropriate solution configuration.
-  (typically Release_CUDA|win32 or Release_CUDA|x64)
+Copy boost headers to lib\include\boost, and boost libraries to bin\x64.
+Open astra_vc14.sln in Visual Studio.
+Select the appropriate solution configuration (typically Release_CUDA|x64).
 Build the solution.
-Install by copying AstraCuda32.dll or AstraCuda64.dll from bin/ and
-  all .mexw32 or .mexw64 files from bin/Release_CUDA or bin/Debug_CUDA
-  and the entire matlab/tools directory to a directory to be added to
-  your matlab path.
+Install by copying AstraCuda64.dll and all .mexw64 files from
+  bin\x64\Release_CUDA and the entire matlab/tools directory to a directory
+  to be added to your matlab path.
+
+
+Using .bat scripts in build\msvc:
+
+Edit build_env.bat and set up the correct directories.
+Run build_setup.bat to automatically copy the boost headers and libraries.
+For matlab: Run build_matlab.bat. The .dll and .mexw64 files will be in bin\x64\Release_Cuda.
+For python 2.7/3.5: Run build_python27.bat or build_python35.bat. Astra will be directly installed into site-packages.
+
 
 
 ## References
