@@ -5,4 +5,4 @@ if [ $MAKEOPTS == '<UNDEFINED>' ]
   then
     MAKEOPTS=""
 fi
-make $MAKEOPTS python-root-install
+make $MAKEOPTS install

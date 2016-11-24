@@ -1,7 +1,7 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-           2014-2015, CWI, Amsterdam
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
 
 Contact: astra@uantwerpen.be
 Website: http://sf.net/projects/astra-toolbox
@@ -23,25 +23,22 @@ You should have received a copy of the GNU General Public License
 along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 -----------------------------------------------------------------------
-$Id$
 */
 
-#ifndef _CUDA_PAR3D_BP_H
-#define _CUDA_PAR3D_BP_H
+#include <oct.h>
 
-namespace astraCUDA3d {
+extern "C" {
 
-_AstraExport bool Par3DBP_Array(cudaPitchedPtr D_volumeData,
-                   cudaArray *D_projArray,
-                   const SDimensions3D& dims, const SPar3DProjection* angles,
-                   const SProjectorParams3D& params);
-
-_AstraExport bool Par3DBP(cudaPitchedPtr D_volumeData,
-             cudaPitchedPtr D_projData,
-             const SDimensions3D& dims, const SPar3DProjection* angles,
-             const SProjectorParams3D& params);
-         
-
+bool utIsInterruptPending() {
+	return octave_signal_caught;
 }
 
-#endif
+mxArray *mxCreateSharedDataCopy(const mxArray *) {
+	return 0;
+}
+
+bool mxUnshareArray(mxArray *, bool) {
+	return false;
+}
+
+}

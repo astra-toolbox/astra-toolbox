@@ -64,6 +64,14 @@ if cfgHasToBeUpdated:
     cfg.write(cfgToWrite)
     cfg.close()
 
+
+pkgdata = { }
+try:
+    if os.environ['ASTRA_INSTALL_LIBRARY_AS_DATA']:
+        pkgdata['astra'] = [os.environ['ASTRA_INSTALL_LIBRARY_AS_DATA']]
+except KeyError:
+    pass
+
 cmdclass = { }
 ext_modules = [ ]
 
@@ -74,7 +82,7 @@ for m in ext_modules:
   if m.name == 'astra.plugin_c':
     m.sources.append('astra/src/PythonPluginAlgorithm.cpp')
 
-setup (name = 'PyASTRAToolbox',
+setup (name = 'astra-toolbox',
        version = '1.7.1',
        description = 'Python interface to the ASTRA-Toolbox',
        author='D.M. Pelt',
@@ -87,6 +95,7 @@ setup (name = 'PyASTRAToolbox',
        include_dirs=[np.get_include()],
        cmdclass = cmdclass,
        #ext_modules = [Extension("astra","astra/astra.pyx")],
-       packages=['astra'],
+       packages=['astra', 'astra.plugins'],
+       package_data=pkgdata,
        requires=["numpy"],
 	)

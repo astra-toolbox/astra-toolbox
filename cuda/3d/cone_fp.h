@@ -34,12 +34,12 @@ namespace astraCUDA3d {
 _AstraExport bool ConeFP_Array(cudaArray *D_volArray,
                   cudaPitchedPtr D_projData,
                   const SDimensions3D& dims, const SConeProjection* angles,
-                  float fOutputScale);
+                  const SProjectorParams3D& params);
 
 _AstraExport bool ConeFP(cudaPitchedPtr D_volumeData,
             cudaPitchedPtr D_projData,
             const SDimensions3D& dims, const SConeProjection* angles,
-            float fOutputScale);
+            const SProjectorParams3D& params);
 
 }
 

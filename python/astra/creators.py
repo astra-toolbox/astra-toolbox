@@ -535,7 +535,7 @@ def create_reconstruction(rec_type, proj_id, sinogram, iterations=1, use_mask='n
 
 
 def create_projector(proj_type, proj_geom, vol_geom):
-    """Create a 2D projector.
+    """Create a 2D or 3D projector.
 
 :param proj_type: Projector type, such as ``'line'``, ``'linear'``, ...
 :type proj_type: :class:`string`

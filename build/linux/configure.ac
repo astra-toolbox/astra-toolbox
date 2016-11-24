@@ -24,7 +24,7 @@ dnl
 dnl -----------------------------------------------------------------------
 dnl $Id$
 
-AC_INIT(astra_toolbox, 1.7.1)
+AC_INIT(astra, 1.7.1)
 AC_CONFIG_SRCDIR([Makefile.in])
 LT_INIT([disable-static])
 
@@ -133,13 +133,15 @@ fi
 AC_ARG_WITH(cuda_compute, [[  --with-cuda-compute=archs  comma separated list of CUDA compute models (optional)]],,)
 if test x"$HAVECUDA" = xyes; then
   AC_MSG_CHECKING([for nvcc archs])
-  dnl 10 11 12 13 20 30 32 35 37 50
+  dnl 10 11 12 13 20 21 30 32 35 37 50 52 53 60 61
   if test x"$with_cuda_compute" = x; then
-    with_cuda_compute="10,12,20,30,35,50"
+    with_cuda_compute="20,30,35,50,60"
   fi
   ASTRA_FIND_NVCC_ARCHS([$with_cuda_compute],NVCCFLAGS_EXTRA,NVCCARCHS)
   AC_MSG_RESULT([$NVCCARCHS])
 fi
+
+AC_ARG_VAR(NVCCFLAGS, [CUDA nvcc flags])
 
 
 AC_SUBST(HAVECUDA)
@@ -174,6 +176,28 @@ if test x"$with_matlab" != x; then
 fi
 
 AC_SUBST(HAVEMATLAB)
+
+# octave
+
+AC_ARG_ENABLE(octave, [[  --enable-octave         enable Octave support]])
+if test x"$enable_octave" = xyes; then
+  AC_PATH_PROG([HAVEOCTAVE], [octave-config], [no], [$PATH])
+  AC_MSG_CHECKING([for octave])
+  if test x"HAVEOCTAVE" != xno -a $HAVEMATLAB = yes; then
+    HAVEOCTAVE=no
+    AC_MSG_RESULT([no (since Matlab support is enabled)])
+  else
+    if test x"$HAVEOCTAVE" != xno; then
+      OCTAVE_CPPFLAGS="-I`octave-config -p OCTINCLUDEDIR`"
+      AC_SUBST(OCTAVE_CPPFLAGS)
+      HAVEOCTAVE=yes
+    fi
+    AC_MSG_RESULT($HAVEOCTAVE)
+  fi
+else
+  HAVEOCTAVE=no
+fi
+AC_SUBST(HAVEOCTAVE)
 
 # python
 
@@ -250,6 +274,15 @@ AC_SUBST(CPPFLAGS_OS)
 VPATH_SRCDIR="$srcdir"
 AC_SUBST(VPATH_SRCDIR)
 
+
+# Installation type
+AC_ARG_WITH(install-type, [[  --with-install-type=prefix|module|dir  type of installation (default prefix)]],,with_install_type=prefix)
+
+INSTALL_TYPE=$with_install_type
+AC_SUBST(INSTALL_TYPE)
+
+
+
 # TODO:
 
 # Detection of tools:
@@ -269,9 +302,46 @@ AC_OUTPUT
 
 echo
 echo "Summary of ASTRA Toolbox build options:"
-echo "  CUDA   : $HAVECUDA"
-echo "  Matlab : $HAVEMATLAB"
-echo "  Python : $HAVEPYTHON"
+echo "  CUDA  : $HAVECUDA"
+echo "  Matlab: $HAVEMATLAB"
+echo "  Octave: $HAVEOCTAVE"
+echo "  Python: $HAVEPYTHON"
 echo
-echo "  prefix : $prefix"
-echo
+echo "Installation type: $with_install_type"
+case $with_install_type in
+  prefix)
+    echo   "  Library     : "$(eval echo `eval echo $libdir`)
+    if test $HAVEMATLAB = yes; then
+      echo "  Matlab files: "$(eval echo `eval echo $datadir`)"/astra/matlab"
+    fi
+    if test $HAVEOCTAVE = yes; then
+      echo "  Octave files: "$(eval echo `eval echo $datadir`)"/astra/octave"
+    fi
+    if test $HAVEPYTHON = yes; then
+      echo "  Python files to site-packages"
+    fi
+    ;;
+  dir)
+    echo   "  Library     : "$(eval echo `eval echo $libdir`)
+    if test $HAVEMATLAB = yes; then
+      echo "  Matlab files: $prefix/matlab"
+    fi
+    if test $HAVEOCTAVE = yes; then
+      echo "  Octave files: $prefix/octave"
+    fi
+    if test $HAVEPYTHON = yes; then
+      echo "  Python files: $prefix/python"
+    fi
+    ;;
+  module)
+    echo   "  Library into Matlab/Octave/Python module directories"
+    if test $HAVEMATLAB = yes; then
+      echo "  Matlab files: $prefix/matlab"
+    fi
+    if test $HAVEOCTAVE = yes; then
+      echo "  Octave files: $prefix/octave"
+    fi
+    if test $HAVEPYTHON = yes; then
+      echo "  Python files to site-packages"
+    fi
+esac

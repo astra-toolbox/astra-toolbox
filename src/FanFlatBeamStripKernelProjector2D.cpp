@@ -29,6 +29,7 @@ $Id$
 #include "astra/FanFlatBeamStripKernelProjector2D.h"
 
 #include <cmath>
+#include <algorithm>
 
 #include "astra/DataProjectorPolicies.h"
 

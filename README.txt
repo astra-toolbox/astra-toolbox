@@ -50,27 +50,51 @@ to your Python path.
 Linux, from source:
 --------------------
 
-Requirements: g++, boost, CUDA (driver+toolkit), Matlab and/or Python (2.7 or 3.x)
+For Matlab:
+
+Requirements: g++, boost, CUDA (5.5 or higher), Matlab (R2012a or higher)
 
 cd build/linux
 ./autogen.sh   # when building a git version
 ./configure --with-cuda=/usr/local/cuda \
             --with-matlab=/usr/local/MATLAB/R2012a \
-            --with-python \
-            --prefix=/usr/local/astra
+            --prefix=$HOME/astra \
+            --with-install-type=module
 make
 make install
-Add /usr/local/astra/lib to your LD_LIBRARY_PATH.
-Add /usr/local/astra/matlab and its subdirectories (tools, mex)
-  to your matlab path.
-Add /usr/local/astra/python to your PYTHONPATH.
+
+Add $HOME/astra/matlab and its subdirectories (tools, mex) to your matlab path.
+
+If you want to build the Octave interface instead of the Matlab interface,
+specify --enable-octave instead of --with-matlab=... . The Octave files
+will be installed into $HOME/astra/octave .
 
 
 NB: Each matlab version only supports a specific range of g++ versions.
 Despite this, if you have a newer g++ and if you get errors related to missing
 GLIBCXX_3.4.xx symbols, it is often possible to work around this requirement
 by deleting the version of libstdc++ supplied by matlab in
-MATLAB_PATH/bin/glnx86 or MATLAB_PATH/bin/glnxa64 (at your own risk).
+MATLAB_PATH/bin/glnx86 or MATLAB_PATH/bin/glnxa64 (at your own risk),
+or setting LD_PRELOAD=/usr/lib64/libstdc++.so.6 (or similar) when starting
+matlab.
+
+
+For Python:
+
+Requirements: g++, boost, CUDA (5.5 or higher), Python (2.7 or 3.x)
+
+cd build/linux
+./autogen.sh   # when building a git version
+./configure --with-cuda=/usr/local/cuda \
+            --with-python \
+            --with-install-type=module
+make
+make install
+
+This will install Astra into your current Python environment.
+
+
+
 
 
 Windows, from source using Visual Studio 2008:
@@ -94,9 +118,11 @@ Install by copying AstraCuda32.dll or AstraCuda64.dll from bin/ and
 References:
 ------------
 
-If you use the ASTRA Toolbox for your research, we would appreciate it if you would refer to the following paper:
+If you use the ASTRA Toolbox for your research, we would appreciate it if you would refer to the following papers:
 
-W. van Aarle, W. J. Palenstijn, J. De Beenhouwer, T. Altantzis, S. Bals,  K J. Batenburg, and J. Sijbers, "The ASTRA Toolbox: A platform for advanced algorithm development in electron tomography", Ultramicroscopy (2015), http://dx.doi.org/10.1016/j.ultramic.2015.05.002
+W. Van Aarle, W J. Palenstijn, J. Cant, E. Janssens, F. Bleichrodt, A. Dabravolski, J. De Beenhouwer, K. J. Batenburg, and J. Sijbers, "Fast and Flexible X-ray Tomography Using the ASTRA Toolbox", Optics Express, vol. 24, no. 22, pp. 25129-25147, 2016
+
+W. Van Aarle, W J. Palenstijn, J. De Beenhouwer, T. Altantzis, S. Bals, K. J. Batenburg, and J. Sijbers, "The ASTRA Toolbox: a platform for advanced algorithm development in electron tomography", Ultramicroscopy, vol. 157, pp. 35–47, 2015
 
 Additionally, if you use parallel beam GPU code, we would appreciate it if you would refer to the following paper:
 

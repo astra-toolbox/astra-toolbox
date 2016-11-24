@@ -37,9 +37,9 @@ install:
   - conda info -a
   - cd build/linux
   - ./autogen.sh
-  - if [ $CUDA == yes ]; then ./configure --prefix=$HOME/astra --with-python --with-cuda; else ./configure --prefix=$HOME/astra --with-python --without-cuda; fi
+  - if [ $CUDA == yes ]; then ./configure --prefix=$HOME/astra --with-python --with-cuda --with-install-type=module; else ./configure --prefix=$HOME/astra --with-python --without-cuda --with-install-type=module; fi
   - make -j 4
   - make install
 
 script:
-  - LD_LIBRARY_PATH=$HOME/astra/lib/:$LD_LIBRARY_PATH PYTHONPATH=$HOME/astra/python/:$PYTHONPATH python -c "import astra"
+  - python -c "import astra"
