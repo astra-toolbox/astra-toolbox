@@ -319,48 +319,6 @@ bool TV::signOperator(float* D_dst, float* D_src, unsigned int pitch, int nz) {
 
 
 
-
-
-
-
-
-// Compute the norm of the operator K = [grad, P]
-// using ||K|| = sqrt(max_eigen(K^T * K))
-float TV::computeOperatorNorm() {
-    float norm = -1.0f;
-
-    zeroVolumeData(D_x, xPitch, dims);
-    callBP(D_x, xPitch, D_sinoData, sinoPitch, 1.0f);
-
-    // power method for computing max eigenval of P^T P
-    for (unsigned int iter = 0 ; iter < nIterComputeNorm; ++iter) {
-        // x := P^T(P(x)) - div(grad(x))
-        zeroProjectionData(D_dualq, dualqPitch, dims);
-        callFP(D_x, xPitch, D_dualq, dualqPitch, 1.0f);
-        zeroVolumeData(D_x, xPitch, dims);
-        callBP(D_x, xPitch, D_dualq, dualqPitch, 1.0f);
-        gradientOperator(D_dualp, D_x, xPitch, 1.0, 0);
-        divergenceOperator(D_x, D_dualp, xPitch, -1.0f, 1); // CHECKME
-
-        // Compute norm and scale x
-        norm = dotProduct2D(D_x, xPitch, dims.iVolWidth, dims.iVolHeight); // TODO: check
-        norm = sqrt(norm);
-        processVol<opMul>(D_x, 1.0f/norm, xPitch, dims);
-    }
-    //
-    zeroVolumeData(D_dualp, dualpPitch, dimsGrad);
-    zeroVolumeData(D_x, xPitch, dimsGrad);
-	zeroProjectionData(D_dualq, dualqPitch, dims);
-    //
-    if (norm < 0) return -1.0f;     // something went wrong
-    else return sqrt(norm);
-}
-
-
-
-
-
-
 __global__ void updateDualq1Kernel(float* out, unsigned int outPitch,
 								  float* in1, unsigned int in1Pitch,
 								  float* in2, unsigned int in2Pitch,
@@ -370,8 +328,7 @@ __global__ void updateDualq1Kernel(float* out, unsigned int outPitch,
     unsigned int gidy = threadIdx.y + blockIdx.y*blockDim.y;
     unsigned int sizeX = dims.iProjDets, sizeY = dims.iProjAngles;
     if (gidx < sizeX && gidy < sizeY) {
-		// TODO: check ?
-		out[gidy*outPitch + gidx] = out[gidy*outPitch + gidx] / in1[gidy*in1Pitch + gidx] - in2[gidy*in2Pitch + gidx];
+		out[gidy*outPitch + gidx] = out[gidy*outPitch + gidx]/in1[gidy*in1Pitch + gidx] - in2[gidy*in2Pitch + gidx];
 	}
 }
 
@@ -424,6 +381,48 @@ bool TV::callUpdateDualq2(float* D_out, unsigned int outPitch,
 
 
 
+
+// Compute the norm of the operator K = [grad, P]
+// using ||K|| = sqrt(max_eigen(K^T * K))
+float TV::computeOperatorNorm() {
+    float norm = -1.0f;
+
+    zeroVolumeData(D_x, xPitch, dims);
+    callBP(D_x, xPitch, D_sinoData, sinoPitch, 1.0f);
+
+    // power method for computing max eigenval of P^T P
+    for (unsigned int iter = 0 ; iter < nIterComputeNorm; ++iter) {
+        // x := P^T(P(x)) - div(grad(x))
+        zeroProjectionData(D_dualq, dualqPitch, dims);
+        callFP(D_x, xPitch, D_dualq, dualqPitch, 1.0f);
+        zeroVolumeData(D_x, xPitch, dims);
+        callBP(D_x, xPitch, D_dualq, dualqPitch, 1.0f);
+        gradientOperator(D_dualp, D_x, xPitch, 1.0, 0);
+        divergenceOperator(D_x, D_dualp, xPitch, -1.0f, 1); // CHECKME
+
+        // Compute norm and scale x
+        norm = dotProduct2D(D_x, xPitch, dims.iVolWidth, dims.iVolHeight); // TODO: check
+        norm = sqrt(norm);
+        processVol<opMul>(D_x, 1.0f/norm, xPitch, dims);
+    }
+    //
+    zeroVolumeData(D_dualp, dualpPitch, dimsGrad);
+    zeroVolumeData(D_x, xPitch, dims);
+	zeroProjectionData(D_dualq, dualqPitch, dims);
+    //
+    if (norm < 0) return -1.0f;     // something went wrong
+    else return sqrt(norm);
+}
+
+
+
+
+
+
+
+
+
+
 /**
  * Compute the diagonal preconditioners "Sigma" and "Tau" described in [1].
  *
@@ -452,6 +451,7 @@ bool TV::callUpdateDualq2(float* D_out, unsigned int outPitch,
  */
 bool TV::computeDiagonalPreconditioners() {
 
+
 	// Project a slice of "ones" to get the sum of projector columns
 	zeroVolumeData(D_xTilde, xtildePitch, dims);
 	processVol<opAdd>(D_xTilde, 1.0, xtildePitch, dims);
@@ -478,13 +478,12 @@ bool TV::computeDiagonalPreconditioners() {
 
 
 
-bool TV::iterate(unsigned int iterations)
+bool TV::chambollepock_preconditioned(unsigned int iterations)
 {
-    // Compute the primal and dual steps, for non-preconditionned CP
+    // Compute the primal and dual steps
     float theta = 1.;				  	// C-P relaxation parameter
     float sigma_grad = 0.5;				// Diagonal preconditioner, gradient part
 	computeDiagonalPreconditioners();
-
 
 	// iteration
 	for (unsigned int iter = 0; iter < iterations; ++iter) {
@@ -538,14 +537,7 @@ bool TV::iterate(unsigned int iterations)
 
 
 
-
-
-
-
-
-
-
-bool TV::iterate_old(unsigned int iterations)
+bool TV::chambollepock(unsigned int iterations)
 {
     // Compute the primal and dual steps, for non-preconditionned CP
     float L = computeOperatorNorm();  //TODO: abort if norm is negative
@@ -569,7 +561,7 @@ bool TV::iterate_old(unsigned int iterations)
 
 		// Update primal variables
 		// ------------------------
-		duplicateVolumeData(D_xold, D_x, volumePitch, dims);
+		duplicateVolumeData(D_xold, D_x, xPitch, dims);
 		// x = x + tau*div(p) - tau*P^T(q)
 		divergenceOperator(D_x, D_dualp, xPitch, tau, 1);					// x = x + tau*div(p)
 		callBP(D_x, xPitch, D_dualq, dualqPitch, -tau);		  				// x += (-tau)*P^T(q)
@@ -602,7 +594,24 @@ bool TV::iterate_old(unsigned int iterations)
 
 
 
-
+bool TV::iterate(unsigned int iterations)
+{
+	/**
+	 If iProjDets > iVolWidth, the projection of a slice of "ones" contains zero near the boundaries.
+	 Thus, inverting this projection (needed for the preconditioned version) is not a good idea.
+	 A work-around would be to invert only the sinogram values at locations
+	 falling in the slice support when backprojected.
+	 However, the center of rotation must be known. We can assume that it is in the center of the slice,
+	 but it still makes an assumption on the geometry.
+	 Thus, if iProjDets > iVolWidth, we fall back to the not-preconditioned algorithm.
+	**/
+	if (dims.iProjDets > dims.iVolWidth) {
+		return chambollepock(iterations);
+	}
+	else {
+		return chambollepock_preconditioned(iterations);
+	}
+}
 
 
 

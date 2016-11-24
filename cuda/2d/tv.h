@@ -52,10 +52,9 @@ public:
 
 	void setRegularization(float r) { fRegularization = r; }
 
-	virtual bool iterate(unsigned int iterations); // preconditioned
-	bool iterate_old(unsigned int iterations); // not preconditioned
-
-	// TODO: declare additional methods here
+	bool chambollepock(unsigned int iterations);
+	bool chambollepock_preconditioned(unsigned int iterations);
+	virtual bool iterate(unsigned int iterations);
 
 	virtual float computeDiffNorm();
 	bool projLinf(float* D_gradData, float* D_data, unsigned int pitch, float radius);
