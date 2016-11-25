@@ -21,6 +21,11 @@ env:
     - CUDA=yes
     - CUDA=no
 
+matrix:
+  include:
+    - env: CUDA=no CLANG=yes
+      python: "3.5"
+
 before_install:
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
       wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
@@ -37,6 +42,7 @@ install:
   - conda info -a
   - cd build/linux
   - ./autogen.sh
+  - if [ x$CLANG == xyes ]; then export CXX=clang++; export CC=clang; fi
   - if [ $CUDA == yes ]; then ./configure --prefix=$HOME/astra --with-python --with-cuda --with-install-type=module; else ./configure --prefix=$HOME/astra --with-python --without-cuda --with-install-type=module; fi
   - make -j 4
   - make install
