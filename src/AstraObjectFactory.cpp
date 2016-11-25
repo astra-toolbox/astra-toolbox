@@ -32,8 +32,8 @@ using namespace std;
 
 namespace astra {
 
-DEFINE_SINGLETON2(CAstraObjectFactory<CAlgorithm, AlgorithmTypeList>);
-DEFINE_SINGLETON2(CAstraObjectFactory<CProjector2D, Projector2DTypeList>);
-DEFINE_SINGLETON2(CAstraObjectFactory<CProjector3D, Projector3DTypeList>);
+DEFINE_SINGLETON2(CAstraObjectFactory<CAlgorithm, AlgorithmTypeList>)
+DEFINE_SINGLETON2(CAstraObjectFactory<CProjector2D, Projector2DTypeList>)
+DEFINE_SINGLETON2(CAstraObjectFactory<CProjector3D, Projector3DTypeList>)
 
 } // end namespace
