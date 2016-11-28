@@ -1,9 +1,9 @@
 dnl -----------------------------------------------------------------------
-dnl Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-dnl            2014-2015, CWI, Amsterdam
+dnl Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+dnl            2014-2016, CWI, Amsterdam
 dnl
 dnl Contact: astra@uantwerpen.be
-dnl Website: http://sf.net/projects/astra-toolbox
+dnl Website: http://www.astra-toolbox.com/
 dnl
 dnl This file is part of the ASTRA Toolbox.
 dnl
@@ -22,7 +22,6 @@ dnl You should have received a copy of the GNU General Public License
 dnl along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 dnl
 dnl -----------------------------------------------------------------------
-dnl $Id$
 
 AC_INIT(astra, 1.7.1)
 AC_CONFIG_SRCDIR([Makefile.in])

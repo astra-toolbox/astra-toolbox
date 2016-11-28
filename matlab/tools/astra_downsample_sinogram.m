@@ -15,13 +15,12 @@ function [sinogram_new, proj_geom_new] = astra_downsample_sinogram(sinogram, pro
 %------------------------------------------------------------------------
 % This file is part of the ASTRA Toolbox
 % 
-% Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-%            2014-2015, CWI, Amsterdam
+% Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+%            2014-2016, CWI, Amsterdam
 % License: Open Source under GPLv3
 % Contact: astra@uantwerpen.be
-% Website: http://sf.net/projects/astra-toolbox
+% Website: http://www.astra-toolbox.com/
 %------------------------------------------------------------------------
-% $Id$
 
 if mod(size(sinogram,2),factor) ~= 0
 	disp('size of the sinogram must be a divisor of the factor');

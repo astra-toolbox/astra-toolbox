@@ -12,7 +12,7 @@ The basic forward and backward projection operations are GPU-accelerated, and di
 
 ## Documentation / samples
 
-See the MATLAB and Python code samples in samples/ and on http://sf.net/projects/astra-toolbox .
+See the MATLAB and Python code samples in samples/ and on http://www.astra-toolbox.com/ .
 
 
 ## Installation instructions
@@ -117,8 +117,8 @@ The ASTRA Toolbox is open source under the GPLv3 license.
 ## Contact
 
 email: astra@uantwerpen.be
-website: http://sf.net/projects/astra-toolbox
+website: http://www.astra-toolbox.com/
 
-Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-           2014-2015, CWI, Amsterdam
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
            http://visielab.uantwerpen.be/ and http://www.cwi.nl/
