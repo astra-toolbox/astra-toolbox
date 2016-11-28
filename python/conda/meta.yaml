@@ -10,8 +10,8 @@ source:
 build:
   number: 0
   script_env:
-    - CC
-    - CUDA_ROOT
+    - CC # [not win]
+    - CUDA_ROOT # [not win]
 
 test:
   imports:
@@ -24,6 +24,7 @@ test:
 requirements:
   build:
     - python
+    - boost ==1.61 # [win]
     - cython >=0.13
     - nomkl # [not win]
     - numpy
