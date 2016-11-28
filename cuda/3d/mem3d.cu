@@ -279,7 +279,7 @@ bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, con
 
 }
 
-bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, bool bShortScan)
+bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, bool bShortScan, const float *pfFilter)
 {
 	SDimensions3D dims;
 	SProjectorParams3D params;
@@ -298,7 +298,7 @@ bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, co
 	if (!ok || !pConeProjs)
 		return false;
 
-	ok &= FDK(volData.d->ptr, projData.d->ptr, pConeProjs, dims, params, bShortScan);
+	ok &= FDK(volData.d->ptr, projData.d->ptr, pConeProjs, dims, params, bShortScan, pfFilter);
 
 	return ok;
 

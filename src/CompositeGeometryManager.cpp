@@ -1042,7 +1042,8 @@ bool CCompositeGeometryManager::doBP(CProjector3D *pProjector, CFloat32VolumeDat
 
 
 bool CCompositeGeometryManager::doFDK(CProjector3D *pProjector, CFloat32VolumeData3DMemory *pVolData,
-                                     CFloat32ProjectionData3DMemory *pProjData, bool bShortScan)
+                                     CFloat32ProjectionData3DMemory *pProjData, bool bShortScan,
+                                     const float *pfFilter)
 {
 	if (!dynamic_cast<CConeProjectionGeometry3D*>(pProjData->getGeometry())) {
 		ASTRA_ERROR("CCompositeGeometryManager::doFDK: cone geometry required");
@@ -1052,6 +1053,7 @@ bool CCompositeGeometryManager::doFDK(CProjector3D *pProjector, CFloat32VolumeDa
 	SJob job = createJobBP(pProjector, pVolData, pProjData);
 	job.eType = SJob::JOB_FDK;
 	job.FDKSettings.bShortScan = bShortScan;
+	job.FDKSettings.pfFilter = pfFilter;
 
 	TJobList L;
 	L.push_back(job);
@@ -1288,7 +1290,7 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 			} else {
 				ASTRA_DEBUG("CCompositeGeometryManager::doJobs: doing FDK");
 
-				ok = astraCUDA3d::FDK(((CCompositeGeometryManager::CProjectionPart*)j.pInput.get())->pGeom, inputMem, ((CCompositeGeometryManager::CVolumePart*)j.pOutput.get())->pGeom, outputMem, j.FDKSettings.bShortScan);
+				ok = astraCUDA3d::FDK(((CCompositeGeometryManager::CProjectionPart*)j.pInput.get())->pGeom, inputMem, ((CCompositeGeometryManager::CVolumePart*)j.pOutput.get())->pGeom, outputMem, j.FDKSettings.bShortScan, j.FDKSettings.pfFilter);
 				if (!ok) ASTRA_ERROR("Error performing sub-FDK");
 				ASTRA_DEBUG("CCompositeGeometryManager::doJobs: FDK done");
 			}

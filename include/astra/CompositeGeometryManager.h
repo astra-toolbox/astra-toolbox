@@ -57,6 +57,7 @@ struct SGPUParams {
 
 struct SFDKSettings {
 	bool bShortScan;
+	const float *pfFilter;
 };
 
 
@@ -161,7 +162,8 @@ public:
 	bool doBP(CProjector3D *pProjector, CFloat32VolumeData3DMemory *pVolData,
 	          CFloat32ProjectionData3DMemory *pProjData);
 	bool doFDK(CProjector3D *pProjector, CFloat32VolumeData3DMemory *pVolData,
-	          CFloat32ProjectionData3DMemory *pProjData, bool bShortScan);
+	          CFloat32ProjectionData3DMemory *pProjData, bool bShortScan,
+	          const float *pfFilter = 0);
 
 	bool doFP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3DMemory *>& volData, const std::vector<CFloat32ProjectionData3DMemory *>& projData);
 	bool doBP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3DMemory *>& volData, const std::vector<CFloat32ProjectionData3DMemory *>& projData);

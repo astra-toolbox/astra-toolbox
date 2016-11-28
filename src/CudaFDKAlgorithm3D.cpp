@@ -37,8 +37,11 @@ $Id$
 #include "astra/Logging.h"
 
 #include "../cuda/3d/astra3d.h"
+#include "../cuda/2d/fft.h"
+#include "../cuda/3d/util3d.h"
 
 using namespace std;
+using namespace astraCUDA3d;
 
 namespace astra {
 
@@ -141,6 +144,28 @@ bool CCudaFDKAlgorithm3D::initialize(const Config& _cfg)
 	CC.markOptionParsed("GPUIndex");
 	if (!_cfg.self.hasOption("GPUIndex"))
 		CC.markOptionParsed("GPUindex");
+	
+	// filter
+	if (_cfg.self.hasOption("FilterSinogramId")){
+		m_iFilterDataId = (int)_cfg.self.getOptionInt("FilterSinogramId");
+		const CFloat32ProjectionData2D * pFilterData = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(m_iFilterDataId));
+		if (!pFilterData){
+			ASTRA_ERROR("Incorrect FilterSinogramId");
+			return false;
+		}
+		const CProjectionGeometry3D* projgeom = m_pSinogram->getGeometry();
+		const CProjectionGeometry2D* filtgeom = pFilterData->getGeometry();
+		int iPaddedDetCount = calcNextPowerOfTwo(2 * projgeom->getDetectorColCount());
+		int iHalfFFTSize = calcFFTFourSize(iPaddedDetCount);
+		if(filtgeom->getDetectorCount()!=iHalfFFTSize || filtgeom->getProjectionAngleCount()!=projgeom->getProjectionCount()){
+			ASTRA_ERROR("Filter size does not match required size (%i angles, %i detectors)",projgeom->getProjectionCount(),iHalfFFTSize);
+			return false;
+		}
+	}else
+	{
+		m_iFilterDataId = -1;
+	}
+	CC.markOptionParsed("FilterSinogramId");
 
 
 
@@ -206,20 +231,26 @@ void CCudaFDKAlgorithm3D::run(int _iNrIterations)
 	CFloat32VolumeData3DMemory* pReconMem = dynamic_cast<CFloat32VolumeData3DMemory*>(m_pReconstruction);
 	ASTRA_ASSERT(pReconMem);
 
+	const float *filter = NULL;
+	if (m_iFilterDataId != -1) {
+		const CFloat32ProjectionData2D *pFilterData = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(m_iFilterDataId));
+		if (pFilterData)
+			filter = pFilterData->getDataConst();
+	}
 
 #if 0
 	bool ok = true;
-
+	
 	ok = astraCudaFDK(pReconMem->getData(), pSinoMem->getDataConst(),
 	                  &volgeom, conegeom,
-	                  m_bShortScan, m_iGPUIndex, m_iVoxelSuperSampling);
+	                  m_bShortScan, m_iGPUIndex, m_iVoxelSuperSampling, filter);
 
 	ASTRA_ASSERT(ok);
 #endif
 
 	CCompositeGeometryManager cgm;
 
-	cgm.doFDK(m_pProjector, pReconMem, pSinoMem, m_bShortScan);
+	cgm.doFDK(m_pProjector, pReconMem, pSinoMem, m_bShortScan, filter);
 
 
 

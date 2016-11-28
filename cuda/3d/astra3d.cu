@@ -1289,6 +1289,4 @@ bool astraCudaBP_SIRTWeighted(float* pfVolume,
 
 }
 
-
-
 }
