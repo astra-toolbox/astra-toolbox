@@ -98,7 +98,7 @@ bool CCudaSartAlgorithm::initialize(const Config& _cfg)
 	} else if (projOrder == "custom") {
 		vector<float32> projOrderList = _cfg.self.getOptionNumericalArray("ProjectionOrderList");
 		projectionOrder = new int[projOrderList.size()];
-		for (int i = 0; i < projOrderList.size(); i++) {
+		for (unsigned int i = 0; i < projOrderList.size(); i++) {
 			projectionOrder[i] = static_cast<int>(projOrderList[i]);
 		}
 		sart->setProjectionOrder(projectionOrder, projectionCount);

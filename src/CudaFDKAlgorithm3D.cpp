@@ -221,7 +221,7 @@ void CCudaFDKAlgorithm3D::run(int _iNrIterations)
 
 	const CProjectionGeometry3D* projgeom = m_pSinogram->getGeometry();
 	const CConeProjectionGeometry3D* conegeom = dynamic_cast<const CConeProjectionGeometry3D*>(projgeom);
-	const CVolumeGeometry3D& volgeom = *m_pReconstruction->getGeometry();
+	// const CVolumeGeometry3D& volgeom = *m_pReconstruction->getGeometry();
 
 	ASTRA_ASSERT(conegeom);
 

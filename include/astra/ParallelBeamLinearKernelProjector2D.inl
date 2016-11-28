@@ -54,8 +54,8 @@ void CParallelBeamLinearKernelProjector2D::projectBlock_internal(int _iProjFrom,
 {
 	// variables
 	float32 theta, sin_theta, cos_theta, inv_sin_theta, inv_cos_theta, t;
-	float32 lengthPerRow, updatePerRow, inv_pixelLengthX;
-	float32 lengthPerCol, updatePerCol, inv_pixelLengthY;
+	float32 lengthPerRow, updatePerRow;
+	float32 lengthPerCol, updatePerCol;
 	bool switch_t;
 	int iAngle, iDetector, iVolumeIndex, iRayIndex;
 	int row, col, x1;
@@ -82,12 +82,10 @@ void CParallelBeamLinearKernelProjector2D::projectBlock_internal(int _iProjFrom,
 		// precalculate kernel limits
 		lengthPerRow = m_pVolumeGeometry->getPixelLengthY() * inv_cos_theta;
 		updatePerRow = sin_theta * inv_cos_theta;
-		inv_pixelLengthX = 1.0f / m_pVolumeGeometry->getPixelLengthX();
 
 		// precalculate kernel limits
 		lengthPerCol = m_pVolumeGeometry->getPixelLengthX() * inv_sin_theta;
 		updatePerCol = cos_theta * inv_sin_theta;
-		inv_pixelLengthY = 1.0f / m_pVolumeGeometry->getPixelLengthY();
 
 		// loop detectors
 		for (iDetector = _iDetFrom; iDetector < _iDetTo; ++iDetector) {
