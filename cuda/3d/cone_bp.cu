@@ -49,7 +49,7 @@ namespace astraCUDA3d {
 #define ZSIZE 6
 static const unsigned int g_volBlockZ = ZSIZE;
 
-static const unsigned int g_anglesPerBlock = 32;
+static const unsigned int g_anglesPerBlock = 4;
 static const unsigned int g_volBlockX = 16;
 static const unsigned int g_volBlockY = 32;
 
