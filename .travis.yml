@@ -45,6 +45,7 @@ install:
   - if [ x$CLANG == xyes ]; then export CXX=clang++; export CC=clang; fi
   - if [ $CUDA == yes ]; then ./configure --prefix=$HOME/astra --with-python --with-cuda --with-install-type=module; else ./configure --prefix=$HOME/astra --with-python --without-cuda --with-install-type=module; fi
   - make -j 4
+  - make test
   - make install
 
 script:
