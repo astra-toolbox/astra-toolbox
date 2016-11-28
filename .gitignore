@@ -4,6 +4,8 @@
 *.orig
 *.rej
 .nfs*
+*.o
+__pycache__
 
 /python/build/*
 /python/finalbuild/*
