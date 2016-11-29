@@ -28,7 +28,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _INC_ASTRA_GLOBALS
 #define _INC_ASTRA_GLOBALS
 
-/*! \mainpage The ASTRA-toolbox 
+/*! \mainpage The ASTRA-toolbox
  *
  * <img src="../images/logo_big.png"/>
  */
@@ -113,9 +113,9 @@ namespace astra {
 
 //float32 getVersion() { return ToolboxVersion; }
 
-//_AstraExport bool cudaEnabled() { 
-//#ifdef ASTRA_CUDA	
-//	return true; 
+//_AstraExport bool cudaEnabled() {
+//#ifdef ASTRA_CUDA
+//	return true;
 //#else
 //	return false;
 //#endif
@@ -126,7 +126,7 @@ namespace astra {
 // errors
 namespace astra {
 
-typedef enum {ASTRA_SUCCESS, 
+typedef enum {ASTRA_SUCCESS,
 			  ASTRA_ERROR_NOT_INITIALIZED,
 			  ASTRA_ERROR_INVALID_FILE,
 			  ASTRA_ERROR_OUT_OF_RANGE,
@@ -145,7 +145,7 @@ namespace astra {
 	const float32 PIdiv2 = PI / 2;
 	const float32 PIdiv4 = PI / 4;
 	const float32 eps = 1e-7f;
-	
+
 	extern _AstraExport bool running_in_matlab;
 }
 
@@ -153,8 +153,8 @@ namespace astra {
 // math
 namespace astra {
 
-	inline float32 cos_73s(float32 x) 
-	{ 
+	inline float32 cos_73s(float32 x)
+	{
 		/*
 		const float32 c1 =  0.999999953464f;
 		const float32 c2 = -0.4999999053455f;
@@ -172,13 +172,13 @@ namespace astra {
 		return (c1 + x2*(c2 + c3 * x2));
 	}
 
-	inline float32 fast_cos(float32 x) 
+	inline float32 fast_cos(float32 x)
 	{
-		int quad; 
+		int quad;
 
 		//x = fmod(x, 2*PI);		// Get rid of values > 2* pi
 		if (x < 0) x = -x;		// cos(-x) = cos(x)
-		quad = int(x/PIdiv2);	// Get quadrant # (0 to 3) 
+		quad = int(x/PIdiv2);	// Get quadrant # (0 to 3)
 		switch (quad) {
 			case 0: return  cos_73s(x);
 			case 1: return -cos_73s(PI-x);
@@ -215,7 +215,7 @@ namespace astra {
 		int m_iAngleIndex;
 		int m_iDetectorIndex;
 	};
-	
+
 	/**
 	 * Struct combining some properties of a detector in 2D detector array
 	 **/
