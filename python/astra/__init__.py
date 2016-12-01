@@ -39,6 +39,8 @@ from . import plugins
 from . import log
 from .optomo import OpTomo
 
+__version__ = '1.8rc1'
+
 import os
 
 if 'ASTRA_GPU_INDEX' in os.environ:

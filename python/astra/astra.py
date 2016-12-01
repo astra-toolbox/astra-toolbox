@@ -37,17 +37,6 @@ def use_cuda():
     """
     return a.use_cuda()
 
-
-def version(printToScreen=False):
-    """Check version of the ASTRA Toolbox.
-    
-    :param printToScreen: If ``True``, print version string. If ``False``, return version integer.
-    :type printToScreen: :class:`bool`
-    :returns: :class:`string` or :class:`int` -- The version string or integer.
-    
-    """
-    return a.version(printToScreen)
-
 def set_gpu_index(idx, memory=0):
     """Set default GPU index to use.
     
