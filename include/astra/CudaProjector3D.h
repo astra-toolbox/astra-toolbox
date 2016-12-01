@@ -117,6 +117,7 @@ public:
 	int getVoxelSuperSampling() const { return m_iVoxelSuperSampling; }
 	int getDetectorSuperSampling() const { return m_iDetectorSuperSampling; }
 	int getGPUIndex() const { return m_iGPUIndex; }
+	bool getDensityWeighting() const { return m_bDensityWeighting; }
 
 protected:
 
@@ -124,6 +125,7 @@ protected:
 	int m_iVoxelSuperSampling;
 	int m_iDetectorSuperSampling;
 	int m_iGPUIndex;
+	bool m_bDensityWeighting;
 
 };
 
