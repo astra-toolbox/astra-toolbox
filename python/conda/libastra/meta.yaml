@@ -10,13 +10,17 @@ source:
 build:
   number: 0
   script_env:
-    - CC
-    - CXX
-    - CUDA_ROOT
+    - CC # [not win]
+    - CXX # [not win]
+    - CUDA_ROOT # [not win]
 
 requirements:
   build:
-    - boost
+    - boost ==1.61 # [win]
+    - vs2015_runtime # [win]
+
+  run:
+    - vs2015_runtime # [win]
 
 about:
   home: http://www.astra-toolbox.com
