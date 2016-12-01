@@ -249,7 +249,7 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, con
 	return ok;
 }
 
-bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, int iVoxelSuperSampling)
+bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, int iVoxelSuperSampling, bool bFDKWeighting)
 {
 	SDimensions3D dims;
 	SProjectorParams3D params;
@@ -268,6 +268,8 @@ bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, con
 	ok = convertAstraGeometry(pVolGeom, pProjGeom,
 	                          pParProjs, pConeProjs,
 	                          params);
+
+	params.bFDKWeighting = bFDKWeighting;
 
 	if (pParProjs)
 		ok &= Par3DBP(volData.d->ptr, projData.d->ptr, dims, pParProjs, params);
