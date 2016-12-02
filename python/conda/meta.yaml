@@ -30,14 +30,14 @@ requirements:
     - numpy
     - scipy
     - six
-    - libastra ==1.8b  # TODO: change to release version
+    - libastra ==1.8rc1  # TODO: change to release version
 
   run:
     - python
     - numpy
     - scipy
     - six
-    - libastra ==1.8b  # TODO: change to release version
+    - libastra ==1.8rc1  # TODO: change to release version
 
 
 about:
