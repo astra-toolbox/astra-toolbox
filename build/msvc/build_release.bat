@@ -17,9 +17,8 @@ mkdir python27
 mkdir python35
 
 cd src
-git clone https://github.com/astra-toolbox/astra-toolbox astra-%B_RELEASE%
+git clone -b %B_RELEASE_TAG% https://github.com/astra-toolbox/astra-toolbox astra-%B_RELEASE%
 cd astra-%B_RELEASE%
-git checkout %B_RELEASE_TAG%
 rd /s /q .git
 
 pause
@@ -133,13 +132,10 @@ echo Sample code can be found in the samples\ directory.
 
 pause
 
-cd %R%\release\matlab
-python -c "import shutil; shutil.make_archive('astra-%B_RELEASE%-matlab-win-x64', 'zip', 'astra-%B_RELEASE%')"
-cd %R%\release\python27
-python -c "import shutil; shutil.make_archive('astra-%B_RELEASE%-python27-win-x64', 'zip', 'astra-%B_RELEASE%')"
-cd %R%\release\python35
-python -c "import shutil; shutil.make_archive('astra-%B_RELEASE%-python35-win-x64', 'zip', 'astra-%B_RELEASE%')"
-cd %R%\release\src
-python -c "import shutil; shutil.make_archive('astra-%B_RELEASE%', 'zip', 'astra-%B_RELEASE%')"
+cd %R%\release
+python -c "import shutil; shutil.make_archive('astra-%B_RELEASE%-matlab-win-x64', 'zip', 'matlab')"
+python -c "import shutil; shutil.make_archive('astra-%B_RELEASE%-python27-win-x64', 'zip', 'python27')"
+python -c "import shutil; shutil.make_archive('astra-%B_RELEASE%-python35-win-x64', 'zip', 'python35')"
+python -c "import shutil; shutil.make_archive('astra-%B_RELEASE%', 'zip', 'src')"
 
 pause

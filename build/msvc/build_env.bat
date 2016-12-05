@@ -12,5 +12,5 @@ set B_VCREDIST=D:\wjp\vs2015u3_redist\vc_redist.x64.exe
 set B_README_WP27=C:\WinPython-64bit-%B_WP27%\python-%B_WP27:~0,-2%.amd64\Lib\site-packages
 set B_README_WP35=C:\WinPython-64bit-%B_WP35%\python-%B_WP35:~0,-2%.amd64\Lib\site-packages
 
-set B_RELEASE_TAG=v1.7.1
-set B_RELEASE=1.7.1beta
+set B_RELEASE_TAG=v1.8
+set B_RELEASE=1.8
