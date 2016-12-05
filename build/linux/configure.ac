@@ -23,7 +23,7 @@ dnl along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 dnl
 dnl -----------------------------------------------------------------------
 
-AC_INIT(astra, 1.7.1)
+AC_INIT(astra, 1.8.0)
 AC_CONFIG_SRCDIR([Makefile.in])
 LT_INIT([disable-static])
 

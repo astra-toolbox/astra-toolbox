@@ -71,7 +71,7 @@ for m in ext_modules:
                                       'PythonPluginAlgorithm.cpp'))
 
 setup(name='astra-toolbox',
-      version='1.7.1',
+      version='1.8',
       description='Python interface to the ASTRA Toolbox',
       author='D.M. Pelt',
       author_email='D.M.Pelt@cwi.nl',

@@ -39,7 +39,7 @@ from . import plugins
 from . import log
 from .optomo import OpTomo
 
-__version__ = '1.8rc1'
+__version__ = '1.8'
 
 import os
 
