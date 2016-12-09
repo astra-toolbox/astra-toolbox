@@ -15,7 +15,6 @@ build:
 
 requirements:
   build:
-    - boost ==1.61 # [win]
     - vs2015_runtime # [win]
 
   run:
