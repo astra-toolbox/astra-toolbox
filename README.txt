@@ -42,8 +42,11 @@ Installation instructions:
 Windows, binary:
 -----------------
 
-Add the mex and tools subdirectories to your matlab path and the Python module
-to your Python path.
+Add the mex and tools subdirectories to your MATLAB path, or copy the Python
+astra module to your Python site-packages directory. We require the Microsoft
+Visual Studio 2015 redistributable package. If this is not already installed on
+your system, it is included as vc_redist.x64.exe in the ASTRA zip file.
+
 
 
 
