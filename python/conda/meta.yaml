@@ -33,7 +33,7 @@ requirements:
 
   run:
     - python
-    - numpy
+    - numpy x.x
     - scipy
     - six
     - libastra ==1.8
