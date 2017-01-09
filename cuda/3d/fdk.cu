@@ -136,13 +136,13 @@ __global__ void devFDK_ParkerWeight(void* D_projData, unsigned int projPitch, un
 
 	if (fBeta <= 0.0f) {
 		fWeight = 0.0f;
-	} else if (fBeta <= 2.0f*(fCentralFanAngle + fGamma)) {
-		fWeight = sinf((M_PI / 4.0f) * fBeta / (fCentralFanAngle + fGamma));
+	} else if (fBeta <= 2.0f*(fCentralFanAngle - fGamma)) {
+		fWeight = sinf((M_PI / 4.0f) * fBeta / (fCentralFanAngle - fGamma));
 		fWeight *= fWeight;
-	} else if (fBeta <= M_PI + 2*fGamma) {
+	} else if (fBeta <= M_PI - 2.0f*fGamma) {
 		fWeight = 1.0f;
-	} else if (fBeta <= M_PI + 2*fCentralFanAngle) {
-		fWeight = sinf((M_PI / 4.0f) * (M_PI + 2.0f*fCentralFanAngle - fBeta) / (fCentralFanAngle - fGamma));
+	} else if (fBeta <= M_PI + 2.0f*fCentralFanAngle) {
+		fWeight = sinf((M_PI / 4.0f) * (M_PI + 2.0f*fCentralFanAngle - fBeta) / (fCentralFanAngle + fGamma));
 		fWeight *= fWeight;
 	} else {
 		fWeight = 0.0f;
