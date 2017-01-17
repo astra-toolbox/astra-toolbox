@@ -17,13 +17,6 @@ See the MATLAB and Python code samples in samples/ and on http://www.astra-toolb
 
 ## Installation instructions
 
-### Windows, binary
-
-Add the mex and tools subdirectories to your MATLAB path, or copy the Python
-astra module to your Python site-packages directory. We require the Microsoft
-Visual Studio 2015 redistributable package. If this is not already installed on
-your system, it is included as vc_redist.x64.exe in the ASTRA zip file.
-
 ### Linux/Windows, using conda for python 
 
 Requirements: [conda](http://conda.pydata.org/) python environment, with 64 bit Python 2.7, 3.5 or 3.6.
@@ -36,9 +29,12 @@ inside a conda environment.
 conda install -c astra-toolbox astra-toolbox
 ```
 
-Linux, from source
-------------------
+### Windows, binary
 
+Add the mex and tools subdirectories to your MATLAB path, or copy the Python
+astra module to your Python site-packages directory. We require the Microsoft
+Visual Studio 2015 redistributable package. If this is not already installed on
+your system, it is included as vc_redist.x64.exe in the ASTRA zip file.
 
 ### Linux, from source
 
