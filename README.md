@@ -24,6 +24,22 @@ astra module to your Python site-packages directory. We require the Microsoft
 Visual Studio 2015 redistributable package. If this is not already installed on
 your system, it is included as vc_redist.x64.exe in the ASTRA zip file.
 
+### Linux/Windows, using conda for python 
+
+Requirements: [conda](http://conda.pydata.org/) python environment, with 64 bit Python 2.7, 3.5 or 3.6.
+
+There are packages available for the ASTRA Toolbox in the astra-toolbox
+channel for the conda package manager. To use these, run the following
+inside a conda environment.
+
+```
+conda install -c astra-toolbox astra-toolbox
+```
+
+Linux, from source
+------------------
+
+
 ### Linux, from source
 
 #### For Matlab
