@@ -360,18 +360,18 @@ mxArray* stringToMxArray(std::string input)
 		StringUtil::splitString(col_strings, row_strings[0], ",");
 
 		// get dimensions
-		int rows = row_strings.size();
-		int cols = col_strings.size();
+		size_t rows = row_strings.size();
+		size_t cols = col_strings.size();
 
 		// init matrix
 		mxArray* pMatrix = mxCreateDoubleMatrix(rows, cols, mxREAL);
 		double* out = mxGetPr(pMatrix);
 
 		// loop elements
-		for (unsigned int row = 0; row < rows; row++) {
+		for (size_t row = 0; row < rows; row++) {
 			StringUtil::splitString(col_strings, row_strings[row], ",");
 			// check size
-			for (unsigned int col = 0; col < col_strings.size(); col++) {
+			for (size_t col = 0; col < col_strings.size(); col++) {
 				out[col*rows + row] = StringUtil::stringToFloat(col_strings[col]);
 			}
 		}
@@ -390,7 +390,7 @@ mxArray* stringToMxArray(std::string input)
 		double* out = mxGetPr(pVector);
 
 		// loop elements
-		for (unsigned int i = 0; i < items.size(); i++) {
+		for (size_t i = 0; i < items.size(); i++) {
 			out[i] = StringUtil::stringToFloat(items[i]);
 		}
 		return pVector;
