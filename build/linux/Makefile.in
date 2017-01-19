@@ -353,6 +353,7 @@ ifeq ($(gen_static_libs),yes)
 	@$(NVCC) $(NVCCFLAGS) -c $(<) -o $*.o >/dev/null 2>&1
 endif
 	@# Generate a .d file, and change the target name in it from .o to .lo
+	@# CUDA 5.5's nvcc doesn't have the -MT option we would like to use.
 	@$(NVCC) $(NVCCFLAGS) -M $(<) -odir $(*D) -o $(*D)/$(DEPDIR)/$(*F).d2
 	@sed '1s/\.o :/.lo :/' < $(*D)/$(DEPDIR)/$(*F).d2 > $(*D)/$(DEPDIR)/$(*F).d
 	@rm -f $(*D)/$(DEPDIR)/$(*F).d2
