@@ -102,14 +102,7 @@ if test x"$NVCC" != xno; then
   HAVECUDA=yes
   BACKUP_CUDA_LDFLAGS="$LDFLAGS"
   if test x"$with_cuda" != x -a x"$with_cuda" != xyes; then
-    case $host_cpu in
-    x86_64)
-      LDFLAGS_CUDA="-L$with_cuda/lib64"
-      ;;
-    *)
-      LDFLAGS_CUDA="-L$with_cuda/lib"
-      ;;
-    esac
+    test -d $with_cuda/lib64 && LDFLAGS_CUDA="-L$with_cuda/lib64" || LDFLAGS_CUDA="-L$with_cuda/lib"
     CPPFLAGS_CUDA="-I$with_cuda/include"
     LDFLAGS="$LDFLAGS $LDFLAGS_CUDA"
   fi

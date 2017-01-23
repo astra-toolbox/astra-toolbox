@@ -14,10 +14,15 @@ $SRC_DIR/build/linux/configure --with-install-type=prefix --with-cuda=$CUDA_ROOT
 
 make install-libraries
 
-LIBPATH=lib
-if [ $ARCH == 64 ]
-  then
-    LIBPATH+=64
-fi
-cp -P $CUDA_ROOT/$LIBPATH/libcudart.so.* $CONDA_PREFIX/lib
-cp -P $CUDA_ROOT/$LIBPATH/libcufft.so.* $CONDA_PREFIX/lib
+
+test -d $CUDA_ROOT/lib64 && LIBPATH="$CUDA_ROOT/lib64" || LIBPATH="$CUDA_ROOT/lib"
+
+case `uname` in
+  Darwin*)
+    cp -P $LIBPATH/libcudart.*.dylib $CONDA_PREFIX/lib
+    cp -P $LIBPATH/libcufft.*.dylib $CONDA_PREFIX/lib
+  *)
+    cp -P $LIBPATH/libcudart.so.* $CONDA_PREFIX/lib
+    cp -P $LIBPATH/libcufft.so.* $CONDA_PREFIX/lib
+    ;;
+esac
