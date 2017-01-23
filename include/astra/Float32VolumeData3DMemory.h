@@ -156,7 +156,7 @@ public:
 	 *
 	 * @return pointer to volume geometry.
 	 */
-	CVolumeGeometry3D* getGeometry();
+	CVolumeGeometry3D* getGeometry() const;
 
 	/**
 	 * Gets a slice, containing all voxels with a given x (= column) index.
@@ -218,7 +218,7 @@ public:
 
 //----------------------------------------------------------------------------------------
 // Get the projection geometry.
-inline CVolumeGeometry3D* CFloat32VolumeData3DMemory::getGeometry()
+inline CVolumeGeometry3D* CFloat32VolumeData3DMemory::getGeometry() const
 {
 	ASTRA_ASSERT(m_bInitialized);
 	return m_pGeometry;
