@@ -10,7 +10,7 @@ echo "int main(){return 0;}" > $CONDA_PREFIX/test.cu
 $NVCC $CONDA_PREFIX/test.cu -ccbin $CC --std=c++11 -o $CONDA_PREFIX/test.out > /dev/null && EXTRA_NVCCFLAGS="--std=c++11" || true
 rm -f $CONDA_PREFIX/test.out
 
-$SRC_DIR/build/linux/configure --with-install-type=prefix --with-cuda=$CUDA_ROOT --prefix=$CONDA_PREFIX NVCCFLAGS="-ccbin $CC $EXTRA_NVCCFLAGS" CC=$CC CXX=$CXX CFLAGS="-I$CONDA_PREFIX/include/boost" CXXFLAGS="-I$CONDA_PREFIX/include/boost"
+$SRC_DIR/build/linux/configure --with-install-type=prefix --with-cuda=$CUDA_ROOT --prefix=$CONDA_PREFIX NVCCFLAGS="-ccbin $CC -I$CONDA_PREFIX/include $EXTRA_NVCCFLAGS" CC=$CC CXX=$CXX CPPFLAGS="-I$CONDA_PREFIX/include"
 
 make install-libraries
 
