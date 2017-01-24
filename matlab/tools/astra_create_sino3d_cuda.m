@@ -1,4 +1,4 @@
-function [sino_id, sino] = astra_create_sino3d_cuda(data, proj_geom, vol_geom)
+function [sino_id, sino] = astra_create_sino3d_cuda(data, proj_geom, vol_geom, cfg_options)
 
 %--------------------------------------------------------------------------
 % [sino_id, sino] = astra_create_sino3d_cuda(data, proj_geom, vol_geom)
@@ -38,10 +38,15 @@ end
 % store sino
 sino_id = astra_mex_data3d('create','-sino', proj_geom, 0);
 
-% create sinogram
+% configure algorithm 
 cfg = astra_struct('FP3D_CUDA');
 cfg.ProjectionDataId = sino_id;
 cfg.VolumeDataId = volume_id;
+if nargin == 4
+        cfg = complete_parameter_structure(cfg, cfg_options);
+end
+
+% create sinogram
 alg_id = astra_mex_algorithm('create', cfg);
 astra_mex_algorithm('iterate', alg_id);
 astra_mex_algorithm('delete', alg_id);

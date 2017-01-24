@@ -1082,6 +1082,18 @@ bool astraCudaFP(const float* pfVolume, float* pfProjections,
 		case ker3d_sum_square_weights:
 			ok &= Par3DFP_SumSqW(D_volumeData, D_projData, dims, pParProjs, params);
 			break;
+		case ker3d_bilin:
+			ok &= Par3DFP_bilin(D_volumeData, D_projData, dims, pParProjs, params);
+			break;
+		case ker3d_bicubic:
+			ok &= Par3DFP_bicubic(D_volumeData, D_projData, dims, pParProjs, params);
+			break;
+		case ker3d_df1:
+			ok &= Par3DFP_ddf1(D_volumeData, D_projData, dims, pParProjs, params);
+			break;
+		case ker3d_df2:
+			ok &= Par3DFP_ddf2(D_volumeData, D_projData, dims, pParProjs, params);
+			break;
 		default:
 			assert(false);
 		}

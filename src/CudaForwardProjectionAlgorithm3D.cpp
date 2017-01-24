@@ -60,6 +60,7 @@ CCudaForwardProjectionAlgorithm3D::CCudaForwardProjectionAlgorithm3D()
 	m_pProjector = 0;
 	m_pProjections = 0;
 	m_pVolume = 0;
+        projKernelInt = ker3d_default;
 
 }
 
@@ -110,6 +111,13 @@ bool CCudaForwardProjectionAlgorithm3D::initialize(const Config& _cfg)
 	id = node.getContentInt();
 	m_pVolume = dynamic_cast<CFloat32VolumeData3DMemory*>(CData3DManager::getSingleton().get(id));
 	CC.markNodeParsed("VolumeDataId");
+        
+        // optional: projection kernel
+	node = _cfg.self.getSingleNode("ProjectionKernel");
+	if (node) {
+		projKernelInt = node.getContentInt();
+	}
+	CC.markNodeParsed("ProjectionKernel");
 
 	// optional: projector
 	node = _cfg.self.getSingleNode("ProjectorId");
@@ -262,7 +270,8 @@ void CCudaForwardProjectionAlgorithm3D::run(int)
 	// check initialized
 	assert(m_bIsInitialized);
 
-#if 1
+#if 0   // SCM: This short-cut does not allow to set projKernel to a
+        // non-default value. Thus not deactivated.
 	CCompositeGeometryManager cgm;
 
 	cgm.doFP(m_pProjector, m_pVolume, m_pProjections);
@@ -271,12 +280,15 @@ void CCudaForwardProjectionAlgorithm3D::run(int)
 	const CProjectionGeometry3D* projgeom = m_pProjections->getGeometry();
 	const CVolumeGeometry3D& volgeom = *m_pVolume->getGeometry();
 
-	Cuda3DProjectionKernel projKernel = ker3d_default;
+        // SCM: Why not make this an attribute of the algorithm-object
+        Cuda3DProjectionKernel projKernel = (Cuda3DProjectionKernel)projKernelInt;      
+                
 	if (m_pProjector) {
 		CCudaProjector3D* projector = dynamic_cast<CCudaProjector3D*>(m_pProjector);
 		projKernel = projector->getProjectionKernel();
 	}
 
+        
 #if 0
 	// Debugging code that gives the coordinates of the corners of the volume
 	// projected on the detector.

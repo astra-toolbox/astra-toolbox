@@ -45,6 +45,26 @@ _AstraExport bool Par3DFP_SumSqW(cudaPitchedPtr D_volumeData,
                     const SDimensions3D& dims, const SPar3DProjection* angles,
                     const SProjectorParams3D& params);
 
+_AstraExport bool Par3DFP_bilin(cudaPitchedPtr D_volumeData,
+            cudaPitchedPtr D_projData,
+            const SDimensions3D& dims, const SPar3DProjection* angles,
+            const SProjectorParams3D& params);
+
+_AstraExport bool Par3DFP_bicubic(cudaPitchedPtr D_volumeData,
+            cudaPitchedPtr D_projData,
+            const SDimensions3D& dims, const SPar3DProjection* angles,
+            const SProjectorParams3D& params);
+
+_AstraExport bool Par3DFP_ddf1(cudaPitchedPtr D_volumeData,
+            cudaPitchedPtr D_projData,
+            const SDimensions3D& dims, const SPar3DProjection* angles,
+            const SProjectorParams3D& params);
+
+_AstraExport bool Par3DFP_ddf2(cudaPitchedPtr D_volumeData,
+            cudaPitchedPtr D_projData,
+            const SDimensions3D& dims, const SPar3DProjection* angles,
+            const SProjectorParams3D& params);
+
 }
 
 #endif
