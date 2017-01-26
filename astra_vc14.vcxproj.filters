@@ -321,6 +321,15 @@
     <ClCompile Include="src\CudaSirtAlgorithm3D.cpp">
       <Filter>CUDA\astra source</Filter>
     </ClCompile>
+    <ClCompile Include="src\Float32Data3DGPU.cpp">
+      <Filter>CUDA\astra source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Float32ProjectionData3DGPU.cpp">
+      <Filter>CUDA\astra source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Float32VolumeData3DGPU.cpp">
+      <Filter>CUDA\astra source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\astra\Algorithm.h">
@@ -579,6 +588,15 @@
       <Filter>CUDA\astra headers</Filter>
     </ClInclude>
     <ClInclude Include="include\astra\CudaSirtAlgorithm3D.h">
+      <Filter>CUDA\astra headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\Float32Data3DGPU.h">
+      <Filter>CUDA\astra headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\Float32ProjectionData3DGPU.h">
+      <Filter>CUDA\astra headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\Float32VolumeData3DGPU.h">
       <Filter>CUDA\astra headers</Filter>
     </ClInclude>
     <ClInclude Include="cuda\2d\algo.h">

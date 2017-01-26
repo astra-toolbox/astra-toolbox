@@ -172,6 +172,13 @@ IF HAVE_CUDA==True:
 	cdef extern from "astra/CudaProjector2D.h" namespace "astra":
 		cdef cppclass CCudaProjector2D
 
+	cdef extern from "astra/Float32Data3DGPU.h" namespace "astraCUDA3d":
+		cdef cppclass MemHandle3D:
+			pass
+
+	cdef extern from "astra/Float32Data3DGPU.h" namespace "astraCUDA3d":
+		cdef MemHandle3D wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch)
+
 
 cdef extern from "astra/SparseMatrix.h" namespace "astra":
 	cdef cppclass CSparseMatrix:
@@ -184,14 +191,18 @@ cdef extern from "astra/SparseMatrix.h" namespace "astra":
 		unsigned int* m_piColIndices
 		unsigned long* m_plRowStarts
 
-cdef extern from "astra/Float32Data3DMemory.h" namespace "astra":
-	cdef cppclass CFloat32Data3DMemory:
-		CFloat32Data3DMemory()
+cdef extern from "astra/Float32Data3D.h" namespace "astra":
+	cdef cppclass CFloat32Data3D:
 		bool isInitialized()
 		int getSize()
 		int getWidth()
 		int getHeight()
 		int getDepth()
+
+
+cdef extern from "astra/Float32Data3DMemory.h" namespace "astra":
+	cdef cppclass CFloat32Data3DMemory(CFloat32Data3D):
+		CFloat32Data3DMemory()
 		void updateStatistics()
 		float32 *getData()
 		float32 ***getData3D()
@@ -228,8 +239,6 @@ cdef extern from "astra/Float32VolumeData3DMemory.h" namespace "astra":
 		int getSliceCount()
 		bool isInitialized()
 
-
-
 cdef extern from "astra/ParallelProjectionGeometry3D.h" namespace "astra":
 	cdef cppclass CParallelProjectionGeometry3D:
 		CParallelProjectionGeometry3D()
@@ -260,12 +269,23 @@ cdef extern from "astra/Float32ProjectionData3DMemory.h" namespace "astra":
 		int getAngleCount()
 		bool isInitialized()
 
-cdef extern from "astra/Float32Data3D.h" namespace "astra":
-	cdef cppclass CFloat32Data3D:
-		CFloat32Data3D()
-		bool isInitialized()
-		int getSize()
-		int getWidth()
-		int getHeight()
-		int getDepth()
-		void updateStatistics()
+IF HAVE_CUDA==True:
+	cdef extern from "astra/Float32VolumeData3DGPU.h" namespace "astra":
+		cdef cppclass CFloat32VolumeData3DGPU:
+			CFloat32VolumeData3DGPU(CVolumeGeometry3D*, MemHandle3D)
+			CVolumeGeometry3D* getGeometry()
+			void changeGeometry(CVolumeGeometry3D*)
+			int getRowCount()
+			int getColCount()
+			int getSliceCount()
+			bool isInitialized()
+
+	cdef extern from "astra/Float32ProjectionData3DGPU.h" namespace "astra":
+		cdef cppclass CFloat32ProjectionData3DGPU:
+			CFloat32ProjectionData3DGPU(CProjectionGeometry3D*, MemHandle3D)
+			CProjectionGeometry3D* getGeometry()
+			void changeGeometry(CProjectionGeometry3D*)
+			int getRowCount()
+			int getColCount()
+			int getSliceCount()
+			bool isInitialized()

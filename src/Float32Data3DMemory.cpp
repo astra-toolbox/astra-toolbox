@@ -163,7 +163,7 @@ bool CFloat32Data3DMemory::_initialize(int _iWidth, int _iHeight, int _iDepth, C
 	ASTRA_ASSERT(_iWidth > 0);
 	ASTRA_ASSERT(_iHeight > 0);
 	ASTRA_ASSERT(_iDepth > 0);
-	ASTRA_ASSERT(_pCustomMemory != NULL);
+	//ASTRA_ASSERT(_pCustomMemory != NULL);
 
 	if (m_bInitialized) {
 		_unInit();

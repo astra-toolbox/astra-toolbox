@@ -114,7 +114,7 @@ bool CFloat32ProjectionData3DMemory::initialize(CProjectionGeometry3D* _pGeometr
 
 //----------------------------------------------------------------------------------------
 // Initialization
-bool CFloat32ProjectionData3DMemory::initialize(CProjectionGeometry3D* _pGeometry, CFloat32CustomMemory* _pCustomMemory) 
+bool CFloat32ProjectionData3DMemory::initialize(CProjectionGeometry3D* _pGeometry, CFloat32CustomMemory* _pCustomMemory)
 {
 	m_pGeometry = _pGeometry->clone();
 	m_bInitialized = _initialize(m_pGeometry->getDetectorColCount(), m_pGeometry->getProjectionCount(), m_pGeometry->getDetectorRowCount(), _pCustomMemory);

@@ -114,7 +114,7 @@ bool CFloat32VolumeData3DMemory::initialize(CVolumeGeometry3D* _pGeometry, float
 }
 //----------------------------------------------------------------------------------------
 // Initialization
-bool CFloat32VolumeData3DMemory::initialize(CVolumeGeometry3D* _pGeometry, CFloat32CustomMemory* _pCustomMemory) 
+bool CFloat32VolumeData3DMemory::initialize(CVolumeGeometry3D* _pGeometry, CFloat32CustomMemory* _pCustomMemory)
 {
 	m_pGeometry = _pGeometry->clone();
 	m_bInitialized = _initialize(m_pGeometry->getGridColCount(), m_pGeometry->getGridRowCount(), m_pGeometry->getGridSliceCount(), _pCustomMemory);

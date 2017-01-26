@@ -101,14 +101,14 @@ bool CCudaForwardProjectionAlgorithm3D::initialize(const Config& _cfg)
 	node = _cfg.self.getSingleNode("ProjectionDataId");
 	ASTRA_CONFIG_CHECK(node, "CudaForwardProjection3D", "No ProjectionDataId tag specified.");
 	id = node.getContentInt();
-	m_pProjections = dynamic_cast<CFloat32ProjectionData3DMemory*>(CData3DManager::getSingleton().get(id));
+	m_pProjections = dynamic_cast<CFloat32ProjectionData3D*>(CData3DManager::getSingleton().get(id));
 	CC.markNodeParsed("ProjectionDataId");
 
 	// reconstruction data
 	node = _cfg.self.getSingleNode("VolumeDataId");
 	ASTRA_CONFIG_CHECK(node, "CudaForwardProjection3D", "No VolumeDataId tag specified.");
 	id = node.getContentInt();
-	m_pVolume = dynamic_cast<CFloat32VolumeData3DMemory*>(CData3DManager::getSingleton().get(id));
+	m_pVolume = dynamic_cast<CFloat32VolumeData3D*>(CData3DManager::getSingleton().get(id));
 	CC.markNodeParsed("VolumeDataId");
 
 	// optional: projector
@@ -140,8 +140,8 @@ bool CCudaForwardProjectionAlgorithm3D::initialize(const Config& _cfg)
 
 
 bool CCudaForwardProjectionAlgorithm3D::initialize(CProjector3D* _pProjector, 
-                                  CFloat32ProjectionData3DMemory* _pProjections, 
-                                  CFloat32VolumeData3DMemory* _pVolume,
+                                  CFloat32ProjectionData3D* _pProjections, 
+                                  CFloat32VolumeData3D* _pVolume,
                                   int _iGPUindex, int _iDetectorSuperSampling)
 {
 	m_pProjector = _pProjector;

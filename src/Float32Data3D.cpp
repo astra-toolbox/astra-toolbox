@@ -28,6 +28,10 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/Float32Data3D.h"
 #include <sstream>
 
+#ifdef ASTRA_CUDA
+#include "../../cuda/3d/mem3d.h"
+#endif
+
 using namespace std;
 
 namespace astra {
@@ -60,7 +64,5 @@ std::string CFloat32Data3D::description() const
 	if (getType() == CFloat32Data3D::VOLUME) res << " volume data \t";
 	return res.str();
 }
-//----------------------------------------------------------------------------------------
-
 
 } // end namespace astra

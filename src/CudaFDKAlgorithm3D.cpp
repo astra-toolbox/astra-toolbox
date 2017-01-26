@@ -59,8 +59,8 @@ CCudaFDKAlgorithm3D::CCudaFDKAlgorithm3D()
 //----------------------------------------------------------------------------------------
 // Constructor with initialization
 CCudaFDKAlgorithm3D::CCudaFDKAlgorithm3D(CProjector3D* _pProjector, 
-								   CFloat32ProjectionData3DMemory* _pProjectionData, 
-								   CFloat32VolumeData3DMemory* _pReconstruction)
+								   CFloat32ProjectionData3D* _pProjectionData, 
+								   CFloat32VolumeData3D* _pReconstruction)
 {
 	_clear();
 	initialize(_pProjector, _pProjectionData, _pReconstruction);
@@ -179,8 +179,8 @@ bool CCudaFDKAlgorithm3D::initialize(const Config& _cfg)
 //----------------------------------------------------------------------------------------
 // Initialize - C++
 bool CCudaFDKAlgorithm3D::initialize(CProjector3D* _pProjector, 
-								  CFloat32ProjectionData3DMemory* _pSinogram, 
-								  CFloat32VolumeData3DMemory* _pReconstruction)
+								  CFloat32ProjectionData3D* _pSinogram, 
+								  CFloat32VolumeData3D* _pReconstruction)
 {
 	// if already initialized, clear first
 	if (m_bIsInitialized) {
@@ -225,9 +225,9 @@ void CCudaFDKAlgorithm3D::run(int _iNrIterations)
 
 	ASTRA_ASSERT(conegeom);
 
-	CFloat32ProjectionData3DMemory* pSinoMem = dynamic_cast<CFloat32ProjectionData3DMemory*>(m_pSinogram);
+	CFloat32ProjectionData3D* pSinoMem = dynamic_cast<CFloat32ProjectionData3D*>(m_pSinogram);
 	ASTRA_ASSERT(pSinoMem);
-	CFloat32VolumeData3DMemory* pReconMem = dynamic_cast<CFloat32VolumeData3DMemory*>(m_pReconstruction);
+	CFloat32VolumeData3D* pReconMem = dynamic_cast<CFloat32VolumeData3D*>(m_pReconstruction);
 	ASTRA_ASSERT(pReconMem);
 
 	const float *filter = NULL;

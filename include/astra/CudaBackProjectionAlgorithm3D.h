@@ -69,8 +69,8 @@ public:
 	 * @param _pReconstruction	VolumeData3D object for storing the reconstructed volume.
 	 */
 	CCudaBackProjectionAlgorithm3D(CProjector3D* _pProjector, 
-	                     CFloat32ProjectionData3DMemory* _pProjectionData, 
-	                     CFloat32VolumeData3DMemory* _pReconstruction);
+	                     CFloat32ProjectionData3D* _pProjectionData, 
+	                     CFloat32VolumeData3D* _pReconstruction);
 	
 	/** Copy constructor.
 	 */
@@ -99,8 +99,8 @@ public:
 	 * @return initialization successful?
 	 */
 	bool initialize(CProjector3D* _pProjector, 
-					CFloat32ProjectionData3DMemory* _pSinogram, 
-					CFloat32VolumeData3DMemory* _pReconstruction);
+					CFloat32ProjectionData3D* _pSinogram, 
+					CFloat32VolumeData3D* _pReconstruction);
 
 	/** Get all information parameters
 	 *

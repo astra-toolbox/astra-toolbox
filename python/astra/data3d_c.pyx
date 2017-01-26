@@ -45,11 +45,16 @@ from .PyXMLDocument cimport XMLDocument
 cimport utils
 from .utils import wrap_from_bytes
 
-from .pythonutils import geom_size
+from .pythonutils import geom_size, GPULink
 
 import operator
 
 from six.moves import reduce
+
+include "config.pxi"
+
+cdef extern from "Python.h":
+    void* PyLong_AsVoidPtr(object)
 
 
 cdef CData3DManager * man3d = <CData3DManager * >PyData3DManager.getSingletonPtr()
@@ -65,12 +70,19 @@ def create(datatype,geometry,data=None, link=False):
     cdef Config *cfg
     cdef CVolumeGeometry3D * pGeometry
     cdef CProjectionGeometry3D * ppGeometry
-    cdef CFloat32Data3DMemory * pDataObject3D
+    cdef CFloat32Data3D * pDataObject3D
     cdef CConeProjectionGeometry3D* pppGeometry
-    cdef CFloat32CustomMemory * pCustom
+    cdef CFloat32CustomMemory * pCustom = NULL
+    IF HAVE_CUDA==True:
+        cdef MemHandle3D hnd
 
-    if link and data.shape!=geom_size(geometry):
-        raise Exception("The dimensions of the data do not match those specified in the geometry.")
+    if link:
+        if isinstance(data, GPULink):
+            s = geom_size(geometry)
+            if geom_size(geometry) != ( data.z, data.y, data.x ):
+                raise Exception("The dimensions of the data do not match those specified in the geometry.")
+        elif data.shape!=geom_size(geometry):
+            raise Exception("The dimensions of the data do not match those specified in the geometry.")
 
     if datatype == '-vol':
         cfg = utils.dictToConfig(six.b('VolumeGeometry'), geometry)
@@ -80,10 +92,18 @@ def create(datatype,geometry,data=None, link=False):
             del pGeometry
             raise Exception('Geometry class not initialized.')
         if link:
-            pCustom = <CFloat32CustomMemory*> new CFloat32CustomPython(data)
-            pDataObject3D = <CFloat32Data3DMemory * > new CFloat32VolumeData3DMemory(pGeometry, pCustom)
+            if isinstance(data, GPULink):
+                IF HAVE_CUDA==True:
+                    s = geom_size(geometry)
+                    hnd = wrapHandle(<float*>PyLong_AsVoidPtr(data.ptr), data.x, data.y, data.z, data.pitch/4)
+                    pDataObject3D = <CFloat32Data3D * > new CFloat32VolumeData3DGPU(pGeometry, hnd)
+                ELSE:
+                    raise NotImplementedError("CUDA support is not enabled in ASTRA")
+            else:
+                pCustom = <CFloat32CustomMemory*> new CFloat32CustomPython(data)
+                pDataObject3D = <CFloat32Data3D * > new CFloat32VolumeData3DMemory(pGeometry, pCustom)
         else:
-            pDataObject3D = <CFloat32Data3DMemory * > new CFloat32VolumeData3DMemory(pGeometry)
+            pDataObject3D = <CFloat32Data3D * > new CFloat32VolumeData3DMemory(pGeometry)
         del cfg
         del pGeometry
     elif datatype == '-sino' or datatype == '-proj3d' or datatype == '-sinocone':
@@ -105,8 +125,16 @@ def create(datatype,geometry,data=None, link=False):
             del ppGeometry
             raise Exception('Geometry class not initialized.')
         if link:
-            pCustom = <CFloat32CustomMemory*> new CFloat32CustomPython(data)
-            pDataObject3D = <CFloat32Data3DMemory * > new CFloat32ProjectionData3DMemory(ppGeometry, pCustom)
+            if isinstance(data, GPULink):
+                IF HAVE_CUDA==True:
+                    s = geom_size(geometry)
+                    hnd = wrapHandle(<float*>PyLong_AsVoidPtr(data.ptr), data.x, data.y, data.z, data.pitch/4)
+                    pDataObject3D = <CFloat32Data3D * > new CFloat32ProjectionData3DGPU(ppGeometry, hnd)
+                ELSE:
+                    raise NotImplementedError("CUDA support is not enabled in ASTRA")
+            else:
+                pCustom = <CFloat32CustomMemory*> new CFloat32CustomPython(data)
+                pDataObject3D = <CFloat32Data3D * > new CFloat32ProjectionData3DMemory(ppGeometry, pCustom)
         else:
             pDataObject3D = <CFloat32Data3DMemory * > new CFloat32ProjectionData3DMemory(ppGeometry)
         del ppGeometry
@@ -118,8 +146,7 @@ def create(datatype,geometry,data=None, link=False):
         del pDataObject3D
         raise Exception("Couldn't initialize data object.")
 
-    if not link: fillDataObject(pDataObject3D, data)
-
+    if not link: fillDataObject(dynamic_cast_mem(pDataObject3D), data)
 
     return man3d.store(<CFloat32Data3D*>pDataObject3D)
 

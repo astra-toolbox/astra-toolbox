@@ -61,3 +61,21 @@ def geom_size(geom, dim=None):
         s = s[dim]
 
     return s
+
+class GPULink(object):
+    """Utility class for astra.data3d.link with a CUDA pointer
+
+    The CUDA pointer ptr must point to an array of floats.
+
+    x is the fastest-changing coordinate, z the slowest-changing.
+
+    pitch is the width in bytes of the memory block. For a contiguous
+    memory block, pitch is equal to sizeof(float) * x. For a memory block
+    allocated by cudaMalloc3D, pitch is the pitch as returned by cudaMalloc3D.
+    """
+    def __init__(self, ptr, x, y, z, pitch):
+        self.ptr = ptr
+        self.x = x
+        self.y = y
+        self.z = z
+        self.pitch = pitch
