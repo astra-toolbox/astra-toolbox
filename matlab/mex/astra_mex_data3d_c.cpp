@@ -103,7 +103,6 @@ void astra_mex_data3d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 		copyMexToCFloat32Array(data, pDataObject3D->getData(),
 				pDataObject3D->getSize());
 	}
-	pDataObject3D->updateStatistics();
 
 	// step4: store data object
 	int iIndex = CData3DManager::getSingleton().store(pDataObject3D);
@@ -161,8 +160,6 @@ void astra_mex_data3d_link(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 		// Error message was already set by the function
 		return;
 	}
-
-	//pDataObject3D->updateStatistics();
 
 	// step4: store data object
 	int iIndex = CData3DManager::getSingleton().store(pDataObject3D);
@@ -234,7 +231,6 @@ void astra_mex_data3d_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 	}
 
 	copyMexToCFloat32Array(prhs[2], pDataObject->getData(), pDataObject->getSize());
-	pDataObject->updateStatistics();
 }
 
 void astra_mex_data3d_dimensions(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])

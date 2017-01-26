@@ -166,17 +166,6 @@ checkDataSize(const mxArray * const mArray,
 
 //-----------------------------------------------------------------------------------------
 void
-updateStatistics(const std::vector<astra::CFloat32Data3DMemory *> & vecIn)
-{
-	const size_t tot_size = vecIn.size();
-	for (size_t count = 0; count < tot_size; count++)
-	{
-		vecIn[count]->updateStatistics();
-	}
-}
-
-//-----------------------------------------------------------------------------------------
-void
 getDataPointers(const std::vector<astra::CFloat32Data3DMemory *> & vecIn,
 		std::vector<astra::float32 *> & vecOut)
 {

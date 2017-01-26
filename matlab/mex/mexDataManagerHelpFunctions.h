@@ -50,8 +50,6 @@ bool checkDataSize(const mxArray * const, const astra::CProjectionGeometry3D * c
 bool checkDataSize(const mxArray * const, const astra::CVolumeGeometry3D * const,
 		const mwIndex & zOffset);
 
-void updateStatistics(const std::vector<astra::CFloat32Data3DMemory *> &);
-
 void getDataPointers(const std::vector<astra::CFloat32Data3DMemory *> &,
 		std::vector<astra::float32 *> &);
 void getDataSizes(const std::vector<astra::CFloat32Data3DMemory *> &,

@@ -132,7 +132,6 @@ def create(datatype,geometry,data=None, link=False):
 
     if not link: fillDataObject(pDataObject3D, data)
 
-    pDataObject3D.updateStatistics()
 
     return man3d.store(<CFloat32Data3D*>pDataObject3D)
 

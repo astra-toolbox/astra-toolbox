@@ -107,22 +107,6 @@ public:
 	 */
 	int getDimensionCount() const;	
 
-	/**
-	 * Clamp data to minimum value
-	 *
-	 * @param _fMin minimum value
-	 * @return l-value
-	 */
-	virtual CFloat32Data3D& clampMin(float32& _fMin) = 0;
-
-	/**
-	 * Clamp data to maximum value
-	 *
-	 * @param _fMax maximum value
-	 * @return l-value
-	 */
-	virtual CFloat32Data3D& clampMax(float32& _fMax) = 0;
-
 	/** get a description of the class
 	 *
 	 * @return description string
