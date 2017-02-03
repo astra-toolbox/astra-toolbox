@@ -250,16 +250,19 @@ AC_SUBST(HAVEPYTHON)
 AC_CANONICAL_HOST
 case $host_os in
   darwin* )
-        CPPFLAGS_OS="-stdlib=libstdc++ -mmacosx-version-min=10.6"
+        CXXFLAGS_OS="-stdlib=libstdc++ -mmacosx-version-min=10.6"
+        LDFLAGS_OS="-stdlib=libstdc++"
         IS_MACOS=yes
         ;;
     *)
-        CPPFLAGS_OS=""
+        CXXFLAGS_OS=""
+        LDFLAGS_OS=""
         IS_MACOS=no
         ;;
 esac
 
-AC_SUBST(CPPFLAGS_OS)
+AC_SUBST(CXXFLAGS_OS)
+AC_SUBST(LDFLAGS_OS)
 AC_SUBST(IS_MACOS)
 
 # For some reason, some older versions of autoconf produce a config.status
