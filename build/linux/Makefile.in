@@ -4,6 +4,7 @@ cuda=@HAVECUDA@
 matlab=@HAVEMATLAB@
 python=@HAVEPYTHON@
 boostutf=@HAVEBOOSTUTF@
+macos=@IS_MACOS@
 
 MATLAB_ROOT=@MATLAB_ROOT@
 octave=@HAVEOCTAVE@
@@ -64,8 +65,10 @@ endif
 ifeq ($(matlab),yes)
 # TODO: Do we also want -fopenmp for octave?
 CPPFLAGS+=-I$(MATLAB_ROOT)/extern/include -DMATLAB_MEX_FILE
+ifeq ($(macos),no)
 CXXFLAGS+=-fopenmp
 LDFLAGS+=-fopenmp
+endif
 endif
 
 # MODLDFLAGS are the base LDFLAGS for matlab, octave, python modules
