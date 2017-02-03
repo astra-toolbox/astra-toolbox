@@ -304,6 +304,12 @@ mex: $(MATLAB_MEX)
 
 %.$(MEXSUFFIX): %.o $(MATLAB_CXX_OBJECTS) libastra.la
 	$(MEX) LDFLAGS="$(MEXLDFLAGS)" $(MEXFLAGS) $(LIBS) $(MEXLIBS) -lastra -output $* $*.o $(MATLAB_CXX_OBJECTS)
+ifeq ($(install_type),module)
+ifeq ($(macos),yes)
+	@# tell macOS dynamic loader to look in mex directory for libastra.0.dylib
+	install_name_tool -change `otool -DX .libs/$(SONAME)` @loader_path/$(SONAME) $@
+endif
+endif
 
 ifeq ($(python),yes)
 matlab/mex/astra_mex_plugin_c.$(MEXSUFFIX): matlab/mex/astra_mex_plugin_c.o $(MATLAB_CXX_OBJECTS) libastra.la
