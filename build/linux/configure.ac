@@ -251,13 +251,16 @@ AC_CANONICAL_HOST
 case $host_os in
   darwin* )
         CPPFLAGS_OS="-stdlib=libstdc++ -mmacosx-version-min=10.6"
+        IS_MACOS=yes
         ;;
     *)
         CPPFLAGS_OS=""
+        IS_MACOS=no
         ;;
 esac
 
 AC_SUBST(CPPFLAGS_OS)
+AC_SUBST(IS_MACOS)
 
 # For some reason, some older versions of autoconf produce a config.status
 # that disables all lines looking like VPATH=@srcdir@
