@@ -109,7 +109,20 @@ make install
 This will install Astra into your current Python environment.
 
 
+macOS, from source:
+--------------------
 
+Use the Homebrew package manager to install boost, libtool, autoconf, automake.
+
+cd build/linux
+./autogen.sh
+CPPFLAGS="-I/usr/local/include" NVCCFLAGS="-I/usr/local/include" ./configure \
+  --with-cuda=/usr/local/cuda \
+  --with-matlab=/Applications/MATLAB_R2016b.app \
+  --prefix=$HOME/astra \
+  --with-install-type=module
+make
+make install
 
 
 Windows, from source using Visual Studio 2015:
