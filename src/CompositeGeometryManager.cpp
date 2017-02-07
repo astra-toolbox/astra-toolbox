@@ -328,6 +328,7 @@ static std::pair<double, double> reduceProjectionVertical(const CVolumeGeometry3
 	// reduce self to only cover intersection with projection of VolumePart
 	// (Project corners of volume, take bounding box)
 
+	assert(pProjGeom->getProjectionCount() > 0);
 	for (int i = 0; i < pProjGeom->getProjectionCount(); ++i) {
 
 		double vol_u[8];
@@ -426,9 +427,9 @@ bool CCompositeGeometryManager::CPart::isFull() const
 {
 	size_t x, y, z;
 	getDims(x, y, z);
-	return x == pData->getWidth() &&
-	       y == pData->getHeight() &&
-	       z == pData->getDepth();
+	return x == (size_t)pData->getWidth() &&
+	       y == (size_t)pData->getHeight() &&
+	       z == (size_t)pData->getDepth();
 }
 
 bool CCompositeGeometryManager::CPart::canSplitAndReduce() const
@@ -805,7 +806,7 @@ void CCompositeGeometryManager::CVolumePart::splitX(CCompositeGeometryManager::T
 		size_t blockSize = computeLinearSplit(m, div, sliceCount);
 
 		int rem = blockSize - (sliceCount % blockSize);
-		if (rem == blockSize)
+		if ((size_t)rem == blockSize)
 			rem = 0;
 
 		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
@@ -856,7 +857,7 @@ void CCompositeGeometryManager::CVolumePart::splitY(CCompositeGeometryManager::T
 		size_t blockSize = computeLinearSplit(m, div, sliceCount);
 
 		int rem = blockSize - (sliceCount % blockSize);
-		if (rem == blockSize)
+		if ((size_t)rem == blockSize)
 			rem = 0;
 
 		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
@@ -907,7 +908,7 @@ void CCompositeGeometryManager::CVolumePart::splitZ(CCompositeGeometryManager::T
 		size_t blockSize = computeLinearSplit(m, div, sliceCount);
 
 		int rem = blockSize - (sliceCount % blockSize);
-		if (rem == blockSize)
+		if ((size_t)rem == blockSize)
 			rem = 0;
 
 		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
@@ -1028,7 +1029,7 @@ void CCompositeGeometryManager::CProjectionPart::splitX(CCompositeGeometryManage
 		size_t blockSize = computeLinearSplit(m, div, sliceCount);
 
 		int rem = blockSize - (sliceCount % blockSize);
-		if (rem == blockSize)
+		if ((size_t)rem == blockSize)
 			rem = 0;
 
 		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
@@ -1076,7 +1077,7 @@ void CCompositeGeometryManager::CProjectionPart::splitZ(CCompositeGeometryManage
 		size_t blockSize = computeLinearSplit(m, div, sliceCount);
 
 		int rem = blockSize - (sliceCount % blockSize);
-		if (rem == blockSize)
+		if ((size_t)rem == blockSize)
 			rem = 0;
 
 		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
