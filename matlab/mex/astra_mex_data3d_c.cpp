@@ -60,7 +60,7 @@ using namespace astra;
 //-----------------------------------------------------------------------------------------
 /**
  * id = astra_mex_io_data('create', datatype, geometry, data);
- *        datatype: ['-vol','-sino','-sinocone'] 
+ *        datatype: ['-vol','-sino']
  */
 void astra_mex_data3d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray* prhs[])
 { 

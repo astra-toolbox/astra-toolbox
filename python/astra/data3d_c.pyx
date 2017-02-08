@@ -86,7 +86,7 @@ def create(datatype,geometry,data=None, link=False):
             pDataObject3D = <CFloat32Data3DMemory * > new CFloat32VolumeData3DMemory(pGeometry)
         del cfg
         del pGeometry
-    elif datatype == '-sino' or datatype == '-proj3d':
+    elif datatype == '-sino' or datatype == '-proj3d' or datatype == '-sinocone':
         cfg = utils.dictToConfig(six.b('ProjectionGeometry'), geometry)
         tpe = wrap_from_bytes(cfg.self.getAttribute(six.b('type')))
         if (tpe == "parallel3d"):
@@ -111,18 +111,6 @@ def create(datatype,geometry,data=None, link=False):
             pDataObject3D = <CFloat32Data3DMemory * > new CFloat32ProjectionData3DMemory(ppGeometry)
         del ppGeometry
         del cfg
-    elif datatype == "-sinocone":
-        cfg = utils.dictToConfig(six.b('ProjectionGeometry'), geometry)
-        pppGeometry = new CConeProjectionGeometry3D()
-        if not pppGeometry.initialize(cfg[0]):
-            del cfg
-            del pppGeometry
-            raise Exception('Geometry class not initialized.')
-        if link:
-            pCustom = <CFloat32CustomMemory*> new CFloat32CustomPython(data)
-            pDataObject3D = <CFloat32Data3DMemory * > new CFloat32ProjectionData3DMemory(pppGeometry, pCustom)
-        else:
-            pDataObject3D = <CFloat32Data3DMemory * > new CFloat32ProjectionData3DMemory(pppGeometry)
     else:
         raise Exception("Invalid datatype.  Please specify '-vol' or '-proj3d'.")
 
