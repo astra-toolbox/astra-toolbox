@@ -77,15 +77,15 @@ def create(datatype,geometry,data=None, link=False):
         cdef MemHandle3D hnd
 
     if link:
+        geom_shape = geom_size(geometry)
         if isinstance(data, np.ndarray):
-            if data.shape != geom_size(geometry):
-                raise Exception("The dimensions of the data do not match those specified in the geometry.")
+            data_shape = data.shape
         elif isinstance(data, GPULink):
-            s = geom_size(geometry)
-            if geom_size(geometry) != ( data.z, data.y, data.x ):
-                raise Exception("The dimensions of the data do not match those specified in the geometry.")
+            data_shape = ( data.z, data.y, data.x )
         else:
             raise TypeError("data should be a numpy.ndarray or a GPULink object")
+        if geom_shape != data_shape:
+            raise ValueError("The dimensions of the data do not match those specified in the geometry: {} != {}".format(data_shape, geom_shape))
 
     if datatype == '-vol':
         cfg = utils.dictToConfig(six.b('VolumeGeometry'), geometry)
@@ -93,7 +93,7 @@ def create(datatype,geometry,data=None, link=False):
         if not pGeometry.initialize(cfg[0]):
             del cfg
             del pGeometry
-            raise Exception('Geometry class not initialized.')
+            raise RuntimeError('Geometry class not initialized.')
         if link:
             if isinstance(data, np.ndarray):
                 pCustom = <CFloat32CustomMemory*> new CFloat32CustomPython(data)
@@ -123,12 +123,12 @@ def create(datatype,geometry,data=None, link=False):
         elif (tpe == "cone_vec"):
             ppGeometry = <CProjectionGeometry3D*> new CConeVecProjectionGeometry3D();
         else:
-            raise Exception("Invalid geometry type.")
+            raise ValueError("Invalid geometry type.")
 
         if not ppGeometry.initialize(cfg[0]):
             del cfg
             del ppGeometry
-            raise Exception('Geometry class not initialized.')
+            raise RuntimeError('Geometry class not initialized.')
         if link:
             if isinstance(data, np.ndarray):
                 pCustom = <CFloat32CustomMemory*> new CFloat32CustomPython(data)
@@ -147,11 +147,11 @@ def create(datatype,geometry,data=None, link=False):
         del ppGeometry
         del cfg
     else:
-        raise Exception("Invalid datatype.  Please specify '-vol' or '-proj3d'.")
+        raise ValueError("Invalid datatype.  Please specify '-vol' or '-proj3d'.")
 
     if not pDataObject3D.isInitialized():
         del pDataObject3D
-        raise Exception("Couldn't initialize data object.")
+        raise RuntimeError("Couldn't initialize data object.")
 
     if not link:
         fillDataObject(dynamic_cast_mem(pDataObject3D), data)
@@ -169,7 +169,7 @@ def get_geometry(i):
         pDataObject3 = <CFloat32VolumeData3DMemory * >pDataObject
         geom = utils.configToDict(pDataObject3.getGeometry().getConfiguration())
     else:
-        raise Exception("Not a known data object")
+        raise RuntimeError("Not a known data object")
     return geom
 
 def change_geometry(i, geom):
@@ -190,18 +190,18 @@ def change_geometry(i, geom):
         elif (tpe == "cone_vec"):
             ppGeometry = <CProjectionGeometry3D*> new CConeVecProjectionGeometry3D();
         else:
-            raise Exception("Invalid geometry type.")
+            raise ValueError("Invalid geometry type.")
         if not ppGeometry.initialize(cfg[0]):
             del cfg
             del ppGeometry
-            raise Exception('Geometry class not initialized.')
+            raise RuntimeError('Geometry class not initialized.')
         del cfg
-        if (ppGeometry.getDetectorColCount() != pDataObject2.getDetectorColCount() or \
-            ppGeometry.getProjectionCount() != pDataObject2.getAngleCount() or \
-            ppGeometry.getDetectorRowCount() != pDataObject2.getDetectorRowCount()):
+        geom_shape = (ppGeometry.getDetectorRowCount(), ppGeometry.getProjectionCount(), ppGeometry.getDetectorColCount())
+        obj_shape = (pDataObject2.getDetectorRowCount(), pDataObject2.getAngleCount(), pDataObject2.getDetectorColCount())
+        if geom_shape != obj_shape:
             del ppGeometry
-            raise Exception(
-                "The dimensions of the data do not match those specified in the geometry.")
+            raise ValueError(
+                "The dimensions of the data do not match those specified in the geometry: {} != {}".format(obj_shape, geom_shape))
         pDataObject2.changeGeometry(ppGeometry)
         del ppGeometry
 
@@ -212,19 +212,19 @@ def change_geometry(i, geom):
         if not pGeometry.initialize(cfg[0]):
             del cfg
             del pGeometry
-            raise Exception('Geometry class not initialized.')
+            raise RuntimeError('Geometry class not initialized.')
         del cfg
-        if (pGeometry.getGridColCount() != pDataObject3.getColCount() or \
-            pGeometry.getGridRowCount() != pDataObject3.getRowCount() or \
-            pGeometry.getGridSliceCount() != pDataObject3.getSliceCount()):
+        geom_shape = (pGeometry.getGridSliceCount(), pGeometry.getGridRowCount(), pGeometry.getGridColCount())
+        obj_shape = (pDataObject3.getSliceCount(), pDataObject3.getRowCount(), pDataObject3.getColCount())
+        if geom_shape != obj_shape:
             del pGeometry
-            raise Exception(
-                "The dimensions of the data do not match those specified in the geometry.")
+            raise ValueError(
+                "The dimensions of the data do not match those specified in the geometry.".format(obj_shape, geom_shape))
         pDataObject3.changeGeometry(pGeometry)
         del pGeometry
 
     else:
-        raise Exception("Not a known data object")
+        raise RuntimeError("Not a known data object")
 
 
 cdef fillDataObject(CFloat32Data3DMemory * obj, data):
@@ -232,6 +232,10 @@ cdef fillDataObject(CFloat32Data3DMemory * obj, data):
         fillDataObjectScalar(obj, 0)
     else:
         if isinstance(data, np.ndarray):
+            obj_shape = (obj.getDepth(), obj.getHeight(), obj.getWidth())
+            if data.shape != obj_shape:
+                raise ValueError(
+                  "The dimensions of the data do not match those specified in the geometry: {} != {}".format(data.shape, obj_shape))
             fillDataObjectArray(obj, np.ascontiguousarray(data,dtype=np.float32))
         else:
             fillDataObjectScalar(obj, np.float32(data))
@@ -244,18 +248,15 @@ cdef fillDataObjectScalar(CFloat32Data3DMemory * obj, float s):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cdef fillDataObjectArray(CFloat32Data3DMemory * obj, float [:,:,::1] data):
-    if (not data.shape[0] == obj.getDepth()) or (not data.shape[1] == obj.getHeight()) or (not data.shape[2] == obj.getWidth()):
-        raise Exception(
-            "The dimensions of the data do not match those specified in the geometry.")
     cdef float [:,:,::1] cView = <float[:data.shape[0],:data.shape[1],:data.shape[2]]> obj.getData3D()[0][0]
     cView[:] = data
 
 cdef CFloat32Data3D * getObject(i) except NULL:
     cdef CFloat32Data3D * pDataObject = man3d.get(i)
     if pDataObject == NULL:
-        raise Exception("Data object not found")
+        raise ValueError("Data object not found")
     if not pDataObject.isInitialized():
-        raise Exception("Data object not initialized properly.")
+        raise RuntimeError("Data object not initialized properly.")
     return pDataObject
 
 @cython.boundscheck(False)
@@ -278,7 +279,7 @@ def get_shared(i):
     return np.PyArray_SimpleNewFromData(3,shape,np.NPY_FLOAT32,<void *>pDataObject.getData3D()[0][0])
 
 def get_single(i):
-    raise Exception("Not yet implemented")
+    raise NotImplementedError("Not yet implemented")
 
 def store(i,data):
     cdef CFloat32Data3D * pDataObject = getObject(i)
