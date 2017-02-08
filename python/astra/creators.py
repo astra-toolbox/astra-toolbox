@@ -258,7 +258,7 @@ This method can be called in a number of ways:
     elif intype == 'cone':
         if len(args) < 7:
             raise Exception('not enough variables: astra_create_proj_geom(cone, detector_spacing_x, detector_spacing_y, det_row_count, det_col_count, angles, source_origin, origin_det)')
-        return {'type':	'cone','DetectorSpacingX':args[0], 'DetectorSpacingY':args[1], 'DetectorRowCount':args[2],'DetectorColCount':args[3],'ProjectionAngles':args[4],'DistanceOriginSource':	args[5],'DistanceOriginDetector':args[6]}
+        return {'type': 'cone','DetectorSpacingX':args[0], 'DetectorSpacingY':args[1], 'DetectorRowCount':args[2],'DetectorColCount':args[3],'ProjectionAngles':args[4],'DistanceOriginSource': args[5],'DistanceOriginDetector':args[6]}
     elif intype == 'cone_vec':
         if len(args) < 3:
             raise Exception('not enough variables: astra_create_proj_geom(cone_vec, det_row_count, det_col_count, V)')
