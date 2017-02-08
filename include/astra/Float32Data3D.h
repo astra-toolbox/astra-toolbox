@@ -37,7 +37,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 namespace astra {
 
 /**
- * This class represents a three-dimensional block of float32ing point data.
+ * This class represents a 3-dimensional block of 32-bit floating point data.
  */
 class _AstraExport CFloat32Data3D : public CFloat32Data {
 

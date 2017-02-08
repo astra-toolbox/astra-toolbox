@@ -34,7 +34,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 namespace astra {
 
 /** 
- * This class represents a three-dimensional block of float32ing point data.
+ * This class represents a 3-dimensional block of 32-bit floating point data.
  * It contains member functions for accessing this data and for performing 
  * elementary computations on the data.
  * The data block is "owned" by the class, meaning that the class is 
@@ -106,8 +106,8 @@ protected:
 	 * This function does not set m_bInitialized to true if everything is ok.
 	 *
 	 * @param _iWidth width of the 3D data (x-axis), must be > 0
-	 * @param _iHeight height of the 3D data (y-axis), must be > 0 
-	 * @param _iDepth depth of the 3D data (z-axis), must be > 0 
+	 * @param _iHeight height of the 3D data (y-axis), must be > 0
+	 * @param _iDepth depth of the 3D data (z-axis), must be > 0
 	 * @return initialization of the base class successfull
 	 */
 	bool _initialize(int _iWidth, int _iHeight, int _iDepth);
@@ -121,9 +121,9 @@ protected:
 	 * object is reinitialized and memory is freed and reallocated if necessary.
 	 * This function does not set m_bInitialized to true if everything is ok.
 	 *
-	 * @param _iWidth width of the 2D data (x-axis), must be > 0
-	 * @param _iHeight height of the 2D data (y-axis), must be > 0 
-	 * @param _iDepth depth of the 2D data (z-axis), must be > 0 
+	 * @param _iWidth width of the 3D data (x-axis), must be > 0
+	 * @param _iHeight height of the 3D data (y-axis), must be > 0
+	 * @param _iDepth depth of the 3D data (z-axis), must be > 0
 	 * @param _pfData pointer to a one-dimensional float32 data block
 	 * @return initialization of the base class successfull
 	 */
@@ -138,9 +138,9 @@ protected:
 	 * object is reinitialized and memory is freed and reallocated if necessary.
 	 * This function does not set m_bInitialized to true if everything is ok.
 	 *
-	 * @param _iWidth width of the 2D data (x-axis), must be > 0
-	 * @param _iHeight height of the 2D data (y-axis), must be > 0 
-	 * @param _iDepth depth of the 2D data (z-axis), must be > 0 
+	 * @param _iWidth width of the 3D data (x-axis), must be > 0
+	 * @param _iHeight height of the 3D data (y-axis), must be > 0
+	 * @param _iDepth depth of the 3D data (z-axis), must be > 0
 	 * @param _fScalar scalar value to fill the data
 	 * @return initialization of the base class successfull
 	 */
@@ -157,9 +157,9 @@ protected:
 	 * object is reinitialized and memory is freed and reallocated if necessary.
 	 * This function does not set m_bInitialized to true if everything is ok.
 	 *
-	 * @param _iWidth width of the 2D data (x-axis), must be > 0
-	 * @param _iHeight height of the 2D data (y-axis), must be > 0 
-	 * @param _iDepth depth of the 2D data (z-axis), must be > 0 
+	 * @param _iWidth width of the 3D data (x-axis), must be > 0
+	 * @param _iHeight height of the 3D data (y-axis), must be > 0
+	 * @param _iDepth depth of the 3D data (z-axis), must be > 0
 	 * @param _pCustomMemory the custom memory handle
 	 */
 

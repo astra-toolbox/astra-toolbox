@@ -1,10 +1,10 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-           2014-2015, CWI, Amsterdam
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
 
 Contact: astra@uantwerpen.be
-Website: http://sf.net/projects/astra-toolbox
+Website: http://www.astra-toolbox.com/
 
 This file is part of the ASTRA Toolbox.
 
@@ -23,7 +23,6 @@ You should have received a copy of the GNU General Public License
 along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 -----------------------------------------------------------------------
-$Id$
 */
 
 #ifndef _INC_ASTRA_FLOAT32DATA3DGPU
@@ -43,7 +42,7 @@ astraCUDA3d::MemHandle3D wrapHandle(float *D_ptr, unsigned int x, unsigned int y
 
 
 /** 
- * This class represents a three-dimensional block of float32ing point data.
+ * This class represents a 3-dimensional block of 32-bit floating point data.
  * The data block is stored on a GPU, and owned by external code.
  *
  * TODO: Store/remember which GPU the data is stored on
@@ -67,9 +66,9 @@ protected:
 	 *
 	 * This function does not set m_bInitialized to true if everything is ok.
 	 *
-	 * @param _iWidth width of the 2D data (x-axis), must be > 0
-	 * @param _iHeight height of the 2D data (y-axis), must be > 0 
-	 * @param _iDepth depth of the 2D data (z-axis), must be > 0 
+	 * @param _iWidth width of the 3D data (x-axis), must be > 0
+	 * @param _iHeight height of the 3D data (y-axis), must be > 0
+	 * @param _iDepth depth of the 3D data (z-axis), must be > 0
 	 * @param _hnd the CUDA memory handle
 	 */
 
