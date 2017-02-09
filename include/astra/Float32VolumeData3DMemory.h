@@ -159,55 +159,6 @@ public:
 	CVolumeGeometry3D* getGeometry() const;
 
 	/**
-	 * Gets a slice, containing all voxels with a given x (= column) index.
-	 */
-	CFloat32VolumeData2D * fetchSliceX(int _iColumnIndex) const;
-
-	/**
-	 * Gets a slice, containing all voxels with a given y (= row) index.
-	 */
-	CFloat32VolumeData2D * fetchSliceY(int _iRowIndex) const;
-
-	/**
-	 * Gets a slice, containing all voxels with a given z (= slice) index.
-	 */
-	CFloat32VolumeData2D * fetchSliceZ(int _iSliceIndex) const;
-
-	/**
-	 * Gets a slice, containing all voxels with a given x (= column) index.
-	 */
-	void returnSliceX(int _iColumnIndex, CFloat32VolumeData2D * _pSliceData);
-
-	/**
-	 * Gets a slice, containing all voxels with a given y (= row) index.
-	 */
-	void returnSliceY(int _iRowIndex, CFloat32VolumeData2D * _pSliceData);
-
-	/**
-	 * Copies data from a 2D slice containing all voxels with a given z (= slice) index to the
-	 * 3D  memory stored in this class.
-	 */
-	void returnSliceZ(int _iSliceIndex, CFloat32VolumeData2D * _pSliceData);
-
-	/** This SLOW function returns a volume value stored a specific index in the array.
-	 *  Reading values in this way might cause a lot of unnecessary memory operations, don't
-	 *  use it in time-critical code.
-	 * 
-	 *  @param _iIndex Index in the array if the data were stored completely in main memory
-	 *  @return The value the location specified by _iIndex
-	 */
-	virtual float32 getVoxelValue(int _iIndex);
-
-	/** This SLOW function stores a voxel value at a specific index in the array.
-	 *  Writing values in this way might cause a lot of unnecessary memory operations, don't
-	 *  use it in time-critical code.
-	 * 
-	 *  @param _iIndex Index in the array if the data were stored completely in main memory
-	 *  @param _fValue The value to be stored at the location specified by _iIndex
-	 */
-	virtual void setVoxelValue(int _iIndex, float32 _fValue);
-
-	/**
 	 * Overloaded Operator: data = data (pointwise)
 	 *
 	 * @param _dataIn r-value

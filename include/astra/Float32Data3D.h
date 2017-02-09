@@ -32,10 +32,12 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "Float32Data.h"
 #include "Float32Data2D.h"
 
+#include "../../cuda/3d/mem3d.h"
+
 namespace astra {
 
 /**
- * This class represents a three-dimensional block of float32ing point data.
+ * This class represents a 3-dimensional block of 32-bit floating point data.
  */
 class _AstraExport CFloat32Data3D : public CFloat32Data {
 
@@ -106,22 +108,6 @@ public:
 	 * @return number of dimensions
 	 */
 	int getDimensionCount() const;	
-
-	/**
-	 * Clamp data to minimum value
-	 *
-	 * @param _fMin minimum value
-	 * @return l-value
-	 */
-	virtual CFloat32Data3D& clampMin(float32& _fMin) = 0;
-
-	/**
-	 * Clamp data to maximum value
-	 *
-	 * @param _fMax maximum value
-	 * @return l-value
-	 */
-	virtual CFloat32Data3D& clampMax(float32& _fMax) = 0;
 
 	/** get a description of the class
 	 *

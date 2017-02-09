@@ -41,7 +41,7 @@ public:
 };
 
 /** 
- * This class represents a two-dimensional block of float32ing point data.
+ * This class represents a 2-dimensional block of 32-bit floating point data.
  * It contains member functions for accessing this data and for performing 
  * elementary computations on the data.
  * The data block is "owned" by the class, meaning that the class is 

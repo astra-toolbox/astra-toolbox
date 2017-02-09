@@ -166,55 +166,6 @@ public:
 
 
 
-	/** Fetch a COPY of a projection of the data.  Note that if you update the 2D data slice, the data in the 
-	 * 3D data object will remain unaltered.  To copy the data back in the 3D-volume you must return the data by calling 'returnProjection'.
-	 *
-	 * @param _iProjectionNr projection number
-	 * @return Volume data object
-	 */
-	virtual CFloat32VolumeData2D* fetchProjection(int _iProjectionNr) const;
-	
-	/** Return a projection slice to the 3D data.  The data will be deleted. If the slice was fetched with 
-	 * 'fetchProjection', the data will be stored first. 
-	 *
-	 * @param _iProjectionNr projection number
-	 * @param _pProjection 2D Projection image
-	 */
-	virtual void returnProjection(int _iProjectionNr, CFloat32VolumeData2D* _pProjection);
-
-	/** Fetch a COPY of a sinogram slice of the data.  Note that if you update the 2D data slice, the data in the 
-	 * 3D data object will remain unaltered.  To copy the data back in the 3D-volume you must return the data by calling 'returnSlice'.
-	 *
-	 * @param _iSliceNr slice number
-	 * @return Sinogram data object
-	 */
-	virtual CFloat32ProjectionData2D* fetchSinogram(int _iSliceNr) const;
-
-	/** This SLOW function returns a detector value stored a specific index in the array.
-	 *  Reading values in this way might cause a lot of unnecessary memory operations, don't
-	 *  use it in time-critical code.
-	 * 
-	 *  @param _iIndex Index in the array if the data were stored completely in main memory
-	 *  @return The value the location specified by _iIndex
-	 */
-	virtual float32 getDetectorValue(int _iIndex);
-
-	/** This SLOW function stores a detector value at a specific index in the array.
-	 *  Writing values in this way might cause a lot of unnecessary memory operations, don't
-	 *  use it in time-critical code.
-	 * 
-	 *  @param _iIndex Index in the array if the data were stored completely in main memory
-	 *  @param _fValue The value to be stored at the location specified by _iIndex
-	 */
-	virtual void setDetectorValue(int _iIndex, float32 _fValue);
-
-	/** Return a sinogram slice to the 3d data.  The data will be stored in the 3D Data object.
-	 *
-	 * @param _iSliceNr slice number
-	 * @param _pSinogram2D 2D Sinogram Object.
-	 */
-	virtual void returnSinogram(int _iSliceNr, CFloat32ProjectionData2D* _pSinogram2D);
-
 	/** Which type is this class?
 	 *
 	 * @return DataType: PROJECTION 

@@ -36,12 +36,20 @@ IF HAVE_CUDA==True:
 
     cdef extern from "astra/CompositeGeometryManager.h" namespace "astra":
         cdef cppclass CCompositeGeometryManager:
-            bool doFP(CProjector3D *, vector[CFloat32VolumeData3DMemory *], vector[CFloat32ProjectionData3DMemory *])
-            bool doBP(CProjector3D *, vector[CFloat32VolumeData3DMemory *], vector[CFloat32ProjectionData3DMemory *])
+            bool doFP(CProjector3D *, vector[CFloat32VolumeData3D *], vector[CFloat32ProjectionData3D *])
+            bool doBP(CProjector3D *, vector[CFloat32VolumeData3D *], vector[CFloat32ProjectionData3D *])
 
     cdef extern from *:
-        CFloat32VolumeData3DMemory * dynamic_cast_vol_mem "dynamic_cast<astra::CFloat32VolumeData3DMemory*>" (CFloat32Data3D * ) except NULL
-        CFloat32ProjectionData3DMemory * dynamic_cast_proj_mem "dynamic_cast<astra::CFloat32ProjectionData3DMemory*>" (CFloat32Data3D * ) except NULL
+        CFloat32VolumeData3D * dynamic_cast_vol_mem "dynamic_cast<astra::CFloat32VolumeData3D*>" (CFloat32Data3D * ) except NULL
+        CFloat32ProjectionData3D * dynamic_cast_proj_mem "dynamic_cast<astra::CFloat32ProjectionData3D*>" (CFloat32Data3D * ) except NULL
+
+    cdef extern from "astra/Float32ProjectionData3D.h" namespace "astra":
+        cdef cppclass CFloat32ProjectionData3D:
+            bool isInitialized()
+    cdef extern from "astra/Float32VolumeData3D.h" namespace "astra":
+        cdef cppclass CFloat32VolumeData3D:
+            bool isInitialized()
+
 
     cimport PyProjector3DManager
     from .PyProjector3DManager cimport CProjector3DManager
@@ -52,9 +60,9 @@ IF HAVE_CUDA==True:
     cdef CData3DManager * man3d = <CData3DManager * >PyData3DManager.getSingletonPtr()
 
     def do_composite(projector_id, vol_ids, proj_ids, t):
-        cdef vector[CFloat32VolumeData3DMemory *] vol
-        cdef CFloat32VolumeData3DMemory * pVolObject
-        cdef CFloat32ProjectionData3DMemory * pProjObject
+        cdef vector[CFloat32VolumeData3D *] vol
+        cdef CFloat32VolumeData3D * pVolObject
+        cdef CFloat32ProjectionData3D * pProjObject
         for v in vol_ids:
             pVolObject = dynamic_cast_vol_mem(man3d.get(v))
             if pVolObject == NULL:
@@ -62,7 +70,7 @@ IF HAVE_CUDA==True:
             if not pVolObject.isInitialized():
                 raise Exception("Data object not initialized properly")
             vol.push_back(pVolObject)
-        cdef vector[CFloat32ProjectionData3DMemory *] proj
+        cdef vector[CFloat32ProjectionData3D *] proj
         for v in proj_ids:
             pProjObject = dynamic_cast_proj_mem(man3d.get(v))
             if pProjObject == NULL:

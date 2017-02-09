@@ -60,8 +60,8 @@ CCudaBackProjectionAlgorithm3D::CCudaBackProjectionAlgorithm3D()
 //----------------------------------------------------------------------------------------
 // Constructor with initialization
 CCudaBackProjectionAlgorithm3D::CCudaBackProjectionAlgorithm3D(CProjector3D* _pProjector, 
-								   CFloat32ProjectionData3DMemory* _pProjectionData, 
-								   CFloat32VolumeData3DMemory* _pReconstruction)
+								   CFloat32ProjectionData3D* _pProjectionData, 
+								   CFloat32VolumeData3D* _pReconstruction)
 {
 	_clear();
 	initialize(_pProjector, _pProjectionData, _pReconstruction);
@@ -145,8 +145,8 @@ bool CCudaBackProjectionAlgorithm3D::initialize(const Config& _cfg)
 //----------------------------------------------------------------------------------------
 // Initialize - C++
 bool CCudaBackProjectionAlgorithm3D::initialize(CProjector3D* _pProjector, 
-								  CFloat32ProjectionData3DMemory* _pSinogram, 
-								  CFloat32VolumeData3DMemory* _pReconstruction)
+								  CFloat32ProjectionData3D* _pSinogram, 
+								  CFloat32VolumeData3D* _pReconstruction)
 {
 	// if already initialized, clear first
 	if (m_bIsInitialized) {
@@ -187,17 +187,21 @@ void CCudaBackProjectionAlgorithm3D::run(int _iNrIterations)
 	// check initialized
 	ASTRA_ASSERT(m_bIsInitialized);
 
-	CFloat32ProjectionData3DMemory* pSinoMem = dynamic_cast<CFloat32ProjectionData3DMemory*>(m_pSinogram);
+	CFloat32ProjectionData3D* pSinoMem = dynamic_cast<CFloat32ProjectionData3D*>(m_pSinogram);
 	ASTRA_ASSERT(pSinoMem);
-	CFloat32VolumeData3DMemory* pReconMem = dynamic_cast<CFloat32VolumeData3DMemory*>(m_pReconstruction);
+	CFloat32VolumeData3D* pReconMem = dynamic_cast<CFloat32VolumeData3D*>(m_pReconstruction);
 	ASTRA_ASSERT(pReconMem);
 
 	const CProjectionGeometry3D* projgeom = pSinoMem->getGeometry();
 	const CVolumeGeometry3D& volgeom = *pReconMem->getGeometry();
 
 	if (m_bSIRTWeighting) {
-		astraCudaBP_SIRTWeighted(pReconMem->getData(),
-		                         pSinoMem->getDataConst(),
+		CFloat32ProjectionData3DMemory* pSinoMemory = dynamic_cast<CFloat32ProjectionData3DMemory*>(m_pSinogram);
+		ASTRA_ASSERT(pSinoMemory);
+		CFloat32VolumeData3DMemory* pReconMemory = dynamic_cast<CFloat32VolumeData3DMemory*>(m_pReconstruction);
+		ASTRA_ASSERT(pReconMemory);
+		astraCudaBP_SIRTWeighted(pReconMemory->getData(),
+		                         pSinoMemory->getDataConst(),
 		                         &volgeom, projgeom,
 		                         m_iGPUIndex, m_iVoxelSuperSampling);
 	} else {

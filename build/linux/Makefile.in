@@ -199,7 +199,10 @@ CUDA_CXX_OBJECTS=\
 	src/CudaFDKAlgorithm3D.lo \
 	src/CudaSirtAlgorithm3D.lo \
 	src/CudaBackProjectionAlgorithm3D.lo \
-	src/CudaForwardProjectionAlgorithm3D.lo
+	src/CudaForwardProjectionAlgorithm3D.lo \
+	src/Float32Data3DGPU.lo \
+	src/Float32ProjectionData3DGPU.lo \
+	src/Float32VolumeData3DGPU.lo
 
 CUDA_OBJECTS=\
 	cuda/2d/algo.lo \

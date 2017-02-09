@@ -34,7 +34,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 namespace astra {
 
 /** 
- * This class represents a three-dimensional block of float32ing point data.
+ * This class represents a 3-dimensional block of 32-bit floating point data.
  * It contains member functions for accessing this data and for performing 
  * elementary computations on the data.
  * The data block is "owned" by the class, meaning that the class is 
@@ -106,8 +106,8 @@ protected:
 	 * This function does not set m_bInitialized to true if everything is ok.
 	 *
 	 * @param _iWidth width of the 3D data (x-axis), must be > 0
-	 * @param _iHeight height of the 3D data (y-axis), must be > 0 
-	 * @param _iDepth depth of the 3D data (z-axis), must be > 0 
+	 * @param _iHeight height of the 3D data (y-axis), must be > 0
+	 * @param _iDepth depth of the 3D data (z-axis), must be > 0
 	 * @return initialization of the base class successfull
 	 */
 	bool _initialize(int _iWidth, int _iHeight, int _iDepth);
@@ -121,9 +121,9 @@ protected:
 	 * object is reinitialized and memory is freed and reallocated if necessary.
 	 * This function does not set m_bInitialized to true if everything is ok.
 	 *
-	 * @param _iWidth width of the 2D data (x-axis), must be > 0
-	 * @param _iHeight height of the 2D data (y-axis), must be > 0 
-	 * @param _iDepth depth of the 2D data (z-axis), must be > 0 
+	 * @param _iWidth width of the 3D data (x-axis), must be > 0
+	 * @param _iHeight height of the 3D data (y-axis), must be > 0
+	 * @param _iDepth depth of the 3D data (z-axis), must be > 0
 	 * @param _pfData pointer to a one-dimensional float32 data block
 	 * @return initialization of the base class successfull
 	 */
@@ -138,9 +138,9 @@ protected:
 	 * object is reinitialized and memory is freed and reallocated if necessary.
 	 * This function does not set m_bInitialized to true if everything is ok.
 	 *
-	 * @param _iWidth width of the 2D data (x-axis), must be > 0
-	 * @param _iHeight height of the 2D data (y-axis), must be > 0 
-	 * @param _iDepth depth of the 2D data (z-axis), must be > 0 
+	 * @param _iWidth width of the 3D data (x-axis), must be > 0
+	 * @param _iHeight height of the 3D data (y-axis), must be > 0
+	 * @param _iDepth depth of the 3D data (z-axis), must be > 0
 	 * @param _fScalar scalar value to fill the data
 	 * @return initialization of the base class successfull
 	 */
@@ -157,9 +157,9 @@ protected:
 	 * object is reinitialized and memory is freed and reallocated if necessary.
 	 * This function does not set m_bInitialized to true if everything is ok.
 	 *
-	 * @param _iWidth width of the 2D data (x-axis), must be > 0
-	 * @param _iHeight height of the 2D data (y-axis), must be > 0 
-	 * @param _iDepth depth of the 2D data (z-axis), must be > 0 
+	 * @param _iWidth width of the 3D data (x-axis), must be > 0
+	 * @param _iHeight height of the 3D data (y-axis), must be > 0
+	 * @param _iDepth depth of the 3D data (z-axis), must be > 0
 	 * @param _pCustomMemory the custom memory handle
 	 */
 
@@ -237,34 +237,10 @@ public:
 	 * After the call p = getData3D(), use p[iy][ix] to access element (ix, iy, iz).
 	 * The data memory and pointer array are still "owned" by the CFloat32Data3DMemory 
 	 * instance; this memory may NEVER be freed by the caller of this function. 
-	 * If changes are made to this data, the function updateStatistics() 
-	 * should be called after completion of all changes. 
 	 *
 	 * @return pointer to the 3-dimensional 32-bit floating point data block
  	 */
 	const float32*** getData3DConst() const;
-
-	/** Update data statistics, such as minimum and maximum value, after the data has been modified. 
-	 */
-	virtual void updateStatistics();
-
-	/** Get the minimum value in the data block.
-	 * If the data has been changed after construction, the function
-	 * updateStatistics() must be called at least once before 
-	 * a query can be made on this value.
-	 *
-	 * @return minimum value in the data block
-	 */
-	virtual float32 getGlobalMin() const;
-
-	/** Get the maximum value in the data block
-	 * If the data has been changed after construction, the function
-	 * updateStatistics() must be called at least once before 
-	 * a query can be made on this value.
-	 *
-	 * @return maximum value in the data block
-	 */
-	virtual float32 getGlobalMax() const;
 
 	/** which type is this class?
 	 *
@@ -306,26 +282,11 @@ inline CFloat32Data3DMemory::EDataType CFloat32Data3DMemory::getType() const
 }
 
 //----------------------------------------------------------------------------------------
-// Get the minimum value in the data block.
-inline float32 CFloat32Data3DMemory::getGlobalMin() const
-{
-	ASTRA_ASSERT(m_bInitialized);
-	return m_fGlobalMin;
-}
-
-//----------------------------------------------------------------------------------------
-// Get the maximum value in the data block
-inline float32 CFloat32Data3DMemory::getGlobalMax() const
-{
-	ASTRA_ASSERT(m_bInitialized);
-	return m_fGlobalMax;
-}
-
-//----------------------------------------------------------------------------------------
 // Get a pointer to the data block, represented as a 1-dimensional array of float32 values.
 inline float32* CFloat32Data3DMemory::getData()
 {
 	ASTRA_ASSERT(m_bInitialized);
+
 	return m_pfData;
 }
 
@@ -334,6 +295,7 @@ inline float32* CFloat32Data3DMemory::getData()
 inline const float32* CFloat32Data3DMemory::getDataConst() const
 {
 	ASTRA_ASSERT(m_bInitialized);
+
 	return (const float32*)m_pfData;
 }
 
