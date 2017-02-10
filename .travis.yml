@@ -1,7 +1,4 @@
-language: python
-
-python:
-  - "3.5"
+language: generic
 
 os:
   - osx
@@ -25,18 +22,14 @@ before_install:
     else
       export CARCH=Linux;
     fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda-latest-$CARCH-x86_64.sh -O miniconda.sh;
-    else
-      wget https://repo.continuum.io/miniconda/Miniconda3-latest-$CARCH-x86_64.sh -O miniconda.sh;
-    fi
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-$CARCH-x86_64.sh -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - conda config --set always_yes yes --set changeps1 no
   - conda update conda
 
 install:
-  - conda install python=$TRAVIS_PYTHON_VERSION six numpy scipy cython
+  - conda install python=3.5 six numpy scipy cython
   - if [ `uname` == "Darwin" ]; then
       conda install boost libtool automake autoconf;
     fi
