@@ -1,11 +1,10 @@
 language: python
 
 python:
-  - "2.7"
   - "3.5"
 
 os:
-  - linux
+  - osx
 
 sudo: false
 
@@ -18,16 +17,7 @@ addons:
       - nvidia-cuda-toolkit
       - nvidia-cuda-dev
 env:
-    - CUDA=yes
-    - CUDA=no
-
-matrix:
-  include:
-    - env: CUDA=no CLANG=yes
-      python: "3.5"
-    - os: osx
-      python: "3.5"
-      env: CUDA=no CLANG=no
+    - CUDA=no CLANG=no
 
 before_install:
   - if [ `uname` == "Darwin" ]; then
