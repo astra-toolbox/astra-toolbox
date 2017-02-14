@@ -99,7 +99,7 @@ bool SIRT::init()
 
 	allocateProjectionData(D_projData, projPitch, dims);
 	zeroProjectionData(D_projData, projPitch, dims);
-	
+
 	allocateProjectionData(D_lineWeight, linePitch, dims);
 	zeroProjectionData(D_lineWeight, linePitch, dims);
 
@@ -359,7 +359,7 @@ int main()
 	allocateVolume(D_sinoData, dims.iProjDets, dims.iProjAngles, sinoPitch);
 	zeroVolume(D_sinoData, sinoPitch, dims.iProjDets, dims.iProjAngles);
 	printf("pitch: %u\n", sinoPitch);
-	
+
 	unsigned int y, x;
 	float* sino = loadImage("sino.png", y, x);
 

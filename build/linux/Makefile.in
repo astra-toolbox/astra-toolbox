@@ -193,6 +193,7 @@ CUDA_CXX_OBJECTS=\
 	src/CudaForwardProjectionAlgorithm.lo \
 	src/CudaSartAlgorithm.lo \
 	src/CudaSirtAlgorithm.lo \
+	src/CudaTVAlgorithm.lo \
 	src/CudaCglsAlgorithm.lo \
 	src/CudaCglsAlgorithm3D.lo \
 	src/CudaEMAlgorithm.lo \
@@ -219,6 +220,7 @@ CUDA_OBJECTS=\
 	cuda/2d/arith.lo \
 	cuda/2d/fft.lo \
 	cuda/2d/darthelper.lo \
+	cuda/2d/tv.lo \
 	cuda/3d/darthelper3d.lo \
 	cuda/3d/algo3d.lo \
 	cuda/3d/cgls3d.lo \
