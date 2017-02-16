@@ -219,10 +219,10 @@ namespace typelist {
 	template <typename Base>
 	struct functor_find {
 		functor_find() { res = NULL; }
-		bool operator() (string name) { 
+		bool operator() (std::string name) {
 			return strcmp(tofind.c_str(), name.c_str()) == 0;
 		} 
-		string tofind;
+		std::string tofind;
 		Base* res;
 	};
 

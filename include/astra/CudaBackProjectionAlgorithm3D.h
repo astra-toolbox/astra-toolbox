@@ -106,7 +106,7 @@ public:
 	 *
 	 * @return map with all boost::any object
 	 */
-	virtual map<string,boost::any> getInformation();
+	virtual std::map<std::string,boost::any> getInformation();
 
 	/** Get a single piece of information represented as a boost::any
 	 *
