@@ -31,9 +31,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "Projector2D.h"
 #include "TypeList.h"
 
-using namespace astra;
-using namespace astra::typelist;
-
 // Projector2D
 #include "Projector2D.h"
 #include "ParallelBeamLineKernelProjector2D.h"
@@ -43,10 +40,11 @@ using namespace astra::typelist;
 #include "SparseMatrixProjector2D.h"
 #include "FanFlatBeamLineKernelProjector2D.h"
 #include "FanFlatBeamStripKernelProjector2D.h"
+#include "CudaProjector2D.h"
+
+namespace astra{
 
 #ifdef ASTRA_CUDA
-#include "CudaProjector2D.h"
-namespace astra{
 
 	typedef TYPELIST_8(
 				CFanFlatBeamLineKernelProjector2D,
@@ -58,13 +56,9 @@ namespace astra{
 				CSparseMatrixProjector2D,
 				CCudaProjector2D)
 		Projector2DTypeList;
-}
-
-
 
 #else
 
-namespace astra{
 	typedef TYPELIST_7(
 				CFanFlatBeamLineKernelProjector2D,
 				CFanFlatBeamStripKernelProjector2D,
@@ -74,30 +68,29 @@ namespace astra{
 				CParallelBeamStripKernelProjector2D, 
 				CSparseMatrixProjector2D)
 		Projector2DTypeList;
-}
 
 #endif
 
+}
+
 // Projector3D
 #include "Projector3D.h"
+#include "CudaProjector3D.h"
+
+namespace astra {
 
 #ifdef ASTRA_CUDA
 
-#include "CudaProjector3D.h"
-namespace astra {
 	typedef TYPELIST_1(
 				CCudaProjector3D
 			)
 			Projector3DTypeList;
-}
-
 #else
 
-namespace astra {
 	typedef TYPELIST_0 Projector3DTypeList;
-}
 
 #endif
 
+}
 
 #endif

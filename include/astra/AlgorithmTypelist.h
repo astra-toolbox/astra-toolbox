@@ -55,12 +55,11 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "CudaDartSmoothingAlgorithm3D.h"
 #include "CudaDataOperationAlgorithm.h"
 #include "CudaRoiSelectAlgorithm.h"
+#include "CudaFilteredBackProjectionAlgorithm.h"
 
-using namespace astra;
+namespace astra {
 
 #ifdef ASTRA_CUDA
-
-#include "CudaFilteredBackProjectionAlgorithm.h"
 
 typedef TYPELIST_25(
 			CArtAlgorithm,
@@ -90,6 +89,7 @@ typedef TYPELIST_25(
 			CCudaBackProjectionAlgorithm3D
 			)
 	AlgorithmTypeList;
+
 #else
 
 typedef TYPELIST_7(
@@ -103,5 +103,7 @@ typedef TYPELIST_7(
 			) AlgorithmTypeList;
 
 #endif
+
+}
 
 #endif
