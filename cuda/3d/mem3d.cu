@@ -253,6 +253,9 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, con
 		}
 	}
 
+	delete[] pParProjs;
+	delete[] pConeProjs;
+
 	return ok;
 }
 
@@ -283,6 +286,9 @@ bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, con
 	else
 		ok &= ConeBP(volData.d->ptr, projData.d->ptr, dims, pConeProjs, params);
 
+	delete[] pParProjs;
+	delete[] pConeProjs;
+
 	return ok;
 
 }
@@ -303,10 +309,16 @@ bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, co
 	                          pParProjs, pConeProjs,
 	                          params);
 
-	if (!ok || !pConeProjs)
+	if (!ok || !pConeProjs) {
+		delete[] pParProjs;
+		delete[] pConeProjs;
 		return false;
+	}
 
 	ok &= FDK(volData.d->ptr, projData.d->ptr, pConeProjs, dims, params, bShortScan, pfFilter);
+
+	delete[] pParProjs;
+	delete[] pConeProjs;
 
 	return ok;
 
