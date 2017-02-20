@@ -1,11 +1,7 @@
-language: python
-
-python:
-  - "2.7"
-  - "3.5"
+language: generic
 
 os:
-  - linux
+  - osx
 
 sudo: false
 
@@ -18,27 +14,25 @@ addons:
       - nvidia-cuda-toolkit
       - nvidia-cuda-dev
 env:
-    - CUDA=yes
-    - CUDA=no
-
-matrix:
-  include:
-    - env: CUDA=no CLANG=yes
-      python: "3.5"
+    - CUDA=no CLANG=no
 
 before_install:
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
+  - if [ `uname` == "Darwin" ]; then
+      export CARCH=MacOSX;
     else
-      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+      export CARCH=Linux;
     fi
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-$CARCH-x86_64.sh -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - conda config --set always_yes yes --set changeps1 no
   - conda update conda
 
 install:
-  - conda install python=$TRAVIS_PYTHON_VERSION six numpy scipy cython
+  - conda install python=3.5 six numpy scipy cython
+  - if [ `uname` == "Darwin" ]; then
+      conda install boost libtool automake autoconf;
+    fi
   - conda info -a
   - cd build/linux
   - ./autogen.sh

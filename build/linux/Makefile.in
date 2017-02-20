@@ -4,6 +4,7 @@ cuda=@HAVECUDA@
 matlab=@HAVEMATLAB@
 python=@HAVEPYTHON@
 boostutf=@HAVEBOOSTUTF@
+macos=@IS_MACOS@
 
 MATLAB_ROOT=@MATLAB_ROOT@
 octave=@HAVEOCTAVE@
@@ -49,7 +50,8 @@ CXXFLAGS+=-g -O3 -Wall -Wshadow
 LIBS+=-lpthread
 LDFLAGS+=-g
 
-CPPFLAGS+=@CPPFLAGS_OS@
+CXXFLAGS+=@CXXFLAGS_OS@
+LDFLAGS+=@LDFLAGS_OS@
 
 BOOSTUTF_LIBS=@LIBS_BOOSTUTF@
 
@@ -64,8 +66,10 @@ endif
 ifeq ($(matlab),yes)
 # TODO: Do we also want -fopenmp for octave?
 CPPFLAGS+=-I$(MATLAB_ROOT)/extern/include -DMATLAB_MEX_FILE
+ifeq ($(macos),no)
 CXXFLAGS+=-fopenmp
 LDFLAGS+=-fopenmp
+endif
 endif
 
 # MODLDFLAGS are the base LDFLAGS for matlab, octave, python modules
@@ -301,6 +305,12 @@ mex: $(MATLAB_MEX)
 
 %.$(MEXSUFFIX): %.o $(MATLAB_CXX_OBJECTS) libastra.la
 	$(MEX) LDFLAGS="$(MEXLDFLAGS)" $(MEXFLAGS) $(LIBS) $(MEXLIBS) -lastra -output $* $*.o $(MATLAB_CXX_OBJECTS)
+ifeq ($(install_type),module)
+ifeq ($(macos),yes)
+	@# tell macOS dynamic loader to look in mex directory for libastra.0.dylib
+	install_name_tool -change `otool -DX .libs/$(SONAME)` @loader_path/$(SONAME) $@
+endif
+endif
 
 ifeq ($(python),yes)
 matlab/mex/astra_mex_plugin_c.$(MEXSUFFIX): matlab/mex/astra_mex_plugin_c.o $(MATLAB_CXX_OBJECTS) libastra.la

@@ -102,14 +102,7 @@ if test x"$NVCC" != xno; then
   HAVECUDA=yes
   BACKUP_CUDA_LDFLAGS="$LDFLAGS"
   if test x"$with_cuda" != x -a x"$with_cuda" != xyes; then
-    case $host_cpu in
-    x86_64)
-      LDFLAGS_CUDA="-L$with_cuda/lib64"
-      ;;
-    *)
-      LDFLAGS_CUDA="-L$with_cuda/lib"
-      ;;
-    esac
+    test -d $with_cuda/lib64 && LDFLAGS_CUDA="-L$with_cuda/lib64" || LDFLAGS_CUDA="-L$with_cuda/lib"
     CPPFLAGS_CUDA="-I$with_cuda/include"
     LDFLAGS="$LDFLAGS $LDFLAGS_CUDA"
   fi
@@ -257,14 +250,20 @@ AC_SUBST(HAVEPYTHON)
 AC_CANONICAL_HOST
 case $host_os in
   darwin* )
-        CPPFLAGS_OS="-stdlib=libstdc++ -mmacosx-version-min=10.6"
+        CXXFLAGS_OS="-stdlib=libstdc++ -mmacosx-version-min=10.6"
+        LDFLAGS_OS="-stdlib=libstdc++"
+        IS_MACOS=yes
         ;;
     *)
-        CPPFLAGS_OS=""
+        CXXFLAGS_OS=""
+        LDFLAGS_OS=""
+        IS_MACOS=no
         ;;
 esac
 
-AC_SUBST(CPPFLAGS_OS)
+AC_SUBST(CXXFLAGS_OS)
+AC_SUBST(LDFLAGS_OS)
+AC_SUBST(IS_MACOS)
 
 # For some reason, some older versions of autoconf produce a config.status
 # that disables all lines looking like VPATH=@srcdir@

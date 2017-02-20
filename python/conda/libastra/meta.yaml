@@ -16,6 +16,10 @@ build:
 requirements:
   build:
     - vs2015_runtime # [win]
+    - boost # [osx]
+    - automake # [osx]
+    - autoconf # [osx]
+    - libtool # [osx]
 
   run:
     - vs2015_runtime # [win]
