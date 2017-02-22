@@ -100,10 +100,19 @@ void astra_mex_set_gpu_index(int nlhs, mxArray* plhs[], int nrhs, const mxArray*
 
 	if (!usage && nrhs >= 4) {
 		std::string s = mexToString(prhs[2]);
-		if (s != "memory") {
-			usage = true;
-		} else {
+		if (s == "memory") {
 			params.memory = (size_t)mxGetScalar(prhs[3]);
+		} else if (s == "distribution") {
+			std::string d = mexToString(prhs[3]);
+			if (d == "force_split") {
+				params.distrib = astra::FORCE_SPLIT;
+			} else if (d == "avoid_split") {
+				params.distrib = astra::TRY_AVOID_SPLIT;
+			} else {
+				usage = true;
+			}
+		} else {
+			usage = true;
 		}
 	}
 
@@ -127,7 +136,8 @@ void astra_mex_set_gpu_index(int nlhs, mxArray* plhs[], int nrhs, const mxArray*
 	}
 
 	if (usage) {
-		mexPrintf("Usage: astra_mex('set_gpu_index', index/indices [, 'memory', memory])");
+		mexPrintf("Usage: astra_mex('set_gpu_index', index/indices [, 'memory', memory])\n");
+		mexPrintf("   or: astra_mex('set_gpu_index', index/indices [, 'distribution', 'force_split' or 'avoid_split'])");
 	}
 #endif
 }

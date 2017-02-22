@@ -67,6 +67,9 @@ CCompositeGeometryManager::CCompositeGeometryManager()
 	if (s_params) {
 		m_iMaxSize = s_params->memory;
 		m_GPUIndices = s_params->GPUIndices;
+		e_distrib = s_params->distrib;
+	} else {
+		e_distrib = TRY_AVOID_SPLIT;
 	}
 }
 
@@ -1668,7 +1671,7 @@ bool CCompositeGeometryManager::doJobs(TJobList &jobs)
 
 	maxSize /= sizeof(float);
 	int div = 1;
-	if (!m_GPUIndices.empty() && jobset.size() <= 1)
+	if (!m_GPUIndices.empty() && (jobset.size() <= 1 || e_distrib == FORCE_SPLIT))
 		div = m_GPUIndices.size();
 
 	// Split jobs to fit
