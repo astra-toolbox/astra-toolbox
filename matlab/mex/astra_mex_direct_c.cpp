@@ -48,10 +48,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/Float32ProjectionData3DMemory.h"
 #include "astra/Float32VolumeData3DMemory.h"
 
-#include "astra/CudaForwardProjectionAlgorithm3D.h"
-
-#include "astra/CudaBackProjectionAlgorithm3D.h"
-
 #include "astra/CompositeGeometryManager.h"
 
 #define USE_MATLAB_UNDOCUMENTED
