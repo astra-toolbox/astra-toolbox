@@ -51,6 +51,7 @@ class CProjector3D;
 
 enum EGPUJobDistribution {
 	TRY_AVOID_SPLIT,
+	FORCE_AVOID_SPLIT,
 	FORCE_SPLIT,
 };
 

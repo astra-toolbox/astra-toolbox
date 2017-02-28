@@ -1671,7 +1671,9 @@ bool CCompositeGeometryManager::doJobs(TJobList &jobs)
 
 	maxSize /= sizeof(float);
 	int div = 1;
-	if (!m_GPUIndices.empty() && (jobset.size() <= 1 || e_distrib == FORCE_SPLIT))
+	if (!m_GPUIndices.empty()
+			&& (jobset.size() <= 1 || e_distrib == FORCE_SPLIT)
+			&& (e_distrib != FORCE_AVOID_SPLIT) )
 		div = m_GPUIndices.size();
 
 	// Split jobs to fit
@@ -1679,7 +1681,7 @@ bool CCompositeGeometryManager::doJobs(TJobList &jobs)
 	splitJobs(jobset, maxSize, div, split);
 	jobset.clear();
 
-	if (m_GPUIndices.size() <= 1) {
+	if (m_GPUIndices.size() <= 1 || split.size() <= 1) {
 
 		// Run jobs
 		ASTRA_DEBUG("Running single-threaded");

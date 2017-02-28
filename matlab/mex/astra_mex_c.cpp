@@ -97,6 +97,7 @@ void astra_mex_set_gpu_index(int nlhs, mxArray* plhs[], int nrhs, const mxArray*
 
 	astra::SGPUParams params;
 	params.memory = 0;
+	params.distrib = astra::TRY_AVOID_SPLIT;
 
 	if (!usage && nrhs >= 4) {
 		std::string s = mexToString(prhs[2]);
@@ -106,8 +107,10 @@ void astra_mex_set_gpu_index(int nlhs, mxArray* plhs[], int nrhs, const mxArray*
 			std::string d = mexToString(prhs[3]);
 			if (d == "force_split") {
 				params.distrib = astra::FORCE_SPLIT;
-			} else if (d == "avoid_split") {
+			} else if (d == "try_avoid_split") {
 				params.distrib = astra::TRY_AVOID_SPLIT;
+			} else if (d == "force_avoid_split") {
+				params.distrib = astra::FORCE_AVOID_SPLIT;
 			} else {
 				usage = true;
 			}
