@@ -533,7 +533,7 @@ def create_reconstruction(rec_type, proj_id, sinogram, iterations=1, use_mask='n
         return recon_id
 
 
-def create_projector(proj_type, proj_geom, vol_geom):
+def create_projector(proj_type, proj_geom, vol_geom, options=None):
     """Create a 2D or 3D projector.
 
 :param proj_type: Projector type, such as ``'line'``, ``'linear'``, ...
@@ -542,6 +542,7 @@ def create_projector(proj_type, proj_geom, vol_geom):
 :type proj_geom: :class:`dict`
 :param vol_geom: Volume geometry.
 :type vol_geom: :class:`dict`
+:param options: Projector options structure defining ``'VoxelSuperSampling'``, ``'DetectorSuperSampling'``, and ``'GPUindex'``.
 :returns: :class:`int` -- The ID of the projector.
 
 """
@@ -550,6 +551,8 @@ def create_projector(proj_type, proj_geom, vol_geom):
     cfg = astra_dict(proj_type)
     cfg['ProjectionGeometry'] = proj_geom
     cfg['VolumeGeometry'] = vol_geom
+    if options is not None:
+        cfg['options'] = options
     types3d = ['linear3d', 'linearcone', 'cuda3d']
     if proj_type in types3d:
         return projector3d.create(cfg)
