@@ -90,45 +90,43 @@ void astra_mex_use_cuda(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs
 void astra_mex_set_gpu_index(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 #ifdef ASTRA_CUDA
-	bool usage = false;
-	if (nrhs != 2 && nrhs != 4) {
-		usage = true;
-	}
+	bool usage = (nrhs > 6 || nrhs < 2 || (nrhs % 2 == 1));
 
-	astra::SGPUParams params;
-	params.memory = 0;
-	params.distrib = astra::TRY_AVOID_SPLIT;
+	if (!usage) {
+		// If the parameters were not already set, we will get the defaults
+		astra::SGPUParams params = astra::CCompositeGeometryManager::getGlobalGPUParams();
 
-	if (!usage && nrhs >= 4) {
-		std::string s = mexToString(prhs[2]);
-		if (s == "memory") {
-			params.memory = (size_t)mxGetScalar(prhs[3]);
-		} else if (s == "distribution") {
-			std::string d = mexToString(prhs[3]);
-			if (d == "force_split") {
-				params.distrib = astra::FORCE_SPLIT;
-			} else if (d == "try_avoid_split") {
-				params.distrib = astra::TRY_AVOID_SPLIT;
-			} else if (d == "force_avoid_split") {
-				params.distrib = astra::FORCE_AVOID_SPLIT;
+		for (size_t option = 2; option < nrhs; option += 2) {
+			std::string s = mexToString(prhs[option]);
+			const mxArray * const mxOptVal = prhs[option+1];
+
+			if (s == "memory") {
+				params.memory = (size_t)mxGetScalar(mxOptVal);
+			} else if (s == "distribution") {
+				std::string d = mexToString(mxOptVal);
+				if (d == "force_split") {
+					params.distrib = astra::FORCE_SPLIT;
+				} else if (d == "try_avoid_split") {
+					params.distrib = astra::TRY_AVOID_SPLIT;
+				} else if (d == "force_avoid_split") {
+					params.distrib = astra::FORCE_AVOID_SPLIT;
+				} else {
+					usage = true;
+					break;
+				}
 			} else {
 				usage = true;
+				break;
 			}
-		} else {
-			usage = true;
 		}
-	}
 
-	if (!usage && nrhs >= 2) {
-		int n = mxGetN(prhs[1]) * mxGetM(prhs[1]);
+		int n = mxGetNumberOfElements(prhs[1]);
 		params.GPUIndices.resize(n);
 		double* pdMatlabData = mxGetPr(prhs[1]);
 		for (int i = 0; i < n; ++i)
 			params.GPUIndices[i] = (int)pdMatlabData[i];
 
-
 		astra::CCompositeGeometryManager::setGlobalGPUParams(params);
-
 
 		// Set first GPU
 		if (n >= 1) {
@@ -139,8 +137,8 @@ void astra_mex_set_gpu_index(int nlhs, mxArray* plhs[], int nrhs, const mxArray*
 	}
 
 	if (usage) {
-		mexPrintf("Usage: astra_mex('set_gpu_index', index/indices [, 'memory', memory])\n");
-		mexPrintf("   or: astra_mex('set_gpu_index', index/indices [, 'distribution', 'force_split' or 'avoid_split'])");
+		mexPrintf("Usage: astra_mex('set_gpu_index', index/indices [, 'memory', memory, 'distribution', distribution])\n");
+		mexPrintf("where: 'distribution' can be one one of {'force_split' | 'try_avoid_split' | 'force_avoid_split'}\n");
 	}
 #endif
 }

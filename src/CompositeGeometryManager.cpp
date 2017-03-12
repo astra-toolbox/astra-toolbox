@@ -1727,6 +1727,18 @@ void CCompositeGeometryManager::setGlobalGPUParams(const SGPUParams& params)
 	ASTRA_DEBUG("Memory: %llu", params.memory);
 }
 
+SGPUParams CCompositeGeometryManager::getGlobalGPUParams()
+{
+	if (s_params) {
+		return *s_params;
+	} else {
+		SGPUParams params;
+		params.GPUIndices.push_back(-1);
+		params.memory = 0;
+		params.distrib = TRY_AVOID_SPLIT;
+		return params;
+	}
+}
 
 }
 

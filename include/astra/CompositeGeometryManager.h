@@ -182,6 +182,7 @@ public:
 	void setGPUIndices(const std::vector<int>& GPUIndices);
 
 	static void setGlobalGPUParams(const SGPUParams& params);
+	static SGPUParams getGlobalGPUParams();
 
 protected:
 
