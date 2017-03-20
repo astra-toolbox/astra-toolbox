@@ -29,12 +29,10 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "mexHelpFunctions.h"
 
-#define HAVE_OMP
-
 #define ROUND_DOWN(x, s) ((x) & ~((s)-1))
 
-#ifdef HAVE_OMP
-#	include <omp.h>
+#ifdef _OPENMP
+#include <omp.h>
 #endif
 
 #if defined(__SSE2__)
