@@ -542,7 +542,8 @@ def create_projector(proj_type, proj_geom, vol_geom, options=None):
 :type proj_geom: :class:`dict`
 :param vol_geom: Volume geometry.
 :type vol_geom: :class:`dict`
-:param options: Projector options structure defining ``'VoxelSuperSampling'``, ``'DetectorSuperSampling'``, and ``'GPUindex'``.
+:param options: Projector options structure defining ``'VoxelSuperSampling'``, ``'DetectorSuperSampling'``.
+:type options: :class:`dict`
 :returns: :class:`int` -- The ID of the projector.
 
 """
