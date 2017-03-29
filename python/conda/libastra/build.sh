@@ -21,6 +21,7 @@ case `uname` in
   Darwin*)
     cp -P $LIBPATH/libcudart.*.dylib $CONDA_PREFIX/lib
     cp -P $LIBPATH/libcufft.*.dylib $CONDA_PREFIX/lib
+    ;;
   *)
     cp -P $LIBPATH/libcudart.so.* $CONDA_PREFIX/lib
     cp -P $LIBPATH/libcufft.so.* $CONDA_PREFIX/lib
