@@ -32,6 +32,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 namespace astraCUDA3d {
 
+
+
 // interpolation routines
 template<float (*texture_lookup)(float,float,float)>
 __device__

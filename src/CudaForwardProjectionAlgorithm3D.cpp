@@ -271,7 +271,7 @@ void CCudaForwardProjectionAlgorithm3D::run(int)
 	assert(m_bIsInitialized);
 
 #if 0   // SCM: This short-cut does not allow to set projKernel to a
-        // non-default value. Thus not deactivated.
+        // non-default value. Thus deactivated.
 	CCompositeGeometryManager cgm;
 
 	cgm.doFP(m_pProjector, m_pVolume, m_pProjections);

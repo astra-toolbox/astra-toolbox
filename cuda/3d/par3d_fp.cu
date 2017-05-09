@@ -33,6 +33,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include <cuda.h>
 #include "util3d.h"
 #include "interp3d.h"
+#include "joseph3d.h"
 
 #ifdef STANDALONE
 #include "testutil.h"
@@ -68,6 +69,7 @@ __constant__ float gC_DetVY[g_MaxAngles];
 __constant__ float gC_DetVZ[g_MaxAngles];
 
 
+
 static bool bindVolumeDataTexture(const cudaArray* array) //, cudaTextureFilterMode filterMode)
 {
 	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
@@ -90,67 +92,6 @@ static bool bindVolumeDataTexture(const cudaArray* array) //, cudaTextureFilterM
 __device__ inline float par3D_tex_lookup(float x, float y, float z) {
         return tex3D(gT_par3DVolumeTexture, x, y, z);
 }
-
-
-// x=0, y=1, z=2
-template<float (*interpolation_method)(float,float,float)>
-struct DIR_X {
-	__device__ float nSlices(const SDimensions3D& dims) const { return dims.iVolX; }
-	__device__ float nDim1(const SDimensions3D& dims) const { return dims.iVolY; }
-	__device__ float nDim2(const SDimensions3D& dims) const { return dims.iVolZ; }
-	__device__ float c0(float x, float y, float z) const { return x; }
-	__device__ float c1(float x, float y, float z) const { return y; }
-	__device__ float c2(float x, float y, float z) const { return z; }
-	__device__ float x(float f0, float f1, float f2) const { return f0; }
-	__device__ float y(float f0, float f1, float f2) const { return f1; }
-	__device__ float z(float f0, float f1, float f2) const { return f2; }
-	__device__ float tex(float f0, float f1, float f2) const { return interpolation_method(f0, f1, f2); }
-};
-
-// y=0, x=1, z=2
-template<float (*interpolation_method)(float,float,float)>
-struct DIR_Y {
-	__device__ float nSlices(const SDimensions3D& dims) const { return dims.iVolY; }
-	__device__ float nDim1(const SDimensions3D& dims) const { return dims.iVolX; }
-	__device__ float nDim2(const SDimensions3D& dims) const { return dims.iVolZ; }
-	__device__ float c0(float x, float y, float z) const { return y; }
-	__device__ float c1(float x, float y, float z) const { return x; }
-	__device__ float c2(float x, float y, float z) const { return z; }
-	__device__ float x(float f0, float f1, float f2) const { return f1; }
-	__device__ float y(float f0, float f1, float f2) const { return f0; }
-	__device__ float z(float f0, float f1, float f2) const { return f2; }
-	__device__ float tex(float f0, float f1, float f2) const { return interpolation_method(f1, f0, f2); }
-};
-
-// z=0, x=1, y=2
-template<float (*interpolation_method)(float,float,float)>
-struct DIR_Z {
-	__device__ float nSlices(const SDimensions3D& dims) const { return dims.iVolZ; }
-	__device__ float nDim1(const SDimensions3D& dims) const { return dims.iVolX; }
-	__device__ float nDim2(const SDimensions3D& dims) const { return dims.iVolY; }
-	__device__ float c0(float x, float y, float z) const { return z; }
-	__device__ float c1(float x, float y, float z) const { return x; }
-	__device__ float c2(float x, float y, float z) const { return y; }
-	__device__ float x(float f0, float f1, float f2) const { return f1; }
-	__device__ float y(float f0, float f1, float f2) const { return f2; }
-	__device__ float z(float f0, float f1, float f2) const { return f0; }
-	__device__ float tex(float f0, float f1, float f2) const { return interpolation_method(f1, f2, f0); }
-};
-
-struct SCALE_CUBE {
-	float fOutputScale;
-	__device__ float scale(float a1, float a2) const { return sqrt(a1*a1+a2*a2+1.0f) * fOutputScale; }
-};
-
-struct SCALE_NONCUBE {
-	float fScale1;
-	float fScale2;
-	float fOutputScale;
-	__device__ float scale(float a1, float a2) const { return sqrt(a1*a1*fScale1+a2*a2*fScale2+1.0f) * fOutputScale; }
-};
-
-
-
 
 
 

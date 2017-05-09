@@ -1102,6 +1102,18 @@ bool astraCudaFP(const float* pfVolume, float* pfProjections,
 		case ker3d_default:
 			ok &= ConeFP(D_volumeData, D_projData, dims, pConeProjs, params);
 			break;
+		case ker3d_bilin:
+			ok &= ConeFP_bilin(D_volumeData, D_projData, dims, pConeProjs, params);
+			break;
+		case ker3d_bicubic:
+			ok &= ConeFP_bicubic(D_volumeData, D_projData, dims, pConeProjs, params);
+			break;
+		case ker3d_df1:
+			ok &= ConeFP_ddf1(D_volumeData, D_projData, dims, pConeProjs, params);
+			break;
+		case ker3d_df2:
+			ok &= ConeFP_ddf2(D_volumeData, D_projData, dims, pConeProjs, params);
+			break;
 		default:
 			assert(false);
 		}
