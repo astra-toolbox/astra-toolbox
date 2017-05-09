@@ -86,8 +86,14 @@ static bool bindVolumeDataTexture(const cudaArray* array) //, cudaTextureFilterM
 }
 
 
+
+__device__ inline float par3D_tex_lookup(float x, float y, float z) {
+        return tex3D(gT_par3DVolumeTexture, x, y, z);
+}
+
+
 // x=0, y=1, z=2
-template<float (*interpolation_method)(float,float,float,float (*)(float,float,float))>
+template<float (*interpolation_method)(float,float,float)>
 struct DIR_X {
 	__device__ float nSlices(const SDimensions3D& dims) const { return dims.iVolX; }
 	__device__ float nDim1(const SDimensions3D& dims) const { return dims.iVolY; }
@@ -98,13 +104,11 @@ struct DIR_X {
 	__device__ float x(float f0, float f1, float f2) const { return f0; }
 	__device__ float y(float f0, float f1, float f2) const { return f1; }
 	__device__ float z(float f0, float f1, float f2) const { return f2; }
-	__device__ float tex(float f0, float f1, float f2) const { 
-            return interpolation_method(f0, f1, f2, [](float f0, float f1, float f2)->float{return tex3D(gT_par3DVolumeTexture, f0, f1, f2);});
-    }
+	__device__ float tex(float f0, float f1, float f2) const { return interpolation_method(f0, f1, f2); }
 };
 
 // y=0, x=1, z=2
-template<float (*interpolation_method)(float,float,float,float (*)(float,float,float))>
+template<float (*interpolation_method)(float,float,float)>
 struct DIR_Y {
 	__device__ float nSlices(const SDimensions3D& dims) const { return dims.iVolY; }
 	__device__ float nDim1(const SDimensions3D& dims) const { return dims.iVolX; }
@@ -115,13 +119,11 @@ struct DIR_Y {
 	__device__ float x(float f0, float f1, float f2) const { return f1; }
 	__device__ float y(float f0, float f1, float f2) const { return f0; }
 	__device__ float z(float f0, float f1, float f2) const { return f2; }
-	__device__ float tex(float f0, float f1, float f2) const { 
-            return interpolation_method(f0, f1, f2, [](float f0, float f1, float f2)->float{return tex3D(gT_par3DVolumeTexture, f1, f0, f2);});
-    }
+	__device__ float tex(float f0, float f1, float f2) const { return interpolation_method(f1, f0, f2); }
 };
 
 // z=0, x=1, y=2
-template<float (*interpolation_method)(float,float,float,float (*)(float,float,float))>
+template<float (*interpolation_method)(float,float,float)>
 struct DIR_Z {
 	__device__ float nSlices(const SDimensions3D& dims) const { return dims.iVolZ; }
 	__device__ float nDim1(const SDimensions3D& dims) const { return dims.iVolX; }
@@ -132,9 +134,7 @@ struct DIR_Z {
 	__device__ float x(float f0, float f1, float f2) const { return f1; }
 	__device__ float y(float f0, float f1, float f2) const { return f2; }
 	__device__ float z(float f0, float f1, float f2) const { return f0; }
-	__device__ float tex(float f0, float f1, float f2) const { 
-            return interpolation_method(f0, f1, f2, [](float f0, float f1, float f2)->float{return tex3D(gT_par3DVolumeTexture, f1, f2, f0);});
-    }
+	__device__ float tex(float f0, float f1, float f2) const { return interpolation_method(f1, f2, f0); }
 };
 
 struct SCALE_CUBE {
@@ -424,7 +424,7 @@ __global__ void par3D_FP_SumSqW_t(float* D_projData, unsigned int projPitch,
 // TODO
 
 
-template<float (*interpolation_method)(float,float,float,float (*)(float,float,float))>
+template<float (*interpolation_method)(float,float,float)>
 bool Par3DFP_Array_internal(cudaPitchedPtr D_projData,
                    const SDimensions3D& dims, unsigned int angleCount, const SPar3DProjection* angles,
                    const SProjectorParams3D& params)
@@ -595,7 +595,7 @@ bool Par3DFP_Array_internal(cudaPitchedPtr D_projData,
 
 
 
-template<float (*interpolation_method)(float,float,float,float (*)(float,float,float))>
+template<float (*interpolation_method)(float,float,float)>
 bool Par3DFP(cudaPitchedPtr D_volumeData,
              cudaPitchedPtr D_projData,
              const SDimensions3D& dims, const SPar3DProjection* angles,
@@ -634,7 +634,7 @@ bool Par3DFP(cudaPitchedPtr D_volumeData,
              cudaPitchedPtr D_projData,
              const SDimensions3D& dims, const SPar3DProjection* angles,
              const SProjectorParams3D& params)
-{ return Par3DFP<tex_interpolate>(D_volumeData, D_projData, dims, angles, params); }
+{ return Par3DFP<tex_interpolate<par3D_tex_lookup> >(D_volumeData, D_projData, dims, angles, params); }
 
 
 
@@ -642,7 +642,7 @@ bool Par3DFP_bilin(cudaPitchedPtr D_volumeData,
                    cudaPitchedPtr D_projData,
                    const SDimensions3D& dims, const SPar3DProjection* angles,
                    const SProjectorParams3D& params)
-{ return Par3DFP<bilin_interpolate>(D_volumeData, D_projData, dims, angles, params); }
+{ return Par3DFP<bilin_interpolate<par3D_tex_lookup> >(D_volumeData, D_projData, dims, angles, params); }
 
 
 
@@ -650,7 +650,7 @@ bool Par3DFP_bicubic(cudaPitchedPtr D_volumeData,
                    cudaPitchedPtr D_projData,
                    const SDimensions3D& dims, const SPar3DProjection* angles,
                    const SProjectorParams3D& params)
-{ return Par3DFP<bicubic_interpolate>(D_volumeData, D_projData, dims, angles, params); }
+{ return Par3DFP<bicubic_interpolate<par3D_tex_lookup> >(D_volumeData, D_projData, dims, angles, params); }
 
 
 
@@ -658,7 +658,7 @@ bool Par3DFP_ddf1(cudaPitchedPtr D_volumeData,
                    cudaPitchedPtr D_projData,
                    const SDimensions3D& dims, const SPar3DProjection* angles,
                    const SProjectorParams3D& params)
-{ return Par3DFP<bicubic_interpolate_ddf1>(D_volumeData, D_projData, dims, angles, params); }
+{ return Par3DFP<bicubic_interpolate_ddf1<par3D_tex_lookup> >(D_volumeData, D_projData, dims, angles, params); }
 
 
 
@@ -666,7 +666,7 @@ bool Par3DFP_ddf2(cudaPitchedPtr D_volumeData,
                    cudaPitchedPtr D_projData,
                    const SDimensions3D& dims, const SPar3DProjection* angles,
                    const SProjectorParams3D& params)
-{ return Par3DFP<bicubic_interpolate_ddf2>(D_volumeData, D_projData, dims, angles, params); }
+{ return Par3DFP<bicubic_interpolate_ddf2<par3D_tex_lookup> >(D_volumeData, D_projData, dims, angles, params); }
 
 
 
@@ -681,9 +681,9 @@ bool Par3DFP_SumSqW(cudaPitchedPtr D_volumeData,
 	float* tmp = new float[dims.iProjAngles];
 
         // typedefs to eliminate annoying template arguments
-        typedef DIR_X<tex_interpolate> DIR_X;
-        typedef DIR_Y<tex_interpolate> DIR_Y;
-        typedef DIR_Z<tex_interpolate> DIR_Z;
+        typedef DIR_X<tex_interpolate<par3D_tex_lookup> > DIR_X;
+        typedef DIR_Y<tex_interpolate<par3D_tex_lookup> > DIR_Y;
+        typedef DIR_Z<tex_interpolate<par3D_tex_lookup> > DIR_Z;
 
 #define TRANSFER_TO_CONSTANT(name) do { for (unsigned int i = 0; i < dims.iProjAngles; ++i) tmp[i] = angles[i].f##name ; cudaMemcpyToSymbol(gC_##name, tmp, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice); } while (0)
 
