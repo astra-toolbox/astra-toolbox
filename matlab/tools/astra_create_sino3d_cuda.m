@@ -38,13 +38,14 @@ end
 % store sino
 sino_id = astra_mex_data3d('create','-sino', proj_geom, 0);
 
-% configure algorithm 
+% configure algorithm
 cfg = astra_struct('FP3D_CUDA');
 cfg.ProjectionDataId = sino_id;
 cfg.VolumeDataId = volume_id;
 if nargin == 4
         cfg = complete_parameter_structure(cfg, cfg_options);
 end
+
 
 % create sinogram
 alg_id = astra_mex_algorithm('create', cfg);
@@ -56,7 +57,7 @@ if (numel(data) > 1)
 end
 
 if nargout >= 2
-	sino = astra_mex_data3d('get',sino_id);
+	sino = astra_mex_data3d('get', sino_id);
 end
 
 
