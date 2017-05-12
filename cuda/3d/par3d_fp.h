@@ -31,39 +31,39 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 namespace astraCUDA3d {
 
 _AstraExport bool Par3DFP_Array(cudaArray *D_volArray,
-                   cudaPitchedPtr D_projData,
-                   const SDimensions3D& dims, const SPar3DProjection* angles,
-                   const SProjectorParams3D& params);
+                                cudaPitchedPtr D_projData,
+                                const SDimensions3D& dims, const SPar3DProjection* angles,
+                                const SProjectorParams3D& params);
 
 _AstraExport bool Par3DFP(cudaPitchedPtr D_volumeData,
-            cudaPitchedPtr D_projData,
-            const SDimensions3D& dims, const SPar3DProjection* angles,
-            const SProjectorParams3D& params);
+                          cudaPitchedPtr D_projData,
+                          const SDimensions3D& dims, const SPar3DProjection* angles,
+                          const SProjectorParams3D& params);
 
 _AstraExport bool Par3DFP_SumSqW(cudaPitchedPtr D_volumeData,
-                    cudaPitchedPtr D_projData,
-                    const SDimensions3D& dims, const SPar3DProjection* angles,
-                    const SProjectorParams3D& params);
+                                 cudaPitchedPtr D_projData,
+                                 const SDimensions3D& dims, const SPar3DProjection* angles,
+                                 const SProjectorParams3D& params);
 
 _AstraExport bool Par3DFP_bilin(cudaPitchedPtr D_volumeData,
-            cudaPitchedPtr D_projData,
-            const SDimensions3D& dims, const SPar3DProjection* angles,
-            const SProjectorParams3D& params);
+                                cudaPitchedPtr D_projData,
+                                const SDimensions3D& dims, const SPar3DProjection* angles,
+                                const SProjectorParams3D& params);
 
 _AstraExport bool Par3DFP_bicubic(cudaPitchedPtr D_volumeData,
-            cudaPitchedPtr D_projData,
-            const SDimensions3D& dims, const SPar3DProjection* angles,
-            const SProjectorParams3D& params);
+                                  cudaPitchedPtr D_projData,
+                                  const SDimensions3D& dims, const SPar3DProjection* angles,
+                                  const SProjectorParams3D& params);
 
 _AstraExport bool Par3DFP_ddf1(cudaPitchedPtr D_volumeData,
-            cudaPitchedPtr D_projData,
-            const SDimensions3D& dims, const SPar3DProjection* angles,
-            const SProjectorParams3D& params);
+                               cudaPitchedPtr D_projData,
+                               const SDimensions3D& dims, const SPar3DProjection* angles,
+                               const SProjectorParams3D& params);
 
 _AstraExport bool Par3DFP_ddf2(cudaPitchedPtr D_volumeData,
-            cudaPitchedPtr D_projData,
-            const SDimensions3D& dims, const SPar3DProjection* angles,
-            const SProjectorParams3D& params);
+                               cudaPitchedPtr D_projData,
+                               const SDimensions3D& dims, const SPar3DProjection* angles,
+                               const SProjectorParams3D& params);
 
 }
 

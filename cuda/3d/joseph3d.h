@@ -33,7 +33,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 namespace astraCUDA3d {
 
 // x=0, y=1, z=2
-template<float (*interpolation_method)(float,float,float)>
+template<float (*interpolation_method)(float,float,float,float (*)(float, float, float)),
+         float (*tex_lookup_xyz)(float,float,float)>
 struct DIR_X {
 	__device__ float nSlices(const SDimensions3D& dims) const { return dims.iVolX; }
 	__device__ float nDim1(const SDimensions3D& dims) const { return dims.iVolY; }
@@ -44,11 +45,13 @@ struct DIR_X {
 	__device__ float x(float f0, float f1, float f2) const { return f0; }
 	__device__ float y(float f0, float f1, float f2) const { return f1; }
 	__device__ float z(float f0, float f1, float f2) const { return f2; }
-	__device__ float tex(float f0, float f1, float f2) const { return interpolation_method(f0, f1, f2); }
+	__device__ static float tex_lookup(float f0, float f1, float f2) { return tex_lookup_xyz(f0, f1, f2); }
+	__device__ float tex(float f0, float f1, float f2) const { return interpolation_method(f0, f1, f2, tex_lookup); }
 };
 
 // y=0, x=1, z=2
-template<float (*interpolation_method)(float,float,float)>
+template<float (*interpolation_method)(float,float,float,float (*)(float, float, float)),
+         float (*tex_lookup_xyz)(float,float,float)>
 struct DIR_Y {
 	__device__ float nSlices(const SDimensions3D& dims) const { return dims.iVolY; }
 	__device__ float nDim1(const SDimensions3D& dims) const { return dims.iVolX; }
@@ -59,11 +62,13 @@ struct DIR_Y {
 	__device__ float x(float f0, float f1, float f2) const { return f1; }
 	__device__ float y(float f0, float f1, float f2) const { return f0; }
 	__device__ float z(float f0, float f1, float f2) const { return f2; }
-	__device__ float tex(float f0, float f1, float f2) const { return interpolation_method(f1, f0, f2); }
+	__device__ static float tex_lookup(float f0, float f1, float f2) { return tex_lookup_xyz(f1, f0, f2); }
+	__device__ float tex(float f0, float f1, float f2) const { return interpolation_method(f0, f1, f2, tex_lookup); }
 };
 
 // z=0, x=1, y=2
-template<float (*interpolation_method)(float,float,float)>
+template<float (*interpolation_method)(float,float,float,float (*)(float, float, float)),
+         float (*tex_lookup_xyz)(float,float,float)>
 struct DIR_Z {
 	__device__ float nSlices(const SDimensions3D& dims) const { return dims.iVolZ; }
 	__device__ float nDim1(const SDimensions3D& dims) const { return dims.iVolX; }
@@ -74,7 +79,8 @@ struct DIR_Z {
 	__device__ float x(float f0, float f1, float f2) const { return f1; }
 	__device__ float y(float f0, float f1, float f2) const { return f2; }
 	__device__ float z(float f0, float f1, float f2) const { return f0; }
-	__device__ float tex(float f0, float f1, float f2) const { return interpolation_method(f1, f2, f0); }
+	__device__ static float tex_lookup(float f0, float f1, float f2) { return tex_lookup_xyz(f1, f2, f0); }
+	__device__ float tex(float f0, float f1, float f2) const { return interpolation_method(f0, f1, f2, tex_lookup); }
 };
 
 struct SCALE_CUBE {

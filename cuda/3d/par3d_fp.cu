@@ -95,6 +95,7 @@ __device__ inline float par3D_tex_lookup(float x, float y, float z) {
 
 
 
+
 // threadIdx: x = u detector
 //            y = relative angle
 // blockIdx:  x = u/v detector
@@ -365,7 +366,7 @@ __global__ void par3D_FP_SumSqW_t(float* D_projData, unsigned int projPitch,
 // TODO
 
 
-template<float (*interpolation_method)(float,float,float)>
+template<float (*interpolation_method)(float,float,float,float (*)(float, float, float))>
 bool Par3DFP_Array_internal(cudaPitchedPtr D_projData,
                    const SDimensions3D& dims, unsigned int angleCount, const SPar3DProjection* angles,
                    const SProjectorParams3D& params)
@@ -374,9 +375,9 @@ bool Par3DFP_Array_internal(cudaPitchedPtr D_projData,
 	float* tmp = new float[dims.iProjAngles];
 
         // typedefs to eliminate annoying template arguments
-        typedef DIR_X<interpolation_method> DIR_X;
-        typedef DIR_Y<interpolation_method> DIR_Y;
-        typedef DIR_Z<interpolation_method> DIR_Z;
+        typedef DIR_X<interpolation_method,par3D_tex_lookup> DIR_X;
+        typedef DIR_Y<interpolation_method,par3D_tex_lookup> DIR_Y;
+        typedef DIR_Z<interpolation_method,par3D_tex_lookup> DIR_Z;
 
 #define TRANSFER_TO_CONSTANT(name) do { for (unsigned int i = 0; i < angleCount; ++i) tmp[i] = angles[i].f##name ; cudaMemcpyToSymbol(gC_##name, tmp, angleCount*sizeof(float), 0, cudaMemcpyHostToDevice); } while (0)
 
@@ -536,7 +537,7 @@ bool Par3DFP_Array_internal(cudaPitchedPtr D_projData,
 
 
 
-template<float (*interpolation_method)(float,float,float)>
+template<float (*interpolation_method)(float,float,float,float (*)(float, float, float))>
 bool Par3DFP(cudaPitchedPtr D_volumeData,
              cudaPitchedPtr D_projData,
              const SDimensions3D& dims, const SPar3DProjection* angles,
@@ -575,7 +576,7 @@ bool Par3DFP(cudaPitchedPtr D_volumeData,
              cudaPitchedPtr D_projData,
              const SDimensions3D& dims, const SPar3DProjection* angles,
              const SProjectorParams3D& params)
-{ return Par3DFP<tex_interpolate<par3D_tex_lookup> >(D_volumeData, D_projData, dims, angles, params); }
+{ return Par3DFP<tex_interpolate>(D_volumeData, D_projData, dims, angles, params); }
 
 
 
@@ -583,7 +584,7 @@ bool Par3DFP_bilin(cudaPitchedPtr D_volumeData,
                    cudaPitchedPtr D_projData,
                    const SDimensions3D& dims, const SPar3DProjection* angles,
                    const SProjectorParams3D& params)
-{ return Par3DFP<bilin_interpolate<par3D_tex_lookup> >(D_volumeData, D_projData, dims, angles, params); }
+{ return Par3DFP<bilin_interpolate>(D_volumeData, D_projData, dims, angles, params); }
 
 
 
@@ -591,7 +592,7 @@ bool Par3DFP_bicubic(cudaPitchedPtr D_volumeData,
                    cudaPitchedPtr D_projData,
                    const SDimensions3D& dims, const SPar3DProjection* angles,
                    const SProjectorParams3D& params)
-{ return Par3DFP<bicubic_interpolate<par3D_tex_lookup> >(D_volumeData, D_projData, dims, angles, params); }
+{ return Par3DFP<bicubic_interpolate>(D_volumeData, D_projData, dims, angles, params); }
 
 
 
@@ -599,7 +600,7 @@ bool Par3DFP_ddf1(cudaPitchedPtr D_volumeData,
                    cudaPitchedPtr D_projData,
                    const SDimensions3D& dims, const SPar3DProjection* angles,
                    const SProjectorParams3D& params)
-{ return Par3DFP<bicubic_interpolate_ddf1<par3D_tex_lookup> >(D_volumeData, D_projData, dims, angles, params); }
+{ return Par3DFP<bicubic_interpolate_ddf1>(D_volumeData, D_projData, dims, angles, params); }
 
 
 
@@ -607,7 +608,7 @@ bool Par3DFP_ddf2(cudaPitchedPtr D_volumeData,
                    cudaPitchedPtr D_projData,
                    const SDimensions3D& dims, const SPar3DProjection* angles,
                    const SProjectorParams3D& params)
-{ return Par3DFP<bicubic_interpolate_ddf2<par3D_tex_lookup> >(D_volumeData, D_projData, dims, angles, params); }
+{ return Par3DFP<bicubic_interpolate_ddf2>(D_volumeData, D_projData, dims, angles, params); }
 
 
 
@@ -622,9 +623,9 @@ bool Par3DFP_SumSqW(cudaPitchedPtr D_volumeData,
 	float* tmp = new float[dims.iProjAngles];
 
         // typedefs to eliminate annoying template arguments
-        typedef DIR_X<tex_interpolate<par3D_tex_lookup> > DIR_X;
-        typedef DIR_Y<tex_interpolate<par3D_tex_lookup> > DIR_Y;
-        typedef DIR_Z<tex_interpolate<par3D_tex_lookup> > DIR_Z;
+        typedef DIR_X<tex_interpolate,par3D_tex_lookup> DIR_X;
+        typedef DIR_Y<tex_interpolate,par3D_tex_lookup> DIR_Y;
+        typedef DIR_Z<tex_interpolate,par3D_tex_lookup> DIR_Z;
 
 #define TRANSFER_TO_CONSTANT(name) do { for (unsigned int i = 0; i < dims.iProjAngles; ++i) tmp[i] = angles[i].f##name ; cudaMemcpyToSymbol(gC_##name, tmp, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice); } while (0)
 

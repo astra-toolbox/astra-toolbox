@@ -30,21 +30,19 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include <cuda.h>
 
+
 namespace astraCUDA3d {
 
 
 
-// interpolation routines
-template<float (*texture_lookup)(float,float,float)>
 __device__
-inline float tex_interpolate(float f0, float f1, float f2) {
+inline float tex_interpolate(float f0, float f1, float f2, float (*texture_lookup)(float,float,float)) {
         return texture_lookup(f0, f1, f2);
 }
 
 
-template<float (*texture_lookup)(float,float,float)>
 __device__
-inline float bilin_interpolate(float f0, float f1, float f2) {
+inline float bilin_interpolate(float f0, float f1, float f2, float (*texture_lookup)(float,float,float)) {
         float f1_lower = floorf(f1 - 0.5f) + 0.5f;
         float df1 = f1-f1_lower;
         float f2_lower = floorf(f2 - 0.5f) + 0.5f;
@@ -56,9 +54,9 @@ inline float bilin_interpolate(float f0, float f1, float f2) {
 }
 
 
-template<float (*texture_lookup)(float,float,float), float (*interp_kernel_f1)(float), float (*interp_kernel_f2)(float)>
+template<float (*interp_kernel_f1)(float), float (*interp_kernel_f2)(float)>
 __device__
-inline float bicubic_interpolate(float f0, float f1, float f2) {
+inline float bicubic_interpolate(float f0, float f1, float f2, float (*texture_lookup)(float,float,float)) {
 
         float f1_lowest = floorf(f1 - 0.5f) - 0.5f;
         float f2_lowest = floorf(f2 - 0.5f) - 0.5f;
@@ -112,25 +110,23 @@ inline float cubic_hermite_spline_deriv(float x) {
 }
 
 
-template<float (*texture_lookup)(float,float,float)>
 __device__
-inline float bicubic_interpolate(float f0, float f1, float f2) {
-        return bicubic_interpolate<texture_lookup, cubic_hermite_spline_eval, cubic_hermite_spline_eval>(f0, f1, f2);
+inline float bicubic_interpolate(float f0, float f1, float f2, float (*texture_lookup)(float,float,float)) {
+        return bicubic_interpolate<cubic_hermite_spline_eval, cubic_hermite_spline_eval>(f0, f1, f2, texture_lookup);
 }
 
 
-template<float (*texture_lookup)(float,float,float)>
 __device__
-inline float bicubic_interpolate_ddf1(float f0, float f1, float f2) {
-        return bicubic_interpolate<texture_lookup, cubic_hermite_spline_deriv, cubic_hermite_spline_eval>(f0, f1, f2);
+inline float bicubic_interpolate_ddf1(float f0, float f1, float f2, float (*texture_lookup)(float,float,float)) {
+        return bicubic_interpolate<cubic_hermite_spline_deriv, cubic_hermite_spline_eval>(f0, f1, f2, texture_lookup);
 }
 
 
-template<float (*texture_lookup)(float,float,float)>
 __device__
-inline float bicubic_interpolate_ddf2(float f0, float f1, float f2) {
-        return bicubic_interpolate<texture_lookup, cubic_hermite_spline_eval, cubic_hermite_spline_deriv>(f0, f1, f2);
+inline float bicubic_interpolate_ddf2(float f0, float f1, float f2, float (*texture_lookup)(float,float,float)) {
+        return bicubic_interpolate<cubic_hermite_spline_eval, cubic_hermite_spline_deriv>(f0, f1, f2, texture_lookup);
 }
+
 
 }
 

@@ -267,7 +267,7 @@ __global__ void cone_FP_SS_t(float* D_projData, unsigned int projPitch,
 
 
 
-template<float (*interpolation_method)(float,float,float)>
+template<float (*interpolation_method)(float,float,float,float (*)(float, float, float))>
 bool ConeFP_Array_internal(cudaPitchedPtr D_projData,
                   const SDimensions3D& dims, unsigned int angleCount, const SConeProjection* angles,
                   const SProjectorParams3D& params)
@@ -276,9 +276,9 @@ bool ConeFP_Array_internal(cudaPitchedPtr D_projData,
 	float* tmp = new float[angleCount];
 
         // typedefs to eliminate annoying template arguments
-        typedef DIR_X<interpolation_method> DIR_X;
-        typedef DIR_Y<interpolation_method> DIR_Y;
-        typedef DIR_Z<interpolation_method> DIR_Z;
+        typedef DIR_X<interpolation_method,cone_tex_lookup> DIR_X;
+        typedef DIR_Y<interpolation_method,cone_tex_lookup> DIR_Y;
+        typedef DIR_Z<interpolation_method,cone_tex_lookup> DIR_Z;
 
 #define TRANSFER_TO_CONSTANT(name) do { for (unsigned int i = 0; i < angleCount; ++i) tmp[i] = angles[i].f##name ; cudaMemcpyToSymbol(gC_##name, tmp, angleCount*sizeof(float), 0, cudaMemcpyHostToDevice); } while (0)
 
@@ -432,7 +432,7 @@ bool ConeFP_Array_internal(cudaPitchedPtr D_projData,
 }
 
 
-template<float (*interpolation_method)(float,float,float)>
+template<float (*interpolation_method)(float,float,float,float (*)(float, float, float))>
 bool ConeFP(cudaPitchedPtr D_volumeData,
             cudaPitchedPtr D_projData,
             const SDimensions3D& dims, const SConeProjection* angles,
@@ -472,7 +472,7 @@ bool ConeFP(cudaPitchedPtr D_volumeData,
             cudaPitchedPtr D_projData,
             const SDimensions3D& dims, const SConeProjection* angles,
             const SProjectorParams3D& params)
-{ return ConeFP<tex_interpolate<cone_tex_lookup> >(D_volumeData, D_projData, dims, angles, params); }
+{ return ConeFP<tex_interpolate>(D_volumeData, D_projData, dims, angles, params); }
 
 
 
@@ -480,7 +480,7 @@ bool ConeFP_bilin(cudaPitchedPtr D_volumeData,
                   cudaPitchedPtr D_projData,
                   const SDimensions3D& dims, const SConeProjection* angles,
                   const SProjectorParams3D& params)
-{ return ConeFP<bilin_interpolate<cone_tex_lookup> >(D_volumeData, D_projData, dims, angles, params); }
+{ return ConeFP<bilin_interpolate>(D_volumeData, D_projData, dims, angles, params); }
 
 
 
@@ -488,7 +488,7 @@ bool ConeFP_bicubic(cudaPitchedPtr D_volumeData,
                    cudaPitchedPtr D_projData,
                    const SDimensions3D& dims, const SConeProjection* angles,
                    const SProjectorParams3D& params)
-{ return ConeFP<bicubic_interpolate<cone_tex_lookup> >(D_volumeData, D_projData, dims, angles, params); }
+{ return ConeFP<bicubic_interpolate>(D_volumeData, D_projData, dims, angles, params); }
 
 
 
@@ -496,7 +496,7 @@ bool ConeFP_ddf1(cudaPitchedPtr D_volumeData,
                  cudaPitchedPtr D_projData,
                  const SDimensions3D& dims, const SConeProjection* angles,
                  const SProjectorParams3D& params)
-{ return ConeFP<bicubic_interpolate_ddf1<cone_tex_lookup> >(D_volumeData, D_projData, dims, angles, params); }
+{ return ConeFP<bicubic_interpolate_ddf1>(D_volumeData, D_projData, dims, angles, params); }
 
 
 
@@ -504,7 +504,7 @@ bool ConeFP_ddf2(cudaPitchedPtr D_volumeData,
                  cudaPitchedPtr D_projData,
                  const SDimensions3D& dims, const SConeProjection* angles,
                  const SProjectorParams3D& params)
-{ return ConeFP<bicubic_interpolate_ddf2<cone_tex_lookup> >(D_volumeData, D_projData, dims, angles, params); }
+{ return ConeFP<bicubic_interpolate_ddf2>(D_volumeData, D_projData, dims, angles, params); }
 
 
 
