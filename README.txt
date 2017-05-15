@@ -134,7 +134,7 @@ Requirements: Visual Studio 2015 (full or community), boost (recent), CUDA 8.0,
 Using the Visual Studio IDE:
 
 Set the environment variable MATLAB_ROOT to your matlab install location.
-Copy boost headers to lib\include\boost, and boost libraries to bin\x64.
+Copy boost headers to lib\include\boost, and boost libraries to lib\x64.
 Open astra_vc14.sln in Visual Studio.
 Select the appropriate solution configuration (typically Release_CUDA|x64).
 Build the solution.
