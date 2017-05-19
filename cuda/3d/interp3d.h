@@ -36,6 +36,14 @@ namespace astraCUDA3d {
 
 
 __device__
+inline float pow2(float x) { return x*x; }
+
+__device__
+inline float pow3(float x) { return x*x*x; }
+
+
+
+__device__
 inline float tex_interpolate(float f0, float f1, float f2, float (*texture_lookup)(float,float,float)) {
         return texture_lookup(f0, f1, f2);
 }
@@ -82,6 +90,74 @@ inline float bicubic_interpolate(float f0, float f1, float f2, float (*texture_l
 }
 
 
+
+template<void (*get_bilin_coeffs_f1)(float, bool, float &, float &), void (*get_bilin_coeffs_f2)(float, bool, float &, float &)>
+__device__
+inline float bspline3_interpolate(float f0, float f1, float f2, float (*texture_lookup)(float,float,float)) {
+
+        float f1_lower = floorf(f1 - 0.5f) + 0.5f;
+        float df1 = f1-f1_lower;
+        float f2_lower = floorf(f2 - 0.5f) + 0.5f;
+        float df2 = f2-f2_lower;
+
+        // Compute auxillary points for bilinear interpolations and
+        // corresponding weights
+        float y1_plus, w1_plus, y1_minus, w1_minus, y2_plus, w2_plus, y2_minus, w2_minus;
+        get_bilin_coeffs_f1(df1, false, y1_plus, w1_plus);
+        get_bilin_coeffs_f1(1.0f - df1, true, y1_minus, w1_minus);
+        get_bilin_coeffs_f2(df2, false, y2_plus, w2_plus);
+        get_bilin_coeffs_f2(1.0f - df2, true, y2_minus, w2_minus);
+
+        // Shift auxillary interpolation points to actually lie between the
+        // correct grid points
+        y1_plus += f1_lower;
+        y2_plus += f2_lower;
+        y1_minus += f1_lower;
+        y2_minus += f2_lower;
+
+        return   w1_plus  * w2_plus  * texture_lookup(f0, y1_plus,  y2_plus )
+               + w1_minus * w2_plus  * texture_lookup(f0, y1_minus, y2_plus )
+               + w1_plus  * w2_minus * texture_lookup(f0, y1_plus,  y2_minus)
+               + w1_minus * w2_minus * texture_lookup(f0, y1_minus, y2_minus);
+
+}
+
+
+
+__device__
+inline void get_bilin_coeffs_b3_eval(float x, bool is_left, float & y, float & w) {
+        float x_plus_1_cube = pow3(x + 1.0f);
+        float x_cube = pow3(x);
+        w = x_plus_1_cube - 3.0f * x_cube;
+        y = x_cube / w;
+        w = 0.1666666f * w;
+        if(is_left) {
+                y = -y;
+        } else {
+                y += 1.0f;
+        }
+}
+
+
+
+__device__
+inline void get_bilin_coeffs_b3_deriv(float x, bool is_left, float & y, float & w) {
+        float x_plus_1_sq = pow2(x + 1.0f);
+        float x_sq = pow2(x);
+        w = x_plus_1_sq - 3.0f * x_sq;
+        y = x_sq / w;
+        w = 0.5f * w;
+        if(is_left) {
+                y = -y;
+                w = -w;
+        } else {
+                y += 1.0f;
+        }
+}
+
+
+
+
 __device__
 inline float cubic_hermite_spline_eval(float x) {
         x = fabs(x);
@@ -112,19 +188,22 @@ inline float cubic_hermite_spline_deriv(float x) {
 
 __device__
 inline float bicubic_interpolate(float f0, float f1, float f2, float (*texture_lookup)(float,float,float)) {
-        return bicubic_interpolate<cubic_hermite_spline_eval, cubic_hermite_spline_eval>(f0, f1, f2, texture_lookup);
+        //return bicubic_interpolate<cubic_hermite_spline_eval, cubic_hermite_spline_eval>(f0, f1, f2, texture_lookup);
+        return bspline3_interpolate<get_bilin_coeffs_b3_eval, get_bilin_coeffs_b3_eval>(f0, f1, f2, texture_lookup);
 }
 
 
 __device__
 inline float bicubic_interpolate_ddf1(float f0, float f1, float f2, float (*texture_lookup)(float,float,float)) {
-        return bicubic_interpolate<cubic_hermite_spline_deriv, cubic_hermite_spline_eval>(f0, f1, f2, texture_lookup);
+        //return bicubic_interpolate<cubic_hermite_spline_deriv, cubic_hermite_spline_eval>(f0, f1, f2, texture_lookup);
+        return bspline3_interpolate<get_bilin_coeffs_b3_deriv, get_bilin_coeffs_b3_eval>(f0, f1, f2, texture_lookup);
 }
 
 
 __device__
 inline float bicubic_interpolate_ddf2(float f0, float f1, float f2, float (*texture_lookup)(float,float,float)) {
-        return bicubic_interpolate<cubic_hermite_spline_eval, cubic_hermite_spline_deriv>(f0, f1, f2, texture_lookup);
+        //return bicubic_interpolate<cubic_hermite_spline_eval, cubic_hermite_spline_deriv>(f0, f1, f2, texture_lookup);
+        return bspline3_interpolate<get_bilin_coeffs_b3_eval, get_bilin_coeffs_b3_deriv>(f0, f1, f2, texture_lookup);
 }
 
 
