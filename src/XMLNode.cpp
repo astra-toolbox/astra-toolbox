@@ -414,8 +414,8 @@ static std::string setContentMatrix_internal(T* _pfMatrix, int _iWidth, int _iHe
 	for (int y = 0; y < _iHeight; ++y) {
 		if (_iWidth > 0)
 			str += StringUtil::toString(_pfMatrix[0*s1 + y*s2]);
-			for (int x = 1; x < _iWidth; x++)
-				str += "," + StringUtil::toString(_pfMatrix[x*s1 + y*s2]);
+		for (int x = 1; x < _iWidth; x++)
+			str += "," + StringUtil::toString(_pfMatrix[x*s1 + y*s2]);
 
 		if (y != _iHeight-1)
 			str += ";";
