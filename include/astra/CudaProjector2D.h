@@ -28,6 +28,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _INC_ASTRA_CUDAPROJECTOR2D
 #define _INC_ASTRA_CUDAPROJECTOR2D
 
+#ifdef ASTRA_CUDA
+
 #include "ParallelProjectionGeometry2D.h"
 #include "Float32Data2D.h"
 #include "Projector2D.h"
@@ -141,6 +143,8 @@ inline std::string CCudaProjector2D::getType()
 }
 
 } // namespace astra
+
+#endif
 
 #endif 
 
