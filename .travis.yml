@@ -1,9 +1,5 @@
 language: python
 
-python:
-  - "2.7"
-  - "3.5"
-
 os:
   - linux
 
@@ -13,18 +9,42 @@ addons:
   apt:
     packages:
       - libboost-all-dev
-      - nvidia-common
-      - nvidia-current
-      - nvidia-cuda-toolkit
-      - nvidia-cuda-dev
-env:
-    - CUDA=yes
-    - CUDA=no
 
 matrix:
   include:
     - env: CUDA=no CLANG=yes
-      python: "3.5"
+      python: "3.6"
+
+    - env: CUDA=no
+      python: "2.7"
+
+    - env: CUDA=no
+      python: "3.6"
+
+    - env: CUDA=yes
+      python: "2.7"
+      addons:
+        apt:
+          packages:
+            - libboost-all-dev
+            - nvidia-common
+            - nvidia-current
+            - nvidia-cuda-toolkit
+            - nvidia-cuda-dev
+
+    - env: CUDA=yes
+      python: "3.6"
+      addons:
+        apt:
+          packages:
+            - libboost-all-dev
+            - nvidia-common
+            - nvidia-current
+            - nvidia-cuda-toolkit
+            - nvidia-cuda-dev
+  exclude:
+    - os: linux
+
 
 before_install:
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
