@@ -30,6 +30,9 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "rapidxml/rapidxml.hpp"
 #include "rapidxml/rapidxml_print.hpp"
 
+#include <sstream>
+#include <iomanip>
+
 
 using namespace rapidxml;
 using namespace astra;
@@ -399,8 +402,6 @@ void XMLNode::setContent(double* pfList, int _iSize)
 template<typename T>
 static std::string setContentMatrix_internal(T* _pfMatrix, int _iWidth, int _iHeight, bool transposed)
 {
-	std::string str = "";
-
 	int s1,s2;
 
 	if (!transposed) {
@@ -411,17 +412,21 @@ static std::string setContentMatrix_internal(T* _pfMatrix, int _iWidth, int _iHe
 		s2 = 1;
 	}
 
+	std::ostringstream s;
+	s.imbue(std::locale::classic());
+	s << std::setprecision(17);
+
 	for (int y = 0; y < _iHeight; ++y) {
 		if (_iWidth > 0)
-			str += StringUtil::toString(_pfMatrix[0*s1 + y*s2]);
+			s << _pfMatrix[0*s1 + y*s2];
 		for (int x = 1; x < _iWidth; x++)
-			str += "," + StringUtil::toString(_pfMatrix[x*s1 + y*s2]);
+			s << "," << _pfMatrix[x*s1 + y*s2];
 
 		if (y != _iHeight-1)
-			str += ";";
+			s << ";";
 	}
 
-	return str;
+	return s.str();
 }
 
 void XMLNode::setContent(float32* _pfMatrix, int _iWidth, int _iHeight, bool transposed)

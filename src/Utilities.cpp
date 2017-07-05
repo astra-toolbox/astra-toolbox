@@ -73,7 +73,24 @@ std::vector<float> stringToFloatVector(const std::string &s)
 
 std::vector<double> stringToDoubleVector(const std::string &s)
 {
-	return stringToVector<double>(s);
+	std::vector<double> out;
+	out.reserve(100);
+	std::istringstream iss;
+	iss.imbue(std::locale::classic());
+	size_t current = 0;
+	size_t next;
+	do {
+		next = s.find_first_of(",;", current);
+		std::string t = s.substr(current, next - current);
+		iss.str(t);
+		iss.clear();
+		double f;
+		iss >> f;
+		out.push_back(f);
+		current = next + 1;
+	} while (next != std::string::npos);
+
+	return out;
 }
 
 template<typename T>
