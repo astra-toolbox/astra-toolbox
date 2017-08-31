@@ -379,9 +379,9 @@ void XMLNode::setContent(float32 _fValue)
 
 template<typename T>
 static std::string setContentList_internal(T* pfList, int _iSize) {
-	std::string str = (_iSize > 0) ? StringUtil::toString(pfList[0]) : "";
-	for (int i = 1; i < _iSize; i++) {
-		str += "," + StringUtil::toString(pfList[i]);
+	std::string str;
+	for (int i = 0; i < _iSize; i++) {
+		str += StringUtil::toString(pfList[i]) + ",";
 	}
 	return str;
 }
@@ -422,8 +422,7 @@ static std::string setContentMatrix_internal(T* _pfMatrix, int _iWidth, int _iHe
 		for (int x = 1; x < _iWidth; x++)
 			s << "," << _pfMatrix[x*s1 + y*s2];
 
-		if (y != _iHeight-1)
-			s << ";";
+		s << ";";
 	}
 
 	return s.str();

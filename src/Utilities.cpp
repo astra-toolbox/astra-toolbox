@@ -77,6 +77,7 @@ std::vector<double> stringToDoubleVector(const std::string &s)
 	out.reserve(100);
 	std::istringstream iss;
 	iss.imbue(std::locale::classic());
+	size_t length = s.size();
 	size_t current = 0;
 	size_t next;
 	do {
@@ -88,7 +89,7 @@ std::vector<double> stringToDoubleVector(const std::string &s)
 		iss >> f;
 		out.push_back(f);
 		current = next + 1;
-	} while (next != std::string::npos);
+	} while (next != std::string::npos && current != length);
 
 	return out;
 }
@@ -97,6 +98,7 @@ template<typename T>
 std::vector<T> stringToVector(const std::string& s)
 {
 	std::vector<T> out;
+	size_t length = s.size();
 	size_t current = 0;
 	size_t next;
 	do {
@@ -104,7 +106,7 @@ std::vector<T> stringToVector(const std::string& s)
 		std::string t = s.substr(current, next - current);
 		out.push_back(stringTo<T>(t));
 		current = next + 1;
-	} while (next != std::string::npos);
+	} while (next != std::string::npos && current != length);
 
 	return out;
 }
@@ -134,13 +136,14 @@ void splitString(std::vector<std::string> &items, const std::string& s,
                  const char *delim)
 {
 	items.clear();
+	size_t length = s.size();
 	size_t current = 0;
 	size_t next;
 	do {
 		next = s.find_first_of(delim, current);
 		items.push_back(s.substr(current, next - current));
 		current = next + 1;
-	} while (next != std::string::npos);
+	} while (next != std::string::npos && current != length);
 }
 
 }
