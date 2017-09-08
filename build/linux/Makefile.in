@@ -308,7 +308,9 @@ mex: $(MATLAB_MEX)
 ifeq ($(install_type),module)
 ifeq ($(macos),yes)
 	@# tell macOS dynamic loader to look in mex directory for libastra.0.dylib
-	install_name_tool -change `otool -DX .libs/$(SONAME)` @loader_path/$(SONAME) $@
+	@# CHECKME: some versions of otool return a two-line output for otool -DX?
+	@# (xcode 8.2.1 / macos 10.11.6 ?)
+	install_name_tool -change `otool -DX .libs/$(SONAME) | tail -n 1` @loader_path/$(SONAME) $@
 endif
 endif
 
