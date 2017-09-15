@@ -210,8 +210,8 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 				// loop rows
 				for (row = 0; row < rowCount; ++row, c += deltac) {
 
-					col = int(c+0.5f);
-					if (col <= 0 || col >= colCount-1) { if (!isin) continue; else break; }
+					col = int(floor(c+0.5f));
+					if (col < -1 || col > colCount) { if (!isin) continue; else break; }
 					offset = c - float32(col);
 
 					// left
@@ -220,14 +220,14 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 
 						iVolumeIndex = row * colCount + col - 1;
 						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-						if (p.pixelPrior(iVolumeIndex)) {
+						if (col > 0 && p.pixelPrior(iVolumeIndex)) {
 							p.addWeight(iRayIndex, iVolumeIndex, lengthPerRow-weight);
 							p.pixelPosterior(iVolumeIndex);
 						}
 
 						iVolumeIndex++;
 						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-						if (p.pixelPrior(iVolumeIndex)) {
+						if (col >= 0 && col < colCount && p.pixelPrior(iVolumeIndex)) {
 							p.addWeight(iRayIndex, iVolumeIndex, weight);
 							p.pixelPosterior(iVolumeIndex);
 						}
@@ -239,21 +239,21 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 
 						iVolumeIndex = row * colCount + col;
 						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-						if (p.pixelPrior(iVolumeIndex)) {
+						if (col >= 0 && col < colCount && p.pixelPrior(iVolumeIndex)) {
 							p.addWeight(iRayIndex, iVolumeIndex, lengthPerRow-weight);
 							p.pixelPosterior(iVolumeIndex);
 						}
 
 						iVolumeIndex++;
 						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-						if (p.pixelPrior(iVolumeIndex)) {
+						if (col + 1 < colCount && p.pixelPrior(iVolumeIndex)) {
 							p.addWeight(iRayIndex, iVolumeIndex, weight);
 							p.pixelPosterior(iVolumeIndex);
 						}
 					}
 
 					// centre
-					else {
+					else if (col >= 0 && col < colCount) {
 						iVolumeIndex = row * colCount + col;
 						// POLICY: PIXEL PRIOR + ADD + POSTERIOR
 						if (p.pixelPrior(iVolumeIndex)) {
@@ -274,8 +274,8 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 				// loop columns
 				for (col = 0; col < colCount; ++col, r += deltar) {
 
-					row = int(r+0.5f);
-					if (row <= 0 || row >= rowCount-1) { if (!isin) continue; else break; }
+					row = int(floor(r+0.5f));
+					if (row < -1 || row > rowCount) { if (!isin) continue; else break; }
 					offset = r - float32(row);
 
 					// up
@@ -283,10 +283,10 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 						weight = (offset + T) * invTminSTimesLengthPerCol;
 
 						iVolumeIndex = (row-1) * colCount + col;
-						policy_weight(p, iRayIndex, iVolumeIndex, lengthPerCol-weight)
+						if (row > 0) { policy_weight(p, iRayIndex, iVolumeIndex, lengthPerCol-weight) }
 
 						iVolumeIndex += colCount;
-						policy_weight(p, iRayIndex, iVolumeIndex, weight)
+						if (row >= 0 && row < rowCount) { policy_weight(p, iRayIndex, iVolumeIndex, weight) }
 					}
 
 					// down
@@ -294,14 +294,14 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 						weight = (offset - S) * invTminSTimesLengthPerCol;
 
 						iVolumeIndex = row * colCount + col;
-						policy_weight(p, iRayIndex, iVolumeIndex, lengthPerCol-weight)
+						if (row >= 0 && row < rowCount) { policy_weight(p, iRayIndex, iVolumeIndex, lengthPerCol-weight) }
 
 						iVolumeIndex += colCount;
-						policy_weight(p, iRayIndex, iVolumeIndex, weight)
+						if (row + 1 < rowCount) { policy_weight(p, iRayIndex, iVolumeIndex, weight) }
 					}
 
 					// centre
-					else {
+					else if (row >= 0 && row < rowCount) {
 						iVolumeIndex = row * colCount + col;
 						policy_weight(p, iRayIndex, iVolumeIndex, lengthPerCol)
 					}
