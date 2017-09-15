@@ -1,10 +1,10 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-           2014-2015, CWI, Amsterdam
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
 
 Contact: astra@uantwerpen.be
-Website: http://sf.net/projects/astra-toolbox
+Website: http://www.astra-toolbox.com/
 
 This file is part of the ASTRA Toolbox.
 
@@ -23,7 +23,6 @@ You should have received a copy of the GNU General Public License
 along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 -----------------------------------------------------------------------
-$Id$
 */
 
 #include <cstdio>
@@ -46,47 +45,18 @@ $Id$
 
 #include "../../include/astra/Logging.h"
 
-typedef texture<float, 3, cudaReadModeElementType> texture3D;
-
-static texture3D gT_coneProjTexture;
-
 namespace astraCUDA3d {
-
-static const unsigned int g_volBlockZ = 16;
-
-static const unsigned int g_anglesPerBlock = 64;
-static const unsigned int g_volBlockX = 32;
-static const unsigned int g_volBlockY = 16;
 
 static const unsigned int g_anglesPerWeightBlock = 16;
 static const unsigned int g_detBlockU = 32;
 static const unsigned int g_detBlockV = 32;
 
-static const unsigned g_MaxAngles = 2048;
+static const unsigned g_MaxAngles = 12000;
 
-__constant__ float gC_angle_sin[g_MaxAngles];
-__constant__ float gC_angle_cos[g_MaxAngles];
 __constant__ float gC_angle[g_MaxAngles];
 
 
 // per-detector u/v shifts?
-
-static bool bindProjDataTexture(const cudaArray* array)
-{
-	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
-
-	gT_coneProjTexture.addressMode[0] = cudaAddressModeBorder;
-	gT_coneProjTexture.addressMode[1] = cudaAddressModeBorder;
-	gT_coneProjTexture.addressMode[2] = cudaAddressModeBorder;
-	gT_coneProjTexture.filterMode = cudaFilterModeLinear;
-	gT_coneProjTexture.normalized = false;
-
-	cudaBindTextureToArray(gT_coneProjTexture, array, channelDesc);
-
-	// TODO: error value?
-
-	return true;
-}
 
 
 __global__ void devFDK_preweight(void* D_projData, unsigned int projPitch, unsigned int startAngle, unsigned int endAngle, float fSrcOrigin, float fDetOrigin, float fZShift, float fDetUSize, float fDetVSize, const SDimensions3D dims)
@@ -151,14 +121,8 @@ __global__ void devFDK_ParkerWeight(void* D_projData, unsigned int projPitch, un
 	// TODO: Detector pixel size
 	const float fU = (detectorU - 0.5f*dims.iProjU + 0.5f) * fDetUSize;
 
-	//const float fGamma = atanf(fU / fCentralRayLength);
-	//const float fBeta = gC_angle[angle];
 	const float fGamma = atanf(fU / fCentralRayLength);
-	float fBeta = -gC_angle[angle];
-	if (fBeta < 0.0f)
-		fBeta += 2*M_PI;
-	if (fBeta >= 2*M_PI)
-		fBeta -= 2*M_PI;
+	float fBeta = gC_angle[angle];
 
 	// compute the weight depending on the location in the central fan's radon
 	// space
@@ -225,24 +189,23 @@ bool FDK_PreWeight(cudaPitchedPtr D_projData,
 		float fAngleBase;
 		if (fdA >= 0.0f) {
 			// going up from angles[0]
-			fAngleBase = angles[dims.iProjAngles - 1];
+			fAngleBase = angles[0];
 		} else {
 			// going down from angles[0]
-			fAngleBase = angles[0];
+			fAngleBase = angles[dims.iProjAngles - 1];
 		}
 
-		// We pick the highest end of the range, and then
-		// move all angles so they fall in (-2pi,0]
+		// We pick the lowest end of the range, and then
+		// move all angles so they fall in [0,2pi)
 
 		float *fRelAngles = new float[dims.iProjAngles];
 		for (unsigned int i = 0; i < dims.iProjAngles; ++i) {
 			float f = angles[i] - fAngleBase;
-			while (f > 0)
+			while (f >= 2*M_PI)
 				f -= 2*M_PI;
-			while (f <= -2*M_PI)
+			while (f < 0)
 				f += 2*M_PI;
 			fRelAngles[i] = f;
-
 		}
 
 		cudaError_t e1 = cudaMemcpyToSymbol(gC_angle, fRelAngles,
@@ -310,7 +273,8 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 bool FDK(cudaPitchedPtr D_volumeData,
          cudaPitchedPtr D_projData,
          const SConeProjection* angles,
-         const SDimensions3D& dims, SProjectorParams3D params, bool bShortScan)
+         const SDimensions3D& dims, SProjectorParams3D params, bool bShortScan,
+	     const float* pfFilter)
 {
 	bool ok;
 	// Generate filter
@@ -361,7 +325,14 @@ bool FDK(cudaPitchedPtr D_volumeData,
 	cufftComplex *pHostFilter = new cufftComplex[dims.iProjAngles * iHalfFFTSize];
 	memset(pHostFilter, 0, sizeof(cufftComplex) * dims.iProjAngles * iHalfFFTSize);
 
-	astraCUDA::genFilter(astra::FILTER_RAMLAK, 1.0f, dims.iProjAngles, pHostFilter, iPaddedDetCount, iHalfFFTSize);
+	if (pfFilter == 0){
+		astraCUDA::genFilter(astra::FILTER_RAMLAK, 1.0f, dims.iProjAngles, pHostFilter, iPaddedDetCount, iHalfFFTSize);
+	} else {
+		for (int i = 0; i < dims.iProjAngles * iHalfFFTSize; i++) {
+			pHostFilter[i].x = pfFilter[i];
+			pHostFilter[i].y = 0;
+		}
+	}
 
 
 	astraCUDA::allocateComplexOnDevice(dims.iProjAngles, iHalfFFTSize, &D_filter);

@@ -1,10 +1,10 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-           2014-2015, CWI, Amsterdam
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
 
 Contact: astra@uantwerpen.be
-Website: http://sf.net/projects/astra-toolbox
+Website: http://www.astra-toolbox.com/
 
 This file is part of the ASTRA Toolbox.
 
@@ -23,7 +23,6 @@ You should have received a copy of the GNU General Public License
 along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 -----------------------------------------------------------------------
-$Id$
 */
 
 /** \file mexHelpFunctions.cpp
@@ -361,18 +360,18 @@ mxArray* stringToMxArray(std::string input)
 		StringUtil::splitString(col_strings, row_strings[0], ",");
 
 		// get dimensions
-		int rows = row_strings.size();
-		int cols = col_strings.size();
+		size_t rows = row_strings.size();
+		size_t cols = col_strings.size();
 
 		// init matrix
 		mxArray* pMatrix = mxCreateDoubleMatrix(rows, cols, mxREAL);
 		double* out = mxGetPr(pMatrix);
 
 		// loop elements
-		for (unsigned int row = 0; row < rows; row++) {
+		for (size_t row = 0; row < rows; row++) {
 			StringUtil::splitString(col_strings, row_strings[row], ",");
 			// check size
-			for (unsigned int col = 0; col < col_strings.size(); col++) {
+			for (size_t col = 0; col < col_strings.size(); col++) {
 				out[col*rows + row] = StringUtil::stringToFloat(col_strings[col]);
 			}
 		}
@@ -391,7 +390,7 @@ mxArray* stringToMxArray(std::string input)
 		double* out = mxGetPr(pVector);
 
 		// loop elements
-		for (unsigned int i = 0; i < items.size(); i++) {
+		for (size_t i = 0; i < items.size(); i++) {
 			out[i] = StringUtil::stringToFloat(items[i]);
 		}
 		return pVector;

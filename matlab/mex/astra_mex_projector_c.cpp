@@ -1,10 +1,10 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-           2014-2015, CWI, Amsterdam
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
 
 Contact: astra@uantwerpen.be
-Website: http://sf.net/projects/astra-toolbox
+Website: http://www.astra-toolbox.com/
 
 This file is part of the ASTRA Toolbox.
 
@@ -23,7 +23,6 @@ You should have received a copy of the GNU General Public License
 along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 -----------------------------------------------------------------------
-$Id$
 */
 
 /** \file astra_mex_projector_c.cpp

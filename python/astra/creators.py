@@ -1,28 +1,27 @@
-#-----------------------------------------------------------------------
-#Copyright 2013 Centrum Wiskunde & Informatica, Amsterdam
+# -----------------------------------------------------------------------
+# Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+#            2013-2016, CWI, Amsterdam
 #
-#Author: Daniel M. Pelt
-#Contact: D.M.Pelt@cwi.nl
-#Website: http://dmpelt.github.io/pyastratoolbox/
+# Contact: astra@uantwerpen.be
+# Website: http://www.astra-toolbox.com/
+#
+# This file is part of the ASTRA Toolbox.
 #
 #
-#This file is part of the Python interface to the
-#All Scale Tomographic Reconstruction Antwerp Toolbox ("ASTRA Toolbox").
+# The ASTRA Toolbox is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
-#The Python interface to the ASTRA Toolbox is free software: you can redistribute it and/or modify
-#it under the terms of the GNU General Public License as published by
-#the Free Software Foundation, either version 3 of the License, or
-#(at your option) any later version.
+# The ASTRA Toolbox is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
 #
-#The Python interface to the ASTRA Toolbox is distributed in the hope that it will be useful,
-#but WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-#GNU General Public License for more details.
+# You should have received a copy of the GNU General Public License
+# along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #
-#You should have received a copy of the GNU General Public License
-#along with the Python interface to the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
-#
-#-----------------------------------------------------------------------
+# -----------------------------------------------------------------------
 
 import six
 import numpy as np
@@ -272,7 +271,7 @@ This method can be called in a number of ways:
     elif intype == 'cone':
         if len(args) < 7:
             raise Exception('not enough variables: astra_create_proj_geom(cone, detector_spacing_x, detector_spacing_y, det_row_count, det_col_count, angles, source_origin, origin_det)')
-        return {'type':	'cone','DetectorSpacingX':args[0], 'DetectorSpacingY':args[1], 'DetectorRowCount':args[2],'DetectorColCount':args[3],'ProjectionAngles':args[4],'DistanceOriginSource':	args[5],'DistanceOriginDetector':args[6]}
+        return {'type': 'cone','DetectorSpacingX':args[0], 'DetectorSpacingY':args[1], 'DetectorRowCount':args[2],'DetectorColCount':args[3],'ProjectionAngles':args[4],'DistanceOriginSource': args[5],'DistanceOriginDetector':args[6]}
     elif intype == 'cone_vec':
         if len(args) < 3:
             raise Exception('not enough variables: astra_create_proj_geom(cone_vec, det_row_count, det_col_count, V)')
@@ -547,8 +546,8 @@ def create_reconstruction(rec_type, proj_id, sinogram, iterations=1, use_mask='n
         return recon_id
 
 
-def create_projector(proj_type, proj_geom, vol_geom):
-    """Create a 2D projector.
+def create_projector(proj_type, proj_geom, vol_geom, options=None):
+    """Create a 2D or 3D projector.
 
 :param proj_type: Projector type, such as ``'line'``, ``'linear'``, ...
 :type proj_type: :class:`string`
@@ -556,6 +555,8 @@ def create_projector(proj_type, proj_geom, vol_geom):
 :type proj_geom: :class:`dict`
 :param vol_geom: Volume geometry.
 :type vol_geom: :class:`dict`
+:param options: Projector options structure defining ``'VoxelSuperSampling'``, ``'DetectorSuperSampling'``.
+:type options: :class:`dict`
 :returns: :class:`int` -- The ID of the projector.
 
 """
@@ -564,6 +565,8 @@ def create_projector(proj_type, proj_geom, vol_geom):
     cfg = astra_dict(proj_type)
     cfg['ProjectionGeometry'] = proj_geom
     cfg['VolumeGeometry'] = vol_geom
+    if options is not None:
+        cfg['options'] = options
     types3d = ['linear3d', 'linearcone', 'cuda3d']
     if proj_type in types3d:
         return projector3d.create(cfg)

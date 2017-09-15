@@ -1,9 +1,9 @@
 dnl -----------------------------------------------------------------------
-dnl Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-dnl            2014-2015, CWI, Amsterdam
+dnl Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+dnl            2014-2016, CWI, Amsterdam
 dnl
 dnl Contact: astra@uantwerpen.be
-dnl Website: http://sf.net/projects/astra-toolbox
+dnl Website: http://www.astra-toolbox.com/
 dnl
 dnl This file is part of the ASTRA Toolbox.
 dnl
@@ -22,9 +22,8 @@ dnl You should have received a copy of the GNU General Public License
 dnl along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 dnl
 dnl -----------------------------------------------------------------------
-dnl $Id$
 
-AC_INIT(astra_toolbox, 1.7.1)
+AC_INIT(astra, 1.8.0)
 AC_CONFIG_SRCDIR([Makefile.in])
 LT_INIT([disable-static])
 
@@ -103,14 +102,7 @@ if test x"$NVCC" != xno; then
   HAVECUDA=yes
   BACKUP_CUDA_LDFLAGS="$LDFLAGS"
   if test x"$with_cuda" != x -a x"$with_cuda" != xyes; then
-    case $host_cpu in
-    x86_64)
-      LDFLAGS_CUDA="-L$with_cuda/lib64"
-      ;;
-    *)
-      LDFLAGS_CUDA="-L$with_cuda/lib"
-      ;;
-    esac
+    test -d $with_cuda/lib64 && LDFLAGS_CUDA="-L$with_cuda/lib64" || LDFLAGS_CUDA="-L$with_cuda/lib"
     CPPFLAGS_CUDA="-I$with_cuda/include"
     LDFLAGS="$LDFLAGS $LDFLAGS_CUDA"
   fi
@@ -133,13 +125,15 @@ fi
 AC_ARG_WITH(cuda_compute, [[  --with-cuda-compute=archs  comma separated list of CUDA compute models (optional)]],,)
 if test x"$HAVECUDA" = xyes; then
   AC_MSG_CHECKING([for nvcc archs])
-  dnl 10 11 12 13 20 30 32 35 37 50
+  dnl 10 11 12 13 20 21 30 32 35 37 50 52 53 60 61
   if test x"$with_cuda_compute" = x; then
-    with_cuda_compute="10,12,20,30,35,50"
+    with_cuda_compute="20,30,35,50,60"
   fi
   ASTRA_FIND_NVCC_ARCHS([$with_cuda_compute],NVCCFLAGS_EXTRA,NVCCARCHS)
   AC_MSG_RESULT([$NVCCARCHS])
 fi
+
+AC_ARG_VAR(NVCCFLAGS, [CUDA nvcc flags])
 
 
 AC_SUBST(HAVECUDA)
@@ -175,6 +169,28 @@ fi
 
 AC_SUBST(HAVEMATLAB)
 
+# octave
+
+AC_ARG_ENABLE(octave, [[  --enable-octave         enable Octave support]])
+if test x"$enable_octave" = xyes; then
+  AC_PATH_PROG([HAVEOCTAVE], [octave-config], [no], [$PATH])
+  AC_MSG_CHECKING([for octave])
+  if test x"HAVEOCTAVE" != xno -a $HAVEMATLAB = yes; then
+    HAVEOCTAVE=no
+    AC_MSG_RESULT([no (since Matlab support is enabled)])
+  else
+    if test x"$HAVEOCTAVE" != xno; then
+      OCTAVE_CPPFLAGS="-I`octave-config -p OCTINCLUDEDIR`"
+      AC_SUBST(OCTAVE_CPPFLAGS)
+      HAVEOCTAVE=yes
+    fi
+    AC_MSG_RESULT($HAVEOCTAVE)
+  fi
+else
+  HAVEOCTAVE=no
+fi
+AC_SUBST(HAVEOCTAVE)
+
 # python
 
 AC_ARG_WITH(python, [[  --with-python=path      path of Python binary (optional)]],,)
@@ -204,8 +220,8 @@ if test x"$with_python" != x -a x"$with_python" != xno; then
   AC_MSG_CHECKING(for Cython module)
   ASTRA_TRY_PYTHON([
 import Cython
-from distutils.version import LooseVersion
-assert(LooseVersion(Cython.__version__)>=LooseVersion("0.13"))
+from pkg_resources import parse_version
+assert(parse_version(Cython.__version__) >= parse_version("0.13"))
 ],,HAVEPYTHON=no)
   if test x$HAVEPYTHON = xno; then
     AC_MSG_RESULT(no)
@@ -234,14 +250,20 @@ AC_SUBST(HAVEPYTHON)
 AC_CANONICAL_HOST
 case $host_os in
   darwin* )
-        CPPFLAGS_OS="-stdlib=libstdc++ -mmacosx-version-min=10.6"
+        CXXFLAGS_OS="-stdlib=libstdc++ -mmacosx-version-min=10.6"
+        LDFLAGS_OS="-stdlib=libstdc++"
+        IS_MACOS=yes
         ;;
     *)
-        CPPFLAGS_OS=""
+        CXXFLAGS_OS=""
+        LDFLAGS_OS=""
+        IS_MACOS=no
         ;;
 esac
 
-AC_SUBST(CPPFLAGS_OS)
+AC_SUBST(CXXFLAGS_OS)
+AC_SUBST(LDFLAGS_OS)
+AC_SUBST(IS_MACOS)
 
 # For some reason, some older versions of autoconf produce a config.status
 # that disables all lines looking like VPATH=@srcdir@
@@ -249,6 +271,15 @@ AC_SUBST(CPPFLAGS_OS)
 # We use a different variable name as a workaround.
 VPATH_SRCDIR="$srcdir"
 AC_SUBST(VPATH_SRCDIR)
+
+
+# Installation type
+AC_ARG_WITH(install-type, [[  --with-install-type=prefix|module|dir  type of installation (default prefix)]],,with_install_type=prefix)
+
+INSTALL_TYPE=$with_install_type
+AC_SUBST(INSTALL_TYPE)
+
+
 
 # TODO:
 
@@ -269,9 +300,46 @@ AC_OUTPUT
 
 echo
 echo "Summary of ASTRA Toolbox build options:"
-echo "  CUDA   : $HAVECUDA"
-echo "  Matlab : $HAVEMATLAB"
-echo "  Python : $HAVEPYTHON"
+echo "  CUDA  : $HAVECUDA"
+echo "  Matlab: $HAVEMATLAB"
+echo "  Octave: $HAVEOCTAVE"
+echo "  Python: $HAVEPYTHON"
 echo
-echo "  prefix : $prefix"
-echo
+echo "Installation type: $with_install_type"
+case $with_install_type in
+  prefix)
+    echo   "  Library     : "$(eval echo `eval echo $libdir`)
+    if test $HAVEMATLAB = yes; then
+      echo "  Matlab files: "$(eval echo `eval echo $datadir`)"/astra/matlab"
+    fi
+    if test $HAVEOCTAVE = yes; then
+      echo "  Octave files: "$(eval echo `eval echo $datadir`)"/astra/octave"
+    fi
+    if test $HAVEPYTHON = yes; then
+      echo "  Python files to site-packages"
+    fi
+    ;;
+  dir)
+    echo   "  Library     : "$(eval echo `eval echo $libdir`)
+    if test $HAVEMATLAB = yes; then
+      echo "  Matlab files: $prefix/matlab"
+    fi
+    if test $HAVEOCTAVE = yes; then
+      echo "  Octave files: $prefix/octave"
+    fi
+    if test $HAVEPYTHON = yes; then
+      echo "  Python files: $prefix/python"
+    fi
+    ;;
+  module)
+    echo   "  Library into Matlab/Octave/Python module directories"
+    if test $HAVEMATLAB = yes; then
+      echo "  Matlab files: $prefix/matlab"
+    fi
+    if test $HAVEOCTAVE = yes; then
+      echo "  Octave files: $prefix/octave"
+    fi
+    if test $HAVEPYTHON = yes; then
+      echo "  Python files to site-packages"
+    fi
+esac

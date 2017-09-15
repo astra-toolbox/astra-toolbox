@@ -3,7 +3,7 @@
 #            2013-2016, CWI, Amsterdam
 #
 # Contact: astra@uantwerpen.be
-# Website: http://sf.net/projects/astra-toolbox
+# Website: http://www.astra-toolbox.com/
 #
 # This file is part of the ASTRA Toolbox.
 #
@@ -44,7 +44,7 @@ from .utils import wrap_from_bytes
 cdef CAlgorithmManager * manAlg = <CAlgorithmManager * >PyAlgorithmManager.getSingletonPtr()
 
 cdef extern from *:
-    CReconstructionAlgorithm2D * dynamic_cast_recAlg "dynamic_cast<CReconstructionAlgorithm2D*>" (CAlgorithm * ) except NULL
+    CReconstructionAlgorithm2D * dynamic_cast_recAlg "dynamic_cast<astra::CReconstructionAlgorithm2D*>" (CAlgorithm * ) except NULL
 
 
 def create(config):

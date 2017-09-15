@@ -1,10 +1,10 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-           2014-2015, CWI, Amsterdam
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
 
 Contact: astra@uantwerpen.be
-Website: http://sf.net/projects/astra-toolbox
+Website: http://www.astra-toolbox.com/
 
 This file is part of the ASTRA Toolbox.
 
@@ -42,9 +42,9 @@ namespace astra {
 
 class CCompositeVolume;
 class CCompositeProjections;
-class CFloat32Data3DMemory;
-class CFloat32ProjectionData3DMemory;
-class CFloat32VolumeData3DMemory;
+class CFloat32Data3D;
+class CFloat32ProjectionData3D;
+class CFloat32VolumeData3D;
 class CVolumeGeometry3D;
 class CProjectionGeometry3D;
 class CProjector3D;
@@ -57,6 +57,7 @@ struct SGPUParams {
 
 struct SFDKSettings {
 	bool bShortScan;
+	const float *pfFilter;
 };
 
 
@@ -76,7 +77,7 @@ public:
 			PART_VOL, PART_PROJ
 		} eType;
 
-		CFloat32Data3DMemory* pData;
+		CFloat32Data3D* pData;
 		unsigned int subX;
 		unsigned int subY;
 		unsigned int subZ;
@@ -87,8 +88,11 @@ public:
 		virtual void splitY(TPartList& out, size_t maxSize, size_t maxDim, int div) = 0;
 		virtual void splitZ(TPartList& out, size_t maxSize, size_t maxDim, int div) = 0;
 		virtual CPart* reduce(const CPart *other) = 0;
-		virtual void getDims(size_t &x, size_t &y, size_t &z) = 0;
-		size_t getSize();
+		virtual void getDims(size_t &x, size_t &y, size_t &z) const = 0;
+		size_t getSize() const;
+
+		bool canSplitAndReduce() const;
+		bool isFull() const;
 	};
 
 	class CVolumePart : public CPart {
@@ -103,7 +107,7 @@ public:
 		virtual void splitY(TPartList& out, size_t maxSize, size_t maxDim, int div);
 		virtual void splitZ(TPartList& out, size_t maxSize, size_t maxDim, int div);
 		virtual CPart* reduce(const CPart *other);
-		virtual void getDims(size_t &x, size_t &y, size_t &z);
+		virtual void getDims(size_t &x, size_t &y, size_t &z) const;
 
 		CVolumePart* clone() const;
 	};
@@ -119,7 +123,7 @@ public:
 		virtual void splitY(TPartList& out, size_t maxSize, size_t maxDim, int div);
 		virtual void splitZ(TPartList& out, size_t maxSize, size_t maxDim, int div);
 		virtual CPart* reduce(const CPart *other);
-		virtual void getDims(size_t &x, size_t &y, size_t &z);
+		virtual void getDims(size_t &x, size_t &y, size_t &z) const;
 
 		CProjectionPart* clone() const;
 	};
@@ -149,22 +153,23 @@ public:
 	bool doJobs(TJobList &jobs);
 
 	SJob createJobFP(CProjector3D *pProjector,
-                     CFloat32VolumeData3DMemory *pVolData,
-                     CFloat32ProjectionData3DMemory *pProjData);
+                     CFloat32VolumeData3D *pVolData,
+                     CFloat32ProjectionData3D *pProjData);
 	SJob createJobBP(CProjector3D *pProjector,
-                     CFloat32VolumeData3DMemory *pVolData,
-                     CFloat32ProjectionData3DMemory *pProjData);
+                     CFloat32VolumeData3D *pVolData,
+                     CFloat32ProjectionData3D *pProjData);
 
 	// Convenience functions for creating and running a single FP or BP job
-	bool doFP(CProjector3D *pProjector, CFloat32VolumeData3DMemory *pVolData,
-	          CFloat32ProjectionData3DMemory *pProjData);
-	bool doBP(CProjector3D *pProjector, CFloat32VolumeData3DMemory *pVolData,
-	          CFloat32ProjectionData3DMemory *pProjData);
-	bool doFDK(CProjector3D *pProjector, CFloat32VolumeData3DMemory *pVolData,
-	          CFloat32ProjectionData3DMemory *pProjData, bool bShortScan);
+	bool doFP(CProjector3D *pProjector, CFloat32VolumeData3D *pVolData,
+	          CFloat32ProjectionData3D *pProjData);
+	bool doBP(CProjector3D *pProjector, CFloat32VolumeData3D *pVolData,
+	          CFloat32ProjectionData3D *pProjData);
+	bool doFDK(CProjector3D *pProjector, CFloat32VolumeData3D *pVolData,
+	          CFloat32ProjectionData3D *pProjData, bool bShortScan,
+	          const float *pfFilter = 0);
 
-	bool doFP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3DMemory *>& volData, const std::vector<CFloat32ProjectionData3DMemory *>& projData);
-	bool doBP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3DMemory *>& volData, const std::vector<CFloat32ProjectionData3DMemory *>& projData);
+	bool doFP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3D *>& volData, const std::vector<CFloat32ProjectionData3D *>& projData);
+	bool doBP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3D *>& volData, const std::vector<CFloat32ProjectionData3D *>& projData);
 
 	void setGPUIndices(const std::vector<int>& GPUIndices);
 

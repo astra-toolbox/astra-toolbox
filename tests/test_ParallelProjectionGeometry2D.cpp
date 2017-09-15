@@ -1,13 +1,13 @@
 /*
 -----------------------------------------------------------------------
-Copyright 2012 iMinds-Vision Lab, University of Antwerp
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
 
-Contact: astra@ua.ac.be
-Website: http://astra.ua.ac.be
+Contact: astra@uantwerpen.be
+Website: http://www.astra-toolbox.com/
 
+This file is part of the ASTRA Toolbox.
 
-This file is part of the
-All Scale Tomographic Reconstruction Antwerp Toolbox ("ASTRA Toolbox").
 
 The ASTRA Toolbox is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ You should have received a copy of the GNU General Public License
 along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 -----------------------------------------------------------------------
-$Id$
 */
 
 

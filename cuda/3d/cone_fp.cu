@@ -1,10 +1,10 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-           2014-2015, CWI, Amsterdam
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
 
 Contact: astra@uantwerpen.be
-Website: http://sf.net/projects/astra-toolbox
+Website: http://www.astra-toolbox.com/
 
 This file is part of the ASTRA Toolbox.
 
@@ -23,7 +23,6 @@ You should have received a copy of the GNU General Public License
 along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 -----------------------------------------------------------------------
-$Id$
 */
 
 #include <cstdio>
@@ -49,7 +48,7 @@ namespace astraCUDA3d {
 static const unsigned int g_anglesPerBlock = 4;
 
 // thickness of the slices we're splitting the volume up into
-static const unsigned int g_blockSlices = 32;
+static const unsigned int g_blockSlices = 4;
 static const unsigned int g_detBlockU = 32;
 static const unsigned int g_detBlockV = 32;
 

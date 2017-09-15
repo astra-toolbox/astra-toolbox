@@ -14,13 +14,12 @@ function backProj = astra_create_backprojection_cuda(sinogramData, proj_geom, vo
     %--------------------------------------------------------------------------
     % This file is part of the ASTRA Toolbox
     % 
-    % Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-    %            2014-2015, CWI, Amsterdam
+    % Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+    %            2014-2016, CWI, Amsterdam
     % License: Open Source under GPLv3
     % Contact: astra@uantwerpen.be
-    % Website: http://sf.net/projects/astra-toolbox
+    % Website: http://www.astra-toolbox.com/
     %--------------------------------------------------------------------------
-    % $Id$
 
     recon_id = astra_mex_data2d('create', '-vol', vol_geom, 0);
     sinogram_id = astra_mex_data2d('create', '-sino', proj_geom, sinogramData);

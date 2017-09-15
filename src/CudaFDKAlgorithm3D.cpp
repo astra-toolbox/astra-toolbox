@@ -1,10 +1,10 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-           2014-2015, CWI, Amsterdam
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
 
 Contact: astra@uantwerpen.be
-Website: http://sf.net/projects/astra-toolbox
+Website: http://www.astra-toolbox.com/
 
 This file is part of the ASTRA Toolbox.
 
@@ -23,7 +23,6 @@ You should have received a copy of the GNU General Public License
 along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 -----------------------------------------------------------------------
-$Id$
 */
 
 #include "astra/CudaFDKAlgorithm3D.h"
@@ -37,8 +36,11 @@ $Id$
 #include "astra/Logging.h"
 
 #include "../cuda/3d/astra3d.h"
+#include "../cuda/2d/fft.h"
+#include "../cuda/3d/util3d.h"
 
 using namespace std;
+using namespace astraCUDA3d;
 
 namespace astra {
 
@@ -57,8 +59,8 @@ CCudaFDKAlgorithm3D::CCudaFDKAlgorithm3D()
 //----------------------------------------------------------------------------------------
 // Constructor with initialization
 CCudaFDKAlgorithm3D::CCudaFDKAlgorithm3D(CProjector3D* _pProjector, 
-								   CFloat32ProjectionData3DMemory* _pProjectionData, 
-								   CFloat32VolumeData3DMemory* _pReconstruction)
+								   CFloat32ProjectionData3D* _pProjectionData, 
+								   CFloat32VolumeData3D* _pReconstruction)
 {
 	_clear();
 	initialize(_pProjector, _pProjectionData, _pReconstruction);
@@ -141,6 +143,28 @@ bool CCudaFDKAlgorithm3D::initialize(const Config& _cfg)
 	CC.markOptionParsed("GPUIndex");
 	if (!_cfg.self.hasOption("GPUIndex"))
 		CC.markOptionParsed("GPUindex");
+	
+	// filter
+	if (_cfg.self.hasOption("FilterSinogramId")){
+		m_iFilterDataId = (int)_cfg.self.getOptionInt("FilterSinogramId");
+		const CFloat32ProjectionData2D * pFilterData = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(m_iFilterDataId));
+		if (!pFilterData){
+			ASTRA_ERROR("Incorrect FilterSinogramId");
+			return false;
+		}
+		const CProjectionGeometry3D* projgeom = m_pSinogram->getGeometry();
+		const CProjectionGeometry2D* filtgeom = pFilterData->getGeometry();
+		int iPaddedDetCount = calcNextPowerOfTwo(2 * projgeom->getDetectorColCount());
+		int iHalfFFTSize = astraCUDA::calcFFTFourierSize(iPaddedDetCount);
+		if(filtgeom->getDetectorCount()!=iHalfFFTSize || filtgeom->getProjectionAngleCount()!=projgeom->getProjectionCount()){
+			ASTRA_ERROR("Filter size does not match required size (%i angles, %i detectors)",projgeom->getProjectionCount(),iHalfFFTSize);
+			return false;
+		}
+	}else
+	{
+		m_iFilterDataId = -1;
+	}
+	CC.markOptionParsed("FilterSinogramId");
 
 
 
@@ -155,8 +179,8 @@ bool CCudaFDKAlgorithm3D::initialize(const Config& _cfg)
 //----------------------------------------------------------------------------------------
 // Initialize - C++
 bool CCudaFDKAlgorithm3D::initialize(CProjector3D* _pProjector, 
-								  CFloat32ProjectionData3DMemory* _pSinogram, 
-								  CFloat32VolumeData3DMemory* _pReconstruction)
+								  CFloat32ProjectionData3D* _pSinogram, 
+								  CFloat32VolumeData3D* _pReconstruction)
 {
 	// if already initialized, clear first
 	if (m_bIsInitialized) {
@@ -197,29 +221,35 @@ void CCudaFDKAlgorithm3D::run(int _iNrIterations)
 
 	const CProjectionGeometry3D* projgeom = m_pSinogram->getGeometry();
 	const CConeProjectionGeometry3D* conegeom = dynamic_cast<const CConeProjectionGeometry3D*>(projgeom);
-	const CVolumeGeometry3D& volgeom = *m_pReconstruction->getGeometry();
+	// const CVolumeGeometry3D& volgeom = *m_pReconstruction->getGeometry();
 
 	ASTRA_ASSERT(conegeom);
 
-	CFloat32ProjectionData3DMemory* pSinoMem = dynamic_cast<CFloat32ProjectionData3DMemory*>(m_pSinogram);
+	CFloat32ProjectionData3D* pSinoMem = dynamic_cast<CFloat32ProjectionData3D*>(m_pSinogram);
 	ASTRA_ASSERT(pSinoMem);
-	CFloat32VolumeData3DMemory* pReconMem = dynamic_cast<CFloat32VolumeData3DMemory*>(m_pReconstruction);
+	CFloat32VolumeData3D* pReconMem = dynamic_cast<CFloat32VolumeData3D*>(m_pReconstruction);
 	ASTRA_ASSERT(pReconMem);
 
+	const float *filter = NULL;
+	if (m_iFilterDataId != -1) {
+		const CFloat32ProjectionData2D *pFilterData = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(m_iFilterDataId));
+		if (pFilterData)
+			filter = pFilterData->getDataConst();
+	}
 
 #if 0
 	bool ok = true;
-
+	
 	ok = astraCudaFDK(pReconMem->getData(), pSinoMem->getDataConst(),
 	                  &volgeom, conegeom,
-	                  m_bShortScan, m_iGPUIndex, m_iVoxelSuperSampling);
+	                  m_bShortScan, m_iGPUIndex, m_iVoxelSuperSampling, filter);
 
 	ASTRA_ASSERT(ok);
 #endif
 
 	CCompositeGeometryManager cgm;
 
-	cgm.doFDK(m_pProjector, pReconMem, pSinoMem, m_bShortScan);
+	cgm.doFDK(m_pProjector, pReconMem, pSinoMem, m_bShortScan, filter);
 
 
 

@@ -1,10 +1,10 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-           2014-2015, CWI, Amsterdam
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
 
 Contact: astra@uantwerpen.be
-Website: http://sf.net/projects/astra-toolbox
+Website: http://www.astra-toolbox.com/
 
 This file is part of the ASTRA Toolbox.
 
@@ -23,7 +23,6 @@ You should have received a copy of the GNU General Public License
 along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 -----------------------------------------------------------------------
-$Id$
 */
 
 #include "mexDataManagerHelpFunctions.h"
@@ -42,10 +41,10 @@ $Id$
 #ifdef USE_MATLAB_UNDOCUMENTED
 extern "C" {
 mxArray *mxCreateSharedDataCopy(const mxArray *pr);
-bool mxUnshareArray(const mxArray *pr, const bool noDeepCopy);
-mxArray *mxUnreference(const mxArray *pr);
+bool mxUnshareArray(mxArray *pr, bool noDeepCopy);
+mxArray *mxUnreference(mxArray *pr);
 #if 0
-// Unsupported in Matlab R2014b
+// Unsupported in Matlab R2014b and later
 bool mxIsSharedArray(const mxArray *pr);
 #endif
 }
@@ -66,12 +65,12 @@ public:
 		// First unshare the input array, so that we may modify it.
 		if (bUnshare) {
 #if 0
-			// Unsupported in Matlab R2014b
+			// Unsupported in Matlab R2014b and later
 			if (mxIsSharedArray(_pArray)) {
 				fprintf(stderr, "Performance note: unsharing shared array in link\n");
 			}
 #endif
-			mxUnshareArray(_pArray, false);
+			mxUnshareArray(const_cast<mxArray*>(_pArray), false);
 			//fprintf(stderr, "Unshared:\narray: %p\tdata: %p\n", (void*)_pArray, (void*)mxGetData(_pArray));
 		}
 		// Then create a (persistent) copy so the data won't be deleted
@@ -79,7 +78,7 @@ public:
 		m_pLink = mxCreateSharedDataCopy(_pArray);
 		//fprintf(stderr, "SharedDataCopy:\narray: %p\tdata: %p\n", (void*)m_pLink, (void*)mxGetData(m_pLink));
 		mexMakeArrayPersistent(m_pLink);
-		m_fPtr = (float *)mxGetData(m_pLink);
+		m_fPtr = (float *)mxGetData(_pArray);
 		m_fPtr += iOffset;
 	}
 	virtual ~CFloat32CustomMemoryMatlab3D() {
@@ -163,17 +162,6 @@ checkDataSize(const mxArray * const mArray,
 	return (geom->getGridColCount() == dims[0]
 			&& geom->getGridRowCount() == dims[1]
 			&& (zOffset + geom->getGridSliceCount()) <= dims[2]);
-}
-
-//-----------------------------------------------------------------------------------------
-void
-updateStatistics(const std::vector<astra::CFloat32Data3DMemory *> & vecIn)
-{
-	const size_t tot_size = vecIn.size();
-	for (size_t count = 0; count < tot_size; count++)
-	{
-		vecIn[count]->updateStatistics();
-	}
 }
 
 //-----------------------------------------------------------------------------------------

@@ -1,10 +1,10 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-           2014-2015, CWI, Amsterdam
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
 
 Contact: astra@uantwerpen.be
-Website: http://sf.net/projects/astra-toolbox
+Website: http://www.astra-toolbox.com/
 
 This file is part of the ASTRA Toolbox.
 
@@ -23,7 +23,6 @@ You should have received a copy of the GNU General Public License
 along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 -----------------------------------------------------------------------
-$Id$
 */
 
 /** \file astra_mex_data3d_c.cpp
@@ -61,7 +60,7 @@ using namespace astra;
 //-----------------------------------------------------------------------------------------
 /**
  * id = astra_mex_io_data('create', datatype, geometry, data);
- *        datatype: ['-vol','-sino','-sinocone'] 
+ *        datatype: ['-vol','-sino']
  */
 void astra_mex_data3d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray* prhs[])
 { 
@@ -104,7 +103,6 @@ void astra_mex_data3d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 		copyMexToCFloat32Array(data, pDataObject3D->getData(),
 				pDataObject3D->getSize());
 	}
-	pDataObject3D->updateStatistics();
 
 	// step4: store data object
 	int iIndex = CData3DManager::getSingleton().store(pDataObject3D);
@@ -162,8 +160,6 @@ void astra_mex_data3d_link(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 		// Error message was already set by the function
 		return;
 	}
-
-	//pDataObject3D->updateStatistics();
 
 	// step4: store data object
 	int iIndex = CData3DManager::getSingleton().store(pDataObject3D);
@@ -235,7 +231,6 @@ void astra_mex_data3d_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 	}
 
 	copyMexToCFloat32Array(prhs[2], pDataObject->getData(), pDataObject->getSize());
-	pDataObject->updateStatistics();
 }
 
 void astra_mex_data3d_dimensions(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])

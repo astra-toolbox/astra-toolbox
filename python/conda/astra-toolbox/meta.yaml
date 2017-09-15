@@ -1,0 +1,48 @@
+package:
+  name: astra-toolbox
+  version: '1.8'
+
+source:
+  git_url: https://github.com/astra-toolbox/astra-toolbox.git
+  git_tag: v1.8
+
+build:
+  number: 0
+  script_env:
+    - CC # [not win]
+    - CUDA_ROOT # [not win]
+
+test:
+  imports:
+    - astra
+
+  requires:
+    # To avoid large downloads just for testing after build phase
+    - nomkl # [not win]
+
+requirements:
+  build:
+    - python
+    - cython >=0.13
+    - nomkl # [not win]
+    - numpy
+    - scipy
+    - six
+    - libastra ==1.8
+
+  run:
+    - python
+    - numpy x.x
+    - scipy
+    - six
+    - libastra ==1.8
+
+
+about:
+  home: http://www.astra-toolbox.com
+  license: GPLv3
+  summary: 'The ASTRA Toolbox is a Python toolbox of high-performance GPU primitives for 2D and 3D tomography.'
+
+# See
+# http://docs.continuum.io/conda/build.html for
+# more information about meta.yaml

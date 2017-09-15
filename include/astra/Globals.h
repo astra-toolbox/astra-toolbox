@@ -1,10 +1,10 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-           2014-2015, CWI, Amsterdam
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
 
 Contact: astra@uantwerpen.be
-Website: http://sf.net/projects/astra-toolbox
+Website: http://www.astra-toolbox.com/
 
 This file is part of the ASTRA Toolbox.
 
@@ -23,7 +23,6 @@ You should have received a copy of the GNU General Public License
 along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 -----------------------------------------------------------------------
-$Id$
 */
 
 #ifndef _INC_ASTRA_GLOBALS
@@ -54,23 +53,21 @@ $Id$
 #include <iostream>
 #include <fstream>
 #include <math.h>
-#include <boost/static_assert.hpp>
-#include <boost/throw_exception.hpp>
 
 //----------------------------------------------------------------------------------------
 // macro's
 
 #define ASTRA_TOOLBOXVERSION_MAJOR 1
-#define ASTRA_TOOLBOXVERSION_MINOR 7
+#define ASTRA_TOOLBOXVERSION_MINOR 8
 #define ASTRA_TOOLBOXVERSION ((ASTRA_TOOLBOXVERSION_MAJOR)*100 + (ASTRA_TOOLBOXVERSION_MINOR))
-#define ASTRA_TOOLBOXVERSION_STRING "1.7.1"
+#define ASTRA_TOOLBOXVERSION_STRING "1.8"
 
 
 #define ASTRA_ASSERT(a) assert(a)
 
-#define ASTRA_CONFIG_CHECK(value, type, msg) if (!(value)) { cout << "Configuration Error in " << type << ": " << msg << endl; return false; }
+#define ASTRA_CONFIG_CHECK(value, type, msg) if (!(value)) { std::cout << "Configuration Error in " << type << ": " << msg << std::endl; return false; }
 
-#define ASTRA_CONFIG_WARNING(type, msg) { cout << "Warning in " << type << ": " << msg << endl; }
+#define ASTRA_CONFIG_WARNING(type, msg) { std::cout << "Warning in " << type << ": " << msg << sdt::endl; }
 
 
 #define ASTRA_DELETE(a) if (a) { delete a; a = NULL; }
@@ -227,16 +224,6 @@ namespace astra {
 		int m_iDetectorIndex;
 		int m_iSliceIndex;
 	};
-}
-//----------------------------------------------------------------------------------------
-// some toys
-
-// safe reinterpret cast
-template <class To, class From>
-To safe_reinterpret_cast(From from)
-{
-	BOOST_STATIC_ASSERT(sizeof(From) <= sizeof(To));
-	return reinterpret_cast<To>(from);
 }
 
 //----------------------------------------------------------------------------------------

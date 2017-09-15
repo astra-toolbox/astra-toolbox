@@ -1,10 +1,10 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-           2014-2015, CWI, Amsterdam
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
 
 Contact: astra@uantwerpen.be
-Website: http://sf.net/projects/astra-toolbox
+Website: http://www.astra-toolbox.com/
 
 This file is part of the ASTRA Toolbox.
 
@@ -23,7 +23,6 @@ You should have received a copy of the GNU General Public License
 along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 -----------------------------------------------------------------------
-$Id$
 */
 
 #ifndef _INC_ASTRA_MEX_HELPFUNCTIONS
@@ -47,7 +46,7 @@ $Id$
 #include "astra/XMLNode.h"
 
 // utility functions
-string mexToString(const mxArray* pInput);
+std::string mexToString(const mxArray* pInput);
 bool mexIsScalar(const mxArray* pInput);
 void get3DMatrixDims(const mxArray* x, mwSize *dims);
 
@@ -56,7 +55,7 @@ mxArray* vectorToMxArray(std::vector<astra::float32> mInput);
 mxArray* anyToMxArray(boost::any _any);
 
 // turn a MATLAB struct into a Config object
-astra::Config* structToConfig(string rootname, const mxArray* pStruct);
+astra::Config* structToConfig(std::string rootname, const mxArray* pStruct);
 bool structToXMLNode(astra::XMLNode node, const mxArray* pStruct);
 bool optionsToXMLNode(astra::XMLNode node, const mxArray* pOptionStruct);
 std::map<std::string, mxArray*> parseStruct(const mxArray* pInput);

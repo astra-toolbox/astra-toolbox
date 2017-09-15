@@ -1,9 +1,5 @@
 language: python
 
-python:
-  - "2.7"
-  - "3.5"
-
 os:
   - linux
 
@@ -13,13 +9,42 @@ addons:
   apt:
     packages:
       - libboost-all-dev
-      - nvidia-common
-      - nvidia-current
-      - nvidia-cuda-toolkit
-      - nvidia-cuda-dev
-env:
-    - CUDA=yes
-    - CUDA=no
+
+matrix:
+  include:
+    - env: CUDA=no CLANG=yes
+      python: "3.6"
+
+    - env: CUDA=no
+      python: "2.7"
+
+    - env: CUDA=no
+      python: "3.6"
+
+    - env: CUDA=yes
+      python: "2.7"
+      addons:
+        apt:
+          packages:
+            - libboost-all-dev
+            - nvidia-common
+            - nvidia-current
+            - nvidia-cuda-toolkit
+            - nvidia-cuda-dev
+
+    - env: CUDA=yes
+      python: "3.6"
+      addons:
+        apt:
+          packages:
+            - libboost-all-dev
+            - nvidia-common
+            - nvidia-current
+            - nvidia-cuda-toolkit
+            - nvidia-cuda-dev
+  exclude:
+    - os: linux
+
 
 before_install:
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
@@ -37,9 +62,11 @@ install:
   - conda info -a
   - cd build/linux
   - ./autogen.sh
-  - if [ $CUDA == yes ]; then ./configure --prefix=$HOME/astra --with-python --with-cuda; else ./configure --prefix=$HOME/astra --with-python --without-cuda; fi
+  - if [ x$CLANG == xyes ]; then export CXX=clang++; export CC=clang; fi
+  - if [ $CUDA == yes ]; then ./configure --prefix=$HOME/astra --with-python --with-cuda --with-install-type=module; else ./configure --prefix=$HOME/astra --with-python --without-cuda --with-install-type=module; fi
   - make -j 4
+  - make test
   - make install
 
 script:
-  - LD_LIBRARY_PATH=$HOME/astra/lib/:$LD_LIBRARY_PATH PYTHONPATH=$HOME/astra/python/:$PYTHONPATH python -c "import astra"
+  - python -c "import astra"

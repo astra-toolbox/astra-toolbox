@@ -1,13 +1,25 @@
 -----------------------------------------------------------------------
 This file is part of the ASTRA Toolbox
 
-Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-           2014-2015, CWI, Amsterdam
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
            http://visielab.uantwerpen.be/ and http://www.cwi.nl/
 License: Open Source under GPLv3
 Contact: astra@uantwerpen.be
-Website: http://sf.net/projects/astra-toolbox
+Website: http://www.astra-toolbox.com/
 -----------------------------------------------------------------------
+
+1.8 (2016-12-05)
+  * the Windows binary release now requires CUDA 8.0
+  * major changes to the way 'make install' works when building from source
+  * removed GPU memory size restrictions for FDK
+  * added multi-GPU support to 3D FP/BP/FDK
+  * added relaxation factor option to SIRT, SART
+  * fixed certain projections parallel to XZ or YZ planes
+  * fixed accumulating multiple raylengths in SART
+  * for matlab OpTomo, make output type match input type
+  * for python OpTomo, add FP/BP functions with optional 'out' argument
+  * fixed problems with non-US locales
 
 1.7.1beta (2015-12-23)
   * NB: This release has a beta tag as it contains two new

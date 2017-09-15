@@ -23,13 +23,12 @@
 %--------------------------------------------------------------------------
 % This file is part of the ASTRA Toolbox
 % 
-% Copyright: 2014-2015, CWI, Amsterdam
+% Copyright: 2014-2016, CWI, Amsterdam
 % License:   Open Source under GPLv3
 % Author:    Folkert Bleichrodt
 % Contact:   F.Bleichrodt@cwi.nl
-% Website:   http://sf.net/projects/astra-toolbox
+% Website:   http://www.astra-toolbox.com/
 %--------------------------------------------------------------------------
-% $Id$
 
 classdef opTomo < opSpot
     

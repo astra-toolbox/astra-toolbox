@@ -74,9 +74,9 @@ namespace rapidxml
     public:
     
         //! Constructs parse error
-        parse_error(const char *what, void *where)
-            : m_what(what)
-            , m_where(where)
+        parse_error(const char *what_, void *where_)
+            : m_what(what_)
+            , m_where(where_)
         {
         }
 

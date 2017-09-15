@@ -1,10 +1,10 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-           2014-2015, CWI, Amsterdam
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
 
 Contact: astra@uantwerpen.be
-Website: http://sf.net/projects/astra-toolbox
+Website: http://www.astra-toolbox.com/
 
 This file is part of the ASTRA Toolbox.
 
@@ -23,7 +23,6 @@ You should have received a copy of the GNU General Public License
 along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 -----------------------------------------------------------------------
-$Id$
 */
 
 #ifndef _INC_ASTRA_ALGORITHMTYPELIST
@@ -56,12 +55,11 @@ $Id$
 #include "CudaDartSmoothingAlgorithm3D.h"
 #include "CudaDataOperationAlgorithm.h"
 #include "CudaRoiSelectAlgorithm.h"
+#include "CudaFilteredBackProjectionAlgorithm.h"
 
-using namespace astra;
+namespace astra {
 
 #ifdef ASTRA_CUDA
-
-#include "CudaFilteredBackProjectionAlgorithm.h"
 
 typedef TYPELIST_25(
 			CArtAlgorithm,
@@ -91,6 +89,7 @@ typedef TYPELIST_25(
 			CCudaBackProjectionAlgorithm3D
 			)
 	AlgorithmTypeList;
+
 #else
 
 typedef TYPELIST_7(
@@ -104,5 +103,7 @@ typedef TYPELIST_7(
 			) AlgorithmTypeList;
 
 #endif
+
+}
 
 #endif

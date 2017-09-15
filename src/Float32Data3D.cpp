@@ -1,10 +1,10 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-           2014-2015, CWI, Amsterdam
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
 
 Contact: astra@uantwerpen.be
-Website: http://sf.net/projects/astra-toolbox
+Website: http://www.astra-toolbox.com/
 
 This file is part of the ASTRA Toolbox.
 
@@ -23,11 +23,14 @@ You should have received a copy of the GNU General Public License
 along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 -----------------------------------------------------------------------
-$Id$
 */
 
 #include "astra/Float32Data3D.h"
 #include <sstream>
+
+#ifdef ASTRA_CUDA
+#include "../../cuda/3d/mem3d.h"
+#endif
 
 using namespace std;
 
@@ -61,7 +64,5 @@ std::string CFloat32Data3D::description() const
 	if (getType() == CFloat32Data3D::VOLUME) res << " volume data \t";
 	return res.str();
 }
-//----------------------------------------------------------------------------------------
-
 
 } // end namespace astra

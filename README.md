@@ -12,64 +12,127 @@ The basic forward and backward projection operations are GPU-accelerated, and di
 
 ## Documentation / samples
 
-See the MATLAB and Python code samples in samples/ and on http://sf.net/projects/astra-toolbox .
+See the MATLAB and Python code samples in samples/ and on http://www.astra-toolbox.com/ .
 
 
 ## Installation instructions
 
 ### Windows, binary
 
-Add the mex and tools subdirectories to your MATLAB path and the Python module to your Python path..
+Add the mex and tools subdirectories to your MATLAB path, or copy the Python
+astra module to your Python site-packages directory. We require the Microsoft
+Visual Studio 2015 redistributable package. If this is not already installed on
+your system, it is included as vc_redist.x64.exe in the ASTRA zip file.
+
+### Linux/Windows, using conda for python 
+
+Requirements: [conda](http://conda.pydata.org/) python environment, with 64 bit Python 2.7, 3.5 or 3.6.
+
+There are packages available for the ASTRA Toolbox in the astra-toolbox
+channel for the conda package manager. To use these, run the following
+inside a conda environment.
+
+```
+conda install -c astra-toolbox astra-toolbox
+```
 
 ### Linux, from source
 
-Requirements: g++, boost, CUDA (driver+toolkit), Matlab and/or Python (2.7 or 3.x)
+#### For Matlab
+
+Requirements: g++, boost, CUDA (5.5 or higher), Matlab (R2012a or higher)
 
 ```
 cd build/linux
 ./autogen.sh   # when building a git version
 ./configure --with-cuda=/usr/local/cuda \
             --with-matlab=/usr/local/MATLAB/R2012a \
-            --with-python \
-            --prefix=/usr/local/astra
+            --prefix=$HOME/astra \
+            --with-install-type=module
 make
 make install
 ```
-Add /usr/local/astra/lib to your LD_LIBRARY_PATH.
-Add /usr/local/astra/matlab and its subdirectories (tools, mex)
-  to your matlab path.
-Add /usr/local/astra/python to your PYTHONPATH.
+Add $HOME/astra/matlab and its subdirectories (tools, mex) to your matlab path.
+
+If you want to build the Octave interface instead of the Matlab interface,
+specify --enable-octave instead of --with-matlab=... . The Octave files
+will be installed into $HOME/astra/octave .
 
 
 NB: Each matlab version only supports a specific range of g++ versions.
 Despite this, if you have a newer g++ and if you get errors related to missing
 GLIBCXX_3.4.xx symbols, it is often possible to work around this requirement
 by deleting the version of libstdc++ supplied by matlab in
-MATLAB_PATH/bin/glnx86 or MATLAB_PATH/bin/glnxa64 (at your own risk).
+MATLAB_PATH/bin/glnx86 or MATLAB_PATH/bin/glnxa64 (at your own risk),
+or setting LD_PRELOAD=/usr/lib64/libstdc++.so.6 (or similar) when starting
+matlab.
 
+#### For Python
 
-### Windows, from source using Visual Studio 2008
+Requirements: g++, boost, CUDA (5.5 or higher), Python (2.7 or 3.x)
 
-Requirements: Visual Studio 2008, boost, CUDA (driver+toolkit), matlab.
-Note that a .zip with all required (and precompiled) boost files is
-  available from our website.
+```
+cd build/linux
+./autogen.sh   # when building a git version
+./configure --with-cuda=/usr/local/cuda \
+            --with-python \
+            --with-install-type=module
+make
+make install
+```
+
+This will install Astra into your current Python environment.
+
+### macOS, from source
+
+Use the Homebrew package manager to install boost, libtool, autoconf, automake.
+
+```
+cd build/linux
+./autogen.sh
+CPPFLAGS="-I/usr/local/include" NVCCFLAGS="-I/usr/local/include" ./configure \
+  --with-cuda=/usr/local/cuda \
+  --with-matlab=/Applications/MATLAB_R2016b.app \
+  --prefix=$HOME/astra \
+  --with-install-type=module
+make
+make install
+```
+
+### Windows, from source using Visual Studio 2015
+
+Requirements: Visual Studio 2015 (full or community), boost (recent), CUDA 8.0,
+              Matlab (R2012a or higher) and/or WinPython 2.7/3.x.
+
+Using the Visual Studio IDE:
 
 Set the environment variable MATLAB_ROOT to your matlab install location.
-Open astra_vc08.sln in Visual Studio.
-Select the appropriate solution configuration.
-  (typically Release_CUDA|win32 or Release_CUDA|x64)
+Copy boost headers to lib\include\boost, and boost libraries to bin\x64.
+Open astra_vc14.sln in Visual Studio.
+Select the appropriate solution configuration (typically Release_CUDA|x64).
 Build the solution.
-Install by copying AstraCuda32.dll or AstraCuda64.dll from bin/ and
-  all .mexw32 or .mexw64 files from bin/Release_CUDA or bin/Debug_CUDA
-  and the entire matlab/tools directory to a directory to be added to
-  your matlab path.
+Install by copying AstraCuda64.dll and all .mexw64 files from
+  bin\x64\Release_CUDA and the entire matlab/tools directory to a directory
+  to be added to your matlab path.
+
+
+Using .bat scripts in build\msvc:
+
+Edit build_env.bat and set up the correct directories.
+Run build_setup.bat to automatically copy the boost headers and libraries.
+For matlab: Run build_matlab.bat. The .dll and .mexw64 files will be in bin\x64\Release_Cuda.
+For python 2.7/3.5: Run build_python27.bat or build_python35.bat. Astra will be directly installed into site-packages.
+
 
 
 ## References
 
-If you use the ASTRA Toolbox for your research, we would appreciate it if you would refer to the following paper:
+If you use the ASTRA Toolbox for your research, we would appreciate it if you would refer to the following papers:
 
-W. van Aarle, W. J. Palenstijn, J. De Beenhouwer, T. Altantzis, S. Bals,  K J. Batenburg, and J. Sijbers, "The ASTRA Toolbox: A platform for advanced algorithm development in electron tomography", Ultramicroscopy (2015), http://dx.doi.org/10.1016/j.ultramic.2015.05.002
+W. van Aarle, W. J. Palenstijn, J. Cant, E. Janssens, F. Bleichrodt, A. Dabravolski, J. De Beenhouwer, K. J. Batenburg, and J. Sijbers, “Fast and Flexible X-ray Tomography Using the ASTRA Toolbox”, Optics Express, 24(22), 25129-25147, (2016), http://dx.doi.org/10.1364/OE.24.025129
+
+W. van Aarle, W. J. Palenstijn, J. De Beenhouwer, T. Altantzis, S. Bals, K. J. Batenburg, and J. Sijbers, “The ASTRA Toolbox: A platform for advanced algorithm development in electron tomography”, Ultramicroscopy, 157, 35–47, (2015), http://dx.doi.org/10.1016/j.ultramic.2015.05.002
+
 
 Additionally, if you use parallel beam GPU code, we would appreciate it if you would refer to the following paper:
 
@@ -83,8 +146,8 @@ The ASTRA Toolbox is open source under the GPLv3 license.
 ## Contact
 
 email: astra@uantwerpen.be
-website: http://sf.net/projects/astra-toolbox
+website: http://www.astra-toolbox.com/
 
-Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-           2014-2015, CWI, Amsterdam
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
            http://visielab.uantwerpen.be/ and http://www.cwi.nl/

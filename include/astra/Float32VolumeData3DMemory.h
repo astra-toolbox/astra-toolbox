@@ -1,10 +1,10 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-           2014-2015, CWI, Amsterdam
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
 
 Contact: astra@uantwerpen.be
-Website: http://sf.net/projects/astra-toolbox
+Website: http://www.astra-toolbox.com/
 
 This file is part of the ASTRA Toolbox.
 
@@ -23,7 +23,6 @@ You should have received a copy of the GNU General Public License
 along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 -----------------------------------------------------------------------
-$Id$
 */
 
 #ifndef _INC_ASTRA_FLOAT32VOLUMEDATA3DMEMORY
@@ -157,56 +156,7 @@ public:
 	 *
 	 * @return pointer to volume geometry.
 	 */
-	CVolumeGeometry3D* getGeometry();
-
-	/**
-	 * Gets a slice, containing all voxels with a given x (= column) index.
-	 */
-	CFloat32VolumeData2D * fetchSliceX(int _iColumnIndex) const;
-
-	/**
-	 * Gets a slice, containing all voxels with a given y (= row) index.
-	 */
-	CFloat32VolumeData2D * fetchSliceY(int _iRowIndex) const;
-
-	/**
-	 * Gets a slice, containing all voxels with a given z (= slice) index.
-	 */
-	CFloat32VolumeData2D * fetchSliceZ(int _iSliceIndex) const;
-
-	/**
-	 * Gets a slice, containing all voxels with a given x (= column) index.
-	 */
-	void returnSliceX(int _iColumnIndex, CFloat32VolumeData2D * _pSliceData);
-
-	/**
-	 * Gets a slice, containing all voxels with a given y (= row) index.
-	 */
-	void returnSliceY(int _iRowIndex, CFloat32VolumeData2D * _pSliceData);
-
-	/**
-	 * Copies data from a 2D slice containing all voxels with a given z (= slice) index to the
-	 * 3D  memory stored in this class.
-	 */
-	void returnSliceZ(int _iSliceIndex, CFloat32VolumeData2D * _pSliceData);
-
-	/** This SLOW function returns a volume value stored a specific index in the array.
-	 *  Reading values in this way might cause a lot of unnecessary memory operations, don't
-	 *  use it in time-critical code.
-	 * 
-	 *  @param _iIndex Index in the array if the data were stored completely in main memory
-	 *  @return The value the location specified by _iIndex
-	 */
-	virtual float32 getVoxelValue(int _iIndex);
-
-	/** This SLOW function stores a voxel value at a specific index in the array.
-	 *  Writing values in this way might cause a lot of unnecessary memory operations, don't
-	 *  use it in time-critical code.
-	 * 
-	 *  @param _iIndex Index in the array if the data were stored completely in main memory
-	 *  @param _fValue The value to be stored at the location specified by _iIndex
-	 */
-	virtual void setVoxelValue(int _iIndex, float32 _fValue);
+	CVolumeGeometry3D* getGeometry() const;
 
 	/**
 	 * Overloaded Operator: data = data (pointwise)
@@ -219,7 +169,7 @@ public:
 
 //----------------------------------------------------------------------------------------
 // Get the projection geometry.
-inline CVolumeGeometry3D* CFloat32VolumeData3DMemory::getGeometry()
+inline CVolumeGeometry3D* CFloat32VolumeData3DMemory::getGeometry() const
 {
 	ASTRA_ASSERT(m_bInitialized);
 	return m_pGeometry;

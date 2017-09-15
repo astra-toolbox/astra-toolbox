@@ -1,10 +1,10 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-           2014-2015, CWI, Amsterdam
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
 
 Contact: astra@uantwerpen.be
-Website: http://sf.net/projects/astra-toolbox
+Website: http://www.astra-toolbox.com/
 
 This file is part of the ASTRA Toolbox.
 
@@ -23,7 +23,6 @@ You should have received a copy of the GNU General Public License
 along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 -----------------------------------------------------------------------
-$Id$
 */
 
 #ifndef _INC_ASTRA_FLOAT32DATA2D
@@ -42,7 +41,7 @@ public:
 };
 
 /** 
- * This class represents a two-dimensional block of float32ing point data.
+ * This class represents a 2-dimensional block of 32-bit floating point data.
  * It contains member functions for accessing this data and for performing 
  * elementary computations on the data.
  * The data block is "owned" by the class, meaning that the class is 

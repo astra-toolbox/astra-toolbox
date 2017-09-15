@@ -3,7 +3,7 @@
 #            2013-2016, CWI, Amsterdam
 #
 # Contact: astra@uantwerpen.be
-# Website: http://sf.net/projects/astra-toolbox
+# Website: http://www.astra-toolbox.com/
 #
 # This file is part of the ASTRA Toolbox.
 #
@@ -37,8 +37,6 @@ cimport PyIndexManager
 from .PyIndexManager cimport CAstraObjectManagerBase
 
 cdef extern from "astra/Globals.h" namespace "astra":
-    int getVersion()
-    string getVersionString()
     bool cudaEnabled()
 
 IF HAVE_CUDA==True:
@@ -73,13 +71,6 @@ def credits():
 
 def use_cuda():
     return cudaEnabled()
-
-
-def version(printToScreen=False):
-    if printToScreen:
-        six.print_(wrap_from_bytes(getVersionString()))
-    else:
-        return getVersion()
 
 IF HAVE_CUDA==True:
   def set_gpu_index(idx, memory=0):

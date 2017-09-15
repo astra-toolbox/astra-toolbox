@@ -1,10 +1,10 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-           2014-2015, CWI, Amsterdam
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
 
 Contact: astra@uantwerpen.be
-Website: http://sf.net/projects/astra-toolbox
+Website: http://www.astra-toolbox.com/
 
 This file is part of the ASTRA Toolbox.
 
@@ -23,7 +23,6 @@ You should have received a copy of the GNU General Public License
 along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 -----------------------------------------------------------------------
-$Id$
 */
 
 #include <cstdio>
@@ -319,6 +318,9 @@ AstraSIRT3d::~AstraSIRT3d()
 
 	delete[] pData->projs;
 	pData->projs = 0;
+
+	delete[] pData->parprojs;
+	pData->parprojs = 0;
 
 	cudaFree(pData->D_projData.ptr);
 	pData->D_projData.ptr = 0;
@@ -702,6 +704,9 @@ AstraCGLS3d::~AstraCGLS3d()
 
 	delete[] pData->projs;
 	pData->projs = 0;
+
+	delete[] pData->parprojs;
+	pData->parprojs = 0;
 
 	cudaFree(pData->D_projData.ptr);
 	pData->D_projData.ptr = 0;
@@ -1134,19 +1139,27 @@ bool astraCudaBP(float* pfVolume, const float* pfProjections,
 		cudaError_t err = cudaGetLastError();
 
 		// Ignore errors caused by calling cudaSetDevice multiple times
-		if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
+		if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess) {
+			delete[] pParProjs;
+			delete[] pConeProjs;
 			return false;
+		}
 	}
 
 
 	cudaPitchedPtr D_volumeData = allocateVolumeData(dims);
 	ok = D_volumeData.ptr;
-	if (!ok)
+	if (!ok) {
+		delete[] pParProjs;
+		delete[] pConeProjs;
 		return false;
+	}
 
 	cudaPitchedPtr D_projData = allocateProjectionData(dims);
 	ok = D_projData.ptr;
 	if (!ok) {
+		delete[] pParProjs;
+		delete[] pConeProjs;
 		cudaFree(D_volumeData.ptr);
 		return false;
 	}
@@ -1157,6 +1170,8 @@ bool astraCudaBP(float* pfVolume, const float* pfProjections,
 	ok &= zeroVolumeData(D_volumeData, dims);
 
 	if (!ok) {
+		delete[] pParProjs;
+		delete[] pConeProjs;
 		cudaFree(D_volumeData.ptr);
 		cudaFree(D_projData.ptr);
 		return false;
@@ -1169,6 +1184,8 @@ bool astraCudaBP(float* pfVolume, const float* pfProjections,
 
 	ok &= copyVolumeFromDevice(pfVolume, D_volumeData, dims, dims.iVolX);
 
+	delete[] pParProjs;
+	delete[] pConeProjs;
 
 	cudaFree(D_volumeData.ptr);
 	cudaFree(D_projData.ptr);
@@ -1209,19 +1226,27 @@ bool astraCudaBP_SIRTWeighted(float* pfVolume,
 		cudaError_t err = cudaGetLastError();
 
 		// Ignore errors caused by calling cudaSetDevice multiple times
-		if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
+		if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess) {
+			delete[] pParProjs;
+			delete[] pConeProjs;
 			return false;
+		}
 	}
 
 
 	cudaPitchedPtr D_pixelWeight = allocateVolumeData(dims);
 	ok = D_pixelWeight.ptr;
-	if (!ok)
+	if (!ok) {
+		delete[] pParProjs;
+		delete[] pConeProjs;
 		return false;
+	}
 
 	cudaPitchedPtr D_volumeData = allocateVolumeData(dims);
 	ok = D_volumeData.ptr;
 	if (!ok) {
+		delete[] pParProjs;
+		delete[] pConeProjs;
 		cudaFree(D_pixelWeight.ptr);
 		return false;
 	}
@@ -1229,6 +1254,8 @@ bool astraCudaBP_SIRTWeighted(float* pfVolume,
 	cudaPitchedPtr D_projData = allocateProjectionData(dims);
 	ok = D_projData.ptr;
 	if (!ok) {
+		delete[] pParProjs;
+		delete[] pConeProjs;
 		cudaFree(D_pixelWeight.ptr);
 		cudaFree(D_volumeData.ptr);
 		return false;
@@ -1245,6 +1272,8 @@ bool astraCudaBP_SIRTWeighted(float* pfVolume,
 
 	processVol3D<opInvert>(D_pixelWeight, dims);
 	if (!ok) {
+		delete[] pParProjs;
+		delete[] pConeProjs;
 		cudaFree(D_pixelWeight.ptr);
 		cudaFree(D_volumeData.ptr);
 		cudaFree(D_projData.ptr);
@@ -1288,7 +1317,5 @@ bool astraCudaBP_SIRTWeighted(float* pfVolume,
 	return ok;
 
 }
-
-
 
 }

@@ -1,10 +1,10 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-           2014-2015, CWI, Amsterdam
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
 
 Contact: astra@uantwerpen.be
-Website: http://sf.net/projects/astra-toolbox
+Website: http://www.astra-toolbox.com/
 
 This file is part of the ASTRA Toolbox.
 
@@ -23,7 +23,6 @@ You should have received a copy of the GNU General Public License
 along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 -----------------------------------------------------------------------
-$Id$
 */
 
 #ifndef _INC_ASTRA_FLOAT32DATA3D
@@ -33,10 +32,12 @@ $Id$
 #include "Float32Data.h"
 #include "Float32Data2D.h"
 
+#include "../../cuda/3d/mem3d.h"
+
 namespace astra {
 
 /**
- * This class represents a three-dimensional block of float32ing point data.
+ * This class represents a 3-dimensional block of 32-bit floating point data.
  */
 class _AstraExport CFloat32Data3D : public CFloat32Data {
 
@@ -107,22 +108,6 @@ public:
 	 * @return number of dimensions
 	 */
 	int getDimensionCount() const;	
-
-	/**
-	 * Clamp data to minimum value
-	 *
-	 * @param _fMin minimum value
-	 * @return l-value
-	 */
-	virtual CFloat32Data3D& clampMin(float32& _fMin) = 0;
-
-	/**
-	 * Clamp data to maximum value
-	 *
-	 * @param _fMax maximum value
-	 * @return l-value
-	 */
-	virtual CFloat32Data3D& clampMax(float32& _fMax) = 0;
 
 	/** get a description of the class
 	 *

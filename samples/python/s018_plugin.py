@@ -1,28 +1,27 @@
-#-----------------------------------------------------------------------
-#Copyright 2015 Centrum Wiskunde & Informatica, Amsterdam
+# -----------------------------------------------------------------------
+# Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+#            2013-2016, CWI, Amsterdam
 #
-#Author: Daniel M. Pelt
-#Contact: D.M.Pelt@cwi.nl
-#Website: http://dmpelt.github.io/pyastratoolbox/
+# Contact: astra@uantwerpen.be
+# Website: http://www.astra-toolbox.com/
+#
+# This file is part of the ASTRA Toolbox.
 #
 #
-#This file is part of the Python interface to the
-#All Scale Tomographic Reconstruction Antwerp Toolbox ("ASTRA Toolbox").
+# The ASTRA Toolbox is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
-#The Python interface to the ASTRA Toolbox is free software: you can redistribute it and/or modify
-#it under the terms of the GNU General Public License as published by
-#the Free Software Foundation, either version 3 of the License, or
-#(at your option) any later version.
+# The ASTRA Toolbox is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
 #
-#The Python interface to the ASTRA Toolbox is distributed in the hope that it will be useful,
-#but WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-#GNU General Public License for more details.
+# You should have received a copy of the GNU General Public License
+# along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #
-#You should have received a copy of the GNU General Public License
-#along with the Python interface to the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
-#
-#-----------------------------------------------------------------------
+# -----------------------------------------------------------------------
 
 import astra
 import numpy as np
@@ -124,6 +123,14 @@ if __name__=='__main__':
     # We can also use OpTomo to call the plugin
     rec_op = W.reconstruct('LANDWEBER-PLUGIN', sinogram, 100, extraOptions={'Relaxation':1.5})
 
+
+    # ASTRA also comes with built-in plugins:
+    astra.plugin.register(astra.plugins.SIRTPlugin)
+    astra.plugin.register(astra.plugins.CGLSPlugin)
+    rec_sirt = W.reconstruct('SIRT-PLUGIN', sinogram, 100, extraOptions={'Relaxation':1.5})
+    rec_cgls = W.reconstruct('CGLS-PLUGIN', sinogram, 100)
+
+
     import pylab as pl
     pl.gray()
     pl.figure(1)
@@ -132,6 +139,10 @@ if __name__=='__main__':
     pl.imshow(rec_rel,vmin=0,vmax=1)
     pl.figure(3)
     pl.imshow(rec_op,vmin=0,vmax=1)
+    pl.figure(4)
+    pl.imshow(rec_sirt,vmin=0,vmax=1)
+    pl.figure(5)
+    pl.imshow(rec_cgls,vmin=0,vmax=1)
     pl.show()
 
     # Clean up.

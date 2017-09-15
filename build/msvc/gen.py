@@ -12,26 +12,28 @@ siguid = "2150E333-8FDC-42A3-9474-1A3956D46DE8" # project group
 # import uuid
 # uuid.uuid4().__str__().upper()
 
-def create_mex_project(name, uuid11, uuid09):
-  return { "type": vcppguid, "name": name, "file11": "matlab\\mex\\" + name + "_vc11.vcxproj", "file09": "matlab\\mex\\" + name + "_vc09.vcproj", "uuid11": uuid11, "uuid09": uuid09, "files": [] }
+def create_mex_project(name, uuid14, uuid11, uuid09):
+    return { "type": vcppguid, "name": name, "file14": "matlab\\mex\\" + name + "_vc14.vcxproj", "file11": "matlab\\mex\\" + name + "_vc11.vcxproj", "file09": "matlab\\mex\\" + name + "_vc09.vcproj", "uuid14": uuid14, "uuid11": uuid11, "uuid09": uuid09, "files": [] }
 
-P_astra = { "type": vcppguid, "name": "astra_vc11", "file11": "astra_vc11.vcxproj", "file09": "astra_vc09.vcproj", "uuid11": "BE9F1326-527C-4284-AE2C-D1E25D539CEA", "uuid09": "12926444-6723-46A8-B388-12E65E0577FA" }
+P_astra = { "type": vcppguid, "name": "astra_vc11", "file14": "astra_vc14.vcxproj", "file11": "astra_vc11.vcxproj", "file09": "astra_vc09.vcproj", "uuid14": "DABD9D82-609E-4C71-B1CA-A41B07495290", "uuid11": "BE9F1326-527C-4284-AE2C-D1E25D539CEA", "uuid09": "12926444-6723-46A8-B388-12E65E0577FA" }
 
-P0 = create_mex_project("astra_mex", "3FDA35E0-0D54-4663-A3E6-5ABA96F32221", "3FDA35E0-0D54-4663-A3E6-5ABA96F32221") 
+P0 = create_mex_project("astra_mex", "6FDF72C4-A855-4F1C-A401-6500040B5E28", "3FDA35E0-0D54-4663-A3E6-5ABA96F32221", "3FDA35E0-0D54-4663-A3E6-5ABA96F32221")
 
-P1 = create_mex_project("astra_mex_algorithm", "056BF7A9-294D-487C-8CC3-BE629077CA94", "056BF7A9-294D-487C-8CC3-BE629077CA94")
-P2 = create_mex_project("astra_mex_data2d", "E4092269-B19C-46F7-A84E-4F146CC70E44", "E4092269-B19C-46F7-A84E-4F146CC70E44")
-P3 = create_mex_project("astra_mex_data3d", "0BEC029B-0929-4BF9-BD8B-9C9806A52065", "0BEC029B-0929-4BF9-BD8B-9C9806A52065")
-P4 = create_mex_project("astra_mex_matrix", "9D041710-2119-4230-BCF2-5FBE753FDE49", "9D041710-2119-4230-BCF2-5FBE753FDE49")
-P5 = create_mex_project("astra_mex_projector", "4DD6056F-8EEE-4C9A-B2A9-923F01A32E97", "4DD6056F-8EEE-4C9A-B2A9-923F01A32E97")
-P6 = create_mex_project("astra_mex_projector3d", "F94CCD79-AA11-42DF-AC8A-6C9D2238A883", "F94CCD79-AA11-42DF-AC8A-6C9D2238A883")
-P7 = create_mex_project("astra_mex_log", "03B833F5-4FD6-4FBE-AAF4-E3305CD56D2E", "CA2840B3-DA68-41B5-AC57-F5DFD20ED8F8")
-P8 = create_mex_project("astra_mex_direct", "0F68F4E2-BE1B-4A9A-B101-AECF4C069CC7", "85FE09A6-FA49-4314-A2B1-59D77C7442A8")
+P1 = create_mex_project("astra_mex_algorithm", "CE5EF874-830C-4C10-8651-CCA2A34ED9E4", "056BF7A9-294D-487C-8CC3-BE629077CA94", "056BF7A9-294D-487C-8CC3-BE629077CA94")
+P2 = create_mex_project("astra_mex_data2d", "D2CDCDB3-7AD9-4853-8D87-BDB1DAD9C9C1", "E4092269-B19C-46F7-A84E-4F146CC70E44", "E4092269-B19C-46F7-A84E-4F146CC70E44")
+P3 = create_mex_project("astra_mex_data3d", "2A7084C6-62ED-4235-85F4-094C17689DEB", "0BEC029B-0929-4BF9-BD8B-9C9806A52065", "0BEC029B-0929-4BF9-BD8B-9C9806A52065")
+P4 = create_mex_project("astra_mex_matrix", "6BFA8857-37EB-4E43-A97C-B860E21599F5", "9D041710-2119-4230-BCF2-5FBE753FDE49", "9D041710-2119-4230-BCF2-5FBE753FDE49")
+P5 = create_mex_project("astra_mex_projector", "85ECCF1D-C5F6-4E0E-A4F9-0DE7C0B916B2", "4DD6056F-8EEE-4C9A-B2A9-923F01A32E97", "4DD6056F-8EEE-4C9A-B2A9-923F01A32E97")
+P6 = create_mex_project("astra_mex_projector3d", "CA85BDA0-9BDD-495E-B200-BFE863EB6318", "F94CCD79-AA11-42DF-AC8A-6C9D2238A883", "F94CCD79-AA11-42DF-AC8A-6C9D2238A883")
+P7 = create_mex_project("astra_mex_log", "88539382-66DB-4BBC-A48E-8B6B3CA6064F", "03B833F5-4FD6-4FBE-AAF4-E3305CD56D2E", "CA2840B3-DA68-41B5-AC57-F5DFD20ED8F8")
+P8 = create_mex_project("astra_mex_direct", "47460476-912B-4313-8B10-BDF1D60A84C4", "0F68F4E2-BE1B-4A9A-B101-AECF4C069CC7", "85FE09A6-FA49-4314-A2B1-59D77C7442A8")
 
 F_astra_mex = { "type": siguid,
                 "name": "astra_mex",
+                "file14": "astra_mex",
                 "file11": "astra_mex",
                 "file09": "astra_mex",
+                "uuid14": "2076FB73-ECFE-4B1B-9A8C-E351C500FAAB",
                 "uuid11": "5E99A109-374E-4102-BE9B-99BA1FA8AA30",
                 "uuid09": "33EF0AC5-B475-40BF-BAE5-67075B204D10",
                 "entries": [ P0, P1, P2, P3, P4, P5, P6, P7, P8 ] }
@@ -275,6 +277,9 @@ P_astra["filters"]["CUDA\\astra source"] = [
 "src\\CudaSartAlgorithm.cpp",
 "src\\CudaSirtAlgorithm.cpp",
 "src\\CudaSirtAlgorithm3D.cpp",
+"src\\Float32Data3DGPU.cpp",
+"src\\Float32ProjectionData3DGPU.cpp",
+"src\\Float32VolumeData3DGPU.cpp",
 ]
 P_astra["filters"]["CUDA\\cuda headers"] = [
 "4e17872e-db7d-41bc-9760-fad1c253b583",
@@ -414,7 +419,9 @@ P_astra["filters"]["CUDA\\astra headers"] = [
 "include\\astra\\CudaSartAlgorithm.h",
 "include\\astra\\CudaSirtAlgorithm.h",
 "include\\astra\\CudaSirtAlgorithm3D.h",
-
+"include\\astra\\Float32Data3DGPU.h",
+"include\\astra\\Float32ProjectionData3DGPU.h",
+"include\\astra\\Float32VolumeData3DGPU.h",
 ]
 P_astra["filters"]["Projectors\\inline"] = [
 "0daffd63-ba49-4a5f-8d7a-5322e0e74f22",
@@ -488,6 +495,8 @@ def write_sln(version):
     F = open("astra_vc09.sln", "w")
   elif version == 11:
     F = open("astra_vc11.sln", "w")
+  elif version == 14:
+    F = open("astra_vc14.sln", "w")
   else:
     assert(False)
   print(bom, file=F)
@@ -501,6 +510,13 @@ def write_sln(version):
     print("# Visual Studio 2012", file=F)
     uuid = "uuid11"
     file_ = "file11"
+  elif version == 14:
+    print("Microsoft Visual Studio Solution File, Format Version 12.00", file=F)
+    print("# Visual Studio 14", file=F)
+    print("VisualStudioVersion = 14.0.25420.1", file=F)
+    print("MinimumVisualStudioVersion = 10.0.40219.1", file=F)
+    uuid = "uuid14"
+    file_ = "file14"
   for p in projects:
     s = '''Project("{%s}") = "%s", "%s", "{%s}"''' % (p["type"], p["name"], p[file_], p[uuid])
     print(s, file=F)
@@ -535,7 +551,7 @@ def write_sln(version):
   print("EndGlobal", file=F)
   F.close()
 
-def write_project11_start(P, F):
+def write_project11_14_start(P, F, version):
   print(bom + '<?xml version="1.0" encoding="utf-8"?>', file=F)
   print('<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">', file=F)
   print('  <ItemGroup Label="ProjectConfigurations">', file=F)
@@ -548,7 +564,10 @@ def write_project11_start(P, F):
   print('  <PropertyGroup Label="Globals">', file=F)
   if 'mex' in P["name"]:
     print('    <ProjectName>' + P["name"] + '</ProjectName>', file=F)
-  print('    <ProjectGuid>{' + P["uuid11"] + '}</ProjectGuid>', file=F)
+  if version == 11:
+    print('    <ProjectGuid>{' + P["uuid11"] + '}</ProjectGuid>', file=F)
+  else:
+    print('    <ProjectGuid>{' + P["uuid14"] + '}</ProjectGuid>', file=F)
   if 'mex' in P["name"]:
     print('    <RootNamespace>astraMatlab</RootNamespace>', file=F)
   else:
@@ -563,7 +582,10 @@ def write_project11_start(P, F):
         print('    <UseDebugLibraries>true</UseDebugLibraries>', file=F)
       else:
         print('    <UseDebugLibraries>false</UseDebugLibraries>', file=F)
-    print('    <PlatformToolset>v110</PlatformToolset>', file=F)
+    if version == 11:
+      print('    <PlatformToolset>v110</PlatformToolset>', file=F)
+    else:
+      print('    <PlatformToolset>v140</PlatformToolset>', file=F)
     if 'mex' not in P["name"]:
       if not c.debug:
         print('    <WholeProgramOptimization>true</WholeProgramOptimization>', file=F)
@@ -572,7 +594,7 @@ def write_project11_start(P, F):
   print('  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />', file=F)
   print('  <ImportGroup Label="ExtensionSettings">', file=F)
   if "mex" not in P["name"]:
-    print('    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.props" />', file=F)
+    print('    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 8.0.props" />', file=F)
   print('  </ImportGroup>', file=F)
   for c in configs:
     print('''  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='%s'">''' % (c.name(), ), file=F)
@@ -580,7 +602,7 @@ def write_project11_start(P, F):
     print('''  </ImportGroup>''', file=F)
   print('  <PropertyGroup Label="UserMacros" />', file=F)
 
-def write_project11_end(P, F):
+def write_project11_14_end(P, F):
   l = [ f for f in P["files"] if len(f) > 4 and f[-4:] == ".cpp" ]
   if l:
     print('  <ItemGroup>', file=F)
@@ -619,18 +641,21 @@ def write_project11_end(P, F):
   print('  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />', file=F)
   print('  <ImportGroup Label="ExtensionTargets">', file=F)
   if "mex" not in P["name"]:
-    print('    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.targets" />', file=F)
+    print('    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 8.0.targets" />', file=F)
   print('  </ImportGroup>', file=F)
   print('</Project>', end="", file=F)
 
 
-def write_main_project11():
+def write_main_project11_14(version):
   P = P_astra;
-  F = open(P["file11"], "w")
-  write_project11_start(P, F)
+  if version == 11:
+    F = open(P["file11"], "w")
+  else:
+    F = open(P["file14"], "w")
+  write_project11_14_start(P, F, version)
   for c in configs:
     print('''  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='%s'">''' % (c.name(), ), file=F)
-    if c.cuda:
+    if c.cuda and version == 11:
       print('    <IncludePath>$(CUDA_INC_PATH);$(IncludePath)</IncludePath>', file=F)
       print('    <LibraryPath>$(CUDA_LIB_PATH);$(LibraryPath)</LibraryPath>', file=F)
     print('    <OutDir>$(SolutionDir)bin\\$(Platform)\\' + c.config() + '\\</OutDir>', file=F)
@@ -695,15 +720,18 @@ def write_main_project11():
       else:
         print('      <TargetMachinePlatform>32</TargetMachinePlatform>', file=F)
       print('      <GenerateLineInfo>true</GenerateLineInfo>', file=F)
-      print('      <CodeGeneration>compute_20,sm_20;compute_30,sm_30;compute_30,sm_35;compute_30,compute_30</CodeGeneration>', file=F)
+      print('      <CodeGeneration>compute_20,sm_20;compute_30,sm_30;compute_35,sm_35;compute_50,sm_50;compute_60,sm_60;compute_60,compute_60</CodeGeneration>', file=F)
       print('    </CudaCompile>', file=F)
     print('  </ItemDefinitionGroup>', file=F)
-  write_project11_end(P, F)
+  write_project11_14_end(P, F)
   F.close()
 
-def write_mex_project11(P):
-  F = open("matlab/mex/" + P["name"] + "_vc11.vcxproj", "w")
-  write_project11_start(P, F)
+def write_mex_project11_14(P, version):
+  if version == 11:
+    F = open("matlab/mex/" + P["name"] + "_vc11.vcxproj", "w")
+  else:
+    F = open("matlab/mex/" + P["name"] + "_vc14.vcxproj", "w")
+  write_project11_14_start(P, F, version)
   print('  <PropertyGroup>', file=F)
   print('    <_ProjectFileVersion>11.0.60610.1</_ProjectFileVersion>', file=F)
   print('  </PropertyGroup>', file=F)
@@ -777,10 +805,10 @@ def write_mex_project11(P):
     print('      <GenerateDebugInformation>true</GenerateDebugInformation>', file=F)
     print('    </Link>', file=F)
     print('  </ItemDefinitionGroup>', file=F)
-  write_project11_end(P, F)
+  write_project11_14_end(P, F)
   F.close()
 
-def write_main_filters11():
+def write_main_filters11_14():
   P = P_astra
   F = open(P["name"] + ".vcxproj.filters", "w")
   print(bom + '<?xml version="1.0" encoding="utf-8"?>', file=F)
@@ -1111,8 +1139,8 @@ def write_mex_project09(P):
 
 
 
-if (len(sys.argv) != 2) or (sys.argv[1] not in ["vc09", "vc11", "all"]):
-  print("Usage: python gen.py [vc09|vc11|all]", file=sys.stderr)
+if (len(sys.argv) != 2) or (sys.argv[1] not in ["vc09", "vc11", "vc14", "all"]):
+  print("Usage: python gen.py [vc09|vc11|vc14|all]", file=sys.stderr)
   sys.exit(1)
 
 
@@ -1126,21 +1154,37 @@ except IOError:
 # Change directory to main dir
 os.chdir("../..")
 
+if sys.argv[1] in ["vc14", "all"]:
+  # HACK
+  P_astra["name"] = "astra_vc14"
+  write_sln(14)
+  write_main_project11_14(14)
+  write_main_filters11_14()
+  write_mex_project11_14(P0, 14)
+  write_mex_project11_14(P1, 14)
+  write_mex_project11_14(P2, 14)
+  write_mex_project11_14(P3, 14)
+  write_mex_project11_14(P4, 14)
+  write_mex_project11_14(P5, 14)
+  write_mex_project11_14(P6, 14)
+  write_mex_project11_14(P7, 14)
+  write_mex_project11_14(P8, 14)
+
 if sys.argv[1] in ["vc11", "all"]:
   # HACK
   P_astra["name"] = "astra_vc11"
   write_sln(11)
-  write_main_project11()
-  write_main_filters11()
-  write_mex_project11(P0)
-  write_mex_project11(P1)
-  write_mex_project11(P2)
-  write_mex_project11(P3)
-  write_mex_project11(P4)
-  write_mex_project11(P5)
-  write_mex_project11(P6)
-  write_mex_project11(P7)
-  write_mex_project11(P8)
+  write_main_project11_14(11)
+  write_main_filters11_14()
+  write_mex_project11_14(P0, 11)
+  write_mex_project11_14(P1, 11)
+  write_mex_project11_14(P2, 11)
+  write_mex_project11_14(P3, 11)
+  write_mex_project11_14(P4, 11)
+  write_mex_project11_14(P5, 11)
+  write_mex_project11_14(P6, 11)
+  write_mex_project11_14(P7, 11)
+  write_mex_project11_14(P8, 11)
 
 if sys.argv[1] in ["vc09", "all"]:
   # HACK

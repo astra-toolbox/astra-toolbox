@@ -3,7 +3,7 @@
 #            2013-2016, CWI, Amsterdam
 #
 # Contact: astra@uantwerpen.be
-# Website: http://sf.net/projects/astra-toolbox
+# Website: http://www.astra-toolbox.com/
 #
 # This file is part of the ASTRA Toolbox.
 #
@@ -83,8 +83,10 @@ def create(datatype, geometry, data=None, link=False):
     cdef CFloat32Data2D * pDataObject2D
     cdef CFloat32CustomMemory * pCustom
 
-    if link and data.shape!=geom_size(geometry):
-        raise Exception("The dimensions of the data do not match those specified in the geometry.")
+    if link:
+        geom_shape = geom_size(geometry)
+        if data.shape != geom_shape:
+            raise ValueError("The dimensions of the data do not match those specified in the geometry: {} != {}".format(data.shape, geom_shape))
 
     if datatype == '-vol':
         cfg = utils.dictToConfig(six.b('VolumeGeometry'), geometry)
@@ -92,7 +94,7 @@ def create(datatype, geometry, data=None, link=False):
         if not pGeometry.initialize(cfg[0]):
             del cfg
             del pGeometry
-            raise Exception('Geometry class not initialized.')
+            raise RuntimeError('Geometry class not initialized.')
         if link:
             pCustom = <CFloat32CustomMemory*> new CFloat32CustomPython(data)
             pDataObject2D = <CFloat32Data2D * > new CFloat32VolumeData2D(pGeometry, pCustom)
@@ -116,7 +118,7 @@ def create(datatype, geometry, data=None, link=False):
         if not ppGeometry.initialize(cfg[0]):
             del cfg
             del ppGeometry
-            raise Exception('Geometry class not initialized.')
+            raise RuntimeError('Geometry class not initialized.')
         if link:
             pCustom = <CFloat32CustomMemory*> new CFloat32CustomPython(data)
             pDataObject2D = <CFloat32Data2D * > new CFloat32ProjectionData2D(ppGeometry, pCustom)
@@ -125,11 +127,11 @@ def create(datatype, geometry, data=None, link=False):
         del ppGeometry
         del cfg
     else:
-        raise Exception("Invalid datatype.  Please specify '-vol' or '-sino'.")
+        raise ValueError("Invalid datatype.  Please specify '-vol' or '-sino'.")
 
     if not pDataObject2D.isInitialized():
         del pDataObject2D
-        raise Exception("Couldn't initialize data object.")
+        raise RuntimeError("Couldn't initialize data object.")
 
     if not link: fillDataObject(pDataObject2D, data)
 
@@ -140,6 +142,10 @@ cdef fillDataObject(CFloat32Data2D * obj, data):
         fillDataObjectScalar(obj, 0)
     else:
         if isinstance(data, np.ndarray):
+            obj_shape = (obj.getHeight(), obj.getWidth())
+            if data.shape != obj_shape:
+                raise ValueError(
+                  "The dimensions of the data do not match those specified in the geometry: {} != {}".format(data.shape, obj_shape))
             fillDataObjectArray(obj, np.ascontiguousarray(data,dtype=np.float32))
         else:
             fillDataObjectScalar(obj, np.float32(data))
@@ -152,18 +158,15 @@ cdef fillDataObjectScalar(CFloat32Data2D * obj, float s):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cdef fillDataObjectArray(CFloat32Data2D * obj, float [:,::1] data):
-    if (not data.shape[0] == obj.getHeight()) or (not data.shape[1] == obj.getWidth()):
-        raise Exception(
-            "The dimensions of the data do not match those specified in the geometry.")
     cdef float [:,::1] cView =  <float[:data.shape[0],:data.shape[1]]> obj.getData2D()[0]
     cView[:] = data
 
 cdef CFloat32Data2D * getObject(i) except NULL:
     cdef CFloat32Data2D * pDataObject = man2d.get(i)
     if pDataObject == NULL:
-        raise Exception("Data object not found")
+        raise ValueError("Data object not found")
     if not pDataObject.isInitialized():
-        raise Exception("Data object not initialized properly.")
+        raise RuntimeError("Data object not initialized properly.")
     return pDataObject
 
 
@@ -182,15 +185,15 @@ def get_geometry(i):
         pDataObject3 = <CFloat32VolumeData2D * >pDataObject
         geom = utils.configToDict(pDataObject3.getGeometry().getConfiguration())
     else:
-        raise Exception("Not a known data object")
+        raise RuntimeError("Not a known data object")
     return geom
 
 cdef CProjector2D * getProjector(i) except NULL:
     cdef CProjector2D * proj = manProj.get(i)
     if proj == NULL:
-        raise Exception("Projector not initialized.")
+        raise RuntimeError("Projector not initialized.")
     if not proj.isInitialized():
-        raise Exception("Projector not initialized.")
+        raise RuntimeError("Projector not initialized.")
     return proj
 
 def check_compatible(i, proj_id):
@@ -205,7 +208,7 @@ def check_compatible(i, proj_id):
         pDataObject3 = <CFloat32VolumeData2D * >pDataObject
         return pDataObject3.getGeometry().isEqual(proj.getVolumeGeometry())
     else:
-        raise Exception("Not a known data object")
+        raise RuntimeError("Not a known data object")
 
 def change_geometry(i, geom):
     cdef Config *cfg
@@ -231,12 +234,14 @@ def change_geometry(i, geom):
         if not ppGeometry.initialize(cfg[0]):
             del cfg
             del ppGeometry
-            raise Exception('Geometry class not initialized.')
-        if (ppGeometry.getDetectorCount() != pDataObject2.getDetectorCount() or ppGeometry.getProjectionAngleCount() != pDataObject2.getAngleCount()):
+            raise RuntimeError('Geometry class not initialized.')
+        geom_shape = (ppGeometry.getProjectionAngleCount(), ppGeometry.getDetectorCount())
+        obj_shape = (pDataObject2.getAngleCount(), pDataObject2.getDetectorCount())
+        if geom_shape != obj_shape:
             del ppGeometry
             del cfg
-            raise Exception(
-                "The dimensions of the data do not match those specified in the geometry.")
+            raise ValueError(
+                "The dimensions of the data do not match those specified in the geometry: {} != {}", obj_shape, geom_shape)
         pDataObject2.changeGeometry(ppGeometry)
         del ppGeometry
         del cfg
@@ -247,17 +252,19 @@ def change_geometry(i, geom):
         if not pGeometry.initialize(cfg[0]):
             del cfg
             del pGeometry
-            raise Exception('Geometry class not initialized.')
-        if (pGeometry.getGridColCount() != pDataObject3.getWidth() or pGeometry.getGridRowCount() != pDataObject3.getHeight()):
+            raise RuntimeError('Geometry class not initialized.')
+        geom_shape = (pGeometry.getGridRowCount(), pGeometry.getGridColCount())
+        obj_shape = (pDataObject3.getHeight(), pDataObject3.getWidth())
+        if geom_shape != obj_shape:
             del cfg
             del pGeometry
-            raise Exception(
-                'The dimensions of the data do not match those specified in the geometry.')
+            raise ValueError(
+                "The dimensions of the data do not match those specified in the geometry: {} != {}", obj_shape, geom_shape)
         pDataObject3.changeGeometry(pGeometry)
         del cfg
         del pGeometry
     else:
-        raise Exception("Not a known data object")
+        raise RuntimeError("Not a known data object")
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -278,7 +285,7 @@ def get_shared(i):
 
 
 def get_single(i):
-    raise Exception("Not yet implemented")
+    raise NotImplementedError("Not yet implemented")
 
 
 def info():

@@ -1,10 +1,10 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-           2014-2015, CWI, Amsterdam
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
 
 Contact: astra@uantwerpen.be
-Website: http://sf.net/projects/astra-toolbox
+Website: http://www.astra-toolbox.com/
 
 This file is part of the ASTRA Toolbox.
 
@@ -23,11 +23,11 @@ You should have received a copy of the GNU General Public License
 along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 -----------------------------------------------------------------------
-$Id$
 */
 
 #include "astra/Float32Data3DMemory.h"
 #include <iostream>
+#include <cstdlib>
 
 namespace astra {
 
@@ -75,10 +75,6 @@ bool CFloat32Data3DMemory::_initialize(int _iWidth, int _iHeight, int _iDepth)
 	m_pppfDataSliceInd = NULL;
 	m_pCustomMemory = 0;
 	_allocateData();
-
-	// set minmax to default values
-	m_fGlobalMin = 0.0;
-	m_fGlobalMax = 0.0;
 
 	// initialization complete
 	return true;
@@ -167,7 +163,7 @@ bool CFloat32Data3DMemory::_initialize(int _iWidth, int _iHeight, int _iDepth, C
 	ASTRA_ASSERT(_iWidth > 0);
 	ASTRA_ASSERT(_iHeight > 0);
 	ASTRA_ASSERT(_iDepth > 0);
-	ASTRA_ASSERT(_pCustomMemory != NULL);
+	//ASTRA_ASSERT(_pCustomMemory != NULL);
 
 	if (m_bInitialized) {
 		_unInit();
@@ -273,9 +269,6 @@ void CFloat32Data3DMemory::_clear()
 	m_ppfDataRowInd = NULL;
 	m_pppfDataSliceInd = NULL;
 	m_pCustomMemory = NULL;
-
-	//m_fGlobalMin = 0.0f;
-	//m_fGlobalMax = 0.0f;
 }
 
 //----------------------------------------------------------------------------------------
@@ -287,37 +280,6 @@ void CFloat32Data3DMemory::_unInit()
 	_freeData();
 	_clear();
 	m_bInitialized = false;
-}
-
-//----------------------------------------------------------------------------------------
-// Update data statistics, such as minimum and maximum value, after the data has been modified. 
-void CFloat32Data3DMemory::updateStatistics()
-{
-	_computeGlobalMinMax();
-}
-
-//----------------------------------------------------------------------------------------
-// Find the minimum and maximum data value.
-void CFloat32Data3DMemory::_computeGlobalMinMax() 
-{
-	// basic checks
-	ASTRA_ASSERT(m_bInitialized);
-	ASTRA_ASSERT(m_pfData != NULL);
-	ASTRA_ASSERT(m_iSize > 0);
-	
-	// initial values
-	m_fGlobalMin = m_pfData[0];
-	m_fGlobalMax = m_pfData[0];
-
-	// loop
-	size_t i;
-	float32 v;
-	for (i = 0; i < m_iSize; ++i) 
-	{
-		v = m_pfData[i];
-		if (v < m_fGlobalMin) m_fGlobalMin = v;
-		if (v > m_fGlobalMax) m_fGlobalMax = v;
-	}
 }
 
 //----------------------------------------------------------------------------------------

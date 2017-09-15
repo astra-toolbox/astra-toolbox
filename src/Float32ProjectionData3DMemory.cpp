@@ -1,10 +1,10 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-           2014-2015, CWI, Amsterdam
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
 
 Contact: astra@uantwerpen.be
-Website: http://sf.net/projects/astra-toolbox
+Website: http://www.astra-toolbox.com/
 
 This file is part of the ASTRA Toolbox.
 
@@ -23,7 +23,6 @@ You should have received a copy of the GNU General Public License
 along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 -----------------------------------------------------------------------
-$Id$
 */
 
 #include "astra/Float32ProjectionData3DMemory.h"
@@ -115,7 +114,7 @@ bool CFloat32ProjectionData3DMemory::initialize(CProjectionGeometry3D* _pGeometr
 
 //----------------------------------------------------------------------------------------
 // Initialization
-bool CFloat32ProjectionData3DMemory::initialize(CProjectionGeometry3D* _pGeometry, CFloat32CustomMemory* _pCustomMemory) 
+bool CFloat32ProjectionData3DMemory::initialize(CProjectionGeometry3D* _pGeometry, CFloat32CustomMemory* _pCustomMemory)
 {
 	m_pGeometry = _pGeometry->clone();
 	m_bInitialized = _initialize(m_pGeometry->getDetectorColCount(), m_pGeometry->getProjectionCount(), m_pGeometry->getDetectorRowCount(), _pCustomMemory);
@@ -131,102 +130,6 @@ CFloat32ProjectionData3DMemory::~CFloat32ProjectionData3DMemory()
 	//_unInit(); //delete stuff inherited from CFloat32Data3DMemory
 }
 
-//----------------------------------------------------------------------------------------
-// Fetch a projection
-CFloat32VolumeData2D* CFloat32ProjectionData3DMemory::fetchProjection(int _iProjectionNr) const
-{
-	// fetch slice of the geometry
-	CVolumeGeometry2D volGeom(m_pGeometry->getDetectorColCount(), m_pGeometry->getDetectorRowCount());
-	// create new volume data
-	CFloat32VolumeData2D* res = new CFloat32VolumeData2D(&volGeom);
-	// copy data
-	int row, col;
-	for (row = 0; row < m_pGeometry->getDetectorRowCount(); ++row) {
-		for (col = 0; col < m_pGeometry->getDetectorColCount(); ++col) {
-			res->getData()[row*m_pGeometry->getDetectorColCount() + col] = 
-				m_pfData[_iProjectionNr * m_pGeometry->getDetectorColCount() + m_pGeometry->getDetectorColCount()* m_pGeometry->getProjectionCount() * row + col];
-		}
-	}
-	// return
-	return res;
-}
-
-//----------------------------------------------------------------------------------------
-// Return a projection
-void CFloat32ProjectionData3DMemory::returnProjection(int _iProjectionNr, CFloat32VolumeData2D* _pProjection) 
-{
-	/// TODO: check geometry
-	// copy data
-	int row, col;
-	for (row = 0; row < m_pGeometry->getDetectorRowCount(); ++row) {
-		for (col = 0; col < m_pGeometry->getDetectorColCount(); ++col) {
-			m_pfData[_iProjectionNr * m_pGeometry->getDetectorColCount() + m_pGeometry->getDetectorColCount()* m_pGeometry->getProjectionCount() * row + col] = 
-				_pProjection->getData()[row*m_pGeometry->getDetectorColCount() + col];
-		}
-	}
-}
-
-//----------------------------------------------------------------------------------------
-// Fetch a sinogram
-CFloat32ProjectionData2D* CFloat32ProjectionData3DMemory::fetchSinogram(int _iSliceNr) const
-{
-	CParallelProjectionGeometry3D * pParallelProjGeo = (CParallelProjectionGeometry3D *)m_pGeometry;
-	CParallelProjectionGeometry2D * pProjGeo2D = pParallelProjGeo->createProjectionGeometry2D();
-
-	// create new projection data
-	CFloat32ProjectionData2D* res = new CFloat32ProjectionData2D(pProjGeo2D);
-	// copy data
-	int row, col;
-
-	int iDetectorColumnCount = m_pGeometry->getDetectorColCount();
-	int iProjectionAngleCount = m_pGeometry->getProjectionCount();
-
-	for (row = 0; row < m_pGeometry->getProjectionCount(); ++row) {
-		for (col = 0; col < m_pGeometry->getDetectorColCount(); ++col)
-		{
-			int iTargetIndex = row * iDetectorColumnCount + col;
-			int iSourceIndex = _iSliceNr * iDetectorColumnCount * iProjectionAngleCount + row * iDetectorColumnCount + col;
-
-			float32 fStoredValue = m_pfData[iSourceIndex];
-
-			res->getData()[iTargetIndex] = fStoredValue;
-		}
-	}
-
-	delete pProjGeo2D;
-
-	// return
-	return res;
-}
-
-//----------------------------------------------------------------------------------------
-// Return a sinogram
-void CFloat32ProjectionData3DMemory::returnSinogram(int _iSliceNr, CFloat32ProjectionData2D* _pSinogram2D) 
-{
-	/// TODO: check geometry
-	// copy data
-	int row, col;
-	for (row = 0; row < m_pGeometry->getProjectionCount(); ++row) {
-		for (col = 0; col < m_pGeometry->getDetectorColCount(); ++col) {
-			m_pfData[_iSliceNr*m_pGeometry->getDetectorColCount()*m_pGeometry->getProjectionCount() + row*m_pGeometry->getDetectorColCount() + col] =
-				_pSinogram2D->getData()[row*m_pGeometry->getDetectorColCount() + col];
-		}
-	}
-}
-
-//----------------------------------------------------------------------------------------
-// Returns a specific value
-float32 CFloat32ProjectionData3DMemory::getDetectorValue(int _iIndex)
-{
-	return m_pfData[_iIndex];
-}
-
-//----------------------------------------------------------------------------------------
-// Sets a specific value
-void CFloat32ProjectionData3DMemory::setDetectorValue(int _iIndex, float32 _fValue)
-{
-	m_pfData[_iIndex] = _fValue;
-}
 //----------------------------------------------------------------------------------------
 
 CFloat32ProjectionData3DMemory& CFloat32ProjectionData3DMemory::operator=(const CFloat32ProjectionData3DMemory& _dataIn)

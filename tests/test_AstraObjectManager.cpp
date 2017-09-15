@@ -1,13 +1,13 @@
 /*
 -----------------------------------------------------------------------
-Copyright 2012 iMinds-Vision Lab, University of Antwerp
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
 
-Contact: astra@ua.ac.be
-Website: http://astra.ua.ac.be
+Contact: astra@uantwerpen.be
+Website: http://www.astra-toolbox.com/
 
+This file is part of the ASTRA Toolbox.
 
-This file is part of the
-All Scale Tomographic Reconstruction Antwerp Toolbox ("ASTRA Toolbox").
 
 The ASTRA Toolbox is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,9 +23,7 @@ You should have received a copy of the GNU General Public License
 along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 -----------------------------------------------------------------------
-$Id$
 */
-
 
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
@@ -33,19 +31,35 @@ $Id$
 
 #include "astra/AstraObjectManager.h"
 
+struct TestT {
+	TestT(int _x) : x(_x) { }
+	bool operator==(int _x) const { return x == _x; }
+
+	int x;
+	bool isInitialized() const { return true; }
+	std::string description() const { return ""; }
+};
+
 namespace astra {
-DEFINE_SINGLETON(CAstraObjectManager<int>);
+
+class CTestManager : public Singleton<CTestManager>, public CAstraObjectManager<TestT>
+{
+        virtual std::string getType() const { return "test"; }
+};
+
+DEFINE_SINGLETON(CTestManager);
+
 }
 
 BOOST_AUTO_TEST_CASE( testAstraObjectManager )
 {
-	astra::CAstraObjectManager<int> man;
+	astra::CTestManager &man = astra::CTestManager::getSingleton();
 
-	int i1 = man.store(new int(1));
+	int i1 = man.store(new TestT(1));
 	BOOST_REQUIRE(man.hasIndex(i1));
 	BOOST_CHECK(*(man.get(i1)) == 1);
 
-	int i2 = man.store(new int(2));
+	int i2 = man.store(new TestT(2));
 	BOOST_REQUIRE(man.hasIndex(i2));
 	BOOST_CHECK(*(man.get(i1)) == 1);
 	BOOST_CHECK(*(man.get(i2)) == 2);
@@ -55,12 +69,12 @@ BOOST_AUTO_TEST_CASE( testAstraObjectManager )
 	BOOST_CHECK(!man.hasIndex(i1));
 	BOOST_REQUIRE(man.hasIndex(i2));
 
-	int i3 = man.store(new int(3));
+	int i3 = man.store(new TestT(3));
 	BOOST_REQUIRE(man.hasIndex(i3));
 	BOOST_CHECK(*(man.get(i2)) == 2);
 	BOOST_CHECK(*(man.get(i3)) == 3);
 
-	int* pi4 = new int(4);
+	TestT* pi4 = new TestT(4);
 	int i4 = man.store(pi4);
 	BOOST_REQUIRE(man.hasIndex(i4));
 	BOOST_CHECK(*(man.get(i2)) == 2);

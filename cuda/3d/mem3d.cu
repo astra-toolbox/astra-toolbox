@@ -1,10 +1,10 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-           2014-2015, CWI, Amsterdam
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
 
 Contact: astra@uantwerpen.be
-Website: http://sf.net/projects/astra-toolbox
+Website: http://www.astra-toolbox.com/
 
 This file is part of the ASTRA Toolbox.
 
@@ -23,7 +23,6 @@ You should have received a copy of the GNU General Public License
 along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 -----------------------------------------------------------------------
-$Id$
 */
 
 #include <cstdio>
@@ -117,6 +116,13 @@ MemHandle3D allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Me
 	*ret.d = hnd;
 
 	return ret;
+}
+
+bool zeroGPUMemory(MemHandle3D handle, unsigned int x, unsigned int y, unsigned int z)
+{
+	SMemHandle3D_internal& hnd = *handle.d.get();
+	cudaError_t err = cudaMemset3D(hnd.ptr, 0, make_cudaExtent(sizeof(float)*x, y, z));
+	return err == cudaSuccess;
 }
 
 bool freeGPUMemory(MemHandle3D handle)
@@ -247,10 +253,13 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, con
 		}
 	}
 
+	delete[] pParProjs;
+	delete[] pConeProjs;
+
 	return ok;
 }
 
-bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, int iVoxelSuperSampling)
+bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, int iVoxelSuperSampling, bool bFDKWeighting)
 {
 	SDimensions3D dims;
 	SProjectorParams3D params;
@@ -270,16 +279,21 @@ bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, con
 	                          pParProjs, pConeProjs,
 	                          params);
 
+	params.bFDKWeighting = bFDKWeighting;
+
 	if (pParProjs)
 		ok &= Par3DBP(volData.d->ptr, projData.d->ptr, dims, pParProjs, params);
 	else
 		ok &= ConeBP(volData.d->ptr, projData.d->ptr, dims, pConeProjs, params);
 
+	delete[] pParProjs;
+	delete[] pConeProjs;
+
 	return ok;
 
 }
 
-bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, bool bShortScan)
+bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, bool bShortScan, const float *pfFilter)
 {
 	SDimensions3D dims;
 	SProjectorParams3D params;
@@ -295,10 +309,16 @@ bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, co
 	                          pParProjs, pConeProjs,
 	                          params);
 
-	if (!ok || !pConeProjs)
+	if (!ok || !pConeProjs) {
+		delete[] pParProjs;
+		delete[] pConeProjs;
 		return false;
+	}
 
-	ok &= FDK(volData.d->ptr, projData.d->ptr, pConeProjs, dims, params, bShortScan);
+	ok &= FDK(volData.d->ptr, projData.d->ptr, pConeProjs, dims, params, bShortScan, pfFilter);
+
+	delete[] pParProjs;
+	delete[] pConeProjs;
 
 	return ok;
 
@@ -306,6 +326,23 @@ bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, co
 
 }
 
+MemHandle3D wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch)
+{
+	cudaPitchedPtr ptr;
+	ptr.ptr = D_ptr;
+	ptr.xsize = sizeof(float) * x;
+	ptr.pitch = sizeof(float) * pitch;
+	ptr.ysize = y;
+
+	SMemHandle3D_internal h;
+	h.ptr = ptr;
+
+	MemHandle3D hnd;
+	hnd.d = boost::shared_ptr<SMemHandle3D_internal>(new SMemHandle3D_internal);
+	*hnd.d = h;
+
+	return hnd;
+}
 
 
 

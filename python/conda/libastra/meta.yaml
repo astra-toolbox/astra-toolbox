@@ -1,16 +1,28 @@
 package:
   name: libastra
-  version: '1.8b'
+  version: '1.8'
 
 source:
   git_url: https://github.com/astra-toolbox/astra-toolbox.git
-  #git_tag: v1.7.1 # Change to 1.8 after release
+  git_tag: v1.8
 
 build:
   number: 0
   script_env:
-    - CUDA_ROOT
-    - MAKEOPTS
+    - CC # [not win]
+    - CXX # [not win]
+    - CUDA_ROOT # [not win]
+
+requirements:
+  build:
+    - vs2015_runtime # [win]
+    - boost # [osx]
+    - automake # [osx]
+    - autoconf # [osx]
+    - libtool # [osx]
+
+  run:
+    - vs2015_runtime # [win]
 
 about:
   home: http://www.astra-toolbox.com

@@ -1,10 +1,10 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-           2014-2015, CWI, Amsterdam
+Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
+           2014-2016, CWI, Amsterdam
 
 Contact: astra@uantwerpen.be
-Website: http://sf.net/projects/astra-toolbox
+Website: http://www.astra-toolbox.com/
 
 This file is part of the ASTRA Toolbox.
 
@@ -23,7 +23,6 @@ You should have received a copy of the GNU General Public License
 along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 -----------------------------------------------------------------------
-$Id$
 */
 
 #ifndef _INC_ASTRA_XMLDOCUMENT
@@ -41,8 +40,6 @@ namespace rapidxml {
 
 #include "Globals.h"
 #include "XMLNode.h"
-
-using namespace std;
 
 namespace astra {
 
@@ -65,14 +62,14 @@ public:
 	 * @param sFilename Location of the XML file.
 	 * @return XML Document containing the DOM tree
 	 */
-	static XMLDocument* readFromFile(string sFilename);
+	static XMLDocument* readFromFile(std::string sFilename);
 
 	/** Construct an empty XML DOM tree with a specific root tag.
 	 *
 	 * @param sRootName Element name of the root tag.
 	 * @return XML Document with an empty root node
 	 */
-	static XMLDocument* createDocument(string sRootName);
+	static XMLDocument* createDocument(std::string sRootName);
 
 	/** Get the rootnode of the XML document
 	 *
@@ -84,7 +81,7 @@ public:
 	 *
 	 * @param sFilename Location of the XML file.
 	 */
-	void saveToFile(string sFilename);
+	void saveToFile(std::string sFilename);
 
 	/** convert and XML DOM tree to a string
 	 */
