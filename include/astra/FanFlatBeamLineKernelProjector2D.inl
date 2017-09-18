@@ -25,7 +25,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#define policy_weight(p,rayindex,volindex,weight) if (p.pixelPrior(volindex)) { p.addWeight(rayindex, volindex, weight); p.pixelPosterior(volindex); }
+#define policy_weight(p,rayindex,volindex,weight) do { if (p.pixelPrior(volindex)) { p.addWeight(rayindex, volindex, weight); p.pixelPosterior(volindex); } } while (false)
 
 template <typename Policy>
 void CFanFlatBeamLineKernelProjector2D::project(Policy& p)
@@ -125,8 +125,8 @@ void CFanFlatBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, in
 				// for each row
 				for (row = 0; row < rowCount; ++row, c += deltac) {
 
-					col = int(c+0.5f);
-					if (col <= 0 || col >= colCount-1) { if (!isin) continue; else break; }
+					col = int(floor(c+0.5f));
+					if (col < -1 || col > colCount) { if (!isin) continue; else break; }
 					offset = c - float32(col);
 
 					// left
@@ -134,10 +134,10 @@ void CFanFlatBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, in
 						weight = (offset + T) * invTminSTimesLengthPerRow;
 
 						iVolumeIndex = row * colCount + col - 1;
-						policy_weight(p, iRayIndex, iVolumeIndex, lengthPerRow-weight)
+						if (col > 0) { policy_weight(p, iRayIndex, iVolumeIndex, lengthPerRow-weight); }
 
 						iVolumeIndex++;
-						policy_weight(p, iRayIndex, iVolumeIndex, weight)
+						if (col >= 0 && col < colCount) { policy_weight(p, iRayIndex, iVolumeIndex, weight); }
 					}
 
 					// right
@@ -145,16 +145,16 @@ void CFanFlatBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, in
 						weight = (offset - S) * invTminSTimesLengthPerRow;
 
 						iVolumeIndex = row * colCount + col;
-						policy_weight(p, iRayIndex, iVolumeIndex, lengthPerRow-weight)
+						if (col >= 0 && col < colCount) { policy_weight(p, iRayIndex, iVolumeIndex, lengthPerRow-weight); }
 
 						iVolumeIndex++;
-						policy_weight(p, iRayIndex, iVolumeIndex, weight)
+						if (col + 1 < colCount) { policy_weight(p, iRayIndex, iVolumeIndex, weight); } 
 					}
 
 					// centre
-					else {
+					else if (col >= 0 && col < colCount) {
 						iVolumeIndex = row * colCount + col;
-						policy_weight(p, iRayIndex, iVolumeIndex, lengthPerRow)
+						policy_weight(p, iRayIndex, iVolumeIndex, lengthPerRow);
 					}
 					isin = true;
 				}
@@ -169,8 +169,8 @@ void CFanFlatBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, in
 				// for each col
 				for (col = 0; col < colCount; ++col, r += deltar) {
 
-					int row = int(r+0.5f);
-					if (row <= 0 || row >= rowCount-1) { if (!isin) continue; else break; }
+					row = int(floor(r+0.5f));
+					if (row < -1 || row > rowCount) { if (!isin) continue; else break; }
 					offset = r - float32(row);
 
 					// up
@@ -178,10 +178,10 @@ void CFanFlatBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, in
 						weight = (offset + T) * invTminSTimesLengthPerCol;
 
 						iVolumeIndex = (row-1) * colCount + col;
-						policy_weight(p, iRayIndex, iVolumeIndex, lengthPerCol-weight)
+						if (row > 0) { policy_weight(p, iRayIndex, iVolumeIndex, lengthPerCol-weight); }
 
 						iVolumeIndex += colCount;
-						policy_weight(p, iRayIndex, iVolumeIndex, weight)
+						if (row >= 0 && row < rowCount) { policy_weight(p, iRayIndex, iVolumeIndex, weight); }
 					}
 
 					// down
@@ -189,16 +189,16 @@ void CFanFlatBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, in
 						weight = (offset - S) * invTminSTimesLengthPerCol;
 
 						iVolumeIndex = row * colCount + col;
-						policy_weight(p, iRayIndex, iVolumeIndex, lengthPerCol-weight)
+						if (row >= 0 && row < rowCount) { policy_weight(p, iRayIndex, iVolumeIndex, lengthPerCol-weight); }
 
 						iVolumeIndex += colCount;
-						policy_weight(p, iRayIndex, iVolumeIndex, weight)
+						if (row + 1 < rowCount) { policy_weight(p, iRayIndex, iVolumeIndex, weight); }
 					}
 
 					// centre
-					else {
+					else if (row >= 0 && row < rowCount) {
 						iVolumeIndex = row * colCount + col;
-						policy_weight(p, iRayIndex, iVolumeIndex, lengthPerCol)
+						policy_weight(p, iRayIndex, iVolumeIndex, lengthPerCol);
 					}
 					isin = true;
 				}
