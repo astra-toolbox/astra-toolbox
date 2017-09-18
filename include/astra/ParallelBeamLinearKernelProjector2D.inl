@@ -25,7 +25,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#define policy_weight(p,rayindex,volindex,weight) if (p.pixelPrior(volindex)) { p.addWeight(rayindex, volindex, weight); p.pixelPosterior(volindex); }
+#define policy_weight(p,rayindex,volindex,weight) do { if (p.pixelPrior(volindex)) { p.addWeight(rayindex, volindex, weight); p.pixelPosterior(volindex); } } while (false)
 
 template <typename Policy>
 void CParallelBeamLinearKernelProjector2D::project(Policy& p)
@@ -192,15 +192,15 @@ void CParallelBeamLinearKernelProjector2D::projectBlock_internal(int _iProjFrom,
 				// loop rows
 				for (row = 0; row < rowCount; ++row, c += deltac) {
 
-					col = int(c);
-					if (col <= 0 || col >= colCount-1) { if (!isin) continue; else break; }
+					col = int(floor(c));
+					if (col < -1 || col >= colCount) { if (!isin) continue; else break; }
 					offset = c - float32(col);
 
 					iVolumeIndex = row * colCount + col;
-					policy_weight(p, iRayIndex, iVolumeIndex, (1.0f - offset) * lengthPerRow)
+					if (col >= 0) { policy_weight(p, iRayIndex, iVolumeIndex, (1.0f - offset) * lengthPerRow); }
 					
 					iVolumeIndex++;
-					policy_weight(p, iRayIndex, iVolumeIndex, offset * lengthPerRow)
+					if (col + 1 < colCount) { policy_weight(p, iRayIndex, iVolumeIndex, offset * lengthPerRow); }
 
 					isin = true;
 				}
@@ -215,15 +215,15 @@ void CParallelBeamLinearKernelProjector2D::projectBlock_internal(int _iProjFrom,
 				// loop columns
 				for (col = 0; col < colCount; ++col, r += deltar) {
 
-					row = int(r);
-					if (row <= 0 || row >= rowCount-1) { if (!isin) continue; else break; }
+					row = int(floor(r));
+					if (row < -1 || row >= rowCount) { if (!isin) continue; else break; }
 					offset = r - float32(row);
 
 					iVolumeIndex = row * colCount + col;
-					policy_weight(p, iRayIndex, iVolumeIndex, (1.0f - offset) * lengthPerCol)
+					if (row >= 0) { policy_weight(p, iRayIndex, iVolumeIndex, (1.0f - offset) * lengthPerCol); }
 
 					iVolumeIndex += colCount;
-					policy_weight(p, iRayIndex, iVolumeIndex, offset * lengthPerCol)
+					if (row + 1 < rowCount) { policy_weight(p, iRayIndex, iVolumeIndex, offset * lengthPerCol); }
 					
 					isin = true;
 				}
