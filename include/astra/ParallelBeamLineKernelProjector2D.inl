@@ -158,7 +158,6 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 	const int detCount = pVecProjectionGeometry->getDetectorCount();
 
 	// loop angles
-	#pragma omp parallel for
 	for (int iAngle = _iProjFrom; iAngle < _iProjTo; ++iAngle) {
 
 		// variables

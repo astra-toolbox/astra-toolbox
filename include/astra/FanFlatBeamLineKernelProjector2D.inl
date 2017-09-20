@@ -73,7 +73,6 @@ void CFanFlatBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, in
 	const float32 Ey = m_pVolumeGeometry->getWindowMaxY() - pixelLengthY*0.5f;
 
 	// loop angles
-	#pragma omp parallel for
 	for (int iAngle = _iProjFrom; iAngle < _iProjTo; ++iAngle) {
 
 		// variables
