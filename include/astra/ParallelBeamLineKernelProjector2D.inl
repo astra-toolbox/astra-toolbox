@@ -184,7 +184,7 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 			invTminSTimesLengthPerCol = lengthPerCol / (T - S);
 		}
 
-		Ex = m_pVolumeGeometry->getWindowMinY() + pixelLengthX*0.5f;
+		Ex = m_pVolumeGeometry->getWindowMinX() + pixelLengthX*0.5f;
 		Ey = m_pVolumeGeometry->getWindowMaxY() - pixelLengthY*0.5f;
 
 		// loop detectors

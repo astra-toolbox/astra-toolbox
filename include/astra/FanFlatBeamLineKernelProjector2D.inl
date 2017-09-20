@@ -69,7 +69,7 @@ void CFanFlatBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, in
 	const int colCount = m_pVolumeGeometry->getGridColCount();
 	const int rowCount = m_pVolumeGeometry->getGridRowCount();
 	const int detCount = pVecProjectionGeometry->getDetectorCount();
-	const float32 Ex = m_pVolumeGeometry->getWindowMinY() + pixelLengthX*0.5f;
+	const float32 Ex = m_pVolumeGeometry->getWindowMinX() + pixelLengthX*0.5f;
 	const float32 Ey = m_pVolumeGeometry->getWindowMaxY() - pixelLengthY*0.5f;
 
 	// loop angles

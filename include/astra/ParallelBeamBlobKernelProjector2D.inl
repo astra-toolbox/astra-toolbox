@@ -147,7 +147,7 @@ void CParallelBeamBlobKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 			invBlobExtent = m_pVolumeGeometry->getPixelLengthX() / abs(m_fBlobSize * sqrt(proj->fRayY*proj->fRayY + proj->fRayX*proj->fRayX) / proj->fRayX);
 		}
 
-		Ex = m_pVolumeGeometry->getWindowMinY() + pixelLengthX*0.5f;
+		Ex = m_pVolumeGeometry->getWindowMinX() + pixelLengthX*0.5f;
 		Ey = m_pVolumeGeometry->getWindowMaxY() - pixelLengthY*0.5f;
 
 		// loop detectors
