@@ -92,11 +92,9 @@ classdef opTomo < opSpot
                 if gpuEnabled
                     fp_alg = 'FP_CUDA';
                     bp_alg = 'BP_CUDA';
-                    proj_id = [];
                 else
                     fp_alg = 'FP';
                     bp_alg = 'BP';
-                    proj_id = astra_create_projector(type, proj_geom, vol_geom);
                 end
                 
                 % configuration for ASTRA fp algorithm
