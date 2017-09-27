@@ -251,36 +251,14 @@ __global__ void FPvertical_simple(float* D_projData, unsigned int projPitch, uns
 static void convertAndUploadAngles(const SParProjection *projs, unsigned int nth, unsigned int ndets)
 {
 	float *angles = new float[nth];
-	float *offset = new float[nth];
+	float *offsets = new float[nth];
 	float *detsizes = new float[nth];
 
-	for (int i = 0; i < nth; ++i) {
-
-#warning TODO: Replace by getParParamaters
-
-		// Take part of DetU orthogonal to Ray
-		double ux = projs[i].fDetUX;
-		double uy = projs[i].fDetUY;
-
-		double t = (ux * projs[i].fRayX + uy * projs[i].fRayY) / (projs[i].fRayX * projs[i].fRayX + projs[i].fRayY * projs[i].fRayY);
-
-		ux -= t * projs[i].fRayX;
-		uy -= t * projs[i].fRayY;
-
-		double angle = atan2(uy, ux);
-
-		angles[i] = angle;
-
-		double norm2 = uy * uy + ux * ux;
-
-		detsizes[i] = sqrt(norm2);
-
-		// CHECKME: SIGNS?
-		offset[i] = -0.5*ndets - (projs[i].fDetSY*uy + projs[i].fDetSX*ux) / norm2;
-	}
+	for (int i = 0; i < nth; ++i)
+		getParParameters(projs[i], ndets, angles[i], detsizes[i], offsets[i]);
 
 	cudaMemcpyToSymbol(gC_angle, angles, nth*sizeof(float), 0, cudaMemcpyHostToDevice); 
-	cudaMemcpyToSymbol(gC_angle_offset, offset, nth*sizeof(float), 0, cudaMemcpyHostToDevice); 
+	cudaMemcpyToSymbol(gC_angle_offset, offsets, nth*sizeof(float), 0, cudaMemcpyHostToDevice);
 	cudaMemcpyToSymbol(gC_angle_detsize, detsizes, nth*sizeof(float), 0, cudaMemcpyHostToDevice); 
 }
 

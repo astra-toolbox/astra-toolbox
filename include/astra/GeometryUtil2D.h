@@ -96,7 +96,10 @@ SFanProjection* genFanProjections(unsigned int iProjAngles,
                                   double fDetSize,
                                   const float *pfAngles);
 
+bool getParParameters(const SParProjection &proj, unsigned int iProjDets, float &fAngle, float &fDetSize, float &fOffset);
+
 bool getFanParameters(const SFanProjection &proj, unsigned int iProjDets, float &fAngle, float &fOriginSource, float &fOriginDetector, float &fDetSize, float &fOffset);
+
 
 }
 

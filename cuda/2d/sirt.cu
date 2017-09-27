@@ -184,9 +184,8 @@ bool SIRT::doSlabCorrections()
 	float bound = cosf(1.3963f);
 	float* t = (float*)D_sinoData;
 	for (int i = 0; i < dims.iProjAngles; ++i) {
-		// TODO: Checkme
-		// TODO: Replace by getParParameters
-		double angle = atan2(parProjs[i].fRayX, -parProjs[i].fRayY);
+		float angle, detsize, offset;
+		getParParameters(parProjs[i], dims.iProjDets, angle, detsize, offset);
 		float f = fabs(cosf(angle));
 
 		if (f < bound)

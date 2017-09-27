@@ -104,13 +104,27 @@ SFanProjection* genFanProjections(unsigned int iProjAngles,
 
 // Convert a SParProjection back into its set of "standard" circular parallel
 // beam parameters. This is always possible.
-bool getParParameters(const SParProjection &proj /* , ... */)
+bool getParParameters(const SParProjection &proj, unsigned int iProjDets, float &fAngle, float &fDetSize, float &fOffset)
 {
-	// angle
-	// det size
-	// offset
+	// Take part of DetU orthogonal to Ray
+	double ux = proj.fDetUX;
+	double uy = proj.fDetUY;
 
-	// (see convertAndUploadAngles in par_fp.cu)
+	double t = (ux * proj.fRayX + uy * proj.fRayY) / (proj.fRayX * proj.fRayX + proj.fRayY * proj.fRayY);
+
+	ux -= t * proj.fRayX;
+	uy -= t * proj.fRayY;
+
+	double angle = atan2(uy, ux);
+
+	fAngle = (float)angle;
+
+	double norm2 = uy * uy + ux * ux;
+
+	fDetSize = (float)sqrt(norm2);
+
+	// CHECKME: SIGNS?
+	fOffset = (float)(-0.5*iProjDets - (proj.fDetSY*uy + proj.fDetSX*ux) / norm2);
 
 	return true;
 }
