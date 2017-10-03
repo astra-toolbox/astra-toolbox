@@ -140,7 +140,7 @@ public:
 		enum {
 			JOB_FP, JOB_BP, JOB_FDK, JOB_NOP
 		} eType;
-		enum {
+		enum EMode {
 			MODE_ADD, MODE_SET
 		} eMode;
 
@@ -154,22 +154,24 @@ public:
 
 	SJob createJobFP(CProjector3D *pProjector,
                      CFloat32VolumeData3D *pVolData,
-                     CFloat32ProjectionData3D *pProjData);
+                     CFloat32ProjectionData3D *pProjData,
+	                 SJob::EMode eMode);
 	SJob createJobBP(CProjector3D *pProjector,
                      CFloat32VolumeData3D *pVolData,
-                     CFloat32ProjectionData3D *pProjData);
+                     CFloat32ProjectionData3D *pProjData,
+	                 SJob::EMode eMode);
 
 	// Convenience functions for creating and running a single FP or BP job
 	bool doFP(CProjector3D *pProjector, CFloat32VolumeData3D *pVolData,
-	          CFloat32ProjectionData3D *pProjData);
+	          CFloat32ProjectionData3D *pProjData, SJob::EMode eMode = SJob::MODE_SET);
 	bool doBP(CProjector3D *pProjector, CFloat32VolumeData3D *pVolData,
-	          CFloat32ProjectionData3D *pProjData);
+	          CFloat32ProjectionData3D *pProjData, SJob::EMode eMode = SJob::MODE_SET);
 	bool doFDK(CProjector3D *pProjector, CFloat32VolumeData3D *pVolData,
 	          CFloat32ProjectionData3D *pProjData, bool bShortScan,
-	          const float *pfFilter = 0);
+	          const float *pfFilter = 0, SJob::EMode eMode = SJob::MODE_SET);
 
-	bool doFP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3D *>& volData, const std::vector<CFloat32ProjectionData3D *>& projData);
-	bool doBP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3D *>& volData, const std::vector<CFloat32ProjectionData3D *>& projData);
+	bool doFP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3D *>& volData, const std::vector<CFloat32ProjectionData3D *>& projData, SJob::EMode eMode = SJob::MODE_SET);
+	bool doBP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3D *>& volData, const std::vector<CFloat32ProjectionData3D *>& projData, SJob::EMode eMode = SJob::MODE_SET);
 
 	void setGPUIndices(const std::vector<int>& GPUIndices);
 
