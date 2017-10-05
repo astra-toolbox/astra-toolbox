@@ -129,8 +129,7 @@ classdef opTomo < opSpot
                 op.bp_alg_id   = bp_alg_id;
                 op.sino_id     = sino_id;
                 op.vol_id      = vol_id;
-                op.proj_geom   = proj_geom;
-                op.vol_geom   = vol_geom;
+                
             else
                 % 3D
                 % only gpu/cuda code for 3D
