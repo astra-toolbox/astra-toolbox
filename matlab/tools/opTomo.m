@@ -51,6 +51,8 @@ classdef opTomo < opSpot
     properties ( SetAccess = private, GetAccess = public )
         proj_size
         vol_size
+        proj_geom
+        vol_geom
     end % properties
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -127,6 +129,8 @@ classdef opTomo < opSpot
                 op.bp_alg_id   = bp_alg_id;
                 op.sino_id     = sino_id;
                 op.vol_id      = vol_id;
+                op.proj_geom   = proj_geom;
+                op.vol_geom   = vol_geom;
             else
                 % 3D
                 % only gpu/cuda code for 3D
@@ -156,6 +160,8 @@ classdef opTomo < opSpot
             op.vol_size    = vol_size;
             op.cflag       = false;
             op.sweepflag   = false;
+            op.proj_geom   = proj_geom;
+            op.vol_geom   = vol_geom;
 
         end % opTomo - constructor
         
