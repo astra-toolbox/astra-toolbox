@@ -155,14 +155,16 @@ void CParallelBeamLinearKernelProjector2D::projectBlock_internal(int _iProjFrom,
 
 		const SParProjection * proj = &pVecProjectionGeometry->getProjectionVectors()[iAngle];
 
+		float32 detSize = sqrt(proj->fDetUX * proj->fDetUX + proj->fDetUY * proj->fDetUY);
+
 		bool vertical = fabs(proj->fRayX) < fabs(proj->fRayY);
 		if (vertical) {
 			RxOverRy = proj->fRayX/proj->fRayY;
-			lengthPerRow = m_pVolumeGeometry->getPixelLengthX() * sqrt(proj->fRayY*proj->fRayY + proj->fRayX*proj->fRayX) / abs(proj->fRayY);
+			lengthPerRow = detSize * m_pVolumeGeometry->getPixelLengthX() * sqrt(proj->fRayY*proj->fRayY + proj->fRayX*proj->fRayX) / abs(proj->fRayY);
 			deltac = -pixelLengthY * RxOverRy * inv_pixelLengthX;
 		} else {
 			RyOverRx = proj->fRayY/proj->fRayX;
-			lengthPerCol = m_pVolumeGeometry->getPixelLengthY() * sqrt(proj->fRayY*proj->fRayY + proj->fRayX*proj->fRayX) / abs(proj->fRayX);
+			lengthPerCol = detSize * m_pVolumeGeometry->getPixelLengthY() * sqrt(proj->fRayY*proj->fRayY + proj->fRayX*proj->fRayX) / abs(proj->fRayX);
 			deltar = -pixelLengthX * RyOverRx * inv_pixelLengthY;
 		}
 
