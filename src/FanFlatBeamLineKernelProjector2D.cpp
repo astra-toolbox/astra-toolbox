@@ -91,7 +91,7 @@ bool CFanFlatBeamLineKernelProjector2D::_check()
 
 	ASTRA_CONFIG_CHECK(dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pProjectionGeometry) || dynamic_cast<CFanFlatVecProjectionGeometry2D*>(m_pProjectionGeometry), "FanFlatBeamLineKernelProjector2D", "Unsupported projection geometry");
 
-	ASTRA_CONFIG_CHECK(m_pVolumeGeometry->getPixelLengthX() == m_pVolumeGeometry->getPixelLengthY(), "FanFlatBeamLineKernelProjector2D", "Pixel height must equal pixel width.");
+	ASTRA_CONFIG_CHECK(abs(m_pVolumeGeometry->getPixelLengthX() / m_pVolumeGeometry->getPixelLengthY()) - 1 < eps, "FanFlatBeamLineKernelProjector2D", "Pixel height must equal pixel width.");
 	
 	// success
 	return true;
