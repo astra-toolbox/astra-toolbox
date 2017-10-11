@@ -53,11 +53,11 @@ def create(config):
     alg = PyAlgorithmFactory.getSingletonPtr().create(cfg.self.getAttribute(six.b('type')))
     if alg == NULL:
         del cfg
-        raise Exception("Unknown algorithm.")
+        raise Exception("Unknown Algorithm.")
     if not alg.initialize(cfg[0]):
         del cfg
         del alg
-        raise Exception("Algorithm not initialized.")
+        raise Exception("Unable to initialize Algorithm.")
     del cfg
     return manAlg.store(alg)
 

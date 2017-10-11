@@ -29,7 +29,7 @@ from .PyIncludes cimport *
 
 cdef extern from "astra/AstraObjectFactory.h" namespace "astra":
     cdef cppclass CProjector3DFactory:
-        CProjector3D *create(Config)
+        CProjector3D *create(string)
 
 cdef extern from "astra/AstraObjectFactory.h" namespace "astra::CProjector3DFactory":
     cdef CProjector3DFactory* getSingletonPtr()
