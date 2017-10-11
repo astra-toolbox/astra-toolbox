@@ -81,45 +81,23 @@ This method can be called in a number of ways:
     if len(varargin) == 1 and isinstance(varargin[0], int) == 1:
         vol_geom['GridRowCount'] = varargin[0]
         vol_geom['GridColCount'] = varargin[0]
-        vol_geom['option']['WindowMinX'] = -varargin[0] / 2.
-        vol_geom['option']['WindowMaxX'] = varargin[0] / 2.
-        vol_geom['option']['WindowMinY'] = -varargin[0] / 2.
-        vol_geom['option']['WindowMaxY'] = varargin[0] / 2.
     # astra_create_vol_geom([row_count col_count])
     elif len(varargin) == 1 and len(varargin[0]) == 2:
         vol_geom['GridRowCount'] = varargin[0][0]
         vol_geom['GridColCount'] = varargin[0][1]
-        vol_geom['option']['WindowMinX'] = -varargin[0][1] / 2.
-        vol_geom['option']['WindowMaxX'] = varargin[0][1] / 2.
-        vol_geom['option']['WindowMinY'] = -varargin[0][0] / 2.
-        vol_geom['option']['WindowMaxY'] = varargin[0][0] / 2.
     # astra_create_vol_geom([row_count col_count slice_count])
     elif len(varargin) == 1 and len(varargin[0]) == 3:
         vol_geom['GridRowCount'] = varargin[0][0]
         vol_geom['GridColCount'] = varargin[0][1]
         vol_geom['GridSliceCount'] = varargin[0][2]
-        vol_geom['option']['WindowMinX'] = -varargin[0][1] / 2.
-        vol_geom['option']['WindowMaxX'] = varargin[0][1] / 2.
-        vol_geom['option']['WindowMinY'] = -varargin[0][0] / 2.
-        vol_geom['option']['WindowMaxY'] = varargin[0][0] / 2.
-        vol_geom['option']['WindowMinZ'] = -varargin[0][2] / 2.
-        vol_geom['option']['WindowMaxZ'] = varargin[0][2] / 2.
     # astra_create_vol_geom(row_count, col_count)
     elif len(varargin) == 2:
         vol_geom['GridRowCount'] = varargin[0]
         vol_geom['GridColCount'] = varargin[1]
-        vol_geom['option']['WindowMinX'] = -varargin[1] / 2.
-        vol_geom['option']['WindowMaxX'] = varargin[1] / 2.
-        vol_geom['option']['WindowMinY'] = -varargin[0] / 2.
-        vol_geom['option']['WindowMaxY'] = varargin[0] / 2.
     # astra_create_vol_geom(row_count, col_count, min_x, max_x, min_y, max_y)
     elif len(varargin) == 6:
         vol_geom['GridRowCount'] = varargin[0]
         vol_geom['GridColCount'] = varargin[1]
-        vol_geom['option']['WindowMinX'] = varargin[2]
-        vol_geom['option']['WindowMaxX'] = varargin[3]
-        vol_geom['option']['WindowMinY'] = varargin[4]
-        vol_geom['option']['WindowMaxY'] = varargin[5]
     # astra_create_vol_geom(row_count, col_count, slice_count)
     elif len(varargin) == 3:
         vol_geom['GridRowCount'] = varargin[0]
@@ -130,12 +108,15 @@ This method can be called in a number of ways:
         vol_geom['GridRowCount'] = varargin[0]
         vol_geom['GridColCount'] = varargin[1]
         vol_geom['GridSliceCount'] = varargin[2]
-        vol_geom['option']['WindowMinX'] = varargin[3]
-        vol_geom['option']['WindowMaxX'] = varargin[4]
-        vol_geom['option']['WindowMinY'] = varargin[5]
-        vol_geom['option']['WindowMaxY'] = varargin[6]
-        vol_geom['option']['WindowMinZ'] = varargin[7]
-        vol_geom['option']['WindowMaxZ'] = varargin[8]
+
+    vol_geom['option']['WindowMinX'] = -vol_geom['GridColCount'] / 2.
+    vol_geom['option']['WindowMaxX'] =  vol_geom['GridColCount'] / 2.
+    vol_geom['option']['WindowMinY'] = -vol_geom['GridRowCount'] / 2.
+    vol_geom['option']['WindowMaxY'] =  vol_geom['GridRowCount'] / 2.
+    if 'GridSliceCount' in vol_geom:
+        vol_geom['option']['WindowMinZ'] = -vol_geom['GridSliceCount'] / 2.
+        vol_geom['option']['WindowMaxZ'] =  vol_geom['GridSliceCount'] / 2.
+
     return vol_geom
 
 
