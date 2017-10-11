@@ -126,21 +126,6 @@ T* CAstraObjectFactory<T, TypeList>::create(std::string _sType)
 	return finder.res;
 }
 
-//----------------------------------------------------------------------------------------
-// Create with XML
-template <typename T, typename TypeList>
-T* CAstraObjectFactory<T, TypeList>::create(const Config& _cfg)
-{
-	T* object = create(_cfg.self.getAttribute("type"));
-	if (object == NULL) return NULL;
-	if (object->initialize(_cfg))
-		return object;
-	delete object;
-	return NULL;
-}
-//----------------------------------------------------------------------------------------
-
-
 
 
 //----------------------------------------------------------------------------------------

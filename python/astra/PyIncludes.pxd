@@ -155,6 +155,7 @@ cdef extern from "astra/ReconstructionAlgorithm2D.h" namespace "astra":
 cdef extern from "astra/Projector2D.h" namespace "astra":
     cdef cppclass CProjector2D:
         bool isInitialized()
+        bool initialize(Config)
         CProjectionGeometry2D* getProjectionGeometry()
         CVolumeGeometry2D* getVolumeGeometry()
         CSparseMatrix* getMatrix()
@@ -162,6 +163,7 @@ cdef extern from "astra/Projector2D.h" namespace "astra":
 cdef extern from "astra/Projector3D.h" namespace "astra":
     cdef cppclass CProjector3D:
         bool isInitialized()
+        bool initialize(Config)
         CProjectionGeometry3D* getProjectionGeometry()
         CVolumeGeometry3D* getVolumeGeometry()
 

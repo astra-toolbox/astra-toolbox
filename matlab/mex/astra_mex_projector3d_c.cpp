@@ -68,10 +68,18 @@ void astra_mex_projector3d_create(int nlhs, mxArray* plhs[], int nrhs, const mxA
 	Config* cfg = structToConfig("Projector3D", prhs[1]);
 
 	// create algorithm
-	CProjector3D* pProj = CProjector3DFactory::getSingleton().create(*cfg);
+	CProjector3D* pProj = CProjector3DFactory::getSingleton().create(cfg->self.getAttribute("type"));
 	if (pProj == NULL) {
 		delete cfg;
-		mexErrMsgTxt("Error creating Projector3D. \n");
+		mexErrMsgTxt("Unknown Projector3D. \n");
+		return;
+	}
+
+	// create algorithm
+	if (!pProj->initialize(*cfg)) {
+		delete cfg;
+		delete pProj;
+		mexErrMsgTxt("Unable to initialize Projector3D. \n");
 		return;
 	}
 	delete cfg;

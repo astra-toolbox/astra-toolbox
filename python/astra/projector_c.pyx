@@ -57,10 +57,14 @@ IF HAVE_CUDA:
 def create(config):
     cdef Config * cfg = utils.dictToConfig(six.b('Projector2D'), config)
     cdef CProjector2D * proj
-    proj = PyProjector2DFactory.getSingletonPtr().create(cfg[0])
+    proj = PyProjector2DFactory.getSingletonPtr().create(cfg.self.getAttribute(six.b('type')))
     if proj == NULL:
         del cfg
-        raise Exception("Error creating projector.")
+        raise Exception("Unknown Projector2D.")
+    if not proj.initialize(cfg[0]):
+        del cfg
+        del proj
+        raise Exception("Unable to initialize Projector2D.")
     del cfg
     return manProj.store(proj)
 

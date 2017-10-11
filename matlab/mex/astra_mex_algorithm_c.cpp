@@ -83,7 +83,7 @@ void astra_mex_algorithm_create(int nlhs, mxArray* plhs[], int nrhs, const mxArr
 	CAlgorithm* pAlg = CAlgorithmFactory::getSingleton().create(cfg->self.getAttribute("type"));
 	if (!pAlg) {
 		delete cfg;
-		mexErrMsgTxt("Unknown algorithm. \n");
+		mexErrMsgTxt("Unknown Algorithm. \n");
 		return;
 	}
 
@@ -91,7 +91,7 @@ void astra_mex_algorithm_create(int nlhs, mxArray* plhs[], int nrhs, const mxArr
 	if (!pAlg->initialize(*cfg)) {
 		delete cfg;
 		delete pAlg;
-		mexErrMsgTxt("Algorithm not initialized. \n");
+		mexErrMsgTxt("Unable to initialize Algorithm. \n");
 		return;
 	}
 	delete cfg;
