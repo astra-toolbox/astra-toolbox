@@ -47,69 +47,69 @@ void CParallelBeamStripKernelProjector2D::projectSingleRay(int _iProjection, int
 }
 
 //----------------------------------------------------------------------------------------
-// PROJECT BLOCK
-// 
-// Kernel limitations: isotropic pixels (PixelLengthX == PixelLengthY)
-//
-// For each angle/detector pair:
-// 
-// Let DL=(DLx,DLy) denote the left of the detector (point) in volume coordinates, and
-// Let DR=(DRx,DRy) denote the right of the detector (point) in volume coordinates, and
-// let R=(Rx,Ry) denote the direction of the ray (vector).
-// 
-// For mainly vertical rays (|Rx|<=|Ry|), 
-// let E=(Ex,Ey) denote the centre of the most upper left pixel:
-//    E = (WindowMinX +  PixelLengthX/2, WindowMaxY - PixelLengthY/2),
-// and let F=(Fx,Fy) denote a vector to the next pixel 
-//    F = (PixelLengthX, 0)
-// 
-// The intersection of the left edge of the strip (DL+aR) with the centre line of the upper row of pixels (E+bF) is
-//    { DLx + a*Rx = Ex + b*Fx
-//    { DLy + a*Ry = Ey + b*Fy
-// Solving for (a,b) results in:
-//    a = (Ey + b*Fy - DLy)/Ry
-//      = (Ey - DLy)/Ry
-//    b = (DLx + a*Rx - Ex)/Fx
-//      = (DLx + (Ey - DLy)*Rx/Ry - Ex)/Fx
-//
-// Define cL as the x-value of the intersection of the left edge of the strip with the upper row in pixel coordinates. 
-//    cL = b 
-//
-// cR, the x-value of the intersection of the right edge of the strip with the upper row in pixel coordinates can be found similarly.
-//
-// The intersection of the ray (DL+aR) with the left line of the second row of pixels (E'+bF) with
-//    E'=(WindowMinX + PixelLengthX/2, WindowMaxY - 3*PixelLengthY/2)
-// expressed in x-value pixel coordinates is
-//    cL' = (DLx + (Ey' - DLy)*Rx/Ry - Ex)/Fx.
-// And thus:
-//    deltac = cL' - cL = (DLx + (Ey' - DLy)*Rx/Ry - Ex)/Fx - (DLx + (Ey - DLy)*Rx/Ry - Ex)/Fx
-//                      = [(Ey' - DLy)*Rx/Ry - (Ey - DLy)*Rx/Ry]/Fx
-//                      = [Ey' - Ey]*(Rx/Ry)/Fx
-//                      = [Ey' - Ey]*(Rx/Ry)/Fx
-//                      = -PixelLengthY*(Rx/Ry)/Fx.
-//
-// The projection weight for a certain pixel is defined by the area between two points of 
-//
-//         _____       LengthPerRow
-//       /|  |  |\
-//      / |  |  | \
-//   __/  |  |  |  \__ 0
-//    -T -S  0  S  T
-// with S = 1/2 - 1/2*|Rx/Ry|, T = 1/2 + 1/2*|Rx/Ry|, and LengthPerRow = pixelLengthX * sqrt(Rx^2+Ry^2) / |Ry|
-// 
-// For a certain row, all columns that are 'hit' by this kernel lie in the interval
-//    (col_left, col_right) = (floor(cL-1/2+S), floor(cR+3/2-S))
-//
-// The offsets for both is
-//    (offsetL, offsetR) = (cL - floor(col_left), cR - floor(col_left))
-//
-// The projection weight is found by the difference between the integrated values of the kernel
-//         offset <= -T   Kernel = 0
-//    -T < offset <= -S   Kernel = PixelArea/2*(T+offset)^2/(T-S)
-//    -S < offset <=  S   Kernel = PixelArea/2 + offset
-//     S < offset <=  T   Kernel = PixelArea - PixelArea/2*(T-offset)^2/(T-S)
-//     T <= offset:       Kernel = PixelArea
-//
+/* PROJECT BLOCK
+   
+   Kernel limitations: isotropic pixels (PixelLengthX == PixelLengthY)
+  
+   For each angle/detector pair:
+   
+   Let DL=(DLx,DLy) denote the left of the detector (point) in volume coordinates, and
+   Let DR=(DRx,DRy) denote the right of the detector (point) in volume coordinates, and
+   let R=(Rx,Ry) denote the direction of the ray (vector).
+   
+   For mainly vertical rays (|Rx|<=|Ry|), 
+   let E=(Ex,Ey) denote the centre of the most upper left pixel:
+      E = (WindowMinX +  PixelLengthX/2, WindowMaxY - PixelLengthY/2),
+   and let F=(Fx,Fy) denote a vector to the next pixel 
+      F = (PixelLengthX, 0)
+   
+   The intersection of the left edge of the strip (DL+aR) with the centre line of the upper row of pixels (E+bF) is
+      { DLx + a*Rx = Ex + b*Fx
+      { DLy + a*Ry = Ey + b*Fy
+   Solving for (a,b) results in:
+      a = (Ey + b*Fy - DLy)/Ry
+        = (Ey - DLy)/Ry
+      b = (DLx + a*Rx - Ex)/Fx
+        = (DLx + (Ey - DLy)*Rx/Ry - Ex)/Fx
+  
+   Define cL as the x-value of the intersection of the left edge of the strip with the upper row in pixel coordinates. 
+      cL = b 
+  
+   cR, the x-value of the intersection of the right edge of the strip with the upper row in pixel coordinates can be found similarly.
+  
+   The intersection of the ray (DL+aR) with the left line of the second row of pixels (E'+bF) with
+      E'=(WindowMinX + PixelLengthX/2, WindowMaxY - 3*PixelLengthY/2)
+   expressed in x-value pixel coordinates is
+      cL' = (DLx + (Ey' - DLy)*Rx/Ry - Ex)/Fx.
+   And thus:
+      deltac = cL' - cL = (DLx + (Ey' - DLy)*Rx/Ry - Ex)/Fx - (DLx + (Ey - DLy)*Rx/Ry - Ex)/Fx
+                        = [(Ey' - DLy)*Rx/Ry - (Ey - DLy)*Rx/Ry]/Fx
+                        = [Ey' - Ey]*(Rx/Ry)/Fx
+                        = [Ey' - Ey]*(Rx/Ry)/Fx
+                        = -PixelLengthY*(Rx/Ry)/Fx.
+  
+   The projection weight for a certain pixel is defined by the area between two points of 
+  
+           _____       LengthPerRow
+         /|  |  |\
+        / |  |  | \
+     __/  |  |  |  \__ 0
+      -T -S  0  S  T
+   with S = 1/2 - 1/2*|Rx/Ry|, T = 1/2 + 1/2*|Rx/Ry|, and LengthPerRow = pixelLengthX * sqrt(Rx^2+Ry^2) / |Ry|
+   
+   For a certain row, all columns that are 'hit' by this kernel lie in the interval
+      (col_left, col_right) = (floor(cL-1/2+S), floor(cR+3/2-S))
+  
+   The offsets for both is
+      (offsetL, offsetR) = (cL - floor(col_left), cR - floor(col_left))
+  
+   The projection weight is found by the difference between the integrated values of the kernel
+           offset <= -T   Kernel = 0
+      -T < offset <= -S   Kernel = PixelArea/2*(T+offset)^2/(T-S)
+      -S < offset <=  S   Kernel = PixelArea/2 + offset
+       S < offset <=  T   Kernel = PixelArea - PixelArea/2*(T-offset)^2/(T-S)
+       T <= offset:       Kernel = PixelArea
+*/
 template <typename Policy>
 void CParallelBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, int _iProjTo, int _iDetFrom, int _iDetTo, Policy& p)
 {

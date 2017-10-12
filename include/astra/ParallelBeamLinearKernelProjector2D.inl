@@ -51,80 +51,80 @@ void CParallelBeamLinearKernelProjector2D::projectSingleRay(int _iProjection, in
 
 
 //----------------------------------------------------------------------------------------
-// PROJECT BLOCK - vector projection geometry
-// 
-// Kernel limitations: isotropic pixels (PixelLengthX == PixelLengthY)
-//
-// For each angle/detector pair:
-// 
-// Let D=(Dx,Dy) denote the centre of the detector (point) in volume coordinates, and
-// let R=(Rx,Ry) denote the direction of the ray (vector).
-// 
-// For mainly vertical rays (|Rx|<=|Ry|), 
-// let E=(Ex,Ey) denote the centre of the most upper left pixel:
-//    E = (WindowMinX +  PixelLengthX/2, WindowMaxY - PixelLengthY/2),
-// and let F=(Fx,Fy) denote a vector to the next pixel 
-//    F = (PixelLengthX, 0)
-// 
-// The intersection of the ray (D+aR) with the centre line of the upper row of pixels (E+bF) is
-//    { Dx + a*Rx = Ex + b*Fx
-//    { Dy + a*Ry = Ey + b*Fy
-// Solving for (a,b) results in:
-//    a = (Ey + b*Fy - Dy)/Ry
-//      = (Ey - Dy)/Ry
-//    b = (Dx + a*Rx - Ex)/Fx
-//      = (Dx + (Ey - Dy)*Rx/Ry - Ex)/Fx
-//
-// Define c as the x-value of the intersection of the ray with the upper row in pixel coordinates. 
-//    c = b 
-//
-// The intersection of the ray (D+aR) with the centre line of the second row of pixels (E'+bF) with
-//    E'=(WindowMinX + PixelLengthX/2, WindowMaxY - 3*PixelLengthY/2)
-// expressed in x-value pixel coordinates is
-//    c' = (Dx + (Ey' - Dy)*Rx/Ry - Ex)/Fx.
-// And thus:
-//    deltac = c' - c = (Dx + (Ey' - Dy)*Rx/Ry - Ex)/Fx - (Dx + (Ey - Dy)*Rx/Ry - Ex)/Fx
-//                    = [(Ey' - Dy)*Rx/Ry - (Ey - Dy)*Rx/Ry]/Fx
-//                    = [Ey' - Ey]*(Rx/Ry)/Fx
-//                    = [Ey' - Ey]*(Rx/Ry)/Fx
-//                    = -PixelLengthY*(Rx/Ry)/Fx.
-// 
-// Given c on a certain row, its pixel directly on its left (col), and the distance (offset) to it, can be found: 
-//    col = floor(c)
-//    offset = c - col
-//
-// The index of this pixel is
-//    volumeIndex = row * colCount + col
-//
-// The projection kernel is defined by
-//
-//                LengthPerRow
-//       /|\
-//      / | \
-//   __/  |  \__ 0
-//     p0 p1 p2
-//
-// And thus
-//    W_(rayIndex,volIndex) = (1 - offset) * lengthPerRow
-//    W_(rayIndex,volIndex+1) = offset * lengthPerRow
-//
-//
-// Mainly horizontal rays (|Rx|<=|Ry|) are handled in a similar fashion:
-//
-//    E = (WindowMinX +  PixelLengthX/2, WindowMaxY - PixelLengthY/2),
-//    F = (0, -PixelLengthX)
-//
-//    a = (Ex + b*Fx - Dx)/Rx = (Ex - Dx)/Rx
-//    b = (Dy + a*Ry - Ey)/Fy = (Dy + (Ex - Dx)*Ry/Rx - Ey)/Fy
-//    r = b
-//    deltar = PixelLengthX*(Ry/Rx)/Fy.
-//    row = floor(r+1/2)
-//    offset = r - row
-//    LengthPerCol = pixelLengthY * sqrt(Rx^2+Ry^2) / |Rx|
-//
-//    W_(rayIndex,volIndex) = (1 - offset) * lengthPerCol
-//    W_(rayIndex,volIndex+colcount) = offset * lengthPerCol
-//
+/* PROJECT BLOCK - vector projection geometry
+   
+   Kernel limitations: isotropic pixels (PixelLengthX == PixelLengthY)
+  
+   For each angle/detector pair:
+   
+   Let D=(Dx,Dy) denote the centre of the detector (point) in volume coordinates, and
+   let R=(Rx,Ry) denote the direction of the ray (vector).
+   
+   For mainly vertical rays (|Rx|<=|Ry|), 
+   let E=(Ex,Ey) denote the centre of the most upper left pixel:
+      E = (WindowMinX +  PixelLengthX/2, WindowMaxY - PixelLengthY/2),
+   and let F=(Fx,Fy) denote a vector to the next pixel 
+      F = (PixelLengthX, 0)
+   
+   The intersection of the ray (D+aR) with the centre line of the upper row of pixels (E+bF) is
+      { Dx + a*Rx = Ex + b*Fx
+      { Dy + a*Ry = Ey + b*Fy
+   Solving for (a,b) results in:
+      a = (Ey + b*Fy - Dy)/Ry
+        = (Ey - Dy)/Ry
+      b = (Dx + a*Rx - Ex)/Fx
+        = (Dx + (Ey - Dy)*Rx/Ry - Ex)/Fx
+  
+   Define c as the x-value of the intersection of the ray with the upper row in pixel coordinates. 
+      c = b 
+  
+   The intersection of the ray (D+aR) with the centre line of the second row of pixels (E'+bF) with
+      E'=(WindowMinX + PixelLengthX/2, WindowMaxY - 3*PixelLengthY/2)
+   expressed in x-value pixel coordinates is
+      c' = (Dx + (Ey' - Dy)*Rx/Ry - Ex)/Fx.
+   And thus:
+      deltac = c' - c = (Dx + (Ey' - Dy)*Rx/Ry - Ex)/Fx - (Dx + (Ey - Dy)*Rx/Ry - Ex)/Fx
+                      = [(Ey' - Dy)*Rx/Ry - (Ey - Dy)*Rx/Ry]/Fx
+                      = [Ey' - Ey]*(Rx/Ry)/Fx
+                      = [Ey' - Ey]*(Rx/Ry)/Fx
+                      = -PixelLengthY*(Rx/Ry)/Fx.
+   
+   Given c on a certain row, its pixel directly on its left (col), and the distance (offset) to it, can be found: 
+      col = floor(c)
+      offset = c - col
+  
+   The index of this pixel is
+      volumeIndex = row * colCount + col
+  
+   The projection kernel is defined by
+  
+                  LengthPerRow
+         /|\
+        / | \
+     __/  |  \__ 0
+       p0 p1 p2
+  
+   And thus
+      W_(rayIndex,volIndex) = (1 - offset) * lengthPerRow
+      W_(rayIndex,volIndex+1) = offset * lengthPerRow
+  
+  
+   Mainly horizontal rays (|Rx|<=|Ry|) are handled in a similar fashion:
+  
+      E = (WindowMinX +  PixelLengthX/2, WindowMaxY - PixelLengthY/2),
+      F = (0, -PixelLengthX)
+  
+      a = (Ex + b*Fx - Dx)/Rx = (Ex - Dx)/Rx
+      b = (Dy + a*Ry - Ey)/Fy = (Dy + (Ex - Dx)*Ry/Rx - Ey)/Fy
+      r = b
+      deltar = PixelLengthX*(Ry/Rx)/Fy.
+      row = floor(r+1/2)
+      offset = r - row
+      LengthPerCol = pixelLengthY * sqrt(Rx^2+Ry^2) / |Rx|
+  
+      W_(rayIndex,volIndex) = (1 - offset) * lengthPerCol
+      W_(rayIndex,volIndex+colcount) = offset * lengthPerCol
+*/
 template <typename Policy>
 void CParallelBeamLinearKernelProjector2D::projectBlock_internal(int _iProjFrom, int _iProjTo, int _iDetFrom, int _iDetTo, Policy& p)
 {
@@ -143,13 +143,12 @@ void CParallelBeamLinearKernelProjector2D::projectBlock_internal(int _iProjFrom,
 	const float32 inv_pixelLengthY = 1.0f / pixelLengthY;
 	const int colCount = m_pVolumeGeometry->getGridColCount();
 	const int rowCount = m_pVolumeGeometry->getGridRowCount();
-	const int detCount = pVecProjectionGeometry->getDetectorCount();
 
 	// loop angles
 	for (int iAngle = _iProjFrom; iAngle < _iProjTo; ++iAngle) {
 
 		// variables
-		float32 Dx, Dy, Ex, Ey, x, y, c, r, deltac, deltar, offset;
+		float32 Dx, Dy, Ex, Ey, c, r, deltac, deltar, offset;
 		float32 RxOverRy, RyOverRx, lengthPerRow, lengthPerCol;
 		int iVolumeIndex, iRayIndex, row, col, iDetector;
 

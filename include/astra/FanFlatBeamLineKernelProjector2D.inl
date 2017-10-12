@@ -99,6 +99,9 @@ void CFanFlatBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, in
 			Ry = proj->fSrcY - Dy;
 
 			bool vertical = fabs(Rx) < fabs(Ry);
+			bool isin = false;
+
+			// vertically
 			if (vertical) {
 				RxOverRy = Rx/Ry;
 				lengthPerRow = detSize * pixelLengthX * sqrt(Rx*Rx + Ry*Ry) / abs(Ry);
@@ -106,19 +109,6 @@ void CFanFlatBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, in
 				S = 0.5f - 0.5f*fabs(RxOverRy);
 				T = 0.5f + 0.5f*fabs(RxOverRy);
 				invTminSTimesLengthPerRow = lengthPerRow / (T - S);
-			} else {
-				RyOverRx = Ry/Rx;
-				lengthPerCol = detSize * pixelLengthY * sqrt(Rx*Rx + Ry*Ry) / abs(Rx);
-				deltar = -pixelLengthX * RyOverRx * inv_pixelLengthY;
-				S = 0.5f - 0.5f*fabs(RyOverRx);
-				T = 0.5f + 0.5f*fabs(RyOverRx);
-				invTminSTimesLengthPerCol = lengthPerCol / (T - S);
-			}
-
-			bool isin = false;
-
-			// vertically
-			if (vertical) {
 
 				// calculate c for row 0
 				c = (Dx + (Ey - Dy)*RxOverRy - Ex) * inv_pixelLengthX;
@@ -163,6 +153,12 @@ void CFanFlatBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, in
 
 			// horizontally
 			else {
+				RyOverRx = Ry/Rx;
+				lengthPerCol = detSize * pixelLengthY * sqrt(Rx*Rx + Ry*Ry) / abs(Rx);
+				deltar = -pixelLengthX * RyOverRx * inv_pixelLengthY;
+				S = 0.5f - 0.5f*fabs(RyOverRx);
+				T = 0.5f + 0.5f*fabs(RyOverRx);
+				invTminSTimesLengthPerCol = lengthPerCol / (T - S);
 
 				// calculate r for col 0
 				r = -(Dy + (Ex - Dx)*RyOverRx - Ey) * inv_pixelLengthY;

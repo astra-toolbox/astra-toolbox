@@ -124,7 +124,6 @@ void CParallelBeamBlobKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 	const float32 inv_pixelLengthY = 1.0f / m_pVolumeGeometry->getPixelLengthY();
 	const int colCount = m_pVolumeGeometry->getGridColCount();
 	const int rowCount = m_pVolumeGeometry->getGridRowCount();
-	const int detCount = pVecProjectionGeometry->getDetectorCount();
 
 	// loop angles
 	for (int iAngle = _iProjFrom; iAngle < _iProjTo; ++iAngle) {

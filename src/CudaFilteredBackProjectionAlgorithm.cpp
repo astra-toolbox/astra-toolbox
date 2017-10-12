@@ -64,7 +64,6 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 	// if already initialized, clear first
 	if (m_bIsInitialized)
 	{
-#warning FIXME Necessary?
 		clear();
 	}
 
@@ -234,18 +233,6 @@ bool CCudaFilteredBackProjectionAlgorithm::check()
 	// success
 	m_bIsInitialized = true;
 	return true;
-}
-
-static int calcNextPowerOfTwo(int _iValue)
-{
-	int iOutput = 1;
-
-	while(iOutput < _iValue)
-	{
-		iOutput *= 2;
-	}
-
-	return iOutput;
 }
 
 static bool stringCompareLowerCase(const char * _stringA, const char * _stringB)
