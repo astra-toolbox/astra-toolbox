@@ -30,7 +30,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #ifdef ASTRA_CUDA
 
-#include "ParallelProjectionGeometry2D.h"
 #include "Float32Data2D.h"
 #include "Projector2D.h"
 #include "../../cuda/2d/astra.h"
@@ -73,7 +72,7 @@ public:
 	 * @param _pProjectionGeometry		Information class about the geometry of the projection.  Will be HARDCOPIED.
 	 * @param _pReconstructionGeometry	Information class about the geometry of the reconstruction volume. Will be HARDCOPIED.
 	 */
-	CCudaProjector2D(CParallelProjectionGeometry2D* _pProjectionGeometry, 
+	CCudaProjector2D(CProjectionGeometry2D* _pProjectionGeometry, 
 	                 CVolumeGeometry2D* _pReconstructionGeometry);
 	
 	~CCudaProjector2D();
@@ -121,6 +120,10 @@ public:
 	 */
 	virtual std::string description() const;
 
+	void setProjectionKernel(Cuda2DProjectionKernel i_projectionKernel) { m_projectionKernel = i_projectionKernel; }
+	void setVoxelSuperSampling(int i_iVoxelSuperSampling) { m_iVoxelSuperSampling = i_iVoxelSuperSampling; }
+	void setDetectorSuperSampling(int i_iDetectorSuperSampling) { m_iDetectorSuperSampling = i_iDetectorSuperSampling; }
+	void setGPUIndex(int i_iGPUIndex) { m_iGPUIndex = i_iGPUIndex; }
 
 	Cuda2DProjectionKernel getProjectionKernel() const { return m_projectionKernel; }
 	int getVoxelSuperSampling() const { return m_iVoxelSuperSampling; }

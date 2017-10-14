@@ -69,6 +69,14 @@ public:
 	 */
 	CCudaProjector3D();
 
+	/** Constructor.
+	 *
+	 * @param _pProjectionGeometry		Information class about the geometry of the projection.  Will be HARDCOPIED.
+	 * @param _pReconstructionGeometry	Information class about the geometry of the reconstruction volume. Will be HARDCOPIED.
+	 */
+	CCudaProjector3D(CProjectionGeometry3D* _pProjectionGeometry,
+	                 CVolumeGeometry3D* _pReconstructionGeometry);
+
 	/** Destructor, is virtual to show that we are aware subclass destructor is called.
 	 */
 	virtual ~CCudaProjector3D();
@@ -112,6 +120,11 @@ public:
 	 */
 	virtual std::string description() const;
 
+	void setProjectionKernel(Cuda3DProjectionKernel i_projectionKernel) { m_projectionKernel = i_projectionKernel; }
+	void setVoxelSuperSampling(int i_iVoxelSuperSampling) { m_iVoxelSuperSampling = i_iVoxelSuperSampling; }
+	void setDetectorSuperSampling(int i_iDetectorSuperSampling) { m_iDetectorSuperSampling = i_iDetectorSuperSampling; }
+	void setGPUIndex(int i_iGPUIndex) { m_iGPUIndex = i_iGPUIndex; }
+	void setDensityWeighting(bool i_bDensityWeighting) { m_bDensityWeighting = i_bDensityWeighting; }
 
 	Cuda3DProjectionKernel getProjectionKernel() const { return m_projectionKernel; }
 	int getVoxelSuperSampling() const { return m_iVoxelSuperSampling; }
