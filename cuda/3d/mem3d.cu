@@ -326,7 +326,7 @@ bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, co
 
 }
 
-MemHandle3D wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch)
+_AstraExport MemHandle3D wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch)
 {
 	cudaPitchedPtr ptr;
 	ptr.ptr = D_ptr;
