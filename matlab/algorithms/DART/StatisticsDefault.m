@@ -42,7 +42,7 @@ classdef StatisticsDefault < matlab.mixin.Copyable
 			
 			% projection difference
 			if strcmp(this.proj_diff, 'yes') 
-				new_sino = DART.tomography.createForwardProjection(DART, DART.S);
+				new_sino = DART.tomography.project(DART.S);
 				stats.proj_diff = sum((new_sino(:) - DART.base.sinogram(:)) .^2 ) ./ (sum(DART.base.sinogram(:)) );
 				stats.proj_diff_hist(DART.iterationcount) = stats.proj_diff;
 			end

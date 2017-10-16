@@ -19,7 +19,7 @@ classdef ProjDiffOptimFunc < handle
 	methods (Access=public)	
 		
 		function proj_diff = calculate(~, D, ~)
-			projection = D.tomography.createForwardProjection(D, D.S);
+			projection = D.tomography.project(D.S);
 			proj_diff = sum((projection(:) - D.base.sinogram(:)).^2);
 		end
 		
