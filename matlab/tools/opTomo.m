@@ -78,9 +78,7 @@ classdef opTomo < opSpot
             gpuEnabled = strcmpi(type, 'cuda');
             
             if is2D
-                % create a projector
-                proj_id = astra_create_projector(type, proj_geom, vol_geom);
-                
+      
                 % create a function handle
                 op.funHandle = @opTomo_intrnl2D;
                 
