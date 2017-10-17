@@ -60,6 +60,8 @@ before_install:
 install:
   - conda install python=$TRAVIS_PYTHON_VERSION six numpy scipy cython
   - conda info -a
+
+script:
   - cd build/linux
   - ./autogen.sh
   - if [ x$CLANG == xyes ]; then export CXX=clang++; export CC=clang; fi
@@ -67,6 +69,4 @@ install:
   - make -j 4
   - make test
   - make install
-
-script:
   - python -c "import astra"
