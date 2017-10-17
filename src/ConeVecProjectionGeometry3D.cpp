@@ -138,6 +138,8 @@ bool CConeVecProjectionGeometry3D::initialize(int _iProjectionAngleCount,
 	for (int i = 0; i < m_iProjectionAngleCount; ++i)
 		m_pProjectionAngles[i] = _pProjectionAngles[i];
 
+	m_iDetectorTotCount = m_iProjectionAngleCount * m_iDetectorRowCount * m_iDetectorColCount;
+
 	// TODO: check?
 
 	// success

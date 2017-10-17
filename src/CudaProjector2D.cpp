@@ -43,6 +43,17 @@ CCudaProjector2D::CCudaProjector2D()
 }
 
 //----------------------------------------------------------------------------------------
+// Constructor
+CCudaProjector2D::CCudaProjector2D(CProjectionGeometry2D* _pProjectionGeometry, CVolumeGeometry2D* _pVolumeGeometry)
+{
+	_clear();
+
+	m_pProjectionGeometry = _pProjectionGeometry->clone();
+	m_pVolumeGeometry = _pVolumeGeometry->clone();
+	m_bIsInitialized = true;
+}
+
+//----------------------------------------------------------------------------------------
 // Destructor
 CCudaProjector2D::~CCudaProjector2D()
 {
