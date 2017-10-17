@@ -69,4 +69,4 @@ script:
   - make -j 4
   - make test
   - make install
-  - python -c "import astra"
+  - python -c "import astra; astra.test_noCUDA()"
