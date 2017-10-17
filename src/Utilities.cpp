@@ -66,14 +66,10 @@ double stringToDouble(const std::string& s)
 template<> float stringTo(const std::string& s) { return stringToFloat(s); }
 template<> double stringTo(const std::string& s) { return stringToDouble(s); }
 
-std::vector<float> stringToFloatVector(const std::string &s)
+template<typename T>
+std::vector<T> stringToNumericVector(const std::string &s)
 {
-	return stringToVector<float>(s);
-}
-
-std::vector<double> stringToDoubleVector(const std::string &s)
-{
-	std::vector<double> out;
+	std::vector<T> out;
 	out.reserve(100);
 	std::istringstream iss;
 	iss.imbue(std::locale::classic());
@@ -85,13 +81,22 @@ std::vector<double> stringToDoubleVector(const std::string &s)
 		std::string t = s.substr(current, next - current);
 		iss.str(t);
 		iss.clear();
-		double f;
+		T f;
 		iss >> f;
 		out.push_back(f);
 		current = next + 1;
 	} while (next != std::string::npos && current != length);
 
 	return out;
+}
+
+std::vector<float> stringToFloatVector(const std::string &s)
+{
+	return stringToNumericVector<float>(s);
+}
+std::vector<double> stringToDoubleVector(const std::string &s)
+{
+	return stringToNumericVector<double>(s);
 }
 
 template<typename T>
