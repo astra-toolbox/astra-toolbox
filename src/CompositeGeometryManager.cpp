@@ -1386,6 +1386,12 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 	bool ok = dstMem->allocateGPUMemory(outx, outy, outz, zero ? astraCUDA3d::INIT_ZERO : astraCUDA3d::INIT_NO);
 	if (!ok) ASTRA_ERROR("Error allocating GPU memory");
 
+	if (!zero) {
+		// instead of zeroing output memory, copy from host
+		ok = dstMem->copyToGPUMemory(dstdims);
+		if (!ok) ASTRA_ERROR("Error copying output data to GPU");
+	}
+
 	for (CCompositeGeometryManager::TJobList::const_iterator i = L.begin(); i != L.end(); ++i) {
 		const CCompositeGeometryManager::SJob &j = *i;
 
