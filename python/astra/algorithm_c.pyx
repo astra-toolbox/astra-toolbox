@@ -44,7 +44,8 @@ from .utils import wrap_from_bytes
 cdef CAlgorithmManager * manAlg = <CAlgorithmManager * >PyAlgorithmManager.getSingletonPtr()
 
 cdef extern from *:
-    CReconstructionAlgorithm2D * dynamic_cast_recAlg "dynamic_cast<astra::CReconstructionAlgorithm2D*>" (CAlgorithm * ) except NULL
+    CReconstructionAlgorithm2D * dynamic_cast_recAlg2D "dynamic_cast<astra::CReconstructionAlgorithm2D*>" (CAlgorithm * )
+    CReconstructionAlgorithm3D * dynamic_cast_recAlg3D "dynamic_cast<astra::CReconstructionAlgorithm3D*>" (CAlgorithm * )
 
 
 def create(config):
@@ -79,12 +80,18 @@ def run(i, iterations=0):
 
 def get_res_norm(i):
     cdef CReconstructionAlgorithm2D * pAlg2D
+    cdef CReconstructionAlgorithm3D * pAlg3D
     cdef CAlgorithm * alg = getAlg(i)
     cdef float32 res = 0.0
-    pAlg2D = dynamic_cast_recAlg(alg)
-    if pAlg2D == NULL:
-        raise Exception("Operation not supported.")
-    if not pAlg2D.getResidualNorm(res):
+    pAlg2D = dynamic_cast_recAlg2D(alg)
+    pAlg3D = dynamic_cast_recAlg3D(alg)
+    if pAlg2D != NULL:
+        if not pAlg2D.getResidualNorm(res):
+            raise Exception("Operation not supported.")
+    elif pAlg3D != NULL:
+        if not pAlg3D.getResidualNorm(res):
+            raise Exception("Operation not supported.")
+    else:
         raise Exception("Operation not supported.")
     return res
 
