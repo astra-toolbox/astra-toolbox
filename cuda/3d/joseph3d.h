@@ -30,6 +30,12 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include <cuda.h>
 
+
+// SCM: implements Joseph interpolation geometries as formerly done in
+// cone_fp.cu, par3d_fp.cu. Functions are templated with respect to
+// the texture-interpolation method.
+
+
 namespace astraCUDA3d {
 
 // x=0, y=1, z=2

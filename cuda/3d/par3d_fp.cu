@@ -366,6 +366,7 @@ __global__ void par3D_FP_SumSqW_t(float* D_projData, unsigned int projPitch,
 // TODO
 
 
+// SCM: templated with respect to interpolation method
 template<float (*interpolation_method)(float,float,float,float (*)(float, float, float))>
 bool Par3DFP_Array_internal(cudaPitchedPtr D_projData,
                    const SDimensions3D& dims, unsigned int angleCount, const SPar3DProjection* angles,
@@ -537,6 +538,7 @@ bool Par3DFP_Array_internal(cudaPitchedPtr D_projData,
 
 
 
+// SCM: templated with respect to interpolation method
 template<float (*interpolation_method)(float,float,float,float (*)(float, float, float))>
 bool Par3DFP(cudaPitchedPtr D_volumeData,
              cudaPitchedPtr D_projData,
@@ -572,12 +574,15 @@ bool Par3DFP(cudaPitchedPtr D_volumeData,
 
 
 
+
+// EXPLICIT SPECIALIZATION: implement projections using different
+// texture interpolation methods
+
 bool Par3DFP(cudaPitchedPtr D_volumeData,
              cudaPitchedPtr D_projData,
              const SDimensions3D& dims, const SPar3DProjection* angles,
              const SProjectorParams3D& params)
 { return Par3DFP<tex_interpolate>(D_volumeData, D_projData, dims, angles, params); }
-
 
 
 bool Par3DFP_bilin(cudaPitchedPtr D_volumeData,
@@ -587,28 +592,25 @@ bool Par3DFP_bilin(cudaPitchedPtr D_volumeData,
 { return Par3DFP<bilin_interpolate>(D_volumeData, D_projData, dims, angles, params); }
 
 
-
 bool Par3DFP_bicubic(cudaPitchedPtr D_volumeData,
                    cudaPitchedPtr D_projData,
                    const SDimensions3D& dims, const SPar3DProjection* angles,
                    const SProjectorParams3D& params)
-{ return Par3DFP<bicubic_interpolate>(D_volumeData, D_projData, dims, angles, params); }
-
+{ return Par3DFP<bicubic_hermite_interpolate>(D_volumeData, D_projData, dims, angles, params); }
 
 
 bool Par3DFP_ddf1(cudaPitchedPtr D_volumeData,
                    cudaPitchedPtr D_projData,
                    const SDimensions3D& dims, const SPar3DProjection* angles,
                    const SProjectorParams3D& params)
-{ return Par3DFP<bicubic_interpolate_ddf1>(D_volumeData, D_projData, dims, angles, params); }
-
+{ return Par3DFP<bicubic_hermite_interpolate_ddf1>(D_volumeData, D_projData, dims, angles, params); }
 
 
 bool Par3DFP_ddf2(cudaPitchedPtr D_volumeData,
                    cudaPitchedPtr D_projData,
                    const SDimensions3D& dims, const SPar3DProjection* angles,
                    const SProjectorParams3D& params)
-{ return Par3DFP<bicubic_interpolate_ddf2>(D_volumeData, D_projData, dims, angles, params); }
+{ return Par3DFP<bicubic_hermite_interpolate_ddf2>(D_volumeData, D_projData, dims, angles, params); }
 
 
 
