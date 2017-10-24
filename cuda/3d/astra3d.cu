@@ -1095,10 +1095,10 @@ bool astraCudaFP(const float* pfVolume, float* pfProjections,
 			ok &= Par3DFP_bicubic(D_volumeData, D_projData, dims, pParProjs, params);
 			break;
 		case ker3d_df1:
-			ok &= Par3DFP_ddf1(D_volumeData, D_projData, dims, pParProjs, params);
+			ok &= Par3DFP_bicubic_ddf1(D_volumeData, D_projData, dims, pParProjs, params);
 			break;
 		case ker3d_df2:
-			ok &= Par3DFP_ddf2(D_volumeData, D_projData, dims, pParProjs, params);
+			ok &= Par3DFP_bicubic_ddf2(D_volumeData, D_projData, dims, pParProjs, params);
 			break;
 		default:
 			assert(false);
@@ -1115,10 +1115,10 @@ bool astraCudaFP(const float* pfVolume, float* pfProjections,
 			ok &= ConeFP_bicubic(D_volumeData, D_projData, dims, pConeProjs, params);
 			break;
 		case ker3d_df1:
-			ok &= ConeFP_ddf1(D_volumeData, D_projData, dims, pConeProjs, params);
+			ok &= ConeFP_bicubic_ddf1(D_volumeData, D_projData, dims, pConeProjs, params);
 			break;
 		case ker3d_df2:
-			ok &= ConeFP_ddf2(D_volumeData, D_projData, dims, pConeProjs, params);
+			ok &= ConeFP_bicubic_ddf2(D_volumeData, D_projData, dims, pConeProjs, params);
 			break;
 		default:
 			assert(false);

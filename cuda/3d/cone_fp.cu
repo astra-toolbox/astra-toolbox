@@ -493,17 +493,17 @@ bool ConeFP_bicubic(cudaPitchedPtr D_volumeData,
 { return ConeFP<bicubic_hermite_interpolate>(D_volumeData, D_projData, dims, angles, params); }
 
 
-bool ConeFP_ddf1(cudaPitchedPtr D_volumeData,
-                 cudaPitchedPtr D_projData,
-                 const SDimensions3D& dims, const SConeProjection* angles,
-                 const SProjectorParams3D& params)
+bool ConeFP_bicubic_ddf1(cudaPitchedPtr D_volumeData,
+                         cudaPitchedPtr D_projData,
+                         const SDimensions3D& dims, const SConeProjection* angles,
+                         const SProjectorParams3D& params)
 { return ConeFP<bicubic_hermite_interpolate_ddf1>(D_volumeData, D_projData, dims, angles, params); }
 
 
-bool ConeFP_ddf2(cudaPitchedPtr D_volumeData,
-                 cudaPitchedPtr D_projData,
-                 const SDimensions3D& dims, const SConeProjection* angles,
-                 const SProjectorParams3D& params)
+bool ConeFP_bicubic_ddf2(cudaPitchedPtr D_volumeData,
+                         cudaPitchedPtr D_projData,
+                         const SDimensions3D& dims, const SConeProjection* angles,
+                         const SProjectorParams3D& params)
 { return ConeFP<bicubic_hermite_interpolate_ddf2>(D_volumeData, D_projData, dims, angles, params); }
 
 
