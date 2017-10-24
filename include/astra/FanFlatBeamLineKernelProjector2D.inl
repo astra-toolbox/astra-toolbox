@@ -26,8 +26,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 */
 
 
-using namespace astra;
-
 template <typename Policy>
 void CFanFlatBeamLineKernelProjector2D::project(Policy& p)
 {

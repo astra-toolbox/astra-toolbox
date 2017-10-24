@@ -117,29 +117,14 @@ T* CAstraObjectFactory<T, TypeList>::findPlugin(std::string _sType)
 template <typename T, typename TypeList>
 T* CAstraObjectFactory<T, TypeList>::create(std::string _sType) 
 {
-	functor_find<T> finder = functor_find<T>();
+	typelist::functor_find<T> finder = typelist::functor_find<T>();
 	finder.tofind = _sType;
-	CreateObject<TypeList>::find(finder);
+	typelist::CreateObject<TypeList>::find(finder);
 	if (finder.res == NULL) {
 		finder.res = findPlugin(_sType);
 	}
 	return finder.res;
 }
-
-//----------------------------------------------------------------------------------------
-// Create with XML
-template <typename T, typename TypeList>
-T* CAstraObjectFactory<T, TypeList>::create(const Config& _cfg)
-{
-	T* object = create(_cfg.self.getAttribute("type"));
-	if (object == NULL) return NULL;
-	if (object->initialize(_cfg))
-		return object;
-	delete object;
-	return NULL;
-}
-//----------------------------------------------------------------------------------------
-
 
 
 

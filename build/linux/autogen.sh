@@ -12,8 +12,11 @@ if test $? -ne 0; then
   exit 1
 fi
 
-case `uname` in Darwin*) LIBTOOLIZEBIN=glibtoolize ;;
-  *) LIBTOOLIZEBIN=libtoolize ;; esac
+case `uname` in
+  Darwin*)
+    test -x "`which glibtoolize 2>/dev/null`" && LIBTOOLIZEBIN=glibtoolize || LIBTOOLIZEBIN=libtoolize ;;
+  *)
+    LIBTOOLIZEBIN=libtoolize ;; esac
 
 $LIBTOOLIZEBIN --install --force > /dev/null 2>&1
 if test $? -ne 0; then

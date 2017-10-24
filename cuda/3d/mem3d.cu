@@ -118,6 +118,13 @@ MemHandle3D allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Me
 	return ret;
 }
 
+bool zeroGPUMemory(MemHandle3D handle, unsigned int x, unsigned int y, unsigned int z)
+{
+	SMemHandle3D_internal& hnd = *handle.d.get();
+	cudaError_t err = cudaMemset3D(hnd.ptr, 0, make_cudaExtent(sizeof(float)*x, y, z));
+	return err == cudaSuccess;
+}
+
 bool freeGPUMemory(MemHandle3D handle)
 {
 	size_t free = availableGPUMemory();
@@ -246,6 +253,9 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, con
 		}
 	}
 
+	delete[] pParProjs;
+	delete[] pConeProjs;
+
 	return ok;
 }
 
@@ -276,6 +286,9 @@ bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, con
 	else
 		ok &= ConeBP(volData.d->ptr, projData.d->ptr, dims, pConeProjs, params);
 
+	delete[] pParProjs;
+	delete[] pConeProjs;
+
 	return ok;
 
 }
@@ -296,10 +309,16 @@ bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, co
 	                          pParProjs, pConeProjs,
 	                          params);
 
-	if (!ok || !pConeProjs)
+	if (!ok || !pConeProjs) {
+		delete[] pParProjs;
+		delete[] pConeProjs;
 		return false;
+	}
 
 	ok &= FDK(volData.d->ptr, projData.d->ptr, pConeProjs, dims, params, bShortScan, pfFilter);
+
+	delete[] pParProjs;
+	delete[] pConeProjs;
 
 	return ok;
 
@@ -307,6 +326,23 @@ bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, co
 
 }
 
+_AstraExport MemHandle3D wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch)
+{
+	cudaPitchedPtr ptr;
+	ptr.ptr = D_ptr;
+	ptr.xsize = sizeof(float) * x;
+	ptr.pitch = sizeof(float) * pitch;
+	ptr.ysize = y;
+
+	SMemHandle3D_internal h;
+	h.ptr = ptr;
+
+	MemHandle3D hnd;
+	hnd.d = boost::shared_ptr<SMemHandle3D_internal>(new SMemHandle3D_internal);
+	*hnd.d = h;
+
+	return hnd;
+}
 
 
 

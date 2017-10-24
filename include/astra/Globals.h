@@ -53,8 +53,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 #include <fstream>
 #include <math.h>
-#include <boost/static_assert.hpp>
-#include <boost/throw_exception.hpp>
 
 //----------------------------------------------------------------------------------------
 // macro's
@@ -67,9 +65,9 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #define ASTRA_ASSERT(a) assert(a)
 
-#define ASTRA_CONFIG_CHECK(value, type, msg) if (!(value)) { cout << "Configuration Error in " << type << ": " << msg << endl; return false; }
+#define ASTRA_CONFIG_CHECK(value, type, msg) if (!(value)) { std::cout << "Configuration Error in " << type << ": " << msg << std::endl; return false; }
 
-#define ASTRA_CONFIG_WARNING(type, msg) { cout << "Warning in " << type << ": " << msg << endl; }
+#define ASTRA_CONFIG_WARNING(type, msg) { std::cout << "Warning in " << type << ": " << msg << sdt::endl; }
 
 
 #define ASTRA_DELETE(a) if (a) { delete a; a = NULL; }
@@ -226,16 +224,6 @@ namespace astra {
 		int m_iDetectorIndex;
 		int m_iSliceIndex;
 	};
-}
-//----------------------------------------------------------------------------------------
-// some toys
-
-// safe reinterpret cast
-template <class To, class From>
-To safe_reinterpret_cast(From from)
-{
-	BOOST_STATIC_ASSERT(sizeof(From) <= sizeof(To));
-	return reinterpret_cast<To>(from);
 }
 
 //----------------------------------------------------------------------------------------

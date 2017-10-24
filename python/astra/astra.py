@@ -45,6 +45,16 @@ def set_gpu_index(idx, memory=0):
     """
     a.set_gpu_index(idx, memory)
 
+def get_gpu_info(idx=-1):
+    """Get GPU info.
+    
+    :param idx: GPU index, or -1 for current device
+    :type idx: :class:`int`
+    :returns: :class:`str` -- GPU info
+    """
+    return a.get_gpu_info(idx)
+
+
 def delete(ids):
     """Delete an astra object.
     

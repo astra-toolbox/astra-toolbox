@@ -28,6 +28,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef CUDAFILTEREDBACKPROJECTIONALGORITHM2_H
 #define CUDAFILTEREDBACKPROJECTIONALGORITHM2_H
 
+#ifdef ASTRA_CUDA
+
 #include <astra/Float32ProjectionData2D.h>
 #include <astra/Float32VolumeData2D.h>
 #include <astra/ReconstructionAlgorithm2D.h>
@@ -93,5 +95,7 @@ protected:
 inline std::string CCudaFilteredBackProjectionAlgorithm::description() const { return CCudaFilteredBackProjectionAlgorithm::type; };
 
 }
+
+#endif
 
 #endif /* CUDAFILTEREDBACKPROJECTIONALGORITHM2_H */

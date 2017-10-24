@@ -75,7 +75,7 @@ public:
 	 *
 	 * @return map with all boost::any object
 	 */
-	virtual map<string,boost::any> getInformation();
+	virtual std::map<std::string,boost::any> getInformation();
 
 	/** Get a single piece of information represented as a boost::any
 	 *
@@ -110,10 +110,10 @@ protected:
 
 	CFloat32Data2D* m_pMask;
 
-	vector<CFloat32Data2D*> m_pData;
-	vector<float> m_fScalar;
+	std::vector<CFloat32Data2D*> m_pData;
+	std::vector<float> m_fScalar;
 
-	string m_sOperation;
+	std::string m_sOperation;
 
 };
 

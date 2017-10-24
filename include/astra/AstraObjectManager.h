@@ -194,7 +194,7 @@ int CAstraObjectManager<T>::store(T* _pDataObject)
 template <typename T>
 bool CAstraObjectManager<T>::hasIndex(int _iIndex) const
 {
-	typename map<int,T*>::const_iterator it = m_mIndexToObject.find(_iIndex);
+	typename std::map<int,T*>::const_iterator it = m_mIndexToObject.find(_iIndex);
 	return it != m_mIndexToObject.end();
 }
 
@@ -203,7 +203,7 @@ bool CAstraObjectManager<T>::hasIndex(int _iIndex) const
 template <typename T>
 T* CAstraObjectManager<T>::get(int _iIndex) const
 {
-	typename map<int,T*>::const_iterator it = m_mIndexToObject.find(_iIndex);
+	typename std::map<int,T*>::const_iterator it = m_mIndexToObject.find(_iIndex);
 	if (it != m_mIndexToObject.end())
 		return it->second;
 	else
@@ -216,7 +216,7 @@ template <typename T>
 void CAstraObjectManager<T>::remove(int _iIndex)
 {
 	// find data
-	typename map<int,T*>::iterator it = m_mIndexToObject.find(_iIndex);
+	typename std::map<int,T*>::iterator it = m_mIndexToObject.find(_iIndex);
 	if (it == m_mIndexToObject.end())
 		return;
 	// delete data
@@ -232,7 +232,7 @@ void CAstraObjectManager<T>::remove(int _iIndex)
 template <typename T>
 int CAstraObjectManager<T>::getIndex(const T* _pObject) const
 {
-	for (typename map<int,T*>::const_iterator it = m_mIndexToObject.begin(); it != m_mIndexToObject.end(); it++) {
+	for (typename std::map<int,T*>::const_iterator it = m_mIndexToObject.begin(); it != m_mIndexToObject.end(); it++) {
 		if ((*it).second == _pObject) return (*it).first;
 	}
 	return 0;
@@ -244,7 +244,7 @@ int CAstraObjectManager<T>::getIndex(const T* _pObject) const
 template <typename T>
 void CAstraObjectManager<T>::clear()
 {
-	for (typename map<int,T*>::iterator it = m_mIndexToObject.begin(); it != m_mIndexToObject.end(); it++) {
+	for (typename std::map<int,T*>::iterator it = m_mIndexToObject.begin(); it != m_mIndexToObject.end(); it++) {
 		// delete data
 		delete (*it).second;
 		(*it).second = 0;
@@ -257,7 +257,7 @@ void CAstraObjectManager<T>::clear()
 // Print info to string
 template <typename T>
 std::string CAstraObjectManager<T>::getInfo(int index) const {
-	typename map<int,T*>::const_iterator it = m_mIndexToObject.find(index);
+	typename std::map<int,T*>::const_iterator it = m_mIndexToObject.find(index);
 	if (it == m_mIndexToObject.end())
 		return "";
 	const T* pObject = it->second;
@@ -277,8 +277,8 @@ std::string CAstraObjectManager<T>::info() {
 	std::stringstream res;
 	res << "id  init  description" << std::endl;
 	res << "-----------------------------------------" << std::endl;
-	for (typename map<int,T*>::const_iterator it = m_mIndexToObject.begin(); it != m_mIndexToObject.end(); it++) {
-		res << getInfo(it->first) << endl;
+	for (typename std::map<int,T*>::const_iterator it = m_mIndexToObject.begin(); it != m_mIndexToObject.end(); it++) {
+		res << getInfo(it->first) << std::endl;
 	}
 	res << "-----------------------------------------" << std::endl;
 	return res.str();

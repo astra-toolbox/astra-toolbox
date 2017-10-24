@@ -4,6 +4,7 @@ cuda=@HAVECUDA@
 matlab=@HAVEMATLAB@
 python=@HAVEPYTHON@
 boostutf=@HAVEBOOSTUTF@
+macos=@IS_MACOS@
 
 MATLAB_ROOT=@MATLAB_ROOT@
 octave=@HAVEOCTAVE@
@@ -49,7 +50,8 @@ CXXFLAGS+=-g -O3 -Wall -Wshadow
 LIBS+=-lpthread
 LDFLAGS+=-g
 
-CPPFLAGS+=@CPPFLAGS_OS@
+CXXFLAGS+=@CXXFLAGS_OS@
+LDFLAGS+=@LDFLAGS_OS@
 
 BOOSTUTF_LIBS=@LIBS_BOOSTUTF@
 
@@ -64,8 +66,10 @@ endif
 ifeq ($(matlab),yes)
 # TODO: Do we also want -fopenmp for octave?
 CPPFLAGS+=-I$(MATLAB_ROOT)/extern/include -DMATLAB_MEX_FILE
+ifeq ($(macos),no)
 CXXFLAGS+=-fopenmp
 LDFLAGS+=-fopenmp
+endif
 endif
 
 # MODLDFLAGS are the base LDFLAGS for matlab, octave, python modules
@@ -199,7 +203,10 @@ CUDA_CXX_OBJECTS=\
 	src/CudaFDKAlgorithm3D.lo \
 	src/CudaSirtAlgorithm3D.lo \
 	src/CudaBackProjectionAlgorithm3D.lo \
-	src/CudaForwardProjectionAlgorithm3D.lo
+	src/CudaForwardProjectionAlgorithm3D.lo \
+	src/Float32Data3DGPU.lo \
+	src/Float32ProjectionData3DGPU.lo \
+	src/Float32VolumeData3DGPU.lo
 
 CUDA_OBJECTS=\
 	cuda/2d/algo.lo \
@@ -298,6 +305,14 @@ mex: $(MATLAB_MEX)
 
 %.$(MEXSUFFIX): %.o $(MATLAB_CXX_OBJECTS) libastra.la
 	$(MEX) LDFLAGS="$(MEXLDFLAGS)" $(MEXFLAGS) $(LIBS) $(MEXLIBS) -lastra -output $* $*.o $(MATLAB_CXX_OBJECTS)
+ifeq ($(install_type),module)
+ifeq ($(macos),yes)
+	@# tell macOS dynamic loader to look in mex directory for libastra.0.dylib
+	@# CHECKME: some versions of otool return a two-line output for otool -DX?
+	@# (xcode 8.2.1 / macos 10.11.6 ?)
+	install_name_tool -change `otool -DX .libs/$(SONAME) | tail -n 1` @loader_path/$(SONAME) $@
+endif
+endif
 
 ifeq ($(python),yes)
 matlab/mex/astra_mex_plugin_c.$(MEXSUFFIX): matlab/mex/astra_mex_plugin_c.o $(MATLAB_CXX_OBJECTS) libastra.la
@@ -311,7 +326,7 @@ py: libastra.la
 # TODO: Avoid writing into source dir
 	ln -s $(abs_top_builddir)/.libs/$(SONAME) $(srcdir)/../../python/astra
 # Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
-	cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS='${PYLDFLAGS}' $(PYTHON) builder.py build --build-base=$(abs_top_builddir)/python/build
+	(cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS='${PYLDFLAGS}' $(PYTHON) builder.py build --build-base=$(abs_top_builddir)/python/build) || (rm $(srcdir)/../../python/astra/$(SONAME); false)
 	rm $(srcdir)/../../python/astra/$(SONAME)
 
 endif

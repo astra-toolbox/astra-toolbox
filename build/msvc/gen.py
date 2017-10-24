@@ -274,6 +274,9 @@ P_astra["filters"]["CUDA\\astra source"] = [
 "src\\CudaSartAlgorithm.cpp",
 "src\\CudaSirtAlgorithm.cpp",
 "src\\CudaSirtAlgorithm3D.cpp",
+"src\\Float32Data3DGPU.cpp",
+"src\\Float32ProjectionData3DGPU.cpp",
+"src\\Float32VolumeData3DGPU.cpp",
 ]
 P_astra["filters"]["CUDA\\cuda headers"] = [
 "4e17872e-db7d-41bc-9760-fad1c253b583",
@@ -411,7 +414,9 @@ P_astra["filters"]["CUDA\\astra headers"] = [
 "include\\astra\\CudaSartAlgorithm.h",
 "include\\astra\\CudaSirtAlgorithm.h",
 "include\\astra\\CudaSirtAlgorithm3D.h",
-
+"include\\astra\\Float32Data3DGPU.h",
+"include\\astra\\Float32ProjectionData3DGPU.h",
+"include\\astra\\Float32VolumeData3DGPU.h",
 ]
 P_astra["filters"]["Projectors\\inline"] = [
 "0daffd63-ba49-4a5f-8d7a-5322e0e74f22",

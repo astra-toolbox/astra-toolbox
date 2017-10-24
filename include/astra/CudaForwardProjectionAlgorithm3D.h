@@ -73,8 +73,8 @@ public:
 	 * @return initialization successful?
 	 */
 	bool initialize(CProjector3D* _pProjector, 
-					CFloat32ProjectionData3DMemory* _pSinogram, 
-					CFloat32VolumeData3DMemory* _pReconstruction,
+					CFloat32ProjectionData3D* _pSinogram, 
+					CFloat32VolumeData3D* _pReconstruction,
 					int _iGPUindex = -1, int _iDetectorSuperSampling = 1);
 
 
@@ -82,7 +82,7 @@ public:
 	 *
 	 * @return map with all boost::any object
 	 */
-	virtual map<string,boost::any> getInformation();
+	virtual std::map<std::string,boost::any> getInformation();
 
 	/** Get a single piece of information represented as a boost::any
 	 *
@@ -118,8 +118,8 @@ public:
 
 protected:
 	CProjector3D* m_pProjector;
-	CFloat32ProjectionData3DMemory* m_pProjections;
-	CFloat32VolumeData3DMemory* m_pVolume;
+	CFloat32ProjectionData3D* m_pProjections;
+	CFloat32VolumeData3D* m_pVolume;
 	int m_iGPUIndex;
 	int m_iDetectorSuperSampling;
     int projKernelInt;

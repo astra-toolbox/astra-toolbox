@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE( testParallelBeamLinearKernelProjector2D_Rectangles )
 				            pPix[i].m_iIndex / volGeom.getGridColCount(),
 				            iDet,
 				            projGeom.getProjectionAngle(0));
-				BOOST_CHECK_SMALL( pPix[i].m_fWeight - fTest, 0.00037f);
+				BOOST_CHECK_SMALL( pPix[i].m_fWeight - fTest, 0.0004f);
 				fW += pPix[i].m_fWeight;
 			}
 

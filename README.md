@@ -83,6 +83,21 @@ make install
 
 This will install Astra into your current Python environment.
 
+### macOS, from source
+
+Use the Homebrew package manager to install boost, libtool, autoconf, automake.
+
+```
+cd build/linux
+./autogen.sh
+CPPFLAGS="-I/usr/local/include" NVCCFLAGS="-I/usr/local/include" ./configure \
+  --with-cuda=/usr/local/cuda \
+  --with-matlab=/Applications/MATLAB_R2016b.app \
+  --prefix=$HOME/astra \
+  --with-install-type=module
+make
+make install
+```
 
 ### Windows, from source using Visual Studio 2015
 
@@ -92,7 +107,7 @@ Requirements: Visual Studio 2015 (full or community), boost (recent), CUDA 8.0,
 Using the Visual Studio IDE:
 
 Set the environment variable MATLAB_ROOT to your matlab install location.
-Copy boost headers to lib\include\boost, and boost libraries to bin\x64.
+Copy boost headers to lib\include\boost, and boost libraries to lib\x64.
 Open astra_vc14.sln in Visual Studio.
 Select the appropriate solution configuration (typically Release_CUDA|x64).
 Build the solution.

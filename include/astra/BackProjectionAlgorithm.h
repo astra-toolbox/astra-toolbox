@@ -122,7 +122,7 @@ public:
 	 *
 	 * @return Map with all available identifier strings and their values.
 	 */
-	virtual map<string,boost::any> getInformation();
+	virtual std::map<std::string,boost::any> getInformation();
 
 	/** Get a single piece of information represented as a boost::any
 	 *

@@ -121,14 +121,8 @@ __global__ void devFDK_ParkerWeight(void* D_projData, unsigned int projPitch, un
 	// TODO: Detector pixel size
 	const float fU = (detectorU - 0.5f*dims.iProjU + 0.5f) * fDetUSize;
 
-	//const float fGamma = atanf(fU / fCentralRayLength);
-	//const float fBeta = gC_angle[angle];
 	const float fGamma = atanf(fU / fCentralRayLength);
-	float fBeta = -gC_angle[angle];
-	if (fBeta < 0.0f)
-		fBeta += 2*M_PI;
-	if (fBeta >= 2*M_PI)
-		fBeta -= 2*M_PI;
+	float fBeta = gC_angle[angle];
 
 	// compute the weight depending on the location in the central fan's radon
 	// space
@@ -195,24 +189,23 @@ bool FDK_PreWeight(cudaPitchedPtr D_projData,
 		float fAngleBase;
 		if (fdA >= 0.0f) {
 			// going up from angles[0]
-			fAngleBase = angles[dims.iProjAngles - 1];
+			fAngleBase = angles[0];
 		} else {
 			// going down from angles[0]
-			fAngleBase = angles[0];
+			fAngleBase = angles[dims.iProjAngles - 1];
 		}
 
-		// We pick the highest end of the range, and then
-		// move all angles so they fall in (-2pi,0]
+		// We pick the lowest end of the range, and then
+		// move all angles so they fall in [0,2pi)
 
 		float *fRelAngles = new float[dims.iProjAngles];
 		for (unsigned int i = 0; i < dims.iProjAngles; ++i) {
 			float f = angles[i] - fAngleBase;
-			while (f > 0)
+			while (f >= 2*M_PI)
 				f -= 2*M_PI;
-			while (f <= -2*M_PI)
+			while (f < 0)
 				f += 2*M_PI;
 			fRelAngles[i] = f;
-
 		}
 
 		cudaError_t e1 = cudaMemcpyToSymbol(gC_angle, fRelAngles,

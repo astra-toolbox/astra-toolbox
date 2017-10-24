@@ -81,37 +81,19 @@ This method can be called in a number of ways:
     if len(varargin) == 1 and isinstance(varargin[0], int) == 1:
         vol_geom['GridRowCount'] = varargin[0]
         vol_geom['GridColCount'] = varargin[0]
-        vol_geom['option']['WindowMinX'] = -varargin[0] / 2.
-        vol_geom['option']['WindowMaxX'] = varargin[0] / 2.
-        vol_geom['option']['WindowMinY'] = -varargin[0] / 2.
-        vol_geom['option']['WindowMaxY'] = varargin[0] / 2.
     # astra_create_vol_geom([row_count col_count])
     elif len(varargin) == 1 and len(varargin[0]) == 2:
         vol_geom['GridRowCount'] = varargin[0][0]
         vol_geom['GridColCount'] = varargin[0][1]
-        vol_geom['option']['WindowMinX'] = -varargin[0][1] / 2.
-        vol_geom['option']['WindowMaxX'] = varargin[0][1] / 2.
-        vol_geom['option']['WindowMinY'] = -varargin[0][0] / 2.
-        vol_geom['option']['WindowMaxY'] = varargin[0][0] / 2.
     # astra_create_vol_geom([row_count col_count slice_count])
     elif len(varargin) == 1 and len(varargin[0]) == 3:
         vol_geom['GridRowCount'] = varargin[0][0]
         vol_geom['GridColCount'] = varargin[0][1]
         vol_geom['GridSliceCount'] = varargin[0][2]
-        vol_geom['option']['WindowMinX'] = -varargin[0][1] / 2.
-        vol_geom['option']['WindowMaxX'] = varargin[0][1] / 2.
-        vol_geom['option']['WindowMinY'] = -varargin[0][0] / 2.
-        vol_geom['option']['WindowMaxY'] = varargin[0][0] / 2.
-        vol_geom['option']['WindowMinZ'] = -varargin[0][2] / 2.
-        vol_geom['option']['WindowMaxZ'] = varargin[0][2] / 2.
     # astra_create_vol_geom(row_count, col_count)
     elif len(varargin) == 2:
         vol_geom['GridRowCount'] = varargin[0]
         vol_geom['GridColCount'] = varargin[1]
-        vol_geom['option']['WindowMinX'] = -varargin[1] / 2.
-        vol_geom['option']['WindowMaxX'] = varargin[1] / 2.
-        vol_geom['option']['WindowMinY'] = -varargin[0] / 2.
-        vol_geom['option']['WindowMaxY'] = varargin[0] / 2.
     # astra_create_vol_geom(row_count, col_count, min_x, max_x, min_y, max_y)
     elif len(varargin) == 6:
         vol_geom['GridRowCount'] = varargin[0]
@@ -136,6 +118,17 @@ This method can be called in a number of ways:
         vol_geom['option']['WindowMaxY'] = varargin[6]
         vol_geom['option']['WindowMinZ'] = varargin[7]
         vol_geom['option']['WindowMaxZ'] = varargin[8]
+
+    # set the window options, if not set already.
+    if not 'WindowMinX' in vol_geom['option']:
+        vol_geom['option']['WindowMinX'] = -vol_geom['GridColCount'] / 2.
+        vol_geom['option']['WindowMaxX'] =  vol_geom['GridColCount'] / 2.
+        vol_geom['option']['WindowMinY'] = -vol_geom['GridRowCount'] / 2.
+        vol_geom['option']['WindowMaxY'] =  vol_geom['GridRowCount'] / 2.
+        if 'GridSliceCount' in vol_geom:
+            vol_geom['option']['WindowMinZ'] = -vol_geom['GridSliceCount'] / 2.
+            vol_geom['option']['WindowMaxZ'] =  vol_geom['GridSliceCount'] / 2.
+
     return vol_geom
 
 
@@ -258,7 +251,7 @@ This method can be called in a number of ways:
     elif intype == 'cone':
         if len(args) < 7:
             raise Exception('not enough variables: astra_create_proj_geom(cone, detector_spacing_x, detector_spacing_y, det_row_count, det_col_count, angles, source_origin, origin_det)')
-        return {'type':	'cone','DetectorSpacingX':args[0], 'DetectorSpacingY':args[1], 'DetectorRowCount':args[2],'DetectorColCount':args[3],'ProjectionAngles':args[4],'DistanceOriginSource':	args[5],'DistanceOriginDetector':args[6]}
+        return {'type': 'cone','DetectorSpacingX':args[0], 'DetectorSpacingY':args[1], 'DetectorRowCount':args[2],'DetectorColCount':args[3],'ProjectionAngles':args[4],'DistanceOriginSource': args[5],'DistanceOriginDetector':args[6]}
     elif intype == 'cone_vec':
         if len(args) < 3:
             raise Exception('not enough variables: astra_create_proj_geom(cone_vec, det_row_count, det_col_count, V)')
@@ -533,7 +526,7 @@ def create_reconstruction(rec_type, proj_id, sinogram, iterations=1, use_mask='n
         return recon_id
 
 
-def create_projector(proj_type, proj_geom, vol_geom):
+def create_projector(proj_type, proj_geom, vol_geom, options=None):
     """Create a 2D or 3D projector.
 
 :param proj_type: Projector type, such as ``'line'``, ``'linear'``, ...
@@ -542,6 +535,8 @@ def create_projector(proj_type, proj_geom, vol_geom):
 :type proj_geom: :class:`dict`
 :param vol_geom: Volume geometry.
 :type vol_geom: :class:`dict`
+:param options: Projector options structure defining ``'VoxelSuperSampling'``, ``'DetectorSuperSampling'``.
+:type options: :class:`dict`
 :returns: :class:`int` -- The ID of the projector.
 
 """
@@ -550,6 +545,8 @@ def create_projector(proj_type, proj_geom, vol_geom):
     cfg = astra_dict(proj_type)
     cfg['ProjectionGeometry'] = proj_geom
     cfg['VolumeGeometry'] = vol_geom
+    if options is not None:
+        cfg['options'] = options
     types3d = ['linear3d', 'linearcone', 'cuda3d']
     if proj_type in types3d:
         return projector3d.create(cfg)

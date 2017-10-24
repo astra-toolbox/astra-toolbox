@@ -39,6 +39,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #ifdef ASTRA_CUDA
 #include "../cuda/2d/darthelper.h"
+#include "../cuda/2d/util.h"
 #include "astra/CompositeGeometryManager.h"
 #endif
 
@@ -131,6 +132,22 @@ void astra_mex_set_gpu_index(int nlhs, mxArray* plhs[], int nrhs, const mxArray*
 #endif
 }
 
+/** get_gpu_info = astra_mex('get_gpu_info');
+ * 
+ * Get GPU info
+ */
+void astra_mex_get_gpu_info(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
+{
+#ifdef ASTRA_CUDA
+	int device = -1;
+	if (nrhs >= 2 && mxIsDouble(prhs[1]) && mxGetN(prhs[1]) * mxGetM(prhs[1]) == 1 ) {
+		device = (int)mxGetScalar(prhs[1]);
+	}
+	mexPrintf("%s\n", astraCUDA::getCudaDeviceString(device).c_str());
+#endif
+}
+
+
 //-----------------------------------------------------------------------------------------
 /** version_number = astra_mex('version');
  * 
@@ -222,6 +239,8 @@ void mexFunction(int nlhs, mxArray* plhs[],
 		astra_mex_credits(nlhs, plhs, nrhs, prhs); 
 	} else if (sMode == std::string("set_gpu_index")) {
 		astra_mex_set_gpu_index(nlhs, plhs, nrhs, prhs);
+	} else if (sMode == std::string("get_gpu_info")) {
+		astra_mex_get_gpu_info(nlhs, plhs, nrhs, prhs);
 	} else if (sMode == std::string("info")) {
 		astra_mex_info(nlhs, plhs, nrhs, prhs);
 	} else if (sMode == std::string("delete")) {
