@@ -60,7 +60,7 @@ CCudaForwardProjectionAlgorithm3D::CCudaForwardProjectionAlgorithm3D()
 	m_pProjector = 0;
 	m_pProjections = 0;
 	m_pVolume = 0;
-        projKernelInt = ker3d_default;
+        m_iProjKernel = ker3d_default;
 
 }
 
@@ -115,7 +115,7 @@ bool CCudaForwardProjectionAlgorithm3D::initialize(const Config& _cfg)
         // optional: projection kernel
 	node = _cfg.self.getSingleNode("ProjectionKernel");
 	if (node) {
-		projKernelInt = node.getContentInt();
+		m_iProjKernel = node.getContentInt();
 	}
 	CC.markNodeParsed("ProjectionKernel");
 
@@ -269,26 +269,43 @@ void CCudaForwardProjectionAlgorithm3D::run(int)
 {
 	// check initialized
 	assert(m_bIsInitialized);
+        
+        Cuda3DProjectionKernel projKernel = (Cuda3DProjectionKernel)m_iProjKernel;      
 
-#if 0   // SCM: This short-cut does not allow to set projKernel to a
-        // non-default value. Thus deactivated.
-	CCompositeGeometryManager cgm;
+#if 1   // SCM: I don't know how to enable a non-default choice of projKernel
+        // for the CompositeGeometryManager-version of this function.
+        // Thus implementing a workaround for now.
+        if(projKernel == ker3d_default) {
+                
+                CCompositeGeometryManager cgm;
 
-	cgm.doFP(m_pProjector, m_pVolume, m_pProjections);
+                cgm.doFP(m_pProjector, m_pVolume, m_pProjections);
+                
+        } else {
+                
+                const CProjectionGeometry3D* projgeom = m_pProjections->getGeometry();
+                const CVolumeGeometry3D& volgeom = *m_pVolume->getGeometry();
+                        
+                if (m_pProjector) {
+                        CCudaProjector3D* projector = dynamic_cast<CCudaProjector3D*>(m_pProjector);
+                        projKernel = projector->getProjectionKernel();
+                }
+        
+                astraCudaFP(m_pVolume->getDataConst(), m_pProjections->getData(),
+                            &volgeom, projgeom,
+                            m_iGPUIndex, m_iDetectorSuperSampling, projKernel);
+                
+        }
 
 #else
 	const CProjectionGeometry3D* projgeom = m_pProjections->getGeometry();
 	const CVolumeGeometry3D& volgeom = *m_pVolume->getGeometry();
-
-        // SCM: Why not make this an attribute of the algorithm-object
-        Cuda3DProjectionKernel projKernel = (Cuda3DProjectionKernel)projKernelInt;      
                 
 	if (m_pProjector) {
 		CCudaProjector3D* projector = dynamic_cast<CCudaProjector3D*>(m_pProjector);
 		projKernel = projector->getProjectionKernel();
 	}
 
-        
 #if 0
 	// Debugging code that gives the coordinates of the corners of the volume
 	// projected on the detector.
