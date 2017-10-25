@@ -120,7 +120,7 @@ protected:
 	CFloat32VolumeData3D* m_pVolume;
 	int m_iGPUIndex;
 	int m_iDetectorSuperSampling;
-	int projKernelInt;
+	int m_iProjKernel;
 
 	void initializeFromProjector();
 };
