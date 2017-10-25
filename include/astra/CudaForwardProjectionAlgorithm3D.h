@@ -32,8 +32,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "Algorithm.h"
 
-//#include "../../cuda/3d/dims3d.h"
-
 #include "Float32ProjectionData3DMemory.h"
 #include "Float32VolumeData3DMemory.h"
 
@@ -122,7 +120,7 @@ protected:
 	CFloat32VolumeData3D* m_pVolume;
 	int m_iGPUIndex;
 	int m_iDetectorSuperSampling;
-    int projKernelInt;
+	int projKernelInt;
 
 	void initializeFromProjector();
 };

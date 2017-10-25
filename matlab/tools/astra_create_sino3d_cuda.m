@@ -1,7 +1,7 @@
-function [sino_id, sino] = astra_create_sino3d_cuda(data, proj_geom, vol_geom, cfg_options)
+function [sino_id, sino] = astra_create_sino3d_cuda(data, proj_geom, vol_geom, projKernelIdx)
 
 %--------------------------------------------------------------------------
-% [sino_id, sino] = astra_create_sino3d_cuda(data, proj_geom, vol_geom)
+% [sino_id, sino] = astra_create_sino3d_cuda(data, proj_geom, vol_geom, projKernelIdx)
 % 
 % Create a GPU based forward projection.
 %
@@ -38,16 +38,14 @@ end
 % store sino
 sino_id = astra_mex_data3d('create','-sino', proj_geom, 0);
 
-% configure algorithm
+% create sinogram
 cfg = astra_struct('FP3D_CUDA');
 cfg.ProjectionDataId = sino_id;
 cfg.VolumeDataId = volume_id;
 if nargin == 4
-        cfg = complete_parameter_structure(cfg, cfg_options);
+        cfg.ProjectionKernel = projKernelIdx;
 end
 
-
-% create sinogram
 alg_id = astra_mex_algorithm('create', cfg);
 astra_mex_algorithm('iterate', alg_id);
 astra_mex_algorithm('delete', alg_id);
@@ -57,7 +55,7 @@ if (numel(data) > 1)
 end
 
 if nargout >= 2
-	sino = astra_mex_data3d('get', sino_id);
+	sino = astra_mex_data3d('get',sino_id);
 end
 
 

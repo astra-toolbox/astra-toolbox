@@ -464,6 +464,8 @@ bool Par3DFP_Array_internal(cudaPitchedPtr D_projData,
 			blockEnd = a;
 			if (blockStart != blockEnd) {
 
+                                // SCM: FORMATTING FIXES IN THIS BLOCK (AND NOTHING ELSE). Master-version is totally unreadable.
+
 				dim3 dimGrid( ((dims.iProjU+g_detBlockU-1)/g_detBlockU)*((dims.iProjV+g_detBlockV-1)/g_detBlockV),
                                               (blockEnd-blockStart+g_anglesPerBlock-1)/g_anglesPerBlock                            );
 				// TODO: check if we can't immediately
