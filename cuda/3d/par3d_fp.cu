@@ -69,8 +69,7 @@ __constant__ float gC_DetVY[g_MaxAngles];
 __constant__ float gC_DetVZ[g_MaxAngles];
 
 
-
-static bool bindVolumeDataTexture(const cudaArray* array) //, cudaTextureFilterMode filterMode)
+static bool bindVolumeDataTexture(const cudaArray* array)
 {
 	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
 
