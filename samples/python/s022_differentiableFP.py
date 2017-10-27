@@ -48,7 +48,7 @@ _, proj = astra.create_sino3d_gpu(cube, proj_geom, vol_geom)
 _, proj_bicubic = astra.create_sino3d_gpu(cube, proj_geom, vol_geom, projectionKernel='bicubic')
 _, proj_bicubic_dd1 = astra.create_sino3d_gpu(cube, proj_geom, vol_geom, projectionKernel='bicubic_derivative_1')
 _, proj_bicubic_dd2 = astra.create_sino3d_gpu(cube, proj_geom, vol_geom, projectionKernel='bicubic_derivative_2')
-s
+
 
 # Plot results
 fig_default = pl.figure(1)
