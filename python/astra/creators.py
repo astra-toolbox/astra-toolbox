@@ -413,7 +413,7 @@ def create_sino3d_gpu(data, proj_geom, vol_geom, returnData=True, gpuIndex=None,
 :type returnData: :class:`bool`
 :param gpuIndex: Optional GPU index.
 :type gpuIndex: :class:`int`
-:param projectionKernel: Optional choice of the projection kernel. Admissible choices are {'default', 'sum_square_weights', 'bicubic', 'bicubic_derivative_1', 'bicubic_derivative_1'}
+:param projectionKernel: Optional choice of the projection kernel. Admissible choices are {'default', 'sum_square_weights', 'bicubic', 'bicubic_derivative_1', 'bicubic_derivative_2'}
 :type gpuIndex: :class:`string`
 :returns: :class:`int` or (:class:`int`, :class:`numpy.ndarray`) -- If ``returnData=False``, returns the ID of the forward projection. Otherwise, returns a tuple containing the ID of the forward projection and the forward projection itself, in that order.
 
