@@ -18,14 +18,15 @@
 % to the measured tomographic data.
 
 
-% Make cuboid test object
-N_obj = [300,300,300];
+% Make hollow cube test object
+N_obj = [256,256,256];
 obj = zeros(N_obj);
 obj(end/4+1:3*end/4, end/4+1:3*end/4, end/4+1:3*end/4) = ones(N_obj/2) + 0.2*rand(N_obj/2);
+obj(3*end/8+1:5*end/8, 3*end/8+1:5*end/8, 3*end/8+1:5*end/8) = 0;
 
 
 % Projection- and volume geometry
-t = rand()*360;     # Random tomographic angle
+t = rand()*360;     % Random tomographic angle
 proj_geom = astra_create_proj_geom('parallel3d', 1, 1, N_obj(2), N_obj(1), t * (pi/180));
 %proj_geom = astra_create_proj_geom('cone', 2, 2, N_obj(2), N_obj(1), t * (pi/180), 2*N_obj(1), 2*N_obj(1));    % uncomment for cone-beam test case
 vol_geom  = astra_create_vol_geom(N_obj);

@@ -39,6 +39,7 @@ cube[3*N_obj/8:5*N_obj/8,3*N_obj/8:5*N_obj/8,3*N_obj/8:5*N_obj/8] = 0.0
 # Projection- and volume geometry
 angle = 2*np.pi*random()    # Random tomographic angle
 proj_geom = astra.create_proj_geom('parallel3d', 1.0, 1.0, N_obj, N_obj, angle)
+#proj_geom = astra.create_proj_geom('cone', 2.0, 2.0, N_obj, N_obj, angle, 2*N_obj, 2*N_obj)    # uncomment for cone-beam test case
 vol_geom = astra.create_vol_geom(N_obj, N_obj, N_obj)
 
 
