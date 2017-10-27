@@ -141,6 +141,8 @@ bool CCudaProjector3D::initialize_parameters(const Config& _cfg) {
 		} else if (sProjKernel == "bicubic_derivative_2") {
 			m_projectionKernel = ker3d_bicubic_ddf2;
 		} else {
+                        ASTRA_CONFIG_CHECK(false, "CudaProjector3D",
+                        "Invalid projection-kernel assigned. Admissible choices are \"default\", \"sum_square_weights\", \"bicubic\", \"bicubic_derivative_1\", \"bicubic_derivative_2\".");
 			return false;
 		}
 	}
