@@ -84,6 +84,15 @@ public:
 	 */
 	virtual bool initialize(const Config& _cfg);
 
+        virtual bool initialize_parameters(const Config& _cfg);
+	/** Initialize only the additional parameters of this child-
+         * class but not the parent-class. 
+         * This function does not set m_bInitialized to true.
+	 *
+	 * @param _cfg Configuration Object
+	 * @return initialization successful?
+	 */
+
 	virtual void computeSingleRayWeights(int _iProjectionIndex, 
 										 int _iSliceIndex,
 										 int _iDetectorIndex, 

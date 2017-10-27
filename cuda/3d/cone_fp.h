@@ -40,11 +40,6 @@ _AstraExport bool ConeFP(cudaPitchedPtr D_volumeData,
             const SDimensions3D& dims, const SConeProjection* angles,
             const SProjectorParams3D& params);
 
-_AstraExport bool ConeFP_bilin(cudaPitchedPtr D_volumeData,
-            cudaPitchedPtr D_projData,
-            const SDimensions3D& dims, const SConeProjection* angles,
-            const SProjectorParams3D& params);
-
 _AstraExport bool ConeFP_bicubic(cudaPitchedPtr D_volumeData,
             cudaPitchedPtr D_projData,
             const SDimensions3D& dims, const SConeProjection* angles,

@@ -40,10 +40,9 @@ using astra::SPar3DProjection;
 enum Cuda3DProjectionKernel {
 	ker3d_default = 0,
 	ker3d_sum_square_weights,
-	ker3d_bilin,
 	ker3d_bicubic,
-	ker3d_df1,
-	ker3d_df2
+	ker3d_bicubic_ddf1,
+	ker3d_bicubic_ddf2
 };
 
 

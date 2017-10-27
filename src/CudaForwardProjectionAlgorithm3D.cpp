@@ -111,13 +111,6 @@ bool CCudaForwardProjectionAlgorithm3D::initialize(const Config& _cfg)
 	id = node.getContentInt();
 	m_pVolume = dynamic_cast<CFloat32VolumeData3D*>(CData3DManager::getSingleton().get(id));
 	CC.markNodeParsed("VolumeDataId");
-        
-        // optional: projection kernel
-	node = _cfg.self.getSingleNode("ProjectionKernel");
-	if (node) {
-		m_iProjKernel = node.getContentInt();
-	}
-	CC.markNodeParsed("ProjectionKernel");
 
 	// optional: projector
 	node = _cfg.self.getSingleNode("ProjectorId");
@@ -130,12 +123,21 @@ bool CCudaForwardProjectionAlgorithm3D::initialize(const Config& _cfg)
 
 	initializeFromProjector();
 
-	// Deprecated options
-	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", m_iDetectorSuperSampling);
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", m_iGPUIndex);
-	CC.markOptionParsed("DetectorSuperSampling");
-	CC.markOptionParsed("GPUindex");
-
+        // SCM: have to build a projector-object to assign additional
+        // parameters such as custom projection-kernel, super-sampling,
+        // etc. since CCompositeGeometryManager::doFP does not allow
+        // for other ways to assign these.
+        if (!m_pProjector) {
+                m_pProjector = new CCudaProjector3D();
+                if (!(dynamic_cast<CCudaProjector3D*>(m_pProjector))->initialize_parameters(_cfg)) {
+                        return false;
+                }
+                CC.markNodeParsed("ProjectionKernel");
+                CC.markOptionParsed("DetectorSuperSampling");
+                CC.markOptionParsed("VoxelSuperSampling");
+                CC.markOptionParsed("DensityWeighting");
+                CC.markOptionParsed("GPUindex");
+        }
 
 	// success
 	m_bIsInitialized = check();
@@ -269,38 +271,17 @@ void CCudaForwardProjectionAlgorithm3D::run(int)
 {
 	// check initialized
 	assert(m_bIsInitialized);
-        
-        Cuda3DProjectionKernel projKernel = (Cuda3DProjectionKernel)m_iProjKernel;      
 
-#if 1   // SCM: I don't know how to enable a non-default choice of projKernel
-        // for the CompositeGeometryManager-version of this function.
-        // Thus implementing a workaround for now.
-        if(projKernel == ker3d_default) {
-                
-                CCompositeGeometryManager cgm;
+#if 1
+	CCompositeGeometryManager cgm;
 
-                cgm.doFP(m_pProjector, m_pVolume, m_pProjections);
-                
-        } else {
-                
-                const CProjectionGeometry3D* projgeom = m_pProjections->getGeometry();
-                const CVolumeGeometry3D& volgeom = *m_pVolume->getGeometry();
-                        
-                if (m_pProjector) {
-                        CCudaProjector3D* projector = dynamic_cast<CCudaProjector3D*>(m_pProjector);
-                        projKernel = projector->getProjectionKernel();
-                }
-        
-                astraCudaFP(m_pVolume->getDataConst(), m_pProjections->getData(),
-                            &volgeom, projgeom,
-                            m_iGPUIndex, m_iDetectorSuperSampling, projKernel);
-                
-        }
+	cgm.doFP(m_pProjector, m_pVolume, m_pProjections);
 
 #else
 	const CProjectionGeometry3D* projgeom = m_pProjections->getGeometry();
 	const CVolumeGeometry3D& volgeom = *m_pVolume->getGeometry();
-                
+
+	Cuda3DProjectionKernel projKernel = ker3d_default;
 	if (m_pProjector) {
 		CCudaProjector3D* projector = dynamic_cast<CCudaProjector3D*>(m_pProjector);
 		projKernel = projector->getProjectionKernel();

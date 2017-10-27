@@ -586,13 +586,6 @@ bool Par3DFP(cudaPitchedPtr D_volumeData,
 { return Par3DFP<tex_interpolate>(D_volumeData, D_projData, dims, angles, params); }
 
 
-bool Par3DFP_bilin(cudaPitchedPtr D_volumeData,
-                   cudaPitchedPtr D_projData,
-                   const SDimensions3D& dims, const SPar3DProjection* angles,
-                   const SProjectorParams3D& params)
-{ return Par3DFP<bilin_interpolate>(D_volumeData, D_projData, dims, angles, params); }
-
-
 bool Par3DFP_bicubic(cudaPitchedPtr D_volumeData,
                    cudaPitchedPtr D_projData,
                    const SDimensions3D& dims, const SPar3DProjection* angles,
