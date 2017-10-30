@@ -9,9 +9,8 @@ source:
 build:
   number: 0
   script_env:
-    - CC # [not win]
-    - CXX # [not win]
-    - CUDA_ROOT # [not win]
+    - CC # [linux]
+    - CXX # [linux]
 
 requirements:
   build:
@@ -20,15 +19,13 @@ requirements:
     - automake # [osx]
     - autoconf # [osx]
     - libtool # [osx]
+    - cudatoolkit {{ cudatoolkit }} # [linux]
 
   run:
     - vs2015_runtime # [win]
+    - cudatoolkit {{ cudatoolkit }} # [linux]
 
 about:
   home: http://www.astra-toolbox.com
   license: GPLv3
   summary: 'The ASTRA Toolbox is a Python toolbox of high-performance GPU primitives for 2D and 3D tomography.'
-
-# See
-# http://docs.continuum.io/conda/build.html for
-# more information about meta.yaml
