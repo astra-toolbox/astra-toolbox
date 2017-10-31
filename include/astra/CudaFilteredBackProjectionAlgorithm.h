@@ -70,10 +70,6 @@ public:
 	static int calcIdealRealFilterWidth(int _iDetectorCount);
 	static int calcIdealFourierFilterWidth(int _iDetectorCount);
 	
-	//debug
-	static void testGenFilter(E_FBPFILTER _eFilter, float _fD, int _iProjectionCount, cufftComplex * _pFilter, int _iFFTRealDetectorCount, int _iFFTFourierDetectorCount);
-	static int getGPUCount();
-
 	/** Get a description of the class.
 	 *
 	 * @return description string

@@ -28,7 +28,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _CUDA_EM_H
 #define _CUDA_EM_H
 
-#include "util.h"
 #include "algo.h"
 
 namespace astraCUDA {

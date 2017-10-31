@@ -32,21 +32,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include <driver_types.h>
 #include <string>
 
-#ifdef _MSC_VER
-
-#ifdef DLL_EXPORTS
-#define _AstraExport __declspec(dllexport)
-#define EXPIMP_TEMPLATE
-#else
-#define _AstraExport __declspec(dllimport)
-#define EXPIMP_TEMPLATE extern
-#endif
-
-#else
-
-#define _AstraExport
-
-#endif
+#include "astra/Globals.h"
 
 #include "dims.h"
 
