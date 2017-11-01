@@ -224,6 +224,15 @@ _AstraExport bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
                     astraCUDA::SFanProjection*& pProjs,
                     float& outputScale);
 
+}
+
+namespace astraCUDA {
+
+// Return string with CUDA device number, name and memory size.
+// Use device == -1 to get info for the current device.
+_AstraExport std::string getCudaDeviceString(int device);
+
+_AstraExport bool setGPUIndex(int index);
 
 }
 #endif

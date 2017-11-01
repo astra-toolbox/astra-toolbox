@@ -79,10 +79,6 @@ void reportCudaError(cudaError_t err);
 float dotProduct2D(float* D_data, unsigned int pitch,
                    unsigned int width, unsigned int height);
 
-// Return string with CUDA device number, name and memory size.
-// Use device == -1 to get info for the current device.
-_AstraExport std::string getCudaDeviceString(int device);
-
 }
 
 #endif

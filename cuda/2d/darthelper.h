@@ -36,8 +36,6 @@ namespace astraCUDA {
 	void dartMask(float* out, const float* in, unsigned int conn, unsigned int radius, unsigned int threshold, unsigned int width, unsigned int height);
 	void dartSmoothing(float* out, const float* in, float b, unsigned int radius, unsigned int width, unsigned int height);
 
-	_AstraExport bool setGPUIndex(int index);
-
 }
 
 #endif
