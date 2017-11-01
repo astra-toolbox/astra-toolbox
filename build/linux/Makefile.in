@@ -179,8 +179,7 @@ BASE_OBJECTS=\
 	src/VolumeGeometry2D.lo \
 	src/VolumeGeometry3D.lo \
 	src/XMLDocument.lo \
-	src/XMLNode.lo \
-	src/swrap.lo
+	src/XMLNode.lo
 
 CUDA_CXX_OBJECTS=\
 	src/CudaProjector2D.lo \
