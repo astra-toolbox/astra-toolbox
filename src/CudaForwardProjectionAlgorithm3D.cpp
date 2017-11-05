@@ -121,8 +121,6 @@ bool CCudaForwardProjectionAlgorithm3D::initialize(const Config& _cfg)
 	}
 	CC.markNodeParsed("ProjectorId");
 
-	initializeFromProjector();
-
         // SCM: have to build a projector-object to assign additional
         // parameters such as custom projection-kernel, super-sampling,
         // etc. since CCompositeGeometryManager::doFP does not allow
@@ -138,6 +136,8 @@ bool CCudaForwardProjectionAlgorithm3D::initialize(const Config& _cfg)
                 CC.markOptionParsed("DensityWeighting");
                 CC.markOptionParsed("GPUindex");
         }
+        
+	initializeFromProjector();
 
 	// success
 	m_bIsInitialized = check();
