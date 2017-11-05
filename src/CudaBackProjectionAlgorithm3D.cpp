@@ -121,21 +121,23 @@ bool CCudaBackProjectionAlgorithm3D::initialize(const Config& _cfg)
 		return false;
 	}
 
+        // SCM: have to build a projector-object to assign additional
+        // parameters such as custom projection-kernel, super-sampling,
+        // etc. since CCompositeGeometryManager::doBP does not allow
+        // for other ways to assign these.
+        if (!m_pProjector) {
+                m_pProjector = new CCudaProjector3D();
+                if (!(dynamic_cast<CCudaProjector3D*>(m_pProjector))->initialize_parameters(_cfg)) {
+                        return false;
+                }
+                CC.markNodeParsed("ProjectionKernel");
+                CC.markOptionParsed("DetectorSuperSampling");
+                CC.markOptionParsed("VoxelSuperSampling");
+                CC.markOptionParsed("DensityWeighting");
+                CC.markOptionParsed("GPUindex");
+        }
+        
 	initializeFromProjector();
-
-	// Deprecated options
-	m_iVoxelSuperSampling = (int)_cfg.self.getOptionNumerical("VoxelSuperSampling", m_iVoxelSuperSampling);
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", m_iGPUIndex);
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
-	CC.markOptionParsed("VoxelSuperSampling");
-	CC.markOptionParsed("GPUIndex");
-	if (!_cfg.self.hasOption("GPUIndex"))
-		CC.markOptionParsed("GPUindex");
-
-
-
-	m_bSIRTWeighting = _cfg.self.getOptionBool("SIRTWeighting", false);
-	CC.markOptionParsed("SIRTWeighting");
 
 	// success
 	m_bIsInitialized = _check();
