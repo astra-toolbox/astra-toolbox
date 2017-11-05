@@ -154,7 +154,8 @@ bool CCudaProjector3D::initialize_parameters(const Config& _cfg) {
 	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", 1);
 	CC.markOptionParsed("DetectorSuperSampling");
 
-	if (dynamic_cast<CConeProjectionGeometry3D*>(m_pProjectionGeometry) ||
+	if (m_pProjectionGeometry == NULL || 
+            dynamic_cast<CConeProjectionGeometry3D*>(m_pProjectionGeometry) ||
 	    dynamic_cast<CConeVecProjectionGeometry3D*>(m_pProjectionGeometry))
 	{
 		m_bDensityWeighting = _cfg.self.getOptionBool("DensityWeighting", false);
