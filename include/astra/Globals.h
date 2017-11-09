@@ -105,22 +105,6 @@ namespace astra {
 }
 
 //----------------------------------------------------------------------------------------
-// globals vars & functions
-//namespace astra {
-//#define ToolboxVersion 0.1f;
-
-//float32 getVersion() { return ToolboxVersion; }
-
-//_AstraExport bool cudaEnabled() { 
-//#ifdef ASTRA_CUDA	
-//	return true; 
-//#else
-//	return false;
-//#endif
-//}
-//}
-
-//----------------------------------------------------------------------------------------
 // variables
 namespace astra {
 	const float32 PI = 3.14159265358979323846264338328f;
@@ -169,6 +153,7 @@ namespace astra {
 namespace astra {
 _AstraExport inline int getVersion() { return ASTRA_TOOLBOXVERSION; }
 _AstraExport inline const char* getVersionString() { return ASTRA_TOOLBOXVERSION_STRING; }
+_AstraExport bool cudaAvailable();
 #ifdef ASTRA_CUDA
 _AstraExport inline bool cudaEnabled() { return true; }
 #else

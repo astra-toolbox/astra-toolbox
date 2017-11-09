@@ -77,7 +77,6 @@ enum Mem3DZeroMode {
 	INIT_ZERO
 };
 
-size_t availableGPUMemory();
 int maxBlockDimension();
 
 _AstraExport MemHandle3D wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch);

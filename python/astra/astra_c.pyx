@@ -38,6 +38,7 @@ from .PyIndexManager cimport CAstraObjectManagerBase
 
 cdef extern from "astra/Globals.h" namespace "astra":
     bool cudaEnabled()
+    bool cudaAvailable()
 
 IF HAVE_CUDA==True:
   cdef extern from "../cuda/2d/astra.h" namespace "astraCUDA":
@@ -74,7 +75,7 @@ def credits():
 
 
 def use_cuda():
-    return cudaEnabled()
+    return cudaAvailable()
 
 IF HAVE_CUDA==True:
   def set_gpu_index(idx, memory=0):

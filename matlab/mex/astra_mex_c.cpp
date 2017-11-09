@@ -78,7 +78,7 @@ void astra_mex_credits(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[
 void astra_mex_use_cuda(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 { 
 	if (1 <= nlhs) {
-		plhs[0] = mxCreateDoubleScalar(astra::cudaEnabled() ? 1 : 0);
+		plhs[0] = mxCreateDoubleScalar(astra::cudaAvailable() ? 1 : 0);
 	}
 }
 

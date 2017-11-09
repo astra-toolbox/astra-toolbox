@@ -529,5 +529,16 @@ _AstraExport bool setGPUIndex(int iGPUIndex)
         return true;
 }
 
+_AstraExport size_t availableGPUMemory()
+{
+    size_t free, total;
+    cudaError_t err = cudaMemGetInfo(&free, &total);
+    if (err != cudaSuccess)
+        return 0;
+    return free;
+}
+
+
+
 
 }

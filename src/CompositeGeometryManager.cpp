@@ -43,6 +43,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/Float32VolumeData3DGPU.h"
 #include "astra/Logging.h"
 
+#include "../cuda/2d/astra.h"
 #include "../cuda/3d/mem3d.h"
 
 #include <cstring>
@@ -1653,7 +1654,7 @@ bool CCompositeGeometryManager::doJobs(TJobList &jobs)
 		// Get memory from first GPU. Not optimal...
 		if (!m_GPUIndices.empty())
 			astraCUDA3d::setGPUIndex(m_GPUIndices[0]);
-		maxSize = astraCUDA3d::availableGPUMemory();
+		maxSize = astraCUDA::availableGPUMemory();
 		if (maxSize == 0) {
 			ASTRA_WARN("Unable to get available GPU memory. Defaulting to 1GB.");
 			maxSize = 1024 * 1024 * 1024;

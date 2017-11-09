@@ -32,6 +32,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "mem3d.h"
 
+#include "../2d/astra.h"
+
 #include "astra3d.h"
 #include "cone_fp.h"
 #include "cone_bp.h"
@@ -52,15 +54,6 @@ struct SMemHandle3D_internal
 	unsigned int ny;
 	unsigned int nz;
 };
-
-size_t availableGPUMemory()
-{
-	size_t free, total;
-	cudaError_t err = cudaMemGetInfo(&free, &total);
-	if (err != cudaSuccess)
-		return 0;
-	return free;
-}
 
 int maxBlockDimension()
 {
@@ -88,7 +81,7 @@ MemHandle3D allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Me
 	hnd.ny = y;
 	hnd.nz = z;
 
-	size_t free = availableGPUMemory();
+	size_t free = astraCUDA::availableGPUMemory();
 
 	cudaError_t err;
 	err = cudaMalloc3D(&hnd.ptr, make_cudaExtent(sizeof(float)*x, y, z));
@@ -97,7 +90,7 @@ MemHandle3D allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Me
 		return MemHandle3D();
 	}
 
-	size_t free2 = availableGPUMemory();
+	size_t free2 = astraCUDA::availableGPUMemory();
 
 	ASTRA_DEBUG("Allocated %d x %d x %d on GPU. (Pre: %lu, post: %lu)", x, y, z, free, free2);
 
@@ -127,9 +120,9 @@ bool zeroGPUMemory(MemHandle3D handle, unsigned int x, unsigned int y, unsigned 
 
 bool freeGPUMemory(MemHandle3D handle)
 {
-	size_t free = availableGPUMemory();
+	size_t free = astraCUDA::availableGPUMemory();
 	cudaError_t err = cudaFree(handle.d->ptr.ptr);
-	size_t free2 = availableGPUMemory();
+	size_t free2 = astraCUDA::availableGPUMemory();
 
 	ASTRA_DEBUG("Freeing memory. (Pre: %lu, post: %lu)", free, free2);
 
