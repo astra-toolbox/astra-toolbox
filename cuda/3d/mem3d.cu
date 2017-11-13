@@ -99,7 +99,7 @@ MemHandle3D allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Me
 
 	size_t free2 = availableGPUMemory();
 
-	ASTRA_DEBUG("Allocated %d x %d x %d on GPU. (Pre: %lu, post: %lu)", x, y, z, free, free2);
+	ASTRA_DEBUG("Allocated %d x %d x %d on GPU. (Pre: %zu, post: %zu)", x, y, z, free, free2);
 
 
 
@@ -131,7 +131,7 @@ bool freeGPUMemory(MemHandle3D handle)
 	cudaError_t err = cudaFree(handle.d->ptr.ptr);
 	size_t free2 = availableGPUMemory();
 
-	ASTRA_DEBUG("Freeing memory. (Pre: %lu, post: %lu)", free, free2);
+	ASTRA_DEBUG("Freeing memory. (Pre: %zu, post: %zu)", free, free2);
 
 	return err == cudaSuccess;
 }
