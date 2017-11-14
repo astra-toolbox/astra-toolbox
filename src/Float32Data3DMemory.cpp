@@ -71,8 +71,6 @@ bool CFloat32Data3DMemory::_initialize(int _iWidth, int _iHeight, int _iDepth)
 
 	// allocate memory for the data, but do not fill it
 	m_pfData = NULL;
-	m_ppfDataRowInd = NULL;
-	m_pppfDataSliceInd = NULL;
 	m_pCustomMemory = 0;
 	_allocateData();
 
@@ -103,8 +101,6 @@ bool CFloat32Data3DMemory::_initialize(int _iWidth, int _iHeight, int _iDepth, c
 
 	// allocate memory for the data, but do not fill it
 	m_pfData = NULL;
-	m_ppfDataRowInd = NULL;
-	m_pppfDataSliceInd = NULL;
 	m_pCustomMemory = 0;
 	_allocateData();
 
@@ -140,8 +136,6 @@ bool CFloat32Data3DMemory::_initialize(int _iWidth, int _iHeight, int _iDepth, f
 
 	// allocate memory for the data, but do not fill it
 	m_pfData = NULL;
-	m_ppfDataRowInd = NULL;
-	m_pppfDataSliceInd = NULL;
 	m_pCustomMemory = 0;
 	_allocateData();
 
@@ -178,8 +172,6 @@ bool CFloat32Data3DMemory::_initialize(int _iWidth, int _iHeight, int _iDepth, C
 	// allocate memory for the data, but do not fill it
 	m_pCustomMemory = _pCustomMemory;
 	m_pfData = NULL;
-	m_ppfDataRowInd = NULL;
-	m_pppfDataSliceInd = NULL;
 	_allocateData();
 
 	// initialization complete
@@ -198,8 +190,6 @@ void CFloat32Data3DMemory::_allocateData()
 	ASTRA_ASSERT(m_iSize > 0);
 	ASTRA_ASSERT(m_iSize == (size_t)m_iWidth * m_iHeight * m_iDepth);
 	ASTRA_ASSERT(m_pfData == NULL);
-	ASTRA_ASSERT(m_ppfDataRowInd == NULL);
-	ASTRA_ASSERT(m_pppfDataSliceInd == NULL);
 
 	if (!m_pCustomMemory) {
 		// allocate contiguous block
@@ -213,20 +203,6 @@ void CFloat32Data3DMemory::_allocateData()
 	} else {
 		m_pfData = m_pCustomMemory->m_fPtr;
 	}
-
-	// create array of pointers to each row of the data block
-	m_ppfDataRowInd = new float32*[m_iHeight*m_iDepth];
-	for (int iy = 0; iy < m_iHeight*m_iDepth; iy++)
-	{
-		m_ppfDataRowInd[iy] = &(m_pfData[iy * m_iWidth]);
-	}
-
-	// create array of pointers to each row of the data block
-	m_pppfDataSliceInd = new float32**[m_iDepth];
-	for (int iy = 0; iy < m_iDepth; iy++)
-	{
-		m_pppfDataSliceInd[iy] = &(m_ppfDataRowInd[iy * m_iHeight]);
-	}
 }
 
 //----------------------------------------------------------------------------------------
@@ -235,13 +211,6 @@ void CFloat32Data3DMemory::_freeData()
 {
 	// basic checks
 	ASTRA_ASSERT(m_pfData != NULL);
-	ASTRA_ASSERT(m_ppfDataRowInd != NULL);
-	ASTRA_ASSERT(m_pppfDataSliceInd != NULL);
-
-	// free memory for index table
-	delete[] m_pppfDataSliceInd;
-	// free memory for index table
-	delete[] m_ppfDataRowInd;
 
 	if (!m_pCustomMemory) {
 		// free memory for data block
@@ -266,8 +235,6 @@ void CFloat32Data3DMemory::_clear()
 	m_iSize = 0;
 
 	m_pfData = NULL;
-	m_ppfDataRowInd = NULL;
-	m_pppfDataSliceInd = NULL;
 	m_pCustomMemory = NULL;
 }
 

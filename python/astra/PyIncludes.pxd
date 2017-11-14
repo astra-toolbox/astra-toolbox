@@ -211,7 +211,6 @@ cdef extern from "astra/Float32Data3DMemory.h" namespace "astra":
         CFloat32Data3DMemory()
         void updateStatistics()
         float32 *getData()
-        float32 ***getData3D()
         THREEEDataType getType()
 
 

@@ -52,22 +52,10 @@ protected:
 	 */
 	 float32* m_pfData;	
 
-	/** Array of float32 pointers, each pointing to a single row 
-	 * in the m_pfData memory block.
-	 * To access element (ix, iy, iz) internally, use m_ppfDataRowInd[iz * m_iHeight + iy][ix]
-	*/
-	float32** m_ppfDataRowInd;
-
-	/** Array of float32 pointers, each pointing to a single slice 
-	 * in the m_pfData memory block.
-	 * To access element (ix, iy, iz) internally, use m_pppfDataSliceInd[iz][iy][ix]
-	*/
-	float32*** m_pppfDataSliceInd;	
-
 	float32 m_fGlobalMin;	///< minimum value of the data
 	float32 m_fGlobalMax;	///< maximum value of the data
 
-	/** Allocate memory for m_pfData, m_ppfDataRowInd and m_pppfDataSliceInd arrays.
+	/** Allocate memory for m_pfData.
 	 *
 	 * The allocated block consists of m_iSize float32s. The block is
 	 * not cleared after allocation and its contents is undefined. 
@@ -75,7 +63,7 @@ protected:
 	 */
 	void _allocateData();
 
-	/** Free memory for m_pfData, m_ppfDataRowInd and m_pppfDataSliceInd arrays.
+	/** Free memory for m_pfData.
 	 *
 	 * This function may ONLY be called if the memory for both blocks has been 
 	 * allocated before.
@@ -298,23 +286,6 @@ inline const float32* CFloat32Data3DMemory::getDataConst() const
 
 	return (const float32*)m_pfData;
 }
-
-//----------------------------------------------------------------------------------------
-// Get a float32** to the data block, represented as a 3-dimensional array of float32 values.
-inline float32*** CFloat32Data3DMemory::getData3D()
-{
-	ASTRA_ASSERT(m_bInitialized);
-	return m_pppfDataSliceInd;
-}
-
-//----------------------------------------------------------------------------------------
-// Get a const float32** to the data block, represented as a 3-dimensional array of float32 values.
-inline const float32*** CFloat32Data3DMemory::getData3DConst() const
-{
-	ASTRA_ASSERT(m_bInitialized);
-	return (const float32***)m_pppfDataSliceInd;
-}
-//----------------------------------------------------------------------------------------
 
 } // end namespace astra
 

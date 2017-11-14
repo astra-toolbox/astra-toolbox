@@ -254,7 +254,7 @@ cdef fillDataObjectScalar(CFloat32Data3DMemory * obj, float s):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cdef fillDataObjectArray(CFloat32Data3DMemory * obj, float [:,:,::1] data):
-    cdef float [:,:,::1] cView = <float[:data.shape[0],:data.shape[1],:data.shape[2]]> obj.getData3D()[0][0]
+    cdef float [:,:,::1] cView = <float[:data.shape[0],:data.shape[1],:data.shape[2]]> obj.getData()
     cView[:] = data
 
 cdef CFloat32Data3D * getObject(i) except NULL:
@@ -271,7 +271,7 @@ def get(i):
     cdef CFloat32Data3DMemory * pDataObject = dynamic_cast_mem_safe(getObject(i))
     outArr = np.empty((pDataObject.getDepth(),pDataObject.getHeight(), pDataObject.getWidth()),dtype=np.float32,order='C')
     cdef float [:,:,::1] mView = outArr
-    cdef float [:,:,::1] cView = <float[:outArr.shape[0],:outArr.shape[1],:outArr.shape[2]]> pDataObject.getData3D()[0][0]
+    cdef float [:,:,::1] cView = <float[:outArr.shape[0],:outArr.shape[1],:outArr.shape[2]]> pDataObject.getData()
     mView[:] = cView
     return outArr
 
@@ -282,7 +282,7 @@ def get_shared(i):
     shape[0] = <np.npy_intp> pDataObject.getDepth()
     shape[1] = <np.npy_intp> pDataObject.getHeight()
     shape[2] = <np.npy_intp> pDataObject.getWidth()
-    return np.PyArray_SimpleNewFromData(3,shape,np.NPY_FLOAT32,<void *>pDataObject.getData3D()[0][0])
+    return np.PyArray_SimpleNewFromData(3,shape,np.NPY_FLOAT32,<void *>pDataObject.getData())
 
 def get_single(i):
     raise NotImplementedError("Not yet implemented")
