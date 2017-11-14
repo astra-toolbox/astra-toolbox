@@ -133,7 +133,11 @@ bool freeGPUMemory(MemHandle3D handle)
 	cudaError_t err = cudaFree(handle.d->ptr.ptr);
 	size_t free2 = availableGPUMemory();
 
+#if defined(_MSC_VER) && _MSC_VER < 1800
+	ASTRA_DEBUG("Freeing memory. (Pre: %Iu, post: %Iu)", free, free2);
+#else
 	ASTRA_DEBUG("Freeing memory. (Pre: %zu, post: %zu)", free, free2);
+#endif
 
 	return err == cudaSuccess;
 }
