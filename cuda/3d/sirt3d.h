@@ -28,7 +28,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _CUDA_SIRT3D_H
 #define _CUDA_SIRT3D_H
 
-#include "util3d.h"
 #include "algo3d.h"
 
 namespace astraCUDA3d {

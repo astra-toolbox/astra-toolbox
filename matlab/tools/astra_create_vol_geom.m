@@ -38,21 +38,12 @@ if numel(varargin) == 1 && numel(varargin{1}) == 1
 	vol_geom = struct();
 	vol_geom.GridRowCount = varargin{1}(1);
 	vol_geom.GridColCount =	varargin{1}(1);
-	vol_geom.option.WindowMinX = -varargin{1}(1) / 2;
-	vol_geom.option.WindowMaxX = varargin{1}(1) / 2;
-	vol_geom.option.WindowMinY = -varargin{1}(1) / 2;
-	vol_geom.option.WindowMaxY = varargin{1}(1) / 2;
-
 
 % astra_create_vol_geom([row_count col_count])
 elseif numel(varargin) == 1 && numel(varargin{1}) == 2
 	vol_geom = struct();
 	vol_geom.GridRowCount = varargin{1}(1);
 	vol_geom.GridColCount =	varargin{1}(2);
-	vol_geom.option.WindowMinX = -varargin{1}(2) / 2;
-	vol_geom.option.WindowMaxX = varargin{1}(2) / 2;
-	vol_geom.option.WindowMinY = -varargin{1}(1) / 2;
-	vol_geom.option.WindowMaxY = varargin{1}(1) / 2;
 
 % astra_create_vol_geom([row_count col_count slice_count])
 elseif numel(varargin) == 1 && numel(varargin{1}) == 3
@@ -60,22 +51,12 @@ elseif numel(varargin) == 1 && numel(varargin{1}) == 3
 	vol_geom.GridRowCount = varargin{1}(1);
 	vol_geom.GridColCount =	varargin{1}(2);
 	vol_geom.GridSliceCount = varargin{1}(3);	
-	vol_geom.option.WindowMinX = -varargin{1}(2) / 2;
-	vol_geom.option.WindowMaxX = varargin{1}(2) / 2;
-	vol_geom.option.WindowMinY = -varargin{1}(1) / 2;
-	vol_geom.option.WindowMaxY = varargin{1}(1) / 2;
-	vol_geom.option.WindowMinZ = -varargin{1}(3) / 2;
-	vol_geom.option.WindowMaxZ = varargin{1}(3) / 2;	
 	
 % astra_create_vol_geom(row_count, col_count)
 elseif numel(varargin) == 2
 	vol_geom = struct();
 	vol_geom.GridRowCount = varargin{1};
 	vol_geom.GridColCount =	varargin{2};
-	vol_geom.option.WindowMinX = -varargin{2} / 2;
-	vol_geom.option.WindowMaxX = varargin{2} / 2;
-	vol_geom.option.WindowMinY = -varargin{1} / 2;
-	vol_geom.option.WindowMaxY = varargin{1} / 2;
 
 % astra_create_vol_geom(row_count, col_count, min_x, max_x, min_y, max_y)
 elseif numel(varargin) == 6
@@ -107,4 +88,16 @@ elseif numel(varargin) == 9
 	vol_geom.option.WindowMinZ = varargin{8};
 	vol_geom.option.WindowMaxZ = varargin{9};
 
+end
+
+% set the window options, if not set already.
+if ~isfield(vol_geom, 'option') || ~isfield(vol_geom.option, 'WindowMinX')
+	vol_geom.option.WindowMinX = -vol_geom.GridColCount / 2;
+	vol_geom.option.WindowMaxX =  vol_geom.GridColCount / 2;
+	vol_geom.option.WindowMinY = -vol_geom.GridRowCount / 2;
+	vol_geom.option.WindowMaxY =  vol_geom.GridRowCount / 2;
+	if isfield(vol_geom, 'GridSliceCount')
+		vol_geom.option.WindowMinZ = -vol_geom.GridSliceCount / 2;
+		vol_geom.option.WindowMaxZ =  vol_geom.GridSliceCount / 2;
+	end
 end

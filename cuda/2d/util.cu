@@ -274,5 +274,4 @@ void reportCudaError(cudaError_t err)
 }
 
 
-
 }

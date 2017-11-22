@@ -60,7 +60,13 @@ cdef extern from "Python.h":
 cdef CData3DManager * man3d = <CData3DManager * >PyData3DManager.getSingletonPtr()
 
 cdef extern from *:
-    CFloat32Data3DMemory * dynamic_cast_mem "dynamic_cast<astra::CFloat32Data3DMemory*>" (CFloat32Data3D * ) except NULL
+    CFloat32Data3DMemory * dynamic_cast_mem "dynamic_cast<astra::CFloat32Data3DMemory*>" (CFloat32Data3D * )
+
+cdef CFloat32Data3DMemory * dynamic_cast_mem_safe(CFloat32Data3D *obj) except NULL:
+    cdef CFloat32Data3DMemory *ret = dynamic_cast_mem(obj)
+    if not ret:
+        raise RuntimeError("Not a memory 3D data object")
+    return ret
 
 cdef extern from "CFloat32CustomPython.h":
     cdef cppclass CFloat32CustomPython:
@@ -154,12 +160,12 @@ def create(datatype,geometry,data=None, link=False):
         raise RuntimeError("Couldn't initialize data object.")
 
     if not link:
-        fillDataObject(dynamic_cast_mem(pDataObject3D), data)
+        fillDataObject(dynamic_cast_mem_safe(pDataObject3D), data)
 
     return man3d.store(<CFloat32Data3D*>pDataObject3D)
 
 def get_geometry(i):
-    cdef CFloat32Data3DMemory * pDataObject = dynamic_cast_mem(getObject(i))
+    cdef CFloat32Data3DMemory * pDataObject = dynamic_cast_mem_safe(getObject(i))
     cdef CFloat32ProjectionData3DMemory * pDataObject2
     cdef CFloat32VolumeData3DMemory * pDataObject3
     if pDataObject.getType() == THREEPROJECTION:
@@ -173,7 +179,7 @@ def get_geometry(i):
     return geom
 
 def change_geometry(i, geom):
-    cdef CFloat32Data3DMemory * pDataObject = dynamic_cast_mem(getObject(i))
+    cdef CFloat32Data3DMemory * pDataObject = dynamic_cast_mem_safe(getObject(i))
     cdef CFloat32ProjectionData3DMemory * pDataObject2
     cdef CFloat32VolumeData3DMemory * pDataObject3
     if pDataObject.getType() == THREEPROJECTION:
@@ -248,7 +254,7 @@ cdef fillDataObjectScalar(CFloat32Data3DMemory * obj, float s):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cdef fillDataObjectArray(CFloat32Data3DMemory * obj, float [:,:,::1] data):
-    cdef float [:,:,::1] cView = <float[:data.shape[0],:data.shape[1],:data.shape[2]]> obj.getData3D()[0][0]
+    cdef float [:,:,::1] cView = <float[:data.shape[0],:data.shape[1],:data.shape[2]]> obj.getData()
     cView[:] = data
 
 cdef CFloat32Data3D * getObject(i) except NULL:
@@ -262,28 +268,28 @@ cdef CFloat32Data3D * getObject(i) except NULL:
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def get(i):
-    cdef CFloat32Data3DMemory * pDataObject = dynamic_cast_mem(getObject(i))
+    cdef CFloat32Data3DMemory * pDataObject = dynamic_cast_mem_safe(getObject(i))
     outArr = np.empty((pDataObject.getDepth(),pDataObject.getHeight(), pDataObject.getWidth()),dtype=np.float32,order='C')
     cdef float [:,:,::1] mView = outArr
-    cdef float [:,:,::1] cView = <float[:outArr.shape[0],:outArr.shape[1],:outArr.shape[2]]> pDataObject.getData3D()[0][0]
+    cdef float [:,:,::1] cView = <float[:outArr.shape[0],:outArr.shape[1],:outArr.shape[2]]> pDataObject.getData()
     mView[:] = cView
     return outArr
 
 def get_shared(i):
-    cdef CFloat32Data3DMemory * pDataObject = dynamic_cast_mem(getObject(i))
+    cdef CFloat32Data3DMemory * pDataObject = dynamic_cast_mem_safe(getObject(i))
     outArr = np.empty((pDataObject.getDepth(),pDataObject.getHeight(), pDataObject.getWidth()),dtype=np.float32,order='C')
     cdef np.npy_intp shape[3]
     shape[0] = <np.npy_intp> pDataObject.getDepth()
     shape[1] = <np.npy_intp> pDataObject.getHeight()
     shape[2] = <np.npy_intp> pDataObject.getWidth()
-    return np.PyArray_SimpleNewFromData(3,shape,np.NPY_FLOAT32,<void *>pDataObject.getData3D()[0][0])
+    return np.PyArray_SimpleNewFromData(3,shape,np.NPY_FLOAT32,<void *>pDataObject.getData())
 
 def get_single(i):
     raise NotImplementedError("Not yet implemented")
 
 def store(i,data):
     cdef CFloat32Data3D * pDataObject = getObject(i)
-    fillDataObject(dynamic_cast_mem(pDataObject), data)
+    fillDataObject(dynamic_cast_mem_safe(pDataObject), data)
 
 def dimensions(i):
     cdef CFloat32Data3D * pDataObject = getObject(i)

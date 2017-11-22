@@ -8,6 +8,15 @@ License: Open Source under GPLv3
 Contact: astra@uantwerpen.be
 Website: http://www.astra-toolbox.com/
 -----------------------------------------------------------------------
+1.8.3 (2017-11-06)
+  * fix geometry memory leak in 3D FP/BP
+  * fix FDK short scan weighting
+  * add preliminary support for building on macOS
+  * add experimental support for using externally managed GPU memory from python
+    (see samples/python/s021_pygpu.py)
+  * our Linux conda python packages now have variants depending on the
+    cudatoolkit version
+  * add basic post-install tests test_CUDA/test_noCUDA (see README)
 
 1.8 (2016-12-05)
   * the Windows binary release now requires CUDA 8.0

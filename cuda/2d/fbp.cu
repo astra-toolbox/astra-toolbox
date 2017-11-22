@@ -30,6 +30,7 @@ $Id$
 #include "fft.h"
 #include "par_bp.h"
 #include "fan_bp.h"
+#include "util.h"
 
 // For fan-beam preweighting
 #include "../3d/fdk.h"

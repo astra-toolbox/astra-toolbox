@@ -441,7 +441,6 @@ bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
 	return true;
 }
 
-
 bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
                           const CProjectionGeometry2D* pProjGeom,
                           astraCUDA::SParProjection*& pParProjs,
@@ -488,6 +487,47 @@ bool convertAstraGeometry_dims(const CVolumeGeometry2D* pVolGeom,
 
 
 
+}
+
+namespace astraCUDA {
+
+
+_AstraExport std::string getCudaDeviceString(int device)
+{
+	char buf[1024];
+	cudaError_t err;
+	if (device == -1) {
+		err = cudaGetDevice(&device);
+		if (err != cudaSuccess) {
+			return "Error getting current GPU index";
+		}
+	}
+
+	cudaDeviceProp prop;
+	err = cudaGetDeviceProperties(&prop, device);
+	if (err != cudaSuccess) {
+		snprintf(buf, 1024, "GPU #%d: Invalid device (%d): %s", device, err, cudaGetErrorString(err));
+		return buf;
+	}
+
+	long mem = prop.totalGlobalMem / (1024*1024);
+	snprintf(buf, 1024, "GPU #%d: %s, with %ldMB", device, prop.name, mem);
+	return buf;
+}
+
+_AstraExport bool setGPUIndex(int iGPUIndex)
+{
+        if (iGPUIndex != -1) {
+                cudaSetDevice(iGPUIndex);
+                cudaError_t err = cudaGetLastError();
+
+                // Ignore errors caused by calling cudaSetDevice multiple times
+                if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
+                        return false;
+        }
+
+        return true;
+}
 
 
 }

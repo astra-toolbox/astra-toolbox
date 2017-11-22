@@ -1,41 +1,41 @@
 package:
   name: astra-toolbox
-  version: '1.8'
+  version: '1.8.3'
 
 source:
   git_url: https://github.com/astra-toolbox/astra-toolbox.git
-  git_tag: v1.8
+  git_tag: v1.8.3
 
 build:
   number: 0
   script_env:
-    - CC # [not win]
-    - CUDA_ROOT # [not win]
+    - CC # [linux]
 
 test:
   imports:
     - astra
-
   requires:
     # To avoid large downloads just for testing after build phase
     - nomkl # [not win]
+    # import scipy.sparse.linalg fails with mkl-2017.0.4 on Windows
+    - mkl !=2017.0.4 # [win]
 
 requirements:
   build:
     - python
     - cython >=0.13
     - nomkl # [not win]
-    - numpy
+    - numpy {{ numpy }}
     - scipy
     - six
-    - libastra ==1.8
+    - libastra ==1.8.3
 
   run:
     - python
-    - numpy x.x
+    - {{ pin_compatible('numpy', max_pin='x.x') }}
     - scipy
     - six
-    - libastra ==1.8
+    - libastra ==1.8.3
 
 
 about:

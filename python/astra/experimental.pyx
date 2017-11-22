@@ -40,8 +40,8 @@ IF HAVE_CUDA==True:
             bool doBP(CProjector3D *, vector[CFloat32VolumeData3D *], vector[CFloat32ProjectionData3D *])
 
     cdef extern from *:
-        CFloat32VolumeData3D * dynamic_cast_vol_mem "dynamic_cast<astra::CFloat32VolumeData3D*>" (CFloat32Data3D * ) except NULL
-        CFloat32ProjectionData3D * dynamic_cast_proj_mem "dynamic_cast<astra::CFloat32ProjectionData3D*>" (CFloat32Data3D * ) except NULL
+        CFloat32VolumeData3D * dynamic_cast_vol_mem "dynamic_cast<astra::CFloat32VolumeData3D*>" (CFloat32Data3D * )
+        CFloat32ProjectionData3D * dynamic_cast_proj_mem "dynamic_cast<astra::CFloat32ProjectionData3D*>" (CFloat32Data3D * )
 
     cdef extern from "astra/Float32ProjectionData3D.h" namespace "astra":
         cdef cppclass CFloat32ProjectionData3D:

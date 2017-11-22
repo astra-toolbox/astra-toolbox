@@ -60,7 +60,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #define ASTRA_TOOLBOXVERSION_MAJOR 1
 #define ASTRA_TOOLBOXVERSION_MINOR 8
 #define ASTRA_TOOLBOXVERSION ((ASTRA_TOOLBOXVERSION_MAJOR)*100 + (ASTRA_TOOLBOXVERSION_MINOR))
-#define ASTRA_TOOLBOXVERSION_STRING "1.8"
+#define ASTRA_TOOLBOXVERSION_STRING "1.8.3"
 
 
 #define ASTRA_ASSERT(a) assert(a)
@@ -121,21 +121,6 @@ namespace astra {
 //}
 
 //----------------------------------------------------------------------------------------
-// errors
-namespace astra {
-
-typedef enum {ASTRA_SUCCESS, 
-			  ASTRA_ERROR_NOT_INITIALIZED,
-			  ASTRA_ERROR_INVALID_FILE,
-			  ASTRA_ERROR_OUT_OF_RANGE,
-			  ASTRA_ERROR_DIMENSION_MISMATCH,
-			  ASTRA_ERROR_EXTERNAL_LIBRARY,
-			  ASTRA_ERROR_ALLOCATION,
-			  ASTRA_ERROR_NOT_IMPLEMENTED} AstraError;
-}
-
-
-//----------------------------------------------------------------------------------------
 // variables
 namespace astra {
 	const float32 PI = 3.14159265358979323846264338328f;
@@ -145,51 +130,6 @@ namespace astra {
 	const float32 eps = 1e-6f;
 	
 	extern _AstraExport bool running_in_matlab;
-}
-
-//----------------------------------------------------------------------------------------
-// math
-namespace astra {
-
-	inline float32 cos_73s(float32 x) 
-	{ 
-		/*
-		const float32 c1 =  0.999999953464f;
-		const float32 c2 = -0.4999999053455f;
-		const float32 c3 =  0.0416635846769f;
-		const float32 c4 = -0.0013853704264f;
-		const float32 c5 =  0.000023233f;
-		*/
-		const float c1= (float)0.99940307;
-		const float c2= (float)-0.49558072;
-		const float c3= (float)0.03679168;
-
-		float32 x2;
-		x2 = x * x;
-		//return (c1 + x2*(c2 + x2*(c3 + x2*(c4 + c5*x2))));
-		return (c1 + x2*(c2 + c3 * x2));
-	}
-
-	inline float32 fast_cos(float32 x) 
-	{
-		int quad; 
-
-		//x = fmod(x, 2*PI);		// Get rid of values > 2* pi
-		if (x < 0) x = -x;		// cos(-x) = cos(x)
-		quad = int(x/PIdiv2);	// Get quadrant # (0 to 3) 
-		switch (quad) {
-			case 0: return  cos_73s(x);
-			case 1: return -cos_73s(PI-x);
-			case 2: return -cos_73s(x-PI);
-			case 3: return  cos_73s(2*PI-x);
-		}
-		return 0.0f;
-	}
-
-	inline float32 fast_sin(float32 x){
-		return fast_cos(PIdiv2-x);
-	}
-
 }
 
 //----------------------------------------------------------------------------------------
@@ -226,47 +166,6 @@ namespace astra {
 	};
 }
 
-//----------------------------------------------------------------------------------------
-// functions for testing
-template<typename T>
-inline void writeArray(T*** arr, int dim1, int dim2, int dim3, const std::string& filename)
-{
-	std::ofstream out(filename.c_str());
-	int i1, i2, i3;
-	for (i1 = 0; i1 < dim1; ++i1) {
-		for (i2 = 0; i2 < dim2; ++i2) {
-			for (i3 = 0; i3 < dim3; ++i3) {
-				out << arr[i1][i2][i3] << " ";
-			}
-			out << std::endl;
-		}
-		out << std::endl;
-	}
-	out.close();
-}
-
-template<typename T>
-inline void writeArray(T** arr, int dim1, int dim2, const std::string& filename)
-{
-	std::ofstream out(filename.c_str());
-	for (int i1 = 0; i1 < dim1; i1++) {
-		for (int i2 = 0; i2 < dim2; i2++) {
-			out << arr[i1][i2] << " ";
-		}
-		out << std::endl;
-	}
-	out.close();
-}
-
-template<typename T>
-inline void writeArray(T* arr, int dim1, const std::string& filename)
-{
-	std::ofstream out(filename.c_str());
-	for (int i1 = 0; i1 < dim1; i1++) {
-		out << arr[i1] << " ";
-	}
-	out.close();
-}
 namespace astra {
 _AstraExport inline int getVersion() { return ASTRA_TOOLBOXVERSION; }
 _AstraExport inline const char* getVersionString() { return ASTRA_TOOLBOXVERSION_STRING; }
@@ -280,7 +179,6 @@ _AstraExport inline bool cudaEnabled() { return false; }
 // portability between MSVC and Linux/gcc
 
 #ifndef _MSC_VER
-#include "swrap.h"
 #define EXPIMP_TEMPLATE
 
 #if !defined(FORCEINLINE) && (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1))

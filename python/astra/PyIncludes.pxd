@@ -156,6 +156,10 @@ cdef extern from "astra/ReconstructionAlgorithm2D.h" namespace "astra":
     cdef cppclass CReconstructionAlgorithm2D:
         bool getResidualNorm(float32&)
 
+cdef extern from "astra/ReconstructionAlgorithm3D.h" namespace "astra":
+    cdef cppclass CReconstructionAlgorithm3D:
+        bool getResidualNorm(float32&)
+
 cdef extern from "astra/Projector2D.h" namespace "astra":
     cdef cppclass CProjector2D:
         bool isInitialized()
@@ -211,7 +215,6 @@ cdef extern from "astra/Float32Data3DMemory.h" namespace "astra":
         CFloat32Data3DMemory()
         void updateStatistics()
         float32 *getData()
-        float32 ***getData3D()
         THREEEDataType getType()
 
 

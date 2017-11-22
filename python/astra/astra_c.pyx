@@ -40,11 +40,15 @@ cdef extern from "astra/Globals.h" namespace "astra":
     bool cudaEnabled()
 
 IF HAVE_CUDA==True:
-  cdef extern from "../cuda/2d/darthelper.h" namespace "astraCUDA":
+  cdef extern from "../cuda/2d/astra.h" namespace "astraCUDA":
       bool setGPUIndex(int)
+      string getCudaDeviceString(int)
 ELSE:
   def setGPUIndex():
     pass
+  def getCudaDeviceString(idx):
+    pass
+
 cdef extern from "astra/CompositeGeometryManager.h" namespace "astra":
     cdef cppclass SGPUParams:
         vector[int] GPUIndices
@@ -85,8 +89,12 @@ IF HAVE_CUDA==True:
         ret = setGPUIndex(params.GPUIndices[0])
         if not ret:
             six.print_("Failed to set GPU " + str(params.GPUIndices[0]))
+  def get_gpu_info(idx=-1):
+    return wrap_from_bytes(getCudaDeviceString(idx))
 ELSE:
   def set_gpu_index(idx, memory=0):
+    raise NotImplementedError("CUDA support is not enabled in ASTRA")
+  def get_gpu_info(idx=-1):
     raise NotImplementedError("CUDA support is not enabled in ASTRA")
 
 def delete(ids):

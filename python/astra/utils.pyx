@@ -171,6 +171,7 @@ def stringToPythonValue(inputIn):
     input = castString(inputIn)
     # matrix
     if ';' in input:
+        input = input.rstrip(';')
         row_strings = input.split(';')
         col_strings = row_strings[0].split(',')
         nRows = len(row_strings)
@@ -185,6 +186,7 @@ def stringToPythonValue(inputIn):
 
     # vector
     if ',' in input:
+        input = input.rstrip(',')
         items = input.split(',')
         out = np.empty(len(items))
         for idx,item in enumerate(items):

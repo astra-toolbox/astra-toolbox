@@ -28,7 +28,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _CUDA_ALGO_H
 #define _CUDA_ALGO_H
 
-#include "util.h"
+#include "astra/Globals.h"
+#include "dims.h"
 
 namespace astra {
 
