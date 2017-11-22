@@ -1202,8 +1202,9 @@ bool CCompositeGeometryManager::doFDK(CProjector3D *pProjector, CFloat32VolumeDa
                                      CFloat32ProjectionData3D *pProjData, bool bShortScan,
                                      const float *pfFilter, SJob::EMode eMode)
 {
-	if (!dynamic_cast<CConeProjectionGeometry3D*>(pProjData->getGeometry())) {
-		ASTRA_ERROR("CCompositeGeometryManager::doFDK: cone geometry required");
+	if (!dynamic_cast<CConeProjectionGeometry3D*>(pProjData->getGeometry()) &&
+	    !dynamic_cast<CConeVecProjectionGeometry3D*>(pProjData->getGeometry())) {
+		ASTRA_ERROR("CCompositeGeometryManager::doFDK: cone/cone_vec geometry required");
 		return false;
 	}
 
