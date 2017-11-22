@@ -1115,7 +1115,8 @@ CCompositeGeometryManager::CProjectionPart* CCompositeGeometryManager::CProjecti
 
 CCompositeGeometryManager::SJob CCompositeGeometryManager::createJobFP(CProjector3D *pProjector,
                                             CFloat32VolumeData3D *pVolData,
-                                            CFloat32ProjectionData3D *pProjData)
+                                            CFloat32ProjectionData3D *pProjData,
+                                            SJob::EMode eMode)
 {
 	ASTRA_DEBUG("CCompositeGeometryManager::createJobFP");
 	// Create single job for FP
@@ -1141,14 +1142,15 @@ CCompositeGeometryManager::SJob CCompositeGeometryManager::createJobFP(CProjecto
 	FP.pOutput = boost::shared_ptr<CPart>(output);
 	FP.pProjector = pProjector;
 	FP.eType = SJob::JOB_FP;
-	FP.eMode = SJob::MODE_SET;
+	FP.eMode = eMode;
 
 	return FP;
 }
 
 CCompositeGeometryManager::SJob CCompositeGeometryManager::createJobBP(CProjector3D *pProjector,
                                             CFloat32VolumeData3D *pVolData,
-                                            CFloat32ProjectionData3D *pProjData)
+                                            CFloat32ProjectionData3D *pProjData,
+                                            SJob::EMode eMode)
 {
 	ASTRA_DEBUG("CCompositeGeometryManager::createJobBP");
 	// Create single job for BP
@@ -1172,25 +1174,25 @@ CCompositeGeometryManager::SJob CCompositeGeometryManager::createJobBP(CProjecto
 	BP.pOutput = boost::shared_ptr<CPart>(output);
 	BP.pProjector = pProjector;
 	BP.eType = SJob::JOB_BP;
-	BP.eMode = SJob::MODE_SET;
+	BP.eMode = eMode;
 
 	return BP;
 }
 
 bool CCompositeGeometryManager::doFP(CProjector3D *pProjector, CFloat32VolumeData3D *pVolData,
-                                     CFloat32ProjectionData3D *pProjData)
+                                     CFloat32ProjectionData3D *pProjData, SJob::EMode eMode)
 {
 	TJobList L;
-	L.push_back(createJobFP(pProjector, pVolData, pProjData));
+	L.push_back(createJobFP(pProjector, pVolData, pProjData, eMode));
 
 	return doJobs(L);
 }
 
-bool CCompositeGeometryManager::doBP(CProjector3D *pProjector, CFloat32VolumeData3D *pVolData,
-                                     CFloat32ProjectionData3D *pProjData)
+		bool CCompositeGeometryManager::doBP(CProjector3D *pProjector, CFloat32VolumeData3D *pVolData,
+                                     CFloat32ProjectionData3D *pProjData, SJob::EMode eMode)
 {
 	TJobList L;
-	L.push_back(createJobBP(pProjector, pVolData, pProjData));
+	L.push_back(createJobBP(pProjector, pVolData, pProjData, eMode));
 
 	return doJobs(L);
 }
@@ -1198,14 +1200,15 @@ bool CCompositeGeometryManager::doBP(CProjector3D *pProjector, CFloat32VolumeDat
 
 bool CCompositeGeometryManager::doFDK(CProjector3D *pProjector, CFloat32VolumeData3D *pVolData,
                                      CFloat32ProjectionData3D *pProjData, bool bShortScan,
-                                     const float *pfFilter)
+                                     const float *pfFilter, SJob::EMode eMode)
 {
-	if (!dynamic_cast<CConeProjectionGeometry3D*>(pProjData->getGeometry())) {
-		ASTRA_ERROR("CCompositeGeometryManager::doFDK: cone geometry required");
+	if (!dynamic_cast<CConeProjectionGeometry3D*>(pProjData->getGeometry()) &&
+	    !dynamic_cast<CConeVecProjectionGeometry3D*>(pProjData->getGeometry())) {
+		ASTRA_ERROR("CCompositeGeometryManager::doFDK: cone/cone_vec geometry required");
 		return false;
 	}
 
-	SJob job = createJobBP(pProjector, pVolData, pProjData);
+	SJob job = createJobBP(pProjector, pVolData, pProjData, eMode);
 	job.eType = SJob::JOB_FDK;
 	job.FDKSettings.bShortScan = bShortScan;
 	job.FDKSettings.pfFilter = pfFilter;
@@ -1216,7 +1219,7 @@ bool CCompositeGeometryManager::doFDK(CProjector3D *pProjector, CFloat32VolumeDa
 	return doJobs(L);
 }
 
-bool CCompositeGeometryManager::doFP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3D *>& volData, const std::vector<CFloat32ProjectionData3D *>& projData)
+bool CCompositeGeometryManager::doFP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3D *>& volData, const std::vector<CFloat32ProjectionData3D *>& projData, SJob::EMode eMode)
 {
 	ASTRA_DEBUG("CCompositeGeometryManager::doFP, multi-volume");
 
@@ -1254,7 +1257,7 @@ bool CCompositeGeometryManager::doFP(CProjector3D *pProjector, const std::vector
 
 	for (i2 = outputs.begin(); i2 != outputs.end(); ++i2) {
 		SJob FP;
-		FP.eMode = SJob::MODE_SET;
+		FP.eMode = eMode;
 		for (j2 = inputs.begin(); j2 != inputs.end(); ++j2) {
 			FP.pInput = *j2;
 			FP.pOutput = *i2;
@@ -1262,7 +1265,7 @@ bool CCompositeGeometryManager::doFP(CProjector3D *pProjector, const std::vector
 			FP.eType = SJob::JOB_FP;
 			L.push_back(FP);
 
-			// Set first, add rest
+			// Always ADD rest
 			FP.eMode = SJob::MODE_ADD;
 		}
 	}
@@ -1270,7 +1273,7 @@ bool CCompositeGeometryManager::doFP(CProjector3D *pProjector, const std::vector
 	return doJobs(L);
 }
 
-bool CCompositeGeometryManager::doBP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3D *>& volData, const std::vector<CFloat32ProjectionData3D *>& projData)
+bool CCompositeGeometryManager::doBP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3D *>& volData, const std::vector<CFloat32ProjectionData3D *>& projData, SJob::EMode eMode)
 {
 	ASTRA_DEBUG("CCompositeGeometryManager::doBP, multi-volume");
 
@@ -1309,7 +1312,7 @@ bool CCompositeGeometryManager::doBP(CProjector3D *pProjector, const std::vector
 
 	for (i2 = outputs.begin(); i2 != outputs.end(); ++i2) {
 		SJob BP;
-		BP.eMode = SJob::MODE_SET;
+		BP.eMode = eMode;
 		for (j2 = inputs.begin(); j2 != inputs.end(); ++j2) {
 			BP.pInput = *j2;
 			BP.pOutput = *i2;
@@ -1317,7 +1320,7 @@ bool CCompositeGeometryManager::doBP(CProjector3D *pProjector, const std::vector
 			BP.eType = SJob::JOB_BP;
 			L.push_back(BP);
 
-			// Set first, add rest
+			// Always ADD rest
 			BP.eMode = SJob::MODE_ADD;
 		}
 	}

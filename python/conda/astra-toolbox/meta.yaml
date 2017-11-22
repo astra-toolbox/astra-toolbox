@@ -1,10 +1,10 @@
 package:
   name: astra-toolbox
-  version: '1.8.3'
+  version: '1.9.0dev'
 
 source:
   git_url: https://github.com/astra-toolbox/astra-toolbox.git
-  git_tag: v1.8.3
+  git_tag: master
 
 build:
   number: 0
@@ -28,14 +28,14 @@ requirements:
     - numpy {{ numpy }}
     - scipy
     - six
-    - libastra ==1.8.3
+    - libastra ==1.9.0dev
 
   run:
     - python
     - {{ pin_compatible('numpy', max_pin='x.x') }}
     - scipy
     - six
-    - libastra ==1.8.3
+    - libastra ==1.9.0dev
 
 
 about:

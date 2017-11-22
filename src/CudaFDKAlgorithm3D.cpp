@@ -31,6 +31,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/CudaProjector3D.h"
 #include "astra/ConeProjectionGeometry3D.h"
+#include "astra/ConeVecProjectionGeometry3D.h"
 #include "astra/CompositeGeometryManager.h"
 
 #include "astra/Logging.h"
@@ -82,7 +83,7 @@ bool CCudaFDKAlgorithm3D::_check()
 	ASTRA_CONFIG_CHECK(CReconstructionAlgorithm3D::_check(), "CUDA_FDK", "Error in ReconstructionAlgorithm3D initialization");
 
 	const CProjectionGeometry3D* projgeom = m_pSinogram->getGeometry();
-	ASTRA_CONFIG_CHECK(dynamic_cast<const CConeProjectionGeometry3D*>(projgeom), "CUDA_FDK", "Error setting FDK geometry");
+	ASTRA_CONFIG_CHECK(dynamic_cast<const CConeProjectionGeometry3D*>(projgeom) || dynamic_cast<const CConeVecProjectionGeometry3D*>(projgeom), "CUDA_FDK", "Error setting FDK geometry");
 
 
 	const CVolumeGeometry3D* volgeom = m_pReconstruction->getGeometry();
