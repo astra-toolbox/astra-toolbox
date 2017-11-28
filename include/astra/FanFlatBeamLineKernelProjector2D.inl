@@ -207,4 +207,8 @@ void CFanFlatBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, in
 		} // end loop detector
 	} // end loop angles
 
+	// Delete created vec geometry if required
+	if (dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pProjectionGeometry))
+		delete pVecProjectionGeometry;
+
 }

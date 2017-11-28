@@ -295,6 +295,7 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 		} // end loop detector
 	} // end loop angles
 
+	// Delete created vec geometry if required
 	if (dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry))
 		delete pVecProjectionGeometry;
 
