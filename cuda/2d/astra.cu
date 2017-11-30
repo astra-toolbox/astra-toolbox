@@ -343,7 +343,7 @@ bool AstraFBP::run()
 
 		astraCUDA3d::FDK_PreWeight(tmp, pData->fOriginSourceDistance,
 		              pData->fOriginDetectorDistance, 0.0f,
-		              pData->dims.fDetScale, 1.0f, 1.0f, // TODO: Are these correct?
+		              pData->dims.fDetScale, 1.0f, pData->fPixelSize, // TODO: Are these correct?
 		              pData->bShortScan, dims3d, pData->angles);
 	}
 
@@ -366,12 +366,17 @@ bool AstraFBP::run()
 
 	}
 
-	float fOutputScale = (M_PI / 2.0f) / (float)pData->dims.iProjAngles;
 
 	if (pData->bFanBeam) {
-		ok = FanBP_FBPWeighted(pData->D_volumeData, pData->volumePitch, pData->D_sinoData, pData->sinoPitch, pData->dims, pData->fanProjections, fOutputScale);
+		float fOutputScale = 1.0 / (pData->fPixelSize * pData->fPixelSize * pData->fPixelSize * pData->dims.fDetScale * pData->dims.fDetScale);
 
+		ok = FanBP_FBPWeighted(pData->D_volumeData, pData->volumePitch, pData->D_sinoData, pData->sinoPitch, pData->dims, pData->fanProjections, fOutputScale);
 	} else {
+		// scale by number of angles. For the fan-beam case, this is already
+		// handled by FDK_PreWeight
+		float fOutputScale = (M_PI / 2.0f) / (float)pData->dims.iProjAngles;
+		fOutputScale /= pData->dims.fDetScale * pData->dims.fDetScale;
+
 		ok = BP(pData->D_volumeData, pData->volumePitch, pData->D_sinoData, pData->sinoPitch, pData->dims, pData->angles, pData->TOffsets, fOutputScale);
 	}
 	if(!ok)

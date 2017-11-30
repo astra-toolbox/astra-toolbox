@@ -83,12 +83,13 @@ __global__ void devFDK_preweight(void* D_projData, unsigned int projPitch, unsig
 
 	float fV = (startDetectorV - 0.5f*dims.iProjV + 0.5f) * fDetVSize + fZShift;
 
-	// Four contributions to the weighting factors:
+	// Contributions to the weighting factors:
 	// fCentralRayLength / fRayLength   : the main FDK preweighting factor
 	// fSrcOrigin / (fDetUSize * fCentralRayLength)
 	//                                  : to adjust the filter to the det width
 	// || u v s || ^ 2                  : see cone_bp.cu, FDKWEIGHT
 	// pi / (2 * iProjAngles)           : scaling of the integral over angles
+	// fVoxSize ^ 2                     : ...
 
 	const float fW1 = fSrcOrigin * fDetUSize * fDetVSize;
 	const float fW2 = fCentralRayLength / (fDetUSize * fSrcOrigin);
