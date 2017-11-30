@@ -150,6 +150,8 @@ __global__ void devFDK_ParkerWeight(void* D_projData, unsigned int projPitch, un
 		fWeight = 0.0f;
 	}
 
+	fWeight *= 2; // adjust to effectively halved angular range
+
 	for (int detectorV = startDetectorV; detectorV < endDetectorV; ++detectorV)
 	{
 
