@@ -343,7 +343,7 @@ bool AstraFBP::run()
 
 		astraCUDA3d::FDK_PreWeight(tmp, pData->fOriginSourceDistance,
 		              pData->fOriginDetectorDistance, 0.0f,
-		              pData->dims.fDetScale, 1.0f, // TODO: Are these correct?
+		              pData->dims.fDetScale, 1.0f, 1.0f, // TODO: Are these correct?
 		              pData->bShortScan, dims3d, pData->angles);
 	}
 
