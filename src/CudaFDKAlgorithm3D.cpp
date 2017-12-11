@@ -220,12 +220,6 @@ void CCudaFDKAlgorithm3D::run(int _iNrIterations)
 	// check initialized
 	ASTRA_ASSERT(m_bIsInitialized);
 
-	const CProjectionGeometry3D* projgeom = m_pSinogram->getGeometry();
-	const CConeProjectionGeometry3D* conegeom = dynamic_cast<const CConeProjectionGeometry3D*>(projgeom);
-	// const CVolumeGeometry3D& volgeom = *m_pReconstruction->getGeometry();
-
-	ASTRA_ASSERT(conegeom);
-
 	CFloat32ProjectionData3D* pSinoMem = dynamic_cast<CFloat32ProjectionData3D*>(m_pSinogram);
 	ASTRA_ASSERT(pSinoMem);
 	CFloat32VolumeData3D* pReconMem = dynamic_cast<CFloat32VolumeData3D*>(m_pReconstruction);
