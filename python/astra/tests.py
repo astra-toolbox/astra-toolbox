@@ -95,3 +95,13 @@ def test_CUDA():
   ok3 = _basic_par3d_cuda()
   if not (ok1 and ok2 and ok3):
     raise RuntimeError("Test failed")
+
+def test():
+  """Perform a very basic functionality test"""
+
+  import astra
+  if astra.use_cuda():
+    test_CUDA()
+  else:
+    print("No GPU support available")
+    test_noCUDA()

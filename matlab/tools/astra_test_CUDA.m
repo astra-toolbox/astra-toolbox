@@ -1,6 +1,5 @@
 %--------------------------------------------------------------------------
-% Clears and frees memory of all objects (data, projectors, algorithms) 
-% currently in the astra-library.
+% Perform a basic test of ASTRA CUDA functionality.
 %--------------------------------------------------------------------------
 %--------------------------------------------------------------------------
 % This file is part of the ASTRA Toolbox

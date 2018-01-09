@@ -126,20 +126,17 @@ For python 2.7/3.5: Run build_python27.bat or build_python35.bat. Astra will be 
 ## Testing your installation
 
 To perform a (very) basic test of your ASTRA installation in Python, you can
-run the following Python commands. You can choose to skip the test of the GPU
-functionality for systems without a NVIDIA GPU.
+run the following Python command.
 
 ```
 import astra
-astra.test_noCUDA() # To skip GPU tests
-astra.test_CUDA()   # To also perform GPU tests
+astra.test()
 ```
 
-To test your ASTRA installation in Matlab, the equivalent commands are:
+To test your ASTRA installation in Matlab, the equivalent command is:
 
 ```
-astra_test_noCUDA   % To skip GPU tests
-astra_test_CUDA     % To also perform GPU tests
+astra_test
 ```
 
 ## References
