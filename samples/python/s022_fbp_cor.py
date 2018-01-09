@@ -32,11 +32,7 @@ vol_geom = astra.create_vol_geom(256, 256)
 proj_geom = astra.create_proj_geom('parallel', 1.0, 256, np.linspace(0,np.pi,180,False))
 
 # Projection geometry with shifted center of rotation
-# We create this by shifting the detector center V[:,2:4] by a multiple of the detector
-# orientation V[:,4:6].
-proj_geom_cor = astra.geom_2vec(proj_geom)
-V = proj_geom_cor['Vectors']
-V[:,2:4] = V[:,2:4] + cor_shift * V[:,4:6]
+proj_geom_cor = astra.geom_postalignment(proj_geom, cor_shift)
 
 # As before, create a sinogram from a phantom, using the shifted center of rotation
 import scipy.io

@@ -280,35 +280,29 @@ def geom_postalignment(proj_geom, factor):
     For 2D geometries, the argument factor is a single float specifying the
     distance to shift the detector (measured in detector pixels).
 
-    For 3D geometries, factor is a pair of floats specifying the horizontal
-    resp. vertical distances to shift the detector.
+    For 3D geometries, factor can be a pair of floats specifying the horizontal
+    resp. vertical distances to shift the detector. If only a single float
+    is specified, this is treated as a horizontal shift.
 
-    :param proj_geom: input projection geometry (vector-based only, use astra.geom_2vec to convert conventional projection geometries)
+    :param proj_geom: input projection geometry
     :type proj_geom: :class:`dict`
     :param factor: number of pixels to shift the detector
     :type factor: :class:`float`
     """
 
+    proj_geom = geom_2vec(proj_geom)
+
     if proj_geom['type'] == 'parallel_vec' or proj_geom['type'] == 'fanflat_vec':
-        for i in range(proj_geom['Vectors'].shape[0]):
-            proj_geom['Vectors'][i,2] = proj_geom['Vectors'][i,2] + factor * proj_geom['Vectors'][i,4];
-            proj_geom['Vectors'][i,3] = proj_geom['Vectors'][i,3] + factor * proj_geom['Vectors'][i,5];
+        V = proj_geom['Vectors']
+        V[:,2:4] = V[:,2:4] + factor * V[:,4:6]
 
     elif proj_geom['type'] == 'parallel3d_vec' or proj_geom['type'] == 'cone_vec':
-
-        if len(factor) == 1:
-            for i in range(proj_geom['Vectors'].shape[0]):
-                proj_geom['Vectors'][i,3] = proj_geom['Vectors'][i,3] + factor * proj_geom['Vectors'][i,6];
-                proj_geom['Vectors'][i,4] = proj_geom['Vectors'][i,4] + factor * proj_geom['Vectors'][i,7];
-                proj_geom['Vectors'][i,5] = proj_geom['Vectors'][i,5] + factor * proj_geom['Vectors'][i,8];
-
-        elif len(factor) > 1:
-            for i in range(proj_geom['Vectors'].shape[0]):
-                proj_geom['Vectors'][i,3] = proj_geom['Vectors'][i,3] + factor[0] * proj_geom['Vectors'][i,6] + factor[1] * proj_geom['Vectors'][i, 9];
-                proj_geom['Vectors'][i,4] = proj_geom['Vectors'][i,4] + factor[0] * proj_geom['Vectors'][i,7] + factor[1] * proj_geom['Vectors'][i,10];
-                proj_geom['Vectors'][i,5] = proj_geom['Vectors'][i,5] + factor[0] * proj_geom['Vectors'][i,8] + factor[1] * proj_geom['Vectors'][i,11];
+        V = proj_geom['Vectors']
+        V[:,3:6] = V[:,3:6] + factor[0] * V[:,6:9]
+        if len(factor) > 1:
+            V[:,3:6] = V[:,3:6] + factor[1] * V[:,9:12]
     else:
-        raise ValueError('No suitable geometry for postalignment: ' + proj_geom['type'])
+        raise RuntimeError('No suitable geometry for postalignment: ' + proj_geom['type'])
 
     return proj_geom
 

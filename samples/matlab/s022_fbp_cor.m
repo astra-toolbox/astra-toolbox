@@ -14,10 +14,7 @@ vol_geom = astra_create_vol_geom(256, 256);
 proj_geom = astra_create_proj_geom('parallel', 1.0, 256, linspace2(0,pi,180));
 
 % Projection geometry with shifted center of rotation
-% We create this by shifting the detector center V(:,3:4) by a multiple of the detector
-% orientation V(:,5:6).
-proj_geom_cor = astra_geom_2vec(proj_geom);
-proj_geom_cor.Vectors(:,3:4) = proj_geom_cor.Vectors(:,3:4) + cor_shift * proj_geom_cor.Vectors(:,5:6);
+proj_geom_cor = astra_geom_postalignment(proj_geom, cor_shift);
 
 % As before, create a sinogram from a phantom, using the shifted center of rotation
 P = phantom(256);
