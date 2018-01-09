@@ -274,11 +274,18 @@ def geom_2vec(proj_geom):
 
 
 def geom_postalignment(proj_geom, factor):
-    """Returns the size of a volume or sinogram, based on the projection or volume geometry.
+    """Apply a postalignment to a vector-based projection geometry.
+    Can be used to model the rotation axis offset.
+
+    For 2D geometries, the argument factor is a single float specifying the
+    distance to shift the detector (measured in detector pixels).
+
+    For 3D geometries, factor is a pair of floats specifying the horizontal
+    resp. vertical distances to shift the detector.
 
     :param proj_geom: input projection geometry (vector-based only, use astra.geom_2vec to convert conventional projection geometries)
     :type proj_geom: :class:`dict`
-    :param factor: Optional axis index to return
+    :param factor: number of pixels to shift the detector
     :type factor: :class:`float`
     """
 

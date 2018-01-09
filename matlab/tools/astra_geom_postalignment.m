@@ -5,9 +5,15 @@ function proj_geom = astra_geom_postalignment(proj_geom, factor)
 %
 % Apply a postalignment to a vector-based projection geometry.  Can be used to model the rotation axis offset.
 %
+% For 2D geometries, the argument factor is a single float specifying the
+% distance to shift the detector (measured in detector pixels).
+%
+% For 3D geometries, factor is a pair of floats specifying the horizontal
+% resp. vertical distances to shift the detector.
+%
 % proj_geom: input projection geometry (vector-based only, use astra_geom_2vec to convert conventional projection geometries)
-% dim (optional): which dimension
-% s: output
+% factor: number of pixels to shift the detector
+% proj_geom: output
 %--------------------------------------------------------------------------
 % This file is part of the ASTRA Toolbox
 %
