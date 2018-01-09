@@ -85,10 +85,10 @@ float32 compute_linear_kernel(const astra::CProjectionGeometry2D& projgeom, cons
 
 	if (fabs(cos(fAngle)) > fabs(sin(fAngle))) {
 		fDetStep = volgeom.getPixelLengthY() * fabs(cos(fAngle));
-		fWeight = volgeom.getPixelLengthX() * 1.0f / fabs(cos(fAngle));
+		fWeight = projgeom.getDetectorWidth() * volgeom.getPixelLengthX() * 1.0f / fabs(cos(fAngle));
 	} else {
 		fDetStep = volgeom.getPixelLengthX() * fabs(sin(fAngle));
-		fWeight = volgeom.getPixelLengthY() * 1.0f / fabs(sin(fAngle));
+		fWeight = projgeom.getDetectorWidth() * volgeom.getPixelLengthY() * 1.0f / fabs(sin(fAngle));
 	}
 
 //	printf("step: %f\n   weight: %f\n", fDetStep, fWeight);

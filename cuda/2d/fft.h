@@ -33,6 +33,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "fbp_filters.h"
 
+namespace astraCUDA {
+
 bool allocateComplexOnDevice(int _iProjectionCount,
                              int _iDetectorCount,
                              cufftComplex ** _ppDevComplex);
@@ -56,13 +58,15 @@ bool runCudaIFFT(int _iProjectionCount, const cufftComplex* _pDevSourceComplex,
 void applyFilter(int _iProjectionCount, int _iFreqBinCount,
                  cufftComplex * _pSinogram, cufftComplex * _pFilter);
 
-int calcFFTFourSize(int _iFFTRealSize);
+int calcFFTFourierSize(int _iFFTRealSize);
 
-void genFilter(E_FBPFILTER _eFilter, float _fD, int _iProjectionCount,
+void genFilter(astra::E_FBPFILTER _eFilter, float _fD, int _iProjectionCount,
                cufftComplex * _pFilter, int _iFFTRealDetectorCount,
                int _iFFTFourierDetectorCount, float _fParameter = -1.0f);
 
 void genIdenFilter(int _iProjectionCount, cufftComplex * _pFilter,
                    int _iFFTRealDetectorCount, int _iFFTFourierDetectorCount);
+
+}
 
 #endif /* FFT_H */

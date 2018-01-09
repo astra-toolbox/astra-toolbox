@@ -147,6 +147,13 @@ This method can be called in a number of ways:
 :type angles: :class:`numpy.ndarray`
 :returns: A parallel projection geometry.
 
+``create_proj_geom('parallel_vec', det_count, V)``:
+
+:param det_count: Number of detector pixels.
+:type det_count: :class:`int`
+:param V: Vector array.
+:type V: :class:`numpy.ndarray`
+:returns: A parallel-beam projection geometry.
 
 ``create_proj_geom('fanflat', det_width, det_count, angles, source_origin, origin_det)``:
 
@@ -234,6 +241,12 @@ This method can be called in a number of ways:
             raise Exception(
                 'not enough variables: astra_create_proj_geom(parallel, detector_spacing, det_count, angles)')
         return {'type': 'parallel', 'DetectorWidth': args[0], 'DetectorCount': args[1], 'ProjectionAngles': args[2]}
+    elif intype == 'parallel_vec':
+        if len(args) < 2:
+            raise Exception('not enough variables: astra_create_proj_geom(parallel_vec, det_count, V)')
+        if not args[1].shape[1] == 6:
+            raise Exception('V should be a Nx6 matrix, with N the number of projections')
+        return {'type':'parallel_vec', 'DetectorCount':args[0], 'Vectors':args[1]}
     elif intype == 'fanflat':
         if len(args) < 5:
             raise Exception('not enough variables: astra_create_proj_geom(fanflat, det_width, det_count, angles, source_origin, origin_det)')

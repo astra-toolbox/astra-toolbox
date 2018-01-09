@@ -27,6 +27,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/FanFlatProjectionGeometry2D.h"
 
+#include "astra/GeometryUtil2D.h"
+
 #include <cstring>
 #include <sstream>
 
@@ -213,7 +215,21 @@ Config* CFanFlatProjectionGeometry2D::getConfiguration() const
 	cfg->self.addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
 	return cfg;
 }
-//----------------------------------------------------------------------------------------
 
+//----------------------------------------------------------------------------------------
+CFanFlatVecProjectionGeometry2D* CFanFlatProjectionGeometry2D::toVectorGeometry()
+{
+	SFanProjection* vectors = genFanProjections(m_iProjectionAngleCount,
+	                                            m_iDetectorCount,
+	                                            m_fOriginSourceDistance,
+	                                            m_fOriginDetectorDistance,
+	                                            m_fDetectorWidth,
+	                                            m_pfProjectionAngles);
+
+	CFanFlatVecProjectionGeometry2D* vecGeom = new CFanFlatVecProjectionGeometry2D();
+	vecGeom->initialize(m_iProjectionAngleCount, m_iDetectorCount, vectors);
+	delete[] vectors;
+	return vecGeom;
+}
 
 } // namespace astra

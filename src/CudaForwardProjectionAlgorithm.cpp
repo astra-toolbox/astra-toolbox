@@ -220,56 +220,48 @@ void CCudaForwardProjectionAlgorithm::run(int)
 	// check initialized
 	assert(m_bIsInitialized);
 
-	CVolumeGeometry2D* pVolGeom = m_pVolume->getGeometry();
-	const CParallelProjectionGeometry2D* parProjGeom = dynamic_cast<CParallelProjectionGeometry2D*>(m_pSinogram->getGeometry());
-	const CFanFlatProjectionGeometry2D* fanProjGeom = dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pSinogram->getGeometry());
-	const CFanFlatVecProjectionGeometry2D* fanVecProjGeom = dynamic_cast<CFanFlatVecProjectionGeometry2D*>(m_pSinogram->getGeometry());
+	bool ok;
 
-	bool ok = false;
-	if (parProjGeom) {
+	const CVolumeGeometry2D* pVolGeom = m_pVolume->getGeometry();
+	const CProjectionGeometry2D* pProjGeom = m_pSinogram->getGeometry();
+	astraCUDA::SDimensions dims;
 
-		float *offsets, *angles, detSize, outputScale;
-		ok = convertAstraGeometry(pVolGeom, parProjGeom, offsets, angles, detSize, outputScale);
+	ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
 
-		ASTRA_ASSERT(ok); // FIXME
+	if (!ok)
+		return;
 
-		// FIXME: Output scaling
+	astraCUDA::SParProjection* pParProjs = 0;
+	astraCUDA::SFanProjection* pFanProjs = 0;
+	float fOutputScale = 1.0f;
+
+	ok = convertAstraGeometry(pVolGeom, pProjGeom, pParProjs, pFanProjs, fOutputScale);
+	if (!ok)
+		return;
+
+	if (pParProjs) {
+		assert(!pFanProjs);
 
 		ok = astraCudaFP(m_pVolume->getDataConst(), m_pSinogram->getData(),
 		                 pVolGeom->getGridColCount(), pVolGeom->getGridRowCount(),
-		                 parProjGeom->getProjectionAngleCount(),
-		                 parProjGeom->getDetectorCount(),
-		                 angles, offsets, detSize,
-		                 m_iDetectorSuperSampling, 1.0f * outputScale, m_iGPUIndex);
+		                 pProjGeom->getProjectionAngleCount(),
+		                 pProjGeom->getDetectorCount(),
+		                 pParProjs,
+		                 m_iDetectorSuperSampling, 1.0f * fOutputScale, m_iGPUIndex);
 
-		delete[] offsets;
-		delete[] angles;
+		delete[] pParProjs;
 
-	} else if (fanProjGeom || fanVecProjGeom) {
-
-		astraCUDA::SFanProjection* projs;
-		float outputScale;
-
-		if (fanProjGeom) {
-			ok = convertAstraGeometry(pVolGeom, fanProjGeom, projs, outputScale);
-		} else {
-			ok = convertAstraGeometry(pVolGeom, fanVecProjGeom, projs, outputScale);
-		}
-
-		ASTRA_ASSERT(ok);
+	} else {
+		assert(pFanProjs);
 
 		ok = astraCudaFanFP(m_pVolume->getDataConst(), m_pSinogram->getData(),
 		                    pVolGeom->getGridColCount(), pVolGeom->getGridRowCount(),
-		                    m_pSinogram->getGeometry()->getProjectionAngleCount(),
-		                    m_pSinogram->getGeometry()->getDetectorCount(),
-		                    projs,
-		                    m_iDetectorSuperSampling, outputScale, m_iGPUIndex);
+		                    pProjGeom->getProjectionAngleCount(),
+		                    pProjGeom->getDetectorCount(),
+		                    pFanProjs,
+		                    m_iDetectorSuperSampling, fOutputScale, m_iGPUIndex);
 
-		delete[] projs;
-
-	} else {
-
-		ASTRA_ASSERT(false);
+		delete[] pFanProjs;
 
 	}
 

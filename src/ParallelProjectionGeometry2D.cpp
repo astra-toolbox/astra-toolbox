@@ -27,6 +27,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/ParallelProjectionGeometry2D.h"
 
+#include "astra/GeometryUtil2D.h"
+
 #include <cstring>
 
 using namespace std;
@@ -47,15 +49,13 @@ CParallelProjectionGeometry2D::CParallelProjectionGeometry2D() :
 CParallelProjectionGeometry2D::CParallelProjectionGeometry2D(int _iProjectionAngleCount, 
 															 int _iDetectorCount, 
 															 float32 _fDetectorWidth, 
-															 const float32* _pfProjectionAngles,
-															 const float32* _pfExtraDetectorOffsets)
+															 const float32* _pfProjectionAngles)
 {
 	_clear();
 	initialize(_iProjectionAngleCount,
 				_iDetectorCount, 
 				_fDetectorWidth, 
-				_pfProjectionAngles,
-				_pfExtraDetectorOffsets);
+				_pfProjectionAngles);
 }
 
 //----------------------------------------------------------------------------------------
@@ -65,8 +65,7 @@ CParallelProjectionGeometry2D::CParallelProjectionGeometry2D(const CParallelProj
 	initialize(_projGeom.m_iProjectionAngleCount,
 				_projGeom.m_iDetectorCount, 
 				_projGeom.m_fDetectorWidth, 
-				_projGeom.m_pfProjectionAngles,
-				_projGeom.m_pfExtraDetectorOffset);
+				_projGeom.m_pfProjectionAngles);
 }
 
 //----------------------------------------------------------------------------------------
@@ -115,14 +114,12 @@ bool CParallelProjectionGeometry2D::initialize(const Config& _cfg)
 bool CParallelProjectionGeometry2D::initialize(int _iProjectionAngleCount, 
 											   int _iDetectorCount, 
 											   float32 _fDetectorWidth, 
-											   const float32* _pfProjectionAngles,
-											   const float32* _pfExtraDetectorOffsets)
+											   const float32* _pfProjectionAngles)
 {
 	_initialize(_iProjectionAngleCount, 
 			    _iDetectorCount, 
 			    _fDetectorWidth, 
-			    _pfProjectionAngles,
-				_pfExtraDetectorOffsets);
+			    _pfProjectionAngles);
 
 	// success
 	m_bInitialized = _check();
@@ -178,15 +175,10 @@ Config* CParallelProjectionGeometry2D::getConfiguration() const
 	cfg->self.addChildNode("DetectorCount", getDetectorCount());
 	cfg->self.addChildNode("DetectorWidth", getDetectorWidth());
 	cfg->self.addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
-	if(m_pfExtraDetectorOffset!=NULL){
-		XMLNode opt = cfg->self.addChildNode("Option");
-		opt.addAttribute("key","ExtraDetectorOffset");
-		opt.setContent(m_pfExtraDetectorOffset, m_iProjectionAngleCount);
-	}
 	return cfg;
 }
-//----------------------------------------------------------------------------------------
 
+//----------------------------------------------------------------------------------------
 CVector3D CParallelProjectionGeometry2D::getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex /* = 0 */)
 {
 	CVector3D vOutput;
@@ -198,6 +190,20 @@ CVector3D CParallelProjectionGeometry2D::getProjectionDirection(int _iProjection
 	vOutput.setZ(0.0f);
 
 	return vOutput;
+}
+
+//----------------------------------------------------------------------------------------
+CParallelVecProjectionGeometry2D* CParallelProjectionGeometry2D::toVectorGeometry()
+{
+	SParProjection* vectors = genParProjections(m_iProjectionAngleCount,
+	                                            m_iDetectorCount,
+	                                            m_fDetectorWidth,
+	                                            m_pfProjectionAngles, 0);
+	// TODO: ExtraOffsets?
+	CParallelVecProjectionGeometry2D* vecGeom = new CParallelVecProjectionGeometry2D();
+	vecGeom->initialize(m_iProjectionAngleCount, m_iDetectorCount, vectors);
+	delete[] vectors;
+	return vecGeom;
 }
 
 } // end namespace astra

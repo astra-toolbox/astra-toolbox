@@ -156,7 +156,7 @@ bool CCudaFDKAlgorithm3D::initialize(const Config& _cfg)
 		const CProjectionGeometry3D* projgeom = m_pSinogram->getGeometry();
 		const CProjectionGeometry2D* filtgeom = pFilterData->getGeometry();
 		int iPaddedDetCount = calcNextPowerOfTwo(2 * projgeom->getDetectorColCount());
-		int iHalfFFTSize = calcFFTFourSize(iPaddedDetCount);
+		int iHalfFFTSize = astraCUDA::calcFFTFourierSize(iPaddedDetCount);
 		if(filtgeom->getDetectorCount()!=iHalfFFTSize || filtgeom->getProjectionAngleCount()!=projgeom->getProjectionCount()){
 			ASTRA_ERROR("Filter size does not match required size (%i angles, %i detectors)",projgeom->getProjectionCount(),iHalfFFTSize);
 			return false;

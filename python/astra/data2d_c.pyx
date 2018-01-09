@@ -111,6 +111,8 @@ def create(datatype, geometry, data=None, link=False):
             ppGeometry = <CProjectionGeometry2D * >new CFanFlatProjectionGeometry2D()
         elif (tpe == 'fanflat_vec'):
             ppGeometry = <CProjectionGeometry2D * >new CFanFlatVecProjectionGeometry2D()
+        elif (tpe == 'parallel_vec'):
+            ppGeometry = <CProjectionGeometry2D * >new CParallelVecProjectionGeometry2D()
         else:
             ppGeometry = <CProjectionGeometry2D * >new CParallelProjectionGeometry2D()
         if not ppGeometry.initialize(cfg[0]):
@@ -225,6 +227,8 @@ def change_geometry(i, geom):
             ppGeometry = <CProjectionGeometry2D * >new CFanFlatProjectionGeometry2D()
         elif (tpe == 'fanflat_vec'):
             ppGeometry = <CProjectionGeometry2D * >new CFanFlatVecProjectionGeometry2D()
+        elif (tpe == 'parallel_vec'):
+            ppGeometry = <CProjectionGeometry2D * >new CParallelVecProjectionGeometry2D()
         else:
             ppGeometry = <CProjectionGeometry2D * >new CParallelProjectionGeometry2D()
         if not ppGeometry.initialize(cfg[0]):

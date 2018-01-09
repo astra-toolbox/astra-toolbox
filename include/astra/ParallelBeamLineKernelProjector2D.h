@@ -29,6 +29,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #define _INC_ASTRA_PARALLELBEAMLINEKERNELPROJECTOR
 
 #include "ParallelProjectionGeometry2D.h"
+#include "ParallelVecProjectionGeometry2D.h"
 #include "Float32Data2D.h"
 #include "Projector2D.h"
 
@@ -179,6 +180,7 @@ protected:
 	template <typename Policy>
 	void projectBlock_internal(int _iProjFrom, int _iProjTo,
 	                           int _iDetFrom, int _iDetTo, Policy& _policy);
+
 };
 
 inline std::string CParallelBeamLineKernelProjector2D::getType() 

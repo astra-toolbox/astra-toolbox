@@ -52,8 +52,8 @@ const unsigned int g_blockSlices = 16;
 
 const unsigned int g_MaxAngles = 2560;
 
-__constant__ float gC_angle_sin[g_MaxAngles];
-__constant__ float gC_angle_cos[g_MaxAngles];
+__constant__ float gC_angle_scaled_sin[g_MaxAngles];
+__constant__ float gC_angle_scaled_cos[g_MaxAngles];
 __constant__ float gC_angle_offset[g_MaxAngles];
 
 static bool bindProjDataTexture(float* data, unsigned int pitch, unsigned int width, unsigned int height, cudaTextureAddressMode mode = cudaAddressModeBorder)
@@ -72,7 +72,7 @@ static bool bindProjDataTexture(float* data, unsigned int pitch, unsigned int wi
 	return true;
 }
 
-__global__ void devBP(float* D_volData, unsigned int volPitch, unsigned int startAngle, bool offsets, const SDimensions dims, float fOutputScale)
+__global__ void devBP(float* D_volData, unsigned int volPitch, unsigned int startAngle, const SDimensions dims, float fOutputScale)
 {
 	const int relX = threadIdx.x;
 	const int relY = threadIdx.y;
@@ -86,47 +86,30 @@ __global__ void devBP(float* D_volData, unsigned int volPitch, unsigned int star
 	if (X >= dims.iVolWidth || Y >= dims.iVolHeight)
 		return;
 
-	const float fX = ( X - 0.5f*dims.iVolWidth + 0.5f ) / dims.fDetScale;
-	const float fY = ( Y - 0.5f*dims.iVolHeight + 0.5f ) / dims.fDetScale;
+	const float fX = ( X - 0.5f*dims.iVolWidth + 0.5f );
+	const float fY = ( Y - 0.5f*dims.iVolHeight + 0.5f );
 
 	float* volData = (float*)D_volData;
 
 	float fVal = 0.0f;
 	float fA = startAngle + 0.5f;
-	const float fT_base = 0.5f*dims.iProjDets - 0.5f + 0.5f;
 
-	if (offsets) {
+	for (int angle = startAngle; angle < endAngle; ++angle)
+	{
+		const float scaled_cos_theta = gC_angle_scaled_cos[angle];
+		const float scaled_sin_theta = gC_angle_scaled_sin[angle];
+		const float TOffset = gC_angle_offset[angle];
 
-		for (int angle = startAngle; angle < endAngle; ++angle)
-		{
-			const float cos_theta = gC_angle_cos[angle];
-			const float sin_theta = gC_angle_sin[angle];
-			const float TOffset = gC_angle_offset[angle];
-
-			const float fT = fT_base + fX * cos_theta - fY * sin_theta + TOffset;
-			fVal += tex2D(gT_projTexture, fT, fA);
-			fA += 1.0f;
-		}
-
-	} else {
-
-		for (int angle = startAngle; angle < endAngle; ++angle)
-		{
-			const float cos_theta = gC_angle_cos[angle];
-			const float sin_theta = gC_angle_sin[angle];
-
-			const float fT = fT_base + fX * cos_theta - fY * sin_theta;
-			fVal += tex2D(gT_projTexture, fT, fA);
-			fA += 1.0f;
-		}
-
+		const float fT = fX * scaled_cos_theta - fY * scaled_sin_theta + TOffset;
+		fVal += tex2D(gT_projTexture, fT, fA);
+		fA += 1.0f;
 	}
 
 	volData[Y*volPitch+X] += fVal * fOutputScale;
 }
 
 // supersampling version
-__global__ void devBP_SS(float* D_volData, unsigned int volPitch, unsigned int startAngle, bool offsets, const SDimensions dims, float fOutputScale)
+__global__ void devBP_SS(float* D_volData, unsigned int volPitch, unsigned int startAngle, const SDimensions dims, float fOutputScale)
 {
 	const int relX = threadIdx.x;
 	const int relY = threadIdx.y;
@@ -140,61 +123,35 @@ __global__ void devBP_SS(float* D_volData, unsigned int volPitch, unsigned int s
 	if (X >= dims.iVolWidth || Y >= dims.iVolHeight)
 		return;
 
-	const float fX = ( X - 0.5f*dims.iVolWidth + 0.5f - 0.5f + 0.5f/dims.iRaysPerPixelDim) / dims.fDetScale;
-	const float fY = ( Y - 0.5f*dims.iVolHeight + 0.5f - 0.5f + 0.5f/dims.iRaysPerPixelDim) / dims.fDetScale;
+	const float fX = ( X - 0.5f*dims.iVolWidth + 0.5f - 0.5f + 0.5f/dims.iRaysPerPixelDim);
+	const float fY = ( Y - 0.5f*dims.iVolHeight + 0.5f - 0.5f + 0.5f/dims.iRaysPerPixelDim);
 
-	const float fSubStep = 1.0f/(dims.iRaysPerPixelDim * dims.fDetScale);
+	const float fSubStep = 1.0f/(dims.iRaysPerPixelDim); // * dims.fDetScale);
 
 	float* volData = (float*)D_volData;
 
 	float fVal = 0.0f;
 	float fA = startAngle + 0.5f;
-	const float fT_base = 0.5f*dims.iProjDets - 0.5f + 0.5f;
 
 	fOutputScale /= (dims.iRaysPerPixelDim * dims.iRaysPerPixelDim);
 
-	if (offsets) {
+	for (int angle = startAngle; angle < endAngle; ++angle)
+	{
+		const float cos_theta = gC_angle_scaled_cos[angle];
+		const float sin_theta = gC_angle_scaled_sin[angle];
+		const float TOffset = gC_angle_offset[angle];
 
-		for (int angle = startAngle; angle < endAngle; ++angle)
-		{
-			const float cos_theta = gC_angle_cos[angle];
-			const float sin_theta = gC_angle_sin[angle];
-			const float TOffset = gC_angle_offset[angle];
+		float fT = fX * cos_theta - fY * sin_theta + TOffset;
 
-			float fT = fT_base + fX * cos_theta - fY * sin_theta + TOffset;
-
-			for (int iSubX = 0; iSubX < dims.iRaysPerPixelDim; ++iSubX) {
-				float fTy = fT;
-				fT += fSubStep * cos_theta;
-				for (int iSubY = 0; iSubY < dims.iRaysPerPixelDim; ++iSubY) {
-					fVal += tex2D(gT_projTexture, fTy, fA);
-					fTy -= fSubStep * sin_theta;
-				}
+		for (int iSubX = 0; iSubX < dims.iRaysPerPixelDim; ++iSubX) {
+			float fTy = fT;
+			fT += fSubStep * cos_theta;
+			for (int iSubY = 0; iSubY < dims.iRaysPerPixelDim; ++iSubY) {
+				fVal += tex2D(gT_projTexture, fTy, fA);
+				fTy -= fSubStep * sin_theta;
 			}
-			fA += 1.0f;
 		}
-
-	} else {
-
-		for (int angle = startAngle; angle < endAngle; ++angle)
-		{
-			const float cos_theta = gC_angle_cos[angle];
-			const float sin_theta = gC_angle_sin[angle];
-
-			float fT = fT_base + fX * cos_theta - fY * sin_theta;
-
-			for (int iSubX = 0; iSubX < dims.iRaysPerPixelDim; ++iSubX) {
-				float fTy = fT;
-				fT += fSubStep * cos_theta;
-				for (int iSubY = 0; iSubY < dims.iRaysPerPixelDim; ++iSubY) {
-					fVal += tex2D(gT_projTexture, fTy, fA);
-					fTy -= fSubStep * sin_theta;
-				}
-			}
-			fA += 1.0f;
-
-		}
-
+		fA += 1.0f;
 	}
 
 	volData[Y*volPitch+X] += fVal * fOutputScale;
@@ -211,12 +168,10 @@ __global__ void devBP_SART(float* D_volData, unsigned int volPitch, float offset
 	if (X >= dims.iVolWidth || Y >= dims.iVolHeight)
 		return;
 
-	const float fX = ( X - 0.5f*dims.iVolWidth + 0.5f ) / dims.fDetScale;
-	const float fY = ( Y - 0.5f*dims.iVolHeight + 0.5f ) / dims.fDetScale;
+	const float fX = ( X - 0.5f*dims.iVolWidth + 0.5f );
+	const float fY = ( Y - 0.5f*dims.iVolHeight + 0.5f );
 
-	const float fT_base = 0.5f*dims.iProjDets - 0.5f + 0.5f;
-
-	const float fT = fT_base + fX * angle_cos - fY * angle_sin + offset;
+	const float fT = fX * angle_cos - fY * angle_sin + offset;
 	const float fVal = tex2D(gT_projTexture, fT, 0.5f);
 
 	D_volData[Y*volPitch+X] += fVal * fOutputScale;
@@ -225,32 +180,35 @@ __global__ void devBP_SART(float* D_volData, unsigned int volPitch, float offset
 
 bool BP_internal(float* D_volumeData, unsigned int volumePitch,
         float* D_projData, unsigned int projPitch,
-        const SDimensions& dims, const float* angles, const float* TOffsets, float fOutputScale)
+        const SDimensions& dims, const SParProjection* angles,
+        float fOutputScale)
 {
-	// TODO: process angles block by block
 	assert(dims.iProjAngles <= g_MaxAngles);
 
-	float* angle_sin = new float[dims.iProjAngles];
-	float* angle_cos = new float[dims.iProjAngles];
+	float* angle_scaled_sin = new float[dims.iProjAngles];
+	float* angle_scaled_cos = new float[dims.iProjAngles];
+	float* angle_offset = new float[dims.iProjAngles];
 
 	bindProjDataTexture(D_projData, projPitch, dims.iProjDets, dims.iProjAngles);
 
 	for (unsigned int i = 0; i < dims.iProjAngles; ++i) {
-		angle_sin[i] = sinf(angles[i]);
-		angle_cos[i] = cosf(angles[i]);
+		double d = angles[i].fDetUX * angles[i].fRayY - angles[i].fDetUY * angles[i].fRayX;
+		angle_scaled_cos[i] = angles[i].fRayY / d;
+		angle_scaled_sin[i] = -angles[i].fRayX / d; // TODO: Check signs
+		angle_offset[i] = (angles[i].fDetSY * angles[i].fRayX - angles[i].fDetSX * angles[i].fRayY) / d;
 	}
-	cudaError_t e1 = cudaMemcpyToSymbol(gC_angle_sin, angle_sin, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice);
-	cudaError_t e2 = cudaMemcpyToSymbol(gC_angle_cos, angle_cos, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice);
+
+	cudaError_t e1 = cudaMemcpyToSymbol(gC_angle_scaled_sin, angle_scaled_sin, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice);
+	cudaError_t e2 = cudaMemcpyToSymbol(gC_angle_scaled_cos, angle_scaled_cos, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice);
+	cudaError_t e3 = cudaMemcpyToSymbol(gC_angle_offset, angle_offset, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice);
 	assert(e1 == cudaSuccess);
 	assert(e2 == cudaSuccess);
+	assert(e3 == cudaSuccess);
 
-	if (TOffsets) {
-		cudaError_t e3 = cudaMemcpyToSymbol(gC_angle_offset, TOffsets, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice);
-		assert(e3 == cudaSuccess);
-	}
 
-	delete[] angle_sin;
-	delete[] angle_cos;
+	delete[] angle_scaled_sin;
+	delete[] angle_scaled_cos;
+	delete[] angle_offset;
 
 	dim3 dimBlock(g_blockSlices, g_blockSliceSize);
 	dim3 dimGrid((dims.iVolWidth+g_blockSlices-1)/g_blockSlices,
@@ -262,9 +220,9 @@ bool BP_internal(float* D_volumeData, unsigned int volumePitch,
 	for (unsigned int i = 0; i < dims.iProjAngles; i += g_anglesPerBlock) {
 
 		if (dims.iRaysPerPixelDim > 1)
-			devBP_SS<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, (TOffsets != 0), dims, fOutputScale);
+			devBP_SS<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, dims, fOutputScale);
 		else
-			devBP<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, (TOffsets != 0), dims, fOutputScale);
+			devBP<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, dims, fOutputScale);
 	}
 	cudaThreadSynchronize();
 
@@ -277,7 +235,7 @@ bool BP_internal(float* D_volumeData, unsigned int volumePitch,
 
 bool BP(float* D_volumeData, unsigned int volumePitch,
         float* D_projData, unsigned int projPitch,
-        const SDimensions& dims, const float* angles, const float* TOffsets, float fOutputScale)
+        const SDimensions& dims, const SParProjection* angles, float fOutputScale)
 {
 	for (unsigned int iAngle = 0; iAngle < dims.iProjAngles; iAngle += g_MaxAngles) {
 		SDimensions subdims = dims;
@@ -289,9 +247,7 @@ bool BP(float* D_volumeData, unsigned int volumePitch,
 		bool ret;
 		ret = BP_internal(D_volumeData, volumePitch,
 		                  D_projData + iAngle * projPitch, projPitch,
-		                  subdims, angles + iAngle,
-		                  TOffsets ? TOffsets + iAngle : 0,
-		                  fOutputScale);
+		                  subdims, angles + iAngle, fOutputScale);
 		if (!ret)
 			return false;
 	}
@@ -302,25 +258,23 @@ bool BP(float* D_volumeData, unsigned int volumePitch,
 bool BP_SART(float* D_volumeData, unsigned int volumePitch,
              float* D_projData, unsigned int projPitch,
              unsigned int angle, const SDimensions& dims,
-             const float* angles, const float* TOffsets, float fOutputScale)
+             const SParProjection* angles, float fOutputScale)
 {
 	// Only one angle.
 	// We need to Clamp to the border pixels instead of to zero, because
 	// SART weights with ray length.
 	bindProjDataTexture(D_projData, projPitch, dims.iProjDets, 1, cudaAddressModeClamp);
 
-	float angle_sin = sinf(angles[angle]);
-	float angle_cos = cosf(angles[angle]);
-
-	float offset = 0.0f;
-	if (TOffsets)
-		offset = TOffsets[angle];
+	double d = angles[angle].fDetUX * angles[angle].fRayY - angles[angle].fDetUY * angles[angle].fRayX;
+	float angle_scaled_cos = angles[angle].fRayY / d;
+	float angle_scaled_sin = -angles[angle].fRayX / d; // TODO: Check signs
+	float angle_offset = (angles[angle].fDetSY * angles[angle].fRayX - angles[angle].fDetSX * angles[angle].fRayY) / d;
 
 	dim3 dimBlock(g_blockSlices, g_blockSliceSize);
 	dim3 dimGrid((dims.iVolWidth+g_blockSlices-1)/g_blockSlices,
 	             (dims.iVolHeight+g_blockSliceSize-1)/g_blockSliceSize);
 
-	devBP_SART<<<dimGrid, dimBlock>>>(D_volumeData, volumePitch, offset, angle_sin, angle_cos, dims, fOutputScale);
+	devBP_SART<<<dimGrid, dimBlock>>>(D_volumeData, volumePitch, angle_offset, angle_scaled_sin, angle_scaled_cos, dims, fOutputScale);
 	cudaThreadSynchronize();
 
 	cudaTextForceKernelsCompletion();

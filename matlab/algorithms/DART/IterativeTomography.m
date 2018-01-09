@@ -87,7 +87,7 @@ classdef IterativeTomography < matlab.mixin.Copyable
 		function ok = initialize(this)
 			% Initialize this object.  Returns 1 if succesful.
 			% >> tomography.initialize();
-			
+			disp('sdfqnlmkqdsfmlkjdfqsjklm');
 			% create projection geometry with super-resolution
 			if this.superresolution > 1
 				this.proj_geom_sr = astra_geom_superresolution(this.proj_geom, this.superresolution);

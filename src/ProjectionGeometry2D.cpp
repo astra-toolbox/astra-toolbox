@@ -44,11 +44,10 @@ CProjectionGeometry2D::CProjectionGeometry2D() : configCheckData(0)
 CProjectionGeometry2D::CProjectionGeometry2D(int _iAngleCount, 
 											 int _iDetectorCount, 
 											 float32 _fDetectorWidth, 
-											 const float32* _pfProjectionAngles,
-											 const float32* _pfExtraDetectorOffsets) : configCheckData(0)
+											 const float32* _pfProjectionAngles) : configCheckData(0)
 {
 	_clear();
-	_initialize(_iAngleCount, _iDetectorCount, _fDetectorWidth, _pfProjectionAngles,_pfExtraDetectorOffsets);
+	_initialize(_iAngleCount, _iDetectorCount, _fDetectorWidth, _pfProjectionAngles);
 }
 
 //----------------------------------------------------------------------------------------
@@ -69,7 +68,6 @@ void CProjectionGeometry2D::_clear()
 	m_iDetectorCount = 0;
 	m_fDetectorWidth = 0.0f;
 	m_pfProjectionAngles = NULL;
-	m_pfExtraDetectorOffset = NULL;
 	m_bInitialized = false;
 }
 
@@ -82,10 +80,8 @@ void CProjectionGeometry2D::clear()
 	m_fDetectorWidth = 0.0f;
 	if (m_bInitialized){
 		delete[] m_pfProjectionAngles;
-		delete[] m_pfExtraDetectorOffset;
 	}
 	m_pfProjectionAngles = NULL;
-	m_pfExtraDetectorOffset = NULL;
 	m_bInitialized = false;
 }
 
@@ -144,19 +140,6 @@ bool CProjectionGeometry2D::initialize(const Config& _cfg)
 	}
 	CC.markNodeParsed("ProjectionAngles");
 
-	vector<float32> offset = _cfg.self.getOptionNumericalArray("ExtraDetectorOffset");
-	m_pfExtraDetectorOffset = new float32[m_iProjectionAngleCount];
-	if (offset.size() == (size_t)m_iProjectionAngleCount) {
-		for (int i = 0; i < m_iProjectionAngleCount; i++) {
-			m_pfExtraDetectorOffset[i] = offset[i];
-		}
-	} else {
-		for (int i = 0; i < m_iProjectionAngleCount; i++) {
-			m_pfExtraDetectorOffset[i] = 0.0f;
-		}	
-	}
-	CC.markOptionParsed("ExtraDetectorOffset");
-
 	// some checks
 	ASTRA_CONFIG_CHECK(m_iDetectorCount > 0, "ProjectionGeometry2D", "DetectorCount should be positive.");
 	ASTRA_CONFIG_CHECK(m_fDetectorWidth > 0.0f, "ProjectionGeometry2D", "DetectorWidth should be positive.");
@@ -171,8 +154,7 @@ bool CProjectionGeometry2D::initialize(const Config& _cfg)
 bool CProjectionGeometry2D::_initialize(int _iProjectionAngleCount, 
 									    int _iDetectorCount, 
 									    float32 _fDetectorWidth, 
-									    const float32* _pfProjectionAngles,
-										const float32* _pfExtraDetectorOffsets)
+									    const float32* _pfProjectionAngles)
 {
 	if (m_bInitialized) {
 		clear();
@@ -183,10 +165,8 @@ bool CProjectionGeometry2D::_initialize(int _iProjectionAngleCount,
 	m_iDetectorCount = _iDetectorCount;
 	m_fDetectorWidth = _fDetectorWidth;
 	m_pfProjectionAngles = new float32[m_iProjectionAngleCount];
-	m_pfExtraDetectorOffset = new float32[m_iProjectionAngleCount];
 	for (int i = 0; i < m_iProjectionAngleCount; i++) {
 		m_pfProjectionAngles[i] = _pfProjectionAngles[i];		
-		m_pfExtraDetectorOffset[i] = _pfExtraDetectorOffsets ? _pfExtraDetectorOffsets[i]:0;
 	}
 
 	// Interface class, so don't set m_bInitialized to true

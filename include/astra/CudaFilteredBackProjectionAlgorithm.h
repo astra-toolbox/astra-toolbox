@@ -25,30 +25,26 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#ifndef CUDAFILTEREDBACKPROJECTIONALGORITHM2_H
-#define CUDAFILTEREDBACKPROJECTIONALGORITHM2_H
+#ifndef CUDAFILTEREDBACKPROJECTIONALGORITHM_H
+#define CUDAFILTEREDBACKPROJECTIONALGORITHM_H
 
 #ifdef ASTRA_CUDA
 
 #include <astra/Float32ProjectionData2D.h>
 #include <astra/Float32VolumeData2D.h>
-#include <astra/ReconstructionAlgorithm2D.h>
+#include <astra/CudaReconstructionAlgorithm2D.h>
 
 #include "../../cuda/2d/astra.h"
 
 namespace astra
 {
 
-class _AstraExport CCudaFilteredBackProjectionAlgorithm : public CReconstructionAlgorithm2D
+class _AstraExport CCudaFilteredBackProjectionAlgorithm : public CCudaReconstructionAlgorithm2D
 {
 public:
 	static std::string type;
 
 private:
-	CFloat32ProjectionData2D * m_pSinogram;
-	CFloat32VolumeData2D * m_pReconstruction;
-	int m_iGPUIndex;
-	int m_iPixelSuperSampling;
 	E_FBPFILTER m_eFilter;
 	float * m_pfFilter;
 	int m_iFilterWidth;	// number of elements per projection direction in filter
@@ -65,11 +61,6 @@ public:
 	virtual bool initialize(const Config& _cfg);
 	bool initialize(CFloat32ProjectionData2D * _pSinogram, CFloat32VolumeData2D * _pReconstruction, E_FBPFILTER _eFilter, const float * _pfFilter = NULL, int _iFilterWidth = 0, int _iGPUIndex = -1, float _fFilterParameter = -1.0f);
 
-	virtual void run(int _iNrIterations = 0);
-
-	static int calcIdealRealFilterWidth(int _iDetectorCount);
-	static int calcIdealFourierFilterWidth(int _iDetectorCount);
-	
 	/** Get a description of the class.
 	 *
 	 * @return description string
@@ -79,12 +70,7 @@ public:
 protected:
 	bool check();
 
-	AstraFBP* m_pFBP;
-
-	bool m_bAstraFBPInit;
-
-	void initializeFromProjector();
-	virtual bool requiresProjector() const { return false; }
+	virtual void initCUDAAlgorithm();
 };
 
 // inline functions

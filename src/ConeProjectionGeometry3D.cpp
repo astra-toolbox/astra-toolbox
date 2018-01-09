@@ -225,7 +225,7 @@ CVector3D CConeProjectionGeometry3D::getProjectionDirection(int _iProjectionInde
 
 	#undef ROTATE
 
-	CVector3D ret(fDetX - fSrcX, fDetY - fSrcY, fDetZ - fDetZ);
+	CVector3D ret(fDetX - fSrcX, fDetY - fSrcY, fDetZ - fSrcZ);
 	return ret;
 }
 

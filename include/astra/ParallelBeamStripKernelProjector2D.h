@@ -29,6 +29,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #define _INC_ASTRA_PARALLELBEAMSTROKEKERNELPROJECTOR
 
 #include "ParallelProjectionGeometry2D.h"
+#include "ParallelVecProjectionGeometry2D.h"
 #include "Float32Data2D.h"
 #include "Projector2D.h"
 

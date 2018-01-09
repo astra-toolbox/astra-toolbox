@@ -31,6 +31,17 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/Globals.h"
 #include "dims.h"
 
+namespace astra {
+
+class CParallelProjectionGeometry2D;
+class CParallelVecProjectionGeometry2D;
+class CFanFlatProjectionGeometry2D;
+class CFanFlatVecProjectionGeometry2D;
+class CVolumeGeometry2D;
+class CProjectionGeometry2D;
+
+}
+
 namespace astraCUDA {
 
 class _AstraExport ReconAlgo {
@@ -40,11 +51,10 @@ public:
 
 	bool setGPUIndex(int iGPUIndex);
 
-	bool setGeometry(const SDimensions& dims, const float* angles);
-	bool setFanGeometry(const SDimensions& dims, const SFanProjection* projs);
+	bool setGeometry(const astra::CVolumeGeometry2D* pVolGeom,
+	                 const astra::CProjectionGeometry2D* pProjGeom);
 
-	// setTOffsets should (optionally) be called after setGeometry
-	bool setTOffsets(const float* TOffsets);
+	bool setSuperSampling(int raysPerDet, int raysPerPixelDim);
 
 	void signalAbort() { shouldAbort = true; }
 
@@ -123,9 +133,9 @@ protected:
 
 
 	SDimensions dims;
-	float* angles;
-	float* TOffsets;
+	SParProjection* parProjs;
 	SFanProjection* fanProjs;
+	float fOutputScale;
 
 	volatile bool shouldAbort;
 

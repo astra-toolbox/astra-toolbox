@@ -74,7 +74,7 @@ BOOST_FIXTURE_TEST_CASE( testParallelBeamLineKernelProjector2D_Rectangle, TestPa
 	for (int i = 0; i < iCount; ++i)
 		fWeight += pPix[i].m_fWeight;
 
-	BOOST_CHECK_SMALL(fWeight - 7.13037f, 0.00001f);
+	BOOST_CHECK_SMALL(fWeight - 7.13037f, 0.00001f); // 6 / sin(1)
 
 	delete[] pPix;
 }

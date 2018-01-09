@@ -44,6 +44,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/SparseMatrixProjectionGeometry2D.h"
 #include "astra/FanFlatProjectionGeometry2D.h"
 #include "astra/FanFlatVecProjectionGeometry2D.h"
+#include "astra/ParallelVecProjectionGeometry2D.h"
 
 using namespace std;
 using namespace astra;
@@ -159,6 +160,8 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 			pGeometry = new CFanFlatProjectionGeometry2D();	
 		} else if (type == "fanflat_vec") {
 			pGeometry = new CFanFlatVecProjectionGeometry2D();	
+		} else if (type == "parallel_vec") {
+			pGeometry = new CParallelVecProjectionGeometry2D();	
 		} else {
 			pGeometry = new CParallelProjectionGeometry2D();	
 		}
@@ -448,6 +451,8 @@ void astra_mex_data2d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 			pGeometry = new CFanFlatProjectionGeometry2D();	
 		} else if (type == "fanflat_vec") {
 			pGeometry = new CFanFlatVecProjectionGeometry2D();	
+		} else if (type == "parallel_vec") {
+			pGeometry = new CParallelVecProjectionGeometry2D();	
 		} else {
 			pGeometry = new CParallelProjectionGeometry2D();	
 		}

@@ -154,6 +154,7 @@ BASE_OBJECTS=\
 	src/Float32VolumeData3DMemory.lo \
 	src/ForwardProjectionAlgorithm.lo \
 	src/Fourier.lo \
+	src/GeometryUtil2D.lo \
 	src/GeometryUtil3D.lo \
 	src/Globals.lo \
 	src/Logging.lo \
@@ -162,6 +163,7 @@ BASE_OBJECTS=\
 	src/ParallelBeamLineKernelProjector2D.lo \
 	src/ParallelBeamStripKernelProjector2D.lo \
 	src/ParallelProjectionGeometry2D.lo \
+	src/ParallelVecProjectionGeometry2D.lo \
 	src/ParallelProjectionGeometry3D.lo \
 	src/ParallelVecProjectionGeometry3D.lo \
 	src/PlatformDepSystemCode.lo \
@@ -213,6 +215,7 @@ CUDA_OBJECTS=\
 	cuda/2d/par_bp.lo \
 	cuda/2d/fan_fp.lo \
 	cuda/2d/fan_bp.lo \
+	cuda/2d/fbp.lo \
 	cuda/2d/sirt.lo \
 	cuda/2d/sart.lo \
 	cuda/2d/cgls.lo \

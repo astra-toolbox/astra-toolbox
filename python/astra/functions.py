@@ -172,7 +172,27 @@ def geom_2vec(proj_geom):
     :param proj_geom: Projection geometry to convert
     :type proj_geom: :class:`dict`
     """
-    if proj_geom['type'] == 'fanflat':
+
+    if proj_geom['type'] == 'parallel':
+        angles = proj_geom['ProjectionAngles']
+        vectors = np.zeros((len(angles), 6))
+        for i in range(len(angles)):
+
+            # source
+            vectors[i, 0] = np.sin(angles[i])
+            vectors[i, 1] = -np.cos(angles[i])
+
+            # center of detector
+            vectors[i, 2] = 0
+            vectors[i, 3] = 0
+
+            # vector from detector pixel 0 to 1
+            vectors[i, 4] = np.cos(angles[i]) * proj_geom['DetectorWidth']
+            vectors[i, 5] = np.sin(angles[i]) * proj_geom['DetectorWidth']
+        proj_geom_out = ac.create_proj_geom(
+        'parallel_vec', proj_geom['DetectorCount'], vectors)
+
+    elif proj_geom['type'] == 'fanflat':
         angles = proj_geom['ProjectionAngles']
         vectors = np.zeros((len(angles), 6))
         for i in range(len(angles)):
@@ -251,3 +271,37 @@ def geom_2vec(proj_geom):
         raise ValueError(
         'No suitable vector geometry found for type: ' + proj_geom['type'])
     return proj_geom_out
+
+
+def geom_postalignment(proj_geom, factor):
+    """Returns the size of a volume or sinogram, based on the projection or volume geometry.
+
+    :param proj_geom: input projection geometry (vector-based only, use astra.geom_2vec to convert conventional projection geometries)
+    :type proj_geom: :class:`dict`
+    :param factor: Optional axis index to return
+    :type factor: :class:`float`
+    """
+
+    if proj_geom['type'] == 'parallel_vec' or proj_geom['type'] == 'fanflat_vec':
+        for i in range(proj_geom['Vectors'].shape[0]):
+            proj_geom['Vectors'][i,2] = proj_geom['Vectors'][i,2] + factor * proj_geom['Vectors'][i,4];
+            proj_geom['Vectors'][i,3] = proj_geom['Vectors'][i,3] + factor * proj_geom['Vectors'][i,5];
+
+    elif proj_geom['type'] == 'parallel3d_vec' or proj_geom['type'] == 'cone_vec':
+
+        if len(factor) == 1:
+            for i in range(proj_geom['Vectors'].shape[0]):
+                proj_geom['Vectors'][i,3] = proj_geom['Vectors'][i,3] + factor * proj_geom['Vectors'][i,6];
+                proj_geom['Vectors'][i,4] = proj_geom['Vectors'][i,4] + factor * proj_geom['Vectors'][i,7];
+                proj_geom['Vectors'][i,5] = proj_geom['Vectors'][i,5] + factor * proj_geom['Vectors'][i,8];
+
+        elif len(factor) > 1:
+            for i in range(proj_geom['Vectors'].shape[0]):
+                proj_geom['Vectors'][i,3] = proj_geom['Vectors'][i,3] + factor[0] * proj_geom['Vectors'][i,6] + factor[1] * proj_geom['Vectors'][i, 9];
+                proj_geom['Vectors'][i,4] = proj_geom['Vectors'][i,4] + factor[0] * proj_geom['Vectors'][i,7] + factor[1] * proj_geom['Vectors'][i,10];
+                proj_geom['Vectors'][i,5] = proj_geom['Vectors'][i,5] + factor[0] * proj_geom['Vectors'][i,8] + factor[1] * proj_geom['Vectors'][i,11];
+    else:
+        raise ValueError('No suitable geometry for postalignment: ' + proj_geom['type'])
+
+    return proj_geom
+

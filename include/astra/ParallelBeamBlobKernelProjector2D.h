@@ -214,7 +214,12 @@ protected:
 	float32 m_fBlobSampleRate; //< At which interval are the inserted blob values evaluated?
 	int m_iBlobSampleCount; //< Number of evaluated blob samples
 	float32* m_pfBlobValues; //< Evaluated blob values
-	float32* m_pfBlobValuesNeg; //< Evaluated blob values
+
+	/** Internal policy-based projection of a range of angles and range.
+ 	 * (_i*From is inclusive, _i*To exclusive) */
+	template <typename Policy>
+	void projectBlock_internal(int _iProjFrom, int _iProjTo,
+	                           int _iDetFrom, int _iDetTo, Policy& _policy);
 
 };
 

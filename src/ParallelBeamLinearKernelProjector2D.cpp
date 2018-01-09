@@ -88,10 +88,10 @@ bool CParallelBeamLinearKernelProjector2D::_check()
 	// check base class
 	ASTRA_CONFIG_CHECK(CProjector2D::_check(), "ParallelBeamLinearKernelProjector2D", "Error in Projector2D initialization");
 
-	ASTRA_CONFIG_CHECK(dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry), "ParallelBeamLinearKernelProjector2D", "Unsupported projection geometry");
+	ASTRA_CONFIG_CHECK(dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry) || dynamic_cast<CParallelVecProjectionGeometry2D*>(m_pProjectionGeometry), "ParallelBeamLinearKernelProjector2D", "Unsupported projection geometry");
 
 	/// TODO: ADD PIXEL H/W LIMITATIONS
-	ASTRA_CONFIG_CHECK(m_pVolumeGeometry->getPixelLengthX() == m_pVolumeGeometry->getPixelLengthY(), "ParallelBeamLinearKernelProjector2D", "Pixel height must equal pixel width.");
+	ASTRA_CONFIG_CHECK(abs(m_pVolumeGeometry->getPixelLengthX() / m_pVolumeGeometry->getPixelLengthY()) - 1 < eps, "ParallelBeamLinearKernelProjector2D", "Pixel height must equal pixel width.");
 
 	// success
 	return true;

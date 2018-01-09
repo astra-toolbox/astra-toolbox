@@ -25,6 +25,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
+#define policy_weight(p,rayindex,volindex,weight) do { if (p.pixelPrior(volindex)) { p.addWeight(rayindex, volindex, weight); p.pixelPosterior(volindex); } } while (false)
 
 template <typename Policy>
 void CFanFlatBeamLineKernelProjector2D::project(Policy& p)
@@ -48,246 +49,166 @@ void CFanFlatBeamLineKernelProjector2D::projectSingleRay(int _iProjection, int _
 }
 
 //----------------------------------------------------------------------------------------
-// PROJECT BLOCK
+// PROJECT BLOCK - vector projection geometry
 template <typename Policy>
 void CFanFlatBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, int _iProjTo, int _iDetFrom, int _iDetTo, Policy& p)
 {
-	// variables
-	float32 sin_theta, cos_theta, inv_sin_theta, inv_cos_theta, S, T, t, I, P, x, x2;
-	float32 lengthPerRow, updatePerRow, inv_pixelLengthX, lengthPerCol, updatePerCol, inv_pixelLengthY;
-	int iVolumeIndex, iRayIndex, row, col, iAngle, iDetector, x1;
-	bool switch_t;
+	// get vector geometry
+	const CFanFlatVecProjectionGeometry2D* pVecProjectionGeometry;
+	if (dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pProjectionGeometry)) {
+		pVecProjectionGeometry = dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pProjectionGeometry)->toVectorGeometry();
+	} else {
+		pVecProjectionGeometry = dynamic_cast<CFanFlatVecProjectionGeometry2D*>(m_pProjectionGeometry);
+	}
 
-	const CFanFlatProjectionGeometry2D* pProjectionGeometry = dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pProjectionGeometry);
-	const CFanFlatVecProjectionGeometry2D* pVecProjectionGeometry = dynamic_cast<CFanFlatVecProjectionGeometry2D*>(m_pProjectionGeometry);
-
-	float32 old_theta, theta, alpha;
-	const SFanProjection * proj = 0;
+	// precomputations
+	const float32 pixelLengthX = m_pVolumeGeometry->getPixelLengthX();
+	const float32 pixelLengthY = m_pVolumeGeometry->getPixelLengthY();
+	const float32 inv_pixelLengthX = 1.0f / pixelLengthX;
+	const float32 inv_pixelLengthY = 1.0f / pixelLengthY;
+	const int colCount = m_pVolumeGeometry->getGridColCount();
+	const int rowCount = m_pVolumeGeometry->getGridRowCount();
+	const int detCount = pVecProjectionGeometry->getDetectorCount();
+	const float32 Ex = m_pVolumeGeometry->getWindowMinX() + pixelLengthX*0.5f;
+	const float32 Ey = m_pVolumeGeometry->getWindowMaxY() - pixelLengthY*0.5f;
 
 	// loop angles
-	for (iAngle = _iProjFrom; iAngle < _iProjTo; ++iAngle) {
+	for (int iAngle = _iProjFrom; iAngle < _iProjTo; ++iAngle) {
 
-		// get theta
-		if (pProjectionGeometry) {
-			old_theta = pProjectionGeometry->getProjectionAngle(iAngle);
-		}
-		else if (pVecProjectionGeometry) {
-			proj = &pVecProjectionGeometry->getProjectionVectors()[iAngle];
-			old_theta = atan2(-proj->fSrcX, proj->fSrcY);
-			if (old_theta < 0) old_theta += 2*PI;
-		} else {
-			assert(false);
-		}
+		// variables
+		float32 Dx, Dy, Rx, Ry, S, T, weight, c, r, deltac, deltar, offset, RxOverRy, RyOverRx;
+		float32 lengthPerRow, lengthPerCol, invTminSTimesLengthPerRow, invTminSTimesLengthPerCol;
+		int iVolumeIndex, iRayIndex, row, col, iDetector;
 
-		switch_t = false;
-		if (old_theta >= 7*PIdiv4) old_theta -= 2*PI;
-		if (old_theta >= 3*PIdiv4) {
-			old_theta -= PI;
-			switch_t = true;
-		}
+		const SFanProjection * proj = &pVecProjectionGeometry->getProjectionVectors()[iAngle];
+
+		float32 detSize = sqrt(proj->fDetUX * proj->fDetUX + proj->fDetUY * proj->fDetUY);
 
 		// loop detectors
 		for (iDetector = _iDetFrom; iDetector < _iDetTo; ++iDetector) {
 			
-			iRayIndex = iAngle * m_pProjectionGeometry->getDetectorCount() + iDetector;
+			iRayIndex = iAngle * detCount + iDetector;
 
 			// POLICY: RAY PRIOR
 			if (!p.rayPrior(iRayIndex)) continue;
+	
+			Dx = proj->fDetSX + (iDetector+0.5f) * proj->fDetUX;
+			Dy = proj->fDetSY + (iDetector+0.5f) * proj->fDetUY;
 
-			// get values
-			if (pProjectionGeometry) {
-				t = -pProjectionGeometry->indexToDetectorOffset(iDetector);
-				alpha = atan(t / pProjectionGeometry->getSourceDetectorDistance());
-				t = sin(alpha) * pProjectionGeometry->getOriginSourceDistance();
-			}
-			else if (pVecProjectionGeometry) {
-				float32 detX = proj->fDetSX + proj->fDetUX*(0.5f + iDetector);
-				float32 detY = proj->fDetSY + proj->fDetUY*(0.5f + iDetector);
-				alpha = angleBetweenVectors(-proj->fSrcX, -proj->fSrcY, detX - proj->fSrcX, detY - proj->fSrcY);
-				t = sin(alpha) * sqrt(proj->fSrcX*proj->fSrcX + proj->fSrcY*proj->fSrcY);
-			} else {
-				assert(false);
-			}
+			Rx = proj->fSrcX - Dx;
+			Ry = proj->fSrcY - Dy;
 
-			if (switch_t) t = -t;
-			theta = old_theta + alpha;
-
-			// precalculate sin, cos, 1/cos
-			sin_theta = sin(theta);
-			cos_theta = cos(theta);
-			inv_sin_theta = 1.0f / sin_theta; 
-			inv_cos_theta = 1.0f / cos_theta; 
-
-			// precalculate kernel limits
-			lengthPerRow = m_pVolumeGeometry->getPixelLengthY() * inv_cos_theta;
-			updatePerRow = sin_theta * inv_cos_theta;
-			inv_pixelLengthX = 1.0f / m_pVolumeGeometry->getPixelLengthX();
-
-			// precalculate kernel limits
-			lengthPerCol = m_pVolumeGeometry->getPixelLengthX() * inv_sin_theta;
-			updatePerCol = cos_theta * inv_sin_theta;
-			inv_pixelLengthY = 1.0f / m_pVolumeGeometry->getPixelLengthY();
-
-			// precalculate S and T
-			S = 0.5f - 0.5f * ((updatePerRow < 0) ? -updatePerRow : updatePerRow);
-			T = 0.5f - 0.5f * ((updatePerCol < 0) ? -updatePerCol : updatePerCol);
+			bool vertical = fabs(Rx) < fabs(Ry);
+			bool isin = false;
 
 			// vertically
-			if (old_theta <= PIdiv4) {
-			
-				// calculate x for row 0
-				P = (t - sin_theta * m_pVolumeGeometry->pixelRowToCenterY(0)) * inv_cos_theta;
-				x = (P - m_pVolumeGeometry->getWindowMinX()) * inv_pixelLengthX;
+			if (vertical) {
+				RxOverRy = Rx/Ry;
+				lengthPerRow = detSize * pixelLengthX * sqrt(Rx*Rx + Ry*Ry) / abs(Ry);
+				deltac = -pixelLengthY * RxOverRy * inv_pixelLengthX;
+				S = 0.5f - 0.5f*fabs(RxOverRy);
+				T = 0.5f + 0.5f*fabs(RxOverRy);
+				invTminSTimesLengthPerRow = lengthPerRow / (T - S);
+
+				// calculate c for row 0
+				c = (Dx + (Ey - Dy)*RxOverRy - Ex) * inv_pixelLengthX;
 
 				// for each row
-				for (row = 0; row < m_pVolumeGeometry->getGridRowCount(); ++row) {
-					
-					// get coords
-					x1 = int((x > 0.0f) ? x : x-1.0f);
-					x2 = x - x1; 
-					x += updatePerRow;
+				for (row = 0; row < rowCount; ++row, c += deltac) {
 
-					if (x1 < -1 || x1 > m_pVolumeGeometry->getGridColCount()) continue;
+					col = int(floor(c+0.5f));
+					if (col < -1 || col > colCount) { if (!isin) continue; else break; }
+					offset = c - float32(col);
 
 					// left
-					if (x2 < 0.5f-S) {
-						I = (0.5f - S + x2) / (1.0f - 2.0f*S) * lengthPerRow;
+					if (offset < -S) {
+						weight = (offset + T) * invTminSTimesLengthPerRow;
 
-						if (x1-1 >= 0 /*&& x1-1 < m_pVolumeGeometry->getGridColCount()*/) {//x1 is always less than or equal to gridColCount because of the "continue" in the beginning of the for-loop
-							iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row, x1-1);
-							// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-							if (p.pixelPrior(iVolumeIndex)) {
-								p.addWeight(iRayIndex, iVolumeIndex, lengthPerRow-I);
-								p.pixelPosterior(iVolumeIndex);
-							}
-						}
+						iVolumeIndex = row * colCount + col - 1;
+						if (col > 0) { policy_weight(p, iRayIndex, iVolumeIndex, lengthPerRow-weight); }
 
-						if (x1 >= 0 && x1 < m_pVolumeGeometry->getGridColCount()) {
-							iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row, x1);
-							// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-							if (p.pixelPrior(iVolumeIndex)) {
-								p.addWeight(iRayIndex, iVolumeIndex, I);
-								p.pixelPosterior(iVolumeIndex);
-							}
-						}
-					}
-
-					// center
-					else if (x2 <= 0.5f+S) {
-						if (x1 >= 0 && x1 < m_pVolumeGeometry->getGridColCount()) {
-							iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row, x1);
-							// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-							if (p.pixelPrior(iVolumeIndex)) {
-								p.addWeight(iRayIndex, iVolumeIndex, lengthPerRow);
-								p.pixelPosterior(iVolumeIndex);
-							}
-						}					
+						iVolumeIndex++;
+						if (col >= 0 && col < colCount) { policy_weight(p, iRayIndex, iVolumeIndex, weight); }
 					}
 
 					// right
-					else  if (x2 <= 1.0f) {
-						I = (1.5f - S - x2) / (1.0f - 2.0f*S) * lengthPerRow;
+					else if (S < offset) {
+						weight = (offset - S) * invTminSTimesLengthPerRow;
 
-						if (x1 >= 0 && x1 < m_pVolumeGeometry->getGridColCount()) {
-							iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row, x1);
-							// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-							if (p.pixelPrior(iVolumeIndex)) {
-								p.addWeight(iRayIndex, iVolumeIndex, I);
-								p.pixelPosterior(iVolumeIndex);
-							}
-						}
-						if (/*x1+1 >= 0 &&*/ x1+1 < m_pVolumeGeometry->getGridColCount()) {//x1 is always greater than or equal to -1 because of the "continue" in the beginning of the for-loop
-							iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(row, x1+1);
-							// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-							if (p.pixelPrior(iVolumeIndex)) {
-								p.addWeight(iRayIndex, iVolumeIndex, lengthPerRow-I);
-								p.pixelPosterior(iVolumeIndex);
-							}
-						}
+						iVolumeIndex = row * colCount + col;
+						if (col >= 0 && col < colCount) { policy_weight(p, iRayIndex, iVolumeIndex, lengthPerRow-weight); }
+
+						iVolumeIndex++;
+						if (col + 1 < colCount) { policy_weight(p, iRayIndex, iVolumeIndex, weight); } 
 					}
+
+					// centre
+					else if (col >= 0 && col < colCount) {
+						iVolumeIndex = row * colCount + col;
+						policy_weight(p, iRayIndex, iVolumeIndex, lengthPerRow);
+					}
+					isin = true;
 				}
 			}
 
 			// horizontally
-			//else if (PIdiv4 <= old_theta && old_theta <= 3*PIdiv4) {
 			else {
+				RyOverRx = Ry/Rx;
+				lengthPerCol = detSize * pixelLengthY * sqrt(Rx*Rx + Ry*Ry) / abs(Rx);
+				deltar = -pixelLengthX * RyOverRx * inv_pixelLengthY;
+				S = 0.5f - 0.5f*fabs(RyOverRx);
+				T = 0.5f + 0.5f*fabs(RyOverRx);
+				invTminSTimesLengthPerCol = lengthPerCol / (T - S);
 
-				// calculate point P
-				P = (t - cos_theta * m_pVolumeGeometry->pixelColToCenterX(0)) * inv_sin_theta;
-				x = (m_pVolumeGeometry->getWindowMaxY() - P) * inv_pixelLengthY;
+				// calculate r for col 0
+				r = -(Dy + (Ex - Dx)*RyOverRx - Ey) * inv_pixelLengthY;
 
 				// for each col
-				for (col = 0; col < m_pVolumeGeometry->getGridColCount(); ++col) {
-				
-					// get coords
-					x1 = int((x > 0.0f) ? x : x-1.0f);
-					x2 = x - x1; 
-					x += updatePerCol;
+				for (col = 0; col < colCount; ++col, r += deltar) {
 
-					if (x1 < -1 || x1 > m_pVolumeGeometry->getGridRowCount()) continue;
+					row = int(floor(r+0.5f));
+					if (row < -1 || row > rowCount) { if (!isin) continue; else break; }
+					offset = r - float32(row);
 
 					// up
-					if (x2 < 0.5f-T) {
-						I = (0.5f - T + x2) / (1.0f - 2.0f*T) * lengthPerCol;
+					if (offset < -S) {
+						weight = (offset + T) * invTminSTimesLengthPerCol;
 
-						if (x1-1 >= 0 /*&& x1-1 < m_pVolumeGeometry->getGridRowCount()*/) {//x1 is always less than or equal to gridRowCount because of the "continue" in the beginning of the for-loop
-							iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(x1-1, col);
-							// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-							if (p.pixelPrior(iVolumeIndex)) {
-								p.addWeight(iRayIndex, iVolumeIndex, lengthPerCol-I);
-								p.pixelPosterior(iVolumeIndex);
-							}
-						}
+						iVolumeIndex = (row-1) * colCount + col;
+						if (row > 0) { policy_weight(p, iRayIndex, iVolumeIndex, lengthPerCol-weight); }
 
-						if (x1 >= 0 && x1 < m_pVolumeGeometry->getGridRowCount()) {
-							iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(x1, col);
-							// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-							if (p.pixelPrior(iVolumeIndex)) {
-								p.addWeight(iRayIndex, iVolumeIndex, I);
-								p.pixelPosterior(iVolumeIndex);
-							}
-						}
-					}
-
-					// center
-					else if (x2 <= 0.5f+T) {
-						if (x1 >= 0 && x1 < m_pVolumeGeometry->getGridRowCount()) {
-							iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(x1, col);
-							// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-							if (p.pixelPrior(iVolumeIndex)) {
-								p.addWeight(iRayIndex, iVolumeIndex, lengthPerCol);
-								p.pixelPosterior(iVolumeIndex);
-							}
-						}					
+						iVolumeIndex += colCount;
+						if (row >= 0 && row < rowCount) { policy_weight(p, iRayIndex, iVolumeIndex, weight); }
 					}
 
 					// down
-					else  if (x2 <= 1.0f) {
-						I = (1.5f - T - x2) / (1.0f - 2.0f*T) * lengthPerCol;
+					else if (S < offset) {
+						weight = (offset - S) * invTminSTimesLengthPerCol;
 
-						if (x1 >= 0 && x1 < m_pVolumeGeometry->getGridRowCount()) {
-							iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(x1, col);
-							// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-							if (p.pixelPrior(iVolumeIndex)) {
-								p.addWeight(iRayIndex, iVolumeIndex, I);
-								p.pixelPosterior(iVolumeIndex);
-							}
-						}
-						if (/*x1+1 >= 0 &&*/ x1+1 < m_pVolumeGeometry->getGridRowCount()) {//x1 is always greater than or equal to -1 because of the "continue" in the beginning of the for-loop
-							iVolumeIndex = m_pVolumeGeometry->pixelRowColToIndex(x1+1, col);
-							// POLICY: PIXEL PRIOR + ADD + POSTERIOR
-							if (p.pixelPrior(iVolumeIndex)) {
-								p.addWeight(iRayIndex, iVolumeIndex, lengthPerCol-I);
-								p.pixelPosterior(iVolumeIndex);
-							}
-						}
+						iVolumeIndex = row * colCount + col;
+						if (row >= 0 && row < rowCount) { policy_weight(p, iRayIndex, iVolumeIndex, lengthPerCol-weight); }
+
+						iVolumeIndex += colCount;
+						if (row + 1 < rowCount) { policy_weight(p, iRayIndex, iVolumeIndex, weight); }
 					}
+
+					// centre
+					else if (row >= 0 && row < rowCount) {
+						iVolumeIndex = row * colCount + col;
+						policy_weight(p, iRayIndex, iVolumeIndex, lengthPerCol);
+					}
+					isin = true;
 				}
-			} // end loop col
+			}
 	
 			// POLICY: RAY POSTERIOR
 			p.rayPosterior(iRayIndex);
 	
 		} // end loop detector
 	} // end loop angles
+
+	// Delete created vec geometry if required
+	if (dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pProjectionGeometry))
+		delete pVecProjectionGeometry;
+
 }

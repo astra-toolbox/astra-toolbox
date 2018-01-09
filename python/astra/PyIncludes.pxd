@@ -128,6 +128,10 @@ cdef extern from "astra/FanFlatVecProjectionGeometry2D.h" namespace "astra":
     cdef cppclass CFanFlatVecProjectionGeometry2D:
         CFanFlatVecProjectionGeometry2D()
 
+cdef extern from "astra/ParallelVecProjectionGeometry2D.h" namespace "astra":
+    cdef cppclass CParallelVecProjectionGeometry2D:
+        CParallelVecProjectionGeometry2D()
+
 cdef extern from "astra/ParallelProjectionGeometry2D.h" namespace "astra":
     cdef cppclass CParallelProjectionGeometry2D:
         CParallelProjectionGeometry2D()

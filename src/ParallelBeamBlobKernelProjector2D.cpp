@@ -101,7 +101,7 @@ bool CParallelBeamBlobKernelProjector2D::_check()
 	// check base class
 	ASTRA_CONFIG_CHECK(CProjector2D::_check(), "ParallelBeamBlobKernelProjector2D", "Error in Projector2D initialization");
 
-	ASTRA_CONFIG_CHECK(dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry), "ParallelBeamBlobKernelProjector2D", "Unsupported projection geometry");
+	ASTRA_CONFIG_CHECK(dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry) || dynamic_cast<CParallelVecProjectionGeometry2D*>(m_pProjectionGeometry), "ParallelBeamBlobKernelProjector2D", "Unsupported projection geometry");
 
 	ASTRA_CONFIG_CHECK(m_iBlobSampleCount > 0, "ParallelBeamBlobKernelProjector2D", "m_iBlobSampleCount should be strictly positive.");
 	ASTRA_CONFIG_CHECK(m_pfBlobValues, "ParallelBeamBlobKernelProjector2D", "Invalid Volume Geometry Object.");
@@ -154,17 +154,6 @@ bool CParallelBeamBlobKernelProjector2D::initialize(const Config& _cfg)
 		for (int i = 0; i < m_iBlobSampleCount; i++) {
 			m_pfBlobValues[i] = values[i];
 		}
-
-		// Required: KernelValues
-		node2 = node.getSingleNode("KernelValuesNeg");
-		ASTRA_CONFIG_CHECK(node2, "BlobProjector", "No Kernel/KernelValuesNeg tag specified.");
-		vector<float32> values2 = node2.getContentNumericalArray();
-		ASTRA_CONFIG_CHECK(values2.size() == (unsigned int)m_iBlobSampleCount, "BlobProjector", "Number of specified values doesn't match SampleCount.");
-		m_pfBlobValuesNeg = new float32[m_iBlobSampleCount];
-		for (int i = 0; i < m_iBlobSampleCount; i++) {
-			m_pfBlobValuesNeg[i] = values2[i];
-		}
-
 	}
 
 	// success
@@ -227,44 +216,44 @@ void CParallelBeamBlobKernelProjector2D::computeSingleRayWeights(int _iProjectio
 // Splat a single point
 std::vector<SDetector2D> CParallelBeamBlobKernelProjector2D::projectPoint(int _iRow, int _iCol)
 {
-	float32 x = m_pVolumeGeometry->pixelColToCenterX(_iCol);
-	float32 y = m_pVolumeGeometry->pixelRowToCenterY(_iRow);
+	// float32 x = m_pVolumeGeometry->pixelColToCenterX(_iCol);
+	// float32 y = m_pVolumeGeometry->pixelRowToCenterY(_iRow);
 
-	std::vector<SDetector2D> res;
-	// loop projectors and detectors
-	for (int iProjection = 0; iProjection < m_pProjectionGeometry->getProjectionAngleCount(); ++iProjection) {
+	// std::vector<SDetector2D> res;
+	// // loop projectors and detectors
+	// for (int iProjection = 0; iProjection < m_pProjectionGeometry->getProjectionAngleCount(); ++iProjection) {
 
-		// get projection angle
-		float32 theta = m_pProjectionGeometry->getProjectionAngle(iProjection);
-		if (theta >= 7*PIdiv4) theta -= 2*PI;
-		bool inverse = false;
-		if (theta >= 3*PIdiv4) {
-			theta -= PI;
-			inverse = true;
-		}
+	// 	// get projection angle
+	// 	float32 theta = m_pProjectionGeometry->getProjectionAngle(iProjection);
+	// 	if (theta >= 7*PIdiv4) theta -= 2*PI;
+	// 	bool inverse = false;
+	// 	if (theta >= 3*PIdiv4) {
+	// 		theta -= PI;
+	// 		inverse = true;
+	// 	}
 
-		// calculate distance from the center of the voxel to the ray though the origin
-		float32 t = x * cos(theta) + y * sin(theta);
-		if (inverse) t *= -1.0f;
+	// 	// calculate distance from the center of the voxel to the ray though the origin
+	// 	float32 t = x * cos(theta) + y * sin(theta);
+	// 	if (inverse) t *= -1.0f;
 
-		// calculate the offset on the detectorarray (in indices)
-		float32 d = m_pProjectionGeometry->detectorOffsetToIndexFloat(t);
-		int dmin = (int)ceil(d - m_fBlobSize);
-		int dmax = (int)floor(d + m_fBlobSize);
+	// 	// calculate the offset on the detectorarray (in indices)
+	// 	float32 d = m_pProjectionGeometry->detectorOffsetToIndexFloat(t);
+	// 	int dmin = (int)ceil(d - m_fBlobSize);
+	// 	int dmax = (int)floor(d + m_fBlobSize);
 
-		// add affected detectors to the list
-		for (int i = dmin; i <= dmax; ++i) {
-			if (d >= 0 && d < m_pProjectionGeometry->getDetectorCount()) {
-				SDetector2D det;
-				det.m_iAngleIndex = iProjection;
-				det.m_iDetectorIndex = i;
-				det.m_iIndex = iProjection * getProjectionGeometry()->getDetectorCount() + i;
-				res.push_back(det);
-			}
-		}
-	}
+	// 	// add affected detectors to the list
+	// 	for (int i = dmin; i <= dmax; ++i) {
+	// 		if (d >= 0 && d < m_pProjectionGeometry->getDetectorCount()) {
+	// 			SDetector2D det;
+	// 			det.m_iAngleIndex = iProjection;
+	// 			det.m_iDetectorIndex = i;
+	// 			det.m_iIndex = iProjection * getProjectionGeometry()->getDetectorCount() + i;
+	// 			res.push_back(det);
+	// 		}
+	// 	}
+	// }
 
-	// return result vector
-	return res;
-
+	// // return result vector
+	// return res;
+	return std::vector<SDetector2D>();
 }

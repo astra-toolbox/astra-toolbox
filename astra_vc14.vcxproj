@@ -524,6 +524,7 @@
     <ClCompile Include="src\Float32VolumeData3DMemory.cpp" />
     <ClCompile Include="src\ForwardProjectionAlgorithm.cpp" />
     <ClCompile Include="src\Fourier.cpp" />
+    <ClCompile Include="src\GeometryUtil2D.cpp" />
     <ClCompile Include="src\GeometryUtil3D.cpp" />
     <ClCompile Include="src\Globals.cpp" />
     <ClCompile Include="src\Logging.cpp" />
@@ -533,6 +534,7 @@
     <ClCompile Include="src\ParallelBeamStripKernelProjector2D.cpp" />
     <ClCompile Include="src\ParallelProjectionGeometry2D.cpp" />
     <ClCompile Include="src\ParallelProjectionGeometry3D.cpp" />
+    <ClCompile Include="src\ParallelVecProjectionGeometry2D.cpp" />
     <ClCompile Include="src\ParallelVecProjectionGeometry3D.cpp" />
     <ClCompile Include="src\PlatformDepSystemCode.cpp" />
     <ClCompile Include="src\PluginAlgorithm.cpp" />
@@ -563,6 +565,7 @@
     <ClInclude Include="cuda\2d\em.h" />
     <ClInclude Include="cuda\2d\fan_bp.h" />
     <ClInclude Include="cuda\2d\fan_fp.h" />
+    <ClInclude Include="cuda\2d\fbp.h" />
     <ClInclude Include="cuda\2d\fbp_filters.h" />
     <ClInclude Include="cuda\2d\fft.h" />
     <ClInclude Include="cuda\2d\par_bp.h" />
@@ -649,6 +652,7 @@
     <ClInclude Include="include\astra\ParallelBeamStripKernelProjector2D.h" />
     <ClInclude Include="include\astra\ParallelProjectionGeometry2D.h" />
     <ClInclude Include="include\astra\ParallelProjectionGeometry3D.h" />
+    <ClInclude Include="include\astra\ParallelVecProjectionGeometry2D.h" />
     <ClInclude Include="include\astra\ParallelVecProjectionGeometry3D.h" />
     <ClInclude Include="include\astra\PlatformDepSystemCode.h" />
     <ClInclude Include="include\astra\PluginAlgorithm.h" />
@@ -718,6 +722,12 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </CudaCompile>
     <CudaCompile Include="cuda\2d\fan_fp.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </CudaCompile>
+    <CudaCompile Include="cuda\2d\fbp.cu">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>

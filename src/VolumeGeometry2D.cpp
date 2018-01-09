@@ -41,16 +41,16 @@ bool CVolumeGeometry2D::_check()
 	ASTRA_CONFIG_CHECK(m_fWindowMinX < m_fWindowMaxX, "VolumeGeometry2D", "WindowMinX should be lower than WindowMaxX.");
 	ASTRA_CONFIG_CHECK(m_fWindowMinY < m_fWindowMaxY, "VolumeGeometry2D", "WindowMinY should be lower than WindowMaxY.");
 
-	ASTRA_CONFIG_CHECK(m_iGridTotCount == (m_iGridColCount * m_iGridRowCount), "VolumeGeometry2D", "Internal configuration error.");
-	ASTRA_CONFIG_CHECK(m_fWindowLengthX == (m_fWindowMaxX - m_fWindowMinX), "VolumeGeometry2D", "Internal configuration error.");
-	ASTRA_CONFIG_CHECK(m_fWindowLengthY == (m_fWindowMaxY - m_fWindowMinY), "VolumeGeometry2D", "Internal configuration error.");
-	ASTRA_CONFIG_CHECK(m_fWindowArea == (m_fWindowLengthX * m_fWindowLengthY), "VolumeGeometry2D", "Internal configuration error.");
-	ASTRA_CONFIG_CHECK(m_fPixelLengthX == (m_fWindowLengthX / (float32)m_iGridColCount), "VolumeGeometry2D", "Internal configuration error.");
-	ASTRA_CONFIG_CHECK(m_fPixelLengthY == (m_fWindowLengthY / (float32)m_iGridRowCount), "VolumeGeometry2D", "Internal configuration error.");
+	ASTRA_CONFIG_CHECK(fabsf(m_iGridTotCount - (m_iGridColCount * m_iGridRowCount)) < eps, "VolumeGeometry2D", "Internal configuration error (m_iGridTotCount).");
+	ASTRA_CONFIG_CHECK(fabsf(m_fWindowLengthX - (m_fWindowMaxX - m_fWindowMinX)) < eps, "VolumeGeometry2D", "Internal configuration error (m_fWindowLengthX).");
+	ASTRA_CONFIG_CHECK(fabsf(m_fWindowLengthY - (m_fWindowMaxY - m_fWindowMinY)) < eps, "VolumeGeometry2D", "Internal configuration error (m_fWindowLengthY).");
+	ASTRA_CONFIG_CHECK(fabsf(m_fWindowArea - (m_fWindowLengthX * m_fWindowLengthY)) < eps, "VolumeGeometry2D", "Internal configuration error (m_fWindowArea).");
+	ASTRA_CONFIG_CHECK(fabsf(m_fPixelLengthX - (m_fWindowLengthX / (float32)m_iGridColCount)) < eps, "VolumeGeometry2D", "Internal configuration error (m_fPixelLengthX).");
+	ASTRA_CONFIG_CHECK(fabsf(m_fPixelLengthY - (m_fWindowLengthY / (float32)m_iGridRowCount)) < eps, "VolumeGeometry2D", "Internal configuration error (m_fPixelLengthY).");
 
-	ASTRA_CONFIG_CHECK(m_fPixelArea == (m_fPixelLengthX * m_fPixelLengthY), "VolumeGeometry2D", "Internal configuration error.");
-	ASTRA_CONFIG_CHECK(fabsf(m_fDivPixelLengthX * m_fPixelLengthX - 1.0f) < eps, "VolumeGeometry2D", "Internal configuration error.");
-	ASTRA_CONFIG_CHECK(fabsf(m_fDivPixelLengthY * m_fPixelLengthY - 1.0f) < eps, "VolumeGeometry2D", "Internal configuration error.");
+	ASTRA_CONFIG_CHECK(fabsf(m_fPixelArea - (m_fPixelLengthX * m_fPixelLengthY)) < eps, "VolumeGeometry2D", "Internal configuration error (m_fPixelArea).");
+	ASTRA_CONFIG_CHECK(fabsf(m_fDivPixelLengthX * m_fPixelLengthX - 1.0f) < eps, "VolumeGeometry2D", "Internal configuration error (m_fDivPixelLengthX).");
+	ASTRA_CONFIG_CHECK(fabsf(m_fDivPixelLengthY * m_fPixelLengthY - 1.0f) < eps, "VolumeGeometry2D", "Internal configuration error (m_fDivPixelLengthY).");
 
 	return true;
 }

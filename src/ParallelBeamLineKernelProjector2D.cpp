@@ -87,9 +87,9 @@ bool CParallelBeamLineKernelProjector2D::_check()
 	// check base class
 	ASTRA_CONFIG_CHECK(CProjector2D::_check(), "ParallelBeamLineKernelProjector2D", "Error in Projector2D initialization");
 
-	ASTRA_CONFIG_CHECK(dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry), "ParallelBeamLineKernelProjector2D", "Unsupported projection geometry");
+	ASTRA_CONFIG_CHECK(dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry) || dynamic_cast<CParallelVecProjectionGeometry2D*>(m_pProjectionGeometry), "ParallelBeamLineKernelProjector2D", "Unsupported projection geometry");
 
-	ASTRA_CONFIG_CHECK(m_pVolumeGeometry->getPixelLengthX() == m_pVolumeGeometry->getPixelLengthY(), "ParallelBeamLineKernelProjector2D", "Pixel height must equal pixel width.");
+	ASTRA_CONFIG_CHECK(abs(m_pVolumeGeometry->getPixelLengthX() / m_pVolumeGeometry->getPixelLengthY()) - 1 < eps, "ParallelBeamLineKernelProjector2D", "Pixel height must equal pixel width.");
 
 	// success
 	return true;
@@ -161,61 +161,63 @@ void CParallelBeamLineKernelProjector2D::computeSingleRayWeights(int _iProjectio
 // Project Point
 std::vector<SDetector2D> CParallelBeamLineKernelProjector2D::projectPoint(int _iRow, int _iCol)
 {
-	float32 xUL = m_pVolumeGeometry->pixelColToCenterX(_iCol) - m_pVolumeGeometry->getPixelLengthX() * 0.5f;
-	float32 yUL = m_pVolumeGeometry->pixelRowToCenterY(_iRow) - m_pVolumeGeometry->getPixelLengthY() * 0.5f;
-	float32 xUR = m_pVolumeGeometry->pixelColToCenterX(_iCol) + m_pVolumeGeometry->getPixelLengthX() * 0.5f;
-	float32 yUR = m_pVolumeGeometry->pixelRowToCenterY(_iRow) - m_pVolumeGeometry->getPixelLengthY() * 0.5f;
-	float32 xLL = m_pVolumeGeometry->pixelColToCenterX(_iCol) - m_pVolumeGeometry->getPixelLengthX() * 0.5f;
-	float32 yLL = m_pVolumeGeometry->pixelRowToCenterY(_iRow) + m_pVolumeGeometry->getPixelLengthY() * 0.5f;
-	float32 xLR = m_pVolumeGeometry->pixelColToCenterX(_iCol) + m_pVolumeGeometry->getPixelLengthX() * 0.5f;
-	float32 yLR = m_pVolumeGeometry->pixelRowToCenterY(_iRow) + m_pVolumeGeometry->getPixelLengthY() * 0.5f;
-
 	std::vector<SDetector2D> res;
-	// loop projectors and detectors
-	for (int iProjection = 0; iProjection < m_pProjectionGeometry->getProjectionAngleCount(); ++iProjection) {
-
-		// get projection angle
-		float32 theta = m_pProjectionGeometry->getProjectionAngle(iProjection);
-		if (theta >= 7*PIdiv4) theta -= 2*PI;
-		bool inverse = false;
-		if (theta >= 3*PIdiv4) {
-			theta -= PI;
-			inverse = true;
-		}
-
-		// calculate distance from the center of the voxel to the ray though the origin
-		float32 tUL = xUL * cos(theta) + yUL * sin(theta);
-		float32 tUR = xUR * cos(theta) + yUR * sin(theta);
-		float32 tLL = xLL * cos(theta) + yLL * sin(theta);
-		float32 tLR = xLR * cos(theta) + yLR * sin(theta);
-		if (inverse) {
-			tUL *= -1.0f;
-			tUR *= -1.0f;
-			tLL *= -1.0f;
-			tLR *= -1.0f;
-		}
-		float32 tMin = min(tUL, min(tUR, min(tLL,tLR)));
-		float32 tMax = max(tUL, max(tUR, max(tLL,tLR)));
-
-		// calculate the offset on the detectorarray (in indices)
-		int dmin = (int)floor(m_pProjectionGeometry->detectorOffsetToIndexFloat(tMin));
-		int dmax = (int)ceil(m_pProjectionGeometry->detectorOffsetToIndexFloat(tMax));
-
-		// add affected detectors to the list
-		for (int i = dmin; i <= dmax; ++i) {
-			if (i >= 0 && i < m_pProjectionGeometry->getDetectorCount()) {
-				SDetector2D det;
-				det.m_iAngleIndex = iProjection;
-				det.m_iDetectorIndex = i;
-				det.m_iIndex = iProjection * getProjectionGeometry()->getDetectorCount() + i;
-				res.push_back(det);
-			}
-		}
-	}
-
-	// return result vector
 	return res;
 
+	// float32 xUL = m_pVolumeGeometry->pixelColToCenterX(_iCol) - m_pVolumeGeometry->getPixelLengthX() * 0.5f;
+	// float32 yUL = m_pVolumeGeometry->pixelRowToCenterY(_iRow) - m_pVolumeGeometry->getPixelLengthY() * 0.5f;
+	// float32 xUR = m_pVolumeGeometry->pixelColToCenterX(_iCol) + m_pVolumeGeometry->getPixelLengthX() * 0.5f;
+	// float32 yUR = m_pVolumeGeometry->pixelRowToCenterY(_iRow) - m_pVolumeGeometry->getPixelLengthY() * 0.5f;
+	// float32 xLL = m_pVolumeGeometry->pixelColToCenterX(_iCol) - m_pVolumeGeometry->getPixelLengthX() * 0.5f;
+	// float32 yLL = m_pVolumeGeometry->pixelRowToCenterY(_iRow) + m_pVolumeGeometry->getPixelLengthY() * 0.5f;
+	// float32 xLR = m_pVolumeGeometry->pixelColToCenterX(_iCol) + m_pVolumeGeometry->getPixelLengthX() * 0.5f;
+	// float32 yLR = m_pVolumeGeometry->pixelRowToCenterY(_iRow) + m_pVolumeGeometry->getPixelLengthY() * 0.5f;
+
+	// std::vector<SDetector2D> res;
+	// // loop projectors and detectors
+	// for (int iProjection = 0; iProjection < m_pProjectionGeometry->getProjectionAngleCount(); ++iProjection) {
+
+	// 	// get projection angle
+	// 	float32 theta = m_pProjectionGeometry->getProjectionAngle(iProjection);
+	// 	if (theta >= 7*PIdiv4) theta -= 2*PI;
+	// 	bool inverse = false;
+	// 	if (theta >= 3*PIdiv4) {
+	// 		theta -= PI;
+	// 		inverse = true;
+	// 	}
+
+	// 	// calculate distance from the center of the voxel to the ray though the origin
+	// 	float32 tUL = xUL * cos(theta) + yUL * sin(theta);
+	// 	float32 tUR = xUR * cos(theta) + yUR * sin(theta);
+	// 	float32 tLL = xLL * cos(theta) + yLL * sin(theta);
+	// 	float32 tLR = xLR * cos(theta) + yLR * sin(theta);
+	// 	if (inverse) {
+	// 		tUL *= -1.0f;
+	// 		tUR *= -1.0f;
+	// 		tLL *= -1.0f;
+	// 		tLR *= -1.0f;
+	// 	}
+	// 	float32 tMin = min(tUL, min(tUR, min(tLL,tLR)));
+	// 	float32 tMax = max(tUL, max(tUR, max(tLL,tLR)));
+
+	// 	// calculate the offset on the detectorarray (in indices)
+	// 	int dmin = (int)floor(m_pProjectionGeometry->detectorOffsetToIndexFloat(tMin));
+	// 	int dmax = (int)ceil(m_pProjectionGeometry->detectorOffsetToIndexFloat(tMax));
+
+	// 	// add affected detectors to the list
+	// 	for (int i = dmin; i <= dmax; ++i) {
+	// 		if (i >= 0 && i < m_pProjectionGeometry->getDetectorCount()) {
+	// 			SDetector2D det;
+	// 			det.m_iAngleIndex = iProjection;
+	// 			det.m_iDetectorIndex = i;
+	// 			det.m_iIndex = iProjection * getProjectionGeometry()->getDetectorCount() + i;
+	// 			res.push_back(det);
+	// 		}
+	// 	}
+	// }
+
+	// // return result vector
+	// return res;
 }
 
 //----------------------------------------------------------------------------------------

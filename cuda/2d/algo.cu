@@ -34,13 +34,13 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "fan_bp.h"
 #include "util.h"
 #include "arith.h"
+#include "astra.h"
 
 namespace astraCUDA {
 
 ReconAlgo::ReconAlgo()
 {
-	angles = 0;
-	TOffsets = 0;
+	parProjs = 0;
 	fanProjs = 0;
 	shouldAbort = false;
 
@@ -65,8 +65,7 @@ ReconAlgo::~ReconAlgo()
 
 void ReconAlgo::reset()
 {
-	delete[] angles;
-	delete[] TOffsets;
+	delete[] parProjs;
 	delete[] fanProjs;
 
 	if (freeGPUMemory) {
@@ -76,8 +75,7 @@ void ReconAlgo::reset()
 		cudaFree(D_volumeData);
 	}
 
-	angles = 0;
-	TOffsets = 0;
+	parProjs = 0;
 	fanProjs = 0;
 	shouldAbort = false;
 
@@ -123,45 +121,39 @@ bool ReconAlgo::enableSinogramMask()
 }
 
 
-bool ReconAlgo::setGeometry(const SDimensions& _dims, const float* _angles)
+bool ReconAlgo::setGeometry(const astra::CVolumeGeometry2D* pVolGeom,
+                            const astra::CProjectionGeometry2D* pProjGeom)
 {
-	dims = _dims;
+	bool ok;
 
-	angles = new float[dims.iProjAngles];
+	ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
 
-	memcpy(angles, _angles, sizeof(angles[0]) * dims.iProjAngles);
+	if (!ok)
+		return false;
 
+	delete[] parProjs;
+	parProjs = 0;
 	delete[] fanProjs;
 	fanProjs = 0;
 
+	fOutputScale = 1.0f;
+	ok = convertAstraGeometry(pVolGeom, pProjGeom, parProjs, fanProjs, fOutputScale);
+	if (!ok)
+		return false;
+
 	return true;
 }
 
-bool ReconAlgo::setFanGeometry(const SDimensions& _dims,
-                               const SFanProjection* _projs)
+bool ReconAlgo::setSuperSampling(int raysPerDet, int raysPerPixelDim)
 {
-	dims = _dims;
-	fanProjs = new SFanProjection[dims.iProjAngles];
+	if (raysPerDet <= 0 || raysPerPixelDim <= 0)
+		return false;
 
-	memcpy(fanProjs, _projs, sizeof(fanProjs[0]) * dims.iProjAngles);
-
-	delete[] angles;
-	angles = 0;
+	dims.iRaysPerDet = raysPerDet;
+	dims.iRaysPerPixelDim = raysPerPixelDim;
 
 	return true;
 }
-
-
-bool ReconAlgo::setTOffsets(const float* _TOffsets)
-{
-	// TODO: determine if they're all zero?
-	TOffsets = new float[dims.iProjAngles];
-	memcpy(TOffsets, _TOffsets, sizeof(angles[0]) * dims.iProjAngles);
-
-	return true;
-}
-
-
 
 bool ReconAlgo::setVolumeMask(float* _D_maskData, unsigned int _maskPitch)
 {
@@ -323,14 +315,14 @@ bool ReconAlgo::callFP(float* D_volumeData, unsigned int volumePitch,
                        float* D_projData, unsigned int projPitch,
                        float outputScale)
 {
-	if (angles) {
+	if (parProjs) {
 		assert(!fanProjs);
 		return FP(D_volumeData, volumePitch, D_projData, projPitch,
-		          dims, angles, TOffsets, outputScale);
+		          dims, parProjs, fOutputScale * outputScale);
 	} else {
 		assert(fanProjs);
 		return FanFP(D_volumeData, volumePitch, D_projData, projPitch,
-		             dims, fanProjs, outputScale);
+		             dims, fanProjs, fOutputScale * outputScale);
 	}
 }
 
@@ -338,10 +330,10 @@ bool ReconAlgo::callBP(float* D_volumeData, unsigned int volumePitch,
                        float* D_projData, unsigned int projPitch,
                        float outputScale)
 {
-	if (angles) {
+	if (parProjs) {
 		assert(!fanProjs);
 		return BP(D_volumeData, volumePitch, D_projData, projPitch,
-		          dims, angles, TOffsets, outputScale);
+		          dims, parProjs, outputScale);
 	} else {
 		assert(fanProjs);
 		return FanBP(D_volumeData, volumePitch, D_projData, projPitch,
