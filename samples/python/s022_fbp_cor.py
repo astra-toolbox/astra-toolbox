@@ -34,7 +34,7 @@ proj_geom = astra.create_proj_geom('parallel', 1.0, 256, np.linspace(0,np.pi,180
 # Projection geometry with shifted center of rotation
 # We create this by shifting the detector center V[:,2:4] by a multiple of the detector
 # orientation V[:,4:6].
-proj_geom_cor = astra.functions.geom_2vec(proj_geom)
+proj_geom_cor = astra.geom_2vec(proj_geom)
 V = proj_geom_cor['Vectors']
 V[:,2:4] = V[:,2:4] + cor_shift * V[:,4:6]
 
