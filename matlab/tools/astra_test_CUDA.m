@@ -1,5 +1,5 @@
 %--------------------------------------------------------------------------
-% Perform a basic test of ASTRA CUDA functionality.
+% Perform a basic test of ASTRA CPU and CUDA functionality.
 %--------------------------------------------------------------------------
 %--------------------------------------------------------------------------
 % This file is part of the ASTRA Toolbox
