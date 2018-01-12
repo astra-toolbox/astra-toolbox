@@ -13,7 +13,7 @@ function s = astra_geom_size(geom, dim)
 % Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
 %            2014-2015, CWI, Amsterdam
 % License: Open Source under GPLv3
-% Contact: astra@uantwerpen.be
+% Contact: astra@astra-toolbox.com
 % Website: http://sf.net/projects/astra-toolbox
 %--------------------------------------------------------------------------
 % $Id$

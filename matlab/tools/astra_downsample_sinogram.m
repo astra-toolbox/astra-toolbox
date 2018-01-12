@@ -18,7 +18,7 @@ function [sinogram_new, proj_geom_new] = astra_downsample_sinogram(sinogram, pro
 % Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
 %            2014-2016, CWI, Amsterdam
 % License: Open Source under GPLv3
-% Contact: astra@uantwerpen.be
+% Contact: astra@astra-toolbox.com
 % Website: http://www.astra-toolbox.com/
 %------------------------------------------------------------------------
 

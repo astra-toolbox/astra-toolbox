@@ -70,7 +70,7 @@ echo Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
 echo            2014-2016, CWI, Amsterdam
 echo            http://visielab.uantwerpen.be/ and http://www.cwi.nl/
 echo License: Open Source under GPLv3
-echo Contact: astra@uantwerpen.be
+echo Contact: astra@astra-toolbox.com
 echo Website: http://www.astra-toolbox.com/
 echo -----------------------------------------------------------------------
 echo.
@@ -114,7 +114,7 @@ echo Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
 echo            2014-2016, CWI, Amsterdam
 echo            http://visielab.uantwerpen.be/ and http://www.cwi.nl/
 echo License: Open Source under GPLv3
-echo Contact: astra@uantwerpen.be
+echo Contact: astra@astra-toolbox.com
 echo Website: http://www.astra-toolbox.com/
 echo -----------------------------------------------------------------------
 echo.

@@ -3,7 +3,7 @@
 Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
            2014-2015, CWI, Amsterdam
 
-Contact: astra@uantwerpen.be
+Contact: astra@astra-toolbox.com
 Website: http://sf.net/projects/astra-toolbox
 
 This file is part of the ASTRA Toolbox.

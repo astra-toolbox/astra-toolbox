@@ -7,7 +7,7 @@
 % Copyright: 2010-2017, iMinds-Vision Lab, University of Antwerp
 %            2014-2017, CWI, Amsterdam
 % License: Open Source under GPLv3
-% Contact: astra@uantwerpen.be
+% Contact: astra@astra-toolbox.com
 % Website: http://www.astra-toolbox.com/
 %--------------------------------------------------------------------------
 
