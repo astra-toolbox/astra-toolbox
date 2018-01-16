@@ -238,14 +238,39 @@ bool FDK_PreWeight(cudaPitchedPtr D_projData,
 }
 
 bool FDK_Filter(cudaPitchedPtr D_projData,
-                cufftComplex * D_filter,
+                const float *pfFilter,
                 const SDimensions3D& dims)
 {
-
 	// The filtering is a regular ramp filter per detector line.
 
+	// Generate filter
+	// TODO: Check errors
 	int iPaddedDetCount = calcNextPowerOfTwo(2 * dims.iProjU);
 	int iHalfFFTSize = astraCUDA::calcFFTFourierSize(iPaddedDetCount);
+
+
+	cufftComplex *pHostFilter = new cufftComplex[dims.iProjAngles * iHalfFFTSize];
+	memset(pHostFilter, 0, sizeof(cufftComplex) * dims.iProjAngles * iHalfFFTSize);
+
+	if (pfFilter == 0){
+		astraCUDA::genFilter(astra::FILTER_RAMLAK, 1.0f, dims.iProjAngles, pHostFilter, iPaddedDetCount, iHalfFFTSize);
+	} else {
+		for (int i = 0; i < dims.iProjAngles * iHalfFFTSize; i++) {
+			pHostFilter[i].x = pfFilter[i];
+			pHostFilter[i].y = 0;
+		}
+	}
+
+	cufftComplex * D_filter;
+
+	astraCUDA::allocateComplexOnDevice(dims.iProjAngles, iHalfFFTSize, &D_filter);
+	astraCUDA::uploadComplexArrayToDevice(dims.iProjAngles, iHalfFFTSize, pHostFilter, D_filter);
+
+	delete [] pHostFilter;
+
+
+
+
 	int projPitch = D_projData.pitch/sizeof(float);
 	
 
@@ -277,6 +302,7 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 	}
 
 	astraCUDA::freeComplexOnDevice(D_sinoFFT);
+	astraCUDA::freeComplexOnDevice(D_filter);
 
 	return ok;
 }
@@ -289,12 +315,6 @@ bool FDK(cudaPitchedPtr D_volumeData,
 	     const float* pfFilter)
 {
 	bool ok;
-	// Generate filter
-	// TODO: Check errors
-	cufftComplex * D_filter;
-	int iPaddedDetCount = calcNextPowerOfTwo(2 * dims.iProjU);
-	int iHalfFFTSize = astraCUDA::calcFFTFourierSize(iPaddedDetCount);
-
 
 	// NB: We don't support arbitrary cone_vec geometries here.
 	// Only those that are vertical sub-geometries
@@ -335,33 +355,8 @@ bool FDK(cudaPitchedPtr D_volumeData,
 		return false;
 
 #if 1
-	cufftComplex *pHostFilter = new cufftComplex[dims.iProjAngles * iHalfFFTSize];
-	memset(pHostFilter, 0, sizeof(cufftComplex) * dims.iProjAngles * iHalfFFTSize);
-
-	if (pfFilter == 0){
-		astraCUDA::genFilter(astra::FILTER_RAMLAK, 1.0f, dims.iProjAngles, pHostFilter, iPaddedDetCount, iHalfFFTSize);
-	} else {
-		for (int i = 0; i < dims.iProjAngles * iHalfFFTSize; i++) {
-			pHostFilter[i].x = pfFilter[i];
-			pHostFilter[i].y = 0;
-		}
-	}
-
-
-	astraCUDA::allocateComplexOnDevice(dims.iProjAngles, iHalfFFTSize, &D_filter);
-	astraCUDA::uploadComplexArrayToDevice(dims.iProjAngles, iHalfFFTSize, pHostFilter, D_filter);
-
-	delete [] pHostFilter;
-
-
 	// Perform filtering
-
-
-
-	ok = FDK_Filter(D_projData, D_filter, dims);
-
-	// Clean up filter
-	astraCUDA::freeComplexOnDevice(D_filter);
+	ok = FDK_Filter(D_projData, pfFilter, dims);
 #endif
 
 	if (!ok)

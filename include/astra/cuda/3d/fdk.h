@@ -39,6 +39,10 @@ bool FDK_PreWeight(cudaPitchedPtr D_projData,
                 bool bShortScan,
                 const SDimensions3D& dims, const float* angles);
 
+bool FDK_Filter(cudaPitchedPtr D_projData,
+                const float *pfFilter,
+                const SDimensions3D& dims);
+
 bool FDK(cudaPitchedPtr D_volumeData,
          cudaPitchedPtr D_projData,
          const SConeProjection* angles,
