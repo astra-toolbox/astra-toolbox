@@ -4,7 +4,7 @@ Copyright: 2010-2018, imec Vision Lab, University of Antwerp
            2014-2018, CWI, Amsterdam
 
 Contact: astra@astra-toolbox.com
-Website: http://sf.net/projects/astra-toolbox
+Website: http://www.astra-toolbox.com/
 
 This file is part of the ASTRA Toolbox.
 

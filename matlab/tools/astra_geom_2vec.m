@@ -14,7 +14,7 @@ function proj_geom_vec = astra_geom_2vec(proj_geom)
 %            2014-2018, CWI, Amsterdam
 % License: Open Source under GPLv3
 % Contact: astra@astra-toolbox.com
-% Website: http://sf.net/projects/astra-toolbox
+% Website: http://www.astra-toolbox.com/
 %--------------------------------------------------------------------------
 % $Id$
 
