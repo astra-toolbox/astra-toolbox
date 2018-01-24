@@ -66,8 +66,8 @@ copy "%CUDA_PATH%\bin\cufft64_80.dll" astra
 echo -----------------------------------------------------------------------
 echo This file is part of the ASTRA Toolbox
 echo.
-echo Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
-echo            2014-2016, CWI, Amsterdam
+echo Copyright: 2010-2018, iMinds-Vision Lab, University of Antwerp
+echo            2014-2018, CWI, Amsterdam
 echo            http://visielab.uantwerpen.be/ and http://www.cwi.nl/
 echo License: Open Source under GPLv3
 echo Contact: astra@astra-toolbox.com
@@ -110,8 +110,8 @@ copy "%CUDA_PATH%\bin\cufft64_80.dll" astra
 echo -----------------------------------------------------------------------
 echo This file is part of the ASTRA Toolbox
 echo.
-echo Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
-echo            2014-2016, CWI, Amsterdam
+echo Copyright: 2010-2018, iMinds-Vision Lab, University of Antwerp
+echo            2014-2018, CWI, Amsterdam
 echo            http://visielab.uantwerpen.be/ and http://www.cwi.nl/
 echo License: Open Source under GPLv3
 echo Contact: astra@astra-toolbox.com

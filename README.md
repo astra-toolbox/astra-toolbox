@@ -162,6 +162,6 @@ The ASTRA Toolbox is open source under the GPLv3 license.
 email: astra@astra-toolbox.com
 website: http://www.astra-toolbox.com/
 
-Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
-           2014-2016, CWI, Amsterdam
+Copyright: 2010-2018, iMinds-Vision Lab, University of Antwerp
+           2014-2018, CWI, Amsterdam
            http://visielab.uantwerpen.be/ and http://www.cwi.nl/

@@ -23,7 +23,7 @@
 %--------------------------------------------------------------------------
 % This file is part of the ASTRA Toolbox
 % 
-% Copyright: 2014-2016, CWI, Amsterdam
+% Copyright: 2014-2018, CWI, Amsterdam
 % License:   Open Source under GPLv3
 % Author:    Folkert Bleichrodt
 % Contact:   F.Bleichrodt@cwi.nl

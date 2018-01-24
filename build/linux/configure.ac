@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
-dnl Copyright: 2010-2016, iMinds-Vision Lab, University of Antwerp
-dnl            2014-2016, CWI, Amsterdam
+dnl Copyright: 2010-2018, iMinds-Vision Lab, University of Antwerp
+dnl            2014-2018, CWI, Amsterdam
 dnl
 dnl Contact: astra@astra-toolbox.com
 dnl Website: http://www.astra-toolbox.com/

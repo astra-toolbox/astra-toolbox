@@ -1,7 +1,7 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-           2014-2015, CWI, Amsterdam
+Copyright: 2010-2018, iMinds-Vision Lab, University of Antwerp
+           2014-2018, CWI, Amsterdam
 
 Contact: astra@astra-toolbox.com
 Website: http://sf.net/projects/astra-toolbox

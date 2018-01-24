@@ -10,8 +10,8 @@ function proj_geom_vec = astra_geom_2vec(proj_geom)
 %--------------------------------------------------------------------------
 % This file is part of the ASTRA Toolbox
 %
-% Copyright: 2010-2015, iMinds-Vision Lab, University of Antwerp
-%            2014-2015, CWI, Amsterdam
+% Copyright: 2010-2018, iMinds-Vision Lab, University of Antwerp
+%            2014-2018, CWI, Amsterdam
 % License: Open Source under GPLv3
 % Contact: astra@astra-toolbox.com
 % Website: http://sf.net/projects/astra-toolbox
