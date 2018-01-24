@@ -15,7 +15,7 @@ function [vol_id, vol] = astra_create_backprojection3d_cuda(data, proj_geom, vol
 %--------------------------------------------------------------------------
 % This file is part of the ASTRA Toolbox
 % 
-% Copyright: 2010-2018, iMinds-Vision Lab, University of Antwerp
+% Copyright: 2010-2018, imec Vision Lab, University of Antwerp
 %            2014-2018, CWI, Amsterdam
 % License: Open Source under GPLv3
 % Contact: astra@astra-toolbox.com

@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------
 This file is part of the ASTRA Toolbox
 
-Copyright: 2010-2018, iMinds-Vision Lab, University of Antwerp
+Copyright: 2010-2018, imec Vision Lab, University of Antwerp
            2014-2018, CWI, Amsterdam
            http://visielab.uantwerpen.be/ and http://www.cwi.nl/
 License: Open Source under GPLv3

@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------
-# Copyright: 2010-2018, iMinds-Vision Lab, University of Antwerp
+# Copyright: 2010-2018, imec Vision Lab, University of Antwerp
 #            2013-2018, CWI, Amsterdam
 #
 # Contact: astra@astra-toolbox.com
