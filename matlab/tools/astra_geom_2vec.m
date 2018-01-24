@@ -16,7 +16,6 @@ function proj_geom_vec = astra_geom_2vec(proj_geom)
 % Contact: astra@astra-toolbox.com
 % Website: http://www.astra-toolbox.com/
 %--------------------------------------------------------------------------
-% $Id$
 
 	% PARALLEL 2D
 	if strcmp(proj_geom.type,'parallel')

@@ -24,7 +24,6 @@ function proj_geom = astra_geom_postalignment(proj_geom, factor)
 % Contact: astra@astra-toolbox.com
 % Website: http://www.astra-toolbox.com/
 %--------------------------------------------------------------------------
-% $Id$
 
 	proj_geom = astra_geom_2vec(proj_geom);
 

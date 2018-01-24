@@ -23,7 +23,6 @@ You should have received a copy of the GNU General Public License
 along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 -----------------------------------------------------------------------
-$Id$
 */
 
 #ifndef _INC_ASTRA_PARALLELVECPROJECTIONGEOMETRY2D

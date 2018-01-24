@@ -16,7 +16,6 @@ function s = astra_geom_size(geom, dim)
 % Contact: astra@astra-toolbox.com
 % Website: http://www.astra-toolbox.com/
 %--------------------------------------------------------------------------
-% $Id$
 
 	if isfield(geom, 'GridSliceCount')
 		% 3D Volume geometry?
