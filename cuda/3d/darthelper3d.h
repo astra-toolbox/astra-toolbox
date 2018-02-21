@@ -28,10 +28,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _CUDA_DARTHELPER3_H
 #define _CUDA_DARTHELPER3_H
 
-#include <cuda.h>
-#include <driver_types.h>
-#include "util3d.h"
-#include "algo3d.h"
+#include "dims3d.h"
 
 namespace astraCUDA3d {
 

@@ -38,7 +38,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/AstraObjectManager.h"
 
 #ifdef ASTRA_CUDA
-#include "../cuda/2d/darthelper.h"
+#include "../cuda/2d/astra.h"
 #include "../cuda/2d/util.h"
 #include "astra/CompositeGeometryManager.h"
 #endif

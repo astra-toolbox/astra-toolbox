@@ -40,9 +40,8 @@ cdef extern from "astra/Globals.h" namespace "astra":
     bool cudaEnabled()
 
 IF HAVE_CUDA==True:
-  cdef extern from "../cuda/2d/darthelper.h" namespace "astraCUDA":
+  cdef extern from "../cuda/2d/astra.h" namespace "astraCUDA":
       bool setGPUIndex(int)
-  cdef extern from "../cuda/2d/util.h" namespace "astraCUDA":
       string getCudaDeviceString(int)
 ELSE:
   def setGPUIndex():

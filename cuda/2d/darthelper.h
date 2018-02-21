@@ -28,15 +28,13 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _CUDA_ARITH2_H
 #define _CUDA_ARITH2_H
 
-#include "util.h"
+#include "astra/Globals.h"
 
 namespace astraCUDA {
 
 	void roiSelect(float* out, float radius, unsigned int width, unsigned int height);
 	void dartMask(float* out, const float* in, unsigned int conn, unsigned int radius, unsigned int threshold, unsigned int width, unsigned int height);
 	void dartSmoothing(float* out, const float* in, float b, unsigned int radius, unsigned int width, unsigned int height);
-
-	_AstraExport bool setGPUIndex(int index);
 
 }
 

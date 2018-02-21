@@ -28,7 +28,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _CUDA_ASTRA_H
 #define _CUDA_ASTRA_H
 
-#include "fft.h"
 #include "fbp_filters.h"
 #include "dims.h"
 #include "algo.h"
@@ -225,6 +224,15 @@ _AstraExport bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
                     astraCUDA::SFanProjection*& pProjs,
                     float& outputScale);
 
+}
+
+namespace astraCUDA {
+
+// Return string with CUDA device number, name and memory size.
+// Use device == -1 to get info for the current device.
+_AstraExport std::string getCudaDeviceString(int device);
+
+_AstraExport bool setGPUIndex(int index);
 
 }
 #endif

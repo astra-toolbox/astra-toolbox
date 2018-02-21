@@ -123,7 +123,24 @@ Run build_setup.bat to automatically copy the boost headers and libraries.
 For matlab: Run build_matlab.bat. The .dll and .mexw64 files will be in bin\x64\Release_Cuda.
 For python 2.7/3.5: Run build_python27.bat or build_python35.bat. Astra will be directly installed into site-packages.
 
+## Testing your installation
 
+To perform a (very) basic test of your ASTRA installation in Python, you can
+run the following Python commands. You can choose to skip the test of the GPU
+functionality for systems without a NVIDIA GPU.
+
+```
+import astra
+astra.test_noCUDA() # To skip GPU tests
+astra.test_CUDA()   # To also perform GPU tests
+```
+
+To test your ASTRA installation in Matlab, the equivalent commands are:
+
+```
+astra_test_noCUDA   % To skip GPU tests
+astra_test_CUDA     % To also perform GPU tests
+```
 
 ## References
 

@@ -517,12 +517,3 @@ E_FBPFILTER CCudaFilteredBackProjectionAlgorithm::_convertStringToFilter(const c
 	return output;
 }
 
-void CCudaFilteredBackProjectionAlgorithm::testGenFilter(E_FBPFILTER _eFilter, float _fD, int _iProjectionCount, cufftComplex * _pFilter, int _iFFTRealDetectorCount, int _iFFTFourierDetectorCount)
-{
-	genFilter(_eFilter, _fD, _iProjectionCount, _pFilter, _iFFTRealDetectorCount, _iFFTFourierDetectorCount);
-}
-
-int CCudaFilteredBackProjectionAlgorithm::getGPUCount()
-{
-	return 0;
-}
