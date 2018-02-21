@@ -47,13 +47,22 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/Float32ProjectionData3DMemory.h"
 #include "astra/Float32VolumeData3D.h"
 #include "astra/Float32VolumeData3DMemory.h"
+#include "astra/Float32VolumeData3DGPUDummy.h"
 #include "astra/ParallelProjectionGeometry3D.h"
 #include "astra/ParallelVecProjectionGeometry3D.h"
 #include "astra/ConeProjectionGeometry3D.h"
 #include "astra/ConeVecProjectionGeometry3D.h"
 
+#include "../../cuda/3d/mem3d.h"
+
+#include "astra/Float32Data3DGPU.h"
+#include "astra/Float32VolumeData3DGPU.h"
+#include "astra/Float32ProjectionData3DGPU.h"
+
+
 using namespace std;
 using namespace astra;
+
 
 #define USE_MATLAB_UNDOCUMENTED
 
@@ -172,6 +181,113 @@ void astra_mex_data3d_link(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 #endif
 
 
+
+//-----------------------------------------------------------------------------------------
+/**
+ * id = astra_mex_io_data('create', datatype, geometry, data);
+ *        datatype: ['-vol','-sino','-sinocone'] 
+ */
+void astra_mex_data3d_createOnGPU(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray* prhs[])
+{ 
+	// step1: get datatype
+	if (nrhs < 3) {
+		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
+		return;
+	}
+        
+        const mxArray * const geometry = prhs[2];
+	const mxArray * const data = nrhs > 3 ? prhs[3] : NULL;
+
+	if (!checkStructs(geometry)) {
+		mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.\n");
+		return;
+	}
+
+	if (data && !checkDataType(data)) {
+		mexErrMsgTxt("Data must be single, double or logical.");
+		return;
+	}
+
+	const string sDataType = mexToString(prhs[1]);
+        
+
+        // step2: Read geometry
+        unsigned int dim_x, dim_y, dim_z;
+	if (sDataType == "-vol")
+	{
+		astra::Config* cfg = structToConfig("VolumeGeometry3D", geometry);
+		astra::CVolumeGeometry3D* pGeometry = new astra::CVolumeGeometry3D();
+		pGeometry->initialize(*cfg);
+                
+                dim_x = pGeometry->getGridColCount();
+                dim_y = pGeometry->getGridRowCount();
+                dim_z = pGeometry->getGridSliceCount();
+	}
+	else if (sDataType == "-proj3d")
+	{
+		astra::Config* cfg = structToConfig("ProjectionGeometry3D", geometry);
+		std::string type = cfg->self.getAttribute("type");
+		astra::CProjectionGeometry3D* pGeometry = 0;
+		if (type == "parallel3d") {
+			pGeometry = new astra::CParallelProjectionGeometry3D();
+		} else if (type == "parallel3d_vec") {
+			pGeometry = new astra::CParallelVecProjectionGeometry3D();
+		} else if (type == "cone") {
+			pGeometry = new astra::CConeProjectionGeometry3D();
+		} else if (type == "cone_vec") {
+			pGeometry = new astra::CConeVecProjectionGeometry3D();
+		} else {
+			mexErrMsgTxt("Invalid geometry type.\n");
+			return NULL;
+		}
+		pGeometry->initialize(*cfg)
+                
+                dim_x = pGeometry->getDetectorColCount();
+                dim_y = pGeometry->getProjectionCount();
+                dim_z = pGeometry->getDetectorRowCount();
+	}
+	else
+	{
+		mexErrMsgTxt("Invalid datatype.  Please specify '-vol' or '-proj3d'. \n");
+		return NULL;
+	}
+
+	// step3: Allocate data
+        CFloat32Data3D * pDataObject3D;
+        MemHandle3D hnd; 
+
+	CFloat32VolumeData3DGPU* pGPUVolumeDataObject3D;
+        if (!data) { 
+                hnd = allocateGPUMemory(x, y, z, INIT_ZERO);
+                pGPUVolumeDataObject3D = new CFloat32VolumeData3DGPU(pGeometry, 0.0f);
+        } else {
+                hnd = allocateGPUMemory(x, y, z, INIT_NO);
+                if(!copyToGPUMemory(data, MemHandle3D hnd, )) {
+                        mexErrMsgTxt("Failed to copy data to GPU'. \n");
+                        return NULL;
+                }
+        }
+
+        if (sDataType == "-vol") {
+                pDataObject3D = new CFloat32VolumeData3DGPU(pGeometry, hnd);
+        } else {
+                pDataObject3D = new CFloat32ProjectionData3DGPU(pGeometry, hnd);
+        }
+                
+
+        pGPUVolumeDataObject3D->updateStatistics();
+
+	// step4: store data object
+	int iIndex = CData3DManager::getSingleton().store(pGPUVolumeDataObject3D);
+
+	// step5: return data id
+	if (1 <= nlhs) {
+		plhs[0] = mxCreateDoubleScalar(iIndex);
+	}
+}
+
+
+
 //-----------------------------------------------------------------------------------------
 /**
  * data = astra_mex_data3d('get', id);
@@ -198,6 +314,44 @@ void astra_mex_data3d_get(int nlhs, mxArray* plhs[], int nrhs, const mxArray* pr
 void astra_mex_data3d_get_single(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 	generic_astra_mex_data3d_get<mxSINGLE_CLASS>(nlhs, plhs, nrhs, prhs);
+}
+
+
+//-----------------------------------------------------------------------------------------
+/**
+ * data = astra_mex_data3d('getFromGPU', id);
+ * 
+ * Copies the GPU-data of a VolumeData3DGPU-object to the host-array
+ * so that it can be fetched.
+ * Does not return anything but just makes sure that the data returned
+ * by the next call of 'get' or 'get_single' gives the data that is
+ * stored on the GPU.
+
+ */
+void astra_mex_data3d_getFromGPU(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
+{
+	// step1: input
+	if (nrhs < 2) {
+		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
+		return;
+	}
+
+	// step2: get data object/s
+        CFloat32Data3DMemory* pDataObject = NULL;
+	if (!checkID(mxGetScalar(prhs[1]), pDataObject)) {
+		mexErrMsgTxt("Data object not found or not initialized properly.\n");
+		return;
+	}
+        
+        // step3: try casting to GPUData-object
+        CFloat32VolumeData3DGPU* pDataObjectGPU = dynamic_cast<CFloat32VolumeData3DGPU*>(pDataObject);
+        if(!pDataObjectGPU) {
+		mexErrMsgTxt("Data object does not contain GPU-data.\n");
+		return;
+        }
+        
+        // step4: synchronize data from GPU to host array
+        pDataObjectGPU->synchronizeFromGPU();
 }
 
 
@@ -482,10 +636,14 @@ void mexFunction(int nlhs, mxArray* plhs[],
 	} else if (sMode == "link") {
 		astra_mex_data3d_link(nlhs, plhs, nrhs, prhs);
 #endif
+	} else if (sMode ==  std::string("createOnGPU")) { 
+		astra_mex_data3d_createOnGPU(nlhs, plhs, nrhs, prhs); 
 	} else if (sMode ==  std::string("get")) { 
 		astra_mex_data3d_get(nlhs, plhs, nrhs, prhs); 
 	} else if (sMode ==  std::string("get_single")) { 
 		astra_mex_data3d_get_single(nlhs, plhs, nrhs, prhs); 
+	} else if (sMode ==  std::string("getFromGPU")) { 
+		astra_mex_data3d_getFromGPU(nlhs, plhs, nrhs, prhs); 
 	} else if (sMode ==  std::string("store") ||
 	           sMode ==  std::string("set")) { 
 		astra_mex_data3d_store(nlhs, plhs, nrhs, prhs); 
@@ -499,6 +657,8 @@ void mexFunction(int nlhs, mxArray* plhs[],
 		astra_mex_data3d_dimensions(nlhs, plhs, nrhs, prhs); 
 	} else if (sMode == std::string("get_geometry")) {
 		astra_mex_data3d_get_geometry(nlhs, plhs, nrhs, prhs);
+	} else if (sMode == std::string("change_geometry")) {
+		astra_mex_data3d_change_geometry(nlhs, plhs, nrhs, prhs);
 	} else if (sMode == std::string("change_geometry")) {
 		astra_mex_data3d_change_geometry(nlhs, plhs, nrhs, prhs);
 	} else {
