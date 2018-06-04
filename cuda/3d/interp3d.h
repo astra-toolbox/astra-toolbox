@@ -214,8 +214,10 @@ inline float cubic_hermite_spline_deriv(float x) {
 __device__
 inline float b3_spline_eval(float x) {
         x = fabs(x);
-        if (x >= 2.0f)
-                return 0.0f;
+        
+        // NOTE: case does not occur in current usage
+        //if (x >= 2.0f)
+        //        return 0.0f;
 
         float res = pow3(2.0f-x);
         if (x <= 1.0f)
@@ -231,8 +233,10 @@ __device__
 inline float b3_spline_deriv(float x) {
         float sgn_x = copysignf(1.0f, x);
         x = fabs(x);
-        if (x >= 2.0f)
-                return 0.0f;
+
+        // NOTE: case does not occur in current usage
+        //if (x >= 2.0f)
+        //        return 0.0f;
         
         float res = pow2(2.0f-x);
         if (x <= 1.0f)
@@ -267,21 +271,24 @@ inline float bicubic_hermite_interpolate_ddf2(float f0, float f1, float f2, floa
 // EXPLICIT SPECIALIZATION: cubic B-spline interpolant on texture
 __device__
 inline float bicubic_bspline_interpolate(float f0, float f1, float f2, float (*texture_lookup)(float,float,float)) {
-        return bspline3_interpolate<get_bilin_coeffs_b3_eval, get_bilin_coeffs_b3_eval>(f0, f1, f2, texture_lookup);
+        //return bspline3_interpolate<get_bilin_coeffs_b3_eval, get_bilin_coeffs_b3_eval>(f0, f1, f2, texture_lookup);
+        return bicubic_interpolate<b3_spline_eval, b3_spline_eval>(f0, f1, f2, texture_lookup);
 }
 
 
 // EXPLICIT SPECIALIZATION: derivative of cubic B-spline interpolant on texture along f1
 __device__
 inline float bicubic_bspline_interpolate_ddf1(float f0, float f1, float f2, float (*texture_lookup)(float,float,float)) {
-        return bspline3_interpolate<get_bilin_coeffs_b3_deriv, get_bilin_coeffs_b3_eval>(f0, f1, f2, texture_lookup);
+        //return bspline3_interpolate<get_bilin_coeffs_b3_deriv, get_bilin_coeffs_b3_eval>(f0, f1, f2, texture_lookup);
+        return bicubic_interpolate<b3_spline_deriv, b3_spline_eval>(f0, f1, f2, texture_lookup);
 }
 
 
 // EXPLICIT SPECIALIZATION: derivative of cubic B-spline interpolant on texture along f2
 __device__
 inline float bicubic_bspline_interpolate_ddf2(float f0, float f1, float f2, float (*texture_lookup)(float,float,float)) {
-        return bspline3_interpolate<get_bilin_coeffs_b3_eval, get_bilin_coeffs_b3_deriv>(f0, f1, f2, texture_lookup);
+        //return bspline3_interpolate<get_bilin_coeffs_b3_eval, get_bilin_coeffs_b3_deriv>(f0, f1, f2, texture_lookup);
+        return bicubic_interpolate<b3_spline_eval, b3_spline_deriv>(f0, f1, f2, texture_lookup);
 }
 
 
