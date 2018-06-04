@@ -71,10 +71,13 @@ inline float bicubic_interpolate(float f0, float f1, float f2, float (*texture_l
         }
 
         float result = 0.0f;
+        float f1_step = f1_lowest;
         for(int step1 = 0; step1 < 4; step1++) {
-                for(int step2 = 0; step2 < 4; step2++) {
-                        result += w1[step1] * w2[step2] * texture_lookup(f0, f1_lowest + step1, f2_lowest + step2);
-                }
+                result += w1[step1] * (   w2[0] * texture_lookup(f0, f1_step, f2_lowest)
+                                        + w2[1] * texture_lookup(f0, f1_step, f2_lowest+1.0f)
+                                        + w2[2] * texture_lookup(f0, f1_step, f2_lowest+2.0f)
+                                        + w2[3] * texture_lookup(f0, f1_step, f2_lowest+3.0f) );
+                f1_step += 1.0f;
         }
 
         return result;
@@ -176,8 +179,10 @@ inline void get_bilin_coeffs_b3_deriv(float x, bool is_minus, float & y, float &
 __device__
 inline float cubic_hermite_spline_eval(float x) {
         x = fabs(x);
-        if (x >= 2.0f)
-                return 0.0f;
+        
+        // NOTE: case does not occur in current usage
+        //if (x >= 2.0f)
+        //        return 0.0f;
 
         float x2 = x*x;
         if (x <= 1.0f)
@@ -191,8 +196,10 @@ inline float cubic_hermite_spline_eval(float x) {
 __device__
 inline float cubic_hermite_spline_deriv(float x) {
         float abs_x = fabs(x);
-        if (abs_x >= 2.0f)
-                return 0.0f;
+        
+        // NOTE: case does not occur in current usage
+        //if (abs_x >= 2.0f)
+        //        return 0.0f;
 
         float sgn_x = copysignf(1.0f, x);
         if (abs_x <= 1.0f)
