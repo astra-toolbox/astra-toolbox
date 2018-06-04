@@ -249,6 +249,15 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, con
 		case astra::ker3d_bicubic_ddf2:
 			ok &= Par3DFP_bicubic_ddf2(volData.d->ptr, projData.d->ptr, dims, pParProjs, params);
 			break;
+		case astra::ker3d_bspline3:
+			ok &= Par3DFP_bspline3(volData.d->ptr, projData.d->ptr, dims, pParProjs, params);
+			break;
+		case astra::ker3d_bspline3_ddf1:
+			ok &= Par3DFP_bspline3_ddf1(volData.d->ptr, projData.d->ptr, dims, pParProjs, params);
+			break;
+		case astra::ker3d_bspline3_ddf2:
+			ok &= Par3DFP_bspline3_ddf2(volData.d->ptr, projData.d->ptr, dims, pParProjs, params);
+			break;
 		default:
 			ok = false;
 		}
@@ -265,6 +274,15 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, con
 			break;
 		case astra::ker3d_bicubic_ddf2:
 			ok &= ConeFP_bicubic_ddf2(volData.d->ptr, projData.d->ptr, dims, pConeProjs, params);
+			break;
+		case astra::ker3d_bspline3:
+			ok &= ConeFP_bspline3(volData.d->ptr, projData.d->ptr, dims, pConeProjs, params);
+			break;
+		case astra::ker3d_bspline3_ddf1:
+			ok &= ConeFP_bspline3_ddf1(volData.d->ptr, projData.d->ptr, dims, pConeProjs, params);
+			break;
+		case astra::ker3d_bspline3_ddf2:
+			ok &= ConeFP_bspline3_ddf2(volData.d->ptr, projData.d->ptr, dims, pConeProjs, params);
 			break;
 		default:
 			ok = false;

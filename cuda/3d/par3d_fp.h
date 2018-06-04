@@ -60,6 +60,21 @@ _AstraExport bool Par3DFP_bicubic_ddf2(cudaPitchedPtr D_volumeData,
                                const SDimensions3D& dims, const SPar3DProjection* angles,
                                const SProjectorParams3D& params);
 
+_AstraExport bool Par3DFP_bspline3(cudaPitchedPtr D_volumeData,
+                                  cudaPitchedPtr D_projData,
+                                  const SDimensions3D& dims, const SPar3DProjection* angles,
+                                  const SProjectorParams3D& params);
+
+_AstraExport bool Par3DFP_bspline3_ddf1(cudaPitchedPtr D_volumeData,
+                               cudaPitchedPtr D_projData,
+                               const SDimensions3D& dims, const SPar3DProjection* angles,
+                               const SProjectorParams3D& params);
+
+_AstraExport bool Par3DFP_bspline3_ddf2(cudaPitchedPtr D_volumeData,
+                               cudaPitchedPtr D_projData,
+                               const SDimensions3D& dims, const SPar3DProjection* angles,
+                               const SProjectorParams3D& params);
+
 }
 
 #endif

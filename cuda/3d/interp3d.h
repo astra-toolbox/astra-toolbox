@@ -109,10 +109,10 @@ inline float bspline3_interpolate(float f0, float f1, float f2, float (*texture_
         y1_minus += f1_lower;
         y2_minus += f2_lower;
 
-        return   w1_plus  * w2_plus  * texture_lookup(f0, y1_plus,  y2_plus )
-               + w1_minus * w2_plus  * texture_lookup(f0, y1_minus, y2_plus )
-               + w1_plus  * w2_minus * texture_lookup(f0, y1_plus,  y2_minus)
-               + w1_minus * w2_minus * texture_lookup(f0, y1_minus, y2_minus);
+        return   w1_plus  * (   w2_plus  * texture_lookup(f0, y1_plus,  y2_plus ) 
+                              + w2_minus * texture_lookup(f0, y1_plus,  y2_minus) )
+               + w1_minus * (   w2_plus  * texture_lookup(f0, y1_minus, y2_plus )
+                              + w2_minus * texture_lookup(f0, y1_minus, y2_minus) );
 
 }
 
@@ -138,13 +138,13 @@ inline float bilin_interpolate(float f0, float f1, float f2, float (*texture_loo
 // Auxillary function, which determines the required bilinear interpolation
 // for a cubic B-spline interpolation
 __device__
-inline void get_bilin_coeffs_b3_eval(float x, bool is_left, float & y, float & w) {
+inline void get_bilin_coeffs_b3_eval(float x, bool is_minus, float & y, float & w) {
         float x_plus_1_cube = pow3(x + 1.0f);
         float x_cube = pow3(x);
         w = x_plus_1_cube - 3.0f * x_cube;
         y = x_cube / w;
         w = 0.1666666f * w;
-        if(is_left) {
+        if(is_minus) {
                 y = -y;
         } else {
                 y += 1.0f;
@@ -156,13 +156,13 @@ inline void get_bilin_coeffs_b3_eval(float x, bool is_left, float & y, float & w
 // Auxillary function, which determines the required bilinear interpolation
 // for evaluating the derivative of a cubic B-spline interpolant
 __device__
-inline void get_bilin_coeffs_b3_deriv(float x, bool is_left, float & y, float & w) {
+inline void get_bilin_coeffs_b3_deriv(float x, bool is_minus, float & y, float & w) {
         float x_plus_1_sq = pow2(x + 1.0f);
         float x_sq = pow2(x);
         w = x_plus_1_sq - 3.0f * x_sq;
         y = x_sq / w;
         w = 0.5f * w;
-        if(is_left) {
+        if(is_minus) {
                 y = -y;
                 w = -w;
         } else {
@@ -254,6 +254,27 @@ inline float bicubic_hermite_interpolate_ddf1(float f0, float f1, float f2, floa
 __device__
 inline float bicubic_hermite_interpolate_ddf2(float f0, float f1, float f2, float (*texture_lookup)(float,float,float)) {
         return bicubic_interpolate<cubic_hermite_spline_eval, cubic_hermite_spline_deriv>(f0, f1, f2, texture_lookup);
+}
+
+
+// EXPLICIT SPECIALIZATION: cubic B-spline interpolant on texture
+__device__
+inline float bicubic_bspline_interpolate(float f0, float f1, float f2, float (*texture_lookup)(float,float,float)) {
+        return bspline3_interpolate<get_bilin_coeffs_b3_eval, get_bilin_coeffs_b3_eval>(f0, f1, f2, texture_lookup);
+}
+
+
+// EXPLICIT SPECIALIZATION: derivative of cubic B-spline interpolant on texture along f1
+__device__
+inline float bicubic_bspline_interpolate_ddf1(float f0, float f1, float f2, float (*texture_lookup)(float,float,float)) {
+        return bspline3_interpolate<get_bilin_coeffs_b3_deriv, get_bilin_coeffs_b3_eval>(f0, f1, f2, texture_lookup);
+}
+
+
+// EXPLICIT SPECIALIZATION: derivative of cubic B-spline interpolant on texture along f2
+__device__
+inline float bicubic_bspline_interpolate_ddf2(float f0, float f1, float f2, float (*texture_lookup)(float,float,float)) {
+        return bspline3_interpolate<get_bilin_coeffs_b3_eval, get_bilin_coeffs_b3_deriv>(f0, f1, f2, texture_lookup);
 }
 
 

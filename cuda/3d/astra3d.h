@@ -50,6 +50,10 @@ using astraCUDA3d::ker3d_sum_square_weights;
 using astraCUDA3d::ker3d_bicubic;
 using astraCUDA3d::ker3d_bicubic_ddf1;
 using astraCUDA3d::ker3d_bicubic_ddf2;
+using astraCUDA3d::ker3d_bspline3;
+using astraCUDA3d::ker3d_bspline3_ddf1;
+using astraCUDA3d::ker3d_bspline3_ddf2;
+
 
 
 class _AstraExport AstraSIRT3d {

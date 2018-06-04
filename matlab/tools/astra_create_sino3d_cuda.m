@@ -5,8 +5,8 @@ function [sino_id, sino] = astra_create_sino3d_cuda(data, proj_geom, vol_geom, p
 % 
 % Create a GPU based forward projection. Optional parameter
 % projectionKernel must be a string. Admissible choices are 'default', 
-% 'sum_square_weights', 'bicubic', 'bicubic_derivative_1' and 
-% 'bicubic_derivative_2'.
+% 'sum_square_weights', 'bicubic', 'bicubic_derivative_1', 'bicubic_derivative_2',
+% 'bspline3', 'bspline3_derivative_1' and 'bspline3_derivative_2'
 %
 % data: input volume, can be either MATLAB-data or an astra-identifier.
 % proj_geom: MATLAB struct containing the projection geometry.

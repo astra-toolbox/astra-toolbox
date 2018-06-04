@@ -140,9 +140,15 @@ bool CCudaProjector3D::initialize_parameters(const Config& _cfg) {
 			m_projectionKernel = ker3d_bicubic_ddf1;
 		} else if (sProjKernel == "bicubic_derivative_2") {
 			m_projectionKernel = ker3d_bicubic_ddf2;
+		} else if (sProjKernel == "bspline3") {
+			m_projectionKernel = ker3d_bspline3;
+		} else if (sProjKernel == "bspline3_derivative_1") {
+			m_projectionKernel = ker3d_bspline3_ddf1;
+		} else if (sProjKernel == "bspline3_derivative_2") {
+			m_projectionKernel = ker3d_bspline3_ddf2;
 		} else {
                         ASTRA_CONFIG_CHECK(false, "CudaProjector3D",
-                        "Invalid projection-kernel assigned. Admissible choices are \"default\", \"sum_square_weights\", \"bicubic\", \"bicubic_derivative_1\", \"bicubic_derivative_2\".");
+                        "Invalid projection-kernel assigned. Admissible choices are \"default\", \"sum_square_weights\", \"bicubic\", \"bicubic_derivative_1\", \"bicubic_derivative_2\", \"bspline3\", \"bspline3_derivative_1\", \"bspline3_derivative_2\".");
 			return false;
 		}
 	}

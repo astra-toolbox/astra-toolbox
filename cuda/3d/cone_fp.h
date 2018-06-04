@@ -54,6 +54,21 @@ _AstraExport bool ConeFP_bicubic_ddf2(cudaPitchedPtr D_volumeData,
             cudaPitchedPtr D_projData,
             const SDimensions3D& dims, const SConeProjection* angles,
             const SProjectorParams3D& params);
+            
+_AstraExport bool ConeFP_bspline3(cudaPitchedPtr D_volumeData,
+            cudaPitchedPtr D_projData,
+            const SDimensions3D& dims, const SConeProjection* angles,
+            const SProjectorParams3D& params);
+
+_AstraExport bool ConeFP_bspline3_ddf1(cudaPitchedPtr D_volumeData,
+            cudaPitchedPtr D_projData,
+            const SDimensions3D& dims, const SConeProjection* angles,
+            const SProjectorParams3D& params);
+
+_AstraExport bool ConeFP_bspline3_ddf2(cudaPitchedPtr D_volumeData,
+            cudaPitchedPtr D_projData,
+            const SDimensions3D& dims, const SConeProjection* angles,
+            const SProjectorParams3D& params);
 
 }
 

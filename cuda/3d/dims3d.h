@@ -42,7 +42,10 @@ enum Cuda3DProjectionKernel {
 	ker3d_sum_square_weights,
 	ker3d_bicubic,
 	ker3d_bicubic_ddf1,
-	ker3d_bicubic_ddf2
+	ker3d_bicubic_ddf2,
+        ker3d_bspline3,
+        ker3d_bspline3_ddf1,
+        ker3d_bspline3_ddf2
 };
 
 
