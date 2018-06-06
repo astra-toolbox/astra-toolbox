@@ -413,7 +413,7 @@ def create_sino(data, proj_id, returnData=True, gpuIndex=None):
 
 
 
-def create_sino3d_gpu(data, proj_geom, vol_geom, returnData=True, gpuIndex=None):
+def create_sino3d_gpu(data, proj_geom, vol_geom, returnData=True, gpuIndex=None, projectionKernel='default'):
     """Create a forward projection of an image (3D).
 
 :param data: Image data or ID.
@@ -426,6 +426,8 @@ def create_sino3d_gpu(data, proj_geom, vol_geom, returnData=True, gpuIndex=None)
 :type returnData: :class:`bool`
 :param gpuIndex: Optional GPU index.
 :type gpuIndex: :class:`int`
+:param projectionKernel: Optional choice of the projection kernel. Admissible choices are {'default', 'sum_square_weights', 'bicubic', 'bicubic_derivative_1', 'bicubic_derivative_2', 'bspline3', 'bspline3_derivative_1', 'bspline3_derivative_2'}
+:type gpuIndex: :class:`string`
 :returns: :class:`int` or (:class:`int`, :class:`numpy.ndarray`) -- If ``returnData=False``, returns the ID of the forward projection. Otherwise, returns a tuple containing the ID of the forward projection and the forward projection itself, in that order.
 
 """
@@ -441,6 +443,7 @@ def create_sino3d_gpu(data, proj_geom, vol_geom, returnData=True, gpuIndex=None)
         cfg['option']={'GPUindex':gpuIndex}
     cfg['ProjectionDataId'] = sino_id
     cfg['VolumeDataId'] = volume_id
+    cfg['ProjectionKernel'] = projectionKernel
     alg_id = algorithm.create(cfg)
     algorithm.run(alg_id)
     algorithm.delete(alg_id)

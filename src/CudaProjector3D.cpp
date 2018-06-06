@@ -94,13 +94,11 @@ bool CCudaProjector3D::_check()
 	return true;
 }
 
+
 //---------------------------------------------------------------------------------------
 // Initialize, use a Config object
 bool CCudaProjector3D::initialize(const Config& _cfg)
 {
-	assert(_cfg.self);
-	ConfigStackCheck<CProjector3D> CC("CudaProjector3D", this, _cfg);
-
 	// if already initialized, clear first
 	if (m_bIsInitialized) {
 		clear();
@@ -111,7 +109,23 @@ bool CCudaProjector3D::initialize(const Config& _cfg)
 		return false;
 	}
 
-	XMLNode node = _cfg.self.getSingleNode("ProjectionKernel");
+        if(!initialize_parameters(_cfg)) {
+                return false;
+        }
+
+        m_bIsInitialized = _check();
+	return m_bIsInitialized;
+}
+
+
+// SCM: need additional function which initializes this object only
+// as a "parameter-struct" as used in CompositeGeometryManager.
+bool CCudaProjector3D::initialize_parameters(const Config& _cfg) {
+
+	assert(_cfg.self);
+	ConfigStackCheck<CProjector3D> CC("CudaProjector3D", this, _cfg);
+
+        XMLNode node = _cfg.self.getSingleNode("ProjectionKernel");
 	m_projectionKernel = ker3d_default;
 	if (node) {
 		std::string sProjKernel = node.getContent();
@@ -120,7 +134,21 @@ bool CCudaProjector3D::initialize(const Config& _cfg)
 
 		} else if (sProjKernel == "sum_square_weights") {
 			m_projectionKernel = ker3d_sum_square_weights;
+		} else if (sProjKernel == "bicubic") {
+			m_projectionKernel = ker3d_bicubic;
+		} else if (sProjKernel == "bicubic_derivative_1") {
+			m_projectionKernel = ker3d_bicubic_ddf1;
+		} else if (sProjKernel == "bicubic_derivative_2") {
+			m_projectionKernel = ker3d_bicubic_ddf2;
+		} else if (sProjKernel == "bspline3") {
+			m_projectionKernel = ker3d_bspline3;
+		} else if (sProjKernel == "bspline3_derivative_1") {
+			m_projectionKernel = ker3d_bspline3_ddf1;
+		} else if (sProjKernel == "bspline3_derivative_2") {
+			m_projectionKernel = ker3d_bspline3_ddf2;
 		} else {
+                        ASTRA_CONFIG_CHECK(false, "CudaProjector3D",
+                        "Invalid projection-kernel assigned. Admissible choices are \"default\", \"sum_square_weights\", \"bicubic\", \"bicubic_derivative_1\", \"bicubic_derivative_2\", \"bspline3\", \"bspline3_derivative_1\", \"bspline3_derivative_2\".");
 			return false;
 		}
 	}
@@ -128,11 +156,12 @@ bool CCudaProjector3D::initialize(const Config& _cfg)
 
 	m_iVoxelSuperSampling = (int)_cfg.self.getOptionNumerical("VoxelSuperSampling", 1);
 	CC.markOptionParsed("VoxelSuperSampling");
- 
+
 	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", 1);
 	CC.markOptionParsed("DetectorSuperSampling");
 
-	if (dynamic_cast<CConeProjectionGeometry3D*>(m_pProjectionGeometry) ||
+	if (m_pProjectionGeometry == NULL || 
+            dynamic_cast<CConeProjectionGeometry3D*>(m_pProjectionGeometry) ||
 	    dynamic_cast<CConeVecProjectionGeometry3D*>(m_pProjectionGeometry))
 	{
 		m_bDensityWeighting = _cfg.self.getOptionBool("DensityWeighting", false);
@@ -145,9 +174,10 @@ bool CCudaProjector3D::initialize(const Config& _cfg)
 	if (!_cfg.self.hasOption("GPUIndex"))
 		CC.markOptionParsed("GPUindex");
 
-	m_bIsInitialized = _check();
-	return m_bIsInitialized;
+	return true;
+
 }
+
 
 /*
 bool CProjector3D::initialize(astra::CProjectionGeometry3D *, astra::CVolumeGeometry3D *)

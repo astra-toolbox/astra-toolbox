@@ -60,6 +60,7 @@ CCudaForwardProjectionAlgorithm3D::CCudaForwardProjectionAlgorithm3D()
 	m_pProjector = 0;
 	m_pProjections = 0;
 	m_pVolume = 0;
+        m_iProjKernel = ker3d_default;
 
 }
 
@@ -120,14 +121,23 @@ bool CCudaForwardProjectionAlgorithm3D::initialize(const Config& _cfg)
 	}
 	CC.markNodeParsed("ProjectorId");
 
+        // SCM: have to build a projector-object to assign additional
+        // parameters such as custom projection-kernel, super-sampling,
+        // etc. since CCompositeGeometryManager::doFP does not allow
+        // for other ways to assign these.
+        if (!m_pProjector) {
+                m_pProjector = new CCudaProjector3D();
+                if (!(dynamic_cast<CCudaProjector3D*>(m_pProjector))->initialize_parameters(_cfg)) {
+                        return false;
+                }
+                CC.markNodeParsed("ProjectionKernel");
+                CC.markOptionParsed("DetectorSuperSampling");
+                CC.markOptionParsed("VoxelSuperSampling");
+                CC.markOptionParsed("DensityWeighting");
+                CC.markOptionParsed("GPUindex");
+        }
+        
 	initializeFromProjector();
-
-	// Deprecated options
-	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", m_iDetectorSuperSampling);
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", m_iGPUIndex);
-	CC.markOptionParsed("DetectorSuperSampling");
-	CC.markOptionParsed("GPUindex");
-
 
 	// success
 	m_bIsInitialized = check();

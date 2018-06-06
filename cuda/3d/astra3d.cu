@@ -1088,6 +1088,24 @@ bool astraCudaFP(const float* pfVolume, float* pfProjections,
 		case ker3d_sum_square_weights:
 			ok &= Par3DFP_SumSqW(D_volumeData, D_projData, dims, pParProjs, params);
 			break;
+		case ker3d_bicubic:
+			ok &= Par3DFP_bicubic(D_volumeData, D_projData, dims, pParProjs, params);
+			break;
+		case ker3d_bicubic_ddf1:
+			ok &= Par3DFP_bicubic_ddf1(D_volumeData, D_projData, dims, pParProjs, params);
+			break;
+		case ker3d_bicubic_ddf2:
+			ok &= Par3DFP_bicubic_ddf2(D_volumeData, D_projData, dims, pParProjs, params);
+			break;
+		case ker3d_bspline3:
+			ok &= Par3DFP_bspline3(D_volumeData, D_projData, dims, pParProjs, params);
+			break;
+		case ker3d_bspline3_ddf1:
+			ok &= Par3DFP_bspline3_ddf1(D_volumeData, D_projData, dims, pParProjs, params);
+			break;
+		case ker3d_bspline3_ddf2:
+			ok &= Par3DFP_bspline3_ddf2(D_volumeData, D_projData, dims, pParProjs, params);
+			break;
 		default:
 			assert(false);
 		}
@@ -1095,6 +1113,24 @@ bool astraCudaFP(const float* pfVolume, float* pfProjections,
 		switch (projKernel) {
 		case ker3d_default:
 			ok &= ConeFP(D_volumeData, D_projData, dims, pConeProjs, params);
+			break;
+		case ker3d_bicubic:
+			ok &= ConeFP_bicubic(D_volumeData, D_projData, dims, pConeProjs, params);
+			break;
+		case ker3d_bicubic_ddf1:
+			ok &= ConeFP_bicubic_ddf1(D_volumeData, D_projData, dims, pConeProjs, params);
+			break;
+		case ker3d_bicubic_ddf2:
+			ok &= ConeFP_bicubic_ddf2(D_volumeData, D_projData, dims, pConeProjs, params);
+			break;
+		case ker3d_bspline3:
+			ok &= ConeFP_bspline3(D_volumeData, D_projData, dims, pConeProjs, params);
+			break;
+		case ker3d_bspline3_ddf1:
+			ok &= ConeFP_bspline3_ddf1(D_volumeData, D_projData, dims, pConeProjs, params);
+			break;
+		case ker3d_bspline3_ddf2:
+			ok &= ConeFP_bspline3_ddf2(D_volumeData, D_projData, dims, pConeProjs, params);
 			break;
 		default:
 			assert(false);

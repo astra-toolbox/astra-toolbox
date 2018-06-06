@@ -1,9 +1,12 @@
-function [sino_id, sino] = astra_create_sino3d_cuda(data, proj_geom, vol_geom)
+function [sino_id, sino] = astra_create_sino3d_cuda(data, proj_geom, vol_geom, projectionKernel)
 
 %--------------------------------------------------------------------------
-% [sino_id, sino] = astra_create_sino3d_cuda(data, proj_geom, vol_geom)
+% [sino_id, sino] = astra_create_sino3d_cuda(data, proj_geom, vol_geom, projectionKernel)
 % 
-% Create a GPU based forward projection.
+% Create a GPU based forward projection. Optional parameter
+% projectionKernel must be a string. Admissible choices are 'default', 
+% 'sum_square_weights', 'bicubic', 'bicubic_derivative_1', 'bicubic_derivative_2',
+% 'bspline3', 'bspline3_derivative_1' and 'bspline3_derivative_2'
 %
 % data: input volume, can be either MATLAB-data or an astra-identifier.
 % proj_geom: MATLAB struct containing the projection geometry.
@@ -42,6 +45,10 @@ sino_id = astra_mex_data3d('create','-sino', proj_geom, 0);
 cfg = astra_struct('FP3D_CUDA');
 cfg.ProjectionDataId = sino_id;
 cfg.VolumeDataId = volume_id;
+if nargin == 4
+        cfg.ProjectionKernel = projectionKernel;
+end
+
 alg_id = astra_mex_algorithm('create', cfg);
 astra_mex_algorithm('iterate', alg_id);
 astra_mex_algorithm('delete', alg_id);

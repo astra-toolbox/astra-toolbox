@@ -1,7 +1,7 @@
-function [vol_id, vol] = astra_create_backprojection3d_cuda(data, proj_geom, vol_geom)
+function [vol_id, vol] = astra_create_backprojection3d_cuda(data, proj_geom, vol_geom, density_weighted)
 
 %--------------------------------------------------------------------------
-% [vol_id, vol] = astra_create_backprojection3d_cuda(data, proj_geom, vol_geom)
+% [vol_id, vol] = astra_create_backprojection3d_cuda(data, proj_geom, vol_geom, density_weighted)
 % 
 % Create a GPU based backprojection.
 %
@@ -37,6 +37,9 @@ vol_id = astra_mex_data3d('create','-vol', vol_geom, 0);
 cfg = astra_struct('BP3D_CUDA');
 cfg.ProjectionDataId = sino_id;
 cfg.ReconstructionDataId = vol_id;
+if nargin == 4 && density_weighted
+        cfg.options.DensityWeighting = 1;
+end
 alg_id = astra_mex_algorithm('create', cfg);
 astra_mex_algorithm('iterate', alg_id);
 astra_mex_algorithm('delete', alg_id);
