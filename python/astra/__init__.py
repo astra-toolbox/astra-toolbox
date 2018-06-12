@@ -48,5 +48,8 @@ if 'ASTRA_GPU_INDEX' in os.environ:
     L = [ int(x) for x in os.environ['ASTRA_GPU_INDEX'].split(',') ]
     set_gpu_index(L)
 
-if 'ASTRA_LOAD_OPTOMO' in os.environ:
-    from .optomo import OpTomo
+try:
+    if os.environ['ASTRA_LOAD_OPTOMO'] in ['y','yes','Y','YES']:
+        from .optomo import OpTomo
+except KeyError:
+    pass
