@@ -38,7 +38,6 @@ from . import matrix
 from . import plugin
 from . import plugins
 from . import log
-from .optomo import OpTomo
 from .tests import test, test_noCUDA, test_CUDA
 
 __version__ = '1.9.0dev'
@@ -48,3 +47,6 @@ import os
 if 'ASTRA_GPU_INDEX' in os.environ:
     L = [ int(x) for x in os.environ['ASTRA_GPU_INDEX'].split(',') ]
     set_gpu_index(L)
+
+if 'ASTRA_LOAD_OPTOMO' in os.environ:
+    from .optomo import OpTomo
