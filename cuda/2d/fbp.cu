@@ -260,6 +260,7 @@ bool FBP::iterate(unsigned int iterations)
 
 	bool ok = false;
 
+	float fFanDetSize = 0.0f;
 	if (fanProjs) {
 		// Call FDK_PreWeight to handle fan beam geometry. We treat
 		// this as a cone beam setup of a single slice:
@@ -271,12 +272,12 @@ bool FBP::iterate(unsigned int iterations)
 
 		float *pfAngles = new float[dims.iProjAngles];
 
-		float fOriginSource, fOriginDetector, fDetSize, fOffset;
+		float fOriginSource, fOriginDetector, fOffset;
 		for (unsigned int i = 0; i < dims.iProjAngles; ++i) {
 			bool ok = astra::getFanParameters(fanProjs[i], dims.iProjDets,
 			                                  pfAngles[i],
 			                                  fOriginSource, fOriginDetector,
-			                                  fDetSize, fOffset);
+			                                  fFanDetSize, fOffset);
 			if (!ok) {
 				ASTRA_ERROR("FBP_CUDA: Failed to extract circular fan beam parameters from fan beam geometry");
 				return false;
@@ -300,7 +301,7 @@ bool FBP::iterate(unsigned int iterations)
 
 		astraCUDA3d::FDK_PreWeight(tmp, fOriginSource,
 		              fOriginDetector, 0.0f,
-		              fDetSize, 1.0f,
+		              fFanDetSize, 1.0f, /* fPixelSize */ 1.0f,
 		              m_bShortScan, dims3d, pfAngles);
 	} else {
 		// TODO: How should different detector pixel size in different
@@ -326,12 +327,17 @@ bool FBP::iterate(unsigned int iterations)
 
 	}
 
-	float fOutputScale = (M_PI / 2.0f) / (float)dims.iProjAngles;
-
 	if (fanProjs) {
+		float fOutputScale = 1.0 / (/*fPixelSize * fPixelSize * fPixelSize * */ fFanDetSize * fFanDetSize);
+
 		ok = FanBP_FBPWeighted(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, fanProjs, fOutputScale);
 
 	} else {
+		// scale by number of angles. For the fan-beam case, this is already
+		// handled by FDK_PreWeight
+		float fOutputScale = (M_PI / 2.0f) / (float)dims.iProjAngles;
+		//fOutputScale /= fDetSize * fDetSize;
+
 		ok = BP(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, parProjs, fOutputScale);
 	}
 	if(!ok)

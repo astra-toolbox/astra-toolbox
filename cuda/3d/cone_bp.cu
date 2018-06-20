@@ -126,6 +126,9 @@ __global__ void dev_cone_BP(void* D_volData, unsigned int volPitch, int startAng
 			float fVNum = fCv.w + fX * fCv.x + fY * fCv.y + fZ * fCv.z;
 			float fDen  = fCd.w + fX * fCd.x + fY * fCd.y + fZ * fCd.z;
 
+			// fCd.w = -|| u v s || (determinant of 3x3 matrix with cols u,v,s)
+			// fDen =  || u v (x-s) ||
+
 			float fU,fV, fr;
 
 			for (int idx = 0; idx < ZSIZE; idx++)
@@ -134,9 +137,17 @@ __global__ void dev_cone_BP(void* D_volData, unsigned int volPitch, int startAng
 				fU = fUNum * fr;
 				fV = fVNum * fr;
 				float fVal = tex3D(gT_coneProjTexture, fU, fAngle, fV);
-				if (FDKWEIGHT)
+				if (FDKWEIGHT) {
+					// The correct factor here is this one:
+					// Z[idx] += (fr*fCd.w)*(fr*fCd.w)*fVal;
+					// This is the square of the inverse magnification factor
+					// from fX,fY,fZ to the detector.
+
+					// Since we are assuming we have a circular cone
+					// beam trajectory, fCd.w is constant, and we instead
+					// multiply by fCd.w*fCd.w in the FDK preweighting step.
 					Z[idx] += fr*fr*fVal;
-				else
+				} else
 					Z[idx] += fVal;
 
 				fUNum += fCu.z;
@@ -255,7 +266,11 @@ bool ConeBP_Array(cudaPitchedPtr D_volumeData,
 {
 	bindProjDataTexture(D_projArray);
 
-	float fOutputScale = params.fOutputScale * params.fVolScaleX * params.fVolScaleY * params.fVolScaleZ;
+	float fOutputScale;
+	if (params.bFDKWeighting)
+		fOutputScale = params.fOutputScale / (params.fVolScaleX * params.fVolScaleY * params.fVolScaleZ);
+	else
+		fOutputScale = params.fOutputScale * (params.fVolScaleX * params.fVolScaleY * params.fVolScaleZ);
 
 	for (unsigned int th = 0; th < dims.iProjAngles; th += g_MaxAngles) {
 		unsigned int angleCount = g_MaxAngles;
