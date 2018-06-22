@@ -25,19 +25,16 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#include <cstdio>
-#include <cassert>
-
-#include "cgls3d.h"
-#include "sirt3d.h"
-#include "util3d.h"
-#include "cone_fp.h"
-#include "cone_bp.h"
-#include "par3d_fp.h"
-#include "par3d_bp.h"
-#include "fdk.h"
-#include "arith3d.h"
-#include "astra3d.h"
+#include "astra/cuda/3d/cgls3d.h"
+#include "astra/cuda/3d/sirt3d.h"
+#include "astra/cuda/3d/util3d.h"
+#include "astra/cuda/3d/cone_fp.h"
+#include "astra/cuda/3d/cone_bp.h"
+#include "astra/cuda/3d/par3d_fp.h"
+#include "astra/cuda/3d/par3d_bp.h"
+#include "astra/cuda/3d/fdk.h"
+#include "astra/cuda/3d/arith3d.h"
+#include "astra/cuda/3d/astra3d.h"
 
 #include "astra/ParallelProjectionGeometry3D.h"
 #include "astra/ParallelVecProjectionGeometry3D.h"
@@ -46,6 +43,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/VolumeGeometry3D.h"
 
 #include <iostream>
+#include <cstdio>
+#include <cassert>
 
 using namespace astraCUDA3d;
 

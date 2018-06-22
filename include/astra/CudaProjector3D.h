@@ -36,7 +36,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "Globals.h"
 #include "Config.h"
 #include "Projector3D.h"
-#include "../../cuda/3d/astra3d.h"
+#include "cuda/3d/astra3d.h"
 
 namespace astra
 {

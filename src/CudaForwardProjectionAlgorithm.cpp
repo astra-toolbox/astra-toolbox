@@ -29,7 +29,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #ifdef ASTRA_CUDA
 
-#include "../cuda/2d/astra.h"
+#include "astra/cuda/2d/astra.h"
 
 #include <driver_types.h>
 #include <cuda_runtime_api.h>

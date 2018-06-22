@@ -25,17 +25,17 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#include <cstdio>
-#include <cassert>
-
-#include "sirt3d.h"
-#include "util3d.h"
-#include "arith3d.h"
-#include "cone_fp.h"
+#include "astra/cuda/3d/sirt3d.h"
+#include "astra/cuda/3d/util3d.h"
+#include "astra/cuda/3d/arith3d.h"
+#include "astra/cuda/3d/cone_fp.h"
 
 #ifdef STANDALONE
 #include "testutil.h"
 #endif
+
+#include <cstdio>
+#include <cassert>
 
 namespace astraCUDA3d {
 

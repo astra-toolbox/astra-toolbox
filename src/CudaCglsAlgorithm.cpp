@@ -29,7 +29,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/CudaCglsAlgorithm.h"
 
-#include "../cuda/2d/cgls.h"
+#include "astra/cuda/2d/cgls.h"
 
 using namespace std;
 

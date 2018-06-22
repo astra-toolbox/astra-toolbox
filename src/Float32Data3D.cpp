@@ -29,7 +29,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 
 #ifdef ASTRA_CUDA
-#include "../../cuda/3d/mem3d.h"
+#include "astra/cuda/3d/mem3d.h"
 #endif
 
 using namespace std;

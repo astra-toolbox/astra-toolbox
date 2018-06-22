@@ -57,7 +57,7 @@ BOOSTUTF_LIBS=@LIBS_BOOSTUTF@
 
 ifeq ($(cuda),yes)
 CPPFLAGS  += @CPPFLAGS_CUDA@ -DASTRA_CUDA
-NVCCFLAGS += @NVCCFLAGS_EXTRA@ @CPPFLAGS_CUDA@ -I$(srcdir)/../.. -I$(srcdir)/../../include -DASTRA_CUDA
+NVCCFLAGS += @NVCCFLAGS_EXTRA@ @CPPFLAGS_CUDA@ -I$(srcdir)/../../include -DASTRA_CUDA
 LDFLAGS   += @LDFLAGS_CUDA@
 LIBS      += -lcudart -lcufft
 NVCC       = @NVCC@
@@ -91,7 +91,7 @@ endif
 
 # This is below where PYCPPFLAGS copies CPPFLAGS.  The python code is built
 # from a different directory, so these relative includes would be wrong.
-CPPFLAGS+=-I$(srcdir)/../.. -I$(srcdir)/../../include -I$(srcdir)/../../lib/include
+CPPFLAGS+=-I$(srcdir)/../../include -I$(srcdir)/../../lib/include
 
 ifeq ($(matlab),yes)
 MEXFLAGS  = -cxx

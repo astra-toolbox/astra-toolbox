@@ -38,7 +38,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/Logging.h"
 
-#include "../cuda/3d/astra3d.h"
+#include "astra/cuda/3d/astra3d.h"
 
 using namespace std;
 

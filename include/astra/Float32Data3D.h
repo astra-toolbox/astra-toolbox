@@ -32,7 +32,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "Float32Data.h"
 #include "Float32Data2D.h"
 
-#include "../../cuda/3d/mem3d.h"
+#include "cuda/3d/mem3d.h"
 
 namespace astra {
 

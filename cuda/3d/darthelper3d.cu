@@ -25,9 +25,10 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#include "util3d.h"
-#include "dims3d.h"
-#include "darthelper3d.h"
+#include "astra/cuda/3d/util3d.h"
+#include "astra/cuda/3d/dims3d.h"
+#include "astra/cuda/3d/darthelper3d.h"
+
 #include <cassert>
 
 namespace astraCUDA3d {

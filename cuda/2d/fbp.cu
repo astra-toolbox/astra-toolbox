@@ -25,14 +25,14 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#include "fbp.h"
-#include "fft.h"
-#include "par_bp.h"
-#include "fan_bp.h"
-#include "util.h"
+#include "astra/cuda/2d/fbp.h"
+#include "astra/cuda/2d/fft.h"
+#include "astra/cuda/2d/par_bp.h"
+#include "astra/cuda/2d/fan_bp.h"
+#include "astra/cuda/2d/util.h"
 
 // For fan-beam preweighting
-#include "../3d/fdk.h"
+#include "astra/cuda/3d/fdk.h"
 
 #include "astra/Logging.h"
 

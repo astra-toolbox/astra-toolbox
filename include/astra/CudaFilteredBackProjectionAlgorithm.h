@@ -30,11 +30,11 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #ifdef ASTRA_CUDA
 
-#include <astra/Float32ProjectionData2D.h>
-#include <astra/Float32VolumeData2D.h>
-#include <astra/CudaReconstructionAlgorithm2D.h>
+#include "Float32ProjectionData2D.h"
+#include "Float32VolumeData2D.h"
+#include "CudaReconstructionAlgorithm2D.h"
 
-#include "../../cuda/2d/astra.h"
+#include "cuda/2d/astra.h"
 
 namespace astra
 {

@@ -36,7 +36,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/Logging.h"
 
-#include "../cuda/2d/algo.h"
+#include "astra/cuda/2d/algo.h"
 
 #include <ctime>
 

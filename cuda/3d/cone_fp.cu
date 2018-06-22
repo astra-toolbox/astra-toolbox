@@ -25,19 +25,19 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
+#include "astra/cuda/3d/util3d.h"
+#include "astra/cuda/3d/dims3d.h"
+
+#ifdef STANDALONE
+#include "testutil.h"
+#endif
+
 #include <cstdio>
 #include <cassert>
 #include <iostream>
 #include <list>
 
 #include <cuda.h>
-#include "util3d.h"
-
-#ifdef STANDALONE
-#include "testutil.h"
-#endif
-
-#include "dims3d.h"
 
 typedef texture<float, 3, cudaReadModeElementType> texture3D;
 

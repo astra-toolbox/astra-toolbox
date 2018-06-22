@@ -29,7 +29,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/CudaSartAlgorithm.h"
 
-#include "../cuda/2d/sart.h"
+#include "astra/cuda/2d/sart.h"
 
 using namespace std;
 

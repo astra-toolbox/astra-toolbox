@@ -31,8 +31,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/AstraObjectManager.h"
 #include "astra/CudaProjector2D.h"
-#include "../cuda/2d/astra.h"
-#include "../cuda/2d/fbp.h"
+#include "astra/cuda/2d/astra.h"
+#include "astra/cuda/2d/fbp.h"
 
 #include "astra/Logging.h"
 

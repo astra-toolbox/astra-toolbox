@@ -29,7 +29,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/CudaEMAlgorithm.h"
 
-#include "../cuda/2d/em.h"
+#include "astra/cuda/2d/em.h"
 
 using namespace std;
 

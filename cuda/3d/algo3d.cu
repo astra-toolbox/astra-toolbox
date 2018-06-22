@@ -25,13 +25,13 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#include <cassert>
+#include "astra/cuda/3d/algo3d.h"
+#include "astra/cuda/3d/cone_fp.h"
+#include "astra/cuda/3d/cone_bp.h"
+#include "astra/cuda/3d/par3d_fp.h"
+#include "astra/cuda/3d/par3d_bp.h"
 
-#include "algo3d.h"
-#include "cone_fp.h"
-#include "cone_bp.h"
-#include "par3d_fp.h"
-#include "par3d_bp.h"
+#include <cassert>
 
 namespace astraCUDA3d {
 

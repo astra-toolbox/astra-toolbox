@@ -25,11 +25,12 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
+#include "astra/cuda/2d/util.h"
+
+#include "astra/Logging.h"
+
 #include <cstdio>
 #include <cassert>
-#include "util.h"
-
-#include "../../include/astra/Logging.h"
 
 namespace astraCUDA {
 

@@ -25,16 +25,16 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#include <cassert>
+#include "astra/cuda/2d/algo.h"
+#include "astra/cuda/2d/par_fp.h"
+#include "astra/cuda/2d/fan_fp.h"
+#include "astra/cuda/2d/par_bp.h"
+#include "astra/cuda/2d/fan_bp.h"
+#include "astra/cuda/2d/util.h"
+#include "astra/cuda/2d/arith.h"
+#include "astra/cuda/2d/astra.h"
 
-#include "algo.h"
-#include "par_fp.h"
-#include "fan_fp.h"
-#include "par_bp.h"
-#include "fan_bp.h"
-#include "util.h"
-#include "arith.h"
-#include "astra.h"
+#include <cassert>
 
 namespace astraCUDA {
 

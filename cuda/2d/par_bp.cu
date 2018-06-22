@@ -25,18 +25,16 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#include <cstdio>
-#include <cassert>
-#include <iostream>
-
-#include "util.h"
-#include "arith.h"
+#include "astra/cuda/2d/util.h"
+#include "astra/cuda/2d/arith.h"
 
 #ifdef STANDALONE
 #include "testutil.h"
 #endif
 
-#define PIXELTRACE
+#include <cstdio>
+#include <cassert>
+#include <iostream>
 
 
 typedef texture<float, 2, cudaReadModeElementType> texture2D;

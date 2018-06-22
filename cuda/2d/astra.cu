@@ -25,33 +25,31 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#include <cstdio>
-#include <cassert>
-
-#include "util.h"
-#include "par_fp.h"
-#include "fan_fp.h"
-#include "par_bp.h"
-#include "fan_bp.h"
-#include "arith.h"
-#include "astra.h"
-
-#include "fft.h"
-
-#include <fstream>
-#include <cuda.h>
-
-#include "../../include/astra/GeometryUtil2D.h"
-#include "../../include/astra/VolumeGeometry2D.h"
-#include "../../include/astra/ParallelProjectionGeometry2D.h"
-#include "../../include/astra/ParallelVecProjectionGeometry2D.h"
-#include "../../include/astra/FanFlatProjectionGeometry2D.h"
-#include "../../include/astra/FanFlatVecProjectionGeometry2D.h"
-
-#include "../../include/astra/Logging.h"
+#include "astra/cuda/2d/util.h"
+#include "astra/cuda/2d/par_fp.h"
+#include "astra/cuda/2d/fan_fp.h"
+#include "astra/cuda/2d/par_bp.h"
+#include "astra/cuda/2d/fan_bp.h"
+#include "astra/cuda/2d/arith.h"
+#include "astra/cuda/2d/astra.h"
+#include "astra/cuda/2d/fft.h"
 
 // For fan beam FBP weighting
-#include "../3d/fdk.h"
+#include "astra/cuda/3d/fdk.h"
+
+#include "astra/GeometryUtil2D.h"
+#include "astra/VolumeGeometry2D.h"
+#include "astra/ParallelProjectionGeometry2D.h"
+#include "astra/ParallelVecProjectionGeometry2D.h"
+#include "astra/FanFlatProjectionGeometry2D.h"
+#include "astra/FanFlatVecProjectionGeometry2D.h"
+#include "astra/Logging.h"
+
+#include <cstdio>
+#include <cassert>
+#include <fstream>
+
+#include <cuda.h>
 
 using namespace astraCUDA;
 using namespace std;

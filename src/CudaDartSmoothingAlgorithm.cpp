@@ -29,9 +29,9 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/CudaDartSmoothingAlgorithm.h"
 
-#include "../cuda/2d/astra.h"
-#include "../cuda/2d/darthelper.h"
-#include "../cuda/2d/algo.h"
+#include "astra/cuda/2d/astra.h"
+#include "astra/cuda/2d/darthelper.h"
+#include "astra/cuda/2d/algo.h"
 
 #include "astra/AstraObjectManager.h"
 

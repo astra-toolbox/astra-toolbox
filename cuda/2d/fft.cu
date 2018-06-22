@@ -25,16 +25,18 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#include "fft.h"
-#include "util.h"
+#include "astra/cuda/2d/fft.h"
+#include "astra/cuda/2d/util.h"
 
-#include <cufft.h>
+#include "astra/Logging.h"
+#include "astra/Fourier.h"
+
 #include <iostream>
-#include <cuda.h>
 #include <fstream>
 
-#include "../../include/astra/Logging.h"
-#include "../../include/astra/Fourier.h"
+#include <cufft.h>
+#include <cuda.h>
+
 
 using namespace astra;
 

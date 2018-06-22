@@ -43,8 +43,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/Float32VolumeData3DGPU.h"
 #include "astra/Logging.h"
 
-#include "../cuda/2d/astra.h"
-#include "../cuda/3d/mem3d.h"
+#include "astra/cuda/2d/astra.h"
+#include "astra/cuda/3d/mem3d.h"
 
 #include <cstring>
 #include <sstream>
