@@ -8,6 +8,13 @@ License: Open Source under GPLv3
 Contact: astra@astra-toolbox.com
 Website: http://www.astra-toolbox.com/
 -----------------------------------------------------------------------
+1.9.0 (2018-??-??)
+  * add 2D parallel_vec geometry
+      The old ExtraDetectorOffset option has been removed. Please use
+      parallel_vec to achieve this effect now
+  * fix inconsistent rotation direction in CPU fan beam code
+  * fix scaling of output values for FDK and fan beam FBP in some geometries
+
 1.8.3 (2017-11-06)
   * fix geometry memory leak in 3D FP/BP
   * fix FDK short scan weighting
