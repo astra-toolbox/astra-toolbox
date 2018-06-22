@@ -66,12 +66,12 @@ def credits():
  * Dr. Folkert Bleichrodt
  * Dr. Andrei Dabravolski
  * Dr. Willem Jan Palenstijn
+ * Dr. Daniel Pelt
  * Dr. Tom Roelandts
  * Dr. Wim van Aarle
  * Dr. Gert Van Gompel
  * Sander van der Maar, MSc.
- * Gert Merckx, MSc.
- * Daan Pelt, MSc.""")
+ * Gert Merckx, MSc.""")
 
 
 def use_cuda():
