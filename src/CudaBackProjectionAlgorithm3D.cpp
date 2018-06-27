@@ -158,6 +158,8 @@ bool CCudaBackProjectionAlgorithm3D::initialize(CProjector3D* _pProjector,
 	m_pSinogram = _pSinogram;
 	m_pReconstruction = _pReconstruction;
 
+	m_bSIRTWeighting = false;
+
 	initializeFromProjector();
 
 	// success
