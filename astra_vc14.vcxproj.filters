@@ -611,97 +611,97 @@
     <ClInclude Include="include\astra\Float32VolumeData3DGPU.h">
       <Filter>CUDA\astra headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\2d\algo.h">
+    <ClInclude Include="include\astra\cuda\2d\algo.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\2d\arith.h">
+    <ClInclude Include="include\astra\cuda\2d\arith.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\2d\astra.h">
+    <ClInclude Include="include\astra\cuda\2d\astra.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\2d\cgls.h">
+    <ClInclude Include="include\astra\cuda\2d\cgls.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\2d\darthelper.h">
+    <ClInclude Include="include\astra\cuda\2d\darthelper.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\2d\dims.h">
+    <ClInclude Include="include\astra\cuda\2d\dims.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\2d\em.h">
+    <ClInclude Include="include\astra\cuda\2d\em.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\2d\fan_bp.h">
+    <ClInclude Include="include\astra\cuda\2d\fan_bp.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\2d\fan_fp.h">
+    <ClInclude Include="include\astra\cuda\2d\fan_fp.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\2d\fbp_filters.h">
+    <ClInclude Include="include\astra\cuda\2d\fbp_filters.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\2d\fbp.h">
+    <ClInclude Include="include\astra\cuda\2d\fbp.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\2d\fft.h">
+    <ClInclude Include="include\astra\cuda\2d\fft.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\2d\par_bp.h">
+    <ClInclude Include="include\astra\cuda\2d\par_bp.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\2d\par_fp.h">
+    <ClInclude Include="include\astra\cuda\2d\par_fp.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\2d\sart.h">
+    <ClInclude Include="include\astra\cuda\2d\sart.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\2d\sirt.h">
+    <ClInclude Include="include\astra\cuda\2d\sirt.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\2d\util.h">
+    <ClInclude Include="include\astra\cuda\2d\util.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\3d\algo3d.h">
+    <ClInclude Include="include\astra\cuda\3d\algo3d.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\3d\arith3d.h">
+    <ClInclude Include="include\astra\cuda\3d\arith3d.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\3d\astra3d.h">
+    <ClInclude Include="include\astra\cuda\3d\astra3d.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\3d\cgls3d.h">
+    <ClInclude Include="include\astra\cuda\3d\cgls3d.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\3d\cone_bp.h">
+    <ClInclude Include="include\astra\cuda\3d\cone_bp.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\3d\cone_fp.h">
+    <ClInclude Include="include\astra\cuda\3d\cone_fp.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\3d\darthelper3d.h">
+    <ClInclude Include="include\astra\cuda\3d\darthelper3d.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\3d\dims3d.h">
+    <ClInclude Include="include\astra\cuda\3d\dims3d.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\3d\fdk.h">
+    <ClInclude Include="include\astra\cuda\3d\fdk.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\3d\mem3d.h">
+    <ClInclude Include="include\astra\cuda\3d\mem3d.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\3d\par3d_bp.h">
+    <ClInclude Include="include\astra\cuda\3d\par3d_bp.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\3d\par3d_fp.h">
+    <ClInclude Include="include\astra\cuda\3d\par3d_fp.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\3d\sirt3d.h">
+    <ClInclude Include="include\astra\cuda\3d\sirt3d.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="cuda\3d\util3d.h">
+    <ClInclude Include="include\astra\cuda\3d\util3d.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
   </ItemGroup>
