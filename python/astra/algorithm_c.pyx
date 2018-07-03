@@ -47,6 +47,13 @@ cdef extern from *:
     CReconstructionAlgorithm2D * dynamic_cast_recAlg2D "dynamic_cast<astra::CReconstructionAlgorithm2D*>" (CAlgorithm * )
     CReconstructionAlgorithm3D * dynamic_cast_recAlg3D "dynamic_cast<astra::CReconstructionAlgorithm3D*>" (CAlgorithm * )
 
+cdef extern from "src/PythonPluginAlgorithm.h" namespace "astra":
+    cdef cppclass CPluginAlgorithm:
+        object getInstance()
+
+cdef extern from *:
+    CPluginAlgorithm * dynamic_cast_PluginAlg "dynamic_cast<astra::CPluginAlgorithm*>" (CAlgorithm * )
+
 
 def create(config):
     cdef Config * cfg = utils.dictToConfig(six.b('Algorithm'), config)
@@ -102,6 +109,16 @@ def delete(ids):
             manAlg.remove(i)
     except TypeError:
         manAlg.remove(ids)
+
+
+def get_plugin_object(algorithm_id):
+    cdef CAlgorithm *alg
+    cdef CPluginAlgorithm *pluginAlg
+    alg = getAlg(algorithm_id)
+    pluginAlg = dynamic_cast_PluginAlg(alg)
+    if not pluginAlg:
+        raise Exception("Not a plugin algorithm")
+    return pluginAlg.getInstance()
 
 
 def clear():

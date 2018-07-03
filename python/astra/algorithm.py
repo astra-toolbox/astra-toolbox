@@ -66,6 +66,17 @@ def delete(ids):
     """
     return a.delete(ids)
 
+def get_plugin_object(i):
+    """Return the Python object instance of a plugin algorithm.
+
+    :param i: ID of object corresponding to a plugin algorithm.
+    :type i: :class:`int`
+    :returns: The Python object instance of the plugin algorithm.
+
+    """
+    return a.get_plugin_object(i)
+
+
 def clear():
     """Clear all matrix objects."""
     return a.clear()

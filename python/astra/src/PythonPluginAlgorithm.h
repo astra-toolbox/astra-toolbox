@@ -49,6 +49,9 @@ public:
     bool initialize(const Config& _cfg);
     void run(int _iNrIterations);
 
+    // Return instance (including INCREF)
+    PyObject *getInstance() const;
+
 private:
     PyObject * instance;
 

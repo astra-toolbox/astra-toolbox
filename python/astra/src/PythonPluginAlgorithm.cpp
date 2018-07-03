@@ -124,6 +124,14 @@ void CPluginAlgorithm::run(int _iNrIterations){
     PyGILState_Release(state);
 }
 
+PyObject *CPluginAlgorithm::getInstance() const {
+	if (instance)
+		Py_INCREF(instance);
+	return instance;
+}
+
+
+
 CPythonPluginAlgorithmFactory::CPythonPluginAlgorithmFactory(){
     if(!Py_IsInitialized()){
         Py_Initialize();

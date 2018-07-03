@@ -66,7 +66,7 @@ ext_modules = cythonize(os.path.join(self_path, 'astra', '*.pyx'),
 cmdclass = {'build_ext': build_ext}
 
 for m in ext_modules:
-    if m.name == 'astra.plugin_c':
+    if m.name in ('astra.plugin_c', 'astra.algorithm_c'):
         m.sources.append(os.path.join(self_path, 'astra', 'src',
                                       'PythonPluginAlgorithm.cpp'))
 
