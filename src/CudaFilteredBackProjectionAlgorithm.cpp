@@ -27,10 +27,10 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include <astra/CudaFilteredBackProjectionAlgorithm.h>
 #include <astra/FanFlatProjectionGeometry2D.h>
-#include <cstring>
 
 #include "astra/AstraObjectManager.h"
 #include "astra/CudaProjector2D.h"
+#include "astra/Filters.h"
 #include "astra/cuda/2d/astra.h"
 #include "astra/cuda/2d/fbp.h"
 
@@ -75,7 +75,7 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 	// filter type
 	XMLNode node = _cfg.self.getSingleNode("FilterType");
 	if (node)
-		m_eFilter = _convertStringToFilter(node.getContent().c_str());
+		m_eFilter = convertStringToFilter(node.getContent().c_str());
 	else
 		m_eFilter = FILTER_RAMLAK;
 	CC.markNodeParsed("FilterType");
@@ -215,6 +215,8 @@ bool CCudaFilteredBackProjectionAlgorithm::check()
 	ASTRA_CONFIG_CHECK(m_pSinogram, "FBP_CUDA", "Invalid Projection Data Object.");
 	ASTRA_CONFIG_CHECK(m_pReconstruction, "FBP_CUDA", "Invalid Reconstruction Data Object.");
 
+	ASTRA_CONFIG_CHECK(m_eFilter != FILTER_ERROR, "FBP_CUDA", "Invalid filter name.");
+
 	if((m_eFilter == FILTER_PROJECTION) || (m_eFilter == FILTER_SINOGRAM) || (m_eFilter == FILTER_RPROJECTION) || (m_eFilter == FILTER_RSINOGRAM))
 	{
 		ASTRA_CONFIG_CHECK(m_pfFilter, "FBP_CUDA", "Invalid filter pointer.");
@@ -235,116 +237,4 @@ bool CCudaFilteredBackProjectionAlgorithm::check()
 	return true;
 }
 
-static bool stringCompareLowerCase(const char * _stringA, const char * _stringB)
-{
-	int iCmpReturn = 0;
-
-#ifdef _MSC_VER
-	iCmpReturn = _stricmp(_stringA, _stringB);
-#else
-	iCmpReturn = strcasecmp(_stringA, _stringB);
-#endif
-
-	return (iCmpReturn == 0);
-}
-
-E_FBPFILTER CCudaFilteredBackProjectionAlgorithm::_convertStringToFilter(const char * _filterType)
-{
-	E_FBPFILTER output = FILTER_NONE;
-
-	if(stringCompareLowerCase(_filterType, "ram-lak"))
-	{
-		output = FILTER_RAMLAK;
-	}
-	else if(stringCompareLowerCase(_filterType, "shepp-logan"))
-	{
-		output = FILTER_SHEPPLOGAN;
-	}
-	else if(stringCompareLowerCase(_filterType, "cosine"))
-	{
-		output = FILTER_COSINE;
-	}
-	else if(stringCompareLowerCase(_filterType, "hamming"))
-	{
-		output = FILTER_HAMMING;
-	}
-	else if(stringCompareLowerCase(_filterType, "hann"))
-	{
-		output = FILTER_HANN;
-	}
-	else if(stringCompareLowerCase(_filterType, "none"))
-	{
-		output = FILTER_NONE;
-	}
-	else if(stringCompareLowerCase(_filterType, "tukey"))
-	{
-		output = FILTER_TUKEY;
-	}
-	else if(stringCompareLowerCase(_filterType, "lanczos"))
-	{
-		output = FILTER_LANCZOS;
-	}
-	else if(stringCompareLowerCase(_filterType, "triangular"))
-	{
-		output = FILTER_TRIANGULAR;
-	}
-	else if(stringCompareLowerCase(_filterType, "gaussian"))
-	{
-		output = FILTER_GAUSSIAN;
-	}
-	else if(stringCompareLowerCase(_filterType, "barlett-hann"))
-	{
-		output = FILTER_BARTLETTHANN;
-	}
-	else if(stringCompareLowerCase(_filterType, "blackman"))
-	{
-		output = FILTER_BLACKMAN;
-	}
-	else if(stringCompareLowerCase(_filterType, "nuttall"))
-	{
-		output = FILTER_NUTTALL;
-	}
-	else if(stringCompareLowerCase(_filterType, "blackman-harris"))
-	{
-		output = FILTER_BLACKMANHARRIS;
-	}
-	else if(stringCompareLowerCase(_filterType, "blackman-nuttall"))
-	{
-		output = FILTER_BLACKMANNUTTALL;
-	}
-	else if(stringCompareLowerCase(_filterType, "flat-top"))
-	{
-		output = FILTER_FLATTOP;
-	}
-	else if(stringCompareLowerCase(_filterType, "kaiser"))
-	{
-		output = FILTER_KAISER;
-	}
-	else if(stringCompareLowerCase(_filterType, "parzen"))
-	{
-		output = FILTER_PARZEN;
-	}
-	else if(stringCompareLowerCase(_filterType, "projection"))
-	{
-		output = FILTER_PROJECTION;
-	}
-	else if(stringCompareLowerCase(_filterType, "sinogram"))
-	{
-		output = FILTER_SINOGRAM;
-	}
-	else if(stringCompareLowerCase(_filterType, "rprojection"))
-	{
-		output = FILTER_RPROJECTION;
-	}
-	else if(stringCompareLowerCase(_filterType, "rsinogram"))
-	{
-		output = FILTER_RSINOGRAM;
-	}
-	else
-	{
-		ASTRA_ERROR("Failed to convert \"%s\" into a filter.",_filterType);
-	}
-
-	return output;
-}
 

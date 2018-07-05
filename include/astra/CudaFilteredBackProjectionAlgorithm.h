@@ -33,6 +33,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "Float32ProjectionData2D.h"
 #include "Float32VolumeData2D.h"
 #include "CudaReconstructionAlgorithm2D.h"
+#include "Filters.h"
 
 #include "cuda/2d/astra.h"
 
@@ -51,8 +52,6 @@ private:
 	float m_fFilterParameter;  // some filters allow for parameterization (value < 0.0f -> no parameter)
 	float m_fFilterD;	// frequency cut-off
 	bool m_bShortScan; // short-scan mode for fan beam
-
-	static E_FBPFILTER _convertStringToFilter(const char * _filterType);
 
 public:
 	CCudaFilteredBackProjectionAlgorithm();

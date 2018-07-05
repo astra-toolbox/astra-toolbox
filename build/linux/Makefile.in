@@ -142,6 +142,7 @@ BASE_OBJECTS=\
 	src/FanFlatProjectionGeometry2D.lo \
 	src/FanFlatVecProjectionGeometry2D.lo \
 	src/FilteredBackProjectionAlgorithm.lo \
+	src/Filters.lo \
 	src/Float32Data2D.lo \
 	src/Float32Data3D.lo \
 	src/Float32Data3DMemory.lo \

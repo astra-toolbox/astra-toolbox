@@ -25,13 +25,14 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#ifndef FBP_FILTERS_H
-#define FBP_FILTERS_H
+#ifndef _INC_ASTRA_FILTERS_H
+#define _INC_ASTRA_FILTERS_H
 
 namespace astra {
 
 enum E_FBPFILTER
 {
+	FILTER_ERROR,			//< not a valid filter
 	FILTER_NONE,			//< no filter (regular BP)
 	FILTER_RAMLAK,			//< default FBP filter
 	FILTER_SHEPPLOGAN,		//< Shepp-Logan
@@ -54,8 +55,17 @@ enum E_FBPFILTER
 	FILTER_SINOGRAM,		//< every projection direction has its own filter
 	FILTER_RPROJECTION,		//< projection filter in real space (as opposed to fourier space)
 	FILTER_RSINOGRAM,		//< sinogram filter in real space
+
 };
+
+// Generate filter of given size and parameters. Returns newly allocated array.
+float *genFilter(E_FBPFILTER _eFilter, float _fD, int _iProjectionCount,
+                 int _iFFTRealDetectorCount,
+                 int _iFFTFourierDetectorCount, float _fParameter = -1.0f);
+
+// Convert string to filter type. Returns FILTER_ERROR if unrecognized.
+E_FBPFILTER convertStringToFilter(const char * _filterType);
 
 }
 
-#endif /* FBP_FILTERS_H */
+#endif

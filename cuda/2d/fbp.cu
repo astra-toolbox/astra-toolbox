@@ -130,7 +130,7 @@ bool FBP::setFilter(astra::E_FBPFILTER _eFilter, const float * _pfHostFilter /* 
 		case astra::FILTER_FLATTOP:
 		case astra::FILTER_PARZEN:
 		{
-			genFilter(_eFilter, _fD, dims.iProjAngles, pHostFilter, iFFTRealDetCount, iFreqBinCount, _fFilterParameter);
+			genCuFFTFilter(_eFilter, _fD, dims.iProjAngles, pHostFilter, iFFTRealDetCount, iFreqBinCount, _fFilterParameter);
 			uploadComplexArrayToDevice(dims.iProjAngles, iFreqBinCount, pHostFilter, (cufftComplex*)D_filter);
 
 			break;

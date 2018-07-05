@@ -26,7 +26,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "algo.h"
-#include "fbp_filters.h"
+#include "astra/Filters.h"
 
 namespace astraCUDA {
 
