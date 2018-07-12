@@ -60,9 +60,9 @@ void applyFilter(int _iProjectionCount, int _iFreqBinCount,
 
 int calcFFTFourierSize(int _iFFTRealSize);
 
-void genCuFFTFilter(astra::E_FBPFILTER _eFilter, float _fD, int _iProjectionCount,
+void genCuFFTFilter(const astra::SFilterConfig &_cfg, int _iProjectionCount,
                    cufftComplex * _pFilter, int _iFFTRealDetectorCount,
-                   int _iFFTFourierDetectorCount, float _fParameter = -1.0f);
+                   int _iFFTFourierDetectorCount);
 
 void genIdenFilter(int _iProjectionCount, cufftComplex * _pFilter,
                    int _iFFTRealDetectorCount, int _iFFTFourierDetectorCount);

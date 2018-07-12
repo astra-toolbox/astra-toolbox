@@ -29,15 +29,18 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/Logging.h"
 #include "astra/Fourier.h"
 #include "astra/Filters.h"
+#include "astra/Config.h"
+#include "astra/Float32ProjectionData2D.h"
+#include "astra/AstraObjectManager.h"
 
 #include <utility>
 #include <cstring>
 
 namespace astra {
 
-float *genFilter(E_FBPFILTER _eFilter, float _fD, int _iProjectionCount,
+float *genFilter(const SFilterConfig &_cfg, int _iProjectionCount,
                int _iFFTRealDetectorCount,
-               int _iFFTFourierDetectorCount, float _fParameter /* = -1.0f */)
+               int _iFFTFourierDetectorCount)
 {
 	float * pfFilt = new float[_iFFTFourierDetectorCount];
 	float * pfW = new float[_iFFTFourierDetectorCount];
@@ -86,7 +89,7 @@ float *genFilter(E_FBPFILTER _eFilter, float _fD, int _iProjectionCount,
 		pfW[iDetectorIndex] = M_PI * 2.0f * fRelIndex;
 	}
 
-	switch(_eFilter)
+	switch(_cfg.m_eType)
 	{
 		case FILTER_RAMLAK:
 		{
@@ -98,7 +101,7 @@ float *genFilter(E_FBPFILTER _eFilter, float _fD, int _iProjectionCount,
 			// filt(2:end) = filt(2:end) .* (sin(w(2:end)/(2*d))./(w(2:end)/(2*d)))
 			for(int iDetectorIndex = 1; iDetectorIndex < _iFFTFourierDetectorCount; iDetectorIndex++)
 			{
-				pfFilt[iDetectorIndex] = pfFilt[iDetectorIndex] * (sinf(pfW[iDetectorIndex] / 2.0f / _fD) / (pfW[iDetectorIndex] / 2.0f / _fD));
+				pfFilt[iDetectorIndex] = pfFilt[iDetectorIndex] * (sinf(pfW[iDetectorIndex] / 2.0f / _cfg.m_fD) / (pfW[iDetectorIndex] / 2.0f / _cfg.m_fD));
 			}
 			break;
 		}
@@ -107,7 +110,7 @@ float *genFilter(E_FBPFILTER _eFilter, float _fD, int _iProjectionCount,
 			// filt(2:end) = filt(2:end) .* cos(w(2:end)/(2*d))
 			for(int iDetectorIndex = 1; iDetectorIndex < _iFFTFourierDetectorCount; iDetectorIndex++)
 			{
-				pfFilt[iDetectorIndex] = pfFilt[iDetectorIndex] * cosf(pfW[iDetectorIndex] / 2.0f / _fD);
+				pfFilt[iDetectorIndex] = pfFilt[iDetectorIndex] * cosf(pfW[iDetectorIndex] / 2.0f / _cfg.m_fD);
 			}
 			break;
 		}
@@ -116,7 +119,7 @@ float *genFilter(E_FBPFILTER _eFilter, float _fD, int _iProjectionCount,
 			// filt(2:end) = filt(2:end) .* (.54 + .46 * cos(w(2:end)/d))
 			for(int iDetectorIndex = 1; iDetectorIndex < _iFFTFourierDetectorCount; iDetectorIndex++)
 			{
-				pfFilt[iDetectorIndex] = pfFilt[iDetectorIndex] * ( 0.54f + 0.46f * cosf(pfW[iDetectorIndex] / _fD));
+				pfFilt[iDetectorIndex] = pfFilt[iDetectorIndex] * ( 0.54f + 0.46f * cosf(pfW[iDetectorIndex] / _cfg.m_fD));
 			}
 			break;
 		}
@@ -125,14 +128,14 @@ float *genFilter(E_FBPFILTER _eFilter, float _fD, int _iProjectionCount,
 			// filt(2:end) = filt(2:end) .*(1+cos(w(2:end)./d)) / 2
 			for(int iDetectorIndex = 1; iDetectorIndex < _iFFTFourierDetectorCount; iDetectorIndex++)
 			{
-				pfFilt[iDetectorIndex] = pfFilt[iDetectorIndex] * (1.0f + cosf(pfW[iDetectorIndex] / _fD)) / 2.0f;
+				pfFilt[iDetectorIndex] = pfFilt[iDetectorIndex] * (1.0f + cosf(pfW[iDetectorIndex] / _cfg.m_fD)) / 2.0f;
 			}
 			break;
 		}
 		case FILTER_TUKEY:
 		{
-			float fAlpha = _fParameter;
-			if(_fParameter < 0.0f) fAlpha = 0.5f;
+			float fAlpha = _cfg.m_fParameter;
+			if(_cfg.m_fParameter < 0.0f) fAlpha = 0.5f;
 			float fN = (float)_iFFTFourierDetectorCount;
 			float fHalfN = fN / 2.0f;
 			float fEnumTerm = fAlpha * fHalfN;
@@ -204,8 +207,8 @@ float *genFilter(E_FBPFILTER _eFilter, float _fD, int _iProjectionCount,
 		}
 		case FILTER_GAUSSIAN:
 		{
-			float fSigma = _fParameter;
-			if(_fParameter < 0.0f) fSigma = 0.4f;
+			float fSigma = _cfg.m_fParameter;
+			if(_cfg.m_fParameter < 0.0f) fSigma = 0.4f;
 			float fN = (float)_iFFTFourierDetectorCount;
 			float fQuotient = (fN - 1.0f) / 2.0f;
 
@@ -245,8 +248,8 @@ float *genFilter(E_FBPFILTER _eFilter, float _fD, int _iProjectionCount,
 		}
 		case FILTER_BLACKMAN:
 		{
-			float fAlpha = _fParameter;
-			if(_fParameter < 0.0f) fAlpha = 0.16f;
+			float fAlpha = _cfg.m_fParameter;
+			if(_cfg.m_fParameter < 0.0f) fAlpha = 0.16f;
 			float fA0 = (1.0f - fAlpha) / 2.0f;
 			float fA1 = 0.5f;
 			float fA2 = fAlpha / 2.0f;
@@ -356,8 +359,8 @@ float *genFilter(E_FBPFILTER _eFilter, float _fD, int _iProjectionCount,
 		}
 		case FILTER_KAISER:
 		{
-			float fAlpha = _fParameter;
-			if(_fParameter < 0.0f) fAlpha = 3.0f;
+			float fAlpha = _cfg.m_fParameter;
+			if(_cfg.m_fParameter < 0.0f) fAlpha = 3.0f;
 			float fPiTimesAlpha = M_PI * fAlpha;
 			float fNMinusOne = (float)(_iFFTFourierDetectorCount - 1);
 			float fDenom = (float)j0((double)fPiTimesAlpha);
@@ -406,7 +409,7 @@ float *genFilter(E_FBPFILTER _eFilter, float _fD, int _iProjectionCount,
 	}
 
 	// filt(w>pi*d) = 0;
-	float fPiTimesD = M_PI * _fD;
+	float fPiTimesD = M_PI * _cfg.m_fD;
 	for(int iDetectorIndex = 0; iDetectorIndex < _iFFTFourierDetectorCount; iDetectorIndex++)
 	{
 		float fWValue = pfW[iDetectorIndex];
@@ -480,5 +483,66 @@ E_FBPFILTER convertStringToFilter(const char * _filterType)
 }
 
 
+SFilterConfig getFilterConfigForAlgorithm(const Config& _cfg, CAlgorithm *_alg)
+{
+	ConfigStackCheck<CAlgorithm> CC("getFilterConfig", _alg, _cfg);
+
+	SFilterConfig c;
+
+	// filter type
+	XMLNode node = _cfg.self.getSingleNode("FilterType");
+	if (node)
+		c.m_eType = convertStringToFilter(node.getContent().c_str());
+	else
+		c.m_eType = FILTER_RAMLAK;
+	CC.markNodeParsed("FilterType");
+
+	// filter
+	node = _cfg.self.getSingleNode("FilterSinogramId");
+	if (node)
+	{
+		int id = node.getContentInt();
+		const CFloat32ProjectionData2D * pFilterData = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
+		c.m_iCustomFilterWidth = pFilterData->getGeometry()->getDetectorCount();
+		int iFilterProjectionCount = pFilterData->getGeometry()->getProjectionAngleCount();
+
+		c.m_pfCustomFilter = new float[c.m_iCustomFilterWidth * iFilterProjectionCount];
+		memcpy(c.m_pfCustomFilter, pFilterData->getDataConst(), sizeof(float) * c.m_iCustomFilterWidth * iFilterProjectionCount);
+	}
+	else
+	{
+		c.m_iCustomFilterWidth = 0;
+		c.m_pfCustomFilter = NULL;
+	}
+	CC.markNodeParsed("FilterSinogramId"); // TODO: Only for some types!
+
+	// filter parameter
+	node = _cfg.self.getSingleNode("FilterParameter");
+	if (node)
+	{
+		float fParameter = node.getContentNumerical();
+		c.m_fParameter = fParameter;
+	}
+	else
+	{
+		c.m_fParameter = -1.0f;
+	}
+	CC.markNodeParsed("FilterParameter"); // TODO: Only for some types!
+
+	// D value
+	node = _cfg.self.getSingleNode("FilterD");
+	if (node)
+	{
+		float fD = node.getContentNumerical();
+		c.m_fD = fD;
+	}
+	else
+	{
+		c.m_fD = 1.0f;
+	}
+	CC.markNodeParsed("FilterD"); // TODO: Only for some types!
+
+	return c;
+}
 
 }

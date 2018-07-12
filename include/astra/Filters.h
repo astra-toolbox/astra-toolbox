@@ -30,6 +30,9 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 namespace astra {
 
+struct Config;
+class CAlgorithm;
+
 enum E_FBPFILTER
 {
 	FILTER_ERROR,			//< not a valid filter
@@ -58,13 +61,27 @@ enum E_FBPFILTER
 
 };
 
+struct SFilterConfig {
+	E_FBPFILTER m_eType;
+	float m_fD;
+	float m_fParameter;
+
+	float *m_pfCustomFilter;
+	int m_iCustomFilterWidth;
+
+	SFilterConfig() : m_eType(FILTER_ERROR), m_fD(1.0f), m_fParameter(-1.0f),
+	                  m_pfCustomFilter(0), m_iCustomFilterWidth(0) { };
+};
+
 // Generate filter of given size and parameters. Returns newly allocated array.
-float *genFilter(E_FBPFILTER _eFilter, float _fD, int _iProjectionCount,
+float *genFilter(const SFilterConfig &_cfg, int _iProjectionCount,
                  int _iFFTRealDetectorCount,
-                 int _iFFTFourierDetectorCount, float _fParameter = -1.0f);
+                 int _iFFTFourierDetectorCount);
 
 // Convert string to filter type. Returns FILTER_ERROR if unrecognized.
 E_FBPFILTER convertStringToFilter(const char * _filterType);
+
+SFilterConfig getFilterConfigForAlgorithm(const Config& _cfg, CAlgorithm *_alg);
 
 }
 

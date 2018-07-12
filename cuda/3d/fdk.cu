@@ -253,7 +253,9 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 	memset(pHostFilter, 0, sizeof(cufftComplex) * dims.iProjAngles * iHalfFFTSize);
 
 	if (pfFilter == 0){
-		astraCUDA::genCuFFTFilter(astra::FILTER_RAMLAK, 1.0f, dims.iProjAngles, pHostFilter, iPaddedDetCount, iHalfFFTSize);
+		astra::SFilterConfig filter;
+		filter.m_eType = astra::FILTER_RAMLAK;
+		astraCUDA::genCuFFTFilter(filter, dims.iProjAngles, pHostFilter, iPaddedDetCount, iHalfFFTSize);
 	} else {
 		for (int i = 0; i < dims.iProjAngles * iHalfFFTSize; i++) {
 			pHostFilter[i].x = pfFilter[i];

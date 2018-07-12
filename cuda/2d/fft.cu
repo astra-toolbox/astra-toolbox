@@ -300,13 +300,13 @@ void genIdenFilter(int _iProjectionCount, cufftComplex * _pFilter,
 	}
 }
 
-void genCuFFTFilter(E_FBPFILTER _eFilter, float _fD, int _iProjectionCount,
+void genCuFFTFilter(const SFilterConfig &_cfg, int _iProjectionCount,
                cufftComplex * _pFilter, int _iFFTRealDetectorCount,
-               int _iFFTFourierDetectorCount, float _fParameter /* = -1.0f */)
+               int _iFFTFourierDetectorCount)
 {
-	float * pfFilt = astra::genFilter(_eFilter, _fD, _iProjectionCount,
+	float * pfFilt = astra::genFilter(_cfg, _iProjectionCount,
 	                                  _iFFTRealDetectorCount,
-	                                  _iFFTFourierDetectorCount, _fParameter);
+	                                  _iFFTFourierDetectorCount);
 
 	for(int iDetectorIndex = 0; iDetectorIndex < _iFFTFourierDetectorCount; iDetectorIndex++)
 	{

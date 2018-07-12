@@ -75,9 +75,7 @@ public:
 	// FILTER_COSINE, FILTER_HAMMING, and FILTER_HANN)
 	// have a D variable, which gives the cutoff point in the frequency domain.
 	// Setting this value to 1.0 will include the whole filter
-	bool setFilter(astra::E_FBPFILTER _eFilter,
-                   const float * _pfHostFilter = NULL,
-                   int _iFilterWidth = 0, float _fD = 1.0f, float _fFilterParameter = -1.0f);
+	bool setFilter(const astra::SFilterConfig &_cfg);
 
 	bool setShortScan(bool ss) { m_bShortScan = ss; return true; }
 
