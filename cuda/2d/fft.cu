@@ -275,17 +275,6 @@ bool runCudaIFFT(int _iProjectionCount, const cufftComplex* _pDevSourceComplex,
 	return true;
 }
 
-
-// Because the input is real, the Fourier transform is symmetric.
-// CUFFT only outputs the first half (ignoring the redundant second half),
-// and expects the same as input for the IFFT.
-int calcFFTFourierSize(int _iFFTRealSize)
-{
-	int iFFTFourierSize = _iFFTRealSize / 2 + 1;
-
-	return iFFTFourierSize;
-}
-
 void genIdenFilter(int _iProjectionCount, cufftComplex * _pFilter,
                    int _iFFTRealDetectorCount, int _iFFTFourierDetectorCount)
 {

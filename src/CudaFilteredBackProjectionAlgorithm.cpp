@@ -176,6 +176,8 @@ bool CCudaFilteredBackProjectionAlgorithm::check()
 	// check pixel supersampling
 	ASTRA_CONFIG_CHECK(m_iPixelSuperSampling >= 0, "FBP_CUDA", "PixelSuperSampling must be a non-negative integer.");
 
+	ASTRA_CONFIG_CHECK(checkCustomFilterSize(m_filterConfig, *m_pSinogram->getGeometry()), "FBP_CUDA", "Filter size mismatch");
+
 
 	// success
 	m_bIsInitialized = true;

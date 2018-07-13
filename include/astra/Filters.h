@@ -32,6 +32,7 @@ namespace astra {
 
 struct Config;
 class CAlgorithm;
+class CProjectionGeometry2D;
 
 enum E_FBPFILTER
 {
@@ -68,9 +69,11 @@ struct SFilterConfig {
 
 	float *m_pfCustomFilter;
 	int m_iCustomFilterWidth;
+	int m_iCustomFilterHeight;
 
 	SFilterConfig() : m_eType(FILTER_ERROR), m_fD(1.0f), m_fParameter(-1.0f),
-	                  m_pfCustomFilter(0), m_iCustomFilterWidth(0) { };
+	                  m_pfCustomFilter(0), m_iCustomFilterWidth(0),
+	                  m_iCustomFilterHeight(0) { };
 };
 
 // Generate filter of given size and parameters. Returns newly allocated array.
@@ -82,6 +85,11 @@ float *genFilter(const SFilterConfig &_cfg, int _iProjectionCount,
 E_FBPFILTER convertStringToFilter(const char * _filterType);
 
 SFilterConfig getFilterConfigForAlgorithm(const Config& _cfg, CAlgorithm *_alg);
+
+bool checkCustomFilterSize(const SFilterConfig &_cfg, const CProjectionGeometry2D &_geom);
+
+int calcFFTFourierSize(int _iFFTRealSize);
+
 
 }
 

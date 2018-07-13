@@ -58,8 +58,6 @@ bool runCudaIFFT(int _iProjectionCount, const cufftComplex* _pDevSourceComplex,
 void applyFilter(int _iProjectionCount, int _iFreqBinCount,
                  cufftComplex * _pSinogram, cufftComplex * _pFilter);
 
-int calcFFTFourierSize(int _iFFTRealSize);
-
 void genCuFFTFilter(const astra::SFilterConfig &_cfg, int _iProjectionCount,
                    cufftComplex * _pFilter, int _iFFTRealDetectorCount,
                    int _iFFTFourierDetectorCount);

@@ -35,9 +35,9 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/CompositeGeometryManager.h"
 
 #include "astra/Logging.h"
+#include "astra/Filters.h"
 
 #include "astra/cuda/3d/astra3d.h"
-#include "astra/cuda/2d/fft.h"
 #include "astra/cuda/3d/util3d.h"
 
 using namespace std;
@@ -156,7 +156,7 @@ bool CCudaFDKAlgorithm3D::initialize(const Config& _cfg)
 		const CProjectionGeometry3D* projgeom = m_pSinogram->getGeometry();
 		const CProjectionGeometry2D* filtgeom = pFilterData->getGeometry();
 		int iPaddedDetCount = calcNextPowerOfTwo(2 * projgeom->getDetectorColCount());
-		int iHalfFFTSize = astraCUDA::calcFFTFourierSize(iPaddedDetCount);
+		int iHalfFFTSize = calcFFTFourierSize(iPaddedDetCount);
 		if(filtgeom->getDetectorCount()!=iHalfFFTSize || filtgeom->getProjectionAngleCount()!=projgeom->getProjectionCount()){
 			ASTRA_ERROR("Filter size does not match required size (%i angles, %i detectors)",projgeom->getProjectionCount(),iHalfFFTSize);
 			return false;

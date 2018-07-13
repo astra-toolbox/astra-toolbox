@@ -504,14 +504,15 @@ SFilterConfig getFilterConfigForAlgorithm(const Config& _cfg, CAlgorithm *_alg)
 		int id = node.getContentInt();
 		const CFloat32ProjectionData2D * pFilterData = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
 		c.m_iCustomFilterWidth = pFilterData->getGeometry()->getDetectorCount();
-		int iFilterProjectionCount = pFilterData->getGeometry()->getProjectionAngleCount();
+		c.m_iCustomFilterHeight = pFilterData->getGeometry()->getProjectionAngleCount();
 
-		c.m_pfCustomFilter = new float[c.m_iCustomFilterWidth * iFilterProjectionCount];
-		memcpy(c.m_pfCustomFilter, pFilterData->getDataConst(), sizeof(float) * c.m_iCustomFilterWidth * iFilterProjectionCount);
+		c.m_pfCustomFilter = new float[c.m_iCustomFilterWidth * c.m_iCustomFilterHeight];
+		memcpy(c.m_pfCustomFilter, pFilterData->getDataConst(), sizeof(float) * c.m_iCustomFilterWidth * c.m_iCustomFilterHeight);
 	}
 	else
 	{
 		c.m_iCustomFilterWidth = 0;
+		c.m_iCustomFilterHeight = 0;
 		c.m_pfCustomFilter = NULL;
 	}
 	CC.markNodeParsed("FilterSinogramId"); // TODO: Only for some types!
@@ -543,6 +544,65 @@ SFilterConfig getFilterConfigForAlgorithm(const Config& _cfg, CAlgorithm *_alg)
 	CC.markNodeParsed("FilterD"); // TODO: Only for some types!
 
 	return c;
+}
+
+static int calcNextPowerOfTwo(int n)
+{
+	int x = 1;
+	while (x < n)
+		x *= 2;
+
+	return x;
+}
+
+// Because the input is real, the Fourier transform is symmetric.
+// CUFFT only outputs the first half (ignoring the redundant second half),
+// and expects the same as input for the IFFT.
+int calcFFTFourierSize(int _iFFTRealSize)
+{
+	int iFFTFourierSize = _iFFTRealSize / 2 + 1;
+
+	return iFFTFourierSize;
+}
+
+bool checkCustomFilterSize(const SFilterConfig &_cfg, const CProjectionGeometry2D &_geom) {
+	int iExpectedWidth = -1, iExpectedHeight = 1;
+
+	switch (_cfg.m_eType) {
+		case FILTER_ERROR:
+			ASTRA_ERROR("checkCustomFilterSize: internal error; FILTER_ERROR passed");
+			return false;
+		case FILTER_NONE:
+			return true;
+		case FILTER_SINOGRAM:
+			iExpectedHeight = _geom.getProjectionAngleCount();
+			// fallthrough
+		case FILTER_PROJECTION:
+			{
+				int iPaddedDetCount = calcNextPowerOfTwo(2 * _geom.getDetectorCount());
+				iExpectedWidth = calcFFTFourierSize(iPaddedDetCount);
+			}
+			if (_cfg.m_iCustomFilterWidth != iExpectedWidth ||
+			    _cfg.m_iCustomFilterHeight != iExpectedHeight)
+			{
+				ASTRA_ERROR("filter size mismatch: %dx%d (received) is not %dx%d (expected)", _cfg.m_iCustomFilterHeight, _cfg.m_iCustomFilterWidth, iExpectedHeight, iExpectedWidth);
+				return false;
+			}
+			return true;
+		case FILTER_RSINOGRAM:
+			iExpectedHeight = _geom.getProjectionAngleCount();
+			// fallthrough
+		case FILTER_RPROJECTION:
+			if (_cfg.m_iCustomFilterHeight != iExpectedHeight)
+			{
+				ASTRA_ERROR("filter size mismatch: %dx%d (received) is not %dxX (expected)", _cfg.m_iCustomFilterHeight, _cfg.m_iCustomFilterWidth, iExpectedHeight);
+				return false;
+			}
+			return true;
+		default:
+			// Non-custom filters; nothing to check.
+			return true;
+	}
 }
 
 }

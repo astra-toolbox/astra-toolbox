@@ -246,7 +246,7 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 	// Generate filter
 	// TODO: Check errors
 	int iPaddedDetCount = calcNextPowerOfTwo(2 * dims.iProjU);
-	int iHalfFFTSize = astraCUDA::calcFFTFourierSize(iPaddedDetCount);
+	int iHalfFFTSize = astra::calcFFTFourierSize(iPaddedDetCount);
 
 
 	cufftComplex *pHostFilter = new cufftComplex[dims.iProjAngles * iHalfFFTSize];
