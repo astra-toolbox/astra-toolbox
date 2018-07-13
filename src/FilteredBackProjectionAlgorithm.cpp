@@ -278,8 +278,14 @@ void CFilteredBackProjectionAlgorithm::performFiltering(CFloat32ProjectionData2D
 	int zpDetector = calcNextPowerOfTwo(2 * m_pSinogram->getDetectorCount());
 	int iHalfFFTSize = astra::calcFFTFourierSize(zpDetector);
 
+	// cdft setup
+	int *ip = new int[int(2+sqrt((float)zpDetector)+1)];
+	ip[0] = 0;
+	float32 *w = new float32[zpDetector/2];
+
 	// Create filter
 	bool bFilterMultiAngle = false;
+	bool bFilterComplex = false;
 	float *pfFilter = 0;
 	float *pfFilter_delete = 0;
 	switch (m_filterConfig.m_eType) {
@@ -289,6 +295,8 @@ void CFilteredBackProjectionAlgorithm::performFiltering(CFloat32ProjectionData2D
 			ASTRA_ASSERT(false);
 			return;
 		case FILTER_PROJECTION:
+			// Fourier space, real, half the coefficients (because symmetric)
+			// 1 x iHalfFFTSize
 			pfFilter = m_filterConfig.m_pfCustomFilter;
 			break;
 		case FILTER_SINOGRAM:
@@ -296,20 +304,47 @@ void CFilteredBackProjectionAlgorithm::performFiltering(CFloat32ProjectionData2D
 			pfFilter = m_filterConfig.m_pfCustomFilter;
 			break;
 		case FILTER_RSINOGRAM:
+			bFilterMultiAngle = true;
+			// fall-through
 		case FILTER_RPROJECTION:
-			// TODO
-			ASTRA_ERROR("Unimplemented filter type");
-			return;
+		{
+			bFilterComplex = true;
 
+			int count = bFilterMultiAngle ? iAngleCount : 1;
+			// Spatial, real, full convolution kernel
+			// Center in center (or right-of-center for even sized.)
+			// I.e., 0 1 0 and 0 0 1 0 both correspond to the identity
+
+			pfFilter = new float[2 * zpDetector * count];
+			pfFilter_delete = pfFilter;
+
+			int iUsedFilterWidth = min(m_filterConfig.m_iCustomFilterWidth, zpDetector);
+			int iStartFilterIndex = (m_filterConfig.m_iCustomFilterWidth - iUsedFilterWidth) / 2;
+			int iMaxFilterIndex = iStartFilterIndex + iUsedFilterWidth;
+
+			int iFilterShiftSize = m_filterConfig.m_iCustomFilterWidth / 2;
+
+			for (int i = 0; i < count; ++i) {
+				float *rOut = pfFilter + i * 2 * zpDetector;
+				float *rIn = m_filterConfig.m_pfCustomFilter + i * m_filterConfig.m_iCustomFilterWidth;
+				memset(rOut, 0, sizeof(float) * 2 * zpDetector);
+
+				for(int j = iStartFilterIndex; j < iMaxFilterIndex; j++) {
+					int iFFTInFilterIndex = (j + zpDetector - iFilterShiftSize) % zpDetector;
+					rOut[2 * iFFTInFilterIndex] = rIn[j];
+				}
+
+				cdft(2*zpDetector, -1, rOut, ip, w);
+			}
+
+			break;
+		}
 		default:
 			pfFilter = genFilter(m_filterConfig, zpDetector, iHalfFFTSize);
 			pfFilter_delete = pfFilter;
 	}
 
 	float32* pf = new float32[2 * iAngleCount * zpDetector];
-	int *ip = new int[int(2+sqrt((float)zpDetector)+1)];
-	ip[0]=0;
-	float32 *w = new float32[zpDetector/2];
 
 	// Copy and zero-pad data
 	for (int iAngle = 0; iAngle < iAngleCount; ++iAngle) {
@@ -332,18 +367,34 @@ void CFilteredBackProjectionAlgorithm::performFiltering(CFloat32ProjectionData2D
 	}
 
 	// Filter
-	for (int iAngle = 0; iAngle < iAngleCount; ++iAngle) {
-		float32* pfRow = pf + iAngle * 2 * zpDetector;
-		float *pfFilterRow = pfFilter;
-		if (bFilterMultiAngle)
-			pfFilterRow += iAngle * iHalfFFTSize;
-		for (int iDetector = 0; iDetector < iHalfFFTSize; ++iDetector) {
-			pfRow[2*iDetector] *= pfFilterRow[iDetector];
-			pfRow[2*iDetector+1] *= pfFilterRow[iDetector];
+	if (bFilterComplex) {
+		for (int iAngle = 0; iAngle < iAngleCount; ++iAngle) {
+			float32* pfRow = pf + iAngle * 2 * zpDetector;
+			float *pfFilterRow = pfFilter;
+			if (bFilterMultiAngle)
+				pfFilterRow += iAngle * 2 * zpDetector;
+
+			for (int i = 0; i < zpDetector; ++i) {
+				float re = pfRow[2*i] * pfFilterRow[2*i] - pfRow[2*i+1] * pfFilterRow[2*i+1];
+				float im = pfRow[2*i] * pfFilterRow[2*i+1] + pfRow[2*i+1] * pfFilterRow[2*i];
+				pfRow[2*i] = re;
+				pfRow[2*i+1] = im;
+			}
 		}
-		for (int iDetector = iHalfFFTSize; iDetector < zpDetector; ++iDetector) {
-			pfRow[2*iDetector] *= pfFilterRow[zpDetector - iDetector];
-			pfRow[2*iDetector+1] *= pfFilterRow[zpDetector - iDetector];
+	} else {
+		for (int iAngle = 0; iAngle < iAngleCount; ++iAngle) {
+			float32* pfRow = pf + iAngle * 2 * zpDetector;
+			float *pfFilterRow = pfFilter;
+			if (bFilterMultiAngle)
+				pfFilterRow += iAngle * iHalfFFTSize;
+			for (int iDetector = 0; iDetector < iHalfFFTSize; ++iDetector) {
+				pfRow[2*iDetector] *= pfFilterRow[iDetector];
+				pfRow[2*iDetector+1] *= pfFilterRow[iDetector];
+			}
+			for (int iDetector = iHalfFFTSize; iDetector < zpDetector; ++iDetector) {
+				pfRow[2*iDetector] *= pfFilterRow[zpDetector - iDetector];
+				pfRow[2*iDetector+1] *= pfFilterRow[zpDetector - iDetector];
+			}
 		}
 	}
 
