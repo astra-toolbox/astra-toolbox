@@ -81,6 +81,9 @@ void CFilteredBackProjectionAlgorithm::clear()
 	m_pSinogram = NULL;
 	m_pReconstruction = NULL;
 	m_bIsInitialized = false;
+
+	delete[] m_filterConfig.m_pfCustomFilter;
+	m_filterConfig.m_pfCustomFilter = 0;
 }
 
 
@@ -151,6 +154,9 @@ bool CFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 		delete[] projectionAngles;
 	}
 
+	m_filterConfig = getFilterConfigForAlgorithm(_cfg, this);
+
+
 	// TODO: check that the angles are linearly spaced between 0 and pi
 
 	// success
@@ -195,11 +201,14 @@ bool CFilteredBackProjectionAlgorithm::initialize(CProjector2D* _pProjector,
 												  CFloat32VolumeData2D* _pVolume,
 												  CFloat32ProjectionData2D* _pSinogram)
 {
+	clear();
+
 	// store classes
 	m_pProjector = _pProjector;
 	m_pReconstruction = _pVolume;
 	m_pSinogram = _pSinogram;
 
+	m_filterConfig = SFilterConfig();
 
 	// TODO: check that the angles are linearly spaced between 0 and pi
 
@@ -213,6 +222,15 @@ bool CFilteredBackProjectionAlgorithm::initialize(CProjector2D* _pProjector,
 bool CFilteredBackProjectionAlgorithm::_check() 
 {
 	ASTRA_CONFIG_CHECK(CReconstructionAlgorithm2D::_check(), "FBP", "Error in ReconstructionAlgorithm2D initialization");
+
+	ASTRA_CONFIG_CHECK(m_filterConfig.m_eType != FILTER_ERROR, "FBP", "Invalid filter name.");
+
+	if((m_filterConfig.m_eType == FILTER_PROJECTION) || (m_filterConfig.m_eType == FILTER_SINOGRAM) || (m_filterConfig.m_eType == FILTER_RPROJECTION) || (m_filterConfig.m_eType == FILTER_RSINOGRAM))
+	{
+		ASTRA_CONFIG_CHECK(m_filterConfig.m_pfCustomFilter, "FBP", "Invalid filter pointer.");
+	}
+
+	ASTRA_CONFIG_CHECK(checkCustomFilterSize(m_filterConfig, *m_pSinogram->getGeometry()), "FBP", "Filter size mismatch");
 
 	// success
 	return true;
@@ -249,29 +267,36 @@ void CFilteredBackProjectionAlgorithm::performFiltering(CFloat32ProjectionData2D
 	ASTRA_ASSERT(_pFilteredSinogram->getAngleCount() == m_pSinogram->getAngleCount());
 	ASTRA_ASSERT(_pFilteredSinogram->getDetectorCount() == m_pSinogram->getDetectorCount());
 
+	ASTRA_ASSERT(m_filterConfig.m_eType != FILTER_ERROR);
+	if (m_filterConfig.m_eType == FILTER_NONE)
+		return;
 
 	int iAngleCount = m_pProjector->getProjectionGeometry()->getProjectionAngleCount();
 	int iDetectorCount = m_pProjector->getProjectionGeometry()->getDetectorCount();
 
 
-	// We'll zero-pad to the smallest power of two at least 64 and
-	// at least 2*iDetectorCount
-	int zpDetector = 64;
-	int nextPow2 = 5;
-	while (zpDetector < iDetectorCount*2) {
-		zpDetector *= 2;
-		nextPow2++;
-	}
+	int zpDetector = calcNextPowerOfTwo(2 * m_pSinogram->getDetectorCount());
+	int iHalfFFTSize = astra::calcFFTFourierSize(zpDetector);
 
 	// Create filter
-	float32* filter = new float32[zpDetector];
+	float *pfFilter = 0;
+	switch (m_filterConfig.m_eType) {
+		case FILTER_ERROR:
+		case FILTER_NONE:
+			// Should have been handled before
+			ASTRA_ASSERT(false);
+			return;
+		case FILTER_SINOGRAM:
+		case FILTER_PROJECTION:
+		case FILTER_RSINOGRAM:
+		case FILTER_RPROJECTION:
+			// TODO
+			ASTRA_ERROR("Unimplemented filter type");
+			return;
 
-	for (int iDetector = 0; iDetector <= zpDetector/2; iDetector++)
-		filter[iDetector] = (2.0f * iDetector)/zpDetector;
-
-	for (int iDetector = zpDetector/2+1; iDetector < zpDetector; iDetector++)
-		filter[iDetector] = (2.0f * (zpDetector - iDetector)) / zpDetector;
-
+		default:
+			pfFilter = genFilter(m_filterConfig, zpDetector, iHalfFFTSize);
+	}
 
 	float32* pf = new float32[2 * iAngleCount * zpDetector];
 	int *ip = new int[int(2+sqrt((float)zpDetector)+1)];
@@ -301,9 +326,13 @@ void CFilteredBackProjectionAlgorithm::performFiltering(CFloat32ProjectionData2D
 	// Filter
 	for (int iAngle = 0; iAngle < iAngleCount; ++iAngle) {
 		float32* pfRow = pf + iAngle * 2 * zpDetector;
-		for (int iDetector = 0; iDetector < zpDetector; ++iDetector) {
-			pfRow[2*iDetector] *= filter[iDetector];
-			pfRow[2*iDetector+1] *= filter[iDetector];
+		for (int iDetector = 0; iDetector < iHalfFFTSize; ++iDetector) {
+			pfRow[2*iDetector] *= pfFilter[iDetector];
+			pfRow[2*iDetector+1] *= pfFilter[iDetector];
+		}
+		for (int iDetector = iHalfFFTSize; iDetector < zpDetector; ++iDetector) {
+			pfRow[2*iDetector] *= pfFilter[zpDetector - iDetector];
+			pfRow[2*iDetector+1] *= pfFilter[zpDetector - iDetector];
 		}
 	}
 
@@ -324,7 +353,7 @@ void CFilteredBackProjectionAlgorithm::performFiltering(CFloat32ProjectionData2D
 	delete[] pf;
 	delete[] w;
 	delete[] ip;
-	delete[] filter;
+	delete[] pfFilter;
 }
 
 }
