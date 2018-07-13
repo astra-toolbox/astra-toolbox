@@ -42,20 +42,10 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 namespace astraCUDA {
 
 
-
-static int calcNextPowerOfTwo(int n)
-{
-	int x = 1;
-	while (x < n)
-		x *= 2;
-
-	return x;
-}
-
 // static
 int FBP::calcFourierFilterSize(int _iDetectorCount)
 {
-	int iFFTRealDetCount = calcNextPowerOfTwo(2 * _iDetectorCount);
+	int iFFTRealDetCount = astra::calcNextPowerOfTwo(2 * _iDetectorCount);
 	int iFreqBinCount = astra::calcFFTFourierSize(iFFTRealDetCount);
 
 	// CHECKME: Matlab makes this at least 64. Do we also need to?
@@ -101,7 +91,7 @@ bool FBP::setFilter(const astra::SFilterConfig &_cfg)
 		return true; // leave D_filter set to 0
 
 
-	int iFFTRealDetCount = calcNextPowerOfTwo(2 * dims.iProjDets);
+	int iFFTRealDetCount = astra::calcNextPowerOfTwo(2 * dims.iProjDets);
 	int iFreqBinCount = astra::calcFFTFourierSize(iFFTRealDetCount);
 
 	cufftComplex * pHostFilter = new cufftComplex[dims.iProjAngles * iFreqBinCount];
@@ -311,7 +301,7 @@ bool FBP::iterate(unsigned int iterations)
 
 	if (D_filter) {
 
-		int iFFTRealDetCount = calcNextPowerOfTwo(2 * dims.iProjDets);
+		int iFFTRealDetCount = astra::calcNextPowerOfTwo(2 * dims.iProjDets);
 		int iFFTFourDetCount = astra::calcFFTFourierSize(iFFTRealDetCount);
 
 		cufftComplex * pDevComplexSinogram = NULL;

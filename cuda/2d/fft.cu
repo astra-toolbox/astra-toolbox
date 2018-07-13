@@ -293,7 +293,7 @@ void genCuFFTFilter(const SFilterConfig &_cfg, int _iProjectionCount,
                cufftComplex * _pFilter, int _iFFTRealDetectorCount,
                int _iFFTFourierDetectorCount)
 {
-	float * pfFilt = astra::genFilter(_cfg, _iProjectionCount,
+	float * pfFilt = astra::genFilter(_cfg,
 	                                  _iFFTRealDetectorCount,
 	                                  _iFFTFourierDetectorCount);
 

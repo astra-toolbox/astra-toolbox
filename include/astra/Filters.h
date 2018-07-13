@@ -77,7 +77,7 @@ struct SFilterConfig {
 };
 
 // Generate filter of given size and parameters. Returns newly allocated array.
-float *genFilter(const SFilterConfig &_cfg, int _iProjectionCount,
+float *genFilter(const SFilterConfig &_cfg,
                  int _iFFTRealDetectorCount,
                  int _iFFTFourierDetectorCount);
 
@@ -88,6 +88,8 @@ SFilterConfig getFilterConfigForAlgorithm(const Config& _cfg, CAlgorithm *_alg);
 
 bool checkCustomFilterSize(const SFilterConfig &_cfg, const CProjectionGeometry2D &_geom);
 
+
+int calcNextPowerOfTwo(int _iValue);
 int calcFFTFourierSize(int _iFFTRealSize);
 
 

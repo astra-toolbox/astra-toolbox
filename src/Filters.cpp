@@ -38,7 +38,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 namespace astra {
 
-float *genFilter(const SFilterConfig &_cfg, int _iProjectionCount,
+float *genFilter(const SFilterConfig &_cfg,
                int _iFFTRealDetectorCount,
                int _iFFTFourierDetectorCount)
 {
@@ -546,10 +546,10 @@ SFilterConfig getFilterConfigForAlgorithm(const Config& _cfg, CAlgorithm *_alg)
 	return c;
 }
 
-static int calcNextPowerOfTwo(int n)
+int calcNextPowerOfTwo(int n)
 {
 	int x = 1;
-	while (x < n)
+	while (x < n && x > 0)
 		x *= 2;
 
 	return x;
