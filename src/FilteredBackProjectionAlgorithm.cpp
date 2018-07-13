@@ -279,15 +279,22 @@ void CFilteredBackProjectionAlgorithm::performFiltering(CFloat32ProjectionData2D
 	int iHalfFFTSize = astra::calcFFTFourierSize(zpDetector);
 
 	// Create filter
+	bool bFilterMultiAngle = false;
 	float *pfFilter = 0;
+	float *pfFilter_delete = 0;
 	switch (m_filterConfig.m_eType) {
 		case FILTER_ERROR:
 		case FILTER_NONE:
 			// Should have been handled before
 			ASTRA_ASSERT(false);
 			return;
-		case FILTER_SINOGRAM:
 		case FILTER_PROJECTION:
+			pfFilter = m_filterConfig.m_pfCustomFilter;
+			break;
+		case FILTER_SINOGRAM:
+			bFilterMultiAngle = true;
+			pfFilter = m_filterConfig.m_pfCustomFilter;
+			break;
 		case FILTER_RSINOGRAM:
 		case FILTER_RPROJECTION:
 			// TODO
@@ -296,6 +303,7 @@ void CFilteredBackProjectionAlgorithm::performFiltering(CFloat32ProjectionData2D
 
 		default:
 			pfFilter = genFilter(m_filterConfig, zpDetector, iHalfFFTSize);
+			pfFilter_delete = pfFilter;
 	}
 
 	float32* pf = new float32[2 * iAngleCount * zpDetector];
@@ -326,13 +334,16 @@ void CFilteredBackProjectionAlgorithm::performFiltering(CFloat32ProjectionData2D
 	// Filter
 	for (int iAngle = 0; iAngle < iAngleCount; ++iAngle) {
 		float32* pfRow = pf + iAngle * 2 * zpDetector;
+		float *pfFilterRow = pfFilter;
+		if (bFilterMultiAngle)
+			pfFilterRow += iAngle * iHalfFFTSize;
 		for (int iDetector = 0; iDetector < iHalfFFTSize; ++iDetector) {
-			pfRow[2*iDetector] *= pfFilter[iDetector];
-			pfRow[2*iDetector+1] *= pfFilter[iDetector];
+			pfRow[2*iDetector] *= pfFilterRow[iDetector];
+			pfRow[2*iDetector+1] *= pfFilterRow[iDetector];
 		}
 		for (int iDetector = iHalfFFTSize; iDetector < zpDetector; ++iDetector) {
-			pfRow[2*iDetector] *= pfFilter[zpDetector - iDetector];
-			pfRow[2*iDetector+1] *= pfFilter[zpDetector - iDetector];
+			pfRow[2*iDetector] *= pfFilterRow[zpDetector - iDetector];
+			pfRow[2*iDetector+1] *= pfFilterRow[zpDetector - iDetector];
 		}
 	}
 
@@ -353,7 +364,7 @@ void CFilteredBackProjectionAlgorithm::performFiltering(CFloat32ProjectionData2D
 	delete[] pf;
 	delete[] w;
 	delete[] ip;
-	delete[] pfFilter;
+	delete[] pfFilter_delete;
 }
 
 }
