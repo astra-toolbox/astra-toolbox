@@ -509,6 +509,7 @@
     <ClCompile Include="src\FanFlatProjectionGeometry2D.cpp" />
     <ClCompile Include="src\FanFlatVecProjectionGeometry2D.cpp" />
     <ClCompile Include="src\FilteredBackProjectionAlgorithm.cpp" />
+    <ClCompile Include="src\Filters.cpp" />
     <ClCompile Include="src\Float32Data.cpp" />
     <ClCompile Include="src\Float32Data2D.cpp" />
     <ClCompile Include="src\Float32Data3D.cpp" />
@@ -596,6 +597,7 @@
     <ClInclude Include="include\astra\FanFlatProjectionGeometry2D.h" />
     <ClInclude Include="include\astra\FanFlatVecProjectionGeometry2D.h" />
     <ClInclude Include="include\astra\FilteredBackProjectionAlgorithm.h" />
+    <ClInclude Include="include\astra\Filters.h" />
     <ClInclude Include="include\astra\Float32Data.h" />
     <ClInclude Include="include\astra\Float32Data2D.h" />
     <ClInclude Include="include\astra\Float32Data3D.h" />
@@ -656,7 +658,6 @@
     <ClInclude Include="include\astra\cuda\2d\fan_bp.h" />
     <ClInclude Include="include\astra\cuda\2d\fan_fp.h" />
     <ClInclude Include="include\astra\cuda\2d\fbp.h" />
-    <ClInclude Include="include\astra\cuda\2d\fbp_filters.h" />
     <ClInclude Include="include\astra\cuda\2d\fft.h" />
     <ClInclude Include="include\astra\cuda\2d\par_bp.h" />
     <ClInclude Include="include\astra\cuda\2d\par_fp.h" />

@@ -168,6 +168,9 @@
     <ClCompile Include="src\Config.cpp">
       <Filter>Global &amp; Other\source</Filter>
     </ClCompile>
+    <ClCompile Include="src\Filters.cpp">
+      <Filter>Global &amp; Other\source</Filter>
+    </ClCompile>
     <ClCompile Include="src\Fourier.cpp">
       <Filter>Global &amp; Other\source</Filter>
     </ClCompile>
@@ -434,6 +437,9 @@
     <ClInclude Include="include\astra\Config.h">
       <Filter>Global &amp; Other\headers</Filter>
     </ClInclude>
+    <ClInclude Include="include\astra\Filters.h">
+      <Filter>Global &amp; Other\headers</Filter>
+    </ClInclude>
     <ClInclude Include="include\astra\Fourier.h">
       <Filter>Global &amp; Other\headers</Filter>
     </ClInclude>
@@ -636,9 +642,6 @@
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
     <ClInclude Include="include\astra\cuda\2d\fan_fp.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="include\astra\cuda\2d\fbp_filters.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
     <ClInclude Include="include\astra\cuda\2d\fbp.h">

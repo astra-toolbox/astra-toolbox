@@ -25,13 +25,18 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#ifndef FBP_FILTERS_H
-#define FBP_FILTERS_H
+#ifndef _INC_ASTRA_FILTERS_H
+#define _INC_ASTRA_FILTERS_H
 
 namespace astra {
 
+struct Config;
+class CAlgorithm;
+class CProjectionGeometry2D;
+
 enum E_FBPFILTER
 {
+	FILTER_ERROR,			//< not a valid filter
 	FILTER_NONE,			//< no filter (regular BP)
 	FILTER_RAMLAK,			//< default FBP filter
 	FILTER_SHEPPLOGAN,		//< Shepp-Logan
@@ -54,8 +59,40 @@ enum E_FBPFILTER
 	FILTER_SINOGRAM,		//< every projection direction has its own filter
 	FILTER_RPROJECTION,		//< projection filter in real space (as opposed to fourier space)
 	FILTER_RSINOGRAM,		//< sinogram filter in real space
+
 };
+
+struct SFilterConfig {
+	E_FBPFILTER m_eType;
+	float m_fD;
+	float m_fParameter;
+
+	float *m_pfCustomFilter;
+	int m_iCustomFilterWidth;
+	int m_iCustomFilterHeight;
+
+	SFilterConfig() : m_eType(FILTER_ERROR), m_fD(1.0f), m_fParameter(-1.0f),
+	                  m_pfCustomFilter(0), m_iCustomFilterWidth(0),
+	                  m_iCustomFilterHeight(0) { };
+};
+
+// Generate filter of given size and parameters. Returns newly allocated array.
+float *genFilter(const SFilterConfig &_cfg,
+                 int _iFFTRealDetectorCount,
+                 int _iFFTFourierDetectorCount);
+
+// Convert string to filter type. Returns FILTER_ERROR if unrecognized.
+E_FBPFILTER convertStringToFilter(const char * _filterType);
+
+SFilterConfig getFilterConfigForAlgorithm(const Config& _cfg, CAlgorithm *_alg);
+
+bool checkCustomFilterSize(const SFilterConfig &_cfg, const CProjectionGeometry2D &_geom);
+
+
+int calcNextPowerOfTwo(int _iValue);
+int calcFFTFourierSize(int _iFFTRealSize);
+
 
 }
 
-#endif /* FBP_FILTERS_H */
+#endif

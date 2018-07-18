@@ -28,7 +28,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _CUDA_ASTRA_H
 #define _CUDA_ASTRA_H
 
-#include "fbp_filters.h"
 #include "dims.h"
 #include "algo.h"
 

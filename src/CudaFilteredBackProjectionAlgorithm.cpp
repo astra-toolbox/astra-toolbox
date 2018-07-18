@@ -27,10 +27,10 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include <astra/CudaFilteredBackProjectionAlgorithm.h>
 #include <astra/FanFlatProjectionGeometry2D.h>
-#include <cstring>
 
 #include "astra/AstraObjectManager.h"
 #include "astra/CudaProjector2D.h"
+#include "astra/Filters.h"
 #include "astra/cuda/2d/astra.h"
 #include "astra/cuda/2d/fbp.h"
 
@@ -45,15 +45,12 @@ CCudaFilteredBackProjectionAlgorithm::CCudaFilteredBackProjectionAlgorithm()
 {
 	m_bIsInitialized = false;
 	CCudaReconstructionAlgorithm2D::_clear();
-	m_pfFilter = NULL;
-	m_fFilterParameter = -1.0f;
-	m_fFilterD = 1.0f;
 }
 
 CCudaFilteredBackProjectionAlgorithm::~CCudaFilteredBackProjectionAlgorithm()
 {
-	delete[] m_pfFilter;
-	m_pfFilter = NULL;
+	delete[] m_filterConfig.m_pfCustomFilter;
+	m_filterConfig.m_pfCustomFilter = NULL;
 }
 
 bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
@@ -71,59 +68,7 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 	if (!m_bIsInitialized)
 		return false;
 
-
-	// filter type
-	XMLNode node = _cfg.self.getSingleNode("FilterType");
-	if (node)
-		m_eFilter = _convertStringToFilter(node.getContent().c_str());
-	else
-		m_eFilter = FILTER_RAMLAK;
-	CC.markNodeParsed("FilterType");
-
-	// filter
-	node = _cfg.self.getSingleNode("FilterSinogramId");
-	if (node)
-	{
-		int id = node.getContentInt();
-		const CFloat32ProjectionData2D * pFilterData = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
-		m_iFilterWidth = pFilterData->getGeometry()->getDetectorCount();
-		int iFilterProjectionCount = pFilterData->getGeometry()->getProjectionAngleCount();
-
-		m_pfFilter = new float[m_iFilterWidth * iFilterProjectionCount];
-		memcpy(m_pfFilter, pFilterData->getDataConst(), sizeof(float) * m_iFilterWidth * iFilterProjectionCount);
-	}
-	else
-	{
-		m_iFilterWidth = 0;
-		m_pfFilter = NULL;
-	}
-	CC.markNodeParsed("FilterSinogramId"); // TODO: Only for some types!
-
-	// filter parameter
-	node = _cfg.self.getSingleNode("FilterParameter");
-	if (node)
-	{
-		float fParameter = node.getContentNumerical();
-		m_fFilterParameter = fParameter;
-	}
-	else
-	{
-		m_fFilterParameter = -1.0f;
-	}
-	CC.markNodeParsed("FilterParameter"); // TODO: Only for some types!
-
-	// D value
-	node = _cfg.self.getSingleNode("FilterD");
-	if (node)
-	{
-		float fD = node.getContentNumerical();
-		m_fFilterD = fD;
-	}
-	else
-	{
-		m_fFilterD = 1.0f;
-	}
-	CC.markNodeParsed("FilterD"); // TODO: Only for some types!
+	m_filterConfig = getFilterConfigForAlgorithm(_cfg, this);
 
 	// Fan beam short scan mode
 	if (m_pSinogram && dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pSinogram->getGeometry())) {
@@ -153,8 +98,8 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(CFloat32ProjectionData2D *
 	m_pReconstruction = _pReconstruction;
 	m_iGPUIndex = _iGPUIndex;
 
-	m_eFilter = _eFilter;
-	m_iFilterWidth = _iFilterWidth;
+	m_filterConfig.m_eType = _eFilter;
+	m_filterConfig.m_iCustomFilterWidth = _iFilterWidth;
 	m_bShortScan = false;
 
 	// success
@@ -167,7 +112,7 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(CFloat32ProjectionData2D *
 	{
 		int iFilterElementCount = 0;
 
-		if((_eFilter != FILTER_SINOGRAM) && (_eFilter != FILTER_RSINOGRAM))
+		if((m_filterConfig.m_eType != FILTER_SINOGRAM) && (m_filterConfig.m_eType != FILTER_RSINOGRAM))
 		{
 			iFilterElementCount = _iFilterWidth;
 		}
@@ -176,15 +121,15 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(CFloat32ProjectionData2D *
 			iFilterElementCount = m_pSinogram->getAngleCount();
 		}
 
-		m_pfFilter = new float[iFilterElementCount];
-		memcpy(m_pfFilter, _pfFilter, iFilterElementCount * sizeof(float));
+		m_filterConfig.m_pfCustomFilter = new float[iFilterElementCount];
+		memcpy(m_filterConfig.m_pfCustomFilter, _pfFilter, iFilterElementCount * sizeof(float));
 	}
 	else
 	{
-		m_pfFilter = NULL;
+		m_filterConfig.m_pfCustomFilter = NULL;
 	}
 
-	m_fFilterParameter = _fFilterParameter;
+	m_filterConfig.m_fParameter = _fFilterParameter;
 
 	return check();
 }
@@ -196,7 +141,7 @@ void CCudaFilteredBackProjectionAlgorithm::initCUDAAlgorithm()
 
 	astraCUDA::FBP* pFBP = dynamic_cast<astraCUDA::FBP*>(m_pAlgo);
 
-	bool ok = pFBP->setFilter(m_eFilter, m_pfFilter, m_iFilterWidth, m_fFilterD, m_fFilterParameter);
+	bool ok = pFBP->setFilter(m_filterConfig);
 	if (!ok) {
 		ASTRA_ERROR("CCudaFilteredBackProjectionAlgorithm: Failed to set filter");
 		ASTRA_ASSERT(ok);
@@ -215,9 +160,11 @@ bool CCudaFilteredBackProjectionAlgorithm::check()
 	ASTRA_CONFIG_CHECK(m_pSinogram, "FBP_CUDA", "Invalid Projection Data Object.");
 	ASTRA_CONFIG_CHECK(m_pReconstruction, "FBP_CUDA", "Invalid Reconstruction Data Object.");
 
-	if((m_eFilter == FILTER_PROJECTION) || (m_eFilter == FILTER_SINOGRAM) || (m_eFilter == FILTER_RPROJECTION) || (m_eFilter == FILTER_RSINOGRAM))
+	ASTRA_CONFIG_CHECK(m_filterConfig.m_eType != FILTER_ERROR, "FBP_CUDA", "Invalid filter name.");
+
+	if((m_filterConfig.m_eType == FILTER_PROJECTION) || (m_filterConfig.m_eType == FILTER_SINOGRAM) || (m_filterConfig.m_eType == FILTER_RPROJECTION) || (m_filterConfig.m_eType == FILTER_RSINOGRAM))
 	{
-		ASTRA_CONFIG_CHECK(m_pfFilter, "FBP_CUDA", "Invalid filter pointer.");
+		ASTRA_CONFIG_CHECK(m_filterConfig.m_pfCustomFilter, "FBP_CUDA", "Invalid filter pointer.");
 	}
 
 	// check initializations
@@ -229,122 +176,12 @@ bool CCudaFilteredBackProjectionAlgorithm::check()
 	// check pixel supersampling
 	ASTRA_CONFIG_CHECK(m_iPixelSuperSampling >= 0, "FBP_CUDA", "PixelSuperSampling must be a non-negative integer.");
 
+	ASTRA_CONFIG_CHECK(checkCustomFilterSize(m_filterConfig, *m_pSinogram->getGeometry()), "FBP_CUDA", "Filter size mismatch");
+
 
 	// success
 	m_bIsInitialized = true;
 	return true;
 }
 
-static bool stringCompareLowerCase(const char * _stringA, const char * _stringB)
-{
-	int iCmpReturn = 0;
-
-#ifdef _MSC_VER
-	iCmpReturn = _stricmp(_stringA, _stringB);
-#else
-	iCmpReturn = strcasecmp(_stringA, _stringB);
-#endif
-
-	return (iCmpReturn == 0);
-}
-
-E_FBPFILTER CCudaFilteredBackProjectionAlgorithm::_convertStringToFilter(const char * _filterType)
-{
-	E_FBPFILTER output = FILTER_NONE;
-
-	if(stringCompareLowerCase(_filterType, "ram-lak"))
-	{
-		output = FILTER_RAMLAK;
-	}
-	else if(stringCompareLowerCase(_filterType, "shepp-logan"))
-	{
-		output = FILTER_SHEPPLOGAN;
-	}
-	else if(stringCompareLowerCase(_filterType, "cosine"))
-	{
-		output = FILTER_COSINE;
-	}
-	else if(stringCompareLowerCase(_filterType, "hamming"))
-	{
-		output = FILTER_HAMMING;
-	}
-	else if(stringCompareLowerCase(_filterType, "hann"))
-	{
-		output = FILTER_HANN;
-	}
-	else if(stringCompareLowerCase(_filterType, "none"))
-	{
-		output = FILTER_NONE;
-	}
-	else if(stringCompareLowerCase(_filterType, "tukey"))
-	{
-		output = FILTER_TUKEY;
-	}
-	else if(stringCompareLowerCase(_filterType, "lanczos"))
-	{
-		output = FILTER_LANCZOS;
-	}
-	else if(stringCompareLowerCase(_filterType, "triangular"))
-	{
-		output = FILTER_TRIANGULAR;
-	}
-	else if(stringCompareLowerCase(_filterType, "gaussian"))
-	{
-		output = FILTER_GAUSSIAN;
-	}
-	else if(stringCompareLowerCase(_filterType, "barlett-hann"))
-	{
-		output = FILTER_BARTLETTHANN;
-	}
-	else if(stringCompareLowerCase(_filterType, "blackman"))
-	{
-		output = FILTER_BLACKMAN;
-	}
-	else if(stringCompareLowerCase(_filterType, "nuttall"))
-	{
-		output = FILTER_NUTTALL;
-	}
-	else if(stringCompareLowerCase(_filterType, "blackman-harris"))
-	{
-		output = FILTER_BLACKMANHARRIS;
-	}
-	else if(stringCompareLowerCase(_filterType, "blackman-nuttall"))
-	{
-		output = FILTER_BLACKMANNUTTALL;
-	}
-	else if(stringCompareLowerCase(_filterType, "flat-top"))
-	{
-		output = FILTER_FLATTOP;
-	}
-	else if(stringCompareLowerCase(_filterType, "kaiser"))
-	{
-		output = FILTER_KAISER;
-	}
-	else if(stringCompareLowerCase(_filterType, "parzen"))
-	{
-		output = FILTER_PARZEN;
-	}
-	else if(stringCompareLowerCase(_filterType, "projection"))
-	{
-		output = FILTER_PROJECTION;
-	}
-	else if(stringCompareLowerCase(_filterType, "sinogram"))
-	{
-		output = FILTER_SINOGRAM;
-	}
-	else if(stringCompareLowerCase(_filterType, "rprojection"))
-	{
-		output = FILTER_RPROJECTION;
-	}
-	else if(stringCompareLowerCase(_filterType, "rsinogram"))
-	{
-		output = FILTER_RSINOGRAM;
-	}
-	else
-	{
-		ASTRA_ERROR("Failed to convert \"%s\" into a filter.",_filterType);
-	}
-
-	return output;
-}
 

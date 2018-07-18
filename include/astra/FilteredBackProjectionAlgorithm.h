@@ -35,6 +35,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "Projector2D.h"
 #include "Float32ProjectionData2D.h"
 #include "Float32VolumeData2D.h"
+#include "Filters.h"
 
 
 namespace astra {
@@ -143,6 +144,10 @@ public:
 	 * @return description string
 	 */
 	virtual std::string description() const;
+
+protected:
+
+	SFilterConfig m_filterConfig;
 
 };
 
