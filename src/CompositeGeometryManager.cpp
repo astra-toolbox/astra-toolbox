@@ -789,6 +789,51 @@ static CProjectionGeometry3D* getSubProjectionGeometryV(const CProjectionGeometr
 
 }
 
+static CProjectionGeometry3D* getSubProjectionGeometryAngle(const CProjectionGeometry3D* pProjGeom, int th, int size)
+{
+	// First convert to vectors, then convert into new object
+
+	const CConeProjectionGeometry3D* conegeom = dynamic_cast<const CConeProjectionGeometry3D*>(pProjGeom);
+	const CParallelProjectionGeometry3D* par3dgeom = dynamic_cast<const CParallelProjectionGeometry3D*>(pProjGeom);
+	const CParallelVecProjectionGeometry3D* parvec3dgeom = dynamic_cast<const CParallelVecProjectionGeometry3D*>(pProjGeom);
+	const CConeVecProjectionGeometry3D* conevec3dgeom = dynamic_cast<const CConeVecProjectionGeometry3D*>(pProjGeom);
+
+	if (conegeom || conevec3dgeom) {
+		SConeProjection* pConeProjs;
+		if (conegeom) {
+			pConeProjs = getProjectionVectors<SConeProjection>(conegeom);
+		} else {
+			pConeProjs = getProjectionVectors<SConeProjection>(conevec3dgeom);
+		}
+
+		CProjectionGeometry3D* ret = new CConeVecProjectionGeometry3D(size,
+		                                                              pProjGeom->getDetectorRowCount(),
+		                                                              pProjGeom->getDetectorColCount(),
+		                                                              pConeProjs + th);
+
+
+		delete[] pConeProjs;
+		return ret;
+	} else {
+		assert(par3dgeom || parvec3dgeom);
+		SPar3DProjection* pParProjs;
+		if (par3dgeom) {
+			pParProjs = getProjectionVectors<SPar3DProjection>(par3dgeom);
+		} else {
+			pParProjs = getProjectionVectors<SPar3DProjection>(parvec3dgeom);
+		}
+
+		CProjectionGeometry3D* ret = new CParallelVecProjectionGeometry3D(size,
+		                                                                  pProjGeom->getDetectorRowCount(),
+		                                                                  pProjGeom->getDetectorColCount(),
+		                                                                  pParProjs + th);
+
+		delete[] pParProjs;
+		return ret;
+	}
+
+}
+
 
 
 // split self into sub-parts:
@@ -798,9 +843,6 @@ static CProjectionGeometry3D* getSubProjectionGeometryV(const CProjectionGeometr
 void CCompositeGeometryManager::CVolumePart::splitX(CCompositeGeometryManager::TPartList& out, size_t maxSize, size_t maxDim, int div)
 {
 	if (canSplitAndReduce()) {
-		// Split in vertical direction only at first, until we figure out
-		// a model for splitting in other directions
-
 		size_t sliceSize = ((size_t) pGeom->getGridSliceCount()) * pGeom->getGridRowCount();
 		int sliceCount = pGeom->getGridColCount();
 		size_t m = std::min(maxSize / sliceSize, maxDim);
@@ -849,9 +891,6 @@ void CCompositeGeometryManager::CVolumePart::splitX(CCompositeGeometryManager::T
 void CCompositeGeometryManager::CVolumePart::splitY(CCompositeGeometryManager::TPartList& out, size_t maxSize, size_t maxDim, int div)
 {
 	if (canSplitAndReduce()) {
-		// Split in vertical direction only at first, until we figure out
-		// a model for splitting in other directions
-
 		size_t sliceSize = ((size_t) pGeom->getGridColCount()) * pGeom->getGridSliceCount();
 		int sliceCount = pGeom->getGridRowCount();
 		size_t m = std::min(maxSize / sliceSize, maxDim);
@@ -900,9 +939,6 @@ void CCompositeGeometryManager::CVolumePart::splitY(CCompositeGeometryManager::T
 void CCompositeGeometryManager::CVolumePart::splitZ(CCompositeGeometryManager::TPartList& out, size_t maxSize, size_t maxDim, int div)
 {
 	if (canSplitAndReduce()) {
-		// Split in vertical direction only at first, until we figure out
-		// a model for splitting in other directions
-
 		size_t sliceSize = ((size_t) pGeom->getGridColCount()) * pGeom->getGridRowCount();
 		int sliceCount = pGeom->getGridSliceCount();
 		size_t m = std::min(maxSize / sliceSize, maxDim);
@@ -1021,9 +1057,6 @@ CCompositeGeometryManager::CPart* CCompositeGeometryManager::CProjectionPart::re
 void CCompositeGeometryManager::CProjectionPart::splitX(CCompositeGeometryManager::TPartList &out, size_t maxSize, size_t maxDim, int div)
 {
 	if (canSplitAndReduce()) {
-		// Split in vertical direction only at first, until we figure out
-		// a model for splitting in other directions
-
 		size_t sliceSize = ((size_t) pGeom->getDetectorRowCount()) * pGeom->getProjectionCount();
 		int sliceCount = pGeom->getDetectorColCount();
 		size_t m = std::min(maxSize / sliceSize, maxDim);
@@ -1062,16 +1095,40 @@ void CCompositeGeometryManager::CProjectionPart::splitX(CCompositeGeometryManage
 
 void CCompositeGeometryManager::CProjectionPart::splitY(CCompositeGeometryManager::TPartList &out, size_t maxSize, size_t maxDim, int div)
 {
-	// TODO
-	out.push_back(boost::shared_ptr<CPart>(clone()));
+	if (canSplitAndReduce()) {
+		size_t sliceSize = ((size_t) pGeom->getDetectorColCount()) * pGeom->getDetectorRowCount();
+		int angleCount = pGeom->getProjectionCount();
+		size_t m = std::min(maxSize / sliceSize, maxDim);
+		size_t blockSize = computeLinearSplit(m, div, angleCount);
+
+		ASTRA_DEBUG("From %d to %d step %d", 0, angleCount, blockSize);
+
+		for (int th = 0; th < angleCount; th += blockSize) {
+			int endTh = th + blockSize;
+			if (endTh > angleCount) endTh = angleCount;
+			int size = endTh - th;
+
+			CProjectionPart *sub = new CProjectionPart();
+			sub->subX = this->subX;
+			sub->subY = this->subY + th;
+			sub->subZ = this->subZ;
+
+			ASTRA_DEBUG("ProjectionPart split %d %d %d -> %p", sub->subX, sub->subY, sub->subZ, (void*)sub);
+
+			sub->pData = pData;
+
+			sub->pGeom = getSubProjectionGeometryAngle(pGeom, th, size);
+
+			out.push_back(boost::shared_ptr<CPart>(sub));
+		}
+	} else {
+		out.push_back(boost::shared_ptr<CPart>(clone()));
+	}
 }
 
 void CCompositeGeometryManager::CProjectionPart::splitZ(CCompositeGeometryManager::TPartList &out, size_t maxSize, size_t maxDim, int div)
 {
 	if (canSplitAndReduce()) {
-		// Split in vertical direction only at first, until we figure out
-		// a model for splitting in other directions
-
 		size_t sliceSize = ((size_t) pGeom->getDetectorColCount()) * pGeom->getProjectionCount();
 		int sliceCount = pGeom->getDetectorRowCount();
 		size_t m = std::min(maxSize / sliceSize, maxDim);
