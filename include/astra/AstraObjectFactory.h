@@ -40,7 +40,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "AlgorithmTypelist.h"
 
 #ifdef ASTRA_PYTHON
-#include "PluginAlgorithm.h"
+#include "PluginAlgorithmFactory.h"
 #endif
 
 

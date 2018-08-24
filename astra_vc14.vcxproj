@@ -538,7 +538,7 @@
     <ClCompile Include="src\ParallelVecProjectionGeometry2D.cpp" />
     <ClCompile Include="src\ParallelVecProjectionGeometry3D.cpp" />
     <ClCompile Include="src\PlatformDepSystemCode.cpp" />
-    <ClCompile Include="src\PluginAlgorithm.cpp" />
+    <ClCompile Include="src\PluginAlgorithmFactory.cpp" />
     <ClCompile Include="src\ProjectionGeometry2D.cpp" />
     <ClCompile Include="src\ProjectionGeometry3D.cpp" />
     <ClCompile Include="src\Projector2D.cpp" />
@@ -626,7 +626,7 @@
     <ClInclude Include="include\astra\ParallelVecProjectionGeometry2D.h" />
     <ClInclude Include="include\astra\ParallelVecProjectionGeometry3D.h" />
     <ClInclude Include="include\astra\PlatformDepSystemCode.h" />
-    <ClInclude Include="include\astra\PluginAlgorithm.h" />
+    <ClInclude Include="include\astra\PluginAlgorithmFactory.h" />
     <ClInclude Include="include\astra\ProjectionGeometry2D.h" />
     <ClInclude Include="include\astra\ProjectionGeometry3D.h" />
     <ClInclude Include="include\astra\Projector2D.h" />

@@ -168,7 +168,7 @@ BASE_OBJECTS=\
 	src/ParallelProjectionGeometry3D.lo \
 	src/ParallelVecProjectionGeometry3D.lo \
 	src/PlatformDepSystemCode.lo \
-	src/PluginAlgorithm.lo \
+	src/PluginAlgorithmFactory.lo \
 	src/ProjectionGeometry2D.lo \
 	src/ProjectionGeometry3D.lo \
 	src/Projector2D.lo \

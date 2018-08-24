@@ -34,7 +34,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/Singleton.h"
 #include "astra/XMLDocument.h"
 #include "astra/XMLNode.h"
-#include "astra/PluginAlgorithm.h"
+#include "astra/PluginAlgorithmFactory.h"
 
 #include <Python.h>
 

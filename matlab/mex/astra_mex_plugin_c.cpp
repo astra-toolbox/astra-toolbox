@@ -34,7 +34,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "mexHelpFunctions.h"
 #include "mexInitFunctions.h"
 
-#include "astra/PluginAlgorithm.h"
+#include "astra/PluginAlgorithmFactory.h"
 
 #include <Python.h>
 

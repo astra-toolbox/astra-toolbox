@@ -25,7 +25,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#include "astra/PluginAlgorithm.h"
+#include "astra/PluginAlgorithmFactory.h"
 
 namespace astra {
 

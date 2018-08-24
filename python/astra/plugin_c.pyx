@@ -48,7 +48,7 @@ cdef extern from "src/PythonPluginAlgorithm.h" namespace "astra":
 cdef extern from "src/PythonPluginAlgorithm.h" namespace "astra::CPythonPluginAlgorithmFactory":
     cdef CPythonPluginAlgorithmFactory* getSingletonPtr()
 
-cdef extern from "astra/PluginAlgorithm.h" namespace "astra::CPluginAlgorithmFactory":
+cdef extern from "astra/PluginAlgorithmFactory.h" namespace "astra::CPluginAlgorithmFactory":
     # NB: Using wrong pointer type here for convenience
     cdef void registerFactory(CPythonPluginAlgorithmFactory *)
 
