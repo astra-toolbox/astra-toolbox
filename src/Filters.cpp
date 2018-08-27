@@ -65,7 +65,7 @@ float *genFilter(const SFilterConfig &_cfg,
 				int j = i;
 				if (2*j > _iFFTRealDetectorCount)
 					j = _iFFTRealDetectorCount - j;
-				float f = M_PI * j;
+				float f = PI * j;
 				pfData[2*i] = -1 / (f*f);
 			} else {
 				pfData[2*i] = 0.0f;
@@ -86,7 +86,7 @@ float *genFilter(const SFilterConfig &_cfg,
 		float fRelIndex = (float)iDetectorIndex / (float)_iFFTRealDetectorCount;
 
 		pfFilt[iDetectorIndex] = 2.0f * pfData[2*iDetectorIndex];
-		pfW[iDetectorIndex] = M_PI * 2.0f * fRelIndex;
+		pfW[iDetectorIndex] = PI * 2.0f * fRelIndex;
 	}
 
 	switch(_cfg.m_eType)
@@ -155,7 +155,7 @@ float *genFilter(const SFilterConfig &_cfg,
 				else
 				{
 					float fEnum = fAbsSmallN - fEnumTerm;
-					float fCosInput = M_PI * fEnum / fDenom;
+					float fCosInput = PI * fEnum / fDenom;
 					fStoredValue = 0.5f * (1.0f + cosf(fCosInput));
 				}
 
@@ -172,7 +172,7 @@ float *genFilter(const SFilterConfig &_cfg,
 			{
 				float fSmallN = (float)iDetectorIndex;
 				float fX = 2.0f * fSmallN / fDenum - 1.0f;
-				float fSinInput = M_PI * fX;
+				float fSinInput = PI * fX;
 				float fStoredValue = 0.0f;
 
 				if(fabsf(fSinInput) > 0.001f)
@@ -237,7 +237,7 @@ float *genFilter(const SFilterConfig &_cfg,
 				float fSmallN = (float)iDetectorIndex;
 				float fAbsInput = fSmallN / fNMinusOne - 0.5f;
 				float fFirstTerm = fA1 * fabsf(fAbsInput);
-				float fCosInput = 2.0f * M_PI * fSmallN / fNMinusOne;
+				float fCosInput = 2.0f * PI * fSmallN / fNMinusOne;
 				float fSecondTerm = fA2 * cosf(fCosInput);
 				float fStoredValue = fA0 - fFirstTerm - fSecondTerm;
 
@@ -258,8 +258,8 @@ float *genFilter(const SFilterConfig &_cfg,
 			for(int iDetectorIndex = 1; iDetectorIndex < _iFFTFourierDetectorCount; iDetectorIndex++)
 			{
 				float fSmallN = (float)iDetectorIndex;
-				float fCosInput1 = 2.0f * M_PI * 0.5f * fSmallN / fNMinusOne;
-				float fCosInput2 = 4.0f * M_PI * 0.5f * fSmallN / fNMinusOne;
+				float fCosInput1 = 2.0f * PI * 0.5f * fSmallN / fNMinusOne;
+				float fCosInput2 = 4.0f * PI * 0.5f * fSmallN / fNMinusOne;
 				float fStoredValue = fA0 - fA1 * cosf(fCosInput1) + fA2 * cosf(fCosInput2);
 
 				pfFilt[iDetectorIndex] *= fStoredValue;
@@ -278,7 +278,7 @@ float *genFilter(const SFilterConfig &_cfg,
 			for(int iDetectorIndex = 1; iDetectorIndex < _iFFTFourierDetectorCount; iDetectorIndex++)
 			{
 				float fSmallN = (float)iDetectorIndex;
-				float fBaseCosInput = M_PI * fSmallN / fNMinusOne;
+				float fBaseCosInput = PI * fSmallN / fNMinusOne;
 				float fFirstTerm = fA1 * cosf(2.0f * fBaseCosInput);
 				float fSecondTerm = fA2 * cosf(4.0f * fBaseCosInput);
 				float fThirdTerm = fA3 * cosf(6.0f * fBaseCosInput);
@@ -300,7 +300,7 @@ float *genFilter(const SFilterConfig &_cfg,
 			for(int iDetectorIndex = 1; iDetectorIndex < _iFFTFourierDetectorCount; iDetectorIndex++)
 			{
 				float fSmallN = (float)iDetectorIndex;
-				float fBaseCosInput = M_PI * fSmallN / fNMinusOne;
+				float fBaseCosInput = PI * fSmallN / fNMinusOne;
 				float fFirstTerm = fA1 * cosf(2.0f * fBaseCosInput);
 				float fSecondTerm = fA2 * cosf(4.0f * fBaseCosInput);
 				float fThirdTerm = fA3 * cosf(6.0f * fBaseCosInput);
@@ -322,7 +322,7 @@ float *genFilter(const SFilterConfig &_cfg,
 			for(int iDetectorIndex = 1; iDetectorIndex < _iFFTFourierDetectorCount; iDetectorIndex++)
 			{
 				float fSmallN = (float)iDetectorIndex;
-				float fBaseCosInput = M_PI * fSmallN / fNMinusOne;
+				float fBaseCosInput = PI * fSmallN / fNMinusOne;
 				float fFirstTerm = fA1 * cosf(2.0f * fBaseCosInput);
 				float fSecondTerm = fA2 * cosf(4.0f * fBaseCosInput);
 				float fThirdTerm = fA3 * cosf(6.0f * fBaseCosInput);
@@ -345,7 +345,7 @@ float *genFilter(const SFilterConfig &_cfg,
 			for(int iDetectorIndex = 1; iDetectorIndex < _iFFTFourierDetectorCount; iDetectorIndex++)
 			{
 				float fSmallN = (float)iDetectorIndex;
-				float fBaseCosInput = M_PI * fSmallN / fNMinusOne;
+				float fBaseCosInput = PI * fSmallN / fNMinusOne;
 				float fFirstTerm = fA1 * cosf(2.0f * fBaseCosInput);
 				float fSecondTerm = fA2 * cosf(4.0f * fBaseCosInput);
 				float fThirdTerm = fA3 * cosf(6.0f * fBaseCosInput);
@@ -361,7 +361,7 @@ float *genFilter(const SFilterConfig &_cfg,
 		{
 			float fAlpha = _cfg.m_fParameter;
 			if(_cfg.m_fParameter < 0.0f) fAlpha = 3.0f;
-			float fPiTimesAlpha = M_PI * fAlpha;
+			float fPiTimesAlpha = PI * fAlpha;
 			float fNMinusOne = (float)(_iFFTFourierDetectorCount - 1);
 			float fDenom = (float)j0((double)fPiTimesAlpha);
 
@@ -409,7 +409,7 @@ float *genFilter(const SFilterConfig &_cfg,
 	}
 
 	// filt(w>pi*d) = 0;
-	float fPiTimesD = M_PI * _cfg.m_fD;
+	float fPiTimesD = PI * _cfg.m_fD;
 	for(int iDetectorIndex = 0; iDetectorIndex < _iFFTFourierDetectorCount; iDetectorIndex++)
 	{
 		float fWValue = pfW[iDetectorIndex];
