@@ -25,39 +25,42 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#ifndef _INC_PYTHONPLUGINALGORITHM
-#define _INC_PYTHONPLUGINALGORITHM
+#ifndef _INC_PYTHONPLUGINALGORITHMFACTORY
+#define _INC_PYTHONPLUGINALGORITHMFACTORY
 
 #ifdef ASTRA_PYTHON
 
-#include "astra/Algorithm.h"
 #include "astra/Singleton.h"
-#include "astra/XMLDocument.h"
-#include "astra/XMLNode.h"
+#include "astra/Algorithm.h"
 #include "astra/PluginAlgorithmFactory.h"
 
 #include <Python.h>
 
 namespace astra {
-class CPluginAlgorithm : public CAlgorithm {
+
+class CPythonPluginAlgorithmFactory : public CPluginAlgorithmFactory, public Singleton<CPythonPluginAlgorithmFactory> {
 
 public:
 
-    CPluginAlgorithm(PyObject* pyclass);
-    ~CPluginAlgorithm();
+    CPythonPluginAlgorithmFactory();
+    virtual ~CPythonPluginAlgorithmFactory();
 
-    bool initialize(const Config& _cfg);
-    void run(int _iNrIterations);
+    virtual CAlgorithm * getPlugin(const std::string &name);
 
-    // Return instance (including INCREF)
-    PyObject *getInstance() const;
+    virtual bool registerPlugin(std::string name, std::string className);
+    virtual bool registerPlugin(std::string className);
+    bool registerPluginClass(std::string name, PyObject * className);
+    bool registerPluginClass(PyObject * className);
+
+    PyObject * getRegistered();
+    virtual std::map<std::string, std::string> getRegisteredMap();
+
+    virtual std::string getHelp(const std::string &name);
 
 private:
-    PyObject * instance;
-
+    PyObject * pluginDict;
+    PyObject *inspect, *six;
 };
-
-PyObject* XMLNode2dict(XMLNode node);
 
 }
 

@@ -45,7 +45,7 @@ cdef extern from "src/PythonPluginAlgorithm.h" namespace "astra":
         object getRegistered()
         string getHelp(string &name)
 
-cdef extern from "src/PythonPluginAlgorithm.h" namespace "astra::CPythonPluginAlgorithmFactory":
+cdef extern from "src/PythonPluginAlgorithmFactory.h" namespace "astra::CPythonPluginAlgorithmFactory":
     cdef CPythonPluginAlgorithmFactory* getSingletonPtr()
 
 cdef extern from "astra/PluginAlgorithmFactory.h" namespace "astra::CPluginAlgorithmFactory":

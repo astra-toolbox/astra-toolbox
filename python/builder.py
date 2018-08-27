@@ -69,6 +69,9 @@ for m in ext_modules:
     if m.name in ('astra.plugin_c', 'astra.algorithm_c'):
         m.sources.append(os.path.join(self_path, 'astra', 'src',
                                       'PythonPluginAlgorithm.cpp'))
+    if m.name in ('astra.plugin_c'):
+        m.sources.append(os.path.join(self_path, 'astra', 'src',
+                                      'PythonPluginAlgorithmFactory.cpp'))
 
 setup(name='astra-toolbox',
       version='1.9.0dev',
