@@ -60,6 +60,8 @@ inside a conda environment.
 
 conda install -c astra-toolbox astra-toolbox
 
+conda install -c astra-toolbox/label/dev astra-toolbox
+
 
 
 Linux, from source:

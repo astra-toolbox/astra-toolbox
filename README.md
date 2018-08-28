@@ -36,6 +36,13 @@ inside a conda environment.
 conda install -c astra-toolbox astra-toolbox
 ```
 
+We also provide development packages:
+
+```
+conda install -c astra-toolbox/label/dev astra-toolbox
+```
+
+
 ### Linux, from source
 
 #### For Matlab
