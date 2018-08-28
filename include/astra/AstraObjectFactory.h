@@ -39,9 +39,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "AlgorithmTypelist.h"
 
-#ifdef ASTRA_PYTHON
 #include "PluginAlgorithmFactory.h"
-#endif
 
 
 namespace astra {
@@ -106,6 +104,9 @@ CAstraObjectFactory<T, TypeList>::~CAstraObjectFactory()
 
 //----------------------------------------------------------------------------------------
 // Hook for finding plugin in registered plugins.
+template <>
+CAlgorithm* CAstraObjectFactory<CAlgorithm, AlgorithmTypeList>::findPlugin(std::string _sType);
+
 template <typename T, typename TypeList>
 T* CAstraObjectFactory<T, TypeList>::findPlugin(std::string _sType)
 {
@@ -134,18 +135,6 @@ T* CAstraObjectFactory<T, TypeList>::create(std::string _sType)
  * Class used to create algorithms from a string or a config object
 */
 class _AstraExport CAlgorithmFactory : public CAstraObjectFactory<CAlgorithm, AlgorithmTypeList> {};
-
-#ifdef ASTRA_PYTHON
-template <>
-inline CAlgorithm* CAstraObjectFactory<CAlgorithm, AlgorithmTypeList>::findPlugin(std::string _sType)
-	{
-		CPluginAlgorithmFactory *fac = CPluginAlgorithmFactory::getFactory();
-		if (fac)
-			return fac->getPlugin(_sType);
-		else
-			return 0;
-	}
-#endif
 
 /**
  * Class used to create 2D projectors from a string or a config object

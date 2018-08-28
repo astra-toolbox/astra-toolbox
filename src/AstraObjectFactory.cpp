@@ -27,12 +27,20 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/AstraObjectFactory.h"
 
-using namespace std;
-
 namespace astra {
 
 DEFINE_SINGLETON2(CAstraObjectFactory<CAlgorithm, AlgorithmTypeList>)
 DEFINE_SINGLETON2(CAstraObjectFactory<CProjector2D, Projector2DTypeList>)
 DEFINE_SINGLETON2(CAstraObjectFactory<CProjector3D, Projector3DTypeList>)
+
+template <>
+CAlgorithm* CAstraObjectFactory<CAlgorithm, AlgorithmTypeList>::findPlugin(std::string _sType)
+{
+	CPluginAlgorithmFactory *fac = CPluginAlgorithmFactory::getFactory();
+	if (fac)
+		return fac->getPlugin(_sType);
+	else
+		return 0;
+}
 
 } // end namespace
