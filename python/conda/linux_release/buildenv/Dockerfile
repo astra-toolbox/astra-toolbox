@@ -2,6 +2,18 @@ FROM debian:7 AS BUILDBASE
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && apt-get install -y perl-modules build-essential autoconf libtool automake libboost-dev git && rm -rf /var/lib/apt/lists/*
 
+FROM BUILDBASE AS CUDA92
+RUN touch /root/cuda92
+COPY cuda_9.2.148_396.37_linux /root
+RUN /bin/bash /root/cuda_9.2.148_396.37_linux --toolkit --silent && \
+	rm -f /root/cuda_9.2.148_396.37_linux
+
+FROM BUILDBASE AS CUDA90
+RUN touch /root/cuda90
+COPY cuda_9.0.176_384.81_linux-run /root
+RUN /bin/bash /root/cuda_9.0.176_384.81_linux-run --toolkit --silent && \
+	rm -f /root/cuda_9.0.176_384.81_linux-run
+
 FROM BUILDBASE AS CUDA80
 RUN touch /root/cuda80
 COPY cuda_8.0.61_375.26_linux-run /root
@@ -42,6 +54,8 @@ RUN /bin/bash /root/cuda_5.5.22_linux_64.run -toolkit -silent && \
 
 FROM BUILDBASE
 RUN touch /root/cuda
+COPY --from=CUDA92 /usr/local/cuda-9.2 /usr/local/cuda-9.2
+COPY --from=CUDA90 /usr/local/cuda-9.0 /usr/local/cuda-9.0
 COPY --from=CUDA80 /usr/local/cuda-8.0 /usr/local/cuda-8.0
 COPY --from=CUDA75 /usr/local/cuda-7.5 /usr/local/cuda-7.5
 COPY --from=CUDA70 /usr/local/cuda-7.0 /usr/local/cuda-7.0
@@ -49,7 +63,7 @@ COPY --from=CUDA60 /usr/local/cuda-6.0 /usr/local/cuda-6.0
 COPY --from=CUDA55 /usr/local/cuda-5.5 /usr/local/cuda-5.5
 
 ENV PATH /root/miniconda3/bin:$PATH
-COPY Miniconda3-4.3.27.1-Linux-x86_64.sh /root/
-RUN /bin/bash /root/Miniconda3-4.3.27.1-Linux-x86_64.sh -b && \
+COPY Miniconda3-4.5.4-Linux-x86_64.sh /root/
+RUN /bin/bash /root/Miniconda3-4.5.4-Linux-x86_64.sh -b && \
 	rm -f /root/Miniconda3*
-RUN conda install -y conda-build
+RUN conda install -y conda-build conda-verify
