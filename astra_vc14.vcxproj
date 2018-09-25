@@ -508,6 +508,7 @@
     <ClCompile Include="src\FanFlatBeamStripKernelProjector2D.cpp" />
     <ClCompile Include="src\FanFlatProjectionGeometry2D.cpp" />
     <ClCompile Include="src\FanFlatVecProjectionGeometry2D.cpp" />
+    <ClCompile Include="src\Features.cpp" />
     <ClCompile Include="src\FilteredBackProjectionAlgorithm.cpp" />
     <ClCompile Include="src\Filters.cpp" />
     <ClCompile Include="src\Float32Data.cpp" />
@@ -596,6 +597,7 @@
     <ClInclude Include="include\astra\FanFlatBeamStripKernelProjector2D.h" />
     <ClInclude Include="include\astra\FanFlatProjectionGeometry2D.h" />
     <ClInclude Include="include\astra\FanFlatVecProjectionGeometry2D.h" />
+    <ClInclude Include="include\astra\Features.h" />
     <ClInclude Include="include\astra\FilteredBackProjectionAlgorithm.h" />
     <ClInclude Include="include\astra\Filters.h" />
     <ClInclude Include="include\astra\Float32Data.h" />
