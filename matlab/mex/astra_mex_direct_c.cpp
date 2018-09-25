@@ -54,8 +54,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 using namespace std;
 using namespace astra;
 
-#define USE_MATLAB_UNDOCUMENTED
-
 
 class CFloat32CustomMemory_simple : public astra::CFloat32CustomMemory {
 public:

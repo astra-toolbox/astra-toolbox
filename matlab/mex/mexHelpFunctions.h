@@ -28,6 +28,10 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _INC_ASTRA_MEX_HELPFUNCTIONS
 #define _INC_ASTRA_MEX_HELPFUNCTIONS
 
+
+#define USE_MATLAB_UNDOCUMENTED
+
+
 #include <string>
 #include <list>
 #include <iostream>
@@ -65,7 +69,5 @@ mxArray* configToStruct(astra::Config* cfg);
 mxArray* XMLNodeToStruct(astra::XMLNode xml);
 mxArray* stringToMxArray(std::string input);
 mxArray* buildStruct(std::map<std::string, mxArray*> mInput);
-
-
 
 #endif
