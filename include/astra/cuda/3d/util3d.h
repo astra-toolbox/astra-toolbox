@@ -51,6 +51,7 @@ bool duplicateProjectionData(cudaPitchedPtr& D_dest, const cudaPitchedPtr& D_src
 
 
 bool transferProjectionsToArray(cudaPitchedPtr D_projData, cudaArray* array, const SDimensions3D& dims);
+bool transferHostProjectionsToArray(const float *projData, cudaArray* array, const SDimensions3D& dims);
 bool transferVolumeToArray(cudaPitchedPtr D_volumeData, cudaArray* array, const SDimensions3D& dims);
 bool zeroProjectionArray(cudaArray* array, const SDimensions3D& dims);
 bool zeroVolumeArray(cudaArray* array, const SDimensions3D& dims);

@@ -35,12 +35,15 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/cuda/3d/fdk.h"
 #include "astra/cuda/3d/arith3d.h"
 #include "astra/cuda/3d/astra3d.h"
+#include "astra/cuda/3d/mem3d.h"
 
 #include "astra/ParallelProjectionGeometry3D.h"
 #include "astra/ParallelVecProjectionGeometry3D.h"
 #include "astra/ConeProjectionGeometry3D.h"
 #include "astra/ConeVecProjectionGeometry3D.h"
 #include "astra/VolumeGeometry3D.h"
+#include "astra/Float32ProjectionData3DGPU.h"
+#include "astra/Logging.h"
 
 #include <iostream>
 #include <cstdio>
@@ -1316,5 +1319,47 @@ bool astraCudaBP_SIRTWeighted(float* pfVolume,
 	return ok;
 
 }
+
+_AstraExport void uploadMultipleProjections(CFloat32ProjectionData3DGPU *proj,
+                                         const float *data,
+                                         unsigned int y_min, unsigned int y_max)
+{
+	astraCUDA3d::MemHandle3D hnd = proj->getHandle();
+
+	astraCUDA3d::SDimensions3D dims1;
+	dims1.iProjU = proj->getDetectorColCount();
+	dims1.iProjV = proj->getDetectorRowCount();
+	dims1.iProjAngles = y_max - y_min + 1;
+
+	cudaPitchedPtr D_proj = allocateProjectionData(dims1);
+	bool ok = copyProjectionsToDevice(data, D_proj, dims1);
+	if (!ok)
+		ASTRA_ERROR("Failed to upload projection to GPU");
+
+	astraCUDA3d::MemHandle3D hnd1 = astraCUDA3d::wrapHandle(
+			(float *)D_proj.ptr,
+			dims1.iProjU, dims1.iProjAngles, dims1.iProjV,
+			D_proj.pitch / sizeof(float));
+
+	astraCUDA3d::SSubDimensions3D subdims;
+	subdims.nx = dims1.iProjU;
+	subdims.ny = proj->getAngleCount();
+	subdims.nz = dims1.iProjV;
+	subdims.pitch = D_proj.pitch / sizeof(float); // FIXME: Pitch for wrong obj!
+	subdims.subnx = dims1.iProjU;
+	subdims.subny = dims1.iProjAngles;
+	subdims.subnz = dims1.iProjV;
+	subdims.subx = 0;
+	subdims.suby = y_min;
+	subdims.subz = 0;
+
+	ok = astraCUDA3d::copyIntoArray(hnd, hnd1, subdims);
+	if (!ok)
+		ASTRA_ERROR("Failed to copy projection into 3d data");
+
+	cudaFree(D_proj.ptr);
+
+}
+
 
 }

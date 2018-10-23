@@ -38,9 +38,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 namespace astra {
 
 
-astraCUDA3d::MemHandle3D wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch);
-
-
 /** 
  * This class represents a 3-dimensional block of 32-bit floating point data.
  * The data block is stored on a GPU, and owned by external code.

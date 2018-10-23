@@ -37,6 +37,17 @@ class CVolumeGeometry3D;
 class CProjectionGeometry3D;	
 }
 
+
+// MemHandle3D defines a very basic opaque interface to GPU memory pointers.
+// Its intended use is allowing ASTRA code to pass around GPU pointers without
+// requiring CUDA headers.
+//
+// It generally wraps CUDA linear global memory.
+//
+// As a very basic extension, it also allows wrapping a CUDA 3D array.
+// This extension (only) allows creating a CUDA 3D array, copying projection
+// data into it, performing a BP from the array, and freeing the array.
+
 namespace astraCUDA3d {
 
 // TODO: Make it possible to delete these handles when they're no longer
@@ -80,6 +91,7 @@ enum Mem3DZeroMode {
 int maxBlockDimension();
 
 _AstraExport MemHandle3D wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch);
+MemHandle3D createProjectionArrayHandle(const float *ptr, unsigned int x, unsigned int y, unsigned int z);
 
 MemHandle3D allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Mem3DZeroMode zero);
 
@@ -92,6 +104,8 @@ bool freeGPUMemory(MemHandle3D handle);
 bool zeroGPUMemory(MemHandle3D handle, unsigned int x, unsigned int y, unsigned int z);
 
 bool setGPUIndex(int index);
+
+bool copyIntoArray(MemHandle3D handle, MemHandle3D subdata, const SSubDimensions3D &pos);
 
 
 bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, int iDetectorSuperSampling, astra::Cuda3DProjectionKernel projKernel);

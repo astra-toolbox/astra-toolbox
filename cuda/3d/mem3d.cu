@@ -49,6 +49,7 @@ namespace astraCUDA3d {
 struct SMemHandle3D_internal
 {
 	cudaPitchedPtr ptr;
+	cudaArray *arr;
 	unsigned int nx;
 	unsigned int ny;
 	unsigned int nz;
@@ -79,6 +80,7 @@ MemHandle3D allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Me
 	hnd.nx = x;
 	hnd.ny = y;
 	hnd.nz = z;
+	hnd.arr = 0;
 
 	size_t free = astraCUDA::availableGPUMemory();
 
@@ -113,6 +115,7 @@ MemHandle3D allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Me
 bool zeroGPUMemory(MemHandle3D handle, unsigned int x, unsigned int y, unsigned int z)
 {
 	SMemHandle3D_internal& hnd = *handle.d.get();
+	assert(!hnd.arr);
 	cudaError_t err = cudaMemset3D(hnd.ptr, 0, make_cudaExtent(sizeof(float)*x, y, z));
 	return err == cudaSuccess;
 }
@@ -120,7 +123,11 @@ bool zeroGPUMemory(MemHandle3D handle, unsigned int x, unsigned int y, unsigned 
 bool freeGPUMemory(MemHandle3D handle)
 {
 	size_t free = astraCUDA::availableGPUMemory();
-	cudaError_t err = cudaFree(handle.d->ptr.ptr);
+	cudaError_t err;
+	if (handle.d->arr)
+		err = cudaFreeArray(handle.d->arr);
+	else
+		err = cudaFree(handle.d->ptr.ptr);
 	size_t free2 = astraCUDA::availableGPUMemory();
 
 	ASTRA_DEBUG("Freeing memory. (Pre: %lu, post: %lu)", free, free2);
@@ -132,6 +139,7 @@ bool copyToGPUMemory(const float *src, MemHandle3D dst, const SSubDimensions3D &
 {
 	ASTRA_DEBUG("Copying %d x %d x %d to GPU", pos.subnx, pos.subny, pos.subnz);
 	ASTRA_DEBUG("Offset %d,%d,%d", pos.subx, pos.suby, pos.subz);
+	assert(!dst.d->arr);
 	cudaPitchedPtr s;
 	s.ptr = (void*)src; // const cast away
 	s.pitch = pos.pitch * sizeof(float);
@@ -162,6 +170,7 @@ bool copyFromGPUMemory(float *dst, MemHandle3D src, const SSubDimensions3D &pos)
 {
 	ASTRA_DEBUG("Copying %d x %d x %d from GPU", pos.subnx, pos.subny, pos.subnz);
 	ASTRA_DEBUG("Offset %d,%d,%d", pos.subx, pos.suby, pos.subz);
+	assert(!src.d->arr);
 	cudaPitchedPtr d;
 	d.ptr = (void*)dst;
 	d.pitch = pos.pitch * sizeof(float);
@@ -170,15 +179,21 @@ bool copyFromGPUMemory(float *dst, MemHandle3D src, const SSubDimensions3D &pos)
 	ASTRA_DEBUG("Pitch %d, xsize %d, ysize %d", d.pitch, d.xsize, d.ysize);
 
 	cudaMemcpy3DParms p;
-	p.srcArray = 0;
 	p.srcPos = make_cudaPos(0, 0, 0);
-	p.srcPtr = src.d->ptr;
 
 	p.dstArray = 0;
 	p.dstPos = make_cudaPos(pos.subx * sizeof(float), pos.suby, pos.subz);
 	p.dstPtr = d;
 
-	p.extent = make_cudaExtent(pos.subnx * sizeof(float), pos.subny, pos.subnz);
+        if (src.d->ptr.ptr) {
+            p.srcArray = 0;
+            p.srcPtr = src.d->ptr;
+            p.extent = make_cudaExtent(pos.subnx * sizeof(float), pos.subny, pos.subnz);
+        } else {
+            p.srcArray = src.d->arr;
+            p.srcPtr.ptr = 0;
+            p.extent = make_cudaExtent(pos.subnx, pos.subny, pos.subnz);
+        }
 
 	p.kind = cudaMemcpyDeviceToHost;
 
@@ -191,6 +206,8 @@ bool copyFromGPUMemory(float *dst, MemHandle3D src, const SSubDimensions3D &pos)
 
 bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, int iDetectorSuperSampling, astra::Cuda3DProjectionKernel projKernel)
 {
+	assert(!projData.d->arr);
+	assert(!volData.d->arr);
 	SDimensions3D dims;
 	SProjectorParams3D params;
 
@@ -253,6 +270,7 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, con
 
 bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, int iVoxelSuperSampling, bool bFDKWeighting)
 {
+	assert(!volData.d->arr);
 	SDimensions3D dims;
 	SProjectorParams3D params;
 
@@ -273,10 +291,17 @@ bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, con
 
 	params.bFDKWeighting = bFDKWeighting;
 
-	if (pParProjs)
-		ok &= Par3DBP(volData.d->ptr, projData.d->ptr, dims, pParProjs, params);
-	else
-		ok &= ConeBP(volData.d->ptr, projData.d->ptr, dims, pConeProjs, params);
+	if (pParProjs) {
+		if (projData.d->arr)
+			ok &= Par3DBP_Array(volData.d->ptr, projData.d->arr, dims, pParProjs, params);
+		else
+			ok &= Par3DBP(volData.d->ptr, projData.d->ptr, dims, pParProjs, params);
+	} else {
+		if (projData.d->arr)
+			ok &= ConeBP_Array(volData.d->ptr, projData.d->arr, dims, pConeProjs, params);
+		else
+			ok &= ConeBP(volData.d->ptr, projData.d->ptr, dims, pConeProjs, params);
+	}
 
 	delete[] pParProjs;
 	delete[] pConeProjs;
@@ -287,6 +312,8 @@ bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, con
 
 bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, bool bShortScan, const float *pfFilter)
 {
+	assert(!projData.d->arr);
+	assert(!volData.d->arr);
 	SDimensions3D dims;
 	SProjectorParams3D params;
 
@@ -328,12 +355,64 @@ _AstraExport MemHandle3D wrapHandle(float *D_ptr, unsigned int x, unsigned int y
 
 	SMemHandle3D_internal h;
 	h.ptr = ptr;
+	h.arr = 0;
 
 	MemHandle3D hnd;
 	hnd.d = boost::shared_ptr<SMemHandle3D_internal>(new SMemHandle3D_internal);
 	*hnd.d = h;
 
 	return hnd;
+}
+
+MemHandle3D createProjectionArrayHandle(const float *ptr, unsigned int x, unsigned int y, unsigned int z)
+{
+	SDimensions3D dims;
+	dims.iProjU = x;
+	dims.iProjAngles = y;
+	dims.iProjV = z;
+
+	cudaArray* cuArray = allocateProjectionArray(dims);
+	transferHostProjectionsToArray(ptr, cuArray, dims);
+
+	SMemHandle3D_internal h;
+	h.arr = cuArray;
+	h.ptr.ptr = 0;
+
+	MemHandle3D hnd;
+	hnd.d = boost::shared_ptr<SMemHandle3D_internal>(new SMemHandle3D_internal);
+	*hnd.d = h;
+
+	return hnd;
+}
+
+bool copyIntoArray(MemHandle3D handle, MemHandle3D subdata, const SSubDimensions3D &pos)
+{
+	assert(handle.d->arr);
+	assert(!handle.d->ptr.ptr);
+	assert(!subdata.d->arr);
+	assert(subdata.d->ptr.ptr);
+
+	ASTRA_DEBUG("Copying %d x %d x %d into GPU array", pos.subnx, pos.subny, pos.subnz);
+	ASTRA_DEBUG("Offset %d,%d,%d", pos.subx, pos.suby, pos.subz);
+	ASTRA_DEBUG("Pitch %d, xsize %d, ysize %d", subdata.d->ptr.pitch, subdata.d->ptr.xsize, subdata.d->ptr.ysize);
+
+	cudaMemcpy3DParms p;
+	p.srcArray = 0;
+	p.srcPos = make_cudaPos(0, 0, 0);
+	p.srcPtr = subdata.d->ptr;
+
+	p.dstArray = handle.d->arr;
+	p.dstPos = make_cudaPos(pos.subx, pos.suby, pos.subz);
+	p.dstPtr.ptr = 0;
+
+	p.extent = make_cudaExtent(pos.subnx, pos.subny, pos.subnz);
+
+	p.kind = cudaMemcpyHostToDevice;
+
+	cudaError_t err = cudaMemcpy3D(&p);
+
+	return err == cudaSuccess;
+
 }
 
 
