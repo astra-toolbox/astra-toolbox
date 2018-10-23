@@ -28,7 +28,7 @@
 
 include "config.pxi"
 import six
-from .utils import wrap_from_bytes
+from .utils import wrap_from_bytes, wrap_to_bytes
 
 from libcpp.string cimport string
 from libcpp.vector cimport vector
@@ -39,6 +39,9 @@ from .PyIndexManager cimport CAstraObjectManagerBase
 cdef extern from "astra/Globals.h" namespace "astra":
     bool cudaEnabled()
     bool cudaAvailable()
+
+cdef extern from "astra/Features.h" namespace "astra":
+    bool hasFeature(string)
 
 IF HAVE_CUDA==True:
   cdef extern from "astra/cuda/2d/astra.h" namespace "astraCUDA":
@@ -120,3 +123,6 @@ def info(ids):
         if ptr:
             s = ptr.getType() + six.b("\t") + ptr.getInfo(i)
             six.print_(wrap_from_bytes(s))
+
+def has_feature(feature):
+    return hasFeature(wrap_to_bytes(feature))

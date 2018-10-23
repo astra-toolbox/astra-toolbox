@@ -168,6 +168,9 @@
     <ClCompile Include="src\Config.cpp">
       <Filter>Global &amp; Other\source</Filter>
     </ClCompile>
+    <ClCompile Include="src\Features.cpp">
+      <Filter>Global &amp; Other\source</Filter>
+    </ClCompile>
     <ClCompile Include="src\Filters.cpp">
       <Filter>Global &amp; Other\source</Filter>
     </ClCompile>
@@ -435,6 +438,9 @@
       <Filter>Global &amp; Other\headers</Filter>
     </ClInclude>
     <ClInclude Include="include\astra\Config.h">
+      <Filter>Global &amp; Other\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\Features.h">
       <Filter>Global &amp; Other\headers</Filter>
     </ClInclude>
     <ClInclude Include="include\astra\Filters.h">

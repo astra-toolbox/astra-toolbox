@@ -35,6 +35,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "mexInitFunctions.h"
 
 #include "astra/Globals.h"
+#include "astra/Features.h"
 #include "astra/AstraObjectManager.h"
 
 #ifdef ASTRA_CUDA
@@ -132,6 +133,7 @@ void astra_mex_set_gpu_index(int nlhs, mxArray* plhs[], int nrhs, const mxArray*
 #endif
 }
 
+//-----------------------------------------------------------------------------------------
 /** get_gpu_info = astra_mex('get_gpu_info');
  * 
  * Get GPU info
@@ -146,6 +148,38 @@ void astra_mex_get_gpu_info(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 	mexPrintf("%s\n", astraCUDA::getCudaDeviceString(device).c_str());
 #endif
 }
+
+
+//-----------------------------------------------------------------------------------------
+/** has_feature = astra_mex('has_feature');
+ *
+ * Check a feature flag. See include/astra/Features.h.
+ */
+void astra_mex_has_feature(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
+{
+	if (2 > nrhs) {
+		mexErrMsgTxt("Usage: astra_mex('has_feature', feature);\n");
+		return;
+	}
+
+	string sMode = mexToString(prhs[0]);
+	bool ret = false;
+
+	// NB: When adding features here, also document them centrally in
+	// include/astra/Features.h
+	if (sMode == "mex_link") {
+#ifdef USE_MATLAB_UNDOCUMENTED
+		ret = true;
+#else
+		ret = false;
+#endif
+	} else {
+		ret = astra::hasFeature(sMode);
+	}
+
+	plhs[0] = mxCreateDoubleScalar(ret ? 1 : 0);
+}
+
 
 
 //-----------------------------------------------------------------------------------------
@@ -208,7 +242,7 @@ void astra_mex_delete(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]
 static void printHelp()
 {
 	mexPrintf("Please specify a mode of operation.\n");
-	mexPrintf("   Valid modes: version, use_cuda, credits, set_gpu_index, info, delete\n");
+	mexPrintf("   Valid modes: version, use_cuda, credits, set_gpu_index, has_feature, info, delete\n");
 }
 
 //-----------------------------------------------------------------------------------------
@@ -241,6 +275,8 @@ void mexFunction(int nlhs, mxArray* plhs[],
 		astra_mex_set_gpu_index(nlhs, plhs, nrhs, prhs);
 	} else if (sMode == std::string("get_gpu_info")) {
 		astra_mex_get_gpu_info(nlhs, plhs, nrhs, prhs);
+	} else if (sMode == std::string("has_feature")) {
+		astra_mex_has_feature(nlhs, plhs, nrhs, prhs);
 	} else if (sMode == std::string("info")) {
 		astra_mex_info(nlhs, plhs, nrhs, prhs);
 	} else if (sMode == std::string("delete")) {

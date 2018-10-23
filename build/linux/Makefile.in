@@ -141,6 +141,7 @@ BASE_OBJECTS=\
 	src/FanFlatBeamStripKernelProjector2D.lo \
 	src/FanFlatProjectionGeometry2D.lo \
 	src/FanFlatVecProjectionGeometry2D.lo \
+	src/Features.lo \
 	src/FilteredBackProjectionAlgorithm.lo \
 	src/Filters.lo \
 	src/Float32Data2D.lo \

@@ -55,8 +55,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 using namespace std;
 using namespace astra;
 
-#define USE_MATLAB_UNDOCUMENTED
-
 //-----------------------------------------------------------------------------------------
 /**
  * id = astra_mex_io_data('create', datatype, geometry, data);
