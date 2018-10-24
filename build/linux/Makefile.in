@@ -81,11 +81,16 @@ endif
 ifeq ($(python),yes)
 PYTHON      = @PYTHON@
 PYINCDIR := $(shell $(PYTHON) -c 'from __future__ import print_function; from distutils.sysconfig import get_python_inc; print(get_python_inc())')
+PYLIBDIR := $(shell $(PYTHON) -c 'from distutils.sysconfig import get_config_var; import six; six.print_(get_config_var("LIBDIR"))')
 PYLIBVER = `basename $(PYINCDIR)`
 CPPFLAGS += -DASTRA_PYTHON -I$(PYINCDIR)
 PYCPPFLAGS  := $(CPPFLAGS)
 PYCPPFLAGS  += -I../include
-PYLDFLAGS = $(MODLDFLAGS)
+
+# copy the current MODLDFLAGS to PYLDFLAGS, and then add flags for matlab/octave
+PYLDFLAGS := $(MODLDFLAGS)
+MODLDFLAGS += -L$(PYLIBDIR)
+
 MODPYLIBS=-l$(PYLIBVER)
 endif
 
