@@ -34,7 +34,7 @@ requirements:
 
   run:
     - python
-    - {{ pin_compatible('numpy', max_pin='x.x') }}
+    - {{ pin_compatible('numpy', min_pin='x.x', max_pin='x.x') }}
     - scipy
     - six
     - libastra ==1.9.0dev
