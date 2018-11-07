@@ -87,7 +87,7 @@ IF HAVE_CUDA==True:
     if use_cuda()==True:
         if not isinstance(idx, collections.Iterable) or isinstance(idx, six.string_types + (six.text_type,six.binary_type)):
             idx = (idx,)
-        if memory < 1024*1024:
+        if memory != 0 and memory < 1024*1024:
             raise ValueError("Setting GPU memory lower than 1MB is not supported.")
         params.memory = memory
         params.GPUIndices = idx
