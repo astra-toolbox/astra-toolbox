@@ -34,6 +34,8 @@ all: $(TARGETS)
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 datarootdir=@datarootdir@
+includedir=@includedir@
+libdir=@libdir@
 
 srcdir=@srcdir@
 abs_top_builddir=@abs_top_builddir@
@@ -354,7 +356,7 @@ endif
 endif
 
 libastra.la: $(ALL_OBJECTS)
-	./libtool --mode=link --tag=CXX $(LD) -rpath @libdir@ -o $@ $(LDFLAGS) $(LIBS) $+
+	./libtool --mode=link --tag=CXX $(LD) -rpath $(libdir) -o $@ $(LDFLAGS) $(LIBS) $+
 
 %.o: %.cpp
 	$(MKDIR) $(*D)/$(DEPDIR)
@@ -435,9 +437,9 @@ distclean: clean
 	rm -f $(srcdir)/configure Makefile
 
 install-libraries: libastra.la
-	$(INSTALL_SH) -m 755 -d @libdir@
-	./libtool --mode=install $(INSTALL_SH) -m 644 libastra.la @libdir@
-	./libtool --mode=finish @libdir@
+	$(INSTALL_SH) -m 755 -d $(libdir)
+	./libtool --mode=install $(INSTALL_SH) -m 644 libastra.la $(libdir)
+	./libtool --mode=finish $(libdir)
 
 
 # ------------------------
@@ -535,8 +537,37 @@ else
 install-octave:
 endif
 
+ifeq ($(install_type),module)
 
-Makefile: $(srcdir)/Makefile.in config.status
+install-dev:
+	@echo "install-dev is not compatible with the 'module' install type."
+	@echo "Please use 'prefix' or 'dir' instead."
+
+install-headers:
+	@echo "install-headers is not compatible with the 'module' install type."
+	@echo "Please use 'prefix' or 'dir' instead."
+
+else
+
+install-headers:
+	$(INSTALL_SH) -m 755 -d $(includedir)
+	$(INSTALL_SH) -m 755 -d $(includedir)/astra
+	$(INSTALL_SH) -m 755 -d $(includedir)/astra/cuda
+	$(INSTALL_SH) -m 755 -d $(includedir)/astra/cuda/2d
+	$(INSTALL_SH) -m 755 -d $(includedir)/astra/cuda/3d
+	$(INSTALL_SH) -m 644 $(srcdir)/../../include/astra/*.h $(includedir)/astra
+	$(INSTALL_SH) -m 644 $(srcdir)/../../include/astra/*.inl $(includedir)/astra
+	$(INSTALL_SH) -m 644 $(srcdir)/../../include/astra/cuda/2d/*.h $(includedir)/astra/cuda/2d
+	$(INSTALL_SH) -m 644 $(srcdir)/../../include/astra/cuda/3d/*.h $(includedir)/astra/cuda/3d
+
+install-dev: install-libraries install-headers libastra.pc
+	$(INSTALL_SH) -m 755 -d $(libdir)
+	$(INSTALL_SH) -m 755 -d $(libdir)/pkgconfig/
+	$(INSTALL_SH) -m 644 libastra.pc $(libdir)/pkgconfig/
+endif
+
+
+Makefile libastra.pc: %: $(srcdir)/%.in config.status
 	CONFIG_HEADERS= CONFIG_LINKS= CONFIG_FILES=$@ $(SHELL) ./config.status
 
 config.status: $(srcdir)/configure
@@ -547,7 +578,7 @@ $(srcdir)/configure: $(srcdir)/configure.ac
 	@echo "configure.ac has been changed. Regenerating configure script"
 	cd $(srcdir) && $(SHELL) ./autogen.sh
 
-.PHONY: all mex test clean distclean install install-libraries py install-python-site-packages install-python install-octave install-matlab-so install-octave-so
+.PHONY: all mex test clean distclean install install-libraries py install-python-site-packages install-python install-octave install-matlab-so install-octave-so install-headers install-dev
 
 # don't remove intermediate files:
 .SECONDARY:

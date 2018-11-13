@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libastra
+Description: ASTRA Toolbox
+Version: @PACKAGE_VERSION@
+Libs: -L${libdir} -lastra
+Cflags: -I${includedir} @PKGCONFIG_CFLAGS_EXTRA@
