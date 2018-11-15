@@ -517,8 +517,30 @@ install-matlab: $(MATLAB_MEX) install-matlab-so
 	$(INSTALL_SH) -m 755 -d $(MATLABBASE)
 	$(INSTALL_SH) -m 755 -d $(MATLABBASE)/mex
 	$(INSTALL_SH) -m 755 -d $(MATLABBASE)/tools
+	$(INSTALL_SH) -m 755 -d $(MATLABBASE)/algorithms
 	$(INSTALL_SH) -m 755 $(MATLAB_MEX) $(MATLABBASE)/mex
 	$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/tools/*.m $(MATLABBASE)/tools
+
+	# TODO: there must be a more efficient way to do this than to create and fill every single folder
+	# install plot_geom
+	$(INSTALL_SH) -m 755 -d $(MATLABBASE)/algorithms/plot_geom
+	$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/algorithms/plot_geom/*.m $(MATLABBASE)/algorithms/plot_geom
+
+	$(INSTALL_SH) -m 755 -d $(MATLABBASE)/algorithms/plot_geom/draw
+	$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/algorithms/plot_geom/draw/*.m $(MATLABBASE)/algorithms/plot_geom/draw
+
+	$(INSTALL_SH) -m 755 -d $(MATLABBASE)/algorithms/plot_geom/stl
+	$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/algorithms/plot_geom/stl/*.stl $(MATLABBASE)/algorithms/plot_geom/stl
+
+	$(INSTALL_SH) -m 755 -d $(MATLABBASE)/algorithms/plot_geom/util
+	$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/algorithms/plot_geom/util/*.m $(MATLABBASE)/algorithms/plot_geom/util
+
+	$(INSTALL_SH) -m 755 -d $(MATLABBASE)/algorithms/plot_geom/util/parseargs
+	$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/algorithms/plot_geom/util/parseargs/* $(MATLABBASE)/algorithms/plot_geom/util/parseargs
+
+	$(INSTALL_SH) -m 755 -d $(MATLABBASE)/algorithms/plot_geom/util/stlTools
+	$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/algorithms/plot_geom/util/stlTools/* $(MATLABBASE)/algorithms/plot_geom/util/stlTools
+
 # TODO: docs
 else
 install-matlab:
