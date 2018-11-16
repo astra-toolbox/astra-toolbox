@@ -29,15 +29,13 @@ function [ output_args ] = draw_fanflat_vec_geom( h_ax, geom, options)
     
     % draw the points and connect with lines
     hold on;
-    for jj = 1:num_angles
-        scatter3(h_ax, xray_source(jj, 1), xray_source(jj, 2),...
-            xray_source(jj, 3), options.SourceMarker,...
-            options.SourceMarkerColor);
-        scatter3(h_ax, detector_center(jj, 1),...
-            detector_center(jj, 2), detector_center(jj, 3),...
-            options.DetectorMarker, options.DetectorMarkerColor);
-    end   
-   
+    scatter3(h_ax, xray_source(:, 1), xray_source(:, 2),...
+        xray_source(:, 3), options.SourceMarker,...
+        options.SourceMarkerColor);
+    scatter3(h_ax, detector_center(:, 1),...
+        detector_center(:, 2), detector_center(:, 3),...
+        options.DetectorMarker, options.DetectorMarkerColor);
+       
     detector = struct;
     detector.u = [vectors(options.VectorIdx, 5:6), 0];
     detector.v = fliplr(detector.u);
@@ -49,6 +47,7 @@ function [ output_args ] = draw_fanflat_vec_geom( h_ax, geom, options)
     connect_source_detector(h_ax, vertices, detector_center,...
         xray_source, options);   
     
+    % rotation axis will be roughly as long as the source detector distance
     distances = eucl_dist3d(detector_center, xray_source);
     mean_sdd = mean(distances(:)); % mean source detector distance
     draw_rotation_axis(h_ax, mean_sdd, options);

@@ -34,17 +34,15 @@ function [] = draw_cone_vec_geom(h_ax, geom, options)
     % draw the points and connect with lines
     hold on;
     num_angles = size(vectors, 1);
-    for jj = 1:num_angles
-        s_source = scatter3(h_ax, xray_source(jj, 1), xray_source(jj, 2),...
-            xray_source(jj, 3));
-        s_source.Marker = options.SourceMarker;
-        s_source.MarkerEdgeColor = options.SourceMarkerColor;
-        
-        s_det = scatter3(h_ax, detector_center(jj, 1),...
-            detector_center(jj, 2), detector_center(jj, 3));
-        s_det.MarkerEdgeColor = options.DetectorMarkerColor;
-        s_det.Marker = options.DetectorMarker;
-    end
+    s_source = scatter3(h_ax, xray_source(:, 1), xray_source(:, 2),...
+        xray_source(:, 3));
+    s_source.Marker = options.SourceMarker;
+    s_source.MarkerEdgeColor = options.SourceMarkerColor;
+
+    s_det = scatter3(h_ax, detector_center(:, 1),...
+        detector_center(:, 2), detector_center(:, 3));
+    s_det.MarkerEdgeColor = options.DetectorMarkerColor;
+    s_det.Marker = options.DetectorMarker;
 
     detector = struct;
     detector.u = vectors(options.VectorIdx, 7:9);
@@ -56,10 +54,12 @@ function [] = draw_cone_vec_geom(h_ax, geom, options)
     vertices = draw_detector_vec(h_ax, detector, options);
     connect_source_detector(h_ax, vertices, detector_center, ...
         xray_source, options);
-    distances = eucl_dist3d(detector_center, xray_source);
-    mean_sdd = mean(distances(:)); % mean source detector distance
     
+    % rotation axis will be roughly as long as the source detector distance
+    distances = eucl_dist3d(detector_center, xray_source);
+    mean_sdd = mean(distances(:)); % mean source detector distance    
     draw_rotation_axis(h_ax, mean_sdd, options);
+    
     text(h_ax, xray_source(options.VectorIdx, 1),...
         xray_source(options.VectorIdx, 2),...
         xray_source(options.VectorIdx, 3), 'x-ray source');
