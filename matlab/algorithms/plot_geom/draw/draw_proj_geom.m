@@ -1,9 +1,8 @@
-function [] = draw_proj_geometry(geom, h_ax, varargin)
-%% draw_proj_geometry.m
+function [] = draw_proj_geom(geom, varargin)
+%% draw_proj_geom.m
 % brief                         rendering function for astra geometries.
 % param geom                    the geometry to plot. If geometry type
 %                               is not supported, throws error
-% param h_ax                    handle to axis to plot into
 % ------------------------------
 % optional parameters that can be provided as string value pairs:
 %
@@ -38,10 +37,7 @@ function [] = draw_proj_geometry(geom, h_ax, varargin)
 %
 % - last update                 07.11.2018
 %%
-    if nargin == 1
-        h_ax = axes(gcf);
-    end
-
+    h_ax = gca;
     options = parseoptions(varargin);
 
     switch geom.type

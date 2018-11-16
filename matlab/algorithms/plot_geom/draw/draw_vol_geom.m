@@ -1,17 +1,17 @@
-function [] = draw_vol_geom( vol_geom, vx_size, h_ax, varargin)
+function [] = draw_vol_geom( vol_geom, varargin)
 %% draw_vol_geom.m
 % brief                 rendering function for astra volume geometries
 %                       describing a phantom.
 % param vol_geom        volume geometry describing the phantom
 % param vx_size         voxel size in unit of preference. must be same unit
 %                       that was used to scale the projection geometry
-% param h_ax            handle to axis to plot into
 % ------------------------------
 % optional parameters that can be provided as string value pairs:
 %
 % param Magnification   magnification factor for the phantom. for small
-%                       phantoms it might be necessary to scale the render up
-%                       as otherwise it won't show up in the plot. Default = 1
+%                       phantoms it might be necessary to scale the render 
+%                       up as otherwise it won't show up in the plot.
+%                       Default = 1
 % param LineWidth       line width for the box wireframe. Default = 2
 % param Color           color of the wireframe. Default = 'r'
 %
@@ -20,12 +20,18 @@ function [] = draw_vol_geom( vol_geom, vx_size, h_ax, varargin)
 %                       imec VisionLab
 %                       University of Antwerp
 %
-% - last update         09.07.2018
+% - last update         16.11.2018
 %%
-    if nargin < 4
-        h_ax = axes(gcf);
-    end
+    h_ax = gca;
 
+    if mod(size(varargin), 2) ~= 0
+        vx_size = varargin{1};
+        varargin = varargin(2:end); % consumed vx_size from arg list
+    else
+        vx_size = 1;
+    end
+    
+    
     options = struct;
     options.Color = 'r';
     options.LineWidth = 2;

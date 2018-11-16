@@ -1,9 +1,9 @@
-function [] = draw_cad_phantom(filename, magn, h_ax)
+function [] = draw_cad_phantom(filename, magn)
 %% draw_cad_phantom.m
 % brief             render an stl model into a 3d axis object
 % param vol_geom    volume geometry describing the phantom
-% param magn        magnification multiplier of the phantom. default = 1
 % param h_ax        handle to axis to plot into
+% param magn        magnification multiplier of the phantom. default = 1
 %
 % date              02.07.2018
 % author            Alice Presenti
@@ -11,12 +11,10 @@ function [] = draw_cad_phantom(filename, magn, h_ax)
 %                   University of Antwerp
 % Modified by Tim Elberfeld
 %%
+    h_ax = gca;    
     if nargin == 1
         magn = 1;
     end
-    if nargin == 2
-        h_ax = axes(gcf);
-    end    
 
     [v,f,~,~] = stlRead(filename);
     m = mean(v); % to center the CAD model!
