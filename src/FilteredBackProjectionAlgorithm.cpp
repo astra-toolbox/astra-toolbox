@@ -92,24 +92,28 @@ void CFilteredBackProjectionAlgorithm::clear()
 bool CFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 {
 	ASTRA_ASSERT(_cfg.self);
+	ConfigStackCheck<CAlgorithm> CC("FilteredBackProjectionAlgorithm", this, _cfg);
 	
 	// projector
 	XMLNode node = _cfg.self.getSingleNode("ProjectorId");
 	ASTRA_CONFIG_CHECK(node, "FilteredBackProjection", "No ProjectorId tag specified.");
 	int id = node.getContentInt();
 	m_pProjector = CProjector2DManager::getSingleton().get(id);
+	CC.markNodeParsed("ProjectorId");
 
 	// sinogram data
 	node = _cfg.self.getSingleNode("ProjectionDataId");
 	ASTRA_CONFIG_CHECK(node, "FilteredBackProjection", "No ProjectionDataId tag specified.");
 	id = node.getContentInt();
 	m_pSinogram = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
+	CC.markNodeParsed("ProjectionDataId");
 
 	// volume data
 	node = _cfg.self.getSingleNode("ReconstructionDataId");
 	ASTRA_CONFIG_CHECK(node, "FilteredBackProjection", "No ReconstructionDataId tag specified.");
 	id = node.getContentInt();
 	m_pReconstruction = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
+	CC.markNodeParsed("ReconstructionDataId");
 
 	node = _cfg.self.getSingleNode("ProjectionIndex");
 	if (node) 
@@ -153,6 +157,7 @@ bool CFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 		delete[] sinogramData2D;
 		delete[] projectionAngles;
 	}
+	CC.markNodeParsed("ProjectionIndex");
 
 	m_filterConfig = getFilterConfigForAlgorithm(_cfg, this);
 

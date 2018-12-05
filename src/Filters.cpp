@@ -492,28 +492,38 @@ SFilterConfig getFilterConfigForAlgorithm(const Config& _cfg, CAlgorithm *_alg)
 	XMLNode node;
 
 	// filter type
-	node = _cfg.self.getSingleNode("FilterType");
-	if (_cfg.self.hasOption("FilterType")) {
-		c.m_eType = convertStringToFilter(_cfg.self.getOption("FilterType"));
-		CC.markOptionParsed("FilterType");
+	const char *nodeName = "FilterType";
+	node = _cfg.self.getSingleNode(nodeName);
+	if (_cfg.self.hasOption(nodeName)) {
+		c.m_eType = convertStringToFilter(_cfg.self.getOption(nodeName));
+		CC.markOptionParsed(nodeName);
 	} else if (node) {
 		// Fallback: check cfg.FilterType (instead of cfg.option.FilterType)
 		c.m_eType = convertStringToFilter(node.getContent());
-		CC.markNodeParsed("FilterType");
+		CC.markNodeParsed(nodeName);
 	} else {
 		c.m_eType = FILTER_RAMLAK;
 	}
 
 	// filter
-	// TODO: Only for some values of FilterType
-	node = _cfg.self.getSingleNode("FilterSinogramId");
+	nodeName = "FilterSinogramId";
 	int id = -1;
-	if (_cfg.self.hasOption("FilterSinogramId")) {
-		id = _cfg.self.getOptionInt("FilterSinogramId");
-		CC.markOptionParsed("FilterSinogramId");
-	} else if (node) {
-		id = node.getContentInt();
-		CC.markNodeParsed("FilterSinogramId");
+	switch (c.m_eType) {
+	case FILTER_PROJECTION:
+	case FILTER_SINOGRAM:
+	case FILTER_RPROJECTION:
+	case FILTER_RSINOGRAM:
+		node = _cfg.self.getSingleNode(nodeName);
+		if (_cfg.self.hasOption(nodeName)) {
+			id = _cfg.self.getOptionInt(nodeName);
+			CC.markOptionParsed(nodeName);
+		} else if (node) {
+			id = node.getContentInt();
+			CC.markNodeParsed(nodeName);
+		}
+		break;
+	default:
+		break;
 	}
 
 	if (id != -1) {
@@ -530,31 +540,49 @@ SFilterConfig getFilterConfigForAlgorithm(const Config& _cfg, CAlgorithm *_alg)
 	}
 
 	// filter parameter
-	// TODO: Only for some values of FilterType
-	node = _cfg.self.getSingleNode("FilterParameter");
-	if (_cfg.self.hasOption("FilterParameter")) {
-		c.m_fParameter = _cfg.self.getOptionNumerical("FilterParameter");
-		CC.markOptionParsed("FilterParameter");
-	} else if (node) {
-		c.m_fParameter = node.getContentNumerical();
-		CC.markNodeParsed("FilterParameter");
-	} else {
-		c.m_fParameter = -1.0f;
+	nodeName = "FilterParameter";
+	c.m_fParameter = -1.0f;
+	switch (c.m_eType) {
+	case FILTER_TUKEY:
+	case FILTER_GAUSSIAN:
+	case FILTER_BLACKMAN:
+	case FILTER_KAISER:
+		node = _cfg.self.getSingleNode(nodeName);
+		if (_cfg.self.hasOption(nodeName)) {
+			c.m_fParameter = _cfg.self.getOptionNumerical(nodeName);
+			CC.markOptionParsed(nodeName);
+		} else if (node) {
+			c.m_fParameter = node.getContentNumerical();
+			CC.markNodeParsed(nodeName);
+		}
+		break;
+	default:
+		break;
 	}
 
 	// D value
-	// TODO: Only for some values of FilterType
-	node = _cfg.self.getSingleNode("FilterD");
-	if (_cfg.self.hasOption("FilterD")) {
-		c.m_fD = _cfg.self.getOptionNumerical("FilterD");
-		CC.markOptionParsed("FilterD");
-	} else if (node) {
-		c.m_fD = node.getContentNumerical();
-		CC.markNodeParsed("FilterD");
-	} else {
-		c.m_fD = 1.0f;
+	nodeName = "FilterD";
+	c.m_fD = 1.0f;
+	switch (c.m_eType) {
+	case FILTER_PROJECTION:
+	case FILTER_SINOGRAM:
+	case FILTER_RPROJECTION:
+	case FILTER_RSINOGRAM:
+		break;
+	case FILTER_NONE:
+	case FILTER_ERROR:
+		break;
+	default:
+		node = _cfg.self.getSingleNode(nodeName);
+		if (_cfg.self.hasOption(nodeName)) {
+			c.m_fD = _cfg.self.getOptionNumerical(nodeName);
+			CC.markOptionParsed(nodeName);
+		} else if (node) {
+			c.m_fD = node.getContentNumerical();
+			CC.markNodeParsed(nodeName);
+		}
+		break;
 	}
-
 	return c;
 }
 
