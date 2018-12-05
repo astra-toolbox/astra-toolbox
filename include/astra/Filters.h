@@ -28,6 +28,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _INC_ASTRA_FILTERS_H
 #define _INC_ASTRA_FILTERS_H
 
+#include <string>
+
 namespace astra {
 
 struct Config;
@@ -82,7 +84,7 @@ float *genFilter(const SFilterConfig &_cfg,
                  int _iFFTFourierDetectorCount);
 
 // Convert string to filter type. Returns FILTER_ERROR if unrecognized.
-E_FBPFILTER convertStringToFilter(const char * _filterType);
+E_FBPFILTER convertStringToFilter(const std::string &_filterType);
 
 SFilterConfig getFilterConfigForAlgorithm(const Config& _cfg, CAlgorithm *_alg);
 

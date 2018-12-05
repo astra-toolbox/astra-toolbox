@@ -32,7 +32,7 @@ cfg.ProjectorId = proj_id;
 
 
 % 1. Use a standard Ram-Lak filter
-cfg.FilterType = 'ram-lak';
+cfg.option.FilterType = 'ram-lak';
 
 alg_id = astra_mex_algorithm('create', cfg);
 astra_mex_algorithm('run', alg_id);
@@ -53,8 +53,8 @@ filter = kernel(1:halfFilterSize);
 filter_geom = astra_create_proj_geom('parallel', 1.0, halfFilterSize, [0]);
 filter_id = astra_mex_data2d('create', '-sino', filter_geom, filter);
 
-cfg.FilterType = 'projection';
-cfg.FilterSinogramId = filter_id;
+cfg.option.FilterType = 'projection';
+cfg.option.FilterSinogramId = filter_id;
 
 alg_id = astra_mex_algorithm('create', cfg);
 astra_mex_algorithm('run', alg_id);
@@ -77,8 +77,8 @@ kernel(floor(N/2)+1) = 0.5;
 kernel_geom = astra_create_proj_geom('parallel', 1.0, N, [0]);
 kernel_id = astra_mex_data2d('create', '-sino', kernel_geom, kernel);
 
-cfg.FilterType = 'rprojection';
-cfg.FilterSinogramId = kernel_id;
+cfg.option.FilterType = 'rprojection';
+cfg.option.FilterSinogramId = kernel_id;
 
 alg_id = astra_mex_algorithm('create', cfg);
 astra_mex_algorithm('run', alg_id);

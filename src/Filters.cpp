@@ -443,7 +443,7 @@ struct FilterNameMapEntry {
 	E_FBPFILTER m_type;
 };
 
-E_FBPFILTER convertStringToFilter(const char * _filterType)
+E_FBPFILTER convertStringToFilter(const std::string &_filterType)
 {
 
 	static const FilterNameMapEntry map[] = {
@@ -474,10 +474,10 @@ E_FBPFILTER convertStringToFilter(const char * _filterType)
 	const FilterNameMapEntry *i;
 
 	for (i = &map[0]; i->m_name; ++i)
-		if (stringCompareLowerCase(_filterType, i->m_name))
+		if (stringCompareLowerCase(_filterType.c_str(), i->m_name))
 			return i->m_type;
 
-	ASTRA_ERROR("Failed to convert \"%s\" into a filter.",_filterType);
+	ASTRA_ERROR("Failed to convert \"%s\" into a filter.",_filterType.c_str());
 
 	return FILTER_ERROR;
 }
@@ -489,59 +489,71 @@ SFilterConfig getFilterConfigForAlgorithm(const Config& _cfg, CAlgorithm *_alg)
 
 	SFilterConfig c;
 
+	XMLNode node;
+
 	// filter type
-	XMLNode node = _cfg.self.getSingleNode("FilterType");
-	if (node)
-		c.m_eType = convertStringToFilter(node.getContent().c_str());
-	else
+	node = _cfg.self.getSingleNode("FilterType");
+	if (_cfg.self.hasOption("FilterType")) {
+		c.m_eType = convertStringToFilter(_cfg.self.getOption("FilterType"));
+		CC.markOptionParsed("FilterType");
+	} else if (node) {
+		// Fallback: check cfg.FilterType (instead of cfg.option.FilterType)
+		c.m_eType = convertStringToFilter(node.getContent());
+		CC.markNodeParsed("FilterType");
+	} else {
 		c.m_eType = FILTER_RAMLAK;
-	CC.markNodeParsed("FilterType");
+	}
 
 	// filter
+	// TODO: Only for some values of FilterType
 	node = _cfg.self.getSingleNode("FilterSinogramId");
-	if (node)
-	{
-		int id = node.getContentInt();
+	int id = -1;
+	if (_cfg.self.hasOption("FilterSinogramId")) {
+		id = _cfg.self.getOptionInt("FilterSinogramId");
+		CC.markOptionParsed("FilterSinogramId");
+	} else if (node) {
+		id = node.getContentInt();
+		CC.markNodeParsed("FilterSinogramId");
+	}
+
+	if (id != -1) {
 		const CFloat32ProjectionData2D * pFilterData = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
 		c.m_iCustomFilterWidth = pFilterData->getGeometry()->getDetectorCount();
 		c.m_iCustomFilterHeight = pFilterData->getGeometry()->getProjectionAngleCount();
 
 		c.m_pfCustomFilter = new float[c.m_iCustomFilterWidth * c.m_iCustomFilterHeight];
 		memcpy(c.m_pfCustomFilter, pFilterData->getDataConst(), sizeof(float) * c.m_iCustomFilterWidth * c.m_iCustomFilterHeight);
-	}
-	else
-	{
+	} else {
 		c.m_iCustomFilterWidth = 0;
 		c.m_iCustomFilterHeight = 0;
 		c.m_pfCustomFilter = NULL;
 	}
-	CC.markNodeParsed("FilterSinogramId"); // TODO: Only for some types!
 
 	// filter parameter
+	// TODO: Only for some values of FilterType
 	node = _cfg.self.getSingleNode("FilterParameter");
-	if (node)
-	{
-		float fParameter = node.getContentNumerical();
-		c.m_fParameter = fParameter;
-	}
-	else
-	{
+	if (_cfg.self.hasOption("FilterParameter")) {
+		c.m_fParameter = _cfg.self.getOptionNumerical("FilterParameter");
+		CC.markOptionParsed("FilterParameter");
+	} else if (node) {
+		c.m_fParameter = node.getContentNumerical();
+		CC.markNodeParsed("FilterParameter");
+	} else {
 		c.m_fParameter = -1.0f;
 	}
-	CC.markNodeParsed("FilterParameter"); // TODO: Only for some types!
 
 	// D value
+	// TODO: Only for some values of FilterType
 	node = _cfg.self.getSingleNode("FilterD");
-	if (node)
-	{
-		float fD = node.getContentNumerical();
-		c.m_fD = fD;
-	}
-	else
-	{
+	if (_cfg.self.hasOption("FilterD")) {
+		c.m_fD = _cfg.self.getOptionNumerical("FilterD");
+		CC.markOptionParsed("FilterD");
+	} else if (node) {
+		c.m_fD = node.getContentNumerical();
+		CC.markNodeParsed("FilterD");
+	} else {
 		c.m_fD = 1.0f;
 	}
-	CC.markNodeParsed("FilterD"); // TODO: Only for some types!
 
 	return c;
 }

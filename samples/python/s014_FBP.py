@@ -49,7 +49,7 @@ rec_id = astra.data2d.create('-vol', vol_geom)
 cfg = astra.astra_dict('FBP_CUDA')
 cfg['ReconstructionDataId'] = rec_id
 cfg['ProjectionDataId'] = sinogram_id
-cfg['FilterType'] = 'Ram-Lak'
+cfg['option'] = { 'FilterType': 'Ram-Lak' }
 
 # possible values for FilterType:
 # none, ram-lak, shepp-logan, cosine, hamming, hann, tukey, lanczos,
