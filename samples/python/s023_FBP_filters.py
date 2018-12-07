@@ -47,11 +47,12 @@ cfg = astra.astra_dict('FBP')
 cfg['ReconstructionDataId'] = rec_id
 cfg['ProjectionDataId'] = sinogram_id
 cfg['ProjectorId'] = proj_id
+cfg['option'] = {}
 
 
 
 # 1. Use a standard Ram-Lak filter
-cfg['FilterType'] = 'ram-lak'
+cfg['option']['FilterType'] = 'ram-lak'
 
 alg_id = astra.algorithm.create(cfg)
 astra.algorithm.run(alg_id)
@@ -71,8 +72,8 @@ filter = np.reshape(kernel[0:halfFilterSize], (1, halfFilterSize))
 filter_geom = astra.create_proj_geom('parallel', 1.0, halfFilterSize, [0]);
 filter_id = astra.data2d.create('-sino', filter_geom, filter);
 
-cfg['FilterType'] = 'projection'
-cfg['FilterSinogramId'] = filter_id
+cfg['option']['FilterType'] = 'projection'
+cfg['option']['FilterSinogramId'] = filter_id
 alg_id = astra.algorithm.create(cfg)
 astra.algorithm.run(alg_id)
 rec_filter = astra.data2d.get(rec_id)
@@ -92,8 +93,8 @@ kernel[0, N//2] = 0.5
 kernel_geom = astra.create_proj_geom('parallel', 1.0, N, [0]);
 kernel_id = astra.data2d.create('-sino', kernel_geom, kernel);
 
-cfg['FilterType'] = 'rprojection'
-cfg['FilterSinogramId'] = kernel_id
+cfg['option']['FilterType'] = 'rprojection'
+cfg['option']['FilterSinogramId'] = kernel_id
 alg_id = astra.algorithm.create(cfg)
 astra.algorithm.run(alg_id)
 rec_kernel = astra.data2d.get(rec_id)
