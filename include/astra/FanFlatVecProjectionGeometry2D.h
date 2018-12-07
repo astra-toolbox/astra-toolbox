@@ -157,6 +157,8 @@ public:
 	virtual CVector3D getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex);
 
 	const SFanProjection* getProjectionVectors() const { return m_pProjectionAngles; }
+protected:
+	virtual bool initializeAngles(const Config& _cfg);
 };
 
 

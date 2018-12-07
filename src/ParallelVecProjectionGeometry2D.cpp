@@ -29,7 +29,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstring>
 #include <sstream>
-#include <boost/lexical_cast.hpp>
 
 using namespace std;
 
@@ -100,20 +99,29 @@ bool CParallelVecProjectionGeometry2D::initialize(const Config& _cfg)
 	ASTRA_ASSERT(_cfg.self);
 	ConfigStackCheck<CProjectionGeometry2D> CC("ParallelVecProjectionGeometry2D", this, _cfg);	
 
-	// TODO: Fix up class hierarchy... this class doesn't fit very well.
 	// initialization of parent class
-	//CProjectionGeometry2D::initialize(_cfg);
+	CProjectionGeometry2D::initialize(_cfg);
 
-	// Required: DetectorCount
-	XMLNode node = _cfg.self.getSingleNode("DetectorCount");
-	ASTRA_CONFIG_CHECK(node, "ParallelVecProjectionGeometry2D", "No DetectorRowCount tag specified.");
-	m_iDetectorCount = boost::lexical_cast<int>(node.getContent());
-	CC.markNodeParsed("DetectorCount");
+
+	// success
+	m_bInitialized = _check();
+	return m_bInitialized;
+}
+
+bool CParallelVecProjectionGeometry2D::initializeAngles(const Config& _cfg)
+{
+	ConfigStackCheck<CProjectionGeometry2D> CC("ParallelVecProjectionGeometry2D", this, _cfg);
 
 	// Required: Vectors
-	node = _cfg.self.getSingleNode("Vectors");
+	XMLNode node = _cfg.self.getSingleNode("Vectors");
 	ASTRA_CONFIG_CHECK(node, "ParallelVecProjectionGeometry2D", "No Vectors tag specified.");
-	vector<float32> data = node.getContentNumericalArray();
+	vector<float32> data;
+	try {
+		data = node.getContentNumericalArray();
+	} catch (const StringUtil::bad_cast &e) {
+		ASTRA_CONFIG_CHECK(false, "ParallelVecProjectionGeometry2D", "Vectors must be a numerical matrix.");
+	}
+
 	CC.markNodeParsed("Vectors");
 	ASTRA_CONFIG_CHECK(data.size() % 6 == 0, "ParallelVecProjectionGeometry2D", "Vectors doesn't consist of 6-tuples.");
 	m_iProjectionAngleCount = data.size() / 6;
@@ -132,9 +140,7 @@ bool CParallelVecProjectionGeometry2D::initialize(const Config& _cfg)
 		p.fDetSY = data[6*i +  3] - 0.5f * m_iDetectorCount * p.fDetUY;
 	}
 
-	// success
-	m_bInitialized = _check();
-	return m_bInitialized;
+	return true;
 }
 
 //----------------------------------------------------------------------------------------
@@ -215,12 +221,12 @@ Config* CParallelVecProjectionGeometry2D::getConfiguration() const
 	std::string vectors = "";
 	for (int i = 0; i < m_iProjectionAngleCount; ++i) {
 		SParProjection& p = m_pProjectionAngles[i];
-		vectors += boost::lexical_cast<string>(p.fRayX) + ",";
-		vectors += boost::lexical_cast<string>(p.fRayY) + ",";
-		vectors += boost::lexical_cast<string>(p.fDetSX + 0.5f * m_iDetectorCount * p.fDetUX) + ",";
-		vectors += boost::lexical_cast<string>(p.fDetSY + 0.5f * m_iDetectorCount * p.fDetUY) + ",";
-		vectors += boost::lexical_cast<string>(p.fDetUX) + ",";
-		vectors += boost::lexical_cast<string>(p.fDetUY);
+		vectors += StringUtil::toString(p.fRayX) + ",";
+		vectors += StringUtil::toString(p.fRayY) + ",";
+		vectors += StringUtil::toString(p.fDetSX + 0.5f * m_iDetectorCount * p.fDetUX) + ",";
+		vectors += StringUtil::toString(p.fDetSY + 0.5f * m_iDetectorCount * p.fDetUY) + ",";
+		vectors += StringUtil::toString(p.fDetUX) + ",";
+		vectors += StringUtil::toString(p.fDetUY);
 		if (i < m_iProjectionAngleCount-1) vectors += ';';
 	}
 	cfg->self.addChildNode("Vectors", vectors);

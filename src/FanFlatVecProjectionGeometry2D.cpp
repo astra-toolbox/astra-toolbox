@@ -116,22 +116,30 @@ bool CFanFlatVecProjectionGeometry2D::initialize(const Config& _cfg)
 
 	XMLNode node;
 
-	// TODO: Fix up class hierarchy... this class doesn't fit very well.
 	// initialization of parent class
-	//CProjectionGeometry2D::initialize(_cfg);
+	CProjectionGeometry2D::initialize(_cfg);
 
-	// Required: DetectorCount
-	node = _cfg.self.getSingleNode("DetectorCount");
-	ASTRA_CONFIG_CHECK(node, "FanFlatVecProjectionGeometry3D", "No DetectorRowCount tag specified.");
-	m_iDetectorCount = node.getContentInt();
-	CC.markNodeParsed("DetectorCount");
+
+	// success
+	m_bInitialized = _check();
+	return m_bInitialized;
+}
+
+bool CFanFlatVecProjectionGeometry2D::initializeAngles(const Config& _cfg)
+{
+	ConfigStackCheck<CProjectionGeometry2D> CC("FanFlatVecProjectionGeometry2D", this, _cfg);
 
 	// Required: Vectors
-	node = _cfg.self.getSingleNode("Vectors");
-	ASTRA_CONFIG_CHECK(node, "FanFlatVecProjectionGeometry3D", "No Vectors tag specified.");
-	vector<float32> data = node.getContentNumericalArray();
+	XMLNode node = _cfg.self.getSingleNode("Vectors");
+	ASTRA_CONFIG_CHECK(node, "FanFlatVecProjectionGeometry2D", "No Vectors tag specified.");
+	vector<float32> data;
+	try {
+		data = node.getContentNumericalArray();
+	} catch (const StringUtil::bad_cast &e) {
+		ASTRA_CONFIG_CHECK(false, "FanFlatVecProjectionGeometry2D", "Vectors must be a numerical matrix.");
+	}
 	CC.markNodeParsed("Vectors");
-	ASTRA_CONFIG_CHECK(data.size() % 6 == 0, "FanFlatVecProjectionGeometry3D", "Vectors doesn't consist of 6-tuples.");
+	ASTRA_CONFIG_CHECK(data.size() % 6 == 0, "FanFlatVecProjectionGeometry2D", "Vectors doesn't consist of 6-tuples.");
 	m_iProjectionAngleCount = data.size() / 6;
 	m_pProjectionAngles = new SFanProjection[m_iProjectionAngleCount];
 
@@ -148,11 +156,7 @@ bool CFanFlatVecProjectionGeometry2D::initialize(const Config& _cfg)
 		p.fDetSY = data[6*i +  3] - 0.5f * m_iDetectorCount * p.fDetUY;
 	}
 
-
-
-	// success
-	m_bInitialized = _check();
-	return m_bInitialized;
+	return true;
 }
 
 //----------------------------------------------------------------------------------------

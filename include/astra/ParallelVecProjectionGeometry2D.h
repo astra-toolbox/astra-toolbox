@@ -155,6 +155,8 @@ public:
 
 	const SParProjection* getProjectionVectors() const { return m_pProjectionAngles; }
 
+protected:
+	virtual bool initializeAngles(const Config& _cfg);
 };
 
 } // namespace astra

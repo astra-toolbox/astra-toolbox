@@ -157,6 +157,8 @@ public:
 	virtual void backprojectPointZ(int iAngleIndex, double fU, double fV,
 	                               double fZ, double &fX, double &fY) const;
 
+protected:
+	virtual bool initializeAngles(const Config& _cfg);
 };
 
 } // namespace astra

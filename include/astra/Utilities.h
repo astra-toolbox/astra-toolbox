@@ -51,6 +51,10 @@ public:
 //< Throw exception on failure.
 _AstraExport int stringToInt(const std::string& s);
 
+//< Parse string as int.
+//< Return fallback on failure.
+_AstraExport int stringToInt(const std::string& s, int fallback);
+
 //< Parse string as float.
 //< Throw exception on failure.
 _AstraExport float stringToFloat(const std::string& s);

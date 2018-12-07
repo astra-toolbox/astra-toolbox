@@ -133,7 +133,7 @@ void CProjectionGeometry3D::clear()
 }
 
 //----------------------------------------------------------------------------------------
-// Initialization witha Config object
+// Initialization with a Config object
 bool CProjectionGeometry3D::initialize(const Config& _cfg)
 {
 	ASTRA_ASSERT(_cfg.self);
@@ -145,35 +145,70 @@ bool CProjectionGeometry3D::initialize(const Config& _cfg)
 
 	ASTRA_ASSERT(_cfg.self);
 	
-	// Required: DetectorWidth
-	XMLNode node = _cfg.self.getSingleNode("DetectorSpacingX");
-	ASTRA_CONFIG_CHECK(node, "ProjectionGeometry3D", "No DetectorSpacingX tag specified.");
-	m_fDetectorSpacingX = node.getContentNumerical();
-	CC.markNodeParsed("DetectorSpacingX");
-
-	// Required: DetectorHeight
-	node = _cfg.self.getSingleNode("DetectorSpacingY");
-	ASTRA_CONFIG_CHECK(node, "ProjectionGeometry3D", "No DetectorSpacingY tag specified.");
-	m_fDetectorSpacingY = node.getContentNumerical();
-	CC.markNodeParsed("DetectorSpacingY");
 
 	// Required: DetectorRowCount
-	node = _cfg.self.getSingleNode("DetectorRowCount");
+	XMLNode node = _cfg.self.getSingleNode("DetectorRowCount");
 	ASTRA_CONFIG_CHECK(node, "ProjectionGeometry3D", "No DetectorRowCount tag specified.");
-	m_iDetectorRowCount = node.getContentInt();
+	try {
+		m_iDetectorRowCount = node.getContentInt();
+	} catch (const StringUtil::bad_cast &e) {
+		ASTRA_CONFIG_CHECK(false, "ProjectionGeometry3D", "DetectorRowCount must be an integer.");
+	}
 	CC.markNodeParsed("DetectorRowCount");
 
 	// Required: DetectorCount
 	node = _cfg.self.getSingleNode("DetectorColCount");
 	ASTRA_CONFIG_CHECK(node, "ProjectionGeometry3D", "No DetectorColCount tag specified.");
-	m_iDetectorColCount = node.getContentInt();
+	try {
+		m_iDetectorColCount = node.getContentInt();
+	} catch (const StringUtil::bad_cast &e) {
+		ASTRA_CONFIG_CHECK(false, "ProjectionGeometry3D", "DetectorColCount must be an integer.");
+	}
 	m_iDetectorTotCount = m_iDetectorRowCount * m_iDetectorColCount;
 	CC.markNodeParsed("DetectorColCount");
+
+
+	if (!initializeAngles(_cfg))
+		return false;
+
+
+	// Interface class, so don't return true
+	return false;
+}
+
+bool CProjectionGeometry3D::initializeAngles(const Config& _cfg)
+{
+	ConfigStackCheck<CProjectionGeometry3D> CC("ProjectionGeometry3D", this, _cfg);
+
+	// Required: DetectorWidth
+	XMLNode node = _cfg.self.getSingleNode("DetectorSpacingX");
+	ASTRA_CONFIG_CHECK(node, "ProjectionGeometry3D", "No DetectorSpacingX tag specified.");
+	try {
+		m_fDetectorSpacingX = node.getContentNumerical();
+	} catch (const StringUtil::bad_cast &e) {
+		ASTRA_CONFIG_CHECK(false, "ProjectionGeometry3D", "DetectorSpacingX must be numerical.");
+	}
+	CC.markNodeParsed("DetectorSpacingX");
+
+	// Required: DetectorHeight
+	node = _cfg.self.getSingleNode("DetectorSpacingY");
+	ASTRA_CONFIG_CHECK(node, "ProjectionGeometry3D", "No DetectorSpacingY tag specified.");
+	try {
+		m_fDetectorSpacingY = node.getContentNumerical();
+	} catch (const StringUtil::bad_cast &e) {
+		ASTRA_CONFIG_CHECK(false, "ProjectionGeometry3D", "DetectorSpacingY must be numerical.");
+	}
+	CC.markNodeParsed("DetectorSpacingY");
 
 	// Required: ProjectionAngles
 	node = _cfg.self.getSingleNode("ProjectionAngles");
 	ASTRA_CONFIG_CHECK(node, "ProjectionGeometry3D", "No ProjectionAngles tag specified.");
-	vector<float32> angles = node.getContentNumericalArray();
+	vector<float32> angles;
+	try {
+		angles = node.getContentNumericalArray();
+	} catch (const StringUtil::bad_cast &e) {
+		ASTRA_CONFIG_CHECK(false, "ProjectionGeometry3D", "ProjectionAngles must be a numerical vector.");
+	}
 	m_iProjectionAngleCount = angles.size();
 	ASTRA_CONFIG_CHECK(m_iProjectionAngleCount > 0, "ProjectionGeometry3D", "Not enough ProjectionAngles specified.");
 	m_pfProjectionAngles = new float32[m_iProjectionAngleCount];
@@ -182,8 +217,8 @@ bool CProjectionGeometry3D::initialize(const Config& _cfg)
 	}
 	CC.markNodeParsed("ProjectionAngles");
 
-	// Interface class, so don't return true
-	return false;
+
+	return true;
 }
 
 //----------------------------------------------------------------------------------------

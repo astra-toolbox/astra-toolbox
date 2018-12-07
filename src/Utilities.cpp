@@ -44,7 +44,17 @@ int stringToInt(const std::string& s)
 	if (iss.fail() || !iss.eof())
 		throw bad_cast();
 	return i;
+}
 
+int stringToInt(const std::string& s, int fallback)
+{
+	int i;
+	std::istringstream iss(s);
+	iss.imbue(std::locale::classic());
+	iss >> i;
+	if (iss.fail() || !iss.eof())
+		return fallback;
+	return i;
 }
 
 float stringToFloat(const std::string& s)

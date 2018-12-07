@@ -74,27 +74,27 @@ bool CParallelVecProjectionGeometry3D::initialize(const Config& _cfg)
 
 	XMLNode node;
 
-	// TODO: Fix up class hierarchy... this class doesn't fit very well.
 	// initialization of parent class
-	//CProjectionGeometry3D::initialize(_cfg);
+	CProjectionGeometry3D::initialize(_cfg);
 
-	// Required: DetectorRowCount
-	node = _cfg.self.getSingleNode("DetectorRowCount");
-	ASTRA_CONFIG_CHECK(node, "ParallelVecProjectionGeometry3D", "No DetectorRowCount tag specified.");
-	m_iDetectorRowCount = node.getContentInt();
-	CC.markNodeParsed("DetectorRowCount");
+	// success
+	m_bInitialized = _check();
+	return m_bInitialized;
+}
 
-	// Required: DetectorCount
-	node = _cfg.self.getSingleNode("DetectorColCount");
-	ASTRA_CONFIG_CHECK(node, "", "No DetectorColCount tag specified.");
-	m_iDetectorColCount = node.getContentInt();
-	m_iDetectorTotCount = m_iDetectorRowCount * m_iDetectorColCount;
-	CC.markNodeParsed("DetectorColCount");
+bool CParallelVecProjectionGeometry3D::initializeAngles(const Config& _cfg)
+{
+	ConfigStackCheck<CProjectionGeometry3D> CC("ParallelVecProjectionGeometry3D", this, _cfg);
 
 	// Required: Vectors
-	node = _cfg.self.getSingleNode("Vectors");
+	XMLNode node = _cfg.self.getSingleNode("Vectors");
 	ASTRA_CONFIG_CHECK(node, "ParallelVecProjectionGeometry3D", "No Vectors tag specified.");
-	vector<double> data = node.getContentNumericalArrayDouble();
+	vector<double> data;
+	try {
+		data = node.getContentNumericalArrayDouble();
+	} catch (const StringUtil::bad_cast &e) {
+		ASTRA_CONFIG_CHECK(false, "ParallelVecProjectionGeometry3D", "Vectors must be a numerical matrix.");
+	}
 	CC.markNodeParsed("Vectors");
 	ASTRA_CONFIG_CHECK(data.size() % 12 == 0, "ParallelVecProjectionGeometry3D", "Vectors doesn't consist of 12-tuples.");
 	m_iProjectionAngleCount = data.size() / 12;
@@ -119,9 +119,7 @@ bool CParallelVecProjectionGeometry3D::initialize(const Config& _cfg)
 		p.fDetSZ = data[12*i +  5] - 0.5f * m_iDetectorRowCount * p.fDetVZ - 0.5f * m_iDetectorColCount * p.fDetUZ;
 	}
 
-	// success
-	m_bInitialized = _check();
-	return m_bInitialized;
+	return true;
 }
 
 //----------------------------------------------------------------------------------------
