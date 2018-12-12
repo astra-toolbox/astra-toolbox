@@ -521,7 +521,7 @@ install-matlab: $(MATLAB_MEX) install-matlab-so
 	$(INSTALL_SH) -m 755 $(MATLAB_MEX) $(MATLABBASE)/mex
 	$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/tools/*.m $(MATLABBASE)/tools
 
-	for D in plot_geom plot_geom/private plot_geom/+draw plot_geom/+draw/private plot_geom/+parseargs plot_geom/+stlTools; do \
+	for D in DART DART/tools DART/examples plot_geom plot_geom/private plot_geom/+draw plot_geom/+draw/private plot_geom/+parseargs plot_geom/+stlTools; do \
 		$(INSTALL_SH) -m 755 -d $(MATLABBASE)/algorithms/$$D; \
 		$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/algorithms/$$D/*.m $(MATLABBASE)/algorithms/$$D; \
 	done
