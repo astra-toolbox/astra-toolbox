@@ -171,9 +171,7 @@ bool CProjectionGeometry3D::initialize(const Config& _cfg)
 	if (!initializeAngles(_cfg))
 		return false;
 
-
-	// Interface class, so don't return true
-	return false;
+	return true;
 }
 
 bool CProjectionGeometry3D::initializeAngles(const Config& _cfg)
@@ -248,8 +246,7 @@ bool CProjectionGeometry3D::_initialize(int _iProjectionAngleCount,
 
 	m_iDetectorTotCount = m_iProjectionAngleCount * m_iDetectorRowCount * m_iDetectorColCount;
 
-	// Interface class, so don't return true
-	return false;
+	return true;
 }
 
 } // namespace astra

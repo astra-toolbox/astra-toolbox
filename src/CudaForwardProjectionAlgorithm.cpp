@@ -94,7 +94,7 @@ bool CCudaForwardProjectionAlgorithm::initialize(const Config& _cfg)
 	m_pProjector = 0;
 	XMLNode node = _cfg.self.getSingleNode("ProjectorId");
 	if (node) {
-		int id = node.getContentInt();
+		int id = StringUtil::stringToInt(node.getContent(), -1);
 		m_pProjector = CProjector2DManager::getSingleton().get(id);
 	}
 	CC.markNodeParsed("ProjectorId");
@@ -104,25 +104,33 @@ bool CCudaForwardProjectionAlgorithm::initialize(const Config& _cfg)
 	// sinogram data
 	node = _cfg.self.getSingleNode("ProjectionDataId");
 	ASTRA_CONFIG_CHECK(node, "FP_CUDA", "No ProjectionDataId tag specified.");
-	int id = node.getContentInt();
+	int id = StringUtil::stringToInt(node.getContent(), -1);
 	m_pSinogram = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
 	CC.markNodeParsed("ProjectionDataId");
 
 	// volume data
 	node = _cfg.self.getSingleNode("VolumeDataId");
 	ASTRA_CONFIG_CHECK(node, "FP_CUDA", "No VolumeDataId tag specified.");
-	id = node.getContentInt();
+	id = StringUtil::stringToInt(node.getContent(), -1);
 	m_pVolume = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 	CC.markNodeParsed("VolumeDataId");
 
 	initializeFromProjector();
 
 	// Deprecated options
-	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", m_iDetectorSuperSampling);
+	try {
+		m_iDetectorSuperSampling = _cfg.self.getOptionInt("DetectorSuperSampling", m_iDetectorSuperSampling);
+	} catch (const StringUtil::bad_cast &e) {
+		ASTRA_CONFIG_CHECK(false, "FP_CUDA", "Supersampling options must be integers.");
+	}
 	CC.markOptionParsed("DetectorSuperSampling");
 	// GPU number
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
+	try {
+		m_iGPUIndex = _cfg.self.getOptionInt("GPUindex", -1);
+		m_iGPUIndex = _cfg.self.getOptionInt("GPUIndex", m_iGPUIndex);
+	} catch (const StringUtil::bad_cast &e) {
+		ASTRA_CONFIG_CHECK(false, "FP_CUDA", "GPUIndex must be an integer.");
+	}
 	CC.markOptionParsed("GPUIndex");
 	if (!_cfg.self.hasOption("GPUIndex"))
 		CC.markOptionParsed("GPUindex");

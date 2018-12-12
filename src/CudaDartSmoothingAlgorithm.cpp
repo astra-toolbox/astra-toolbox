@@ -65,15 +65,15 @@ bool CCudaDartSmoothingAlgorithm::initialize(const Config& _cfg)
 
 	// reconstruction data
 	XMLNode node = _cfg.self.getSingleNode("InDataId");
-	ASTRA_CONFIG_CHECK(node, "CudaDartMask", "No InDataId tag specified.");
-	int id = node.getContentInt();
+	ASTRA_CONFIG_CHECK(node, "CudaDartSmoothing", "No InDataId tag specified.");
+	int id = StringUtil::stringToInt(node.getContent(), -1);
 	m_pIn = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 	CC.markNodeParsed("InDataId");
 
 	// reconstruction data
 	node = _cfg.self.getSingleNode("OutDataId");
-	ASTRA_CONFIG_CHECK(node, "CudaDartMask", "No OutDataId tag specified.");
-	id = node.getContentInt();
+	ASTRA_CONFIG_CHECK(node, "CudaDartSmoothing", "No OutDataId tag specified.");
+	id = StringUtil::stringToInt(node.getContent(), -1);
 	m_pOut = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 	CC.markNodeParsed("OutDataId");
 
@@ -85,11 +85,19 @@ bool CCudaDartSmoothingAlgorithm::initialize(const Config& _cfg)
 		CC.markOptionParsed("GPUIndex");
 
 	// Option: Radius
-	m_fB = (float)_cfg.self.getOptionNumerical("Intensity", 0.3f);
+	try {
+		m_fB = (float)_cfg.self.getOptionNumerical("Intensity", 0.3f);
+	} catch (const StringUtil::bad_cast &e) {
+		ASTRA_CONFIG_CHECK(false, "CudaDartSmoothing", "Intensity must be numerical");
+	}
 	CC.markOptionParsed("Intensity");
 
 	// Option: Radius
-	m_iRadius = (unsigned int)_cfg.self.getOptionNumerical("Radius", 1);
+	try {
+		m_iRadius = _cfg.self.getOptionInt("Radius", 1);
+	} catch (const StringUtil::bad_cast &e) {
+		ASTRA_CONFIG_CHECK(false, "CudaDartSmoothing", "Radius must be an integer.");
+	}
 	CC.markOptionParsed("Radius");
 
 

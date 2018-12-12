@@ -117,7 +117,8 @@ bool CFanFlatVecProjectionGeometry2D::initialize(const Config& _cfg)
 	XMLNode node;
 
 	// initialization of parent class
-	CProjectionGeometry2D::initialize(_cfg);
+	if (!CProjectionGeometry2D::initialize(_cfg))
+		return false;
 
 
 	// success

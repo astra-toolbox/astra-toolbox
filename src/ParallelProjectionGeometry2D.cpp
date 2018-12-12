@@ -102,7 +102,8 @@ bool CParallelProjectionGeometry2D::initialize(const Config& _cfg)
 
 
 	// initialization of parent class
-	CProjectionGeometry2D::initialize(_cfg);
+	if (!CProjectionGeometry2D::initialize(_cfg))
+		return false;
 
 	// success
 	m_bInitialized = _check();

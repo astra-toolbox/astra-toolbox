@@ -100,14 +100,14 @@ bool CCudaForwardProjectionAlgorithm3D::initialize(const Config& _cfg)
 	// sinogram data
 	node = _cfg.self.getSingleNode("ProjectionDataId");
 	ASTRA_CONFIG_CHECK(node, "CudaForwardProjection3D", "No ProjectionDataId tag specified.");
-	id = node.getContentInt();
+	id = StringUtil::stringToInt(node.getContent(), -1);
 	m_pProjections = dynamic_cast<CFloat32ProjectionData3D*>(CData3DManager::getSingleton().get(id));
 	CC.markNodeParsed("ProjectionDataId");
 
 	// reconstruction data
 	node = _cfg.self.getSingleNode("VolumeDataId");
 	ASTRA_CONFIG_CHECK(node, "CudaForwardProjection3D", "No VolumeDataId tag specified.");
-	id = node.getContentInt();
+	id = StringUtil::stringToInt(node.getContent(), -1);
 	m_pVolume = dynamic_cast<CFloat32VolumeData3D*>(CData3DManager::getSingleton().get(id));
 	CC.markNodeParsed("VolumeDataId");
 
@@ -115,19 +115,34 @@ bool CCudaForwardProjectionAlgorithm3D::initialize(const Config& _cfg)
 	node = _cfg.self.getSingleNode("ProjectorId");
 	m_pProjector = 0;
 	if (node) {
-		id = node.getContentInt();
+		id = StringUtil::stringToInt(node.getContent(), -1);
 		m_pProjector = CProjector3DManager::getSingleton().get(id);
+		if (!m_pProjector) {
+			// Report this explicitly since projector is optional
+			ASTRA_ERROR("ProjectorId is not a valid id");
+		}
 	}
 	CC.markNodeParsed("ProjectorId");
 
 	initializeFromProjector();
 
 	// Deprecated options
-	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", m_iDetectorSuperSampling);
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", m_iGPUIndex);
+	try {
+		m_iDetectorSuperSampling = _cfg.self.getOptionInt("DetectorSuperSampling", m_iDetectorSuperSampling);
+	} catch (const StringUtil::bad_cast &e) {
+		ASTRA_CONFIG_CHECK(false, "CudaForwardProjection3D", "Supersampling options must be integers.");
+	}
 	CC.markOptionParsed("DetectorSuperSampling");
-	CC.markOptionParsed("GPUindex");
-
+	// GPU number
+	try {
+		m_iGPUIndex = _cfg.self.getOptionInt("GPUindex", -1);
+		m_iGPUIndex = _cfg.self.getOptionInt("GPUIndex", m_iGPUIndex);
+	} catch (const StringUtil::bad_cast &e) {
+		ASTRA_CONFIG_CHECK(false, "CudaForwardProjection3D", "GPUIndex must be an integer.");
+	}
+	CC.markOptionParsed("GPUIndex");
+	if (!_cfg.self.hasOption("GPUIndex"))
+		CC.markOptionParsed("GPUindex");
 
 	// success
 	m_bIsInitialized = check();

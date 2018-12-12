@@ -83,7 +83,8 @@ bool CConeProjectionGeometry3D::initialize(const Config& _cfg)
 	ConfigStackCheck<CProjectionGeometry3D> CC("ConeProjectionGeometry3D", this, _cfg);	
 
 	// initialization of parent class
-	CProjectionGeometry3D::initialize(_cfg);
+	if (!CProjectionGeometry3D::initialize(_cfg))
+		return false;
 
 	// Required: DistanceOriginDetector
 	XMLNode node = _cfg.self.getSingleNode("DistanceOriginDetector");

@@ -93,12 +93,13 @@ bool CSparseMatrixProjectionGeometry2D::initialize(const Config& _cfg)
 	ConfigStackCheck<CProjectionGeometry2D> CC("SparseMatrixProjectionGeometry2D", this, _cfg);	
 
 	// initialization of parent class
-	CProjectionGeometry2D::initialize(_cfg);
+	if (!CProjectionGeometry2D::initialize(_cfg))
+		return false;
 
 	// get matrix
 	XMLNode node = _cfg.self.getSingleNode("MatrixID");
 	ASTRA_CONFIG_CHECK(node, "SparseMatrixProjectionGeometry2D", "No MatrixID tag specified.");
-	int id = node.getContentInt();
+	int id = StringUtil::stringToInt(node.getContent(), -1);
 	m_pMatrix = CMatrixManager::getSingleton().get(id);
 	CC.markNodeParsed("MatrixID");
 

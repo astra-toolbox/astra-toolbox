@@ -75,7 +75,8 @@ bool CParallelVecProjectionGeometry3D::initialize(const Config& _cfg)
 	XMLNode node;
 
 	// initialization of parent class
-	CProjectionGeometry3D::initialize(_cfg);
+	if (!CProjectionGeometry3D::initialize(_cfg))
+		return false;
 
 	// success
 	m_bInitialized = _check();

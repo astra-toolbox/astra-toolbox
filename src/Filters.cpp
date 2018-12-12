@@ -514,12 +514,16 @@ SFilterConfig getFilterConfigForAlgorithm(const Config& _cfg, CAlgorithm *_alg)
 	case FILTER_RPROJECTION:
 	case FILTER_RSINOGRAM:
 		node = _cfg.self.getSingleNode(nodeName);
-		if (_cfg.self.hasOption(nodeName)) {
-			id = _cfg.self.getOptionInt(nodeName);
-			CC.markOptionParsed(nodeName);
-		} else if (node) {
-			id = node.getContentInt();
-			CC.markNodeParsed(nodeName);
+		try {
+			if (_cfg.self.hasOption(nodeName)) {
+				id = _cfg.self.getOptionInt(nodeName);
+				CC.markOptionParsed(nodeName);
+			} else if (node) {
+				id = node.getContentInt();
+				CC.markNodeParsed(nodeName);
+			}
+		} catch (const astra::StringUtil::bad_cast &e) {
+			ASTRA_ERROR("%s is not a valid id", nodeName);
 		}
 		break;
 	default:
@@ -547,13 +551,17 @@ SFilterConfig getFilterConfigForAlgorithm(const Config& _cfg, CAlgorithm *_alg)
 	case FILTER_GAUSSIAN:
 	case FILTER_BLACKMAN:
 	case FILTER_KAISER:
-		node = _cfg.self.getSingleNode(nodeName);
-		if (_cfg.self.hasOption(nodeName)) {
-			c.m_fParameter = _cfg.self.getOptionNumerical(nodeName);
-			CC.markOptionParsed(nodeName);
-		} else if (node) {
-			c.m_fParameter = node.getContentNumerical();
-			CC.markNodeParsed(nodeName);
+		try {
+			node = _cfg.self.getSingleNode(nodeName);
+			if (_cfg.self.hasOption(nodeName)) {
+				c.m_fParameter = _cfg.self.getOptionNumerical(nodeName);
+				CC.markOptionParsed(nodeName);
+			} else if (node) {
+				c.m_fParameter = node.getContentNumerical();
+				CC.markNodeParsed(nodeName);
+			}
+		} catch (const astra::StringUtil::bad_cast &e) {
+			ASTRA_ERROR("%s must be numerical", nodeName);
 		}
 		break;
 	default:
@@ -573,13 +581,17 @@ SFilterConfig getFilterConfigForAlgorithm(const Config& _cfg, CAlgorithm *_alg)
 	case FILTER_ERROR:
 		break;
 	default:
-		node = _cfg.self.getSingleNode(nodeName);
-		if (_cfg.self.hasOption(nodeName)) {
-			c.m_fD = _cfg.self.getOptionNumerical(nodeName);
-			CC.markOptionParsed(nodeName);
-		} else if (node) {
-			c.m_fD = node.getContentNumerical();
-			CC.markNodeParsed(nodeName);
+		try {
+			node = _cfg.self.getSingleNode(nodeName);
+			if (_cfg.self.hasOption(nodeName)) {
+				c.m_fD = _cfg.self.getOptionNumerical(nodeName);
+				CC.markOptionParsed(nodeName);
+			} else if (node) {
+				c.m_fD = node.getContentNumerical();
+				CC.markNodeParsed(nodeName);
+			}
+		} catch (const astra::StringUtil::bad_cast &e) {
+			ASTRA_ERROR("%s must be numerical", nodeName);
 		}
 		break;
 	}

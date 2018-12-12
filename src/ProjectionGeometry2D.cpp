@@ -132,8 +132,7 @@ bool CProjectionGeometry2D::initialize(const Config& _cfg)
 	// some checks
 	ASTRA_CONFIG_CHECK(m_iDetectorCount > 0, "ProjectionGeometry2D", "DetectorCount should be positive.");
 
-	// Interface class, so don't return true
-	return false;
+	return true;
 }
 
 bool CProjectionGeometry2D::initializeAngles(const Config& _cfg)

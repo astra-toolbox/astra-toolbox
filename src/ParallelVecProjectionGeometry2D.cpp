@@ -100,7 +100,8 @@ bool CParallelVecProjectionGeometry2D::initialize(const Config& _cfg)
 	ConfigStackCheck<CProjectionGeometry2D> CC("ParallelVecProjectionGeometry2D", this, _cfg);	
 
 	// initialization of parent class
-	CProjectionGeometry2D::initialize(_cfg);
+	if (!CProjectionGeometry2D::initialize(_cfg))
+		return false;
 
 
 	// success

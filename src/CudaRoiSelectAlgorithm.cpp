@@ -62,12 +62,12 @@ CCudaRoiSelectAlgorithm::~CCudaRoiSelectAlgorithm()
 bool CCudaRoiSelectAlgorithm::initialize(const Config& _cfg)
 {
 	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CAlgorithm> CC("CudaDartMaskAlgorithm", this, _cfg);
+	ConfigStackCheck<CAlgorithm> CC("CudaDartRoiSelectAlgorithm", this, _cfg);
 
 	// reconstruction data
 	XMLNode node = _cfg.self.getSingleNode("DataId");
 	ASTRA_CONFIG_CHECK(node, "CudaRoiSelect", "No DataId tag specified.");
-	int id = node.getContentInt();
+	int id = StringUtil::stringToInt(node.getContent(), -1);
 	m_pData = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 	CC.markNodeParsed("DataId");
 
@@ -79,7 +79,11 @@ bool CCudaRoiSelectAlgorithm::initialize(const Config& _cfg)
 		CC.markOptionParsed("GPUIndex");
 
 	// Option: Radius
-	m_fRadius = (unsigned int)_cfg.self.getOptionNumerical("Radius", 0.0f);
+	try {
+		m_fRadius = _cfg.self.getOptionNumerical("Radius", 0.0f);
+	} catch (const StringUtil::bad_cast &e) {
+		ASTRA_CONFIG_CHECK(false, "CudaDartRoiSelect", "Radius must be numerical.");
+	}
 	CC.markOptionParsed("Radius");
 
 	_check();
