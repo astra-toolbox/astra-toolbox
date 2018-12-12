@@ -1,5 +1,7 @@
 %% STLDEMO shows how to use the functions included in the toolbox STLTOOLS
 
+import stlTools.*
+
 %% EXAMPLE 1.- How to cut a sphere and close the base to get a semisphere
 
 % load an ascii STL sample file (STLGETFORMAT and STLREADASCII)

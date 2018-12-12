@@ -16,7 +16,7 @@ function [] = draw_cad_phantom(filename, magn)
         magn = 1;
     end
 
-    [v,f,~,~] = stlRead(filename);
+    [v,f,~,~] = stlTools.stlRead(filename);
     m = mean(v); % to center the CAD model!
     for i=1:3
         v(:,i) = (v(:,i)- m(i)) .* magn;

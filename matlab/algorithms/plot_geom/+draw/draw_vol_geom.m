@@ -36,7 +36,7 @@ function [] = draw_vol_geom( vol_geom, varargin)
     options.Color = 'r';
     options.LineWidth = 2;
     options.Magnification = 1;
-    options = parseargs(options, varargin{:});
+    options = parseargs.parseargs(options, varargin{:});
 
     hold on;
     phantom_height = vol_geom.GridRowCount * vx_size;

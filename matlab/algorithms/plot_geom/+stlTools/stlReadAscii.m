@@ -5,6 +5,8 @@ function [v, f, n, name] = stlReadAscii(fileName)
 %N are the normals
 %NAME is the name of the STL object (NOT the name of the STL file)
 
+import stlTools.*
+
 %======================
 % STL ascii file format
 %======================

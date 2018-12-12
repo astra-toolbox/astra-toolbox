@@ -20,6 +20,6 @@ function [] = draw_fanflat_geom( h_ax, geom, options)
         geom.DetectorWidth, 1, geom.DetectorCount, geom.ProjectionAngles,...
         geom.DistanceOriginSource, geom.DistanceOriginDetector);
     
-    draw_cone_geom(h_ax, cone_geom, options);
+    draw.draw_cone_geom(h_ax, cone_geom, options);
 end
 

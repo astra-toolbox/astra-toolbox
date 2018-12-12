@@ -5,6 +5,8 @@ function [v, f, n, name] = stlReadBinary(fileName)
 %N are the normals
 %NAME is the name of the STL object (NOT the name of the STL file)
 
+import stlTools.*
+
 %=======================
 % STL binary file format
 %=======================

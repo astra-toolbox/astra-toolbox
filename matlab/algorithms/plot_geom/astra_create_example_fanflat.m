@@ -19,8 +19,8 @@ function [ geom ] = create_example_fanflat( type )
     if strcmpi(type, 'normal')
          geom = make_normal_geometry();
     elseif strcmpi(type, 'vec')
-        geom = create_example_fanflat('normal');
-        geom = fanflat_to_fanflat_vec(geom);
+        geom = astra_create_example_fanflat('normal');
+        geom = astra_geom_2vec(geom);
         
     else
         geom = make_normal_geometry();

@@ -53,14 +53,14 @@ function [] = draw_proj_geom(geom, varargin)
             disp('DistanceOriginDetector inf');
             disp('DistanceOriginSource inf');
 
-            draw_parallel3d_geom(h_ax, geom, options);
+            draw.draw_parallel3d_geom(h_ax, geom, options);
         case 'parallel3d_vec'
             disp('type: parallel3d_vec')
             disp(['detector px: [' num2str(geom.DetectorRowCount), ', '...
                 num2str(geom.DetectorColCount) ']']);
             disp(['# angles: ' num2str(size(geom.Vectors, 1))]);
 
-            draw_parallel3d_vec_geom(h_ax, geom, options);
+            draw.draw_parallel3d_vec_geom(h_ax, geom, options);
         case 'cone'
             disp('type: cone');
             disp(['detector spacing: [' num2str(geom.DetectorSpacingX), ', '...
@@ -73,14 +73,14 @@ function [] = draw_proj_geom(geom, varargin)
             disp(['DistanceOriginDetector ' num2str(geom.DistanceOriginDetector)]);
             disp(['DistanceOriginSource ' num2str(geom.DistanceOriginSource)]);
 
-            draw_cone_geom(h_ax, geom, options);
+            draw.draw_cone_geom(h_ax, geom, options);
         case 'cone_vec'
             disp('type: cone_vec');
             disp(['detector px: [' num2str(geom.DetectorRowCount), ', ' ...
                 num2str(geom.DetectorColCount) ']']);
             disp(['# angles: ' num2str(size(geom.Vectors, 1))]);
 
-            draw_cone_vec_geom(h_ax, geom, options);
+            draw.draw_cone_vec_geom(h_ax, geom, options);
         case 'fanflat'
             disp('type: fanflat');
             disp(['detector px: ' num2str(geom.DetectorCount)]);
@@ -92,13 +92,13 @@ function [] = draw_proj_geom(geom, varargin)
             disp(['DistanceOriginSource '...
                 num2str(geom.DistanceOriginSource)]);
 
-            draw_fanflat_geom(h_ax, geom, options);
+            draw.draw_fanflat_geom(h_ax, geom, options);
         case 'fanflat_vec'
             disp('type: fanflat_vec');
             disp(['detector px: ' num2str(geom.DetectorCount)]);
             disp(['# angles: ' num2str(size(geom.Vectors, 1))]);
 
-            draw_fanflat_vec_geom(h_ax, geom, options);
+            draw.draw_fanflat_vec_geom(h_ax, geom, options);
         otherwise
             error(['Unknown geometry type ' geom.type])
     end
@@ -119,7 +119,7 @@ function [] = draw_proj_geom(geom, varargin)
         options.SourceMarkerColor = '';
         options.SourceDistance = 100;
         options.OpticalAxisColor = '';
-        options = parseargs(options, input_args{:});
+        options = parseargs.parseargs(options, input_args{:});
 
         % if the color is still empty, replace by global color
         if strcmpi(options.DetectorMarkerColor , '')

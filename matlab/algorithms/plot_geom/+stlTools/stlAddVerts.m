@@ -6,6 +6,8 @@ function [vnew, fnew] = stlAddVerts(v, f, list)
 %VNEW is the new array of vertices
 %FNEW is the new array of faces
 
+import stlTools.*
+
 % triangulation just with the slice
 faces = delaunay(list(:,1),list(:,2)); % calculate new faces
 % update object

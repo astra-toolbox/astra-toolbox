@@ -5,6 +5,8 @@ function [v, f, n, name] = stlRead(fileName)
 %N are the normals
 %NAME is the name of the STL object (NOT the name of the STL file)
 
+import stlTools.*
+
 format = stlGetFormat(fileName);
 if strcmp(format,'ascii')
   [v,f,n,name] = stlReadAscii(fileName);

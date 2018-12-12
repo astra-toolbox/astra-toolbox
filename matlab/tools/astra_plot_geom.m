@@ -64,14 +64,16 @@ function [] = astra_plot_geom(geometry, varargin)
 % Contact: astra@astra-toolbox.com
 % Website: http://www.astra-toolbox.com/
 %--------------------------------------------------------------------------
-    addpath(genpath('../algorithms/plot_geom')); % add plot_geom tools to matlab path
+    if exist('astra_create_example_cone') ~= 2
+        error('Please add astra/algorithms/plot_geom to your path to use this function')
+    end
 
     if is_vol_geom(geometry)
-        draw_vol_geom(geometry, varargin{:});
+        draw.draw_vol_geom(geometry, varargin{:});
     elseif is_proj_geom(geometry)
-        draw_proj_geom(geometry, varargin{:});
+        draw.draw_proj_geom(geometry, varargin{:});
     elseif ischar(geometry) % assume 'geometry' is a path to a CAD file
-        draw_cad_phantom(geometry, varargin{:});
+        draw.draw_cad_phantom(geometry, varargin{:});
     end
 
     % ---- helper functions ----

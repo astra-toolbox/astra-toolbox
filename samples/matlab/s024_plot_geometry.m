@@ -13,6 +13,11 @@
 %%
 close all;
 
+if exist('astra_create_example_cone') ~= 2
+    error('Please add astra/algorithms/plot_geom to your path to use this function')
+end
+
+
 % proj_geom = astra_create_example_cone('vec');
 % proj_geom = astra_create_example_cone('normal');
 proj_geom = astra_create_example_cone('helix');
@@ -20,7 +25,7 @@ proj_geom = astra_create_example_cone('helix');
 % proj_geom = astra_create_example_fanflat('vec');
 % proj_geom = astra_create_example_fanflat();
 % proj_geom = astra_create_example_parallel3d();
-% proj_geom = create_example_cone('deform_vec');
+% proj_geom = astra_create_example_cone('deform_vec');
 
 astra_plot_geom(proj_geom);
 hold on;
