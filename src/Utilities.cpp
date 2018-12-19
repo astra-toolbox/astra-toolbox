@@ -93,6 +93,8 @@ std::vector<T> stringToNumericVector(const std::string &s)
 		iss.clear();
 		T f;
 		iss >> f;
+		if (iss.fail() || !iss.eof())
+			throw bad_cast();
 		out.push_back(f);
 		current = next + 1;
 	} while (next != std::string::npos && current != length);
