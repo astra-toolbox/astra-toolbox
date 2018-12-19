@@ -32,4 +32,4 @@ from .PyXMLDocument cimport XMLNode
 from .PyIncludes cimport *
 
 cdef configToDict(Config *)
-cdef Config * dictToConfig(string rootname, dc)
+cdef Config * dictToConfig(string rootname, dc) except NULL
