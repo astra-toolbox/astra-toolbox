@@ -85,7 +85,7 @@ bool CCudaDartMaskAlgorithm3D::initialize(const Config& _cfg)
 
 	// Option: Connectivity
 	try {
-		m_iConn = _cfg.self.getOptionInt("Connectivity", 8);
+		m_iConn = _cfg.self.getOptionInt("Connectivity", 26);
 	} catch (const StringUtil::bad_cast &e) {
 		ASTRA_CONFIG_CHECK(false, "CudaDartMask3D", "Connectivity must be an integer.");
 	}
@@ -144,7 +144,8 @@ void CCudaDartMaskAlgorithm3D::run(int _iNrIterations)
 bool CCudaDartMaskAlgorithm3D::_check() 
 {
 
-	// connectivity: 4 of 8
+	// connectivity: 6 or 26
+	ASTRA_CONFIG_CHECK(m_iConn == 6 || m_iConn == 26, "CudaDartMask3D", "Connectivity must be 6 or 26");
 
 	// gpuindex >= 0 
 

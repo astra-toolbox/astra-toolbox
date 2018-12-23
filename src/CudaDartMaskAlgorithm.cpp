@@ -143,7 +143,8 @@ void CCudaDartMaskAlgorithm::run(int _iNrIterations)
 bool CCudaDartMaskAlgorithm::_check() 
 {
 
-	// connectivity: 4 of 8
+	// connectivity: 4 or 8
+	ASTRA_CONFIG_CHECK(m_iConn == 4 || m_iConn == 8, "CudaDartMask", "Connectivity must be 4 or 8");
 
 	// gpuindex >= 0 
 
