@@ -36,6 +36,83 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 namespace astra
 {
 
+struct KernelBounds
+{
+    int StartStep;
+    int EndPre;
+    int EndMain;
+    int EndPost;
+};
+
+struct GlobalParameters
+{
+    GlobalParameters(CVolumeGeometry2D* pVolumeGeometry, int ds, int de, int dc);
+
+    int pixelLengthX;
+    int pixelLengthY;
+    float32 inv_pixelLengthX;
+    float32 inv_pixelLengthY;
+    int colCount;
+    int rowCount;
+    float32 Ex;
+    float32 Ey;
+
+    int detStart;
+    int detEnd;
+    int detCount;
+};
+
+struct AngleParameters
+{
+    AngleParameters(GlobalParameters const& gp, const SParProjection* p, int angle);
+
+    const SParProjection* proj;
+    int iAngle;
+    bool vertical;
+    float32 RbOverRa;
+    float32 delta;
+    float32 lengthPerRank;
+};
+
+struct ProjectionData
+{
+    int iRayIndex;
+    int bounds;
+
+    float32 S;
+    float32 lengthPerRank;
+    float32 invTminSTimesLengthPerRank;
+    float32 invTminSTimesLengthPerRankTimesT;
+    float32 invTminSTimesLengthPerRankTimesS;
+
+    float32 b0;
+    float32 delta;
+};
+
+struct VerticalHelper
+{
+    // a = row, b = col
+    int colCount;
+    int VolumeIndex(int a, int b) const;
+    int NextIndex() const;
+    std::pair<int, int> GetPixelSizes() const;
+    float32 GetB0(GlobalParameters const& gp, AngleParameters const& ap, float32 Dx, float32 Dy) const;
+    KernelBounds GetBounds(GlobalParameters const& gp, AngleParameters const& ap, float32 b0) const;
+    ProjectionData GetProjectionData(GlobalParameters const& gp, AngleParameters const& ap, int iRayIndex, float32 b0) const;
+};
+
+struct HorizontalHelper
+{
+    // a = row, b = col
+    int colCount;
+    int VolumeIndex(int a, int b) const;
+    int NextIndex() const;
+    std::pair<int, int> GetPixelSizes() const;
+    float32 GetB0(GlobalParameters const& gp, AngleParameters const& ap, float32 Dx, float32 Dy) const;
+    KernelBounds GetBounds(GlobalParameters const& gp, AngleParameters const& ap, float32 b0) const;
+    ProjectionData GetProjectionData(GlobalParameters const& gp, AngleParameters const& ap, int iRayIndex, float32 b0) const;
+};
+
 /** This class implements a two-dimensional projector based on a line based kernel.
  *
  * \par XML Configuration

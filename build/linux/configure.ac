@@ -148,6 +148,18 @@ AC_SUBST(LDFLAGS_CUDA)
 AC_SUBST(CPPFLAGS_CUDA)
 AC_SUBST(NVCCFLAGS_EXTRA)
 
+# simd
+AC_MSG_CHECKING([for enable-simd])
+AC_ARG_ENABLE(simd, [[  --enable-simd           enable simd instructions]],,)
+
+if test x"$enable_simd" = xyes; then
+  AC_MSG_RESULT([yes])
+  USE_SIMD=yes
+else
+  AC_MSG_RESULT([no])
+  USE_SIMD=no
+fi
+AC_SUBST(USE_SIMD)
 
 # mex, matlab
 

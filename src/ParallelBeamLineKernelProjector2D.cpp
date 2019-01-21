@@ -40,6 +40,136 @@ using namespace astra;
 // type of the projector, needed to register with CProjectorFactory
 std::string CParallelBeamLineKernelProjector2D::type = "line";
 
+//Given a point (0, b0) with slope delta, find (an, bn)
+//b(a) = delta * an + b0
+//an = (bn - b0) / delta
+inline int FindIntersect(float32 bn, float32 b0, float32 delta, int maxA)
+{
+    const auto bdiff = bn - b0;
+    //If delta is really small, there may be an overflow. To avoid this,
+    //check to see if the max number of steps would get us to our desired intersect
+    //If not, just return the max number of steps
+    if(std::abs(delta * maxA) < std::abs(bdiff)) { return maxA; }
+    const auto an = bdiff / delta + 0.5f;
+    const auto i_an = static_cast<int>(an);
+    return i_an;
+}
+
+//This function can likely be optimized further and a single code path generated
+//However, it isn't called too frequently to warrant the work
+inline KernelBounds FindBounds(float32 b0, float32 delta, int maxA, int maxB)
+{
+    const auto lowerBoundB = -1.5f;
+    const auto lowerMainB = 2.5f;
+    const auto upperMainB = maxB - 2.5f;
+    const auto upperBoundB = maxB + 0.5f;
+    KernelBounds bounds{0, 0, 0, 0};
+
+    if(delta < 0.0f) {
+        if(b0 <= lowerBoundB) { return bounds; }
+        bounds.StartStep = (b0 > upperBoundB) ? FindIntersect(upperBoundB, b0, delta, maxA) + 1 : 0;
+        const auto startPos = b0 + (delta * bounds.StartStep);
+        bounds.EndPre = (startPos > upperMainB) ? FindIntersect(upperMainB, startPos, delta, maxA) : 0;
+        const auto prePos = startPos + (delta * bounds.EndPre);
+        bounds.EndMain = (prePos > lowerMainB) ? FindIntersect(lowerMainB, prePos, delta, maxA) : 0;
+        const auto mainPos = prePos + (delta * bounds.EndMain);
+        bounds.EndPost = (mainPos > lowerBoundB) ? FindIntersect(lowerBoundB, mainPos, delta, maxA) : 0;
+    } else {
+        if(b0 >= upperBoundB) { return bounds; }
+        bounds.StartStep = (b0 < lowerBoundB) ? FindIntersect(lowerBoundB, b0, delta, maxA) + 1 : 0;
+        const auto startPos = b0 + (delta * bounds.StartStep);
+        bounds.EndPre = (startPos < lowerMainB) ? FindIntersect(lowerMainB, startPos, delta, maxA) : 0;
+        const auto prePos = startPos + (delta * bounds.EndPre);
+        bounds.EndMain = (prePos < upperMainB) ? FindIntersect(upperMainB, prePos, delta, maxA) : 0;
+        const auto mainPos = prePos + (delta * bounds.EndMain);
+        bounds.EndPost = (mainPos < upperBoundB) ? FindIntersect(upperBoundB, mainPos, delta, maxA) : 0;
+    }
+
+    //Convert the step counts into contiguous ranges
+    bounds.EndPre = std::min(bounds.EndPre + bounds.StartStep, maxA);
+    bounds.EndMain = std::min(bounds.EndMain + bounds.EndPre, maxA);
+    bounds.EndPost = std::min(bounds.EndPost + bounds.EndMain, maxA);
+    return bounds;
+}
+
+GlobalParameters::GlobalParameters(CVolumeGeometry2D* pVolumeGeometry, int ds, int de, int dc)
+	: detStart(ds), detEnd(de), detCount(dc)
+{
+	pixelLengthX = pVolumeGeometry->getPixelLengthX();
+	pixelLengthY = pVolumeGeometry->getPixelLengthY();
+	inv_pixelLengthX = 1.0f / pixelLengthX;
+	inv_pixelLengthY = 1.0f / pixelLengthY;
+	colCount = pVolumeGeometry->getGridColCount();
+	rowCount = pVolumeGeometry->getGridRowCount();
+	Ex = pVolumeGeometry->getWindowMinX() + pixelLengthX * 0.5f;
+	Ey = pVolumeGeometry->getWindowMaxY() - pixelLengthY * 0.5f;
+}
+
+AngleParameters::AngleParameters(GlobalParameters const& gp, const SParProjection* p, int angle)
+	: proj(p), iAngle(angle)
+{
+	vertical = fabs(proj->fRayX) < fabs(proj->fRayY);
+	const auto detSize = sqrt(proj->fDetUX * proj->fDetUX + proj->fDetUY * proj->fDetUY);
+	const auto raySize = sqrt(proj->fRayY*proj->fRayY + proj->fRayX*proj->fRayX);
+
+	if(vertical)
+	{
+		RbOverRa = proj->fRayX / proj->fRayY;
+		delta = -gp.pixelLengthY * RbOverRa * gp.inv_pixelLengthX;
+		lengthPerRank = detSize * gp.pixelLengthX * raySize / abs(proj->fRayY);
+	} else {
+		RbOverRa = proj->fRayY / proj->fRayX;
+		delta = -gp.pixelLengthX * RbOverRa * gp.inv_pixelLengthY;
+		lengthPerRank = detSize * gp.pixelLengthY * raySize / abs(proj->fRayX);
+	}
+}
+
+ProjectionData CalculateProjectionData(const int iRayIndex, const int rankCount, float32 const& b0, float32 const& delta, float32 const& RbOverRa, float32 const& lengthPerRank)
+{
+    const auto S = 0.5f - 0.5f * fabs(RbOverRa);
+    const auto T = 0.5f + 0.5f * fabs(RbOverRa);
+
+    const auto invTminSTimesLengthPerRank = lengthPerRank / (T - S);
+    const auto invTminSTimesLengthPerRankTimesT = invTminSTimesLengthPerRank * T;
+    const auto invTminSTimesLengthPerRankTimesS = invTminSTimesLengthPerRank * S;
+
+    return {iRayIndex, rankCount, S, lengthPerRank,
+        invTminSTimesLengthPerRank, invTminSTimesLengthPerRankTimesT, invTminSTimesLengthPerRankTimesS,
+        b0, delta};
+}
+
+int VerticalHelper::VolumeIndex(int a, int b) const { return a * colCount + b; }
+int VerticalHelper::NextIndex() const { return 1; }
+std::pair<int, int> VerticalHelper::GetPixelSizes() const { return {colCount, 1}; }
+float32 VerticalHelper::GetB0(GlobalParameters const& gp, AngleParameters const& ap, float32 Dx, float32 Dy) const
+{
+    return (Dx + (gp.Ey - Dy) * ap.RbOverRa - gp.Ex) * gp.inv_pixelLengthX;
+}
+KernelBounds VerticalHelper::GetBounds(GlobalParameters const& gp, AngleParameters const& ap, float32 b0) const
+{
+    return FindBounds(b0, ap.delta, gp.rowCount, gp.colCount);
+}
+ProjectionData VerticalHelper::GetProjectionData(GlobalParameters const& gp, AngleParameters const& ap, int iRayIndex, float32 b0) const
+{
+    return CalculateProjectionData(iRayIndex, gp.colCount, b0, ap.delta, ap.RbOverRa, ap.lengthPerRank);
+}
+
+int HorizontalHelper::VolumeIndex(int a, int b) const { return b * colCount + a; }
+int HorizontalHelper::NextIndex() const { return colCount; }
+std::pair<int, int> HorizontalHelper::GetPixelSizes() const { return {1, colCount}; }
+float32 HorizontalHelper::GetB0(GlobalParameters const& gp, AngleParameters const& ap, float32 Dx, float32 Dy) const
+{
+    return -(Dy + (gp.Ex - Dx) * ap.RbOverRa - gp.Ey) * gp.inv_pixelLengthY;
+}
+KernelBounds HorizontalHelper::GetBounds(GlobalParameters const& gp, AngleParameters const& ap, float32 b0) const
+{
+    return FindBounds(b0, ap.delta, gp.colCount, gp.rowCount);
+}
+ProjectionData HorizontalHelper::GetProjectionData(GlobalParameters const& gp, AngleParameters const& ap, int iRayIndex, float32 b0) const
+{
+    return CalculateProjectionData(iRayIndex, gp.rowCount, b0, ap.delta, ap.RbOverRa, ap.lengthPerRank);
+}
+
 //----------------------------------------------------------------------------------------
 // default constructor
 CParallelBeamLineKernelProjector2D::CParallelBeamLineKernelProjector2D()

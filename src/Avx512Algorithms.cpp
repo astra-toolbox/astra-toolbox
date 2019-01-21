@@ -1,0 +1,55 @@
+// Copyright (c) 2019 Intel Corporation
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+//     http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#include "astra/SimdAlgorithms.h"
+
+#define COMPILING_AVX512
+#include "SimdAlgorithms.inl"
+#undef COMPILING_AVX512
+
+#ifdef ENABLE_AVX512
+int astra::Simd::Avx512::ProjectParallelBeamLine(DefaultFPPolicy& p, VerticalHelper const& helper, GlobalParameters const& gp, AngleParameters const& ap)
+{
+    return ParallelBeamLine<Vt_Avx512>::ProjectBlockedRange(p, helper, gp, ap);
+}
+int astra::Simd::Avx512::ProjectParallelBeamLine(DefaultBPPolicy& p, VerticalHelper const& helper, GlobalParameters const& gp, AngleParameters const& ap)
+{
+    return ParallelBeamLine<Vt_Avx512>::ProjectBlockedRange(p, helper, gp, ap);
+}
+int astra::Simd::Avx512::ProjectParallelBeamLine(DefaultFPPolicy& p, HorizontalHelper const& helper, GlobalParameters const& gp, AngleParameters const& ap)
+{
+    return ParallelBeamLine<Vt_Avx512>::ProjectBlockedRange(p, helper, gp, ap);
+}
+int astra::Simd::Avx512::ProjectParallelBeamLine(DefaultBPPolicy& p, HorizontalHelper const& helper, GlobalParameters const& gp, AngleParameters const& ap)
+{
+    return ParallelBeamLine<Vt_Avx512>::ProjectBlockedRange(p, helper, gp, ap);
+}
+#else
+int astra::Simd::Avx512::ProjectParallelBeamLine(DefaultFPPolicy& p, VerticalHelper const& helper, GlobalParameters const& gp, AngleParameters const& ap)
+{
+    return gp.detStart;
+}
+int astra::Simd::Avx512::ProjectParallelBeamLine(DefaultBPPolicy& p, VerticalHelper const& helper, GlobalParameters const& gp, AngleParameters const& ap)
+{
+    return gp.detStart;
+}
+int astra::Simd::Avx512::ProjectParallelBeamLine(DefaultFPPolicy& p, HorizontalHelper const& helper, GlobalParameters const& gp, AngleParameters const& ap)
+{
+    return gp.detStart;
+}
+int astra::Simd::Avx512::ProjectParallelBeamLine(DefaultBPPolicy& p, HorizontalHelper const& helper, GlobalParameters const& gp, AngleParameters const& ap)
+{
+    return gp.detStart;
+}
+#endif

@@ -352,7 +352,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>__SSE2__;DLL_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__SSE2__;DLL_EXPORTS;_CRT_SECURE_NO_WARNINGS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
@@ -370,6 +370,13 @@
     <ClCompile Include="src\AstraObjectFactory.cpp" />
     <ClCompile Include="src\AstraObjectManager.cpp" />
     <ClCompile Include="src\AsyncAlgorithm.cpp" />
+    <ClCompile Include="src\Avx2Algorithms.cpp">
+      <UseProcessorExtensions Condition="'$(Platform)'=='x64'">AVX2</UseProcessorExtensions>
+    </ClCompile>
+    <ClCompile Include="src\Avx512Algorithms.cpp">
+      <UseProcessorExtensions Condition="'$(Platform)'=='x64'">CORE512</UseProcessorExtensions>
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="src\BackProjectionAlgorithm.cpp" />
     <ClCompile Include="src\CglsAlgorithm.cpp" />
     <ClCompile Include="src\CompositeGeometryManager.cpp" />
@@ -547,6 +554,10 @@
     <ClCompile Include="src\ReconstructionAlgorithm2D.cpp" />
     <ClCompile Include="src\ReconstructionAlgorithm3D.cpp" />
     <ClCompile Include="src\SartAlgorithm.cpp" />
+    <ClInclude Include="src\SimdAlgorithms.inl">
+      <FileType>Document</FileType>
+    </ClInclude>
+    <ClCompile Include="src\SimdChooser.cpp" />
     <ClCompile Include="src\SirtAlgorithm.cpp" />
     <ClCompile Include="src\SparseMatrix.cpp" />
     <ClCompile Include="src\SparseMatrixProjectionGeometry2D.cpp" />
@@ -637,6 +648,8 @@
     <ClInclude Include="include\astra\ReconstructionAlgorithm2D.h" />
     <ClInclude Include="include\astra\ReconstructionAlgorithm3D.h" />
     <ClInclude Include="include\astra\SartAlgorithm.h" />
+    <ClInclude Include="include\astra\SimdChooser.h" />
+    <ClInclude Include="include\astra\SimdAlgorithms.h" />
     <ClInclude Include="include\astra\Singleton.h" />
     <ClInclude Include="include\astra\SirtAlgorithm.h" />
     <ClInclude Include="include\astra\SparseMatrix.h" />
