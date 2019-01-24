@@ -97,13 +97,12 @@ void CParallelBeamDistanceDrivenProjector2D::projectBlock_internal(int _iProjFro
 			const float32 Dx = proj->fDetSX + (iDetector+0.5f) * proj->fDetUX;
 			const float32 Dy = proj->fDetSY + (iDetector+0.5f) * proj->fDetUY;
 
-			if (vertical && true) {
+			if (vertical) {
 
 				const float32 RxOverRy = proj->fRayX/proj->fRayY;
-				// TODO: Determine det/pixel scaling factors
 				const float32 lengthPerRow = m_pVolumeGeometry->getPixelLengthX() * m_pVolumeGeometry->getPixelLengthY();
 				const float32 deltac = -pixelLengthY * RxOverRy * inv_pixelLengthX;
-				const float32 deltad = fabs((proj->fDetUX - proj->fDetUY * RxOverRy) * inv_pixelLengthX);
+				const float32 deltad = 0.5f * fabs((proj->fDetUX - proj->fDetUY * RxOverRy) * inv_pixelLengthX);
 
 				// calculate c for row 0
 				float32 c = (Dx + (Ey - Dy)*RxOverRy - Ex) * inv_pixelLengthX + 0.5f;
@@ -112,57 +111,55 @@ void CParallelBeamDistanceDrivenProjector2D::projectBlock_internal(int _iProjFro
 				for (int row = 0; row < rowCount; ++row, c+= deltac) {
 
 					// horizontal extent of ray in center of this row:
-					// [ c - deltad/2 , c + deltad/2 ]
+					// [ c - deltad , c + deltad ]
 
 					// |-gapBegin-*---|------|----*-gapEnd-|
-					// * = ray extent intercepts; c - deltad/2 and c + deltad/2
+					// * = ray extent intercepts; c - deltad and c + deltad
 					// | = pixel column edges
 
-					const int colBegin = (int)floor(c - deltad/2.0f);
-					const int colEnd = (int)ceil(c + deltad/2.0f);
+					const int colBegin = (int)floor(c - deltad);
+					const int colEnd = (int)ceil(c + deltad);
 
-					// TODO: Optimize volume edge checks
+					if (colBegin >= colCount || colEnd <= 0)
+						continue;
 
 					int iVolumeIndex = row * colCount + colBegin;
 					if (colBegin + 1 == colEnd) {
 
 						if (colBegin >= 0 && colBegin < colCount)
 							policy_weight(p, iRayIndex, iVolumeIndex,
-							              deltad * lengthPerRow);
+							              2.0f * deltad * lengthPerRow);
 					} else {
-						const float gapBegin = (c - deltad/2.0f) - (float32)colBegin;
-						const float gapEnd = (float32)colEnd - (c + deltad/2.0f);
-						float tot = 1.0f - gapBegin;
-						if (colBegin >= 0 && colBegin < colCount) {
+
+						if (colBegin >= 0) {
+							const float gapBegin = (c - deltad) - (float32)colBegin;
 							policy_weight(p, iRayIndex, iVolumeIndex,
 							              (1.0f - gapBegin) * lengthPerRow);
 						}
-						iVolumeIndex++;
 
-						for (int col = colBegin + 1; col + 1 < colEnd; ++col, ++iVolumeIndex) {
-							tot += 1.0f;
-							if (col >= 0 && col < colCount) {
-								policy_weight(p, iRayIndex, iVolumeIndex, lengthPerRow);
-							}
+						const int clippedMColBegin = std::max(colBegin + 1, 0);
+						const int clippedMColEnd = std::min(colEnd - 1, colCount);
+						iVolumeIndex = row * colCount + clippedMColBegin;
+						for (int col = clippedMColBegin; col < clippedMColEnd; ++col, ++iVolumeIndex) {
+							policy_weight(p, iRayIndex, iVolumeIndex, lengthPerRow);
 						}
-						assert(iVolumeIndex == row * colCount + colEnd - 1);
-						tot += 1.0f - gapEnd;
-						if (colEnd > 0 && colEnd <= colCount) {
+
+						iVolumeIndex = row * colCount + colEnd - 1;
+						if (colEnd <= colCount) {
+							const float gapEnd = (float32)colEnd - (c + deltad);
 							policy_weight(p, iRayIndex, iVolumeIndex,
 						 	             (1.0f - gapEnd) * lengthPerRow);
 						}
-						assert(fabs(tot - deltad) < 0.0001);
 					}
 
 				}
 				
-			} else if (!vertical && true) {
+			} else {
 
 				const float32 RyOverRx = proj->fRayY/proj->fRayX;
-				// TODO: Determine det/pixel scaling factors
 				const float32 lengthPerCol = m_pVolumeGeometry->getPixelLengthX() * m_pVolumeGeometry->getPixelLengthY();
 				const float32 deltar = -pixelLengthX * RyOverRx * inv_pixelLengthY;
-				const float32 deltad = fabs((proj->fDetUY - proj->fDetUX * RyOverRx) * inv_pixelLengthY);
+				const float32 deltad = 0.5f * fabs((proj->fDetUY - proj->fDetUX * RyOverRx) * inv_pixelLengthY);
 
 				// calculate r for col 0
 				float32 r = -(Dy + (Ex - Dx)*RyOverRx - Ey) * inv_pixelLengthY + 0.5f;
@@ -171,43 +168,41 @@ void CParallelBeamDistanceDrivenProjector2D::projectBlock_internal(int _iProjFro
 				for (int col = 0; col < colCount; ++col, r+= deltar) {
 
 					// vertical extent of ray in center of this column:
-					// [ r - deltad/2 , r + deltad/2 ]
+					// [ r - deltad , r + deltad ]
 
-					const int rowBegin = (int)floor(r - deltad/2.0f);
-					const int rowEnd = (int)ceil(r + deltad/2.0f);
+					const int rowBegin = (int)floor(r - deltad);
+					const int rowEnd = (int)ceil(r + deltad);
 
-					// TODO: Optimize volume edge checks
+					if (rowBegin >= rowCount || rowEnd <= 0)
+						continue;
 
 					int iVolumeIndex = rowBegin * colCount + col;
 					if (rowBegin + 1 == rowEnd) {
 
 						if (rowBegin >= 0 && rowBegin < rowCount)
 							policy_weight(p, iRayIndex, iVolumeIndex,
-							              deltad * lengthPerCol);
+							              2.0f * deltad * lengthPerCol);
 					} else {
-						const float gapBegin = (r - deltad/2.0f) - (float32)rowBegin;
-						const float gapEnd = (float32)rowEnd - (r + deltad/2.0f);
-						float tot = 1.0f - gapBegin;
-
-						if (rowBegin >= 0 && rowBegin < rowCount) {
+						if (rowBegin >= 0) {
+							const float gapBegin = (r - deltad) - (float32)rowBegin;
 							policy_weight(p, iRayIndex, iVolumeIndex,
 							              (1.0f - gapBegin) * lengthPerCol);
 						}
-						iVolumeIndex += colCount;
 
-						for (int row = rowBegin + 1; row + 1 < rowEnd; ++row, iVolumeIndex += colCount) {
-							tot += 1.0f;
-							if (row >= 0 && row < rowCount) {
-								policy_weight(p, iRayIndex, iVolumeIndex, lengthPerCol);
-							}
+						const int clippedMRowBegin = std::max(rowBegin + 1, 0);
+						const int clippedMRowEnd = std::min(rowEnd - 1, rowCount);
+						iVolumeIndex = clippedMRowBegin * colCount + col;
+
+						for (int row = clippedMRowBegin; row < clippedMRowEnd; ++row, iVolumeIndex += colCount) {
+							policy_weight(p, iRayIndex, iVolumeIndex, lengthPerCol);
 						}
-						assert(iVolumeIndex == (rowEnd - 1) * colCount + col);
-						tot += 1.0f - gapEnd;
-						if (rowEnd > 0 && rowEnd <= rowCount) {
+
+						iVolumeIndex = (rowEnd - 1) * colCount + col;
+						if (rowEnd <= rowCount) {
+							const float gapEnd = (float32)rowEnd - (r + deltad);
 							policy_weight(p, iRayIndex, iVolumeIndex,
 						 	             (1.0f - gapEnd) * lengthPerCol);
 						}
-						assert(fabs(tot - deltad) < 0.0001);
 					}
 
 				}
