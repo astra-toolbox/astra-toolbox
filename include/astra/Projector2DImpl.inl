@@ -26,6 +26,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 */
 
 
+#include "ParallelBeamDistanceDrivenProjector2D.inl"
 #include "ParallelBeamLinearKernelProjector2D.inl"
 #include "ParallelBeamLineKernelProjector2D.inl"
 #include "ParallelBeamStripKernelProjector2D.inl"
