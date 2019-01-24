@@ -337,59 +337,6 @@ void astra_mex_projector_weights_projection(int nlhs, mxArray* plhs[], int nrhs,
 }
 
 //-----------------------------------------------------------------------------------------
-/** hit_detectors = astra_mex_projector('splat', id, col, row);
- *
- * Create a list of detector indices which have a nonzero contribution to the projection matrix for a pixel [row,col].
- * id: identifier of the projector object as stored in the astra-library.
- * col: column of the pixel
- * row: row of the pixel
- * hit_detectors: list of detector indices [angle_index, det_index] that are hit
- */
-void astra_mex_projector_splat(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
-{ 
-	// step1: get input
-	if (nrhs < 4) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
-	}
-	int iPid = (int)(mxGetScalar(prhs[1]));
-	int iX = (int)(mxGetScalar(prhs[2]));
-	int iY = (int)(mxGetScalar(prhs[3]));
-
-	// step2: get projector
-	CProjector2D* pProjector = CProjector2DManager::getSingleton().get(iPid);
-	if (!pProjector || !pProjector->isInitialized()) {
-		mexErrMsgTxt("Projector not initialized.\n");
-		return;
-	}
-
-	// step3: perform action
-	vector<SDetector2D> detinfo = pProjector->projectPoint(iX, iY);
-
-	// step4: output
-	if (nlhs <= 1) {
-		plhs[0] = mxCreateDoubleMatrix(detinfo.size(),	// # rows
-									   2,				// # cols
-									   mxREAL);			// datatype 32-bits
-		double* out = mxGetPr(plhs[0]);
-
-		// fill up output
-		int i = 0;
-		int x;
-		for (x = 0; x < detinfo.size(); ++x) {
-			out[i] = detinfo[x].m_iAngleIndex;
-			++i;
-		}
-		for (x = 0; x < detinfo.size(); ++x) {
-			out[i] = detinfo[x].m_iDetectorIndex;
-			++i;
-		}
-	}
-
-
-}
-
-//-----------------------------------------------------------------------------------------
 /** matrix_id = astra_mex_projector('matrix', id);
  *
  * Create an explicit projection matrix for this projector.
@@ -467,7 +414,7 @@ static void printHelp()
 	mexPrintf("Please specify a mode of operation.\n");
 	mexPrintf("Valid modes: create, delete, clear, info, projection_geometry,\n");
 	mexPrintf("             volume_geometry, weights_single_ray, weights_projection\n");
-	mexPrintf("             splat, matrix, is_cuda\n");
+	mexPrintf("             matrix, is_cuda\n");
 }
 
 
@@ -506,8 +453,6 @@ void mexFunction(int nlhs, mxArray* plhs[],
 		astra_mex_projector_weights_single_ray(nlhs, plhs, nrhs, prhs);
 	} else if (sMode == "weights_projection") {
 		astra_mex_projector_weights_projection(nlhs, plhs, nrhs, prhs);
-	} else if (sMode == "splat") {
-		astra_mex_projector_splat(nlhs, plhs, nrhs, prhs);
 	} else if (sMode == "matrix") {
 		astra_mex_projector_matrix(nlhs, plhs, nrhs, prhs);
 	} else if (sMode == "is_cuda") {

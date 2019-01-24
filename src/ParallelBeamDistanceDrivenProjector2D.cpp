@@ -32,8 +32,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/DataProjectorPolicies.h"
 
-using namespace std;
-using namespace astra;
+namespace astra {
 
 #include "astra/ParallelBeamDistanceDrivenProjector2D.inl"
 
@@ -140,8 +139,8 @@ bool CParallelBeamDistanceDrivenProjector2D::initialize(CParallelProjectionGeome
 // Get maximum amount of weights on a single ray
 int CParallelBeamDistanceDrivenProjector2D::getProjectionWeightsCount(int _iProjectionIndex)
 {
-	int maxDim = max(m_pVolumeGeometry->getGridRowCount(), m_pVolumeGeometry->getGridColCount());
-	int scale = m_pProjectionGeometry->getDetectorWidth() / min(m_pVolumeGeometry->getPixelLengthX(), m_pVolumeGeometry->getPixelLengthY());
+	int maxDim = std::max(m_pVolumeGeometry->getGridRowCount(), m_pVolumeGeometry->getGridColCount());
+	int scale = m_pProjectionGeometry->getDetectorWidth() / std::min(m_pVolumeGeometry->getPixelLengthX(), m_pVolumeGeometry->getPixelLengthY());
 	return maxDim * scale * 10 + 1;
 }
 
@@ -158,17 +157,5 @@ void CParallelBeamDistanceDrivenProjector2D::computeSingleRayWeights(int _iProje
 	projectSingleRay(_iProjectionIndex, _iDetectorIndex, p);
 	_iStoredPixelCount = p.getStoredPixelCount();
 }
-
-//----------------------------------------------------------------------------------------
-// Splat a single point
-std::vector<SDetector2D> CParallelBeamDistanceDrivenProjector2D::projectPoint(int _iRow, int _iCol)
-{
-	// TODO
-	assert(false);
-
-	std::vector<SDetector2D> res;
-
-	// return result vector
-	return res;
 
 }

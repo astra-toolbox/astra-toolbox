@@ -179,175 +179,6 @@ void astra_mex_projector3d_get_volume_geometry(int nlhs, mxArray* plhs[], int nr
 }
 
 //-----------------------------------------------------------------------------------------
-/**
-* [weights] = astra_mex_projector3d('weights_single_ray', pid, projection_index, detector_index);
-*/
-void astra_mex_projector_weights_single_ray(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
-{ 
-	//// step1: get input
-	//if (nrhs < 4) {
-	//	mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-	//	return;
-	//}
-	//int iPid = (int)(mxGetScalar(prhs[1]));
-	//int iProjectionIndex = (int)(mxGetScalar(prhs[2]));
-	//int iDetectorIndex = (int)(mxGetScalar(prhs[3]));
-
-	//// step2: get projector
-	//CProjector3D* pProjector;
-	//if (!(pProjector = CProjector3DManager::getSingleton().get(iPid))) {
-	//	mexErrMsgTxt("Projector not found.\n");
-	//	return;
-	//}
-	//
-	//// step3: create output vars
-	//int iStoredPixelCount;
-	//int iMaxPixelCount = pProjector->getProjectionWeightsCount(iProjectionIndex);
-	//SWeightedPixel* pPixelsWeights = new SWeightedPixel3D[iMaxPixelCount];
-	//
-	//// step4: perform operation
-	//pProjector->computeSingleRayWeights(iProjectionIndex, 
-	//									iDetectorIndex, 
-	//									pPixelsWeights, 
-	//									iMaxPixelCount, 
-	//									iStoredPixelCount);
-
-	//// step5: return output
-	//if (1 <= nlhs) {
-	//	mwSize dims[2];
-	//	dims[0] = iStoredPixelCount;
-	//	dims[1] = 2;
-
-	//	plhs[0] = mxCreateNumericArray(2, dims, mxDOUBLE_CLASS, mxREAL);
-	//	double* out = mxGetPr(plhs[0]);
-
-	//	for (int col = 0; col < iStoredPixelCount; col++) {
-	//		out[col] = pPixelsWeights[col].m_iIndex;
-	//		out[iStoredPixelCount+col] = pPixelsWeights[col].m_fWeight;
-	//		//cout << pPixelsWeights[col].m_iIndex << " " << pPixelsWeights[col].m_fWeight <<endl;
-	//	}	
-	//}
-	//
-	//// garbage collection
-	//delete[] pPixelsWeights;
-}
-
-////-----------------------------------------------------------------------------------------
-///**
-//* [weights] = astra_mex_projector('weights_projection', pid, projection_index);
-//*/
-//void astra_mex_projector_weights_projection(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
-//{ 
-//	// step1: get input
-//	if (nrhs < 3) {
-//		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-//		return;
-//	}
-//	int iPid = (int)(mxGetScalar(prhs[1]));
-//	int iProjectionIndex = (int)(mxGetScalar(prhs[2]));
-//
-//	// step2: get projector
-//	CProjector2D* pProjector;
-//	if (!(pProjector = CProjectorManager::getSingleton().get(iPid))) {
-//		mexErrMsgTxt("Projector not found.\n");
-//		return;
-//	}
-//
-//	// step3: create output vars
-//	SWeightedPixel2D* pPixelsWheights = new SWeightedPixel2D[pProjector->getProjectionWeightsCount(iProjectionIndex)];
-//	int* piRayStoredPixelCount = new int[pProjector->getProjectionGeometry()->getDetectorCount()];
-//
-//	// step4: perform operation
-//	pProjector->computeProjectionRayWeights(iProjectionIndex, pPixelsWheights, piRayStoredPixelCount);
-//
-//	// step5: return output
-//	if (1 <= nlhs) {
-//		// get basic values
-//		int iMatrixSize = pProjector->getVolumeGeometry()->getWindowLengthX() *
-//						  pProjector->getVolumeGeometry()->getWindowLengthY();
-//		int iDetectorCount = pProjector->getProjectionGeometry()->getDetectorCount();
-//		int iTotalStoredPixelCount = 0;
-//		for (int i = 0; i < iDetectorCount; i++) {
-//			iTotalStoredPixelCount += piRayStoredPixelCount[i];
-//		}
-//
-//		// create matlab sparse matrix
-//		plhs[0] = mxCreateSparse(iMatrixSize,				// number of rows (#pixels)
-//							     iDetectorCount,			// number of columns (#detectors)
-//								 iTotalStoredPixelCount,	// number of non-zero elements
-//								 mxREAL);					// element type
-//		double* values = mxGetPr(plhs[0]);
-//		mwIndex* rows = mxGetIr(plhs[0]);
-//		mwIndex* cols = mxGetJc(plhs[0]);
-//		
-//		int currentBase = 0;
-//		int currentIndex = 0;
-//		for (int i = 0; i < iDetectorCount; i++) {
-//			for (int j = 0; j < piRayStoredPixelCount[i]; j++) {
-//				values[currentIndex + j] = pPixelsWheights[currentBase + j].m_fWeight;
-//				rows[currentIndex + j] = pPixelsWheights[currentBase + j].m_iIndex;
-//			}
-//					
-//			currentBase += pProjector->getProjectionWeightsCount(iProjectionIndex) / pProjector->getProjectionGeometry()->getDetectorCount();
-//			currentIndex += piRayStoredPixelCount[i];
-//		}
-//		cols[0] = piRayStoredPixelCount[0];
-//		for (int j = 1; j < iDetectorCount; j++) {
-//			cols[j] = cols[j-1] + piRayStoredPixelCount[j];
-//		}
-//		cols[iDetectorCount] = iTotalStoredPixelCount;
-//	}
-//	
-//}
-//
-////-----------------------------------------------------------------------------------------
-///**
-//* output = astra_mex_projector('splat', pid, x, y);
-//*/
-//void astra_mex_projector_splat(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
-//{ 
-//	// step1: get input
-//	if (nrhs < 4) {
-//		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-//		return;
-//	}
-//	int iPid = (int)(mxGetScalar(prhs[1]));
-//	int iX = (int)(mxGetScalar(prhs[2]));
-//	int iY = (int)(mxGetScalar(prhs[3]));
-//
-//	// step2: get projector
-//	CProjector2D* pProjector;
-//	if (!(pProjector = CProjectorManager::getSingleton().get(iPid))) {
-//		mexErrMsgTxt("Projector not found.\n");
-//		return;
-//	}
-//
-//	// step3: perform action
-//	vector<SDetector2D> detinfo = pProjector->projectPoint(iX, iY);
-//
-//	// step4: output
-//	if (nlhs <= 1) {
-//		plhs[0] = mxCreateDoubleMatrix(detinfo.size(),	// # rows
-//									   2,				// # cols
-//									   mxREAL);			// datatype 32-bits
-//		double* out = mxGetPr(plhs[0]);
-//
-//		// fill up output
-//		int i = 0;
-//		for (int x = 0; x < detinfo.size() ; x++) {
-//			out[i] = detinfo[x].m_iAngleIndex;
-//			i++;
-//		}
-//		for (int x = 0; x < detinfo.size() ; x++) {
-//			out[i] = detinfo[x].m_iDetectorIndex;
-//			i++;
-//		}
-//	}
-//
-//
-//}
-
-//-----------------------------------------------------------------------------------------
 /** result = astra_mex_projector3d('is_cuda', id);
  *
  * Return is the specified projector is a cuda projector.
@@ -395,8 +226,7 @@ static void printHelp()
 {
 	mexPrintf("Please specify a mode of operation.\n");
 	mexPrintf("Valid modes: create, delete, clear, get_projection_geometry,\n");
-	mexPrintf("             get_volume_geometry, weights_single_ray, weights_projection\n");
-	mexPrintf("				splat, is_cuda\n");
+	mexPrintf("             get_volume_geometry, is_cuda\n");
 }
 
 //-----------------------------------------------------------------------------------------
@@ -428,12 +258,6 @@ void mexFunction(int nlhs, mxArray* plhs[],
 		astra_mex_projector3d_get_projection_geometry(nlhs, plhs, nrhs, prhs);
 	} else if (sMode == "get_volume_geometry") {
 		astra_mex_projector3d_get_volume_geometry(nlhs, plhs, nrhs, prhs);
-	} else if (sMode == "weights_single_ray") {
-		astra_mex_projector_weights_single_ray(nlhs, plhs, nrhs, prhs);
-	//} else if (sMode == "weights_projection") {
-	//	astra_mex_projector_weights_projection(nlhs, plhs, nrhs, prhs);
-	//} else if (sMode == "splat") {
-	//	astra_mex_projector_splat(nlhs, plhs, nrhs, prhs);
 	} else if (sMode == "is_cuda") {
 		astra_mex_projector3d_is_cuda(nlhs, plhs, nrhs, prhs);
 	} else if (sMode == "help") {

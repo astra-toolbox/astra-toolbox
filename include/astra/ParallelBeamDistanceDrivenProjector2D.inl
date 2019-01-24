@@ -81,8 +81,6 @@ void CParallelBeamDistanceDrivenProjector2D::projectBlock_internal(int _iProjFro
 
 		const SParProjection * proj = &pVecProjectionGeometry->getProjectionVectors()[iAngle];
 
-		float32 detSize = sqrt(proj->fDetUX * proj->fDetUX + proj->fDetUY * proj->fDetUY);
-
 		const bool vertical = fabs(proj->fRayX) < fabs(proj->fRayY);
 
 		const float32 Ex = m_pVolumeGeometry->getWindowMinX() + pixelLengthX*0.5f;

@@ -160,14 +160,6 @@ void CFanFlatBeamLineKernelProjector2D::computeSingleRayWeights(int _iProjection
 }
 
 //----------------------------------------------------------------------------------------
-// Splat a single point
-std::vector<SDetector2D> CFanFlatBeamLineKernelProjector2D::projectPoint(int _iRow, int _iCol)
-{
-	std::vector<SDetector2D> res;
-	return res;
-}
-
-//----------------------------------------------------------------------------------------
 //Result is always in [-PI/2; PI/2]
 float32 CFanFlatBeamLineKernelProjector2D::angleBetweenVectors(float32 _fAX, float32 _fAY, float32 _fBX, float32 _fBY)
 {

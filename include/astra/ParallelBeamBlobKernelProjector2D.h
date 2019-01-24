@@ -160,14 +160,6 @@ public:
 		                                 int _iMaxPixelCount, 
 										 int& _iStoredPixelCount);
 
-	/** Create a list of detectors that are influenced by point [_iRow, _iCol].
-	 *
-	 * @param _iRow row of the point
-	 * @param _iCol column of the point
-	 * @return list of SDetector2D structs
-	 */
-	virtual std::vector<SDetector2D> projectPoint(int _iRow, int _iCol);
-
 	/** Policy-based projection of all rays.  This function will calculate each non-zero projection 
 	 * weight and use this value for a task provided by the policy object.
 	 *

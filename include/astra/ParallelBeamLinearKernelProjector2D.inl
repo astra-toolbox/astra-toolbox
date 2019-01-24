@@ -156,7 +156,7 @@ void CParallelBeamLinearKernelProjector2D::projectBlock_internal(int _iProjFrom,
 
 		float32 detSize = sqrt(proj->fDetUX * proj->fDetUX + proj->fDetUY * proj->fDetUY);
 
-		bool vertical = fabs(proj->fRayX) < fabs(proj->fRayY);
+		const bool vertical = fabs(proj->fRayX) < fabs(proj->fRayY);
 		if (vertical) {
 			RxOverRy = proj->fRayX/proj->fRayY;
 			lengthPerRow = detSize * m_pVolumeGeometry->getPixelLengthX() * sqrt(proj->fRayY*proj->fRayY + proj->fRayX*proj->fRayX) / abs(proj->fRayY);
