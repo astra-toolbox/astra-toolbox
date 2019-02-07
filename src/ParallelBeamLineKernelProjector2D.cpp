@@ -45,13 +45,13 @@ std::string CParallelBeamLineKernelProjector2D::type = "line";
 //an = (bn - b0) / delta
 inline int FindIntersect(float32 bn, float32 b0, float32 delta, int maxA)
 {
-    const auto bdiff = bn - b0;
+    const float32 bdiff = bn - b0;
     //If delta is really small, there may be an overflow. To avoid this,
     //check to see if the max number of steps would get us to our desired intersect
     //If not, just return the max number of steps
     if(std::abs(delta * maxA) < std::abs(bdiff)) { return maxA; }
-    const auto an = bdiff / delta + 0.5f;
-    const auto i_an = static_cast<int>(an);
+    const float32 an = bdiff / delta + 0.5f;
+    const int i_an = static_cast<int>(an);
     return i_an;
 }
 
@@ -59,29 +59,30 @@ inline int FindIntersect(float32 bn, float32 b0, float32 delta, int maxA)
 //However, it isn't called too frequently to warrant the work
 inline KernelBounds FindBounds(float32 b0, float32 delta, int maxA, int maxB)
 {
-    const auto lowerBoundB = -1.5f;
-    const auto lowerMainB = 2.5f;
-    const auto upperMainB = maxB - 2.5f;
-    const auto upperBoundB = maxB + 0.5f;
-    KernelBounds bounds{0, 0, 0, 0};
+    const float32 lowerBoundB = -1.5f;
+    const float32 lowerMainB = 2.5f;
+    const float32 upperMainB = maxB - 2.5f;
+    const float32 upperBoundB = maxB + 0.5f;
+    KernelBounds bounds;
+	bounds.StartStep = bounds.EndPre = bounds.EndMain = bounds.EndPost = 0;
 
     if(delta < 0.0f) {
         if(b0 <= lowerBoundB) { return bounds; }
         bounds.StartStep = (b0 > upperBoundB) ? FindIntersect(upperBoundB, b0, delta, maxA) + 1 : 0;
-        const auto startPos = b0 + (delta * bounds.StartStep);
+        const int startPos = b0 + (delta * bounds.StartStep);
         bounds.EndPre = (startPos > upperMainB) ? FindIntersect(upperMainB, startPos, delta, maxA) : 0;
-        const auto prePos = startPos + (delta * bounds.EndPre);
+        const int prePos = startPos + (delta * bounds.EndPre);
         bounds.EndMain = (prePos > lowerMainB) ? FindIntersect(lowerMainB, prePos, delta, maxA) : 0;
-        const auto mainPos = prePos + (delta * bounds.EndMain);
+        const int mainPos = prePos + (delta * bounds.EndMain);
         bounds.EndPost = (mainPos > lowerBoundB) ? FindIntersect(lowerBoundB, mainPos, delta, maxA) : 0;
     } else {
         if(b0 >= upperBoundB) { return bounds; }
         bounds.StartStep = (b0 < lowerBoundB) ? FindIntersect(lowerBoundB, b0, delta, maxA) + 1 : 0;
-        const auto startPos = b0 + (delta * bounds.StartStep);
+        const int startPos = b0 + (delta * bounds.StartStep);
         bounds.EndPre = (startPos < lowerMainB) ? FindIntersect(lowerMainB, startPos, delta, maxA) : 0;
-        const auto prePos = startPos + (delta * bounds.EndPre);
+        const int prePos = startPos + (delta * bounds.EndPre);
         bounds.EndMain = (prePos < upperMainB) ? FindIntersect(upperMainB, prePos, delta, maxA) : 0;
-        const auto mainPos = prePos + (delta * bounds.EndMain);
+        const int mainPos = prePos + (delta * bounds.EndMain);
         bounds.EndPost = (mainPos < upperBoundB) ? FindIntersect(upperBoundB, mainPos, delta, maxA) : 0;
     }
 
@@ -109,11 +110,10 @@ AngleParameters::AngleParameters(GlobalParameters const& gp, const SParProjectio
 	: proj(p), iAngle(angle)
 {
 	vertical = fabs(proj->fRayX) < fabs(proj->fRayY);
-	const auto detSize = sqrt(proj->fDetUX * proj->fDetUX + proj->fDetUY * proj->fDetUY);
-	const auto raySize = sqrt(proj->fRayY*proj->fRayY + proj->fRayX*proj->fRayX);
+	const float32 detSize = sqrt(proj->fDetUX * proj->fDetUX + proj->fDetUY * proj->fDetUY);
+	const float32 raySize = sqrt(proj->fRayY*proj->fRayY + proj->fRayX*proj->fRayX);
 
-	if(vertical)
-	{
+	if(vertical) {
 		RbOverRa = proj->fRayX / proj->fRayY;
 		delta = -gp.pixelLengthY * RbOverRa * gp.inv_pixelLengthX;
 		lengthPerRank = detSize * gp.pixelLengthX * raySize / abs(proj->fRayY);
@@ -126,21 +126,24 @@ AngleParameters::AngleParameters(GlobalParameters const& gp, const SParProjectio
 
 ProjectionData CalculateProjectionData(const int iRayIndex, const int rankCount, float32 const& b0, float32 const& delta, float32 const& RbOverRa, float32 const& lengthPerRank)
 {
-    const auto S = 0.5f - 0.5f * fabs(RbOverRa);
-    const auto T = 0.5f + 0.5f * fabs(RbOverRa);
+    const float32 S = 0.5f - 0.5f * fabs(RbOverRa);
+    const float32 T = 0.5f + 0.5f * fabs(RbOverRa);
 
-    const auto invTminSTimesLengthPerRank = lengthPerRank / (T - S);
-    const auto invTminSTimesLengthPerRankTimesT = invTminSTimesLengthPerRank * T;
-    const auto invTminSTimesLengthPerRankTimesS = invTminSTimesLengthPerRank * S;
+    const float32 invTminSTimesLengthPerRank = lengthPerRank / (T - S);
+    const float32 invTminSTimesLengthPerRankTimesT = invTminSTimesLengthPerRank * T;
+    const float32 invTminSTimesLengthPerRankTimesS = invTminSTimesLengthPerRank * S;
 
-    return {iRayIndex, rankCount, S, lengthPerRank,
-        invTminSTimesLengthPerRank, invTminSTimesLengthPerRankTimesT, invTminSTimesLengthPerRankTimesS,
-        b0, delta};
+	ProjectionData ret;
+	ret.iRayIndex = iRayIndex; ret.bounds = rankCount; ret.S = S; ret.lengthPerRank = lengthPerRank;
+	ret.invTminSTimesLengthPerRank = invTminSTimesLengthPerRank; ret.invTminSTimesLengthPerRankTimesT = invTminSTimesLengthPerRankTimesT;
+	ret.invTminSTimesLengthPerRankTimesS = invTminSTimesLengthPerRankTimesS; ret.b0 = b0; ret.delta = delta;
+	return ret;
 }
 
+VerticalHelper::VerticalHelper(int c) : colCount(c) {}
 int VerticalHelper::VolumeIndex(int a, int b) const { return a * colCount + b; }
 int VerticalHelper::NextIndex() const { return 1; }
-std::pair<int, int> VerticalHelper::GetPixelSizes() const { return {colCount, 1}; }
+void VerticalHelper::GetPixelSizes(int* pA, int* pB) const { *pA = colCount; *pB = 1; }
 float32 VerticalHelper::GetB0(GlobalParameters const& gp, AngleParameters const& ap, float32 Dx, float32 Dy) const
 {
     return (Dx + (gp.Ey - Dy) * ap.RbOverRa - gp.Ex) * gp.inv_pixelLengthX;
@@ -154,9 +157,10 @@ ProjectionData VerticalHelper::GetProjectionData(GlobalParameters const& gp, Ang
     return CalculateProjectionData(iRayIndex, gp.colCount, b0, ap.delta, ap.RbOverRa, ap.lengthPerRank);
 }
 
+HorizontalHelper::HorizontalHelper(int c) : colCount(c) {}
 int HorizontalHelper::VolumeIndex(int a, int b) const { return b * colCount + a; }
 int HorizontalHelper::NextIndex() const { return colCount; }
-std::pair<int, int> HorizontalHelper::GetPixelSizes() const { return {1, colCount}; }
+void HorizontalHelper::GetPixelSizes(int* pA, int* pB) const { *pA = 1; *pB = colCount; }
 float32 HorizontalHelper::GetB0(GlobalParameters const& gp, AngleParameters const& ap, float32 Dx, float32 Dy) const
 {
     return -(Dy + (gp.Ex - Dx) * ap.RbOverRa - gp.Ey) * gp.inv_pixelLengthY;

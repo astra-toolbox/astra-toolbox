@@ -18,7 +18,6 @@
 #include "SimdAlgorithms.inl"
 #undef COMPILING_AVX2
 
-#ifdef ENABLE_AVX512
 int astra::Simd::Avx2::ProjectParallelBeamLine(DefaultFPPolicy& p, VerticalHelper const& helper, GlobalParameters const& gp, AngleParameters const& ap)
 {
     return ParallelBeamLine<Vt_Avx2>::ProjectBlockedRange(p, helper, gp, ap);
@@ -35,21 +34,3 @@ int astra::Simd::Avx2::ProjectParallelBeamLine(DefaultBPPolicy& p, HorizontalHel
 {
     return ParallelBeamLine<Vt_Avx2>::ProjectBlockedRange(p, helper, gp, ap);
 }
-#else
-int astra::Simd::Avx2::ProjectParallelBeamLine(DefaultFPPolicy& p, VerticalHelper const& helper, GlobalParameters const& gp, AngleParameters const& ap)
-{
-    return gp.detStart;
-}
-int astra::Simd::Avx2::ProjectParallelBeamLine(DefaultBPPolicy& p, VerticalHelper const& helper, GlobalParameters const& gp, AngleParameters const& ap)
-{
-    return gp.detStart;
-}
-int astra::Simd::Avx2::ProjectParallelBeamLine(DefaultFPPolicy& p, HorizontalHelper const& helper, GlobalParameters const& gp, AngleParameters const& ap)
-{
-    return gp.detStart;
-}
-int astra::Simd::Avx2::ProjectParallelBeamLine(DefaultBPPolicy& p, HorizontalHelper const& helper, GlobalParameters const& gp, AngleParameters const& ap)
-{
-    return gp.detStart;
-}
-#endif

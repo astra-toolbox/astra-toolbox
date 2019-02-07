@@ -50,7 +50,7 @@ void CParallelBeamLineKernelProjector2D::projectSingleRay(int _iProjection, int 
 
 inline int fast_floor(float32 f)
 {
-    const auto i = static_cast<int>(f);
+    const int i = static_cast<int>(f);
     if(f < 0.0f) { return (i == f) ? i : i - 1; }
     else { return i; }
 }
@@ -58,20 +58,20 @@ inline int fast_floor(float32 f)
 template<typename Policy, typename Helper>
 inline void ProjectPixelChecked(Policy& p, Helper& h, ProjectionData const& d, int a)
 {
-    const auto bf = (d.delta * a) + d.b0;
-    const auto b = fast_floor(bf + 0.5f);
+    const float32 bf = (d.delta * a) + d.b0;
+    const int b = fast_floor(bf + 0.5f);
     assert(b >= -1); assert(b <= d.bounds + 1);
-    const auto offset = bf - b;
-    const auto iVolumeIndex = h.VolumeIndex(a, b);
+    const float32 offset = bf - b;
+    const int iVolumeIndex = h.VolumeIndex(a, b);
 
     if(offset < -d.S) //left
     {
-        const auto preWeight = (offset * d.invTminSTimesLengthPerRank) + d.invTminSTimesLengthPerRankTimesT;
+        const float32 preWeight = (offset * d.invTminSTimesLengthPerRank) + d.invTminSTimesLengthPerRankTimesT;
         if(b > 0) { policy_weight(p, d.iRayIndex, iVolumeIndex - h.NextIndex(), d.lengthPerRank - preWeight); }
         if(b >= 0 && b < d.bounds) { policy_weight(p, d.iRayIndex, iVolumeIndex, preWeight); }
     } else if(d.S < offset) //right
     {
-        const auto postWeight = (offset * d.invTminSTimesLengthPerRank) - d.invTminSTimesLengthPerRankTimesS;
+        const float32 postWeight = (offset * d.invTminSTimesLengthPerRank) - d.invTminSTimesLengthPerRankTimesS;
         if(b >= 0 && b < d.bounds) { policy_weight(p, d.iRayIndex, iVolumeIndex, d.lengthPerRank - postWeight); }
         if(b + 1 < d.bounds) { policy_weight(p, d.iRayIndex, iVolumeIndex + h.NextIndex(), postWeight); }
     } else if(b >= 0 && b < d.bounds) //centre
@@ -83,20 +83,20 @@ inline void ProjectPixelChecked(Policy& p, Helper& h, ProjectionData const& d, i
 template<typename Policy, typename Helper>
 FORCEINLINE void ProjectPixel(Policy& p, Helper& h, ProjectionData const& d, int a)
 {
-    const auto bf = (d.delta * a) + d.b0;
-    const auto b = static_cast<int>(bf + 0.5f);
+    const float32 bf = (d.delta * a) + d.b0;
+    const int b = static_cast<int>(bf + 0.5f);
     assert(b >= -1); assert(b <= d.bounds + 1);
-    const auto offset = bf - b;
-    const auto iVolumeIndex = h.VolumeIndex(a, b);
+    const float32 offset = bf - b;
+    const int iVolumeIndex = h.VolumeIndex(a, b);
 
     if(offset < -d.S) //left
     {
-        const auto preWeight = (offset * d.invTminSTimesLengthPerRank) + d.invTminSTimesLengthPerRankTimesT;
+        const float32 preWeight = (offset * d.invTminSTimesLengthPerRank) + d.invTminSTimesLengthPerRankTimesT;
         policy_weight(p, d.iRayIndex, iVolumeIndex - h.NextIndex(), d.lengthPerRank - preWeight);
         policy_weight(p, d.iRayIndex, iVolumeIndex, preWeight);
     } else if(d.S < offset) //right
     {
-        const auto postWeight = (offset * d.invTminSTimesLengthPerRank) - d.invTminSTimesLengthPerRankTimesS;
+        const float32 postWeight = (offset * d.invTminSTimesLengthPerRank) - d.invTminSTimesLengthPerRankTimesS;
         policy_weight(p, d.iRayIndex, iVolumeIndex, d.lengthPerRank - postWeight);
         policy_weight(p, d.iRayIndex, iVolumeIndex + h.NextIndex(), postWeight);
     } else
@@ -108,29 +108,29 @@ FORCEINLINE void ProjectPixel(Policy& p, Helper& h, ProjectionData const& d, int
 template<typename Policy, typename Helper>
 void ProjectRange(Policy&p, Helper const& helper, int start, int end, GlobalParameters const& gp, AngleParameters const& ap)
 {
-    auto isin = false;
+    bool isin = false;
     for(int iDetector = start; iDetector < end; ++iDetector)
     {
-        const auto iRayIndex = ap.iAngle * gp.detCount + iDetector;
+        const int iRayIndex = ap.iAngle * gp.detCount + iDetector;
         if(!p.rayPrior(iRayIndex)) continue;
 
-        const auto Dx = ap.proj->fDetSX + (iDetector + 0.5f) * ap.proj->fDetUX;
-        const auto Dy = ap.proj->fDetSY + (iDetector + 0.5f) * ap.proj->fDetUY;
-        const auto b0 = helper.GetB0(gp, ap, Dx, Dy);
-        const auto bounds = helper.GetBounds(gp, ap, b0);
+        const float32 Dx = ap.proj->fDetSX + (iDetector + 0.5f) * ap.proj->fDetUX;
+        const float32 Dy = ap.proj->fDetSY + (iDetector + 0.5f) * ap.proj->fDetUY;
+        const float32 b0 = helper.GetB0(gp, ap, Dx, Dy);
+        const KernelBounds bounds = helper.GetBounds(gp, ap, b0);
         if(bounds.StartStep == bounds.EndPost) { if(isin) { break; } else { continue; } }
         isin = true;
-        const auto data = helper.GetProjectionData(gp, ap, iRayIndex, b0);
+        const ProjectionData data = helper.GetProjectionData(gp, ap, iRayIndex, b0);
 
-        for(auto a = bounds.StartStep; a < bounds.EndPre; ++a)
+        for(int a = bounds.StartStep; a < bounds.EndPre; ++a)
         {
             ProjectPixelChecked(p, helper, data, a);
         }
-        for(auto a = bounds.EndPre; a < bounds.EndMain; ++a)
+        for(int a = bounds.EndPre; a < bounds.EndMain; ++a)
         {
             ProjectPixel(p, helper, data, a);
         }
-        for(auto a = bounds.EndMain; a < bounds.EndPost; ++a)
+        for(int a = bounds.EndMain; a < bounds.EndPost; ++a)
         {
             ProjectPixelChecked(p, helper, data, a);
         }
@@ -140,50 +140,45 @@ void ProjectRange(Policy&p, Helper const& helper, int start, int end, GlobalPara
     } // end loop detector
 }
 
-template<typename Policy, bool UseVectorization = std::is_same<DefaultFPPolicy, Policy>::value || std::is_same<DefaultBPPolicy, Policy>::value>
-struct ProjectChooser;
-
-#ifdef ENABLE_SIMD
 template<typename Policy>
-struct ProjectChooser<Policy, true>
+inline void ProjectAngle(Policy& p, GlobalParameters const& gp, AngleParameters const& ap)
 {
-    //FP and BP can benefit from vectorization if we cache the iRayIndex value
-    template<typename Helper>
-    static inline void Project(Policy&p, Helper const& helper, GlobalParameters const& gp, AngleParameters const& ap)
-    {
-        const auto blockEnd = Simd::Chooser::ProjectParallelBeamLine(p, helper, gp, ap);
-        ProjectRange(p, helper, blockEnd, gp.detEnd, gp, ap);
-    }
-};
-
-template<typename Policy>
-struct ProjectChooser<Policy, false>
-#else
-template<typename Policy, bool UseVectorization>
-struct ProjectChooser
-#endif
-{
-    //Plain projector for non-BP and non-FP projectors
-    //These projectors don't benefit from vectorization due to being memory bound
-    template<typename Helper>
-    static inline void Project(Policy&p, Helper const& helper, GlobalParameters const& gp, AngleParameters const& ap)
-    {
+    if(ap.vertical) {
+        const VerticalHelper helper(gp.colCount);
+        ProjectRange(p, helper, gp.detStart, gp.detEnd, gp, ap);
+    } else {
+        const HorizontalHelper helper(gp.colCount);
         ProjectRange(p, helper, gp.detStart, gp.detEnd, gp, ap);
     }
-};
-
-template<typename Policy>
-inline void ProjectAngle(Policy& p, GlobalParameters const& gp, int iAngle, const SParProjection* proj)
+}
+#ifdef ENABLE_SIMD
+template<>
+inline void ProjectAngle(DefaultFPPolicy& p, GlobalParameters const& gp, AngleParameters const& ap)
 {
-    AngleParameters ap{gp, proj, iAngle};
     if(ap.vertical) {
-        const VerticalHelper helper = {gp.colCount};
-        ProjectChooser<Policy>::Project(p, helper, gp, ap);
+        const VerticalHelper helper(gp.colCount);
+        const int blockEnd = Simd::Chooser::ProjectParallelBeamLine(p, helper, gp, ap);
+        ProjectRange(p, helper, blockEnd, gp.detEnd, gp, ap);
     } else {
-        const HorizontalHelper helper = {gp.colCount};
-        ProjectChooser<Policy>::Project(p, helper, gp, ap);
+        const HorizontalHelper helper(gp.colCount);
+        const int blockEnd = Simd::Chooser::ProjectParallelBeamLine(p, helper, gp, ap);
+        ProjectRange(p, helper, blockEnd, gp.detEnd, gp, ap);
     }
 }
+template<>
+inline void ProjectAngle(DefaultBPPolicy& p, GlobalParameters const& gp, AngleParameters const& ap)
+{
+    if(ap.vertical) {
+        const VerticalHelper helper(gp.colCount);
+        const int blockEnd = Simd::Chooser::ProjectParallelBeamLine(p, helper, gp, ap);
+        ProjectRange(p, helper, blockEnd, gp.detEnd, gp, ap);
+    } else {
+        const HorizontalHelper helper(gp.colCount);
+        const int blockEnd = Simd::Chooser::ProjectParallelBeamLine(p, helper, gp, ap);
+        ProjectRange(p, helper, blockEnd, gp.detEnd, gp, ap);
+    }
+}
+#endif
 
 //----------------------------------------------------------------------------------------
 /* PROJECT BLOCK - vector projection geometry
@@ -286,11 +281,12 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, i
     }
 
     // precomputations
-    GlobalParameters gp{m_pVolumeGeometry, _iDetFrom, _iDetTo, m_pProjectionGeometry->getDetectorCount()};
+    GlobalParameters gp(m_pVolumeGeometry, _iDetFrom, _iDetTo, m_pProjectionGeometry->getDetectorCount());
 
     for(int iAngle = _iProjFrom; iAngle < _iProjTo; ++iAngle) {
         const SParProjection* proj = &pVecProjectionGeometry->getProjectionVectors()[iAngle];
-        ProjectAngle(p, gp, iAngle, proj);
+        AngleParameters ap(gp, proj, iAngle);
+        ProjectAngle(p, gp, ap);
     }
 
     // Delete created vec geometry if required

@@ -14,11 +14,11 @@
 
 #include "astra/SimdAlgorithms.h"
 
+#ifndef NO_AVX512
 #define COMPILING_AVX512
 #include "SimdAlgorithms.inl"
 #undef COMPILING_AVX512
 
-#ifdef ENABLE_AVX512
 int astra::Simd::Avx512::ProjectParallelBeamLine(DefaultFPPolicy& p, VerticalHelper const& helper, GlobalParameters const& gp, AngleParameters const& ap)
 {
     return ParallelBeamLine<Vt_Avx512>::ProjectBlockedRange(p, helper, gp, ap);

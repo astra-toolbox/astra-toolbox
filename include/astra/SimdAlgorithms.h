@@ -15,36 +15,32 @@
 #ifndef ASTRA_INC_SIMDHEADERS
 #define ASTRA_INC_SIMDHEADERS
 
+#ifdef ENABLE_SIMD
 //x86 architecture
 #if defined(__x86_64__) || defined(__ICC) || defined(_M_AMD64)
     #ifdef __GNUC__
         //gcc compiler
-        #ifdef __AVX2__
-            #define ENABLE_AVX2
-            #include <x86intrin.h>
-            #ifdef __AVX512F__
-                #define ENABLE_AVX512
-                #include <avx512fintrin.h>
-            #endif
-        #endif
+        #include <x86intrin.h>
+        #include <avx512fintrin.h>
+        #define ALIGN(x) __attribute__((aligned(x)))
     #endif
-
     #if defined(__ICC) || defined(__ICL)
         //Intel compiler
-        #define ENABLE_AVX2
         #include <immintrin.h>
-        #define ENABLE_AVX512
         #include <zmmintrin.h>
+        #define ALIGN(x) __attribute__((aligned(x)))
     #elif defined(_MSC_VER)
         //Microsoft compiler
-        #define ENABLE_AVX2
         #include <intrin.h>
         #if _MSC_VER > 1900
             //VS2017 or later
-            #define ENABLE_AVX512
             #include <zmmintrin.h>
+        #else
+            #define NO_AVX512
         #endif
+        #define ALIGN(x) __declspec(align(x))
     #endif
+#endif
 #endif
 
 namespace astra

@@ -126,15 +126,6 @@ endif
 
 endif
 
-ifeq ($(simd),yes)
-AVX512FLAGS := -mavx512f -mfma
-AVX2FLAGS := -mavx2 -mfma
-CPPFLAGS += -DENABLE_SIMD
-else
-AVX512FLAGS := 
-AVX2FLAGS := 
-endif
-
 DEPDIR=.deps
 
 BASE_OBJECTS=\
@@ -199,10 +190,22 @@ BASE_OBJECTS=\
 	src/VolumeGeometry2D.lo \
 	src/VolumeGeometry3D.lo \
 	src/XMLDocument.lo \
-	src/XMLNode.lo \
+	src/XMLNode.lo
+
+SIMD_OBJECTS=\
 	src/SimdChooser.lo \
 	src/Avx512Algorithms.avx512.lo \
 	src/Avx2Algorithms.avx2.lo
+
+ifeq ($(simd),yes)
+AVX512FLAGS := -mavx512f -mfma
+AVX2FLAGS := -mavx2 -mfma
+CPPFLAGS += -DENABLE_SIMD
+ALL_OBJECTS+=$(SIMD_OBJECTS)
+else
+AVX512FLAGS := 
+AVX2FLAGS := 
+endif
 
 CUDA_CXX_OBJECTS=\
 	src/CudaProjector2D.lo \

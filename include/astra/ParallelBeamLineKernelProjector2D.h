@@ -92,25 +92,31 @@ struct ProjectionData
 struct VerticalHelper
 {
     // a = row, b = col
-    int colCount;
+	VerticalHelper(int colCount);
+	
     int VolumeIndex(int a, int b) const;
     int NextIndex() const;
-    std::pair<int, int> GetPixelSizes() const;
+    void GetPixelSizes(int* pA, int* pB) const;
     float32 GetB0(GlobalParameters const& gp, AngleParameters const& ap, float32 Dx, float32 Dy) const;
     KernelBounds GetBounds(GlobalParameters const& gp, AngleParameters const& ap, float32 b0) const;
     ProjectionData GetProjectionData(GlobalParameters const& gp, AngleParameters const& ap, int iRayIndex, float32 b0) const;
+
+    int colCount;
 };
 
 struct HorizontalHelper
 {
     // a = row, b = col
-    int colCount;
+	HorizontalHelper(int colCount);
+
     int VolumeIndex(int a, int b) const;
     int NextIndex() const;
-    std::pair<int, int> GetPixelSizes() const;
+    void GetPixelSizes(int* pA, int* pB) const;
     float32 GetB0(GlobalParameters const& gp, AngleParameters const& ap, float32 Dx, float32 Dy) const;
     KernelBounds GetBounds(GlobalParameters const& gp, AngleParameters const& ap, float32 b0) const;
     ProjectionData GetProjectionData(GlobalParameters const& gp, AngleParameters const& ap, int iRayIndex, float32 b0) const;
+	
+    int colCount;
 };
 
 /** This class implements a two-dimensional projector based on a line based kernel.
