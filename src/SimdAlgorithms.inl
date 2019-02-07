@@ -155,12 +155,13 @@ struct ParallelBeamLine
             projectionData = V::fmadd(V::load(blockValues), block.thisWeight, projectionData);
 
             //if prevWeight != 0, then we need to add at least one weight from the previous index
-            //else if nextWeight != 0, then we need to add at least one weight from the next index
             if(V::is_non_zero(block.prevWeight)) {
                 V::store(weightData, block.prevWeight);
                 for(unsigned int i = 0u; i < V::Width; ++i) { if(weightData[i] != 0) { blockValues[i] = p.getVolumeData(block.thisVolumeIndex[i] - block.indexSize); } }
                 projectionData = V::fmadd(V::load(blockValues), block.prevWeight, projectionData);
-            } else if(V::is_non_zero(block.nextWeight)) {
+            }
+            //if nextWeight != 0, then we need to add at least one weight from the next index
+            if(V::is_non_zero(block.nextWeight)) {
                 V::store(weightData, block.nextWeight);
                 for(unsigned int i = 0u; i < V::Width; ++i) { if(weightData[i] != 0) { blockValues[i] = p.getVolumeData(block.thisVolumeIndex[i] + block.indexSize); } }
                 projectionData = V::fmadd(V::load(blockValues), block.nextWeight, projectionData);
@@ -187,17 +188,18 @@ struct ParallelBeamLine
             ALIGN(V::Alignment) float32 weightData[V::Width];
 
             //Note that "this" will always have some value (it is either left, right, or middle)
-            V::store(blockValues, V::mul(block.thisWeight, projectionData));
+            V::store(blockValues, V::mulf(block.thisWeight, projectionData));
             for(unsigned int i = 0u; i < V::Width; ++i) { p.addToVolumeData(block.thisVolumeIndex[i], blockValues[i]); }
 
             //if prevWeight != 0, then we need to add at least one weight from the previous index
-            //else if nextWeight != 0, then we need to add at least one weight from the next index
             if(V::is_non_zero(block.prevWeight)) {
-                V::store(blockValues, V::mul(block.prevWeight, projectionData));
+                V::store(blockValues, V::mulf(block.prevWeight, projectionData));
                 V::store(weightData, block.prevWeight);
                 for(unsigned int i = 0u; i < V::Width; ++i) { if(weightData[i] != 0) { p.addToVolumeData(block.thisVolumeIndex[i] - block.indexSize, blockValues[i]); } }
-            } else if(V::is_non_zero(block.nextWeight)) {
-                V::store(blockValues, V::mul(block.nextWeight, projectionData));
+            }
+            //if nextWeight != 0, then we need to add at least one weight from the next index
+            if(V::is_non_zero(block.nextWeight)) {
+                V::store(blockValues, V::mulf(block.nextWeight, projectionData));
                 V::store(weightData, block.nextWeight);
                 for(unsigned int i = 0u; i < V::Width; ++i) { if(weightData[i] != 0) { p.addToVolumeData(block.thisVolumeIndex[i] + block.indexSize, blockValues[i]); } }
             }
@@ -246,7 +248,7 @@ struct ParallelBeamLine
         const vfloat Sp1 = V::addf(V::set(data.S), V::set(1.0f));
 
         //S and T match for all rays, meaning all the following match for all rays
-        const vint lengthPerRank = V::set(data.lengthPerRank);
+        const vfloat lengthPerRank = V::set(data.lengthPerRank);
         const vfloat invTminSTimesLengthPerRank = V::set(data.invTminSTimesLengthPerRank);
         const vfloat invTminSTimesLengthPerRankTimesT = V::set(data.invTminSTimesLengthPerRankTimesT);
         const vfloat invTminSTimesLengthPerRankTimesS = V::set(data.invTminSTimesLengthPerRankTimesS);

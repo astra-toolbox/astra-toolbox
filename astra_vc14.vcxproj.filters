@@ -728,9 +728,6 @@
     <ClInclude Include="include\astra\SimdAlgorithms.h">
       <Filter>Global &amp; Other\headers</Filter>
     </ClInclude>
-    <ClInclude Include="src\SimdAlgorithms.inl">
-      <Filter>Projectors\inline</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="include\astra\DataProjectorPolicies.inl">
@@ -755,6 +752,9 @@
       <Filter>Projectors\inline</Filter>
     </None>
     <None Include="include\astra\SparseMatrixProjector2D.inl">
+      <Filter>Projectors\inline</Filter>
+    </None>
+    <None Include="src\SimdAlgorithms.inl">
       <Filter>Projectors\inline</Filter>
     </None>
   </ItemGroup>

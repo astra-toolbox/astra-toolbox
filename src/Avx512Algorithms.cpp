@@ -36,6 +36,7 @@ int astra::Simd::Avx512::ProjectParallelBeamLine(DefaultBPPolicy& p, HorizontalH
     return ParallelBeamLine<Vt_Avx512>::ProjectBlockedRange(p, helper, gp, ap);
 }
 #else
+#include "astra/ParallelBeamLineKernelProjector2D.h"
 int astra::Simd::Avx512::ProjectParallelBeamLine(DefaultFPPolicy& p, VerticalHelper const& helper, GlobalParameters const& gp, AngleParameters const& ap)
 {
     return gp.detStart;

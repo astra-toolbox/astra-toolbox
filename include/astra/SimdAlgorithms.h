@@ -28,7 +28,7 @@
         //Intel compiler
         #include <immintrin.h>
         #include <zmmintrin.h>
-        #define ALIGN(x) __attribute__((aligned(x)))
+        #define ALIGN(x) alignas(x)
     #elif defined(_MSC_VER)
         //Microsoft compiler
         #include <intrin.h>
@@ -38,7 +38,7 @@
         #else
             #define NO_AVX512
         #endif
-        #define ALIGN(x) __declspec(align(x))
+        #define ALIGN(x) alignas(x)
     #endif
 #endif
 #endif

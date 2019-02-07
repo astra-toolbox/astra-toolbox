@@ -64,25 +64,25 @@ inline KernelBounds FindBounds(float32 b0, float32 delta, int maxA, int maxB)
     const float32 upperMainB = maxB - 2.5f;
     const float32 upperBoundB = maxB + 0.5f;
     KernelBounds bounds;
-	bounds.StartStep = bounds.EndPre = bounds.EndMain = bounds.EndPost = 0;
+    bounds.StartStep = bounds.EndPre = bounds.EndMain = bounds.EndPost = 0;
 
     if(delta < 0.0f) {
         if(b0 <= lowerBoundB) { return bounds; }
         bounds.StartStep = (b0 > upperBoundB) ? FindIntersect(upperBoundB, b0, delta, maxA) + 1 : 0;
-        const int startPos = b0 + (delta * bounds.StartStep);
+        const float32 startPos = b0 + (delta * bounds.StartStep);
         bounds.EndPre = (startPos > upperMainB) ? FindIntersect(upperMainB, startPos, delta, maxA) : 0;
-        const int prePos = startPos + (delta * bounds.EndPre);
+        const float32 prePos = startPos + (delta * bounds.EndPre);
         bounds.EndMain = (prePos > lowerMainB) ? FindIntersect(lowerMainB, prePos, delta, maxA) : 0;
-        const int mainPos = prePos + (delta * bounds.EndMain);
+        const float32 mainPos = prePos + (delta * bounds.EndMain);
         bounds.EndPost = (mainPos > lowerBoundB) ? FindIntersect(lowerBoundB, mainPos, delta, maxA) : 0;
     } else {
         if(b0 >= upperBoundB) { return bounds; }
         bounds.StartStep = (b0 < lowerBoundB) ? FindIntersect(lowerBoundB, b0, delta, maxA) + 1 : 0;
-        const int startPos = b0 + (delta * bounds.StartStep);
+        const float32 startPos = b0 + (delta * bounds.StartStep);
         bounds.EndPre = (startPos < lowerMainB) ? FindIntersect(lowerMainB, startPos, delta, maxA) : 0;
-        const int prePos = startPos + (delta * bounds.EndPre);
+        const float32 prePos = startPos + (delta * bounds.EndPre);
         bounds.EndMain = (prePos < upperMainB) ? FindIntersect(upperMainB, prePos, delta, maxA) : 0;
-        const int mainPos = prePos + (delta * bounds.EndMain);
+        const float32 mainPos = prePos + (delta * bounds.EndMain);
         bounds.EndPost = (mainPos < upperBoundB) ? FindIntersect(upperBoundB, mainPos, delta, maxA) : 0;
     }
 
