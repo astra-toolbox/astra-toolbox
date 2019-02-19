@@ -168,6 +168,7 @@ BASE_OBJECTS=\
 	src/Globals.lo \
 	src/Logging.lo \
 	src/ParallelBeamBlobKernelProjector2D.lo \
+	src/ParallelBeamDistanceDrivenProjector2D.lo \
 	src/ParallelBeamLinearKernelProjector2D.lo \
 	src/ParallelBeamLineKernelProjector2D.lo \
 	src/ParallelBeamStripKernelProjector2D.lo \

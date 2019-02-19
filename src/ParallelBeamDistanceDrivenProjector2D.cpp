@@ -25,24 +25,23 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#include "astra/ParallelBeamLinearKernelProjector2D.h"
+#include "astra/ParallelBeamDistanceDrivenProjector2D.h"
 
 #include <cmath>
 #include <algorithm>
 
 #include "astra/DataProjectorPolicies.h"
 
-using namespace std;
-using namespace astra;
+namespace astra {
 
-#include "astra/ParallelBeamLinearKernelProjector2D.inl"
+#include "astra/ParallelBeamDistanceDrivenProjector2D.inl"
 
 // type of the projector, needed to register with CProjectorFactory
-std::string CParallelBeamLinearKernelProjector2D::type = "linear";
+std::string CParallelBeamDistanceDrivenProjector2D::type = "distance_driven";
 
 //----------------------------------------------------------------------------------------
 // default constructor
-CParallelBeamLinearKernelProjector2D::CParallelBeamLinearKernelProjector2D()
+CParallelBeamDistanceDrivenProjector2D::CParallelBeamDistanceDrivenProjector2D()
 {
 	_clear();
 }
@@ -50,7 +49,7 @@ CParallelBeamLinearKernelProjector2D::CParallelBeamLinearKernelProjector2D()
 
 //----------------------------------------------------------------------------------------
 // constructor
-CParallelBeamLinearKernelProjector2D::CParallelBeamLinearKernelProjector2D(CParallelProjectionGeometry2D* _pProjectionGeometry,
+CParallelBeamDistanceDrivenProjector2D::CParallelBeamDistanceDrivenProjector2D(CParallelProjectionGeometry2D* _pProjectionGeometry,
 																		   CVolumeGeometry2D* _pReconstructionGeometry)
 
 {
@@ -60,14 +59,14 @@ CParallelBeamLinearKernelProjector2D::CParallelBeamLinearKernelProjector2D(CPara
 
 //----------------------------------------------------------------------------------------
 // destructor
-CParallelBeamLinearKernelProjector2D::~CParallelBeamLinearKernelProjector2D()
+CParallelBeamDistanceDrivenProjector2D::~CParallelBeamDistanceDrivenProjector2D()
 {
 	clear();
 }
 
 //---------------------------------------------------------------------------------------
-// Clear - CParallelBeamLinearKernelProjector2D
-void CParallelBeamLinearKernelProjector2D::_clear()
+// Clear - CParallelBeamDistanceDrivenProjector2D
+void CParallelBeamDistanceDrivenProjector2D::_clear()
 {
 	CProjector2D::_clear();
 	m_bIsInitialized = false;
@@ -75,7 +74,7 @@ void CParallelBeamLinearKernelProjector2D::_clear()
 
 //---------------------------------------------------------------------------------------
 // Clear - Public
-void CParallelBeamLinearKernelProjector2D::clear()
+void CParallelBeamDistanceDrivenProjector2D::clear()
 {
 	CProjector2D::clear();
 	m_bIsInitialized = false;
@@ -83,15 +82,14 @@ void CParallelBeamLinearKernelProjector2D::clear()
 
 //---------------------------------------------------------------------------------------
 // Check
-bool CParallelBeamLinearKernelProjector2D::_check()
+bool CParallelBeamDistanceDrivenProjector2D::_check()
 {
 	// check base class
-	ASTRA_CONFIG_CHECK(CProjector2D::_check(), "ParallelBeamLinearKernelProjector2D", "Error in Projector2D initialization");
+	ASTRA_CONFIG_CHECK(CProjector2D::_check(), "ParallelBeamDistanceDrivenProjector2D", "Error in Projector2D initialization");
 
-	ASTRA_CONFIG_CHECK(dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry) || dynamic_cast<CParallelVecProjectionGeometry2D*>(m_pProjectionGeometry), "ParallelBeamLinearKernelProjector2D", "Unsupported projection geometry");
+	ASTRA_CONFIG_CHECK(dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry) || dynamic_cast<CParallelVecProjectionGeometry2D*>(m_pProjectionGeometry), "ParallelBeamDistanceDrivenProjector2D", "Unsupported projection geometry");
 
-	/// TODO: ADD PIXEL H/W LIMITATIONS
-	ASTRA_CONFIG_CHECK(abs(m_pVolumeGeometry->getPixelLengthX() / m_pVolumeGeometry->getPixelLengthY()) - 1 < eps, "ParallelBeamLinearKernelProjector2D", "Pixel height must equal pixel width.");
+	ASTRA_CONFIG_CHECK(abs(m_pVolumeGeometry->getPixelLengthX() / m_pVolumeGeometry->getPixelLengthY()) - 1 < eps, "ParallelBeamDistanceDrivenProjector2D", "Pixel height must equal pixel width.");
 
 	// success
 	return true;
@@ -99,7 +97,7 @@ bool CParallelBeamLinearKernelProjector2D::_check()
 
 //---------------------------------------------------------------------------------------
 // Initialize, use a Config object
-bool CParallelBeamLinearKernelProjector2D::initialize(const Config& _cfg)
+bool CParallelBeamDistanceDrivenProjector2D::initialize(const Config& _cfg)
 {
 	ASTRA_ASSERT(_cfg.self);
 
@@ -120,8 +118,8 @@ bool CParallelBeamLinearKernelProjector2D::initialize(const Config& _cfg)
 
 //---------------------------------------------------------------------------------------
 // Initialize
-bool CParallelBeamLinearKernelProjector2D::initialize(CParallelProjectionGeometry2D* _pProjectionGeometry, 
-													  CVolumeGeometry2D* _pVolumeGeometry)
+bool CParallelBeamDistanceDrivenProjector2D::initialize(CParallelProjectionGeometry2D* _pProjectionGeometry, 
+                                                        CVolumeGeometry2D* _pVolumeGeometry)
 {
 	// if already initialized, clear first
 	if (m_bIsInitialized) {
@@ -139,15 +137,16 @@ bool CParallelBeamLinearKernelProjector2D::initialize(CParallelProjectionGeometr
 
 //----------------------------------------------------------------------------------------
 // Get maximum amount of weights on a single ray
-int CParallelBeamLinearKernelProjector2D::getProjectionWeightsCount(int _iProjectionIndex)
+int CParallelBeamDistanceDrivenProjector2D::getProjectionWeightsCount(int _iProjectionIndex)
 {
-	int maxDim = max(m_pVolumeGeometry->getGridRowCount(), m_pVolumeGeometry->getGridColCount());
-	return maxDim * 2 + 1;
+	int maxDim = std::max(m_pVolumeGeometry->getGridRowCount(), m_pVolumeGeometry->getGridColCount());
+	int scale = m_pProjectionGeometry->getDetectorWidth() / std::min(m_pVolumeGeometry->getPixelLengthX(), m_pVolumeGeometry->getPixelLengthY());
+	return maxDim * scale * 10 + 1;
 }
 
 //----------------------------------------------------------------------------------------
 // Single Ray Weights
-void CParallelBeamLinearKernelProjector2D::computeSingleRayWeights(int _iProjectionIndex, 
+void CParallelBeamDistanceDrivenProjector2D::computeSingleRayWeights(int _iProjectionIndex, 
 														   int _iDetectorIndex, 
 														   SPixelWeight* _pWeightedPixels,
 														   int _iMaxPixelCount, 
@@ -157,4 +156,6 @@ void CParallelBeamLinearKernelProjector2D::computeSingleRayWeights(int _iProject
 	StorePixelWeightsPolicy p(_pWeightedPixels, _iMaxPixelCount);
 	projectSingleRay(_iProjectionIndex, _iDetectorIndex, p);
 	_iStoredPixelCount = p.getStoredPixelCount();
+}
+
 }

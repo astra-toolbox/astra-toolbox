@@ -149,14 +149,6 @@ public:
 											 SPixelWeight* _pfWeightedPixels, 
 											 int* _piRayStoredPixelCount);
 
-	/** Create a list of detectors that are influenced by point [_iRow, _iCol].
-	 *
-	 * @param _iRow row of the point
-	 * @param _iCol column of the point
-	 * @return list of SDetector2D structs
-	 */
-	virtual std::vector<SDetector2D> projectPoint(int _iRow, int _iCol) = 0;
-
 	/** Returns the number of weights required for storage of all weights of one projection ray.
 	 *
 	 * @param _iProjectionIndex Index of the projection (zero-based).

@@ -25,19 +25,24 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#ifndef _INC_ASTRA_SPARSEMATRIXPROJECTOR2D
-#define _INC_ASTRA_SPARSEMATRIXPROJECTOR2D
+#ifndef _INC_ASTRA_PARALLELDISTANCEDRIVENPROJECTOR
+#define _INC_ASTRA_PARALLELDISTANCEDRIVENPROJECTOR
 
-#include "SparseMatrixProjectionGeometry2D.h"
-#include "SparseMatrix.h"
+#include "ParallelProjectionGeometry2D.h"
+#include "ParallelVecProjectionGeometry2D.h"
 #include "Float32Data2D.h"
 #include "Projector2D.h"
+
+#include "Float32ProjectionData2D.h"
+#include "Float32VolumeData2D.h"
 
 namespace astra
 {
 
-
-/** This class implements a two-dimensional projector using a projection geometry defined by an arbitrary sparse matrix.
+/** This class implements a "distance driven" two-dimensional projector.
+ *
+ * Reference:
+ * De Man, Bruno, and Samit Basu. “Distance-Driven Projection and Backprojection in Three Dimensions.” Physics in Medicine and Biology 49, no. 11 (2004): 2463.
  *
  * \par XML Configuration
  * \astra_xml_item{ProjectionGeometry, xml node, The geometry of the projection.}
@@ -45,13 +50,13 @@ namespace astra
  *
  * \par MATLAB example
  * \astra_code{
- *		cfg = astra_struct('sparse_matrix');\n
+ *		cfg = astra_struct('distance_driven');\n
  *		cfg.ProjectionGeometry = proj_geom;\n
  *		cfg.VolumeGeometry = vol_geom;\n
  *		proj_id = astra_mex_projector('create'\, cfg);\n
  * }
  */
-class _AstraExport CSparseMatrixProjector2D : public CProjector2D {
+class _AstraExport CParallelBeamDistanceDrivenProjector2D : public CProjector2D {
 
 protected:
 	
@@ -63,7 +68,7 @@ protected:
 	 * The following statements are then guaranteed to hold:
 	 * - no NULL pointers
 	 * - all sub-objects are initialized properly
-	 * - matrix dimensions match volume geometry
+	 * - blobvalues are ok
 	 */
 	virtual bool _check();
 
@@ -74,19 +79,19 @@ public:
 
 	/** Default constructor.
 	 */
-	CSparseMatrixProjector2D();
+	CParallelBeamDistanceDrivenProjector2D();
 
 	/** Constructor.
 	 * 
 	 * @param _pProjectionGeometry		Information class about the geometry of the projection.  Will be HARDCOPIED.
 	 * @param _pReconstructionGeometry	Information class about the geometry of the reconstruction volume. Will be HARDCOPIED.
 	 */
-	CSparseMatrixProjector2D(CSparseMatrixProjectionGeometry2D* _pProjectionGeometry, 
-	                         CVolumeGeometry2D* _pReconstructionGeometry);
+	CParallelBeamDistanceDrivenProjector2D(CParallelProjectionGeometry2D* _pProjectionGeometry, 
+										 CVolumeGeometry2D* _pReconstructionGeometry);
 	
 	/** Destructor, is virtual to show that we are aware subclass destructor are called.
 	 */	
-	~CSparseMatrixProjector2D();
+	~CParallelBeamDistanceDrivenProjector2D();
 
 	/** Initialize the projector with a config object.
 	 *
@@ -101,8 +106,8 @@ public:
 	 * @param _pReconstructionGeometry	Information class about the geometry of the reconstruction volume.  Will be HARDCOPIED.
 	 * @return initialization successful?
 	 */
-	virtual bool initialize(CSparseMatrixProjectionGeometry2D* _pProjectionGeometry, 
-		                    CVolumeGeometry2D* _pReconstructionGeometry);
+	virtual bool initialize(CParallelProjectionGeometry2D* _pProjectionGeometry, 
+							CVolumeGeometry2D* _pVolumeGeometry);
 
 	/** Clear this class.
 	 */
@@ -133,6 +138,7 @@ public:
 		                                 int _iMaxPixelCount, 
 										 int& _iStoredPixelCount);
 	
+
 	/** Policy-based projection of all rays.  This function will calculate each non-zero projection 
 	 * weight and use this value for a task provided by the policy object.
 	 *
@@ -144,7 +150,7 @@ public:
 	/** Policy-based projection of all rays of a single projection.  This function will calculate 
 	 * each non-zero projection weight and use this value for a task provided by the policy object.
 	 *
-	 * @param _iProjection Wwhich projection should be projected?
+	 * @param _iProjection Which projection should be projected?
 	 * @param _policy Policy object.  Should contain prior, addWeight and posterior function.
 	 */
 	template <typename Policy>
@@ -160,42 +166,32 @@ public:
 	template <typename Policy>
 	void projectSingleRay(int _iProjection, int _iDetector, Policy& _policy);
 
-	/** Policy-based voxel-projection of a single pixel.  This function will calculate 
-	 * each non-zero projection weight and use this value for a task provided by the policy object.
-	 *
-	 * @param _iRow
-	 * @param _iCol
-	 * @param _policy Policy object.  Should contain prior, addWeight and posterior function.
-	 */
-	template <typename Policy>
-	void projectSingleVoxel(int _iRow, int _iCol, Policy& _policy) {}
-
-	/** Policy-based voxel-projection of all voxels.  This function will calculate 
-	 * each non-zero projection weight and use this value for a task provided by the policy object.
-	 *
-	 * @param _policy Policy object.  Should contain prior, addWeight and posterior function.
-	 */
-	template <typename Policy>
-	void projectAllVoxels(Policy& _policy) {}
-
-protected:	
-
 	/** Return the  type of this projector.
 	 *
 	 * @return identification type of this projector
 	 */
 	virtual std::string getType();
 
+
+protected:
+	/** Internal policy-based projection of a range of angles and range.
+ 	 * (_i*From is inclusive, _i*To exclusive) */
+	template <typename Policy>
+	void projectBlock_internal(int _iProjFrom, int _iProjTo,
+	                           int _iDetFrom, int _iDetTo, Policy& _policy);
+
 };
 
 //----------------------------------------------------------------------------------------
 
-inline std::string CSparseMatrixProjector2D::getType() 
+inline std::string CParallelBeamDistanceDrivenProjector2D::getType() 
 { 
 	return type; 
 }
 
+
 } // namespace astra
+
 
 #endif 
 

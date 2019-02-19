@@ -58,6 +58,53 @@ def intersect_line_rectangle_interval(src, det, xmin, xmax, ymin, ymax, f):
   c = intersect_line_rectangle_feather(src, det, xmin, xmax, ymin, ymax, f)
   return (a,b,c)
 
+
+# x-coord of intersection of the line (src, det) with the horizontal line at y
+def intersect_line_horizontal(src, det, y):
+  EPS = 1e-5
+
+  if np.abs(src[1] - det[1]) < EPS:
+    return np.nan
+
+  t = (y - src[1]) / (det[1] - src[1])
+
+  return src[0] + t * (det[0] - src[0])
+
+
+# length of the intersection of the strip with boundaries edge1, edge2 with the horizontal
+# segment at y, with horizontal extent x_seg
+def intersect_ray_horizontal_segment(edge1, edge2, y, x_seg):
+  e1 = intersect_line_horizontal(edge1[0], edge1[1], y)
+  e2 = intersect_line_horizontal(edge2[0], edge2[1], y)
+
+  if not (np.isfinite(e1) and np.isfinite(e2)):
+    return np.nan
+
+  (e1, e2) = np.sort([e1, e2])
+  (x1, x2) = np.sort(x_seg)
+  l = np.max([e1, x1])
+  r = np.min([e2, x2])
+  #print(edge1, edge2, y, x_seg, r-l)
+  return np.max([r-l, 0.0])
+
+def intersect_ray_vertical_segment(edge1, edge2, x, y_seg):
+  # mirror edge1 and edge2
+  edge1 = [ (a[1], a[0]) for a in edge1 ]
+  edge2 = [ (a[1], a[0]) for a in edge2 ]
+  return intersect_ray_horizontal_segment(edge1, edge2, x, y_seg)
+
+
+
+
+
+
+# LINE GENERATORS
+# ---------------
+#
+# Per ray these yield three lines, at respectively the center and two edges of the detector pixel.
+# Each line is given by two points on the line.
+# ( ( (p0x, p0y), (q0x, q0y) ), ( (p1x, p1y), (q1x, q1y) ), ( (p2x, p2y), (q2x, q2y) ) )
+
 def gen_lines_fanflat(proj_geom):
   angles = proj_geom['ProjectionAngles']
   for theta in angles:
@@ -76,7 +123,9 @@ def gen_lines_fanflat(proj_geom):
     detb= detc + (0.5 - 0.5*proj_geom['DetectorCount']) * detu
 
     for i in range(proj_geom['DetectorCount']):
-      yield (src, detb + i * detu)
+      yield ((src, detb + i * detu),
+             (src, detb + (i - 0.5) * detu),
+             (src, detb + (i + 0.5) * detu))
 
 def gen_lines_fanflat_vec(proj_geom):
   v = proj_geom['Vectors']
@@ -87,7 +136,9 @@ def gen_lines_fanflat_vec(proj_geom):
 
     detb = detc + (0.5 - 0.5*proj_geom['DetectorCount']) * detu
     for i in range(proj_geom['DetectorCount']):
-      yield (src, detb + i * detu)
+      yield ((src, detb + i * detu),
+             (src, detb + (i - 0.5) * detu),
+             (src, detb + (i + 0.5) * detu))
 
 def gen_lines_parallel(proj_geom):
   angles = proj_geom['ProjectionAngles']
@@ -106,7 +157,10 @@ def gen_lines_parallel(proj_geom):
     detb= detc + (0.5 - 0.5*proj_geom['DetectorCount']) * detu
 
     for i in range(proj_geom['DetectorCount']):
-      yield (detb + i * detu - ray, detb + i * detu)
+      yield ((detb + i * detu - ray, detb + i * detu),
+             (detb + (i - 0.5) * detu - ray, detb + (i - 0.5) * detu),
+             (detb + (i + 0.5) * detu - ray, detb + (i + 0.5) * detu))
+
 
 def gen_lines_parallel_vec(proj_geom):
   v = proj_geom['Vectors']
@@ -118,7 +172,9 @@ def gen_lines_parallel_vec(proj_geom):
     detb = detc + (0.5 - 0.5*proj_geom['DetectorCount']) * detu
 
     for i in range(proj_geom['DetectorCount']):
-      yield (detb + i * detu - ray, detb + i * detu)
+      yield ((detb + i * detu - ray, detb + i * detu),
+             (detb + (i - 0.5) * detu - ray, detb + (i - 0.5) * detu),
+             (detb + (i + 0.5) * detu - ray, detb + (i + 0.5) * detu))
 
 
 def gen_lines(proj_geom):
@@ -179,8 +235,8 @@ def gen_random_geometry_parallel_vec():
 nloops = 50
 seed = 123
 
-class TestLineKernel(unittest.TestCase):
-  def single_test(self, type):
+class Test2DKernel(unittest.TestCase):
+  def single_test(self, type, proj_type):
       shape = np.random.randint(*range2d, size=2)
       # these rectangles are biased, but that shouldn't matter
       rect_min = [ np.random.randint(0, a) for a in shape ]
@@ -201,16 +257,16 @@ class TestLineKernel(unittest.TestCase):
 
       if type == 'parallel':
         pg = gen_random_geometry_parallel()
-        projector_id = astra.create_projector('line', pg, vg)
+        projector_id = astra.create_projector(proj_type, pg, vg)
       elif type == 'parallel_vec':
         pg = gen_random_geometry_parallel_vec()
-        projector_id = astra.create_projector('line', pg, vg)
+        projector_id = astra.create_projector(proj_type, pg, vg)
       elif type == 'fanflat':
         pg = gen_random_geometry_fanflat()
-        projector_id = astra.create_projector('line_fanflat', pg, vg)
+        projector_id = astra.create_projector(proj_type + '_fanflat', pg, vg)
       elif type == 'fanflat_vec':
         pg = gen_random_geometry_fanflat_vec()
-        projector_id = astra.create_projector('line_fanflat', pg, vg)
+        projector_id = astra.create_projector(proj_type + '_fanflat', pg, vg)
 
 
       data = np.zeros((shape[1], shape[0]), dtype=np.float32)
@@ -225,84 +281,129 @@ class TestLineKernel(unittest.TestCase):
 
       astra.projector.delete(projector_id)
 
-      a = np.zeros(np.prod(astra.functions.geom_size(pg)), dtype=np.float32)
-      b = np.zeros(np.prod(astra.functions.geom_size(pg)), dtype=np.float32)
-      c = np.zeros(np.prod(astra.functions.geom_size(pg)), dtype=np.float32)
+      if proj_type == 'line':
 
-      i = 0
-      #print( origin[0] + (-0.5 * shape[0] + rect_min[0]) * pixsize[0], origin[0] + (-0.5 * shape[0] + rect_max[0]) * pixsize[0], origin[1] + (-0.5 * shape[1] + rect_min[1]) * pixsize[1], origin[1] + (-0.5 * shape[1] + rect_max[1]) * pixsize[1])
-      for src, det in gen_lines(pg):
-        #print(src,det)
+        a = np.zeros(np.prod(astra.functions.geom_size(pg)), dtype=np.float32)
+        b = np.zeros(np.prod(astra.functions.geom_size(pg)), dtype=np.float32)
+        c = np.zeros(np.prod(astra.functions.geom_size(pg)), dtype=np.float32)
 
-        # NB: Flipped y-axis here, since that is how astra interprets 2D volumes
-        # We compute line intersections with slightly bigger (cw) and
-        # smaller (aw) rectangles, and see if the kernel falls
-        # between these two values.
-        (aw,bw,cw) = intersect_line_rectangle_interval(src, det,
-                      origin[0] + (-0.5 * shape[0] + rect_min[0]) * pixsize[0],
-                      origin[0] + (-0.5 * shape[0] + rect_max[0]) * pixsize[0],
-                      origin[1] + (+0.5 * shape[1] - rect_max[1]) * pixsize[1],
-                      origin[1] + (+0.5 * shape[1] - rect_min[1]) * pixsize[1],
-                      1e-3)
-        a[i] = aw
-        b[i] = bw
-        c[i] = cw
-        i += 1
-      # Add weight for pixel / voxel size
-      try:
-        detweight = pg['DetectorWidth']
-      except KeyError:
-        detweight = np.sqrt(pg['Vectors'][0,4]*pg['Vectors'][0,4] + pg['Vectors'][0,5]*pg['Vectors'][0,5] )
-      a *= detweight
-      b *= detweight
-      c *= detweight
-      a = a.reshape(astra.functions.geom_size(pg))
-      b = b.reshape(astra.functions.geom_size(pg))
-      c = c.reshape(astra.functions.geom_size(pg))
+        i = 0
+        #print( origin[0] + (-0.5 * shape[0] + rect_min[0]) * pixsize[0], origin[0] + (-0.5 * shape[0] + rect_max[0]) * pixsize[0], origin[1] + (-0.5 * shape[1] + rect_min[1]) * pixsize[1], origin[1] + (-0.5 * shape[1] + rect_max[1]) * pixsize[1])
+        for center, edge1, edge2 in gen_lines(pg):
+          (src, det) = center
+          #print(src,det)
 
-      # Check if sinogram lies between a and c
-      y = np.min(sinogram-a)
-      z = np.min(c-sinogram)
-      x = np.max(np.abs(sinogram-b)) # ideally this is small, but can be large
-                                     # due to discontinuities in line kernel
-      self.assertFalse(z < 0 or y < 0)
-      if z < 0 or y < 0:
-        print(y,z,x)
-        pylab.gray()
-        pylab.imshow(data)
-        pylab.figure()
-        pylab.imshow(sinogram)
-        pylab.figure()
-        pylab.imshow(b)
-        pylab.figure()
-        pylab.imshow(a)
-        pylab.figure()
-        pylab.imshow(c)
-        pylab.figure()
-        pylab.imshow(sinogram-a)
-        pylab.figure()
-        pylab.imshow(c-sinogram)
-        pylab.show()
+          # NB: Flipped y-axis here, since that is how astra interprets 2D volumes
+          # We compute line intersections with slightly bigger (cw) and
+          # smaller (aw) rectangles, and see if the kernel falls
+          # between these two values.
+          (aw,bw,cw) = intersect_line_rectangle_interval(src, det,
+                        origin[0] + (-0.5 * shape[0] + rect_min[0]) * pixsize[0],
+                        origin[0] + (-0.5 * shape[0] + rect_max[0]) * pixsize[0],
+                        origin[1] + (+0.5 * shape[1] - rect_max[1]) * pixsize[1],
+                        origin[1] + (+0.5 * shape[1] - rect_min[1]) * pixsize[1],
+                        1e-3)
+          a[i] = aw
+          b[i] = bw
+          c[i] = cw
+          i += 1
+        # Add weight for pixel / voxel size
+        try:
+          detweight = pg['DetectorWidth']
+        except KeyError:
+          detweight = np.sqrt(pg['Vectors'][0,4]*pg['Vectors'][0,4] + pg['Vectors'][0,5]*pg['Vectors'][0,5] )
+        a *= detweight
+        b *= detweight
+        c *= detweight
+        a = a.reshape(astra.functions.geom_size(pg))
+        b = b.reshape(astra.functions.geom_size(pg))
+        c = c.reshape(astra.functions.geom_size(pg))
+
+        # Check if sinogram lies between a and c
+        y = np.min(sinogram-a)
+        z = np.min(c-sinogram)
+        x = np.max(np.abs(sinogram-b)) # ideally this is small, but can be large
+                                       # due to discontinuities in line kernel
+        self.assertFalse(z < 0 or y < 0)
+        if z < 0 or y < 0:
+          print(y,z,x)
+          pylab.gray()
+          pylab.imshow(data)
+          pylab.figure()
+          pylab.imshow(sinogram)
+          pylab.figure()
+          pylab.imshow(b)
+          pylab.figure()
+          pylab.imshow(a)
+          pylab.figure()
+          pylab.imshow(c)
+          pylab.figure()
+          pylab.imshow(sinogram-a)
+          pylab.figure()
+          pylab.imshow(c-sinogram)
+          pylab.show()
+      elif proj_type == 'distance_driven':
+        a = np.zeros(np.prod(astra.functions.geom_size(pg)), dtype=np.float32)
+        i = 0
+        for center, edge1, edge2 in gen_lines(pg):
+          (xd, yd) = center[1] - center[0]
+          l = 0.0
+          if np.abs(xd) > np.abs(yd): # horizontal ray
+            y_seg = (origin[1] + (+0.5 * shape[1] - rect_max[1]) * pixsize[1],
+                     origin[1] + (+0.5 * shape[1] - rect_min[1]) * pixsize[1])
+            for j in range(rect_min[0], rect_max[0]):
+              x = origin[0] + (-0.5 * shape[0] + j + 0.5) * pixsize[0]
+              l += intersect_ray_vertical_segment(edge1, edge2, x, y_seg) * pixsize[0]
+          else:
+            x_seg = (origin[0] + (-0.5 * shape[0] + rect_max[0]) * pixsize[0],
+                     origin[0] + (-0.5 * shape[0] + rect_min[0]) * pixsize[0])
+            for j in range(rect_min[1], rect_max[1]):
+              y = origin[1] + (+0.5 * shape[1] - j - 0.5) * pixsize[1]
+              l += intersect_ray_horizontal_segment(edge1, edge2, y, x_seg) * pixsize[1]
+          a[i] = l
+          i += 1
+        a = a.reshape(astra.functions.geom_size(pg))
+        x = np.max(np.abs(sinogram-a))
+        if x > 2e-3:
+          pylab.gray()
+          pylab.imshow(data)
+          pylab.figure()
+          pylab.imshow(sinogram)
+          pylab.figure()
+          pylab.imshow(a)
+          pylab.figure()
+          pylab.imshow(sinogram-a)
+          pylab.show()
+        self.assertFalse(x > 2e-3)
+
 
   def test_par(self):
     np.random.seed(seed)
     for _ in range(nloops):
-      self.single_test('parallel')
+      self.single_test('parallel', 'line')
+  def test_par_dd(self):
+    np.random.seed(seed)
+    for _ in range(nloops):
+      self.single_test('parallel', 'distance_driven')
   def test_fan(self):
     np.random.seed(seed)
     for _ in range(nloops):
-      self.single_test('fanflat')
+      self.single_test('fanflat', 'line')
   def test_parvec(self):
     np.random.seed(seed)
     for _ in range(nloops):
-      self.single_test('parallel_vec')
+      self.single_test('parallel_vec', 'line')
+  def test_parvec_dd(self):
+    np.random.seed(seed)
+    for _ in range(nloops):
+      self.single_test('parallel_vec', 'distance_driven')
   def test_fanvec(self):
     np.random.seed(seed)
     for _ in range(nloops):
-      self.single_test('fanflat_vec')
+      self.single_test('fanflat_vec', 'line')
 
 
- 
+
 
 if __name__ == '__main__':
   unittest.main()
