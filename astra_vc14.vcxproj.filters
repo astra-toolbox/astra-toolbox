@@ -255,6 +255,9 @@
     <ClCompile Include="src\ParallelBeamBlobKernelProjector2D.cpp">
       <Filter>Projectors\source</Filter>
     </ClCompile>
+    <ClCompile Include="src\ParallelBeamDistanceDrivenProjector2D.cpp">
+      <Filter>Projectors\source</Filter>
+    </ClCompile>
     <ClCompile Include="src\ParallelBeamLinearKernelProjector2D.cpp">
       <Filter>Projectors\source</Filter>
     </ClCompile>
@@ -536,6 +539,9 @@
     <ClInclude Include="include\astra\ParallelBeamBlobKernelProjector2D.h">
       <Filter>Projectors\headers</Filter>
     </ClInclude>
+    <ClInclude Include="include\astra\ParallelBeamDistanceDrivenProjector2D.h">
+      <Filter>Projectors\headers</Filter>
+    </ClInclude>
     <ClInclude Include="include\astra\ParallelBeamLinearKernelProjector2D.h">
       <Filter>Projectors\headers</Filter>
     </ClInclude>
@@ -725,6 +731,9 @@
       <Filter>Projectors\inline</Filter>
     </None>
     <None Include="include\astra\ParallelBeamBlobKernelProjector2D.inl">
+      <Filter>Projectors\inline</Filter>
+    </None>
+    <None Include="include\astra\ParallelBeamDistanceDrivenProjector2D.inl">
       <Filter>Projectors\inline</Filter>
     </None>
     <None Include="include\astra\ParallelBeamLinearKernelProjector2D.inl">

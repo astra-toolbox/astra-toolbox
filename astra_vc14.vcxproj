@@ -531,6 +531,7 @@
     <ClCompile Include="src\Globals.cpp" />
     <ClCompile Include="src\Logging.cpp" />
     <ClCompile Include="src\ParallelBeamBlobKernelProjector2D.cpp" />
+    <ClCompile Include="src\ParallelBeamDistanceDrivenProjector2D.cpp" />
     <ClCompile Include="src\ParallelBeamLineKernelProjector2D.cpp" />
     <ClCompile Include="src\ParallelBeamLinearKernelProjector2D.cpp" />
     <ClCompile Include="src\ParallelBeamStripKernelProjector2D.cpp" />
@@ -620,6 +621,7 @@
     <ClInclude Include="include\astra\Globals.h" />
     <ClInclude Include="include\astra\Logging.h" />
     <ClInclude Include="include\astra\ParallelBeamBlobKernelProjector2D.h" />
+    <ClInclude Include="include\astra\ParallelBeamDistanceDrivenProjector2D.h" />
     <ClInclude Include="include\astra\ParallelBeamLineKernelProjector2D.h" />
     <ClInclude Include="include\astra\ParallelBeamLinearKernelProjector2D.h" />
     <ClInclude Include="include\astra\ParallelBeamStripKernelProjector2D.h" />
@@ -856,6 +858,7 @@
     <None Include="include\astra\FanFlatBeamLineKernelProjector2D.inl" />
     <None Include="include\astra\FanFlatBeamStripKernelProjector2D.inl" />
     <None Include="include\astra\ParallelBeamBlobKernelProjector2D.inl" />
+    <None Include="include\astra\ParallelBeamDistanceDrivenProjector2D.inl" />
     <None Include="include\astra\ParallelBeamLineKernelProjector2D.inl" />
     <None Include="include\astra\ParallelBeamLinearKernelProjector2D.inl" />
     <None Include="include\astra\ParallelBeamStripKernelProjector2D.inl" />

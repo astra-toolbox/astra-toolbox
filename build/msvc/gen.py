@@ -434,6 +434,7 @@ P_astra["filters"]["Projectors\\inline"] = [
 "include\\astra\\FanFlatBeamLineKernelProjector2D.inl",
 "include\\astra\\FanFlatBeamStripKernelProjector2D.inl",
 "include\\astra\\ParallelBeamBlobKernelProjector2D.inl",
+"include\\astra\\ParallelBeamDistanceDrivenProjector2D.inl",
 "include\\astra\\ParallelBeamLinearKernelProjector2D.inl",
 "include\\astra\\ParallelBeamLineKernelProjector2D.inl",
 "include\\astra\\ParallelBeamStripKernelProjector2D.inl",
