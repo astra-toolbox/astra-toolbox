@@ -141,7 +141,7 @@ bool CParallelBeamStripKernelProjector2D::initialize(CParallelProjectionGeometry
 int CParallelBeamStripKernelProjector2D::getProjectionWeightsCount(int _iProjectionIndex)
 {
 	int maxDim = max(m_pVolumeGeometry->getGridRowCount(), m_pVolumeGeometry->getGridColCount());
-	double scale = m_pProjectionGeometry->getDetectorWidth() / min(m_pVolumeGeometry->getPixelLengthX(), m_pVolumeGeometry->getPixelLengthY());
+	double scale = max(m_pProjectionGeometry->getDetectorWidth() / min(m_pVolumeGeometry->getPixelLengthX(), m_pVolumeGeometry->getPixelLengthY()), 1.0f);
 	return int(maxDim * scale * 10) + 1;
 }
 
