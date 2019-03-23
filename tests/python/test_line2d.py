@@ -98,6 +98,30 @@ def intersect_ray_vertical_segment(edge1, edge2, x, y_seg):
   edge2 = [ (a[1], a[0]) for a in edge2 ]
   return intersect_ray_horizontal_segment(edge1, edge2, x, y_seg)
 
+# weight of the intersection of line with the horizontal segment at y, with horizontal extent x_seg
+# using linear interpolation
+def intersect_line_horizontal_segment_linear(src, det, y, x_seg, inter_width):
+  EPS = 1e-5
+  x = intersect_line_horizontal(src, det, y)
+
+  assert(x_seg[1] - x_seg[0] + EPS >= inter_width)
+  if x < x_seg[0] - 0.5*inter_width:
+    return 0.0
+  elif x < x_seg[0] + 0.5*inter_width:
+    return (x - (x_seg[0] - 0.5*inter_width)) / inter_width
+  elif x < x_seg[1] - 0.5*inter_width:
+    return 1.0
+  elif x < x_seg[1] + 0.5*inter_width:
+    return (x_seg[1] + 0.5*inter_width - x) / inter_width
+  else:
+    return 0.0
+
+def intersect_line_vertical_segment_linear(src, det, x, y_seg, inter_height):
+  src = ( src[1], src[0] )
+  det = ( det[1], det[0] )
+  return intersect_line_horizontal_segment_linear(src, det, x, y_seg, inter_height)
+
+
 
 def area_signed(a, b):
   return a[0] * b[1] - a[1] * b[0]
@@ -286,6 +310,9 @@ def gen_random_geometry_parallel_vec():
 nloops = 50
 seed = 123
 
+def proj_type_to_fan(t):
+  return t + '_fanflat'
+
 class Test2DKernel(unittest.TestCase):
   def single_test(self, type, proj_type):
       shape = np.random.randint(*range2d, size=2)
@@ -314,10 +341,10 @@ class Test2DKernel(unittest.TestCase):
         projector_id = astra.create_projector(proj_type, pg, vg)
       elif type == 'fanflat':
         pg = gen_random_geometry_fanflat()
-        projector_id = astra.create_projector(proj_type + '_fanflat', pg, vg)
+        projector_id = astra.create_projector(proj_type_to_fan(proj_type), pg, vg)
       elif type == 'fanflat_vec':
         pg = gen_random_geometry_fanflat_vec()
-        projector_id = astra.create_projector(proj_type + '_fanflat', pg, vg)
+        projector_id = astra.create_projector(proj_type_to_fan(proj_type), pg, vg)
 
 
       data = np.zeros((shape[1], shape[0]), dtype=np.float32)
@@ -331,6 +358,12 @@ class Test2DKernel(unittest.TestCase):
       astra.data2d.delete(sinogram_id)
 
       astra.projector.delete(projector_id)
+
+      # Weight for pixel / voxel size
+      try:
+        detweight = pg['DetectorWidth']
+      except KeyError:
+        detweight = np.sqrt(pg['Vectors'][0,4]**2 + pg['Vectors'][0,5]**2)
 
       if proj_type == 'line':
 
@@ -358,11 +391,6 @@ class Test2DKernel(unittest.TestCase):
           b[i] = bw
           c[i] = cw
           i += 1
-        # Add weight for pixel / voxel size
-        try:
-          detweight = pg['DetectorWidth']
-        except KeyError:
-          detweight = np.sqrt(pg['Vectors'][0,4]*pg['Vectors'][0,4] + pg['Vectors'][0,5]*pg['Vectors'][0,5] )
         a *= detweight
         b *= detweight
         c *= detweight
@@ -393,6 +421,44 @@ class Test2DKernel(unittest.TestCase):
           pylab.figure()
           pylab.imshow(c-sinogram)
           pylab.show()
+      elif proj_type == 'linear':
+        a = np.zeros(np.prod(astra.functions.geom_size(pg)), dtype=np.float32)
+        i = 0
+        for center, edge1, edge2 in gen_lines(pg):
+          (xd, yd) = center[1] - center[0]
+          l = 0.0
+          if np.abs(xd) > np.abs(yd): # horizontal ray
+            length = math.sqrt(1.0 + abs(yd/xd)**2)
+            y_seg = (origin[1] + (+0.5 * shape[1] - rect_max[1]) * pixsize[1],
+                     origin[1] + (+0.5 * shape[1] - rect_min[1]) * pixsize[1])
+            for j in range(rect_min[0], rect_max[0]):
+              x = origin[0] + (-0.5 * shape[0] + j + 0.5) * pixsize[0]
+              w = intersect_line_vertical_segment_linear(center[0], center[1], x, y_seg, pixsize[1])
+              l += w * length * pixsize[0] * detweight
+          else:
+            length = math.sqrt(1.0 + abs(xd/yd)**2)
+            x_seg = (origin[0] + (-0.5 * shape[0] + rect_min[0]) * pixsize[0],
+                     origin[0] + (-0.5 * shape[0] + rect_max[0]) * pixsize[0])
+            for j in range(rect_min[1], rect_max[1]):
+              y = origin[1] + (+0.5 * shape[1] - j - 0.5) * pixsize[1]
+              w = intersect_line_horizontal_segment_linear(center[0], center[1], y, x_seg, pixsize[0])
+              l += w * length * pixsize[1] * detweight
+          a[i] = l
+          i += 1
+        a = a.reshape(astra.functions.geom_size(pg))
+        x = np.max(np.abs(sinogram-a))
+        TOL = 2e-3
+        if True and x > TOL:
+          pylab.gray()
+          pylab.imshow(data)
+          pylab.figure()
+          pylab.imshow(sinogram)
+          pylab.figure()
+          pylab.imshow(a)
+          pylab.figure()
+          pylab.imshow(sinogram-a)
+          pylab.show()
+        self.assertFalse(x > TOL)
       elif proj_type == 'distance_driven':
         a = np.zeros(np.prod(astra.functions.geom_size(pg)), dtype=np.float32)
         i = 0
@@ -406,8 +472,8 @@ class Test2DKernel(unittest.TestCase):
               x = origin[0] + (-0.5 * shape[0] + j + 0.5) * pixsize[0]
               l += intersect_ray_vertical_segment(edge1, edge2, x, y_seg) * pixsize[0]
           else:
-            x_seg = (origin[0] + (-0.5 * shape[0] + rect_max[0]) * pixsize[0],
-                     origin[0] + (-0.5 * shape[0] + rect_min[0]) * pixsize[0])
+            x_seg = (origin[0] + (-0.5 * shape[0] + rect_min[0]) * pixsize[0],
+                     origin[0] + (-0.5 * shape[0] + rect_max[0]) * pixsize[0])
             for j in range(rect_min[1], rect_max[1]):
               y = origin[1] + (+0.5 * shape[1] - j - 0.5) * pixsize[1]
               l += intersect_ray_horizontal_segment(edge1, edge2, y, x_seg) * pixsize[1]
@@ -415,7 +481,8 @@ class Test2DKernel(unittest.TestCase):
           i += 1
         a = a.reshape(astra.functions.geom_size(pg))
         x = np.max(np.abs(sinogram-a))
-        if x > 2e-3:
+        TOL = 2e-3
+        if x > TOL:
           pylab.gray()
           pylab.imshow(data)
           pylab.figure()
@@ -425,7 +492,7 @@ class Test2DKernel(unittest.TestCase):
           pylab.figure()
           pylab.imshow(sinogram-a)
           pylab.show()
-        self.assertFalse(x > 2e-3)
+        self.assertFalse(x > TOL)
       elif proj_type == 'strip':
         xmin = origin[0] + (-0.5 * shape[0] + rect_min[0]) * pixsize[0]
         xmax = origin[0] + (-0.5 * shape[0] + rect_max[0]) * pixsize[0]
@@ -440,9 +507,9 @@ class Test2DKernel(unittest.TestCase):
 
         a = a.reshape(astra.functions.geom_size(pg))
         x = np.max(np.abs(sinogram-a))
-        if x > 2e-3:
-          print(x)
-        if False and x > 2e-3:
+        # TODO: Investigate tolerance for fanflat/strip
+        TOL = 2e-3
+        if False and x > TOL:
           pylab.gray()
           pylab.imshow(data)
           pylab.figure()
@@ -452,12 +519,16 @@ class Test2DKernel(unittest.TestCase):
           pylab.figure()
           pylab.imshow(sinogram-a)
           pylab.show()
-        self.assertFalse(x > 2e-3)
+        self.assertFalse(x > TOL)
 
   def test_par(self):
     np.random.seed(seed)
     for _ in range(nloops):
       self.single_test('parallel', 'line')
+  def test_par_linear(self):
+    np.random.seed(seed)
+    for _ in range(nloops):
+      self.single_test('parallel', 'linear')
   def test_par_dd(self):
     np.random.seed(seed)
     for _ in range(nloops):
@@ -478,6 +549,10 @@ class Test2DKernel(unittest.TestCase):
     np.random.seed(seed)
     for _ in range(nloops):
       self.single_test('parallel_vec', 'line')
+  def test_parvec_linear(self):
+    np.random.seed(seed)
+    for _ in range(nloops):
+      self.single_test('parallel_vec', 'linear')
   def test_parvec_dd(self):
     np.random.seed(seed)
     for _ in range(nloops):
