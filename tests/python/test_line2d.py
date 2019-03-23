@@ -70,6 +70,11 @@ def intersect_line_horizontal(src, det, y):
 
   return src[0] + t * (det[0] - src[0])
 
+# y-coord of intersection of the line (src, det) with the vertical line at x
+def intersect_line_vertical(src, det, x):
+  src = ( src[1], src[0] )
+  det = ( det[1], det[0] )
+  return intersect_line_horizontal(src, det, x)
 
 # length of the intersection of the strip with boundaries edge1, edge2 with the horizontal
 # segment at y, with horizontal extent x_seg
@@ -94,7 +99,53 @@ def intersect_ray_vertical_segment(edge1, edge2, x, y_seg):
   return intersect_ray_horizontal_segment(edge1, edge2, x, y_seg)
 
 
+def area_signed(a, b):
+  return a[0] * b[1] - a[1] * b[0]
 
+# is c to the left of ab
+def is_left_of(a, b, c):
+  return area_signed( (b[0] - a[0], b[1] - a[1]), (c[0] - a[0], c[1] - a[1]) ) > 0
+
+# compute area of rect on left side of line
+def halfarea_rect_line(src, det, xmin, xmax, ymin, ymax):
+  pts = ( (xmin,ymin), (xmin,ymax), (xmax,ymin), (xmax,ymax) )
+  pts_left = list(filter( lambda p: is_left_of(src, det, p), pts ))
+  npts_left = len(pts_left)
+  if npts_left == 0:
+    return 0.0
+  elif npts_left == 1:
+    # triangle
+    p = pts_left[0]
+    xd = intersect_line_horizontal(src, det, p[1]) - p[0]
+    yd = intersect_line_vertical(src, det, p[0]) - p[1]
+    ret = 0.5 * abs(xd) * abs(yd)
+    return ret
+  elif npts_left == 2:
+    p = pts_left[0]
+    q = pts_left[1]
+    if p[0] == q[0]:
+      # vertical intersection
+      x1 = intersect_line_horizontal(src, det, p[1]) - p[0]
+      x2 = intersect_line_horizontal(src, det, q[1]) - q[0]
+      ret = 0.5 * (ymax - ymin) * (abs(x1) + abs(x2))
+      return ret
+    else:
+      assert(p[1] == q[1])
+      # horizontal intersection
+      y1 = intersect_line_vertical(src, det, p[0]) - p[1]
+      y2 = intersect_line_vertical(src, det, q[0]) - q[1]
+      ret = 0.5 * (xmax - xmin) * (abs(y1) + abs(y2))
+      return ret
+  else:
+    # mirror and invert
+    ret = ((xmax - xmin) * (ymax - ymin)) - halfarea_rect_line(det, src, xmin, xmax, ymin, ymax)
+    return ret
+
+# area of intersection of the strip with boundaries edge1, edge2 with rectangle
+def intersect_ray_rect(edge1, edge2, xmin, xmax, ymin, ymax):
+  s1 = halfarea_rect_line(edge1[0], edge1[1], xmin, xmax, ymin, ymax)
+  s2 = halfarea_rect_line(edge2[0], edge2[1], xmin, xmax, ymin, ymax)
+  return abs(s1 - s2)
 
 
 
@@ -375,7 +426,33 @@ class Test2DKernel(unittest.TestCase):
           pylab.imshow(sinogram-a)
           pylab.show()
         self.assertFalse(x > 2e-3)
+      elif proj_type == 'strip':
+        xmin = origin[0] + (-0.5 * shape[0] + rect_min[0]) * pixsize[0]
+        xmax = origin[0] + (-0.5 * shape[0] + rect_max[0]) * pixsize[0]
+        ymin = origin[1] + (+0.5 * shape[1] - rect_max[1]) * pixsize[1]
+        ymax = origin[1] + (+0.5 * shape[1] - rect_min[1]) * pixsize[1]
 
+        a = np.zeros(np.prod(astra.functions.geom_size(pg)), dtype=np.float32)
+        i = 0
+        for center, edge1, edge2 in gen_lines(pg):
+          a[i] = intersect_ray_rect(edge1, edge2, xmin, xmax, ymin, ymax)
+          i += 1
+
+        a = a.reshape(astra.functions.geom_size(pg))
+        x = np.max(np.abs(sinogram-a))
+        if x > 2e-3:
+          print(x)
+        if False and x > 2e-3:
+          pylab.gray()
+          pylab.imshow(data)
+          pylab.figure()
+          pylab.imshow(sinogram)
+          pylab.figure()
+          pylab.imshow(a)
+          pylab.figure()
+          pylab.imshow(sinogram-a)
+          pylab.show()
+        self.assertFalse(x > 2e-3)
 
   def test_par(self):
     np.random.seed(seed)
@@ -385,10 +462,18 @@ class Test2DKernel(unittest.TestCase):
     np.random.seed(seed)
     for _ in range(nloops):
       self.single_test('parallel', 'distance_driven')
+  def test_par_strip(self):
+    np.random.seed(seed)
+    for _ in range(nloops):
+      self.single_test('parallel', 'strip')
   def test_fan(self):
     np.random.seed(seed)
     for _ in range(nloops):
       self.single_test('fanflat', 'line')
+  def test_fan_strip(self):
+    np.random.seed(seed)
+    for _ in range(nloops):
+      self.single_test('fanflat', 'strip')
   def test_parvec(self):
     np.random.seed(seed)
     for _ in range(nloops):
@@ -397,6 +482,10 @@ class Test2DKernel(unittest.TestCase):
     np.random.seed(seed)
     for _ in range(nloops):
       self.single_test('parallel_vec', 'distance_driven')
+  def test_parvec_strip(self):
+    np.random.seed(seed)
+    for _ in range(nloops):
+      self.single_test('parallel_vec', 'strip')
   def test_fanvec(self):
     np.random.seed(seed)
     for _ in range(nloops):
