@@ -87,11 +87,11 @@ void CFanFlatBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 		
 		// get values
 		theta = m_pProjectionGeometry->getProjectionAngle(iAngle);
-		bool switch_t = false;
+		bool switch_t = true;
 		if (theta >= 7*PIdiv4) theta -= 2*PI;
 		if (theta >= 3*PIdiv4) {
 			theta -= PI;
-			switch_t = true;
+			switch_t = false;
 		}
 
 		// Precalculate sin, cos, 1/cos
