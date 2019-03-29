@@ -166,3 +166,20 @@ fi
 rm -f conftest.cu conftest.o conftest.nvcc.out
 ])
 
+dnl ASTRA_CHECK_CUDA_BOOST(action-if-ok, action-if-not-ok)
+dnl Check for a specific incompatibility between boost and cuda version
+dnl (See https://github.com/boostorg/config/pull/175 )
+AC_DEFUN([ASTRA_CHECK_CUDA_BOOST],[
+cat >conftest.cu <<_ACEOF
+#include <boost/shared_ptr.hpp>
+int main() {
+  return 0;
+}
+_ACEOF
+ASTRA_RUN_LOGOUTPUT([$NVCC -c -o conftest.o conftest.cu $NVCCFLAGS])
+AS_IF([test $? = 0],[$1],[
+  AS_ECHO(["$as_me: failed program was:"]) >&AS_MESSAGE_LOG_FD
+  sed 's/^/| /' conftest.cu >&AS_MESSAGE_LOG_FD
+  $2])
+])
+
