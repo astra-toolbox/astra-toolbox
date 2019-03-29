@@ -115,10 +115,9 @@ __global__ void FPhorizontal_simple(float* D_projData, unsigned int projPitch, u
 	float fSliceStep = cos_theta / sin_theta;
 	float fDistCorr;
 	if (sin_theta > 0.0f)
-		fDistCorr = -fDetStep;
+		fDistCorr = outputScale / sin_theta;
 	else
-		fDistCorr = fDetStep;
-	fDistCorr *= outputScale;
+		fDistCorr = -outputScale / sin_theta;
 
 	float fVal = 0.0f;
 	// project detector on slice
@@ -193,10 +192,9 @@ __global__ void FPvertical_simple(float* D_projData, unsigned int projPitch, uns
 	float fSliceStep = sin_theta / cos_theta;
 	float fDistCorr;
 	if (cos_theta < 0.0f)
-		fDistCorr = -fDetStep;
+		fDistCorr = -outputScale / cos_theta; 
 	else
-		fDistCorr = fDetStep;
-	fDistCorr *= outputScale;
+		fDistCorr = outputScale / cos_theta;
 
 	float fVal = 0.0f;
 	float fP = (detector - 0.5f*dims.iProjDets + 0.5f - gC_angle_offset[angle]) * fDetStep + (startSlice - 0.5f*dims.iVolHeight + 0.5f) * fSliceStep + 0.5f*dims.iVolWidth - 0.5f + 0.5f;

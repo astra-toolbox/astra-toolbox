@@ -486,17 +486,9 @@ class Test2DKernel(unittest.TestCase):
         for i, (center, edge1, edge2) in enumerate(gen_lines(pg)):
           (src, det) = center
           (xd, yd) = det - src
-          try:
-            detweight = pg['DetectorWidth']
-          except KeyError:
-            if 'fan' not in type:
-              detweight = effective_detweight(src, det, pg['Vectors'][i//pg['DetectorCount'],4:6])
-            else:
-              detweight = np.linalg.norm(pg['Vectors'][i//pg['DetectorCount'],4:6], ord=2)
-
           l = 0.0
           if np.abs(xd) > np.abs(yd): # horizontal ray
-            length = math.sqrt(1.0 + abs(yd/xd)**2)
+            length = math.sqrt(1.0 + abs(yd/xd)**2) * pixsize[0]
             y_seg = (ymin, ymax)
             for j in range(rect_min[0], rect_max[0]):
               x = origin[0] + (-0.5 * shape[0] + j + 0.5) * pixsize[0]
@@ -504,9 +496,9 @@ class Test2DKernel(unittest.TestCase):
               # limited interpolation precision with cuda
               if CUDA_8BIT_LINEAR and proj_type == 'cuda':
                 w = np.round(w * 256.0) / 256.0
-              l += w * length * pixsize[0] * detweight
+              l += w * length
           else:
-            length = math.sqrt(1.0 + abs(xd/yd)**2)
+            length = math.sqrt(1.0 + abs(xd/yd)**2) * pixsize[1]
             x_seg = (xmin, xmax)
             for j in range(rect_min[1], rect_max[1]):
               y = origin[1] + (+0.5 * shape[1] - j - 0.5) * pixsize[1]
@@ -514,7 +506,7 @@ class Test2DKernel(unittest.TestCase):
               # limited interpolation precision with cuda
               if CUDA_8BIT_LINEAR and proj_type == 'cuda':
                 w = np.round(w * 256.0) / 256.0
-              l += w * length * pixsize[1] * detweight
+              l += w * length
           a[i] = l
         a = a.reshape(astra.functions.geom_size(pg))
         if not np.all(np.isfinite(a)):
