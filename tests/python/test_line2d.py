@@ -516,21 +516,26 @@ class Test2DKernel(unittest.TestCase):
         if DISPLAY and x > TOL:
           display_mismatch(data, sinogram, a)
         self.assertFalse(x > TOL)
-      elif proj_type == 'distance_driven':
+      elif proj_type == 'distance_driven' and 'par' in type:
         a = np.zeros(np.prod(astra.functions.geom_size(pg)), dtype=np.float32)
         for i, (center, edge1, edge2) in enumerate(gen_lines(pg)):
-          (xd, yd) = center[1] - center[0]
+          (src, det) = center
+          try:
+            detweight = pg['DetectorWidth']
+          except KeyError:
+            detweight = effective_detweight(src, det, pg['Vectors'][i//pg['DetectorCount'],4:6])
+          (xd, yd) = det - src
           l = 0.0
           if np.abs(xd) > np.abs(yd): # horizontal ray
             y_seg = (ymin, ymax)
             for j in range(rect_min[0], rect_max[0]):
               x = origin[0] + (-0.5 * shape[0] + j + 0.5) * pixsize[0]
-              l += intersect_ray_vertical_segment(edge1, edge2, x, y_seg) * pixsize[0]
+              l += intersect_ray_vertical_segment(edge1, edge2, x, y_seg) * pixsize[0] / detweight
           else:
             x_seg = (xmin, xmax)
             for j in range(rect_min[1], rect_max[1]):
               y = origin[1] + (+0.5 * shape[1] - j - 0.5) * pixsize[1]
-              l += intersect_ray_horizontal_segment(edge1, edge2, y, x_seg) * pixsize[1]
+              l += intersect_ray_horizontal_segment(edge1, edge2, y, x_seg) * pixsize[1] / detweight
           a[i] = l
         a = a.reshape(astra.functions.geom_size(pg))
         if not np.all(np.isfinite(a)):
@@ -578,6 +583,8 @@ class Test2DKernel(unittest.TestCase):
         if DISPLAY and x > TOL:
           display_mismatch(data, sinogram, a)
         self.assertFalse(x > TOL)
+      else:
+        raise RuntimeError("Unsupported projector")
 
   def multi_test(self, type, proj_type):
     np.random.seed(seed)
