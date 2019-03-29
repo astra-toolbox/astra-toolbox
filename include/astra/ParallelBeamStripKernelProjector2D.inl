@@ -142,6 +142,10 @@ void CParallelBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, 
 
 		const SParProjection * proj = &pVecProjectionGeometry->getProjectionVectors()[iAngle];
 
+		const float32 rayWidth = fabs(proj->fDetUX * proj->fRayY - proj->fDetUY * proj->fRayX) /
+		                         sqrt(proj->fRayX * proj->fRayX + proj->fRayY * proj->fRayY);
+		const float32 relPixelArea = pixelArea / rayWidth;
+
 		bool vertical = fabs(proj->fRayX) < fabs(proj->fRayY);
 		if (vertical) {
 			RxOverRy = proj->fRayX/proj->fRayY;
@@ -219,7 +223,7 @@ void CParallelBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, 
 							else if (-S < offsetL)  res -= 0.5f + offsetL;
 							else if (-T < offsetL)  res -= 0.5f*(offsetL+T)*(offsetL+T)*invTminS;
 
-							p.addWeight(iRayIndex, iVolumeIndex, pixelArea*res);
+							p.addWeight(iRayIndex, iVolumeIndex, relPixelArea*res);
 							p.pixelPosterior(iVolumeIndex);
 						}
 					}
@@ -272,7 +276,7 @@ void CParallelBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, 
 							else if (-S < offsetL)  res -= 0.5f + offsetL;
 							else if (-T < offsetL)  res -= 0.5f*(offsetL+T)*(offsetL+T)*invTminS;
 
-							p.addWeight(iRayIndex, iVolumeIndex, pixelArea*res);
+							p.addWeight(iRayIndex, iVolumeIndex, relPixelArea*res);
 							p.pixelPosterior(iVolumeIndex);
 						}
 					}
