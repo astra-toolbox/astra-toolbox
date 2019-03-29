@@ -591,40 +591,16 @@ class Test2DKernel(unittest.TestCase):
     for _ in range(nloops):
       self.single_test(type, proj_type)
 
-  def test_par(self):
-    self.multi_test('parallel', 'line')
-  def test_par_linear(self):
-    self.multi_test('parallel', 'linear')
-  def test_par_cuda(self):
-    self.multi_test('parallel', 'cuda')
-  def test_par_dd(self):
-    self.multi_test('parallel', 'distance_driven')
-  def test_par_strip(self):
-    self.multi_test('parallel', 'strip')
-  def test_fan(self):
-    self.multi_test('fanflat', 'line')
-  def test_fan_strip(self):
-    self.multi_test('fanflat', 'strip')
-  def test_fan_cuda(self):
-    self.multi_test('fanflat', 'cuda')
-  def test_parvec(self):
-    self.multi_test('parallel_vec', 'line')
-  def test_parvec_linear(self):
-    self.multi_test('parallel_vec', 'linear')
-  def test_parvec_dd(self):
-    self.multi_test('parallel_vec', 'distance_driven')
-  def test_parvec_strip(self):
-    self.multi_test('parallel_vec', 'strip')
-  def test_parvec_cuda(self):
-    self.multi_test('parallel_vec', 'cuda')
-  def test_fanvec(self):
-    self.multi_test('fanflat_vec', 'line')
-  def test_fanvec_cuda(self):
-    self.multi_test('fanflat_vec', 'cuda')
+__combinations = { 'parallel': [ 'line', 'linear', 'distance_driven', 'strip', 'cuda' ],
+                   'parallel_vec': [ 'line', 'linear', 'distance_driven', 'strip', 'cuda' ],
+                   'fanflat': [ 'line', 'strip', 'cuda' ],
+                   'fanflat_vec': [ 'line', 'cuda' ] }
 
-
-
-
+for k, l in __combinations.items():
+  for v in l:
+    def f(k,v):
+      return lambda self: self.multi_test(k, v)
+    setattr(Test2DKernel, 'test_' + k + '_' + v, f(k,v))
 
 if __name__ == '__main__':
   unittest.main()
