@@ -454,23 +454,15 @@ class Test2DKernel(unittest.TestCase):
         for i, (center, edge1, edge2) in enumerate(gen_lines(pg)):
           (src, det) = center
 
-          try:
-            detweight = pg['DetectorWidth']
-          except KeyError:
-            if 'fan' not in type:
-              detweight = effective_detweight(src, det, pg['Vectors'][i//pg['DetectorCount'],4:6])
-            else:
-              detweight = np.linalg.norm(pg['Vectors'][i//pg['DetectorCount'],4:6], ord=2)
-
           # We compute line intersections with slightly bigger (cw) and
           # smaller (aw) rectangles, and see if the kernel falls
           # between these two values.
           (aw,bw,cw) = intersect_line_rectangle_interval(src, det,
                         xmin, xmax, ymin, ymax,
                         1e-3)
-          a[i] = aw * detweight
-          b[i] = bw * detweight
-          c[i] = cw * detweight
+          a[i] = aw
+          b[i] = bw
+          c[i] = cw
         a = a.reshape(astra.functions.geom_size(pg))
         b = b.reshape(astra.functions.geom_size(pg))
         c = c.reshape(astra.functions.geom_size(pg))
