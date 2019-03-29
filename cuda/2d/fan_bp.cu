@@ -48,7 +48,7 @@ const unsigned int g_anglesPerBlock = 16;
 const unsigned int g_blockSliceSize = 32;
 const unsigned int g_blockSlices = 16;
 
-const unsigned int g_MaxAngles = 2560;
+const unsigned int g_MaxAngles = 2240;
 
 __constant__ float gC_SrcX[g_MaxAngles];
 __constant__ float gC_SrcY[g_MaxAngles];
@@ -56,6 +56,7 @@ __constant__ float gC_DetSX[g_MaxAngles];
 __constant__ float gC_DetSY[g_MaxAngles];
 __constant__ float gC_DetUX[g_MaxAngles];
 __constant__ float gC_DetUY[g_MaxAngles];
+__constant__ float gC_Scale[g_MaxAngles];
 
 
 static bool bindProjDataTexture(float* data, unsigned int pitch, unsigned int width, unsigned int height, cudaTextureAddressMode mode = cudaAddressModeBorder)
@@ -96,8 +97,6 @@ __global__ void devFanBP(float* D_volData, unsigned int volPitch, unsigned int s
 	float fVal = 0.0f;
 	float fA = startAngle + 0.5f;
 
-	// TODO: Distance correction?
-
 	for (int angle = startAngle; angle < endAngle; ++angle)
 	{
 		const float fSrcX = gC_SrcX[angle];
@@ -106,15 +105,24 @@ __global__ void devFanBP(float* D_volData, unsigned int volPitch, unsigned int s
 		const float fDetSY = gC_DetSY[angle];
 		const float fDetUX = gC_DetUX[angle];
 		const float fDetUY = gC_DetUY[angle];
+		const float fScale = gC_Scale[angle];
 
 		const float fXD = fSrcX - fX;
 		const float fYD = fSrcY - fY;
 
 		const float fNum = fDetSY * fXD - fDetSX * fYD + fX*fSrcY - fY*fSrcX;
 		const float fDen = fDetUX * fYD - fDetUY * fXD;
-		
-		const float fT = fNum / fDen;
-		fVal += tex2D(gT_FanProjTexture, fT, fA);
+
+		// fDen = || u (x-s) ||     (2x2 determinant)
+
+		// Scale factor is the approximate number of rays traversing this pixel,
+		// given by the inverse size of a detector pixel scaled by the magnification
+		// factor of this pixel.
+		// Magnification factor is || u (d-s) || / || u (x-s) ||
+
+		const float fr = __fdividef(1.0f, fDen);
+		const float fT = fNum * fr;
+		fVal += tex2D(gT_FanProjTexture, fT, fA) * fScale * fr;
 		fA += 1.0f;
 	}
 
@@ -148,8 +156,6 @@ __global__ void devFanBP_SS(float* D_volData, unsigned int volPitch, unsigned in
 	float fVal = 0.0f;
 	float fA = startAngle + 0.5f;
 
-	// TODO: Distance correction?
-
 	for (int angle = startAngle; angle < endAngle; ++angle)
 	{
 		const float fSrcX = gC_SrcX[angle];
@@ -158,6 +164,7 @@ __global__ void devFanBP_SS(float* D_volData, unsigned int volPitch, unsigned in
 		const float fDetSY = gC_DetSY[angle];
 		const float fDetUX = gC_DetUX[angle];
 		const float fDetUY = gC_DetUY[angle];
+		const float fScale = gC_Scale[angle];
 
 		// TODO: Optimize these loops...
 		float fX = fXb;
@@ -169,9 +176,10 @@ __global__ void devFanBP_SS(float* D_volData, unsigned int volPitch, unsigned in
 
 				const float fNum = fDetSY * fXD - fDetSX * fYD + fX*fSrcY - fY*fSrcX;
 				const float fDen = fDetUX * fYD - fDetUY * fXD;
-		
-				const float fT = fNum / fDen;
-				fVal += tex2D(gT_FanProjTexture, fT, fA);
+				const float fr = __fdividef(1.0f, fDen);
+
+				const float fT = fNum * fr;
+				fVal += tex2D(gT_FanProjTexture, fT, fA) * fScale * fr;
 				fY -= fSubStep;
 			}
 			fX += fSubStep;
@@ -202,8 +210,6 @@ __global__ void devFanBP_SART(float* D_volData, unsigned int volPitch, const SDi
 
 	float* volData = (float*)D_volData;
 
-	// TODO: Distance correction?
-
 	// TODO: Constant memory vs parameters.
 	const float fSrcX = gC_SrcX[0];
 	const float fSrcY = gC_SrcY[0];
@@ -211,15 +217,17 @@ __global__ void devFanBP_SART(float* D_volData, unsigned int volPitch, const SDi
 	const float fDetSY = gC_DetSY[0];
 	const float fDetUX = gC_DetUX[0];
 	const float fDetUY = gC_DetUY[0];
+	const float fScale = gC_Scale[0];
 
 	const float fXD = fSrcX - fX;
 	const float fYD = fSrcY - fY;
 
 	const float fNum = fDetSY * fXD - fDetSX * fYD + fX*fSrcY - fY*fSrcX;
 	const float fDen = fDetUX * fYD - fDetUY * fXD;
-		
-	const float fT = fNum / fDen;
-	const float fVal = tex2D(gT_FanProjTexture, fT, 0.5f);
+	const float fr = __fdividef(1.0f, fDen);
+
+	const float fT = fNum * fr;
+	const float fVal = tex2D(gT_FanProjTexture, fT, 0.5f) * fScale * fr;
 
 	volData[Y*volPitch+X] += fVal * fOutputScale;
 }
@@ -248,7 +256,7 @@ __global__ void devFanBP_FBPWeighted(float* D_volData, unsigned int volPitch, un
 	float fVal = 0.0f;
 	float fA = startAngle + 0.5f;
 
-	// TODO: Distance correction?
+	// TODO: Update for new projection scaling
 
 	for (int angle = startAngle; angle < endAngle; ++angle)
 	{
@@ -299,6 +307,13 @@ bool FanBP_internal(float* D_volumeData, unsigned int volumePitch,
 
 #undef TRANSFER_TO_CONSTANT
 
+	for (unsigned int i = 0; i < dims.iProjAngles; ++i) {
+		double detsize = sqrt(angles[i].fDetUX * angles[i].fDetUX + angles[i].fDetUY * angles[i].fDetUY);
+		double scale = (angles[i].fDetUX * (angles[i].fSrcY - angles[i].fDetSY) - angles[i].fDetUY * (angles[i].fSrcX - angles[i].fDetSX)) / detsize;
+		tmp[i] = (float)scale;
+	}
+	cudaMemcpyToSymbol(gC_Scale, tmp, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice);
+
 	delete[] tmp;
 
 	dim3 dimBlock(g_blockSlices, g_blockSliceSize);
@@ -346,6 +361,14 @@ bool FanBP_FBPWeighted_internal(float* D_volumeData, unsigned int volumePitch,
 
 #undef TRANSFER_TO_CONSTANT
 
+	for (unsigned int i = 0; i < dims.iProjAngles; ++i) {
+		double detsize = sqrt(angles[i].fDetUX * angles[i].fDetUX + angles[i].fDetUY * angles[i].fDetUY);
+		double scale = (angles[i].fDetUX * (angles[i].fSrcY - angles[i].fDetSY) - angles[i].fDetUY * (angles[i].fSrcX - angles[i].fDetSX)) / detsize;
+		tmp[i] = (float)scale;
+	}
+	cudaMemcpyToSymbol(gC_Scale, tmp, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice);
+
+
 	delete[] tmp;
 
 	dim3 dimBlock(g_blockSlices, g_blockSliceSize);
@@ -388,6 +411,11 @@ bool FanBP_SART(float* D_volumeData, unsigned int volumePitch,
 	TRANSFER_TO_CONSTANT(DetUY);
 
 #undef TRANSFER_TO_CONSTANT
+
+	double detsize = sqrt(angles[angle].fDetUX * angles[angle].fDetUX + angles[angle].fDetUY * angles[angle].fDetUY);
+	double scale = (angles[angle].fDetUX * (angles[angle].fSrcY - angles[angle].fDetSY) - angles[angle].fDetUY * (angles[angle].fSrcX - angles[angle].fDetSX)) / detsize;
+	float tmp = (float)scale;
+	cudaMemcpyToSymbol(gC_Scale, &tmp, sizeof(float), 0, cudaMemcpyHostToDevice);
 
 	dim3 dimBlock(g_blockSlices, g_blockSliceSize);
 	dim3 dimGrid((dims.iVolWidth+g_blockSlices-1)/g_blockSlices,

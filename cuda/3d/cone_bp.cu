@@ -140,8 +140,10 @@ __global__ void dev_cone_BP(void* D_volData, unsigned int volPitch, int startAng
 				if (FDKWEIGHT) {
 					// The correct factor here is this one:
 					// Z[idx] += (fr*fCd.w)*(fr*fCd.w)*fVal;
-					// This is the square of the inverse magnification factor
-					// from fX,fY,fZ to the detector.
+					// This is the square of the magnification factor
+					// from fX,fY,fZ to the virtual detector, where the
+					// virtual detector is the plane through the origin
+					// parallel to the detector, so spanned by u,v.
 
 					// Since we are assuming we have a circular cone
 					// beam trajectory, fCd.w is constant, and we instead

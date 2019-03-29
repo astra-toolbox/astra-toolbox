@@ -586,10 +586,66 @@ class Test2DKernel(unittest.TestCase):
       else:
         raise RuntimeError("Unsupported projector")
 
+  def single_test_adjoint(self, type, proj_type):
+      shape = np.random.randint(*range2d, size=2)
+      if FLEXVOL:
+          if not NONSQUARE:
+            pixsize = np.array([0.5, 0.5]) + np.random.random()
+          else:
+            pixsize = 0.5 + np.random.random(size=2)
+          origin = 10 * np.random.random(size=2)
+      else:
+          pixsize = (1.,1.)
+          origin = (0.,0.)
+      vg = astra.create_vol_geom(shape[1], shape[0],
+                                 origin[0] - 0.5 * shape[0] * pixsize[0],
+                                 origin[0] + 0.5 * shape[0] * pixsize[0],
+                                 origin[1] - 0.5 * shape[1] * pixsize[1],
+                                 origin[1] + 0.5 * shape[1] * pixsize[1])
+
+      if type == 'parallel':
+        pg = gen_random_geometry_parallel()
+        projector_id = astra.create_projector(proj_type, pg, vg)
+      elif type == 'parallel_vec':
+        pg = gen_random_geometry_parallel_vec()
+        projector_id = astra.create_projector(proj_type, pg, vg)
+      elif type == 'fanflat':
+        pg = gen_random_geometry_fanflat()
+        projector_id = astra.create_projector(proj_type_to_fan(proj_type), pg, vg)
+      elif type == 'fanflat_vec':
+        pg = gen_random_geometry_fanflat_vec()
+        projector_id = astra.create_projector(proj_type_to_fan(proj_type), pg, vg)
+
+      for i in range(5):
+        X = np.random.random((shape[1], shape[0]))
+        Y = np.random.random(astra.geom_size(pg))
+
+        sinogram_id, fX = astra.create_sino(X, projector_id)
+        bp_id, fTY = astra.create_backprojection(Y, projector_id)
+
+        astra.data2d.delete(sinogram_id)
+        astra.data2d.delete(bp_id)
+
+        da = np.dot(fX.ravel(), Y.ravel())
+        db = np.dot(X.ravel(), fTY.ravel())
+        m = np.abs(da - db)
+        TOL = 1e-3 if 'cuda' not in proj_type else 1e-1
+        if m / da >= TOL:
+          print(vg)
+          print(pg)
+          print(m/da, da/db, da, db)
+        self.assertTrue(m / da < TOL)
+      astra.projector.delete(projector_id)
+
+
   def multi_test(self, type, proj_type):
     np.random.seed(seed)
     for _ in range(nloops):
       self.single_test(type, proj_type)
+  def multi_test_adjoint(self, type, proj_type):
+    np.random.seed(seed)
+    for _ in range(nloops):
+      self.single_test_adjoint(type, proj_type)
 
 __combinations = { 'parallel': [ 'line', 'linear', 'distance_driven', 'strip', 'cuda' ],
                    'parallel_vec': [ 'line', 'linear', 'distance_driven', 'strip', 'cuda' ],
@@ -600,7 +656,10 @@ for k, l in __combinations.items():
   for v in l:
     def f(k,v):
       return lambda self: self.multi_test(k, v)
+    def f_adj(k,v):
+      return lambda self: self.multi_test_adjoint(k, v)
     setattr(Test2DKernel, 'test_' + k + '_' + v, f(k,v))
+    setattr(Test2DKernel, 'test_' + k + '_' + v + '_adjoint', f_adj(k,v))
 
 if __name__ == '__main__':
   unittest.main()

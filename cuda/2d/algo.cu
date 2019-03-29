@@ -258,10 +258,10 @@ bool ReconAlgo::copyDataToGPU(const float* pfSinogram, unsigned int iSinogramPit
 	if (!ok)
 		return false;
 
-	// rescale sinogram to adjust for pixel size
-	processSino<opMul>(D_sinoData, fSinogramScale,
-	                       //1.0f/(fPixelSize*fPixelSize),
-	                       sinoPitch, dims);
+	// rescale sinogram
+	if (fSinogramScale != 1.0f)
+		processSino<opMul>(D_sinoData, fSinogramScale,
+		                   sinoPitch, dims);
 
 	ok = copyVolumeToDevice(pfReconstruction, iReconstructionPitch,
 	                        dims,
@@ -331,11 +331,11 @@ bool ReconAlgo::callBP(float* D_volumeData, unsigned int volumePitch,
 	if (parProjs) {
 		assert(!fanProjs);
 		return BP(D_volumeData, volumePitch, D_projData, projPitch,
-		          dims, parProjs, outputScale);
+		          dims, parProjs, fOutputScale * outputScale);
 	} else {
 		assert(fanProjs);
 		return FanBP(D_volumeData, volumePitch, D_projData, projPitch,
-		             dims, fanProjs, outputScale);
+		             dims, fanProjs, fOutputScale * outputScale);
 	}
 
 }
