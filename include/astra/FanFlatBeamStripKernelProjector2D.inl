@@ -109,6 +109,9 @@ void CFanFlatBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 				// POLICY: RAY PRIOR
 				if (!p.rayPrior(iRayIndex)) continue;
 
+				float32 dist_srcDetPixSquared = projgeom->getSourceDetectorDistance() * projgeom->getSourceDetectorDistance() +
+				                                (iDetector + 0.5f - m_pProjectionGeometry->getDetectorCount()*0.5f) * (iDetector + 0.5f - m_pProjectionGeometry->getDetectorCount()*0.5f) * DW * DW;
+
 				float32 sin_theta_left, cos_theta_left;
 				float32 sin_theta_right, cos_theta_right;
 
@@ -138,10 +141,11 @@ void CFanFlatBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 				float32 inv_cos_theta_left = 1.0f / cos_theta_left; 
 				float32 inv_cos_theta_right = 1.0f / cos_theta_right; 
 	
-				float32 updateX_left = sin_theta_left * inv_cos_theta_left;
-				float32 updateX_right = sin_theta_right * inv_cos_theta_right;
+				float32 updateX_left = sin_theta_left * inv_cos_theta_left; // tan(theta_left)
+				float32 updateX_right = sin_theta_right * inv_cos_theta_right; // tan(theta_right)
 
 				// Precalculate kernel limits
+				// BUG: If updateX_left > 1 (which can happen if theta_left >= pi/4 > theta), then T_l > U_l, and the expressions for res are no longer correct
 				float32 S_l = -0.5f * updateX_left;
 				if (S_l > 0) {S_l = -S_l;}
 				float32 T_l = -S_l;
@@ -185,6 +189,13 @@ void CFanFlatBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 					xL += updateX_left; 
 					xR += updateX_right; 
 
+					float32 diffSrcYSquared;
+					if (switch_t)
+						diffSrcYSquared = m_pVolumeGeometry->pixelRowToCenterY(row) + cos_theta * projgeom->getOriginSourceDistance();
+					else
+						diffSrcYSquared = m_pVolumeGeometry->pixelRowToCenterY(row) - cos_theta * projgeom->getOriginSourceDistance();
+					diffSrcYSquared = diffSrcYSquared * diffSrcYSquared;
+
 					// for each affected col
 					for (col = x1L; col <= x1R; ++col) {
 
@@ -199,17 +210,25 @@ void CFanFlatBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 						else if (x2R > U_r)		res = x2R - (x2R-U_r)*(x2R-U_r)*inv_4T_r;
 						else if (x2R >= T_r)	res = x2R;
 						else if (x2R > S_r)		res = (x2R-S_r)*(x2R-S_r) * inv_4T_r;
-						else					{ x2L -= 1.0f; x2R -= 1.0f;	continue; }
+						else					{ x2L -= 1.0f; x2R -= 1.0f;	p.pixelPosterior(iVolumeIndex); continue; }
 								
 						// left
 						if (x2L <= S_l)			{}
 						else if (x2L < T_l)		res -= (x2L-S_l)*(x2L-S_l) * inv_4T_l;
 						else if (x2L <= U_l)	res -= x2L;
 						else if (x2L < V_l)		res -= x2L - (x2L-U_l)*(x2L-U_l)*inv_4T_l;
-						else					{ x2L -= 1.0f; x2R -= 1.0f;	continue; }
+						else					{ x2L -= 1.0f; x2R -= 1.0f; p.pixelPosterior(iVolumeIndex); continue; }
+
+						float32 diffSrcX;
+						if (switch_t)
+							diffSrcX = m_pVolumeGeometry->pixelColToCenterX(col) - sin_theta * projgeom->getOriginSourceDistance();
+						else
+							diffSrcX = m_pVolumeGeometry->pixelColToCenterX(col) + sin_theta * projgeom->getOriginSourceDistance();
+
+						float32 scale = sqrt(dist_srcDetPixSquared / (diffSrcYSquared + diffSrcX * diffSrcX));
 
 						// POLICY: ADD
-						p.addWeight(iRayIndex, iVolumeIndex, PW*PH * res);
+						p.addWeight(iRayIndex, iVolumeIndex, PW*PH * res * scale);
 
 						// POLICY: PIXEL POSTERIOR
 						p.pixelPosterior(iVolumeIndex);
@@ -237,6 +256,9 @@ void CFanFlatBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 
 				// POLICY: RAY PRIOR
 				if (!p.rayPrior(iRayIndex)) continue;
+
+				float32 dist_srcDetPixSquared = projgeom->getSourceDetectorDistance() * projgeom->getSourceDetectorDistance() +
+				                                (iDetector + 0.5f - m_pProjectionGeometry->getDetectorCount()*0.5f) * (iDetector + 0.5f - m_pProjectionGeometry->getDetectorCount()*0.5f) * DW * DW;
 
 				// get theta_l = alpha_left + theta and theta_r = alpha_right + theta
 				float32 sin_theta_left, cos_theta_left;
@@ -270,6 +292,7 @@ void CFanFlatBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 				float32 updateX_right = cos_theta_right * inv_sin_theta_right;
 
 				// Precalculate kernel limits
+				// BUG: If updateX_left > 1 (which can happen if theta_left < pi/4 <= theta), then T_l > U_l, and the expressions for res are no longer correct
 				float32 S_l = -0.5f * updateX_left;
 				if (S_l > 0) { S_l = -S_l; }
 				float32 T_l = -S_l;
@@ -313,6 +336,13 @@ void CFanFlatBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 					xL += updateX_left; 
 					xR += updateX_right; 
 
+					float32 diffSrcXSquared;
+					if (switch_t)
+						diffSrcXSquared = m_pVolumeGeometry->pixelColToCenterX(col) - sin_theta * projgeom->getOriginSourceDistance();
+					else
+						diffSrcXSquared = m_pVolumeGeometry->pixelColToCenterX(col) + sin_theta * projgeom->getOriginSourceDistance();
+					diffSrcXSquared = diffSrcXSquared * diffSrcXSquared;
+
 					// for each affected row
 					for (row = x1L; row <= x1R; ++row) {
 
@@ -328,17 +358,25 @@ void CFanFlatBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 						else if (x2R > U_r)		res = x2R - (x2R-U_r)*(x2R-U_r)*inv_4T_r;
 						else if (x2R >= T_r)	res = x2R;
 						else if (x2R > S_r)		res = (x2R-S_r)*(x2R-S_r) * inv_4T_r;
-						else					{ x2L -= 1.0f; x2R -= 1.0f;	continue; }
+						else					{ x2L -= 1.0f; x2R -= 1.0f;	p.pixelPosterior(iVolumeIndex); continue; }
 								
 						// left
 						if (x2L <= S_l)			{}
 						else if (x2L < T_l)		res -= (x2L-S_l)*(x2L-S_l) * inv_4T_l;
 						else if (x2L <= U_l)	res -= x2L;
 						else if (x2L < V_l)		res -= x2L - (x2L-U_l)*(x2L-U_l)*inv_4T_l;
-						else					{ x2L -= 1.0f; x2R -= 1.0f;	continue; }
+						else					{ x2L -= 1.0f; x2R -= 1.0f; p.pixelPosterior(iVolumeIndex); continue; }
+
+						float32 diffSrcY;
+						if (switch_t)
+							diffSrcY = m_pVolumeGeometry->pixelRowToCenterY(row) + cos_theta * projgeom->getOriginSourceDistance();
+						else
+							diffSrcY = m_pVolumeGeometry->pixelRowToCenterY(row) - cos_theta * projgeom->getOriginSourceDistance();
+
+						float32 scale = sqrt(dist_srcDetPixSquared / (diffSrcXSquared + diffSrcY * diffSrcY));
 
 						// POLICY: ADD
-						p.addWeight(iRayIndex, iVolumeIndex, PW*PH * res);
+						p.addWeight(iRayIndex, iVolumeIndex, PW*PH * res * scale);
 
 						// POLICY: PIXEL POSTERIOR
 						p.pixelPosterior(iVolumeIndex);

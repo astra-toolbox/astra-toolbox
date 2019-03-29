@@ -556,11 +556,36 @@ class Test2DKernel(unittest.TestCase):
         if DISPLAY and x > TOL:
           display_mismatch(data, sinogram, a)
         self.assertFalse(x > TOL)
+      elif proj_type == 'strip' and 'fan' in type:
+        a = np.zeros(np.prod(astra.functions.geom_size(pg)), dtype=np.float32)
+        for i, (center, edge1, edge2) in enumerate(gen_lines(pg)):
+          (src, det) = center
+          det_dist = np.linalg.norm(src-det, ord=2)
+          l = 0.0
+          for j in range(rect_min[0], rect_max[0]):
+            xmin = origin[0] + (-0.5 * shape[0] + j) * pixsize[0]
+            xmax = origin[0] + (-0.5 * shape[0] + j + 1) * pixsize[0]
+            xcen = 0.5 * (xmin + xmax)
+            for k in range(rect_min[1], rect_max[1]):
+              ymin = origin[1] + (+0.5 * shape[1] - k - 1) * pixsize[1]
+              ymax = origin[1] + (+0.5 * shape[1] - k) * pixsize[1]
+              ycen = 0.5 * (ymin + ymax)
+              scale = det_dist / np.linalg.norm( src - np.array((xcen,ycen)), ord=2 )
+              w = intersect_ray_rect(edge1, edge2, xmin, xmax, ymin, ymax)
+              l += w * scale
+          a[i] = l
+        a = a.reshape(astra.functions.geom_size(pg))
+        if not np.all(np.isfinite(a)):
+          raise RuntimeError("Invalid value in reference sinogram")
+        x = np.max(np.abs(sinogram-a))
+        TOL = 8e-3
+        if DISPLAY and x > TOL:
+          display_mismatch(data, sinogram, a)
+        self.assertFalse(x > TOL)
       elif proj_type == 'strip':
         a = np.zeros(np.prod(astra.functions.geom_size(pg)), dtype=np.float32)
         for i, (center, edge1, edge2) in enumerate(gen_lines(pg)):
           a[i] = intersect_ray_rect(edge1, edge2, xmin, xmax, ymin, ymax)
-
         a = a.reshape(astra.functions.geom_size(pg))
         if not np.all(np.isfinite(a)):
           raise RuntimeError("Invalid value in reference sinogram")
