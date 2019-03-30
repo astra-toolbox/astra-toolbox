@@ -321,15 +321,14 @@ bool FBP::iterate(unsigned int iterations)
 	if (fanProjs) {
 		float fOutputScale = 1.0 / (/*fPixelSize * fPixelSize * fPixelSize * */ fFanDetSize * fFanDetSize);
 
-		ok = FanBP_FBPWeighted(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, fanProjs, fOutputScale);
+		ok = FanBP_FBPWeighted(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, fanProjs, fOutputScale * this->fOutputScale);
 
 	} else {
 		// scale by number of angles. For the fan-beam case, this is already
 		// handled by FDK_PreWeight
 		float fOutputScale = (M_PI / 2.0f) / (float)dims.iProjAngles;
-		//fOutputScale /= fDetSize * fDetSize;
 
-		ok = BP(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, parProjs, fOutputScale);
+		ok = BP(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, parProjs, fOutputScale * this->fOutputScale);
 	}
 	if(!ok)
 	{

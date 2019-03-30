@@ -153,6 +153,12 @@ bool ReconAlgo::setSuperSampling(int raysPerDet, int raysPerPixelDim)
 	return true;
 }
 
+bool ReconAlgo::setReconstructionScale(float fScale)
+{
+	fOutputScale *= fScale;
+	return true;
+}
+
 bool ReconAlgo::setVolumeMask(float* _D_maskData, unsigned int _maskPitch)
 {
 	assert(useVolumeMask);
@@ -242,7 +248,7 @@ bool ReconAlgo::allocateBuffers()
 	return true;
 }
 
-bool ReconAlgo::copyDataToGPU(const float* pfSinogram, unsigned int iSinogramPitch, float fSinogramScale,
+bool ReconAlgo::copyDataToGPU(const float* pfSinogram, unsigned int iSinogramPitch,
                               const float* pfReconstruction, unsigned int iReconstructionPitch,
                               const float* pfVolMask, unsigned int iVolMaskPitch,
                               const float* pfSinoMask, unsigned int iSinoMaskPitch)
@@ -257,11 +263,6 @@ bool ReconAlgo::copyDataToGPU(const float* pfSinogram, unsigned int iSinogramPit
 	                               D_sinoData, sinoPitch);
 	if (!ok)
 		return false;
-
-	// rescale sinogram
-	if (fSinogramScale != 1.0f)
-		processSino<opMul>(D_sinoData, fSinogramScale,
-		                   sinoPitch, dims);
 
 	ok = copyVolumeToDevice(pfReconstruction, iReconstructionPitch,
 	                        dims,

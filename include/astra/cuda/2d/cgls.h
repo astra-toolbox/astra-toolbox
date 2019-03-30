@@ -47,7 +47,7 @@ public:
 	virtual bool setBuffers(float* D_volumeData, unsigned int volumePitch,
 	                        float* D_projData, unsigned int projPitch);
 
-	virtual bool copyDataToGPU(const float* pfSinogram, unsigned int iSinogramPitch, float fSinogramScale,
+	virtual bool copyDataToGPU(const float* pfSinogram, unsigned int iSinogramPitch,
 	                           const float* pfReconstruction, unsigned int iReconstructionPitch,
 	                           const float* pfVolMask, unsigned int iVolMaskPitch,
 	                           const float* pfSinoMask, unsigned int iSinoMaskPitch);

@@ -102,14 +102,14 @@ bool CGLS::setBuffers(float* _D_volumeData, unsigned int _volumePitch,
 	return true;
 }
 
-bool CGLS::copyDataToGPU(const float* pfSinogram, unsigned int iSinogramPitch, float fSinogramScale,
+bool CGLS::copyDataToGPU(const float* pfSinogram, unsigned int iSinogramPitch,
                          const float* pfReconstruction, unsigned int iReconstructionPitch,
                          const float* pfVolMask, unsigned int iVolMaskPitch,
                          const float* pfSinoMask, unsigned int iSinoMaskPitch)
 {
 	sliceInitialized = false;
 
-	return ReconAlgo::copyDataToGPU(pfSinogram, iSinogramPitch, fSinogramScale, pfReconstruction, iReconstructionPitch, pfVolMask, iVolMaskPitch, pfSinoMask, iSinoMaskPitch);
+	return ReconAlgo::copyDataToGPU(pfSinogram, iSinogramPitch, pfReconstruction, iReconstructionPitch, pfVolMask, iVolMaskPitch, pfSinoMask, iSinoMaskPitch);
 }
 
 bool CGLS::iterate(unsigned int iterations)

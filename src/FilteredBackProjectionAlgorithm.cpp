@@ -264,8 +264,12 @@ void CFilteredBackProjectionAlgorithm::run(int _iNrIterations)
 	            DefaultBPPolicy(m_pReconstruction, &filteredSinogram));
 
 	// Scale data
-	int iAngleCount = m_pProjector->getProjectionGeometry()->getProjectionAngleCount();
-	(*m_pReconstruction) *= (PI/2)/iAngleCount;
+	const CVolumeGeometry2D& volGeom = *m_pProjector->getVolumeGeometry();
+	const CProjectionGeometry2D& projGeom = *m_pProjector->getProjectionGeometry();
+
+	int iAngleCount = projGeom.getProjectionAngleCount();
+	float fPixelArea = volGeom.getPixelArea();
+	(*m_pReconstruction) *= PI/(2*iAngleCount*fPixelArea);
 
 	m_pReconstruction->updateStatistics();
 }
