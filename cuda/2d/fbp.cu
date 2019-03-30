@@ -58,7 +58,8 @@ int FBP::calcFourierFilterSize(int _iDetectorCount)
 FBP::FBP() : ReconAlgo()
 {
 	D_filter = 0;
-
+	m_bShortScan = false;
+	fReconstructionScale = 1.0f;
 }
 
 FBP::~FBP()
@@ -72,10 +73,18 @@ void FBP::reset()
 		freeComplexOnDevice((cufftComplex *)D_filter);
 		D_filter = 0;
 	}
+	m_bShortScan = false;
+	fReconstructionScale = 1.0f;
 }
 
 bool FBP::init()
 {
+	return true;
+}
+
+bool FBP::setReconstructionScale(float fScale)
+{
+	fReconstructionScale = fScale;
 	return true;
 }
 
@@ -321,14 +330,14 @@ bool FBP::iterate(unsigned int iterations)
 	if (fanProjs) {
 		float fOutputScale = 1.0 / (/*fPixelSize * fPixelSize * fPixelSize * */ fFanDetSize * fFanDetSize);
 
-		ok = FanBP_FBPWeighted(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, fanProjs, fOutputScale * this->fOutputScale);
+		ok = FanBP_FBPWeighted(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, fanProjs, fOutputScale * fProjectorScale * fReconstructionScale);
 
 	} else {
 		// scale by number of angles. For the fan-beam case, this is already
 		// handled by FDK_PreWeight
 		float fOutputScale = (M_PI / 2.0f) / (float)dims.iProjAngles;
 
-		ok = BP(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, parProjs, fOutputScale * this->fOutputScale);
+		ok = BP(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, parProjs, fOutputScale * fProjectorScale * fReconstructionScale);
 	}
 	if(!ok)
 	{

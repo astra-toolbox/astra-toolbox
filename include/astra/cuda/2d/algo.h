@@ -136,7 +136,7 @@ protected:
 	SDimensions dims;
 	SParProjection* parProjs;
 	SFanProjection* fanProjs;
-	float fOutputScale;
+	float fProjectorScale;
 
 	bool freeGPUMemory;
 

@@ -134,8 +134,8 @@ bool ReconAlgo::setGeometry(const astra::CVolumeGeometry2D* pVolGeom,
 	delete[] fanProjs;
 	fanProjs = 0;
 
-	fOutputScale = 1.0f;
-	ok = convertAstraGeometry(pVolGeom, pProjGeom, parProjs, fanProjs, fOutputScale);
+	fProjectorScale = 1.0f;
+	ok = convertAstraGeometry(pVolGeom, pProjGeom, parProjs, fanProjs, fProjectorScale);
 	if (!ok)
 		return false;
 
@@ -150,12 +150,6 @@ bool ReconAlgo::setSuperSampling(int raysPerDet, int raysPerPixelDim)
 	dims.iRaysPerDet = raysPerDet;
 	dims.iRaysPerPixelDim = raysPerPixelDim;
 
-	return true;
-}
-
-bool ReconAlgo::setReconstructionScale(float fScale)
-{
-	fOutputScale *= fScale;
 	return true;
 }
 
@@ -317,11 +311,11 @@ bool ReconAlgo::callFP(float* D_volumeData, unsigned int volumePitch,
 	if (parProjs) {
 		assert(!fanProjs);
 		return FP(D_volumeData, volumePitch, D_projData, projPitch,
-		          dims, parProjs, fOutputScale * outputScale);
+		          dims, parProjs, fProjectorScale * outputScale);
 	} else {
 		assert(fanProjs);
 		return FanFP(D_volumeData, volumePitch, D_projData, projPitch,
-		             dims, fanProjs, fOutputScale * outputScale);
+		             dims, fanProjs, fProjectorScale * outputScale);
 	}
 }
 
@@ -332,11 +326,11 @@ bool ReconAlgo::callBP(float* D_volumeData, unsigned int volumePitch,
 	if (parProjs) {
 		assert(!fanProjs);
 		return BP(D_volumeData, volumePitch, D_projData, projPitch,
-		          dims, parProjs, fOutputScale * outputScale);
+		          dims, parProjs, fProjectorScale * outputScale);
 	} else {
 		assert(fanProjs);
 		return FanBP(D_volumeData, volumePitch, D_projData, projPitch,
-		             dims, fanProjs, fOutputScale * outputScale);
+		             dims, fanProjs, fProjectorScale * outputScale);
 	}
 
 }
