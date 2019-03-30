@@ -176,7 +176,7 @@ __global__ void devBP_SART(float* D_volData, unsigned int volPitch, float offset
 	const float fT = fX * angle_cos - fY * angle_sin + offset;
 	const float fVal = tex2D(gT_projTexture, fT, 0.5f);
 
-	// NB: The 'scale' constant in devBP has been folded into fOutputScale by the caller here
+	// NB: The 'scale' constant in devBP is cancelled out by the SART weighting
 
 	D_volData[Y*volPitch+X] += fVal * fOutputScale;
 }
@@ -280,7 +280,8 @@ bool BP_SART(float* D_volumeData, unsigned int volumePitch,
 	float angle_scaled_cos = angles[angle].fRayY / d;
 	float angle_scaled_sin = -angles[angle].fRayX / d; // TODO: Check signs
 	float angle_offset = (angles[angle].fDetSY * angles[angle].fRayX - angles[angle].fDetSX * angles[angle].fRayY) / d;
-	fOutputScale *= sqrt(angles[angle].fRayX * angles[angle].fRayX + angles[angle].fRayY * angles[angle].fRayY) / abs(d);
+	// NB: The adjoint scaling factor from regular BP is cancelled out by the SART weighting
+	//fOutputScale *= sqrt(angles[angle].fRayX * angles[angle].fRayX + angles[angle].fRayY * angles[angle].fRayY) / abs(d);
 
 	dim3 dimBlock(g_blockSlices, g_blockSliceSize);
 	dim3 dimGrid((dims.iVolWidth+g_blockSlices-1)/g_blockSlices,

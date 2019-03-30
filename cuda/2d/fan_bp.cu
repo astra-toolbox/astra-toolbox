@@ -217,17 +217,16 @@ __global__ void devFanBP_SART(float* D_volData, unsigned int volPitch, const SDi
 	const float fDetSY = gC_DetSY[0];
 	const float fDetUX = gC_DetUX[0];
 	const float fDetUY = gC_DetUY[0];
-	const float fScale = gC_Scale[0];
+
+	// NB: The 'scale' constant in devBP is cancelled out by the SART weighting
 
 	const float fXD = fSrcX - fX;
 	const float fYD = fSrcY - fY;
 
 	const float fNum = fDetSY * fXD - fDetSX * fYD + fX*fSrcY - fY*fSrcX;
 	const float fDen = fDetUX * fYD - fDetUY * fXD;
-	const float fr = __fdividef(1.0f, fDen);
-
-	const float fT = fNum * fr;
-	const float fVal = tex2D(gT_FanProjTexture, fT, 0.5f) * fScale * fr;
+	const float fT = fNum / fDen;
+	const float fVal = tex2D(gT_FanProjTexture, fT, 0.5f);
 
 	volData[Y*volPitch+X] += fVal * fOutputScale;
 }
