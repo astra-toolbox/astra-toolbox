@@ -167,6 +167,11 @@ bool CFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 
 	m_filterConfig = getFilterConfigForAlgorithm(_cfg, this);
 
+	const CParallelProjectionGeometry2D* parprojgeom = dynamic_cast<CParallelProjectionGeometry2D*>(m_pSinogram->getGeometry());
+	if (!parprojgeom) {
+		ASTRA_ERROR("FBP currently only supports parallel projection geometries.");
+		return false;
+	}
 
 	// TODO: check that the angles are linearly spaced between 0 and pi
 
