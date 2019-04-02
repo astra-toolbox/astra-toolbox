@@ -271,11 +271,14 @@ __global__ void devFanBP_FBPWeighted(float* D_volData, unsigned int volPitch, un
 
 		const float fNum = fDetSY * fXD - fDetSX * fYD + fX*fSrcY - fY*fSrcX;
 		const float fDen = fDetUX * fYD - fDetUY * fXD;
+		const float fr = __fdividef(1.0f, fDen);
 
-		const float fWeight = fXD*fXD + fYD*fYD;
-		
-		const float fT = fNum / fDen;
-		fVal += tex2D(gT_FanProjTexture, fT, fA) / fWeight;
+		// fDen = || u (x-s) ||
+		// Required scale factor is ( || u s || / || u (x-s) || ) ^ 2.
+		// The factor || u s || ^ 2 is handled by the preweighting
+
+		const float fT = fNum * fr;
+		fVal += tex2D(gT_FanProjTexture, fT, fA) * fr * fr;
 		fA += 1.0f;
 	}
 

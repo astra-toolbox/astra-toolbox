@@ -301,7 +301,7 @@ bool FBP::iterate(unsigned int iterations)
 
 		astraCUDA3d::FDK_PreWeight(tmp, fOriginSource,
 		              fOriginDetector, 0.0f,
-		              fFanDetSize, 1.0f, /* fPixelSize */ 1.0f,
+		              fFanDetSize, 1.0f, /* fPixelSize, but is normalized */ 1.0f,
 		              m_bShortScan, dims3d, pfAngles);
 	} else {
 		// TODO: How should different detector pixel size in different
@@ -328,9 +328,7 @@ bool FBP::iterate(unsigned int iterations)
 	}
 
 	if (fanProjs) {
-		float fOutputScale = 1.0 / (/*fPixelSize * fPixelSize * fPixelSize * */ fFanDetSize * fFanDetSize);
-
-		ok = FanBP_FBPWeighted(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, fanProjs, fOutputScale * fProjectorScale * fReconstructionScale);
+		ok = FanBP_FBPWeighted(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, fanProjs, fProjectorScale * fReconstructionScale);
 
 	} else {
 		// scale by number of angles. For the fan-beam case, this is already
