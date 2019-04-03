@@ -257,8 +257,6 @@ endif
 TEST_OBJECTS=\
 	tests/main.o \
 	tests/test_AstraObjectManager.o \
-	tests/test_ParallelBeamLineKernelProjector2D.o \
-	tests/test_ParallelBeamLinearKernelProjector2D.o \
 	tests/test_Float32Data2D.o \
 	tests/test_VolumeGeometry2D.o \
 	tests/test_ParallelProjectionGeometry2D.o \
