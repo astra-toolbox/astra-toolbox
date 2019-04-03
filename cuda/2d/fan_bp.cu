@@ -48,15 +48,18 @@ const unsigned int g_anglesPerBlock = 16;
 const unsigned int g_blockSliceSize = 32;
 const unsigned int g_blockSlices = 16;
 
-const unsigned int g_MaxAngles = 2240;
+const unsigned int g_MaxAngles = 2560;
 
-__constant__ float gC_SrcX[g_MaxAngles];
-__constant__ float gC_SrcY[g_MaxAngles];
-__constant__ float gC_DetSX[g_MaxAngles];
-__constant__ float gC_DetSY[g_MaxAngles];
-__constant__ float gC_DetUX[g_MaxAngles];
-__constant__ float gC_DetUY[g_MaxAngles];
-__constant__ float gC_Scale[g_MaxAngles];
+struct DevFanParams {
+	float fNumC;
+	float fNumX;
+	float fNumY;
+	float fDenC;
+	float fDenX;
+	float fDenY;
+};
+
+__constant__ DevFanParams gC_C[g_MaxAngles];
 
 
 static bool bindProjDataTexture(float* data, unsigned int pitch, unsigned int width, unsigned int height, cudaTextureAddressMode mode = cudaAddressModeBorder)
@@ -75,6 +78,7 @@ static bool bindProjDataTexture(float* data, unsigned int pitch, unsigned int wi
 	return true;
 }
 
+template<bool FBPWEIGHT>
 __global__ void devFanBP(float* D_volData, unsigned int volPitch, unsigned int startAngle, const SDimensions dims, float fOutputScale)
 {
 	const int relX = threadIdx.x;
@@ -99,21 +103,14 @@ __global__ void devFanBP(float* D_volData, unsigned int volPitch, unsigned int s
 
 	for (int angle = startAngle; angle < endAngle; ++angle)
 	{
-		const float fSrcX = gC_SrcX[angle];
-		const float fSrcY = gC_SrcY[angle];
-		const float fDetSX = gC_DetSX[angle];
-		const float fDetSY = gC_DetSY[angle];
-		const float fDetUX = gC_DetUX[angle];
-		const float fDetUY = gC_DetUY[angle];
-		const float fScale = gC_Scale[angle];
+		const float fNumC = gC_C[angle].fNumC;
+		const float fNumX = gC_C[angle].fNumX;
+		const float fNumY = gC_C[angle].fNumY;
+		const float fDenX = gC_C[angle].fDenX;
+		const float fDenY = gC_C[angle].fDenY;
 
-		const float fXD = fSrcX - fX;
-		const float fYD = fSrcY - fY;
-
-		const float fNum = fDetSY * fXD - fDetSX * fYD + fX*fSrcY - fY*fSrcX;
-		const float fDen = fDetUX * fYD - fDetUY * fXD;
-
-		// fDen = || u (x-s) ||     (2x2 determinant)
+		const float fNum = fNumC + fNumX * fX + fNumY * fY;
+		const float fDen = (FBPWEIGHT ? 1.0 : gC_C[angle].fDenC) + fDenX * fX + fDenY * fY;
 
 		// Scale factor is the approximate number of rays traversing this pixel,
 		// given by the inverse size of a detector pixel scaled by the magnification
@@ -122,7 +119,7 @@ __global__ void devFanBP(float* D_volData, unsigned int volPitch, unsigned int s
 
 		const float fr = __fdividef(1.0f, fDen);
 		const float fT = fNum * fr;
-		fVal += tex2D(gT_FanProjTexture, fT, fA) * fScale * fr;
+		fVal += tex2D(gT_FanProjTexture, fT, fA) * (FBPWEIGHT ? fr * fr : fr);
 		fA += 1.0f;
 	}
 
@@ -158,28 +155,25 @@ __global__ void devFanBP_SS(float* D_volData, unsigned int volPitch, unsigned in
 
 	for (int angle = startAngle; angle < endAngle; ++angle)
 	{
-		const float fSrcX = gC_SrcX[angle];
-		const float fSrcY = gC_SrcY[angle];
-		const float fDetSX = gC_DetSX[angle];
-		const float fDetSY = gC_DetSY[angle];
-		const float fDetUX = gC_DetUX[angle];
-		const float fDetUY = gC_DetUY[angle];
-		const float fScale = gC_Scale[angle];
+		const float fNumC = gC_C[angle].fNumC;
+		const float fNumX = gC_C[angle].fNumX;
+		const float fNumY = gC_C[angle].fNumY;
+		const float fDenC = gC_C[angle].fDenC;
+		const float fDenX = gC_C[angle].fDenX;
+		const float fDenY = gC_C[angle].fDenY;
 
 		// TODO: Optimize these loops...
 		float fX = fXb;
 		for (int iSubX = 0; iSubX < dims.iRaysPerPixelDim; ++iSubX) {
 			float fY = fYb;
 			for (int iSubY = 0; iSubY < dims.iRaysPerPixelDim; ++iSubY) {
-				const float fXD = fSrcX - fX;
-				const float fYD = fSrcY - fY;
 
-				const float fNum = fDetSY * fXD - fDetSX * fYD + fX*fSrcY - fY*fSrcX;
-				const float fDen = fDetUX * fYD - fDetUY * fXD;
+				const float fNum = fNumC + fNumX * fX + fNumY * fY;
+				const float fDen = fDenC + fDenX * fX + fDenY * fY;
 				const float fr = __fdividef(1.0f, fDen);
 
 				const float fT = fNum * fr;
-				fVal += tex2D(gT_FanProjTexture, fT, fA) * fScale * fr;
+				fVal += tex2D(gT_FanProjTexture, fT, fA) * fr;
 				fY -= fSubStep;
 			}
 			fX += fSubStep;
@@ -210,79 +204,97 @@ __global__ void devFanBP_SART(float* D_volData, unsigned int volPitch, const SDi
 
 	float* volData = (float*)D_volData;
 
-	// TODO: Constant memory vs parameters.
-	const float fSrcX = gC_SrcX[0];
-	const float fSrcY = gC_SrcY[0];
-	const float fDetSX = gC_DetSX[0];
-	const float fDetSY = gC_DetSY[0];
-	const float fDetUX = gC_DetUX[0];
-	const float fDetUY = gC_DetUY[0];
+	const float fNumC = gC_C[0].fNumC;
+	const float fNumX = gC_C[0].fNumX;
+	const float fNumY = gC_C[0].fNumY;
+	const float fDenC = gC_C[0].fDenC;
+	const float fDenX = gC_C[0].fDenX;
+	const float fDenY = gC_C[0].fDenY;
 
-	// NB: The 'scale' constant in devBP is cancelled out by the SART weighting
+	const float fNum = fNumC + fNumX * fX + fNumY * fY;
+	const float fDen = fDenC + fDenX * fX + fDenY * fY;
 
-	const float fXD = fSrcX - fX;
-	const float fYD = fSrcY - fY;
-
-	const float fNum = fDetSY * fXD - fDetSX * fYD + fX*fSrcY - fY*fSrcX;
-	const float fDen = fDetUX * fYD - fDetUY * fXD;
-	const float fT = fNum / fDen;
+	const float fr = __fdividef(1.0f, fDen);
+	const float fT = fNum * fr;
+	// NB: The scale constant in devBP is cancelled out by the SART weighting
 	const float fVal = tex2D(gT_FanProjTexture, fT, 0.5f);
 
 	volData[Y*volPitch+X] += fVal * fOutputScale;
 }
 
-// Weighted BP for use in fan beam FBP
-// Each pixel/ray is weighted by 1/L^2 where L is the distance to the source.
-__global__ void devFanBP_FBPWeighted(float* D_volData, unsigned int volPitch, unsigned int startAngle, const SDimensions dims, float fOutputScale)
+struct Vec2 {
+	double x;
+	double y;
+	Vec2(double x_, double y_) : x(x_), y(y_) { }
+	Vec2 operator+(const Vec2 &b) const {
+		return Vec2(x + b.x, y + b.y);
+	}
+	Vec2 operator-(const Vec2 &b) const {
+		return Vec2(x - b.x, y - b.y);
+	}
+	Vec2 operator-() const {
+		return Vec2(-x, -y);
+	}
+	double norm() const {
+		return sqrt(x*x + y*y);
+	}
+};
+
+double det2(const Vec2 &a, const Vec2 &b) {
+	return a.x * b.y - a.y * b.x;
+}
+
+
+bool transferConstants(const SFanProjection* angles, unsigned int iProjAngles, bool FBP)
 {
-	const int relX = threadIdx.x;
-	const int relY = threadIdx.y;
+	DevFanParams *p = new DevFanParams[iProjAngles];
 
-	int endAngle = startAngle + g_anglesPerBlock;
-	if (endAngle > dims.iProjAngles)
-		endAngle = dims.iProjAngles;
-	const int X = blockIdx.x * g_blockSlices + relX;
-	const int Y = blockIdx.y * g_blockSliceSize + relY;
+	// We need three values in the kernel:
+	// projected coordinates of pixels on the detector:
+	// || x (s-d) || + ||s d|| / || u (s-x) ||
 
-	if (X >= dims.iVolWidth || Y >= dims.iVolHeight)
-		return;
+	// ray density weighting factor for the adjoint
+	// || u (s-d) || / ( |u| * || u (s-x) || )
 
-	const float fX = ( X - 0.5f*dims.iVolWidth + 0.5f );
-	const float fY = - ( Y - 0.5f*dims.iVolHeight + 0.5f );
+	// fan-beam FBP weighting factor
+	// ( || u s || / || u (s-x) || ) ^ 2
 
-	float* volData = (float*)D_volData;
 
-	float fVal = 0.0f;
-	float fA = startAngle + 0.5f;
 
-	// TODO: Update for new projection scaling
+	for (unsigned int i = 0; i < iProjAngles; ++i) {
+		Vec2 u(angles[i].fDetUX, angles[i].fDetUY);
+		Vec2 s(angles[i].fSrcX, angles[i].fSrcY);
+		Vec2 d(angles[i].fDetSX, angles[i].fDetSY);
 
-	for (int angle = startAngle; angle < endAngle; ++angle)
-	{
-		const float fSrcX = gC_SrcX[angle];
-		const float fSrcY = gC_SrcY[angle];
-		const float fDetSX = gC_DetSX[angle];
-		const float fDetSY = gC_DetSY[angle];
-		const float fDetUX = gC_DetUX[angle];
-		const float fDetUY = gC_DetUY[angle];
 
-		const float fXD = fSrcX - fX;
-		const float fYD = fSrcY - fY;
 
-		const float fNum = fDetSY * fXD - fDetSX * fYD + fX*fSrcY - fY*fSrcX;
-		const float fDen = fDetUX * fYD - fDetUY * fXD;
-		const float fr = __fdividef(1.0f, fDen);
+		double fScale;
+		if (!FBP) {
+			// goal: 1/fDen = || u (s-d) || / ( |u| * || u (s-x) || )
+			// fDen = ( |u| * || u (s-x) || ) / || u (s-d) ||
+			// i.e. scale = |u| /  || u (s-d) ||
 
-		// fDen = || u (x-s) ||
-		// Required scale factor is ( || u s || / || u (x-s) || ) ^ 2.
-		// The factor || u s || ^ 2 is handled by the preweighting
+			fScale = u.norm() / det2(u, s-d);
+		} else {
+			// goal: 1/fDen = || u s || / || u (s-x) ||
+			// fDen = || u (s-x) || / || u s ||
+			// i.e., scale = 1 / || u s ||
 
-		const float fT = fNum * fr;
-		fVal += tex2D(gT_FanProjTexture, fT, fA) * fr * fr;
-		fA += 1.0f;
+			fScale = 1.0 / det2(u, s);
+		}
+
+		p[i].fNumC = fScale * det2(s,d);
+		p[i].fNumX = fScale * (s-d).y;
+		p[i].fNumY = -fScale * (s-d).x;
+		p[i].fDenC = fScale * det2(u, s); // == 1.0 for FBP
+		p[i].fDenX = fScale * u.y;
+		p[i].fDenY = -fScale * u.x;
 	}
 
-	volData[Y*volPitch+X] += fVal * fOutputScale;
+	// TODO: Check for errors
+	cudaMemcpyToSymbol(gC_C, p, iProjAngles*sizeof(DevFanParams), 0, cudaMemcpyHostToDevice);
+
+	return true;
 }
 
 
@@ -295,28 +307,9 @@ bool FanBP_internal(float* D_volumeData, unsigned int volumePitch,
 
 	bindProjDataTexture(D_projData, projPitch, dims.iProjDets, dims.iProjAngles);
 
-	// transfer angles to constant memory
-	float* tmp = new float[dims.iProjAngles];
-
-#define TRANSFER_TO_CONSTANT(name) do { for (unsigned int i = 0; i < dims.iProjAngles; ++i) tmp[i] = angles[i].f##name ; cudaMemcpyToSymbol(gC_##name, tmp, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice); } while (0)
-
-	TRANSFER_TO_CONSTANT(SrcX);
-	TRANSFER_TO_CONSTANT(SrcY);
-	TRANSFER_TO_CONSTANT(DetSX);
-	TRANSFER_TO_CONSTANT(DetSY);
-	TRANSFER_TO_CONSTANT(DetUX);
-	TRANSFER_TO_CONSTANT(DetUY);
-
-#undef TRANSFER_TO_CONSTANT
-
-	for (unsigned int i = 0; i < dims.iProjAngles; ++i) {
-		double detsize = sqrt(angles[i].fDetUX * angles[i].fDetUX + angles[i].fDetUY * angles[i].fDetUY);
-		double scale = (angles[i].fDetUX * (angles[i].fSrcY - angles[i].fDetSY) - angles[i].fDetUY * (angles[i].fSrcX - angles[i].fDetSX)) / detsize;
-		tmp[i] = (float)scale;
-	}
-	cudaMemcpyToSymbol(gC_Scale, tmp, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice);
-
-	delete[] tmp;
+	bool ok = transferConstants(angles, dims.iProjAngles, false);
+	if (!ok)
+		return false;
 
 	dim3 dimBlock(g_blockSlices, g_blockSliceSize);
 	dim3 dimGrid((dims.iVolWidth+g_blockSlices-1)/g_blockSlices,
@@ -329,7 +322,7 @@ bool FanBP_internal(float* D_volumeData, unsigned int volumePitch,
 		if (dims.iRaysPerPixelDim > 1)
 			devFanBP_SS<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, dims, fOutputScale);
 		else
-			devFanBP<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, dims, fOutputScale);
+			devFanBP<false><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, dims, fOutputScale);
 	}
 	cudaThreadSynchronize();
 
@@ -349,29 +342,9 @@ bool FanBP_FBPWeighted_internal(float* D_volumeData, unsigned int volumePitch,
 
 	bindProjDataTexture(D_projData, projPitch, dims.iProjDets, dims.iProjAngles);
 
-	// transfer angles to constant memory
-	float* tmp = new float[dims.iProjAngles];
-
-#define TRANSFER_TO_CONSTANT(name) do { for (unsigned int i = 0; i < dims.iProjAngles; ++i) tmp[i] = angles[i].f##name ; cudaMemcpyToSymbol(gC_##name, tmp, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice); } while (0)
-
-	TRANSFER_TO_CONSTANT(SrcX);
-	TRANSFER_TO_CONSTANT(SrcY);
-	TRANSFER_TO_CONSTANT(DetSX);
-	TRANSFER_TO_CONSTANT(DetSY);
-	TRANSFER_TO_CONSTANT(DetUX);
-	TRANSFER_TO_CONSTANT(DetUY);
-
-#undef TRANSFER_TO_CONSTANT
-
-	for (unsigned int i = 0; i < dims.iProjAngles; ++i) {
-		double detsize = sqrt(angles[i].fDetUX * angles[i].fDetUX + angles[i].fDetUY * angles[i].fDetUY);
-		double scale = (angles[i].fDetUX * (angles[i].fSrcY - angles[i].fDetSY) - angles[i].fDetUY * (angles[i].fSrcX - angles[i].fDetSX)) / detsize;
-		tmp[i] = (float)scale;
-	}
-	cudaMemcpyToSymbol(gC_Scale, tmp, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice);
-
-
-	delete[] tmp;
+	bool ok = transferConstants(angles, dims.iProjAngles, true);
+	if (!ok)
+		return false;
 
 	dim3 dimBlock(g_blockSlices, g_blockSliceSize);
 	dim3 dimGrid((dims.iVolWidth+g_blockSlices-1)/g_blockSlices,
@@ -381,7 +354,7 @@ bool FanBP_FBPWeighted_internal(float* D_volumeData, unsigned int volumePitch,
 	cudaStreamCreate(&stream);
 
 	for (unsigned int i = 0; i < dims.iProjAngles; i += g_anglesPerBlock) {
-		devFanBP_FBPWeighted<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, dims, fOutputScale);
+		devFanBP<true><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, dims, fOutputScale);
 	}
 	cudaThreadSynchronize();
 
@@ -402,22 +375,9 @@ bool FanBP_SART(float* D_volumeData, unsigned int volumePitch,
 	// only one angle
 	bindProjDataTexture(D_projData, projPitch, dims.iProjDets, 1, cudaAddressModeClamp);
 
-	// transfer angle to constant memory
-#define TRANSFER_TO_CONSTANT(name) do { cudaMemcpyToSymbol(gC_##name, &(angles[angle].f##name), sizeof(float), 0, cudaMemcpyHostToDevice); } while (0)
-
-	TRANSFER_TO_CONSTANT(SrcX);
-	TRANSFER_TO_CONSTANT(SrcY);
-	TRANSFER_TO_CONSTANT(DetSX);
-	TRANSFER_TO_CONSTANT(DetSY);
-	TRANSFER_TO_CONSTANT(DetUX);
-	TRANSFER_TO_CONSTANT(DetUY);
-
-#undef TRANSFER_TO_CONSTANT
-
-	double detsize = sqrt(angles[angle].fDetUX * angles[angle].fDetUX + angles[angle].fDetUY * angles[angle].fDetUY);
-	double scale = (angles[angle].fDetUX * (angles[angle].fSrcY - angles[angle].fDetSY) - angles[angle].fDetUY * (angles[angle].fSrcX - angles[angle].fDetSX)) / detsize;
-	float tmp = (float)scale;
-	cudaMemcpyToSymbol(gC_Scale, &tmp, sizeof(float), 0, cudaMemcpyHostToDevice);
+	bool ok = transferConstants(angles + angle, 1, false);
+	if (!ok)
+		return false;
 
 	dim3 dimBlock(g_blockSlices, g_blockSliceSize);
 	dim3 dimGrid((dims.iVolWidth+g_blockSlices-1)/g_blockSlices,

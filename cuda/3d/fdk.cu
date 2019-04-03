@@ -92,10 +92,9 @@ __global__ void devFDK_preweight(void* D_projData, unsigned int projPitch, unsig
 	// pi / (2 * iProjAngles)           : scaling of the integral over angles
 	// fVoxSize ^ 2                     : ...
 
-	const float fW1 = fSrcOrigin * fDetUSize * fDetVSize;
 	const float fW2 = fCentralRayLength / (fDetUSize * fSrcOrigin);
 	const float fW3 = fVoxSize * fVoxSize;
-	const float fW = fCentralRayLength * fW1 * fW1 * fW2 * fW3 * (M_PI / 2.0f) / (float)dims.iProjAngles;
+	const float fW = fCentralRayLength * fW2 * fW3 * (M_PI / 2.0f) / (float)dims.iProjAngles;
 
 	for (int detectorV = startDetectorV; detectorV < endDetectorV; ++detectorV)
 	{
