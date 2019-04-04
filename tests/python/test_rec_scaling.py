@@ -43,6 +43,8 @@ def ProjectionGeometries(type):
 
 class TestRecScale(unittest.TestCase):
   def single_test(self, geom_type, proj_type, alg, iters):
+    if alg == 'FBP' and 'fanflat' in geom_type:
+      self.skipTest('CPU FBP is parallel-beam only')
     is3D = (geom_type in ['parallel3d', 'cone'])
     for vg in VolumeGeometries(is3D, 'FDK' not in alg):
       for pg in ProjectionGeometries(geom_type):
@@ -88,7 +90,7 @@ class TestRecScale(unittest.TestCase):
           else:
             pylab.imshow(rec[:,32,:])
           pylab.show()
-        #self.assertTrue(abs(val-1.0) < TOL)
+        self.assertTrue(abs(val-1.0) < TOL)
 
 
 __combinations = {
@@ -99,7 +101,8 @@ __combinations = {
                  }
 
 __algs = {
-   'SIRT': 50, 'SART': 10*180, 'CGLS': 30, 'FBP': 1
+   'SIRT': 50, 'SART': 10*180, 'CGLS': 30,
+   'FBP': 1
 }
 
 __algs_CUDA = {

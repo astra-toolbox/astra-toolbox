@@ -7,9 +7,9 @@ import pylab
 # Display sinograms with mismatch on test failure
 DISPLAY=False
 
-NONUNITDET=False
-OBLIQUE=False
-FLEXVOL=False
+NONUNITDET=True
+OBLIQUE=True
+FLEXVOL=True
 NONSQUARE=False  # non-square pixels not supported yet by most projectors
 
 # Round interpolation weight to 8 bits to emulate CUDA texture unit precision
