@@ -60,7 +60,7 @@ __constant__ float gC_angle[g_MaxAngles];
 // per-detector u/v shifts?
 
 
-__global__ void devFDK_preweight(void* D_projData, unsigned int projPitch, unsigned int startAngle, unsigned int endAngle, float fSrcOrigin, float fDetOrigin, float fZShift, float fDetUSize, float fDetVSize, float fVoxSize, const SDimensions3D dims)
+__global__ void devFDK_preweight(void* D_projData, unsigned int projPitch, unsigned int startAngle, unsigned int endAngle, float fSrcOrigin, float fDetOrigin, float fZShift, float fDetUSize, float fDetVSize, const SDimensions3D dims)
 {
 	float* projData = (float*)D_projData;
 	int angle = startAngle + blockIdx.y * g_anglesPerWeightBlock + threadIdx.y;
@@ -88,13 +88,10 @@ __global__ void devFDK_preweight(void* D_projData, unsigned int projPitch, unsig
 	// fCentralRayLength / fRayLength   : the main FDK preweighting factor
 	// fSrcOrigin / (fDetUSize * fCentralRayLength)
 	//                                  : to adjust the filter to the det width
-	// || u v s || ^ 2                  : see cone_bp.cu, FDKWEIGHT
 	// pi / (2 * iProjAngles)           : scaling of the integral over angles
-	// fVoxSize ^ 2                     : ...
 
 	const float fW2 = fCentralRayLength / (fDetUSize * fSrcOrigin);
-	const float fW3 = fVoxSize * fVoxSize;
-	const float fW = fCentralRayLength * fW2 * fW3 * (M_PI / 2.0f) / (float)dims.iProjAngles;
+	const float fW = fCentralRayLength * fW2 * (M_PI / 2.0f) / (float)dims.iProjAngles;
 
 	for (int detectorV = startDetectorV; detectorV < endDetectorV; ++detectorV)
 	{
@@ -166,7 +163,7 @@ __global__ void devFDK_ParkerWeight(void* D_projData, unsigned int projPitch, un
 bool FDK_PreWeight(cudaPitchedPtr D_projData,
                 float fSrcOrigin, float fDetOrigin,
                 float fZShift,
-                float fDetUSize, float fDetVSize, float fVoxSize,
+                float fDetUSize, float fDetVSize,
 				bool bShortScan,
                 const SDimensions3D& dims, const float* angles)
 {
@@ -179,7 +176,7 @@ bool FDK_PreWeight(cudaPitchedPtr D_projData,
 
 	int projPitch = D_projData.pitch/sizeof(float);
 
-	devFDK_preweight<<<dimGrid, dimBlock>>>(D_projData.ptr, projPitch, 0, dims.iProjAngles, fSrcOrigin, fDetOrigin, fZShift, fDetUSize, fDetVSize, fVoxSize, dims);
+	devFDK_preweight<<<dimGrid, dimBlock>>>(D_projData.ptr, projPitch, 0, dims.iProjAngles, fSrcOrigin, fDetOrigin, fZShift, fDetUSize, fDetVSize, dims);
 
 	cudaTextForceKernelsCompletion();
 
@@ -343,9 +340,8 @@ bool FDK(cudaPitchedPtr D_volumeData,
 
 
 #if 1
-	// NB: assuming cube voxels (params.fVolScaleX)
 	ok = FDK_PreWeight(D_projData, fSrcOrigin, fDetOrigin,
-	                fZShift, fDetUSize, fDetVSize, params.fVolScaleX,
+	                fZShift, fDetUSize, fDetVSize,
 	                bShortScan, dims, pfAngles);
 #else
 	ok = true;

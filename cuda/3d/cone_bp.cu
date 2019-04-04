@@ -363,10 +363,12 @@ bool ConeBP_Array(cudaPitchedPtr D_volumeData,
 	bindProjDataTexture(D_projArray);
 
 	float fOutputScale;
-	if (params.bFDKWeighting)
-		fOutputScale = params.fOutputScale / (params.fVolScaleX * params.fVolScaleY * params.fVolScaleZ);
-	else
+	if (params.bFDKWeighting) {
+		// NB: assuming cube voxels here
+		fOutputScale = params.fOutputScale / (params.fVolScaleX);
+	} else {
 		fOutputScale = params.fOutputScale * (params.fVolScaleX * params.fVolScaleY * params.fVolScaleZ);
+	}
 
 	for (unsigned int th = 0; th < dims.iProjAngles; th += g_MaxAngles) {
 		unsigned int angleCount = g_MaxAngles;

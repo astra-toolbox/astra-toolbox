@@ -301,7 +301,7 @@ bool FBP::iterate(unsigned int iterations)
 
 		astraCUDA3d::FDK_PreWeight(tmp, fOriginSource,
 		              fOriginDetector, 0.0f,
-		              fFanDetSize, 1.0f, /* fPixelSize, but is normalized */ 1.0f,
+		              fFanDetSize, 1.0f,
 		              m_bShortScan, dims3d, pfAngles);
 	} else {
 		// TODO: How should different detector pixel size in different
