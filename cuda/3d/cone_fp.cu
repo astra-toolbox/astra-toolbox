@@ -368,7 +368,7 @@ bool ConeFP_Array_internal(cudaPitchedPtr D_projData,
 	SCALE_NONCUBE snoncubeY;
 	fS1 = params.fVolScaleX / params.fVolScaleY;
 	snoncubeY.fScale1 = fS1 * fS1;
-	fS2 = params.fVolScaleY / params.fVolScaleY;
+	fS2 = params.fVolScaleZ / params.fVolScaleY;
 	snoncubeY.fScale2 = fS2 * fS2;
 	snoncubeY.fOutputScale = params.fOutputScale * params.fVolScaleY;
 

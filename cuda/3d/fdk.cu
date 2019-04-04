@@ -57,7 +57,10 @@ static const unsigned g_MaxAngles = 12000;
 __constant__ float gC_angle[g_MaxAngles];
 
 
-// per-detector u/v shifts?
+
+// TODO: To support non-cube voxels, preweighting needs per-view
+// parameters. NB: Need to properly take into account the
+// anisotropic volume normalization done for that too.
 
 
 __global__ void devFDK_preweight(void* D_projData, unsigned int projPitch, unsigned int startAngle, unsigned int endAngle, float fSrcOrigin, float fDetOrigin, float fZShift, float fDetUSize, float fDetVSize, const SDimensions3D dims)
