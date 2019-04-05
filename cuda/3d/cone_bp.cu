@@ -241,52 +241,6 @@ __global__ void dev_cone_BP_SS(void* D_volData, unsigned int volPitch, int start
 	}
 }
 
-struct Vec3 {
-	double x;
-	double y;
-	double z;
-	Vec3(double x_, double y_, double z_) : x(x_), y(y_), z(z_) { }
-	Vec3 operator+(const Vec3 &b) const {
-		return Vec3(x + b.x, y + b.y, z + b.z);
-	}
-	Vec3 operator-(const Vec3 &b) const {
-		return Vec3(x - b.x, y - b.y, z - b.z);
-	}
-	Vec3 operator-() const {
-		return Vec3(-x, -y, -z);
-	}
-	double norm() const {
-		return sqrt(x*x + y*y + z*z);
-	}
-};
-
-double det3x(const Vec3 &b, const Vec3 &c) {
-	return (b.y * c.z - b.z * c.y);
-}
-double det3y(const Vec3 &b, const Vec3 &c) {
-	return -(b.x * c.z - b.z * c.x);
-}
-
-double det3z(const Vec3 &b, const Vec3 &c) {
-	return (b.x * c.y - b.y * c.x);
-}
-
-double det3(const Vec3 &a, const Vec3 &b, const Vec3 &c) {
-	return a.x * det3x(b,c) + a.y * det3y(b,c) + a.z * det3z(b,c);
-}
-
-Vec3 cross3(const Vec3 &a, const Vec3 &b) {
-	return Vec3(det3x(a,b), det3y(a,b), det3z(a,b));
-}
-
-Vec3 scaled_cross3(const Vec3 &a, const Vec3 &b, const Vec3 &sc) {
-	Vec3 ret = cross3(a, b);
-	ret.x *= sc.y * sc.z;
-	ret.y *= sc.x * sc.z;
-	ret.z *= sc.x * sc.y;
-	return ret;
-}
-
 
 bool transferConstants(const SConeProjection* angles, unsigned int iProjAngles, const SProjectorParams3D& params)
 {
