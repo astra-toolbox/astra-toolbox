@@ -28,10 +28,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/cuda/2d/util.h"
 #include "astra/cuda/2d/arith.h"
 
-#ifdef STANDALONE
-#include "testutil.h"
-#endif
-
 #include <cstdio>
 #include <cassert>
 #include <iostream>
@@ -373,65 +369,3 @@ bool FP(float* D_volumeData, unsigned int volumePitch,
 
 
 }
-
-#ifdef STANDALONE
-
-using namespace astraCUDA;
-
-int main()
-{
-	float* D_volumeData;
-	float* D_projData;
-
-	SDimensions dims;
-	dims.iVolWidth = 1024;
-	dims.iVolHeight = 1024;
-	dims.iProjAngles = 512;
-	dims.iProjDets = 1536;
-	dims.fDetScale = 1.0f;
-	dims.iRaysPerDet = 1;
-	unsigned int volumePitch, projPitch;
-
-	allocateVolume(D_volumeData, dims.iVolWidth, dims.iVolHeight, volumePitch);
-	printf("pitch: %u\n", volumePitch);
-
-	allocateVolume(D_projData, dims.iProjDets, dims.iProjAngles, projPitch);
-	printf("pitch: %u\n", projPitch);
-
-	unsigned int y, x;
-	float* img = loadImage("phantom.png", y, x);
-
-	float* sino = new float[dims.iProjAngles * dims.iProjDets];
-
-	memset(sino, 0, dims.iProjAngles * dims.iProjDets * sizeof(float));
-
-	copyVolumeToDevice(img, dims.iVolWidth, dims.iVolWidth, dims.iVolHeight, D_volumeData, volumePitch);
-	copySinogramToDevice(sino, dims.iProjDets, dims.iProjDets, dims.iProjAngles, D_projData, projPitch);
-
-	float* angle = new float[dims.iProjAngles];
-
-	for (unsigned int i = 0; i < dims.iProjAngles; ++i)
-		angle[i] = i*(M_PI/dims.iProjAngles);
-
-	FP(D_volumeData, volumePitch, D_projData, projPitch, dims, angle, 0, 1.0f);
-
-	delete[] angle;
-
-	copySinogramFromDevice(sino, dims.iProjDets, dims.iProjDets, dims.iProjAngles, D_projData, projPitch);
-
-	float s = 0.0f;
-	for (unsigned int y = 0; y < dims.iProjAngles; ++y)
-		for (unsigned int x = 0; x < dims.iProjDets; ++x)
-			s += sino[y*dims.iProjDets+x] * sino[y*dims.iProjDets+x];
-	printf("cpu norm: %f\n", s);
-
-	//zeroVolume(D_projData, projPitch, dims.iProjDets, dims.iProjAngles);
-	s = dotProduct2D(D_projData, projPitch, dims.iProjDets, dims.iProjAngles, 1, 0);
-	printf("gpu norm: %f\n", s);
-
-	saveImage("sino.png",dims.iProjAngles,dims.iProjDets,sino);
-
-
-	return 0;
-}
-#endif

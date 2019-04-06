@@ -28,10 +28,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/cuda/2d/util.h"
 #include "astra/cuda/2d/arith.h"
 
-#ifdef STANDALONE
-#include "testutil.h"
-#endif
-
 #include <cstdio>
 #include <cassert>
 #include <iostream>
@@ -438,66 +434,3 @@ bool FanBP_FBPWeighted(float* D_volumeData, unsigned int volumePitch,
 
 
 }
-
-#ifdef STANDALONE
-
-using namespace astraCUDA;
-
-int main()
-{
-	float* D_volumeData;
-	float* D_projData;
-
-	SDimensions dims;
-	dims.iVolWidth = 128;
-	dims.iVolHeight = 128;
-	dims.iProjAngles = 180;
-	dims.iProjDets = 256;
-	dims.fDetScale = 1.0f;
-	dims.iRaysPerDet = 1;
-	unsigned int volumePitch, projPitch;
-
-	SFanProjection projs[180];
-
-	projs[0].fSrcX = 0.0f;
-	projs[0].fSrcY = 1536.0f;
-	projs[0].fDetSX = 128.0f;
-	projs[0].fDetSY = -512.0f;
-	projs[0].fDetUX = -1.0f;
-	projs[0].fDetUY = 0.0f;
-
-#define ROTATE0(name,i,alpha) do { projs[i].f##name##X = projs[0].f##name##X * cos(alpha) - projs[0].f##name##Y * sin(alpha); projs[i].f##name##Y = projs[0].f##name##X * sin(alpha) + projs[0].f##name##Y * cos(alpha); } while(0)
-
-	for (int i = 1; i < 180; ++i) {
-		ROTATE0(Src, i, i*2*M_PI/180);
-		ROTATE0(DetS, i, i*2*M_PI/180);
-		ROTATE0(DetU, i, i*2*M_PI/180);
-	}
-
-#undef ROTATE0
-
-	allocateVolume(D_volumeData, dims.iVolWidth, dims.iVolHeight, volumePitch);
-	printf("pitch: %u\n", volumePitch);
-
-	allocateVolume(D_projData, dims.iProjDets, dims.iProjAngles, projPitch);
-	printf("pitch: %u\n", projPitch);
-
-	unsigned int y, x;
-	float* sino = loadImage("sino.png", y, x);
-
-	float* img = new float[dims.iVolWidth*dims.iVolHeight];
-
-	memset(img, 0, dims.iVolWidth*dims.iVolHeight*sizeof(float));
-
-	copyVolumeToDevice(img, dims.iVolWidth, dims.iVolWidth, dims.iVolHeight, D_volumeData, volumePitch);
-	copySinogramToDevice(sino, dims.iProjDets, dims.iProjDets, dims.iProjAngles, D_projData, projPitch);
-
-	FanBP(D_volumeData, volumePitch, D_projData, projPitch, dims, projs, 1.0f);
-
-	copyVolumeFromDevice(img, dims.iVolWidth, dims.iVolWidth, dims.iVolHeight, D_volumeData, volumePitch);
-
-	saveImage("vol.png",dims.iVolHeight,dims.iVolWidth,img);
-
-	return 0;
-}
-#endif

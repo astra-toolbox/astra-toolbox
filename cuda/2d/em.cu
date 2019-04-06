@@ -29,10 +29,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/cuda/2d/util.h"
 #include "astra/cuda/2d/arith.h"
 
-#ifdef STANDALONE
-#include "testutil.h"
-#endif
-
 #include <cstdio>
 #include <cassert>
 
@@ -168,64 +164,3 @@ float EM::computeDiffNorm()
 
 
 }
-
-#ifdef STANDALONE
-
-using namespace astraCUDA;
-
-int main()
-{
-	float* D_volumeData;
-	float* D_sinoData;
-
-	SDimensions dims;
-	dims.iVolWidth = 1024;
-	dims.iVolHeight = 1024;
-	dims.iProjAngles = 512;
-	dims.iProjDets = 1536;
-	dims.fDetScale = 1.0f;
-	dims.iRaysPerDet = 1;
-	unsigned int volumePitch, sinoPitch;
-
-	allocateVolume(D_volumeData, dims.iVolWidth, dims.iVolHeight, volumePitch);
-	zeroVolume(D_volumeData, volumePitch, dims.iVolWidth, dims.iVolHeight);
-	printf("pitch: %u\n", volumePitch);
-
-	allocateVolume(D_sinoData, dims.iProjDets, dims.iProjAngles, sinoPitch);
-	zeroVolume(D_sinoData, sinoPitch, dims.iProjDets, dims.iProjAngles);
-	printf("pitch: %u\n", sinoPitch);
-	
-	unsigned int y, x;
-	float* sino = loadImage("sino.png", y, x);
-
-	float* img = new float[dims.iVolWidth*dims.iVolHeight];
-
-	copySinogramToDevice(sino, dims.iProjDets, dims.iProjDets, dims.iProjAngles, D_sinoData, sinoPitch);
-
-	float* angle = new float[dims.iProjAngles];
-
-	for (unsigned int i = 0; i < dims.iProjAngles; ++i)
-		angle[i] = i*(M_PI/dims.iProjAngles);
-
-	EM em;
-
-	em.setGeometry(dims, angle);
-	em.init();
-
-	// TODO: Initialize D_volumeData with an unfiltered backprojection
-
-	em.setBuffers(D_volumeData, volumePitch, D_sinoData, sinoPitch);
-
-	em.iterate(25);
-
-
-	delete[] angle;
-
-	copyVolumeFromDevice(img, dims.iVolWidth, dims.iVolWidth, dims.iVolHeight, D_volumeData, volumePitch);
-
-	saveImage("vol.png",dims.iVolHeight,dims.iVolWidth,img);
-
-	return 0;
-}
-
-#endif
