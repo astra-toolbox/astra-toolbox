@@ -152,7 +152,7 @@ void CCudaFilteredBackProjectionAlgorithm::initCUDAAlgorithm()
 		ASTRA_ERROR("CCudaFilteredBackProjectionAlgorithm: Failed to set short-scan mode");
 	}
 
-	const CVolumeGeometry2D& volGeom = *m_pProjector->getVolumeGeometry();
+	const CVolumeGeometry2D& volGeom = *m_pReconstruction->getGeometry();
 	float fPixelArea = volGeom.getPixelArea();
 	ok &= pFBP->setReconstructionScale(1.0f/fPixelArea);
 	if (!ok) {
