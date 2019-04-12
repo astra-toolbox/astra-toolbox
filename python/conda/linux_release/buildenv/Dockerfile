@@ -2,6 +2,12 @@ FROM debian:7 AS BUILDBASE
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && apt-get install -y perl-modules build-essential autoconf libtool automake libboost-dev git && rm -rf /var/lib/apt/lists/*
 
+FROM BUILDBASE AS CUDA100
+RUN touch /root/cuda100
+COPY cuda_10.0.130_410.48_linux /root
+RUN /bin/bash /root/cuda_10.0.130_410.48_linux --toolkit --silent && \
+	rm -f /root/cuda_10.0.130_410.48_linux
+
 FROM BUILDBASE AS CUDA92
 RUN touch /root/cuda92
 COPY cuda_9.2.148_396.37_linux /root
@@ -54,6 +60,7 @@ RUN /bin/bash /root/cuda_5.5.22_linux_64.run -toolkit -silent && \
 
 FROM BUILDBASE
 RUN touch /root/cuda
+COPY --from=CUDA100 /usr/local/cuda-10.0 /usr/local/cuda-10.0
 COPY --from=CUDA92 /usr/local/cuda-9.2 /usr/local/cuda-9.2
 COPY --from=CUDA90 /usr/local/cuda-9.0 /usr/local/cuda-9.0
 COPY --from=CUDA80 /usr/local/cuda-8.0 /usr/local/cuda-8.0
