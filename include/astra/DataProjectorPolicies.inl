@@ -76,6 +76,14 @@ void DefaultFPPolicy::pixelPosterior(int _iVolumeIndex)
 {
 	// nothing
 }
+float32 DefaultFPPolicy::getVolumeData(int _iVolumeIndex)
+{
+    return m_pVolumeData->getData()[_iVolumeIndex];
+}
+void DefaultFPPolicy::addProjectionData(int _iRayIndex, float32 value)
+{
+    m_pProjectionData->getData()[_iRayIndex] += value;
+}
 //----------------------------------------------------------------------------------------
 
 
@@ -124,6 +132,14 @@ void DefaultBPPolicy::rayPosterior(int _iRayIndex)
 void DefaultBPPolicy::pixelPosterior(int _iVolumeIndex) 
 {
 	// nothing
+}
+float32 DefaultBPPolicy::getProjectionData(int _iRayIndex)
+{
+    return m_pProjectionData->getData()[_iRayIndex];
+}
+void DefaultBPPolicy::addToVolumeData(int _iVolumeIndex, float32 item)
+{
+    m_pVolumeData->getData()[_iVolumeIndex] += item;
 }
 //----------------------------------------------------------------------------------------
 

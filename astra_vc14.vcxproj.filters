@@ -348,6 +348,15 @@
     <ClCompile Include="src\Float32VolumeData3DGPU.cpp">
       <Filter>CUDA\astra source</Filter>
     </ClCompile>
+    <ClCompile Include="src\Avx2Algorithms.cpp">
+      <Filter>Projectors\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Avx512Algorithms.cpp">
+      <Filter>Projectors\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SimdChooser.cpp">
+      <Filter>Projectors\source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\astra\Algorithm.h">
@@ -719,6 +728,12 @@
     <ClInclude Include="include\astra\cuda\3d\util3d.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
+    <ClInclude Include="include\astra\SimdChooser.h">
+      <Filter>Projectors\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\SimdAlgorithms.h">
+      <Filter>Global &amp; Other\headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="include\astra\DataProjectorPolicies.inl">
@@ -746,6 +761,9 @@
       <Filter>Projectors\inline</Filter>
     </None>
     <None Include="include\astra\SparseMatrixProjector2D.inl">
+      <Filter>Projectors\inline</Filter>
+    </None>
+    <None Include="src\SimdAlgorithms.inl">
       <Filter>Projectors\inline</Filter>
     </None>
   </ItemGroup>

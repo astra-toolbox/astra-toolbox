@@ -37,6 +37,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "ParallelProjectionGeometry2D.h"
 #include "ProjectionGeometry2D.h"
 #include "VolumeGeometry2D.h"
+#include "SimdChooser.h"
 
 namespace astra
 {

@@ -61,6 +61,9 @@ public:
 	FORCEINLINE void addWeight(int _iRayIndex, int _iVolumeIndex, float32 weight);
 	FORCEINLINE void rayPosterior(int _iRayIndex);
 	FORCEINLINE void pixelPosterior(int _iVolumeIndex);
+
+    FORCEINLINE float32 getVolumeData(int _iVolumeIndex);
+    FORCEINLINE void addProjectionData(int _iRayIndex, float32 value);
 };
 
 
@@ -85,6 +88,9 @@ public:
 	FORCEINLINE void addWeight(int _iRayIndex, int _iVolumeIndex, float32 weight);
 	FORCEINLINE void rayPosterior(int _iRayIndex);
 	FORCEINLINE void pixelPosterior(int _iVolumeIndex);
+
+    FORCEINLINE float32 getProjectionData(int _iRayIndex);
+    FORCEINLINE void addToVolumeData(int _iVolumeIndex, float32 item);
 };
 
 
