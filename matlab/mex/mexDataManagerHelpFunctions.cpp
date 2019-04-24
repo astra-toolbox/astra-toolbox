@@ -39,7 +39,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifdef USE_MATLAB_UNDOCUMENTED
 extern "C" {
 mxArray *mxCreateSharedDataCopy(const mxArray *pr);
-bool mxUnshareArray(mxArray *pr, bool noDeepCopy);
+int mxUnshareArray(mxArray *pr, int noDeepCopy);
 mxArray *mxUnreference(mxArray *pr);
 #if 0
 // Unsupported in Matlab R2014b and later
