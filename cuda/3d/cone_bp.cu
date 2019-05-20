@@ -253,6 +253,9 @@ bool transferConstants(const SConeProjection* angles, unsigned int iProjAngles, 
 	// FDK weighting factor
 	// ( || u v s || / || u v (s-x) || ) ^ 2
 
+	// Since u and v are ratios with the same denominator, we have
+	// a degree of freedom to scale the denominator. We use that to make
+	// the square of the denominator equal to the relevant weighting factor.
 
 
 	for (unsigned int i = 0; i < iProjAngles; ++i) {
