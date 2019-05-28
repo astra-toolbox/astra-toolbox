@@ -1,0 +1,10 @@
+prefix=/home/tim/astra
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: libastra
+Description: ASTRA Toolbox
+Version: 1.9.0dev
+Libs: -L${libdir} -lastra
+Cflags: -I${includedir} -DASTRA_CUDA
