@@ -36,8 +36,8 @@ IF HAVE_CUDA==True:
 
     cdef extern from "astra/CompositeGeometryManager.h" namespace "astra::CCompositeGeometryManager::SJob":
         cdef enum EMode:
-            MODE_SET = 0
-            MODE_ADD = 1
+            MODE_ADD = 0
+            MODE_SET = 1
     cdef extern from "astra/CompositeGeometryManager.h" namespace "astra":
         cdef cppclass CCompositeGeometryManager:
             bool doFP(CProjector3D *, vector[CFloat32VolumeData3D *], vector[CFloat32ProjectionData3D *], EMode)

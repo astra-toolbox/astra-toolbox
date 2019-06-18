@@ -141,7 +141,7 @@ public:
 			JOB_FP, JOB_BP, JOB_FDK, JOB_NOP
 		} eType;
 		enum EMode {
-			MODE_ADD, MODE_SET
+			MODE_ADD = 0, MODE_SET = 1
 		} eMode;
 
 	};
