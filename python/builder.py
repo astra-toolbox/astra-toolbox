@@ -61,16 +61,16 @@ if os.environ.get('ASTRA_INSTALL_LIBRARY_AS_DATA', ''):
 cmdclass = {}
 ext_modules = []
 
-ext_modules = cythonize(os.path.join(self_path, 'astra', '*.pyx'),
+ext_modules = cythonize(os.path.join('.', 'astra', '*.pyx'),
                         language_level=2)
 cmdclass = {'build_ext': build_ext}
 
 for m in ext_modules:
     if m.name in ('astra.plugin_c', 'astra.algorithm_c'):
-        m.sources.append(os.path.join(self_path, 'astra', 'src',
+        m.sources.append(os.path.join('.', 'astra', 'src',
                                       'PythonPluginAlgorithm.cpp'))
     if m.name in ('astra.plugin_c'):
-        m.sources.append(os.path.join(self_path, 'astra', 'src',
+        m.sources.append(os.path.join('.', 'astra', 'src',
                                       'PythonPluginAlgorithmFactory.cpp'))
 
 setup(name='astra-toolbox',
