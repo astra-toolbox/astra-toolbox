@@ -777,6 +777,7 @@ def write_mex_project11_14(P, version):
     if c.cuda:
       d+="ASTRA_CUDA;"
     d+="__SSE2__;"
+    d+="MATLAB_MEXCMD_RELEASE=700;"
 #    d+="DLL_EXPORTS;_CRT_SECURE_NO_WARNINGS;"
     d+='%(PreprocessorDefinitions)</PreprocessorDefinitions>'
     print(d, file=F)

@@ -1,6 +1,6 @@
 package:
   name: libastra
-  version: '1.9.0dev'
+  version: '1.9.0.dev11'
 
 source:
   git_url: https://github.com/astra-toolbox/astra-toolbox.git
@@ -14,7 +14,7 @@ build:
 
 requirements:
   build:
-    - vs2015_runtime # [win]
+    - {{compiler('c')}} # [win]
     - boost # [osx]
     - automake # [osx]
     - autoconf # [osx]
@@ -22,7 +22,6 @@ requirements:
     - cudatoolkit {{ cudatoolkit }} # [linux]
 
   run:
-    - vs2015_runtime # [win]
     - cudatoolkit {{ cudatoolkit }} # [linux]
 
 about:

@@ -20,7 +20,7 @@ rd /s /q "%WINPYDIR%\lib\site-packages\astra"
 
 set VS90COMNTOOLS=%VS140COMNTOOLS%
 set CL=/DASTRA_CUDA /DASTRA_PYTHON /EHsc
-set INCLUDE=%R%\include;%R%\lib\include;%CUDA_PATH%\include
+set INCLUDE=%R%\include;%R%\lib\include;%CUDA_PATH%\include;%INCLUDE%
 copy ..\bin\x64\Release_CUDA\AstraCuda64.lib astra.lib
 python builder.py build_ext --compiler=msvc install
 copy ..\bin\x64\Release_CUDA\AstraCuda64.dll "%WINPYDIR%\lib\site-packages\astra"
