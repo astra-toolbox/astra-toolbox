@@ -166,13 +166,11 @@ bool SART::precomputeWeights()
 
 bool SART::iterate(unsigned int iterations)
 {
-	shouldAbort = false;
-
 	if (useVolumeMask)
 		precomputeWeights();
 
 	// iteration
-	for (unsigned int iter = 0; iter < iterations && !shouldAbort; ++iter) {
+	for (unsigned int iter = 0; iter < iterations && !astra::shouldAbort(); ++iter) {
 
 		int angle;
 		if (customOrder) {

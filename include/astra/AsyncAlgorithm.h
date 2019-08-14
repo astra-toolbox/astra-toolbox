@@ -80,10 +80,6 @@ public:
 	 */
 	bool isDone() const { return m_bDone; }	
 
-	/** Signal abort to the wrapped algorithm. 
-	 */
-	void signalAbort();
-
 protected:
 	//< Has this class been initialized?
 	bool m_bInitialized;

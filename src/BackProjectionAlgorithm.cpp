@@ -167,8 +167,6 @@ void CBackProjectionAlgorithm::run(int _iNrIterations)
 	// check initialized
 	ASTRA_ASSERT(m_bIsInitialized);
 
-	m_bShouldAbort = false;
-
 	CDataProjectorInterface* pBackProjector;
 
 	pBackProjector = dispatchDataProjector(

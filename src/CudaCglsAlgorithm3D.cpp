@@ -274,13 +274,6 @@ void CCudaCglsAlgorithm3D::run(int _iNrIterations)
 
 }
 //----------------------------------------------------------------------------------------
-void CCudaCglsAlgorithm3D::signalAbort()
-{
-	if (m_bIsInitialized && m_pCgls) {
-		m_pCgls->signalAbort();
-	}
-}
-
 bool CCudaCglsAlgorithm3D::getResidualNorm(float32& _fNorm)
 {
 	if (!m_bIsInitialized || !m_pCgls)

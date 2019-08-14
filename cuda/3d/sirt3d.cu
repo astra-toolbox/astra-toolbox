@@ -235,8 +235,6 @@ bool SIRT::setBuffers(cudaPitchedPtr& _D_volumeData,
 
 bool SIRT::iterate(unsigned int iterations)
 {
-	shouldAbort = false;
-
 	if (useVolumeMask || useSinogramMask)
 		precomputeWeights();
 
@@ -267,7 +265,7 @@ bool SIRT::iterate(unsigned int iterations)
 
 
 	// iteration
-	for (unsigned int iter = 0; iter < iterations && !shouldAbort; ++iter) {
+	for (unsigned int iter = 0; iter < iterations && !astra::shouldAbort(); ++iter) {
 		// copy sinogram to projection data
 		duplicateProjectionData(D_projData, D_sinoData, dims);
 

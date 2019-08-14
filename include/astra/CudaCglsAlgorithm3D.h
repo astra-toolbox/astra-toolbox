@@ -141,9 +141,6 @@ public:
 	 */
 	void setGPUIndex(int _iGPUIndex) { m_iGPUIndex = _iGPUIndex; }
 
-
-	virtual void signalAbort();
-
 	/** Get the norm of the residual image.
 	 *  Only a few algorithms support this method.
 	 *

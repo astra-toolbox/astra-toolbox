@@ -150,6 +150,25 @@ namespace astra {
 	};
 }
 
+//----------------------------------------------------------------------------------------
+// functions for internal use
+
+namespace astra {
+
+/** Specify a function) to be called by shouldAbort() to check if an external
+ *  abort signal has arrived, or NULL to disable. Intended to be used by the
+ *  matlab/python interfaces to check if Ctrl-C has been pressed.
+ */
+void setShouldAbortHook(bool (*pShouldAbortHook)(void));
+
+/** Check if we should abort execution (due to an external signal).
+ */
+bool shouldAbort();
+}
+
+//----------------------------------------------------------------------------------------
+// functions for external use
+
 namespace astra {
 _AstraExport inline int getVersion() { return ASTRA_TOOLBOXVERSION; }
 _AstraExport inline const char* getVersionString() { return ASTRA_TOOLBOXVERSION_STRING; }

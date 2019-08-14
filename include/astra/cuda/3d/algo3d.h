@@ -41,8 +41,6 @@ public:
 	bool setConeGeometry(const SDimensions3D& dims, const SConeProjection* projs, const SProjectorParams3D& params);
 	bool setPar3DGeometry(const SDimensions3D& dims, const SPar3DProjection* projs, const SProjectorParams3D& params);
 
-	void signalAbort() { shouldAbort = true; }
-
 protected:
 	void reset();
 
@@ -59,9 +57,6 @@ protected:
 	SPar3DProjection* par3DProjs;
 
 	float fOutputScale;
-
-	volatile bool shouldAbort;
-
 };
 
 

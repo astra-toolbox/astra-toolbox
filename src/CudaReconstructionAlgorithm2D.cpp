@@ -341,13 +341,6 @@ void CCudaReconstructionAlgorithm2D::run(int _iNrIterations)
 	ASTRA_ASSERT(ok);
 }
 
-void CCudaReconstructionAlgorithm2D::signalAbort()
-{
-	if (m_bIsInitialized && m_pAlgo) {
-		m_pAlgo->signalAbort();
-	}
-}
-
 bool CCudaReconstructionAlgorithm2D::getResidualNorm(float32& _fNorm)
 {
 	if (!m_bIsInitialized || !m_pAlgo)

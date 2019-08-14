@@ -93,25 +93,10 @@ public:
 	 */
 	virtual void setGPUIndex(int /*_iGPUIndex*/) { };
 
-	/** Signal the algorithm it should abort soon.
-	 *  This is intended to be called from a different thread
-	 *  while the algorithm is running. There are no guarantees
-	 *  on how soon the algorithm will abort. The state of the
-	 *  algorithm object will be consistent (so it is safe to delete it
-	 *  normally afterwards), but the algorithm's output is undefined.
-	 *
-	 *  Note that specific algorithms may give guarantees on their
-	 *  state after an abort. Check their documentation for details.
-	 */
-	virtual void signalAbort() { m_bShouldAbort = true; }
-
 protected:
 
 	//< Has this class been initialized?
 	bool m_bIsInitialized;
-
-	//< If this is set, the algorithm should try to abort as soon as possible.
-	volatile bool m_bShouldAbort;
 
 private:
 	/**

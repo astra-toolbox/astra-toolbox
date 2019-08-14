@@ -238,13 +238,11 @@ bool SIRT::uploadMinMaxMasks(const float* pfMinMaskData, const float* pfMaxMaskD
 
 bool SIRT::iterate(unsigned int iterations)
 {
-	shouldAbort = false;
-
 	if (useVolumeMask || useSinogramMask)
 		precomputeWeights();
 
 	// iteration
-	for (unsigned int iter = 0; iter < iterations && !shouldAbort; ++iter) {
+	for (unsigned int iter = 0; iter < iterations && !astra::shouldAbort(); ++iter) {
 
 		// copy sinogram to projection data
 		duplicateProjectionData(D_projData, D_sinoData, projPitch, dims);

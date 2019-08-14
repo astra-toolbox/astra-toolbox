@@ -122,8 +122,6 @@ public:
 	 */
 	virtual void run(int _iNrIterations = 0);
 
-	virtual void signalAbort();
-
 protected:
 	
 	/** Check this object.

@@ -288,8 +288,6 @@ void CSartAlgorithm::run(int _iNrIterations)
 	// check initialized
 	ASTRA_ASSERT(m_bIsInitialized);
 
-	m_bShouldAbort = false;
-
 	// data projectors
 	CDataProjectorInterface* pFirstForwardProjector;
 	CDataProjectorInterface* pForwardProjector;
@@ -334,7 +332,7 @@ void CSartAlgorithm::run(int _iNrIterations)
 
 
 	// iteration loop
-	for (int iIteration = 0; iIteration < _iNrIterations && !m_bShouldAbort; ++iIteration) {
+	for (int iIteration = 0; iIteration < _iNrIterations && !shouldAbort(); ++iIteration) {
 
 		int iProjection = m_piProjectionOrder[m_iIterationCount % m_iProjectionCount];
 	

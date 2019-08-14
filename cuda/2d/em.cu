@@ -117,15 +117,13 @@ bool EM::precomputeWeights()
 
 bool EM::iterate(unsigned int iterations)
 {
-	shouldAbort = false;
-
 #if 0
 	if (useVolumeMask)
 		precomputeWeights();
 #endif
 
 	// iteration
-	for (unsigned int iter = 0; iter < iterations && !shouldAbort; ++iter) {
+	for (unsigned int iter = 0; iter < iterations && !astra::shouldAbort(); ++iter) {
 
 		// Do FP of volumeData 
 		zeroProjectionData(D_projData, projPitch, dims);

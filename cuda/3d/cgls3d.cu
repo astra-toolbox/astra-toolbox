@@ -146,8 +146,6 @@ bool CGLS::setBuffers(cudaPitchedPtr& _D_volumeData,
 
 bool CGLS::iterate(unsigned int iterations)
 {
-	shouldAbort = false;
-
 	if (!sliceInitialized) {
 
 		// copy sinogram
@@ -176,7 +174,7 @@ bool CGLS::iterate(unsigned int iterations)
 
 
 	// iteration
-	for (unsigned int iter = 0; iter < iterations && !shouldAbort; ++iter) {
+	for (unsigned int iter = 0; iter < iterations && !astra::shouldAbort(); ++iter) {
 
 		// w = A*p
 		zeroProjectionData(D_w, dims);

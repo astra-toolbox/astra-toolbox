@@ -33,7 +33,7 @@ namespace astra {
 
 //----------------------------------------------------------------------------------------
 // Constructor
-CAlgorithm::CAlgorithm() : m_bShouldAbort(false), configCheckData(0) {
+CAlgorithm::CAlgorithm() : configCheckData(0) {
 	
 }
 
@@ -59,5 +59,6 @@ boost::any CAlgorithm::getInformation(std::string _sIdentifier)
 	if (_sIdentifier == "Initialized") { return m_bIsInitialized ? "yes" : "no"; } 
 	return std::string("not found");
 }
+
 
 } // namespace astra

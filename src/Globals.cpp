@@ -40,5 +40,19 @@ _AstraExport bool cudaAvailable() {
 #endif
 }
 
+
+static bool (*pShouldAbortHook)(void) = 0;
+
+void setShouldAbortHook(bool (*_pShouldAbortHook)(void)) {
+	pShouldAbortHook = _pShouldAbortHook;
+}
+
+bool shouldAbort() {
+	if (pShouldAbortHook && (*pShouldAbortHook)())
+		return true;
+
+	return false;
+}
+
 }
 

@@ -105,52 +105,9 @@ void astra_mex_algorithm_create(int nlhs, mxArray* plhs[], int nrhs, const mxArr
 }
 
 #ifdef USE_MATLAB_UNDOCUMENTED
-
-#ifndef USE_PTHREADS_CTRLC
-
-// boost version
-void waitForInterrupt_boost(CAlgorithm* _pAlg)
-{
-	boost::posix_time::milliseconds rel(2000);
-
-	while (!utIsInterruptPending()) {
-
-		// This is an interruption point. If the main thread calls
-		// interrupt(), this thread will terminate here.
-		boost::this_thread::sleep(rel);
-	}
-
-	//mexPrintf("Aborting. Please wait.\n");
-
-	// One last quick check to see if the algorithm already finished
-	boost::this_thread::interruption_point();
-
-	_pAlg->signalAbort();
+bool checkMatlabInterrupt() {
+	return utIsInterruptPending();
 }
-
-#else
-
-// pthreads version
-void *waitForInterrupt_pthreads(void *threadid)
-{
-	CAlgorithm* _pAlg = (CAlgorithm*)threadid;
-
-	while (!utIsInterruptPending()) {
-		usleep(50000);
-		pthread_testcancel();
-	}
-
-	//mexPrintf("Aborting. Please wait.\n");
-
-	// One last quick check to see if the algorithm already finished
-	pthread_testcancel();
-
-	_pAlg->signalAbort();
-
-	return 0;
-}
-
-#endif
 #endif
 
 //-----------------------------------------------------------------------------------------
@@ -185,34 +142,12 @@ void astra_mex_algorithm_run(int nlhs, mxArray* plhs[], int nrhs, const mxArray*
 	}
 
 	// step3: perform actions
-#ifndef USE_MATLAB_UNDOCUMENTED
 
-	pAlg->run(iIterations);
-
-#elif defined(USE_PTHREADS_CTRLC)
-
-	// Start a new thread to watch if the user pressed Ctrl-C
-	pthread_t thread;
-	pthread_create(&thread, 0, waitForInterrupt_pthreads, (void*)pAlg);
-
-	pAlg->run(iIterations);
-
-	// kill the watcher thread in case it's still running
-	pthread_cancel(thread);
-	pthread_join(thread, 0);
-
-#else
-
-	// Start a new thread to watch if the user pressed Ctrl-C
-	boost::thread interruptThread(waitForInterrupt_boost, pAlg);
-
-	pAlg->run(iIterations);
-
-	// kill the watcher thread in case it's still running
-	interruptThread.interrupt();
-	interruptThread.join();
-
+#ifdef USE_MATLAB_UNDOCUMENTED
+	setShouldAbortHook(&checkMatlabInterrupt);
 #endif
+
+	pAlg->run(iIterations);
 }
 //-----------------------------------------------------------------------------------------
 /** astra_mex_algorithm('get_res_norm', id);

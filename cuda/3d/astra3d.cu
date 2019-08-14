@@ -625,14 +625,6 @@ bool AstraSIRT3d::getReconstruction(float* pfReconstruction,
 	return true;
 }
 
-void AstraSIRT3d::signalAbort()
-{
-	if (!pData->initialized)
-		return;
-
-	pData->sirt.signalAbort();
-}
-
 float AstraSIRT3d::computeDiffNorm()
 {
 	if (!pData->initialized)
@@ -1004,14 +996,6 @@ bool AstraCGLS3d::getReconstruction(float* pfReconstruction,
 		return false;
 
 	return true;
-}
-
-void AstraCGLS3d::signalAbort()
-{
-	if (!pData->initialized)
-		return;
-
-	pData->cgls.signalAbort();
 }
 
 float AstraCGLS3d::computeDiffNorm()

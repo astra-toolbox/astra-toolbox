@@ -157,10 +157,6 @@ public:
 	// It can be called after iterate().
 	float computeDiffNorm();
 
-	// Signal the algorithm that it should abort after the current iteration.
-	// This is intended to be called from another thread.
-	void signalAbort();
-
 protected:
 	AstraSIRT3d_internal *pData;
 };
@@ -273,10 +269,6 @@ public:
 	// reconstruction and the sinogram. (This performs one FP.)
 	// It can be called after iterate().
 	float computeDiffNorm();
-
-	// Signal the algorithm that it should abort after the current iteration.
-	// This is intended to be called from another thread.
-	void signalAbort();
 
 protected:
 	AstraCGLS3d_internal *pData;

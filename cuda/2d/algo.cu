@@ -42,7 +42,6 @@ ReconAlgo::ReconAlgo()
 {
 	parProjs = 0;
 	fanProjs = 0;
-	shouldAbort = false;
 
 	useVolumeMask = false;
 	useSinogramMask = false;
@@ -77,7 +76,6 @@ void ReconAlgo::reset()
 
 	parProjs = 0;
 	fanProjs = 0;
-	shouldAbort = false;
 
 	useVolumeMask = false;
 	useSinogramMask = false;

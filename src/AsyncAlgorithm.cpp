@@ -161,10 +161,4 @@ void CAsyncAlgorithm::runWrapped(int _iNrIterations)
 	m_bDone = true;
 }
 
-void CAsyncAlgorithm::signalAbort()
-{
-	if (m_pAlg)
-		m_pAlg->signalAbort();
-}
-
 }

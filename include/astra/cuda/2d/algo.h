@@ -56,8 +56,6 @@ public:
 
 	bool setSuperSampling(int raysPerDet, int raysPerPixelDim);
 
-	void signalAbort() { shouldAbort = true; }
-
 	virtual bool enableVolumeMask();
 	virtual bool enableSinogramMask();
 
@@ -136,8 +134,6 @@ protected:
 	SParProjection* parProjs;
 	SFanProjection* fanProjs;
 	float fOutputScale;
-
-	volatile bool shouldAbort;
 
 	bool freeGPUMemory;
 

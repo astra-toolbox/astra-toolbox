@@ -275,13 +275,6 @@ void CCudaSirtAlgorithm3D::run(int _iNrIterations)
 
 }
 //----------------------------------------------------------------------------------------
-void CCudaSirtAlgorithm3D::signalAbort()
-{
-	if (m_bIsInitialized && m_pSirt) {
-		m_pSirt->signalAbort();
-	}
-}
-
 bool CCudaSirtAlgorithm3D::getResidualNorm(float32& _fNorm)
 {
 	if (!m_bIsInitialized || !m_pSirt)
