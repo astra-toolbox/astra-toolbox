@@ -38,14 +38,30 @@ extern "C" void mexFunction() {
 }
 _ACEOF
 $CXX -fPIC -c -o conftest.o conftest.cc
-$MEX -cxx -output conftest conftest.o
-$2=""
+$MEX -cxx -output conftest conftest.o >/dev/null 2>&1
 for suffix in $1; do
   if test -f "conftest.$suffix"; then
     $2="$suffix"
     rm -f "conftest.$suffix"
   fi
 done
+rm -f conftest.cc conftest.o
+])
+
+dnl ASTRA_CHECK_MEX_OPTION(option, mex-suffix, action-if-supported, action-if-not-supported)
+dnl Check if an option is supported by mex.
+dnl We test if mex works by testing if it produces a mex file as output;
+dnl this is required since 'mex' is also a commonly installed LaTeX format
+AC_DEFUN([ASTRA_CHECK_MEX_OPTION],[
+cat >conftest.cc <<_ACEOF
+extern "C" void mexFunction() {
+}
+_ACEOF
+$CXX -fPIC -c -o conftest.o conftest.cc
+$MEX $1 -cxx -output conftest conftest.o >/dev/null 2>&1
+AS_IF([test -f "conftest.$2"],[
+  rm -f "conftest.$2"
+  $3],[$4])
 rm -f conftest.cc conftest.o
 ])
 

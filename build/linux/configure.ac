@@ -174,7 +174,24 @@ if test x"$with_matlab" != x; then
   fi
 fi
 
+AC_MSG_CHECKING([if mex requires the -R2017b option])
+if test x"$HAVEMATLAB" = xyes; then
+  ASTRA_CHECK_MEX_OPTION([-R2017b],[$MEXSUFFIX],[
+    MEXFLAGS="-R2017b"
+    # TODO: check if this is the best way of emulating -R2017b when using
+    # CXX directly to compile mex files.
+    CPPFLAGS_MATLAB="-DMATLAB_MEXCMD_RELEASE=700"
+    AC_MSG_RESULT([yes])
+  ],[
+    MEXFLAGS=
+    CPPFLAGS_MATLAB=
+    AC_MSG_RESULT([no])
+  ])
+fi
+
 AC_SUBST(HAVEMATLAB)
+AC_SUBST(MEXFLAGS)
+AC_SUBST(CPPFLAGS_MATLAB)
 
 # octave
 
