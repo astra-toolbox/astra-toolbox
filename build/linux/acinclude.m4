@@ -38,7 +38,7 @@ extern "C" void mexFunction() {
 }
 _ACEOF
 $CXX -fPIC -c -o conftest.o conftest.cc
-$MEX -cxx -output conftest conftest.o >/dev/null 2>&1
+ASTRA_RUN_LOGOUTPUT([$MEX -cxx -output conftest conftest.o])
 for suffix in $1; do
   if test -f "conftest.$suffix"; then
     $2="$suffix"
@@ -58,7 +58,7 @@ extern "C" void mexFunction() {
 }
 _ACEOF
 $CXX -fPIC -c -o conftest.o conftest.cc
-$MEX $1 -cxx -output conftest conftest.o >/dev/null 2>&1
+ASTRA_RUN_LOGOUTPUT([$MEX $1 -cxx -output conftest conftest.o])
 AS_IF([test -f "conftest.$2"],[
   rm -f "conftest.$2"
   $3],[$4])
