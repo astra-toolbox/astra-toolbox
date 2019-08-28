@@ -120,7 +120,9 @@ if test x"$HAVECUDA" = xyes; then
   AC_MSG_CHECKING([if nvcc works])
   ASTRA_CHECK_NVCC(HAVECUDA,NVCCFLAGS_EXTRA)
   AC_MSG_RESULT($HAVECUDA)
+fi
 
+if test x"$HAVECUDA" = xyes; then
   AC_MSG_CHECKING([if boost and CUDA versions are compatible])
   ASTRA_CHECK_CUDA_BOOST(AC_MSG_RESULT([yes]),[
     AC_MSG_RESULT([no])
