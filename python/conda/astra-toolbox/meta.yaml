@@ -8,8 +8,7 @@ source:
 
 build:
   number: 0
-  script_env:
-    - CC # [linux]
+  string: py_{{ python }}_numpy_{{ numpy }}
 
 test:
   imports:
@@ -24,14 +23,17 @@ test:
 
 requirements:
   build:
+    - {{ compiler('c') }}    # [win or linux]
+    - {{ compiler('cxx') }}  # [linux]
+  host:
     - python
     - cython >=0.13
+    - boost # [osx or linux]
     - nomkl # [not win]
     - numpy {{ numpy }}
     - scipy
     - six
     - libastra ==1.9.0.dev11
-
   run:
     - python
     - {{ pin_compatible('numpy', min_pin='x.x', max_pin='x.x') }}

@@ -3,3 +3,7 @@ python:
 
 numpy:
   - 1.15
+c_compiler_version:
+  - 7.3
+cxx_compiler_version:
+  - 7.3

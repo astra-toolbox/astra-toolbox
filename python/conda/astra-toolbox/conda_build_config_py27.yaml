@@ -8,3 +8,8 @@ numpy:
   - 1.14
   - 1.15
   - 1.16
+
+c_compiler_version:
+  - 7.3
+cxx_compiler_version:
+  - 7.3
