@@ -39,8 +39,9 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/Logging.h"
 #include <sstream>
 
-using namespace astra;
 using namespace std;
+
+namespace astra {
 
 //-----------------------------------------------------------------------------
 // default constructor
@@ -180,3 +181,4 @@ template class ConfigStackCheck<CVolumeGeometry3D>;
 template class ConfigStackCheck<CProjector2D>;
 template class ConfigStackCheck<CProjector3D>;
 
+}
