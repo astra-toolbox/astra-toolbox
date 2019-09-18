@@ -30,7 +30,6 @@ matrix:
             - nvidia-cuda-toolkit
             - nvidia-cuda-dev
             - nvidia-profiler
-            - libcuinj64-5.5
 
     - env: CUDA=yes
       python: "3.6"
@@ -41,7 +40,6 @@ matrix:
             - nvidia-cuda-toolkit
             - nvidia-cuda-dev
             - nvidia-profiler
-            - libcuinj64-5.5
   exclude:
     - os: linux
 
