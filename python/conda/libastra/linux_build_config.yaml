@@ -4,3 +4,7 @@ cudatoolkit:
   - 9.2
   - 10.0
   - 10.1
+c_compiler_version:    # [linux or win]
+  - 5.4                # [linux or win]
+cxx_compiler_version:  # [linux or win]
+  - 5.4                # [linux or win]

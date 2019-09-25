@@ -8,21 +8,22 @@ source:
 
 build:
   number: 0
-  script_env:
-    - CC # [linux]
-    - CXX # [linux]
+  string: cuda_{{ cudatoolkit }} # [linux]
 
 requirements:
   build:
-    - {{compiler('c')}} # [win]
+    - {{ compiler('c') }}    # [win or linux]
+    - {{ compiler('cxx') }}  # [linux]
     - boost # [osx]
     - automake # [osx]
     - autoconf # [osx]
     - libtool # [osx]
+  host:
+    - boost # [osx or linux]
     - cudatoolkit {{ cudatoolkit }} # [linux]
-
   run:
-    - cudatoolkit {{ cudatoolkit }} # [linux]
+    # See: https://github.com/conda-forge/conda-forge.github.io/issues/687#issuecomment-460095230
+    - {{ pin_compatible('cudatoolkit', max_pin='x.x') }} # [linux]
 
 about:
   home: http://www.astra-toolbox.com
