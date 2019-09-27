@@ -41,7 +41,7 @@ from . import log
 from .optomo import OpTomo
 from .tests import test, test_noCUDA, test_CUDA
 
-__version__ = '1.9.0dev'
+__version__ = '1.9.9.dev'
 
 import os
 
