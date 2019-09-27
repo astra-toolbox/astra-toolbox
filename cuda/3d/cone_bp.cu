@@ -28,11 +28,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/cuda/3d/util3d.h"
 #include "astra/cuda/3d/dims3d.h"
 
-#ifdef STANDALONE
-#include "astra/cuda/3d/cone_fp.h"
-#include "testutil.h"
-#endif
-
 #include <cstdio>
 #include <cassert>
 #include <iostream>
@@ -55,7 +50,13 @@ static const unsigned int g_volBlockY = 32;
 
 static const unsigned g_MaxAngles = 1024;
 
-__constant__ float gC_C[12*g_MaxAngles];
+struct DevConeParams {
+	float4 fNumU;
+	float4 fNumV;
+	float4 fDen;
+};
+
+__constant__ DevConeParams gC_C[g_MaxAngles];
 
 bool bindProjDataTexture(const cudaArray* array)
 {
@@ -118,16 +119,13 @@ __global__ void dev_cone_BP(void* D_volData, unsigned int volPitch, int startAng
 
 		for (int angle = startAngle; angle < endAngle; ++angle, fAngle += 1.0f)
 		{
-			float4 fCu  = make_float4(gC_C[12*angle+0], gC_C[12*angle+1], gC_C[12*angle+2], gC_C[12*angle+3]);
-			float4 fCv  = make_float4(gC_C[12*angle+4], gC_C[12*angle+5], gC_C[12*angle+6], gC_C[12*angle+7]);
-			float4 fCd  = make_float4(gC_C[12*angle+8], gC_C[12*angle+9], gC_C[12*angle+10], gC_C[12*angle+11]);
+			float4 fCu  = gC_C[angle].fNumU;
+			float4 fCv  = gC_C[angle].fNumV;
+			float4 fCd  = gC_C[angle].fDen;
 
 			float fUNum = fCu.w + fX * fCu.x + fY * fCu.y + fZ * fCu.z;
 			float fVNum = fCv.w + fX * fCv.x + fY * fCv.y + fZ * fCv.z;
-			float fDen  = fCd.w + fX * fCd.x + fY * fCd.y + fZ * fCd.z;
-
-			// fCd.w = -|| u v s || (determinant of 3x3 matrix with cols u,v,s)
-			// fDen =  || u v (x-s) ||
+			float fDen  = (FDKWEIGHT ? 1.0f : fCd.w) + fX * fCd.x + fY * fCd.y + fZ * fCd.z;
 
 			float fU,fV, fr;
 
@@ -137,18 +135,7 @@ __global__ void dev_cone_BP(void* D_volData, unsigned int volPitch, int startAng
 				fU = fUNum * fr;
 				fV = fVNum * fr;
 				float fVal = tex3D(gT_coneProjTexture, fU, fAngle, fV);
-				if (FDKWEIGHT) {
-					// The correct factor here is this one:
-					// Z[idx] += (fr*fCd.w)*(fr*fCd.w)*fVal;
-					// This is the square of the inverse magnification factor
-					// from fX,fY,fZ to the detector.
-
-					// Since we are assuming we have a circular cone
-					// beam trajectory, fCd.w is constant, and we instead
-					// multiply by fCd.w*fCd.w in the FDK preweighting step.
-					Z[idx] += fr*fr*fVal;
-				} else
-					Z[idx] += fVal;
+				Z[idx] += fr*fr*fVal;
 
 				fUNum += fCu.z;
 				fVNum += fCv.z;
@@ -215,19 +202,9 @@ __global__ void dev_cone_BP_SS(void* D_volData, unsigned int volPitch, int start
 
 		for (int angle = startAngle; angle < endAngle; ++angle, fAngle += 1.0f)
 		{
-
-			const float fCux = gC_C[12*angle+0];
-			const float fCuy = gC_C[12*angle+1];
-			const float fCuz = gC_C[12*angle+2];
-			const float fCuc = gC_C[12*angle+3];
-			const float fCvx = gC_C[12*angle+4];
-			const float fCvy = gC_C[12*angle+5];
-			const float fCvz = gC_C[12*angle+6];
-			const float fCvc = gC_C[12*angle+7];
-			const float fCdx = gC_C[12*angle+8];
-			const float fCdy = gC_C[12*angle+9];
-			const float fCdz = gC_C[12*angle+10];
-			const float fCdc = gC_C[12*angle+11];
+			float4 fCu  = gC_C[angle].fNumU;
+			float4 fCv  = gC_C[angle].fNumV;
+			float4 fCd  = gC_C[angle].fDen;
 
 			float fXs = fX;
 			for (int iSubX = 0; iSubX < iRaysPerVoxelDim; ++iSubX) {
@@ -236,14 +213,15 @@ __global__ void dev_cone_BP_SS(void* D_volData, unsigned int volPitch, int start
 			float fZs = fZ;
 			for (int iSubZ = 0; iSubZ < iRaysPerVoxelDim; ++iSubZ) {
 
-				const float fUNum = fCuc + fXs * fCux + fYs * fCuy + fZs * fCuz;
-				const float fVNum = fCvc + fXs * fCvx + fYs * fCvy + fZs * fCvz;
-				const float fDen = fCdc + fXs * fCdx + fYs * fCdy + fZs * fCdz;
+				const float fUNum = fCu.w + fX * fCu.x + fY * fCu.y + fZ * fCu.z;
+				const float fVNum = fCv.w + fX * fCv.x + fY * fCv.y + fZ * fCv.z;
+				const float fDen  = fCd.w + fX * fCd.x + fY * fCd.y + fZ * fCd.z;
 
-				const float fU = fUNum / fDen;
-				const float fV = fVNum / fDen;
+				const float fr = __fdividef(1.0f, fDen);
+				const float fU = fUNum * fr;
+				const float fV = fVNum * fr;
 
-				fVal += tex3D(gT_coneProjTexture, fU, fV, fAngle);
+				fVal += tex3D(gT_coneProjTexture, fU, fV, fAngle) * fr;
 
 				fZs += fSubStep;
 			}
@@ -259,6 +237,76 @@ __global__ void dev_cone_BP_SS(void* D_volData, unsigned int volPitch, int start
 }
 
 
+bool transferConstants(const SConeProjection* angles, unsigned int iProjAngles, const SProjectorParams3D& params)
+{
+	DevConeParams *p = new DevConeParams[iProjAngles];
+
+	// We need three things in the kernel:
+	// projected coordinates of pixels on the detector:
+
+	// u: || (x-s) v (s-d) || / || u v (s-x) ||
+	// v: -|| u (x-s) (s-d) || / || u v (s-x) ||
+
+	// ray density weighting factor for the adjoint
+	// || u v (s-d) ||^2 / ( |cross(u,v)| * || u v (s-x) ||^2 )
+
+	// FDK weighting factor
+	// ( || u v s || / || u v (s-x) || ) ^ 2
+
+	// Since u and v are ratios with the same denominator, we have
+	// a degree of freedom to scale the denominator. We use that to make
+	// the square of the denominator equal to the relevant weighting factor.
+
+
+	for (unsigned int i = 0; i < iProjAngles; ++i) {
+		Vec3 u(angles[i].fDetUX, angles[i].fDetUY, angles[i].fDetUZ);
+		Vec3 v(angles[i].fDetVX, angles[i].fDetVY, angles[i].fDetVZ);
+		Vec3 s(angles[i].fSrcX, angles[i].fSrcY, angles[i].fSrcZ);
+		Vec3 d(angles[i].fDetSX, angles[i].fDetSY, angles[i].fDetSZ);
+
+
+
+		double fScale;
+		if (!params.bFDKWeighting) {
+			// goal: 1/fDen^2 = || u v (s-d) ||^2 / ( |cross(u,v)| * || u v (s-x) ||^2 )
+			// fDen = ( sqrt(|cross(u,v)|) * || u v (s-x) || ) / || u v (s-d) || 
+			// i.e. scale = sqrt(|cross(u,v)|) * / || u v (s-d) ||
+
+
+			// NB: for cross(u,v) we invert the volume scaling (for the voxel
+			// size normalization) to get the proper dimensions for
+			// the scaling of the adjoint
+
+			fScale = sqrt(scaled_cross3(u,v,Vec3(params.fVolScaleX,params.fVolScaleY,params.fVolScaleZ)).norm()) / det3(u, v, s-d);
+		} else {
+			// goal: 1/fDen = || u v s || / || u v (s-x) ||
+			// fDen = || u v (s-x) || / || u v s ||
+			// i.e., scale = 1 / || u v s ||
+
+			fScale = 1.0 / det3(u, v, s);
+		}
+
+		p[i].fNumU.w = fScale * det3(s,v,d);
+		p[i].fNumU.x = fScale * det3x(v,s-d);
+		p[i].fNumU.y = fScale * det3y(v,s-d);
+		p[i].fNumU.z = fScale * det3z(v,s-d);
+		p[i].fNumV.w = -fScale * det3(s,u,d);
+		p[i].fNumV.x = -fScale * det3x(u,s-d);
+		p[i].fNumV.y = -fScale * det3y(u,s-d);
+		p[i].fNumV.z = -fScale * det3z(u,s-d);
+		p[i].fDen.w = fScale * det3(u, v, s); // == 1.0 for FDK
+		p[i].fDen.x = -fScale * det3x(u, v);
+		p[i].fDen.y = -fScale * det3y(u, v);
+		p[i].fDen.z = -fScale * det3z(u, v);
+	}
+
+	// TODO: Check for errors
+	cudaMemcpyToSymbol(gC_C, p, iProjAngles*sizeof(DevConeParams), 0, cudaMemcpyHostToDevice);
+
+	return true;
+}
+
+
 bool ConeBP_Array(cudaPitchedPtr D_volumeData,
                   cudaArray *D_projArray,
                   const SDimensions3D& dims, const SConeProjection* angles,
@@ -267,44 +315,21 @@ bool ConeBP_Array(cudaPitchedPtr D_volumeData,
 	bindProjDataTexture(D_projArray);
 
 	float fOutputScale;
-	if (params.bFDKWeighting)
-		fOutputScale = params.fOutputScale / (params.fVolScaleX * params.fVolScaleY * params.fVolScaleZ);
-	else
+	if (params.bFDKWeighting) {
+		// NB: assuming cube voxels here
+		fOutputScale = params.fOutputScale / (params.fVolScaleX);
+	} else {
 		fOutputScale = params.fOutputScale * (params.fVolScaleX * params.fVolScaleY * params.fVolScaleZ);
+	}
 
 	for (unsigned int th = 0; th < dims.iProjAngles; th += g_MaxAngles) {
 		unsigned int angleCount = g_MaxAngles;
 		if (th + angleCount > dims.iProjAngles)
 			angleCount = dims.iProjAngles - th;
 
-		// transfer angles to constant memory
-		float* tmp = new float[12*angleCount];
-
-
-		// NB: We increment angles at the end of the loop body.
-
-
-#define TRANSFER_TO_CONSTANT(expr,name) do { for (unsigned int i = 0; i < angleCount; ++i) tmp[12*i+name] = (expr) ; } while (0)
-
-		TRANSFER_TO_CONSTANT( (angles[i].fDetSZ - angles[i].fSrcZ)*angles[i].fDetVY - (angles[i].fDetSY - angles[i].fSrcY)*angles[i].fDetVZ , 0 );
-		TRANSFER_TO_CONSTANT( (angles[i].fDetSX - angles[i].fSrcX)*angles[i].fDetVZ -(angles[i].fDetSZ - angles[i].fSrcZ)*angles[i].fDetVX , 1 );
-		TRANSFER_TO_CONSTANT( (angles[i].fDetSY - angles[i].fSrcY)*angles[i].fDetVX - (angles[i].fDetSX - angles[i].fSrcX)*angles[i].fDetVY , 2 );
-		TRANSFER_TO_CONSTANT( (angles[i].fDetSY*angles[i].fDetVZ - angles[i].fDetSZ*angles[i].fDetVY)*angles[i].fSrcX - (angles[i].fDetSX*angles[i].fDetVZ - angles[i].fDetSZ*angles[i].fDetVX)*angles[i].fSrcY + (angles[i].fDetSX*angles[i].fDetVY - angles[i].fDetSY*angles[i].fDetVX)*angles[i].fSrcZ , 3 );
-
-		TRANSFER_TO_CONSTANT( (angles[i].fDetSY - angles[i].fSrcY)*angles[i].fDetUZ-(angles[i].fDetSZ - angles[i].fSrcZ)*angles[i].fDetUY, 4 );
-		TRANSFER_TO_CONSTANT( (angles[i].fDetSZ - angles[i].fSrcZ)*angles[i].fDetUX - (angles[i].fDetSX - angles[i].fSrcX)*angles[i].fDetUZ , 5 );
-		TRANSFER_TO_CONSTANT((angles[i].fDetSX - angles[i].fSrcX)*angles[i].fDetUY-(angles[i].fDetSY - angles[i].fSrcY)*angles[i].fDetUX , 6 );
-		TRANSFER_TO_CONSTANT( -(angles[i].fDetSY*angles[i].fDetUZ - angles[i].fDetSZ*angles[i].fDetUY)*angles[i].fSrcX + (angles[i].fDetSX*angles[i].fDetUZ - angles[i].fDetSZ*angles[i].fDetUX)*angles[i].fSrcY - (angles[i].fDetSX*angles[i].fDetUY - angles[i].fDetSY*angles[i].fDetUX)*angles[i].fSrcZ , 7 );
-
-		TRANSFER_TO_CONSTANT( angles[i].fDetUY*angles[i].fDetVZ - angles[i].fDetUZ*angles[i].fDetVY , 8 );
-		TRANSFER_TO_CONSTANT( angles[i].fDetUZ*angles[i].fDetVX - angles[i].fDetUX*angles[i].fDetVZ , 9 );
-		TRANSFER_TO_CONSTANT( angles[i].fDetUX*angles[i].fDetVY - angles[i].fDetUY*angles[i].fDetVX , 10 );
-		TRANSFER_TO_CONSTANT( -angles[i].fSrcX * (angles[i].fDetUY*angles[i].fDetVZ - angles[i].fDetUZ*angles[i].fDetVY) - angles[i].fSrcY * (angles[i].fDetUZ*angles[i].fDetVX - angles[i].fDetUX*angles[i].fDetVZ) - angles[i].fSrcZ * (angles[i].fDetUX*angles[i].fDetVY - angles[i].fDetUY*angles[i].fDetVX) , 11 );
-
-#undef TRANSFER_TO_CONSTANT
-		cudaMemcpyToSymbol(gC_C, tmp, angleCount*12*sizeof(float), 0, cudaMemcpyHostToDevice); 
-
-		delete[] tmp;
+		bool ok = transferConstants(angles, angleCount, params);
+		if (!ok)
+			return false;
 
 		dim3 dimBlock(g_volBlockX, g_volBlockY);
 
@@ -353,168 +378,3 @@ bool ConeBP(cudaPitchedPtr D_volumeData,
 
 
 }
-
-#ifdef STANDALONE
-int main()
-{
-	astraCUDA3d::SDimensions3D dims;
-	dims.iVolX = 512;
-	dims.iVolY = 512;
-	dims.iVolZ = 512;
-	dims.iProjAngles = 496;
-	dims.iProjU = 512;
-	dims.iProjV = 512;
-	dims.iRaysPerDetDim = 1;
-	dims.iRaysPerVoxelDim = 1;
-
-	cudaExtent extentV;
-	extentV.width = dims.iVolX*sizeof(float);
-	extentV.height = dims.iVolY;
-	extentV.depth = dims.iVolZ;
-
-	cudaPitchedPtr volData; // pitch, ptr, xsize, ysize
-
-	cudaMalloc3D(&volData, extentV);
-
-	cudaExtent extentP;
-	extentP.width = dims.iProjU*sizeof(float);
-	extentP.height = dims.iProjAngles;
-	extentP.depth = dims.iProjV;
-
-	cudaPitchedPtr projData; // pitch, ptr, xsize, ysize
-
-	cudaMalloc3D(&projData, extentP);
-	cudaMemset3D(projData, 0, extentP);
-
-#if 0
-	float* slice = new float[256*256];
-	cudaPitchedPtr ptr;
-	ptr.ptr = slice;
-	ptr.pitch = 256*sizeof(float);
-	ptr.xsize = 256*sizeof(float);
-	ptr.ysize = 256;
-
-	for (unsigned int i = 0; i < 256*256; ++i)
-		slice[i] = 1.0f;
-	for (unsigned int i = 0; i < 256; ++i) {
-		cudaExtent extentS;
-		extentS.width = dims.iVolX*sizeof(float);
-		extentS.height = dims.iVolY;
-		extentS.depth = 1;
-		cudaPos sp = { 0, 0, 0 };
-		cudaPos dp = { 0, 0, i };
-		cudaMemcpy3DParms p;
-		p.srcArray = 0;
-		p.srcPos = sp;
-		p.srcPtr = ptr;
-		p.dstArray = 0;
-		p.dstPos = dp;
-		p.dstPtr = volData;
-		p.extent = extentS;
-		p.kind = cudaMemcpyHostToDevice;
-		cudaMemcpy3D(&p);
-#if 0
-		if (i == 128) {
-			for (unsigned int j = 0; j < 256*256; ++j)
-				slice[j] = 0.0f;
-		}
-#endif 
-	}
-#endif
-
-
-	astraCUDA3d::SConeProjection angle[512];
-	angle[0].fSrcX = -5120;
-	angle[0].fSrcY = 0;
-	angle[0].fSrcZ = 0;
-
-	angle[0].fDetSX = 512;
-	angle[0].fDetSY = -256;
-	angle[0].fDetSZ = -256;
-
-	angle[0].fDetUX = 0;
-	angle[0].fDetUY = 1;
-	angle[0].fDetUZ = 0;
-
-	angle[0].fDetVX = 0;
-	angle[0].fDetVY = 0;
-	angle[0].fDetVZ = 1;
-
-#define ROTATE0(name,i,alpha) do { angle[i].f##name##X = angle[0].f##name##X * cos(alpha) - angle[0].f##name##Y * sin(alpha); angle[i].f##name##Y = angle[0].f##name##X * sin(alpha) + angle[0].f##name##Y * cos(alpha); } while(0)
-	for (int i = 1; i < 512; ++i) {
-		angle[i] = angle[0];
-		ROTATE0(Src, i, i*2*M_PI/512);
-		ROTATE0(DetS, i, i*2*M_PI/512);
-		ROTATE0(DetU, i, i*2*M_PI/512);
-		ROTATE0(DetV, i, i*2*M_PI/512);
-	}
-#undef ROTATE0
-
-#if 0
-	astraCUDA3d::ConeFP(volData, projData, dims, angle, 1.0f);
-#endif
-#if 0
-	float* bufs = new float[180*512];
-
-	for (int i = 0; i < 512; ++i) {
-		cudaMemcpy(bufs, ((float*)projData.ptr)+180*512*i, 180*512*sizeof(float), cudaMemcpyDeviceToHost);
-
-		printf("%d %d %d\n", projData.pitch, projData.xsize, projData.ysize);
-
-		char fname[20];
-		sprintf(fname, "sino%03d.png", i);
-		saveImage(fname, 180, 512, bufs);
-	}
-
-	float* bufp = new float[512*512];
-
-	for (int i = 0; i < 180; ++i) {
-		for (int j = 0; j < 512; ++j) {
-			cudaMemcpy(bufp+512*j, ((float*)projData.ptr)+180*512*j+512*i, 512*sizeof(float), cudaMemcpyDeviceToHost);
-		}
-
-		char fname[20];
-		sprintf(fname, "proj%03d.png", i);
-		saveImage(fname, 512, 512, bufp);
-	}
-#endif		
-#if 0
-	for (unsigned int i = 0; i < 256*256; ++i)
-		slice[i] = 0.0f;
-	for (unsigned int i = 0; i < 256; ++i) {
-		cudaExtent extentS;
-		extentS.width = dims.iVolX*sizeof(float);
-		extentS.height = dims.iVolY;
-		extentS.depth = 1;
-		cudaPos sp = { 0, 0, 0 };
-		cudaPos dp = { 0, 0, i };
-		cudaMemcpy3DParms p;
-		p.srcArray = 0;
-		p.srcPos = sp;
-		p.srcPtr = ptr;
-		p.dstArray = 0;
-		p.dstPos = dp;
-		p.dstPtr = volData;
-		p.extent = extentS;
-		p.kind = cudaMemcpyHostToDevice;
-		cudaMemcpy3D(&p);
-	}
-#endif
-
-	astraCUDA3d::ConeBP(volData, projData, dims, angle, 1.0f);
-#if 0
-	float* buf = new float[256*256];
-
-	for (int i = 0; i < 256; ++i) {
-		cudaMemcpy(buf, ((float*)volData.ptr)+256*256*i, 256*256*sizeof(float), cudaMemcpyDeviceToHost);
-
-		printf("%d %d %d\n", volData.pitch, volData.xsize, volData.ysize);
-
-		char fname[20];
-		sprintf(fname, "vol%03d.png", i);
-		saveImage(fname, 256, 256, buf);
-	}
-#endif
-
-}
-#endif

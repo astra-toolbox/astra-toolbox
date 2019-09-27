@@ -35,7 +35,7 @@ namespace astraCUDA3d {
 bool FDK_PreWeight(cudaPitchedPtr D_projData,
                 float fSrcOrigin, float fDetOrigin,
                 float fZShift,
-                float fDetUSize, float fDetVSize, float fVoxSize,
+                float fDetUSize, float fDetVSize,
                 bool bShortScan,
                 const SDimensions3D& dims, const float* angles);
 

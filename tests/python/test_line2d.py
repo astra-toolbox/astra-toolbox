@@ -7,9 +7,9 @@ import pylab
 # Display sinograms with mismatch on test failure
 DISPLAY=False
 
-NONUNITDET=False
-OBLIQUE=False
-FLEXVOL=False
+NONUNITDET=True
+OBLIQUE=True
+FLEXVOL=True
 NONSQUARE=False  # non-square pixels not supported yet by most projectors
 
 # Round interpolation weight to 8 bits to emulate CUDA texture unit precision
@@ -20,15 +20,8 @@ nloops = 50
 seed = 123
 
 
-# FAILURES:
-# fan/cuda with flexible volume
-# detweight for fan/cuda
-# fan/strip relatively high numerical errors?
-# parvec/line+linear for oblique
-
-# INCONSISTENCY:
-# effective_detweight vs norm(detu) in line/linear (oblique)
-
+# KNOWN FAILURES:
+# fan/strip relatively high numerical errors around 45 degrees
 
 
 # return length of intersection of the line through points src = (x,y)
@@ -454,23 +447,15 @@ class Test2DKernel(unittest.TestCase):
         for i, (center, edge1, edge2) in enumerate(gen_lines(pg)):
           (src, det) = center
 
-          try:
-            detweight = pg['DetectorWidth']
-          except KeyError:
-            if 'fan' not in type:
-              detweight = effective_detweight(src, det, pg['Vectors'][i//pg['DetectorCount'],4:6])
-            else:
-              detweight = np.linalg.norm(pg['Vectors'][i//pg['DetectorCount'],4:6], ord=2)
-
           # We compute line intersections with slightly bigger (cw) and
           # smaller (aw) rectangles, and see if the kernel falls
           # between these two values.
           (aw,bw,cw) = intersect_line_rectangle_interval(src, det,
                         xmin, xmax, ymin, ymax,
                         1e-3)
-          a[i] = aw * detweight
-          b[i] = bw * detweight
-          c[i] = cw * detweight
+          a[i] = aw
+          b[i] = bw
+          c[i] = cw
         a = a.reshape(astra.functions.geom_size(pg))
         b = b.reshape(astra.functions.geom_size(pg))
         c = c.reshape(astra.functions.geom_size(pg))
@@ -494,17 +479,9 @@ class Test2DKernel(unittest.TestCase):
         for i, (center, edge1, edge2) in enumerate(gen_lines(pg)):
           (src, det) = center
           (xd, yd) = det - src
-          try:
-            detweight = pg['DetectorWidth']
-          except KeyError:
-            if 'fan' not in type:
-              detweight = effective_detweight(src, det, pg['Vectors'][i//pg['DetectorCount'],4:6])
-            else:
-              detweight = np.linalg.norm(pg['Vectors'][i//pg['DetectorCount'],4:6], ord=2)
-
           l = 0.0
           if np.abs(xd) > np.abs(yd): # horizontal ray
-            length = math.sqrt(1.0 + abs(yd/xd)**2)
+            length = math.sqrt(1.0 + abs(yd/xd)**2) * pixsize[0]
             y_seg = (ymin, ymax)
             for j in range(rect_min[0], rect_max[0]):
               x = origin[0] + (-0.5 * shape[0] + j + 0.5) * pixsize[0]
@@ -512,9 +489,9 @@ class Test2DKernel(unittest.TestCase):
               # limited interpolation precision with cuda
               if CUDA_8BIT_LINEAR and proj_type == 'cuda':
                 w = np.round(w * 256.0) / 256.0
-              l += w * length * pixsize[0] * detweight
+              l += w * length
           else:
-            length = math.sqrt(1.0 + abs(xd/yd)**2)
+            length = math.sqrt(1.0 + abs(xd/yd)**2) * pixsize[1]
             x_seg = (xmin, xmax)
             for j in range(rect_min[1], rect_max[1]):
               y = origin[1] + (+0.5 * shape[1] - j - 0.5) * pixsize[1]
@@ -522,7 +499,7 @@ class Test2DKernel(unittest.TestCase):
               # limited interpolation precision with cuda
               if CUDA_8BIT_LINEAR and proj_type == 'cuda':
                 w = np.round(w * 256.0) / 256.0
-              l += w * length * pixsize[1] * detweight
+              l += w * length
           a[i] = l
         a = a.reshape(astra.functions.geom_size(pg))
         if not np.all(np.isfinite(a)):
@@ -532,21 +509,26 @@ class Test2DKernel(unittest.TestCase):
         if DISPLAY and x > TOL:
           display_mismatch(data, sinogram, a)
         self.assertFalse(x > TOL)
-      elif proj_type == 'distance_driven':
+      elif proj_type == 'distance_driven' and 'par' in type:
         a = np.zeros(np.prod(astra.functions.geom_size(pg)), dtype=np.float32)
         for i, (center, edge1, edge2) in enumerate(gen_lines(pg)):
-          (xd, yd) = center[1] - center[0]
+          (src, det) = center
+          try:
+            detweight = pg['DetectorWidth']
+          except KeyError:
+            detweight = effective_detweight(src, det, pg['Vectors'][i//pg['DetectorCount'],4:6])
+          (xd, yd) = det - src
           l = 0.0
           if np.abs(xd) > np.abs(yd): # horizontal ray
             y_seg = (ymin, ymax)
             for j in range(rect_min[0], rect_max[0]):
               x = origin[0] + (-0.5 * shape[0] + j + 0.5) * pixsize[0]
-              l += intersect_ray_vertical_segment(edge1, edge2, x, y_seg) * pixsize[0]
+              l += intersect_ray_vertical_segment(edge1, edge2, x, y_seg) * pixsize[0] / detweight
           else:
             x_seg = (xmin, xmax)
             for j in range(rect_min[1], rect_max[1]):
               y = origin[1] + (+0.5 * shape[1] - j - 0.5) * pixsize[1]
-              l += intersect_ray_horizontal_segment(edge1, edge2, y, x_seg) * pixsize[1]
+              l += intersect_ray_horizontal_segment(edge1, edge2, y, x_seg) * pixsize[1] / detweight
           a[i] = l
         a = a.reshape(astra.functions.geom_size(pg))
         if not np.all(np.isfinite(a)):
@@ -560,6 +542,7 @@ class Test2DKernel(unittest.TestCase):
         a = np.zeros(np.prod(astra.functions.geom_size(pg)), dtype=np.float32)
         for i, (center, edge1, edge2) in enumerate(gen_lines(pg)):
           (src, det) = center
+          detweight = effective_detweight(src, det, edge2[1] - edge1[1])
           det_dist = np.linalg.norm(src-det, ord=2)
           l = 0.0
           for j in range(rect_min[0], rect_max[0]):
@@ -570,7 +553,7 @@ class Test2DKernel(unittest.TestCase):
               ymin = origin[1] + (+0.5 * shape[1] - k - 1) * pixsize[1]
               ymax = origin[1] + (+0.5 * shape[1] - k) * pixsize[1]
               ycen = 0.5 * (ymin + ymax)
-              scale = det_dist / np.linalg.norm( src - np.array((xcen,ycen)), ord=2 )
+              scale = det_dist / (np.linalg.norm( src - np.array((xcen,ycen)), ord=2 ) * detweight)
               w = intersect_ray_rect(edge1, edge2, xmin, xmax, ymin, ymax)
               l += w * scale
           a[i] = l
@@ -578,14 +561,20 @@ class Test2DKernel(unittest.TestCase):
         if not np.all(np.isfinite(a)):
           raise RuntimeError("Invalid value in reference sinogram")
         x = np.max(np.abs(sinogram-a))
-        TOL = 8e-3
+        # BUG: Known bug in fan/strip code around 45 degree projections causing larger errors than desirable
+        TOL = 4e-2
         if DISPLAY and x > TOL:
           display_mismatch(data, sinogram, a)
         self.assertFalse(x > TOL)
       elif proj_type == 'strip':
         a = np.zeros(np.prod(astra.functions.geom_size(pg)), dtype=np.float32)
         for i, (center, edge1, edge2) in enumerate(gen_lines(pg)):
-          a[i] = intersect_ray_rect(edge1, edge2, xmin, xmax, ymin, ymax)
+          (src, det) = center
+          try:
+            detweight = pg['DetectorWidth']
+          except KeyError:
+            detweight = effective_detweight(src, det, pg['Vectors'][i//pg['DetectorCount'],4:6])
+          a[i] = intersect_ray_rect(edge1, edge2, xmin, xmax, ymin, ymax) / detweight
         a = a.reshape(astra.functions.geom_size(pg))
         if not np.all(np.isfinite(a)):
           raise RuntimeError("Invalid value in reference sinogram")
@@ -594,46 +583,83 @@ class Test2DKernel(unittest.TestCase):
         if DISPLAY and x > TOL:
           display_mismatch(data, sinogram, a)
         self.assertFalse(x > TOL)
+      else:
+        raise RuntimeError("Unsupported projector")
+
+  def single_test_adjoint(self, type, proj_type):
+      shape = np.random.randint(*range2d, size=2)
+      if FLEXVOL:
+          if not NONSQUARE:
+            pixsize = np.array([0.5, 0.5]) + np.random.random()
+          else:
+            pixsize = 0.5 + np.random.random(size=2)
+          origin = 10 * np.random.random(size=2)
+      else:
+          pixsize = (1.,1.)
+          origin = (0.,0.)
+      vg = astra.create_vol_geom(shape[1], shape[0],
+                                 origin[0] - 0.5 * shape[0] * pixsize[0],
+                                 origin[0] + 0.5 * shape[0] * pixsize[0],
+                                 origin[1] - 0.5 * shape[1] * pixsize[1],
+                                 origin[1] + 0.5 * shape[1] * pixsize[1])
+
+      if type == 'parallel':
+        pg = gen_random_geometry_parallel()
+        projector_id = astra.create_projector(proj_type, pg, vg)
+      elif type == 'parallel_vec':
+        pg = gen_random_geometry_parallel_vec()
+        projector_id = astra.create_projector(proj_type, pg, vg)
+      elif type == 'fanflat':
+        pg = gen_random_geometry_fanflat()
+        projector_id = astra.create_projector(proj_type_to_fan(proj_type), pg, vg)
+      elif type == 'fanflat_vec':
+        pg = gen_random_geometry_fanflat_vec()
+        projector_id = astra.create_projector(proj_type_to_fan(proj_type), pg, vg)
+
+      for i in range(5):
+        X = np.random.random((shape[1], shape[0]))
+        Y = np.random.random(astra.geom_size(pg))
+
+        sinogram_id, fX = astra.create_sino(X, projector_id)
+        bp_id, fTY = astra.create_backprojection(Y, projector_id)
+
+        astra.data2d.delete(sinogram_id)
+        astra.data2d.delete(bp_id)
+
+        da = np.dot(fX.ravel(), Y.ravel())
+        db = np.dot(X.ravel(), fTY.ravel())
+        m = np.abs(da - db)
+        TOL = 1e-3 if 'cuda' not in proj_type else 1e-1
+        if m / da >= TOL:
+          print(vg)
+          print(pg)
+          print(m/da, da/db, da, db)
+        self.assertTrue(m / da < TOL)
+      astra.projector.delete(projector_id)
+
 
   def multi_test(self, type, proj_type):
     np.random.seed(seed)
     for _ in range(nloops):
       self.single_test(type, proj_type)
+  def multi_test_adjoint(self, type, proj_type):
+    np.random.seed(seed)
+    for _ in range(nloops):
+      self.single_test_adjoint(type, proj_type)
 
-  def test_par(self):
-    self.multi_test('parallel', 'line')
-  def test_par_linear(self):
-    self.multi_test('parallel', 'linear')
-  def test_par_cuda(self):
-    self.multi_test('parallel', 'cuda')
-  def test_par_dd(self):
-    self.multi_test('parallel', 'distance_driven')
-  def test_par_strip(self):
-    self.multi_test('parallel', 'strip')
-  def test_fan(self):
-    self.multi_test('fanflat', 'line')
-  def test_fan_strip(self):
-    self.multi_test('fanflat', 'strip')
-  def test_fan_cuda(self):
-    self.multi_test('fanflat', 'cuda')
-  def test_parvec(self):
-    self.multi_test('parallel_vec', 'line')
-  def test_parvec_linear(self):
-    self.multi_test('parallel_vec', 'linear')
-  def test_parvec_dd(self):
-    self.multi_test('parallel_vec', 'distance_driven')
-  def test_parvec_strip(self):
-    self.multi_test('parallel_vec', 'strip')
-  def test_parvec_cuda(self):
-    self.multi_test('parallel_vec', 'cuda')
-  def test_fanvec(self):
-    self.multi_test('fanflat_vec', 'line')
-  def test_fanvec_cuda(self):
-    self.multi_test('fanflat_vec', 'cuda')
+__combinations = { 'parallel': [ 'line', 'linear', 'distance_driven', 'strip', 'cuda' ],
+                   'parallel_vec': [ 'line', 'linear', 'distance_driven', 'strip', 'cuda' ],
+                   'fanflat': [ 'line', 'strip', 'cuda' ],
+                   'fanflat_vec': [ 'line', 'cuda' ] }
 
-
-
-
+for k, l in __combinations.items():
+  for v in l:
+    def f(k,v):
+      return lambda self: self.multi_test(k, v)
+    def f_adj(k,v):
+      return lambda self: self.multi_test_adjoint(k, v)
+    setattr(Test2DKernel, 'test_' + k + '_' + v, f(k,v))
+    setattr(Test2DKernel, 'test_' + k + '_' + v + '_adjoint', f_adj(k,v))
 
 if __name__ == '__main__':
   unittest.main()

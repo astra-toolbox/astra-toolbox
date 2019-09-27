@@ -79,6 +79,11 @@ public:
 
 	bool setShortScan(bool ss) { m_bShortScan = ss; return true; }
 
+	// Scale the final reconstruction.
+	// May be called at any time before iterate().
+	bool setReconstructionScale(float fScale);
+
+
 	virtual bool init();
 
 	virtual bool iterate(unsigned int iterations);
@@ -90,6 +95,7 @@ protected:
 
 	void* D_filter; // cufftComplex*
 	bool m_bShortScan;
+	float fReconstructionScale;
 };
 
 }

@@ -142,20 +142,11 @@ void CParallelBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, 
 
 		const SParProjection * proj = &pVecProjectionGeometry->getProjectionVectors()[iAngle];
 
+		const float32 rayWidth = fabs(proj->fDetUX * proj->fRayY - proj->fDetUY * proj->fRayX) /
+		                         sqrt(proj->fRayX * proj->fRayX + proj->fRayY * proj->fRayY);
+		const float32 relPixelArea = pixelArea / rayWidth;
+
 		bool vertical = fabs(proj->fRayX) < fabs(proj->fRayY);
-		if (vertical) {
-			RxOverRy = proj->fRayX/proj->fRayY;
-			deltac = -m_pVolumeGeometry->getPixelLengthY() * RxOverRy * inv_pixelLengthX;
-			S = 0.5f - 0.5f*fabs(RxOverRy);
-			T = 0.5f + 0.5f*fabs(RxOverRy);
-			invTminS = 1.0f / (T-S);
-		} else {
-			RyOverRx = proj->fRayY/proj->fRayX;
-			deltar = -m_pVolumeGeometry->getPixelLengthX() * RyOverRx * inv_pixelLengthY;
-			S = 0.5f - 0.5f*fabs(RyOverRx);
-			T = 0.5f + 0.5f*fabs(RyOverRx);
-			invTminS = 1.0f / (T-S);
-		}
 
 		Ex = m_pVolumeGeometry->getWindowMinX() + pixelLengthX*0.5f;
 		Ey = m_pVolumeGeometry->getWindowMaxY() - pixelLengthY*0.5f;
@@ -175,6 +166,12 @@ void CParallelBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, 
 
 			// vertically
 			if (vertical) {
+
+				RxOverRy = proj->fRayX/proj->fRayY;
+				deltac = -m_pVolumeGeometry->getPixelLengthY() * RxOverRy * inv_pixelLengthX;
+				S = 0.5f - 0.5f*fabs(RxOverRy);
+				T = 0.5f + 0.5f*fabs(RxOverRy);
+				invTminS = 1.0f / (T-S);
 
 				// calculate cL and cR for row 0
 				cL = (DLx + (Ey - DLy)*RxOverRy - Ex) * inv_pixelLengthX;
@@ -219,7 +216,7 @@ void CParallelBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, 
 							else if (-S < offsetL)  res -= 0.5f + offsetL;
 							else if (-T < offsetL)  res -= 0.5f*(offsetL+T)*(offsetL+T)*invTminS;
 
-							p.addWeight(iRayIndex, iVolumeIndex, pixelArea*res);
+							p.addWeight(iRayIndex, iVolumeIndex, relPixelArea*res);
 							p.pixelPosterior(iVolumeIndex);
 						}
 					}
@@ -228,6 +225,12 @@ void CParallelBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, 
 
 			// horizontally
 			else {
+
+				RyOverRx = proj->fRayY/proj->fRayX;
+				deltar = -m_pVolumeGeometry->getPixelLengthX() * RyOverRx * inv_pixelLengthY;
+				S = 0.5f - 0.5f*fabs(RyOverRx);
+				T = 0.5f + 0.5f*fabs(RyOverRx);
+				invTminS = 1.0f / (T-S);
 
 				// calculate rL and rR for row 0
 				rL = -(DLy + (Ex - DLx)*RyOverRx - Ey) * inv_pixelLengthY;
@@ -272,7 +275,7 @@ void CParallelBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, 
 							else if (-S < offsetL)  res -= 0.5f + offsetL;
 							else if (-T < offsetL)  res -= 0.5f*(offsetL+T)*(offsetL+T)*invTminS;
 
-							p.addWeight(iRayIndex, iVolumeIndex, pixelArea*res);
+							p.addWeight(iRayIndex, iVolumeIndex, relPixelArea*res);
 							p.pixelPosterior(iVolumeIndex);
 						}
 					}

@@ -166,24 +166,7 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 
 		const SParProjection * proj = &pVecProjectionGeometry->getProjectionVectors()[iAngle];
 
-		float32 detSize = sqrt(proj->fDetUX * proj->fDetUX + proj->fDetUY * proj->fDetUY);
-
 		bool vertical = fabs(proj->fRayX) < fabs(proj->fRayY);
-		if (vertical) {
-			RxOverRy = proj->fRayX/proj->fRayY;
-			lengthPerRow = detSize * pixelLengthX * sqrt(proj->fRayY*proj->fRayY + proj->fRayX*proj->fRayX) / abs(proj->fRayY);
-			deltac = -pixelLengthY * RxOverRy * inv_pixelLengthX;
-			S = 0.5f - 0.5f*fabs(RxOverRy);
-			T = 0.5f + 0.5f*fabs(RxOverRy);
-			invTminSTimesLengthPerRow = lengthPerRow / (T - S);
-		} else {
-			RyOverRx = proj->fRayY/proj->fRayX;
-			lengthPerCol = detSize * pixelLengthY * sqrt(proj->fRayY*proj->fRayY + proj->fRayX*proj->fRayX) / abs(proj->fRayX);
-			deltar = -pixelLengthX * RyOverRx * inv_pixelLengthY;
-			S = 0.5f - 0.5f*fabs(RyOverRx);
-			T = 0.5f + 0.5f*fabs(RyOverRx);
-			invTminSTimesLengthPerCol = lengthPerCol / (T - S);
-		}
 
 		Ex = m_pVolumeGeometry->getWindowMinX() + pixelLengthX*0.5f;
 		Ey = m_pVolumeGeometry->getWindowMaxY() - pixelLengthY*0.5f;
@@ -203,6 +186,13 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 			
 			// vertically
 			if (vertical) {
+
+				RxOverRy = proj->fRayX/proj->fRayY;
+				lengthPerRow = pixelLengthX * sqrt(proj->fRayY*proj->fRayY + proj->fRayX*proj->fRayX) / abs(proj->fRayY);
+				deltac = -pixelLengthY * RxOverRy * inv_pixelLengthX;
+				S = 0.5f - 0.5f*fabs(RxOverRy);
+				T = 0.5f + 0.5f*fabs(RxOverRy);
+				invTminSTimesLengthPerRow = lengthPerRow / (T - S);
 
 				// calculate c for row 0
 				c = (Dx + (Ey - Dy)*RxOverRy - Ex) * inv_pixelLengthX;
@@ -247,6 +237,13 @@ void CParallelBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 
 			// horizontally
 			else {
+
+				RyOverRx = proj->fRayY/proj->fRayX;
+				lengthPerCol = pixelLengthY * sqrt(proj->fRayY*proj->fRayY + proj->fRayX*proj->fRayX) / abs(proj->fRayX);
+				deltar = -pixelLengthX * RyOverRx * inv_pixelLengthY;
+				S = 0.5f - 0.5f*fabs(RyOverRx);
+				T = 0.5f + 0.5f*fabs(RyOverRx);
+				invTminSTimesLengthPerCol = lengthPerCol / (T - S);
 
 				// calculate r for col 0
 				r = -(Dy + (Ex - Dx)*RyOverRx - Ey) * inv_pixelLengthY;

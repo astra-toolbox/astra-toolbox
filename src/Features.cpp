@@ -34,6 +34,12 @@ _AstraExport bool hasFeature(const std::string &flag) {
 	if (flag == "cuda") {
 		return cudaEnabled();
 	}
+	if (flag == "projectors_scaled_as_line_integrals") {
+		return true;
+	}
+	if (flag == "fan_cone_BP_density_weighting_by_default") {
+		return true;
+	}
 
 	return false;
 }

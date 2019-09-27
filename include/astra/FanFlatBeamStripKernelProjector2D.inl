@@ -109,8 +109,12 @@ void CFanFlatBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 				// POLICY: RAY PRIOR
 				if (!p.rayPrior(iRayIndex)) continue;
 
-				float32 dist_srcDetPixSquared = projgeom->getSourceDetectorDistance() * projgeom->getSourceDetectorDistance() +
-				                                (iDetector + 0.5f - m_pProjectionGeometry->getDetectorCount()*0.5f) * (iDetector + 0.5f - m_pProjectionGeometry->getDetectorCount()*0.5f) * DW * DW;
+				float32 dist_srcDetPixSquared = projgeom->getSourceDetectorDistance() * projgeom->getSourceDetectorDistance() + (iDetector + 0.5f - m_pProjectionGeometry->getDetectorCount()*0.5f) * (iDetector + 0.5f - m_pProjectionGeometry->getDetectorCount()*0.5f) * DW * DW;
+				dist_srcDetPixSquared = dist_srcDetPixSquared * dist_srcDetPixSquared / (projgeom->getSourceDetectorDistance() * projgeom->getSourceDetectorDistance()  * DW * DW);
+
+
+
+				//float32 InvRayWidthSquared = (projgeom->getSourceDetectorDistance() * projgeom->getSourceDetectorDistance()) / dist_srcDetPixSquared;
 
 				float32 sin_theta_left, cos_theta_left;
 				float32 sin_theta_right, cos_theta_right;
@@ -257,8 +261,8 @@ void CFanFlatBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 				// POLICY: RAY PRIOR
 				if (!p.rayPrior(iRayIndex)) continue;
 
-				float32 dist_srcDetPixSquared = projgeom->getSourceDetectorDistance() * projgeom->getSourceDetectorDistance() +
-				                                (iDetector + 0.5f - m_pProjectionGeometry->getDetectorCount()*0.5f) * (iDetector + 0.5f - m_pProjectionGeometry->getDetectorCount()*0.5f) * DW * DW;
+				float32 dist_srcDetPixSquared = projgeom->getSourceDetectorDistance() * projgeom->getSourceDetectorDistance() + (iDetector + 0.5f - m_pProjectionGeometry->getDetectorCount()*0.5f) * (iDetector + 0.5f - m_pProjectionGeometry->getDetectorCount()*0.5f) * DW * DW;
+				dist_srcDetPixSquared = dist_srcDetPixSquared * dist_srcDetPixSquared / (projgeom->getSourceDetectorDistance() * projgeom->getSourceDetectorDistance()  * DW * DW);
 
 				// get theta_l = alpha_left + theta and theta_r = alpha_right + theta
 				float32 sin_theta_left, cos_theta_left;

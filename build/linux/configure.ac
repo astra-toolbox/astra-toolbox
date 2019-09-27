@@ -122,6 +122,14 @@ if test x"$HAVECUDA" = xyes; then
   AC_MSG_RESULT($HAVECUDA)
 fi
 
+if test x"$HAVECUDA" = xyes; then
+  AC_MSG_CHECKING([if boost and CUDA versions are compatible])
+  ASTRA_CHECK_CUDA_BOOST(AC_MSG_RESULT([yes]),[
+    AC_MSG_RESULT([no])
+    AC_MSG_ERROR([Boost and CUDA versions are incompatible. You probably have to upgrade boost.])
+  ])
+fi
+
 AC_ARG_WITH(cuda_compute, [[  --with-cuda-compute=archs  comma separated list of CUDA compute models (optional)]],,)
 if test x"$HAVECUDA" = xyes; then
   AC_MSG_CHECKING([for nvcc archs])

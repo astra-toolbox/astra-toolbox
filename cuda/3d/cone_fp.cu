@@ -28,10 +28,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/cuda/3d/util3d.h"
 #include "astra/cuda/3d/dims3d.h"
 
-#ifdef STANDALONE
-#include "testutil.h"
-#endif
-
 #include <cstdio>
 #include <cassert>
 #include <iostream>
@@ -368,7 +364,7 @@ bool ConeFP_Array_internal(cudaPitchedPtr D_projData,
 	SCALE_NONCUBE snoncubeY;
 	fS1 = params.fVolScaleX / params.fVolScaleY;
 	snoncubeY.fScale1 = fS1 * fS1;
-	fS2 = params.fVolScaleY / params.fVolScaleY;
+	fS2 = params.fVolScaleZ / params.fVolScaleY;
 	snoncubeY.fScale2 = fS2 * fS2;
 	snoncubeY.fOutputScale = params.fOutputScale * params.fVolScaleY;
 
@@ -498,105 +494,3 @@ bool ConeFP(cudaPitchedPtr D_volumeData,
 
 
 }
-
-#ifdef STANDALONE
-int main()
-{
-	SDimensions3D dims;
-	dims.iVolX = 256;
-	dims.iVolY = 256;
-	dims.iVolZ = 256;
-	dims.iProjAngles = 32;
-	dims.iProjU = 512;
-	dims.iProjV = 512;
-	dims.iRaysPerDet = 1;
-
-	cudaExtent extentV;
-	extentV.width = dims.iVolX*sizeof(float);
-	extentV.height = dims.iVolY;
-	extentV.depth = dims.iVolZ;
-
-	cudaPitchedPtr volData; // pitch, ptr, xsize, ysize
-
-	cudaMalloc3D(&volData, extentV);
-
-	cudaExtent extentP;
-	extentP.width = dims.iProjU*sizeof(float);
-	extentP.height = dims.iProjV;
-	extentP.depth = dims.iProjAngles;
-
-	cudaPitchedPtr projData; // pitch, ptr, xsize, ysize
-
-	cudaMalloc3D(&projData, extentP);
-	cudaMemset3D(projData, 0, extentP);
-
-	float* slice = new float[256*256];
-	cudaPitchedPtr ptr;
-	ptr.ptr = slice;
-	ptr.pitch = 256*sizeof(float);
-	ptr.xsize = 256*sizeof(float);
-	ptr.ysize = 256;
-
-	for (unsigned int i = 0; i < 256*256; ++i)
-		slice[i] = 1.0f;
-	for (unsigned int i = 0; i < 256; ++i) {
-		cudaExtent extentS;
-		extentS.width = dims.iVolX*sizeof(float);
-		extentS.height = dims.iVolY;
-		extentS.depth = 1;
-		cudaPos sp = { 0, 0, 0 };
-		cudaPos dp = { 0, 0, i };
-		cudaMemcpy3DParms p;
-		p.srcArray = 0;
-		p.srcPos = sp;
-		p.srcPtr = ptr;
-		p.dstArray = 0;
-		p.dstPos = dp;
-		p.dstPtr = volData;
-		p.extent = extentS;
-		p.kind = cudaMemcpyHostToDevice;
-		cudaError err = cudaMemcpy3D(&p);
-		assert(!err);
-	}
-
-
-	SConeProjection angle[32];
-	angle[0].fSrcX = -1536;
-	angle[0].fSrcY = 0;
-	angle[0].fSrcZ = 200;
-
-	angle[0].fDetSX = 512;
-	angle[0].fDetSY = -256;
-	angle[0].fDetSZ = -256;
-
-	angle[0].fDetUX = 0;
-	angle[0].fDetUY = 1;
-	angle[0].fDetUZ = 0;
-
-	angle[0].fDetVX = 0;
-	angle[0].fDetVY = 0;
-	angle[0].fDetVZ = 1;
-
-#define ROTATE0(name,i,alpha) do { angle[i].f##name##X = angle[0].f##name##X * cos(alpha) - angle[0].f##name##Y * sin(alpha); angle[i].f##name##Y = angle[0].f##name##X * sin(alpha) + angle[0].f##name##Y * cos(alpha); } while(0)
-	for (int i = 1; i < 32; ++i) {
-		angle[i] = angle[0];
-		ROTATE0(Src, i, i*1*M_PI/180);
-		ROTATE0(DetS, i, i*1*M_PI/180);
-		ROTATE0(DetU, i, i*1*M_PI/180);
-		ROTATE0(DetV, i, i*1*M_PI/180);
-	}
-#undef ROTATE0
-
-	astraCUDA3d::ConeFP(volData, projData, dims, angle, 1.0f);
-
-	float* buf = new float[512*512];
-
-	cudaMemcpy(buf, ((float*)projData.ptr)+512*512*8, 512*512*sizeof(float), cudaMemcpyDeviceToHost);
-
-	printf("%d %d %d\n", projData.pitch, projData.xsize, projData.ysize);
-
-	saveImage("proj.png", 512, 512, buf);
-	
-
-}
-#endif

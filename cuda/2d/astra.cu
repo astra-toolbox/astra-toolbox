@@ -302,7 +302,8 @@ static bool convertAstraGeometry_internal(const CVolumeGeometry2D* pVolGeom,
 		pProjs[i].scale(factor);
 	}
 	// CHECKME: Check factor
-	fOutputScale *= pVolGeom->getPixelLengthX() * pVolGeom->getPixelLengthY();
+	// NB: Only valid for square pixels
+	fOutputScale *= pVolGeom->getPixelLengthX();
 
 	return true;
 }

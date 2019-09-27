@@ -309,10 +309,7 @@ void CCudaReconstructionAlgorithm2D::run(int _iNrIterations)
 		m_bAlgoInit = true;
 	}
 
-	float fPixelSize = volgeom.getPixelLengthX();
-	float fSinogramScale = 1.0f/(fPixelSize*fPixelSize);
-
-	ok = m_pAlgo->copyDataToGPU(m_pSinogram->getDataConst(), m_pSinogram->getGeometry()->getDetectorCount(), fSinogramScale,
+	ok = m_pAlgo->copyDataToGPU(m_pSinogram->getDataConst(), m_pSinogram->getGeometry()->getDetectorCount(),
 	                            m_pReconstruction->getDataConst(), volgeom.getGridColCount(),
 	                            m_bUseReconstructionMask ? m_pReconstructionMask->getDataConst() : 0, volgeom.getGridColCount(),
 	                            m_bUseSinogramMask ? m_pSinogramMask->getDataConst() : 0, m_pSinogram->getGeometry()->getDetectorCount());

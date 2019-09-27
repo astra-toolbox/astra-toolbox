@@ -167,6 +167,11 @@ bool CFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 
 	m_filterConfig = getFilterConfigForAlgorithm(_cfg, this);
 
+	const CParallelProjectionGeometry2D* parprojgeom = dynamic_cast<CParallelProjectionGeometry2D*>(m_pSinogram->getGeometry());
+	if (!parprojgeom) {
+		ASTRA_ERROR("FBP currently only supports parallel projection geometries.");
+		return false;
+	}
 
 	// TODO: check that the angles are linearly spaced between 0 and pi
 
@@ -264,8 +269,12 @@ void CFilteredBackProjectionAlgorithm::run(int _iNrIterations)
 	            DefaultBPPolicy(m_pReconstruction, &filteredSinogram));
 
 	// Scale data
-	int iAngleCount = m_pProjector->getProjectionGeometry()->getProjectionAngleCount();
-	(*m_pReconstruction) *= (PI/2)/iAngleCount;
+	const CVolumeGeometry2D& volGeom = *m_pProjector->getVolumeGeometry();
+	const CProjectionGeometry2D& projGeom = *m_pProjector->getProjectionGeometry();
+
+	int iAngleCount = projGeom.getProjectionAngleCount();
+	float fPixelArea = volGeom.getPixelArea();
+	(*m_pReconstruction) *= PI/(2*iAngleCount*fPixelArea);
 
 	m_pReconstruction->updateStatistics();
 }

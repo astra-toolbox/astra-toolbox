@@ -72,7 +72,7 @@ void CParallelBeamDistanceDrivenProjector2D::projectBlock_internal(int _iProjFro
 	const int rowCount = m_pVolumeGeometry->getGridRowCount();
 
 	// Performance note:
-	// This is not a very well optimizated version of the distance driven
+	// This is not a very well optimized version of the distance driven
 	// projector. The CPU projector model in ASTRA requires ray-driven iteration,
 	// which limits re-use of intermediate computations.
 
@@ -85,6 +85,9 @@ void CParallelBeamDistanceDrivenProjector2D::projectBlock_internal(int _iProjFro
 
 		const float32 Ex = m_pVolumeGeometry->getWindowMinX() + pixelLengthX*0.5f;
 		const float32 Ey = m_pVolumeGeometry->getWindowMaxY() - pixelLengthY*0.5f;
+
+		const float32 rayWidth = fabs(proj->fDetUX * proj->fRayY - proj->fDetUY * proj->fRayX) /
+		                         sqrt(proj->fRayX * proj->fRayX + proj->fRayY * proj->fRayY);
 
 		// loop detectors
 		for (int iDetector = _iDetFrom; iDetector < _iDetTo; ++iDetector) {
@@ -100,7 +103,7 @@ void CParallelBeamDistanceDrivenProjector2D::projectBlock_internal(int _iProjFro
 			if (vertical) {
 
 				const float32 RxOverRy = proj->fRayX/proj->fRayY;
-				const float32 lengthPerRow = m_pVolumeGeometry->getPixelLengthX() * m_pVolumeGeometry->getPixelLengthY();
+				const float32 lengthPerRow = m_pVolumeGeometry->getPixelLengthX() * m_pVolumeGeometry->getPixelLengthY() / rayWidth;
 				const float32 deltac = -pixelLengthY * RxOverRy * inv_pixelLengthX;
 				const float32 deltad = 0.5f * fabs((proj->fDetUX - proj->fDetUY * RxOverRy) * inv_pixelLengthX);
 
@@ -157,7 +160,7 @@ void CParallelBeamDistanceDrivenProjector2D::projectBlock_internal(int _iProjFro
 			} else {
 
 				const float32 RyOverRx = proj->fRayY/proj->fRayX;
-				const float32 lengthPerCol = m_pVolumeGeometry->getPixelLengthX() * m_pVolumeGeometry->getPixelLengthY();
+				const float32 lengthPerCol = m_pVolumeGeometry->getPixelLengthX() * m_pVolumeGeometry->getPixelLengthY() / rayWidth;
 				const float32 deltar = -pixelLengthX * RyOverRx * inv_pixelLengthY;
 				const float32 deltad = 0.5f * fabs((proj->fDetUY - proj->fDetUX * RyOverRx) * inv_pixelLengthY);
 

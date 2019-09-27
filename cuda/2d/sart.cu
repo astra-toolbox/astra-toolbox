@@ -254,11 +254,11 @@ bool SART::callFP_SART(float* D_volumeData, unsigned int volumePitch,
 	if (parProjs) {
 		assert(!fanProjs);
 		return FP(D_volumeData, volumePitch, D_projData, projPitch,
-		          d, &parProjs[angle], outputScale);
+		          d, &parProjs[angle], outputScale * fProjectorScale);
 	} else {
 		assert(fanProjs);
 		return FanFP(D_volumeData, volumePitch, D_projData, projPitch,
-		             d, &fanProjs[angle], outputScale);
+		             d, &fanProjs[angle], outputScale * fProjectorScale);
 	}
 }
 
@@ -266,6 +266,7 @@ bool SART::callBP_SART(float* D_volumeData, unsigned int volumePitch,
                        float* D_projData, unsigned int projPitch,
                        unsigned int angle, float outputScale)
 {
+	// NB: No fProjectorScale here, as that it is cancelled out in the SART weighting
 	if (parProjs) {
 		assert(!fanProjs);
 		return BP_SART(D_volumeData, volumePitch, D_projData, projPitch,

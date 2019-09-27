@@ -56,6 +56,10 @@ public:
 
 	bool setSuperSampling(int raysPerDet, int raysPerPixelDim);
 
+	// Scale the final reconstruction.
+	// May be called at any time after setGeometry and before iterate(). Multiple calls stack.
+	bool setReconstructionScale(float fScale);
+
 	virtual bool enableVolumeMask();
 	virtual bool enableSinogramMask();
 
@@ -88,8 +92,7 @@ public:
 	// sinogram, reconstruction, volume mask and sinogram mask in system RAM,
 	// respectively. The corresponding pitch variables give the pitches
 	// of these buffers, measured in floats.
-	// The sinogram is multiplied by fSinogramScale after uploading it.
-	virtual bool copyDataToGPU(const float* pfSinogram, unsigned int iSinogramPitch, float fSinogramScale,
+	virtual bool copyDataToGPU(const float* pfSinogram, unsigned int iSinogramPitch,
 	                           const float* pfReconstruction, unsigned int iReconstructionPitch,
 	                           const float* pfVolMask, unsigned int iVolMaskPitch,
 	                           const float* pfSinoMask, unsigned int iSinoMaskPitch);
@@ -133,7 +136,7 @@ protected:
 	SDimensions dims;
 	SParProjection* parProjs;
 	SFanProjection* fanProjs;
-	float fOutputScale;
+	float fProjectorScale;
 
 	bool freeGPUMemory;
 
