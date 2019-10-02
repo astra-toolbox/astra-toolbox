@@ -90,6 +90,17 @@ make install
 
 This will install Astra into your current Python environment.
 
+You can pass a different Python than the default by specifying the path to the Python executable:
+```
+cd build/linux
+./autogen.sh   # when building a git version
+./configure --with-cuda=/usr/local/cuda \
+            --with-python=/path/to/python_executable \
+            --with-install-type=module
+make
+make install
+```
+
 #### As a C++ library
 
 Requirements: g++, boost, CUDA (5.5 or higher)
@@ -104,6 +115,16 @@ make install-dev
 
 This will install the Astra library and C++ headers.
 
+#### Building without CUDA
+Should you not want to build of the CUDA modules just remove `--with-cuda=/usr/local/cuda` from the arguments passed to the `configure.sh` script
+
+```
+cd build/linux
+./autogen.sh   # when building a git version
+./configure
+make
+make install-dev
+```
 
 ### macOS, from source
 
