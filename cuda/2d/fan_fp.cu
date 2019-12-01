@@ -190,7 +190,7 @@ __global__ void FanFPvertical(float* D_projData, unsigned int projPitch, unsigne
 
 		// ray: x = alpha * y + beta
 		const float alpha = (fSrcX - fDetX) / (fSrcY - fDetY);
-		const float beta = fSrcX - alpha * fSrcY;
+		const float beta = - fSrcX + alpha * fSrcY;
 	
 		const float fDistCorr = sqrt(alpha*alpha+1) * outputScale / dims.iRaysPerDet;
 
