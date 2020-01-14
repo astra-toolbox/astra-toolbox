@@ -2,9 +2,10 @@ python:
   - 3.6
 
 numpy:
-  - 1.14
+  - 1.11
   - 1.15
   - 1.16
+  - 1.17
 c_compiler_version:
   - 7.3
 cxx_compiler_version:

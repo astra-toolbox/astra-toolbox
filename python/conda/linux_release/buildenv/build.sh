@@ -18,7 +18,7 @@ git clone --depth 1 --branch ${BRANCH} ${URL}
 
 conda-build -m astra-toolbox/python/conda/libastra/linux_build_config.yaml astra-toolbox/python/conda/libastra
 
-for i in 27 35 36 37; do
+for i in 27 36 37 38; do
   conda-build -m astra-toolbox/python/conda/astra-toolbox/conda_build_config_py$i.yaml astra-toolbox/python/conda/astra-toolbox
 done
 
