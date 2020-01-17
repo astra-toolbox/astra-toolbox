@@ -8,7 +8,7 @@ source:
 
 build:
   number: 0
-  string: cuda_{{ cudatoolkit }} # [linux]
+  string: cuda_{{ cudatoolkit }}_0 # [linux]
 
 requirements:
   build:

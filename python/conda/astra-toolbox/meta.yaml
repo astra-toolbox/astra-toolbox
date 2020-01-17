@@ -8,7 +8,6 @@ source:
 
 build:
   number: 0
-  string: py_{{ python }}_numpy_{{ numpy }}
 
 test:
   imports:
@@ -36,7 +35,7 @@ requirements:
     - libastra ==1.9.9.dev0
   run:
     - python
-    - {{ pin_compatible('numpy', min_pin='x.x', max_pin='x.x') }}
+    - {{ pin_compatible('numpy', min_pin='x.x', max_pin='x') }}
     - scipy
     - six
     - libastra ==1.9.9.dev0
