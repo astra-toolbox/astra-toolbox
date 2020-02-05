@@ -268,7 +268,7 @@ bool Par3DBP_Array(cudaPitchedPtr D_volumeData,
 		if (th + angleCount > dims.iProjAngles)
 			angleCount = dims.iProjAngles - th;
 
-		bool ok = transferConstants(angles, dims.iProjAngles, params);
+		bool ok = transferConstants(angles, angleCount, params);
 		if (!ok)
 			return false;
 
