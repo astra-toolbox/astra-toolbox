@@ -303,6 +303,8 @@ bool transferConstants(const SConeProjection* angles, unsigned int iProjAngles, 
 	// TODO: Check for errors
 	cudaMemcpyToSymbol(gC_C, p, iProjAngles*sizeof(DevConeParams), 0, cudaMemcpyHostToDevice);
 
+	delete[] p;
+
 	return true;
 }
 

@@ -247,6 +247,10 @@ bool transferConstants(const SPar3DProjection* angles, unsigned int iProjAngles,
 
 	cudaMemcpyToSymbol(gC_C, p, iProjAngles*sizeof(DevPar3DParams), 0, cudaMemcpyHostToDevice);
 	cudaMemcpyToSymbol(gC_scale, s, iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice);
+
+	delete[] p;
+	delete[] s;
+
 	return true;
 }
 
