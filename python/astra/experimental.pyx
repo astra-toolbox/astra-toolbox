@@ -125,7 +125,7 @@ IF HAVE_CUDA==True:
     cimport utils
     from .utils cimport linkVolFromGeometry, linkProjFromGeometry
 
-    def direct_FPBP3D(projector_id, vol, proj, t):
+    def direct_FPBP3D(projector_id, vol, proj, mode, t):
         cdef CProjector3D * projector = manProj.get(projector_id)
         if projector == NULL:
             raise Exception("Projector not found")
@@ -140,10 +140,10 @@ IF HAVE_CUDA==True:
         cdef CCompositeGeometryManager m
         try:
             if t == "FP":
-                if not m.doFP(projector, vols, projs, MODE_SET):
+                if not m.doFP(projector, vols, projs, mode):
                     raise Exception("Failed to perform FP")
             elif t == "BP":
-                if not m.doBP(projector, vols, projs, MODE_SET):
+                if not m.doBP(projector, vols, projs, mode):
                     raise Exception("Failed to perform BP")
             else:
                 raise RuntimeError("internal error: wrong op type")
@@ -161,7 +161,7 @@ IF HAVE_CUDA==True:
         :param proj: The pre-allocated output data, either numpy array or GPULink
         :type datatype: :class:`numpy.ndarray` or :class:`astra.data3d.GPULink`
         """
-        direct_FPBP3D(projector_id, vol, proj, "FP")
+        direct_FPBP3D(projector_id, vol, proj, MODE_SET, "FP")
 
     def direct_BP3D(projector_id, vol, proj):
         """Perform a 3D back projection with pre-allocated input/output.
@@ -173,5 +173,4 @@ IF HAVE_CUDA==True:
         :param proj: The input data, either numpy array or GPULink
         :type datatype: :class:`numpy.ndarray` or :class:`astra.data3d.GPULink`
         """
-        direct_FPBP3D(projector_id, vol, proj, "BP")
-
+        direct_FPBP3D(projector_id, vol, proj, MODE_SET, "BP")
