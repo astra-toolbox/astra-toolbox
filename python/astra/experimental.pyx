@@ -121,3 +121,57 @@ IF HAVE_CUDA==True:
         cdef CProjector3D * projector = manProj.get(projector_id) # may be NULL
         if not m.doFDK(projector, pVolObject, pProjObject, False, NULL, MODE_ADD):
             raise Exception("Failed to perform FDK")
+
+    cimport utils
+    from .utils cimport linkVolFromGeometry, linkProjFromGeometry
+
+    def direct_FPBP3D(projector_id, vol, proj, t):
+        cdef CProjector3D * projector = manProj.get(projector_id)
+        if projector == NULL:
+            raise Exception("Projector not found")
+        cdef CVolumeGeometry3D *pGeometry = projector.getVolumeGeometry()
+        cdef CProjectionGeometry3D *ppGeometry = projector.getProjectionGeometry()
+        cdef CFloat32VolumeData3D * pVol = linkVolFromGeometry(pGeometry, vol)
+        cdef CFloat32ProjectionData3D * pProj = linkProjFromGeometry(ppGeometry, proj)
+        cdef vector[CFloat32VolumeData3D *] vols
+        cdef vector[CFloat32ProjectionData3D *] projs
+        vols.push_back(pVol)
+        projs.push_back(pProj)
+        cdef CCompositeGeometryManager m
+        try:
+            if t == "FP":
+                if not m.doFP(projector, vols, projs, MODE_SET):
+                    raise Exception("Failed to perform FP")
+            elif t == "BP":
+                if not m.doBP(projector, vols, projs, MODE_SET):
+                    raise Exception("Failed to perform BP")
+            else:
+                raise RuntimeError("internal error: wrong op type")
+        finally:
+            del pVol
+            del pProj
+
+    def direct_FP3D(projector_id, vol, proj):
+        """Perform a 3D forward projection with pre-allocated input/output.
+
+        :param projector_id: A 3D projector object handle
+        :type datatype: :class:`int`
+        :param vol: The input data, as either a numpy array, or a GPULink object
+        :type datatype: :class:`numpy.ndarray` or :class:`astra.data3d.GPULink`
+        :param proj: The pre-allocated output data, either numpy array or GPULink
+        :type datatype: :class:`numpy.ndarray` or :class:`astra.data3d.GPULink`
+        """
+        direct_FPBP3D(projector_id, vol, proj, "FP")
+
+    def direct_BP3D(projector_id, vol, proj):
+        """Perform a 3D back projection with pre-allocated input/output.
+
+        :param projector_id: A 3D projector object handle
+        :type datatype: :class:`int`
+        :param vol: The input data, as either a numpy array, or a GPULink object
+        :type datatype: :class:`numpy.ndarray` or :class:`astra.data3d.GPULink`
+        :param proj: The pre-allocated output data, either numpy array or GPULink
+        :type datatype: :class:`numpy.ndarray` or :class:`astra.data3d.GPULink`
+        """
+        direct_FPBP3D(projector_id, vol, proj, "BP")
+
