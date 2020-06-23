@@ -168,9 +168,9 @@ IF HAVE_CUDA==True:
 
         :param projector_id: A 3D projector object handle
         :type datatype: :class:`int`
-        :param vol: The input data, as either a numpy array, or a GPULink object
+        :param vol: The pre-allocated output data, as either a numpy array, or a GPULink object
         :type datatype: :class:`numpy.ndarray` or :class:`astra.data3d.GPULink`
-        :param proj: The pre-allocated output data, either numpy array or GPULink
+        :param proj: The input data, either numpy array or GPULink
         :type datatype: :class:`numpy.ndarray` or :class:`astra.data3d.GPULink`
         """
         direct_FPBP3D(projector_id, vol, proj, "BP")

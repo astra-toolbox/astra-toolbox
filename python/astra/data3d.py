@@ -26,7 +26,7 @@
 from . import data3d_c as d
 import numpy as np
 
-from .pythonutils import GPULink
+from .pythonutils import GPULink, checkArrayForLink
 
 def create(datatype,geometry,data=None):
     """Create a 3D object.
@@ -57,10 +57,7 @@ def link(datatype, geometry, data):
     if not isinstance(data,np.ndarray) and not isinstance(data,GPULink):
         raise TypeError("Input should be a numpy ndarray or GPULink object")
     if isinstance(data, np.ndarray):
-        if data.dtype != np.float32:
-            raise ValueError("Numpy array should be float32")
-        if not (data.flags['C_CONTIGUOUS'] and data.flags['ALIGNED']):
-            raise ValueError("Numpy array should be C_CONTIGUOUS and ALIGNED")
+        checkArrayForLink(data)
     return d.create(datatype,geometry,data,True)
 
 

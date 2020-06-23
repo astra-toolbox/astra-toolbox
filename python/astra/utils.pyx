@@ -45,7 +45,7 @@ from .PyXMLDocument cimport XMLDocument
 from .PyXMLDocument cimport XMLNode
 from .PyIncludes cimport *
 
-from .pythonutils import GPULink
+from .pythonutils import GPULink, checkArrayForLink
 
 cdef extern from "CFloat32CustomPython.h":
     cdef cppclass CFloat32CustomPython:
@@ -252,9 +252,10 @@ cdef CFloat32VolumeData3D* linkVolFromGeometry(CVolumeGeometry3D *pGeometry, dat
         data_shape = (data.z, data.y, data.x)
     if geom_shape != data_shape:
         raise ValueError(
-            "The dimensions of the data do not match those specified in the geometry.".format(data_shape, geom_shape))
+            "The dimensions of the data do not match those specified in the geometry: {} != {}".format(data_shape, geom_shape))
 
     if isinstance(data, np.ndarray):
+        checkArrayForLink(data)
         pCustom = <CFloat32CustomMemory*> new CFloat32CustomPython(data)
         pDataObject3D = new CFloat32VolumeData3DMemory(pGeometry, pCustom)
     elif isinstance(data, GPULink):
@@ -276,9 +277,10 @@ cdef CFloat32ProjectionData3D* linkProjFromGeometry(CProjectionGeometry3D *pGeom
         data_shape = (data.z, data.y, data.x)
     if geom_shape != data_shape:
         raise ValueError(
-            "The dimensions of the data do not match those specified in the geometry.".format(data_shape, geom_shape))
+            "The dimensions of the data do not match those specified in the geometry: {} != {}".format(data_shape, geom_shape))
 
     if isinstance(data, np.ndarray):
+        checkArrayForLink(data)
         pCustom = <CFloat32CustomMemory*> new CFloat32CustomPython(data)
         pDataObject3D = new CFloat32ProjectionData3DMemory(pGeometry, pCustom)
     elif isinstance(data, GPULink):
