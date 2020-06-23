@@ -45,6 +45,18 @@ from .PyXMLDocument cimport XMLDocument
 from .PyXMLDocument cimport XMLNode
 from .PyIncludes cimport *
 
+from .pythonutils import GPULink
+
+cdef extern from "CFloat32CustomPython.h":
+    cdef cppclass CFloat32CustomPython:
+        CFloat32CustomPython(arrIn)
+
+cdef extern from "Python.h":
+    void* PyLong_AsVoidPtr(object)
+
+
+include "config.pxi"
+
 
 cdef Config * dictToConfig(string rootname, dc) except NULL:
     cdef Config * cfg = new Config()
@@ -230,3 +242,53 @@ cdef XMLNode2dict(XMLNode node):
         inc(it)
     if len(opts)>0: dct['options'] = opts
     return dct
+
+cdef CFloat32VolumeData3D* linkVolFromGeometry(CVolumeGeometry3D *pGeometry, data) except NULL:
+    cdef CFloat32VolumeData3D * pDataObject3D = NULL
+    geom_shape = (pGeometry.getGridSliceCount(), pGeometry.getGridRowCount(), pGeometry.getGridColCount())
+    if isinstance(data, np.ndarray):
+        data_shape = data.shape
+    elif isinstance(data, GPULink):
+        data_shape = (data.z, data.y, data.x)
+    if geom_shape != data_shape:
+        raise ValueError(
+            "The dimensions of the data do not match those specified in the geometry.".format(data_shape, geom_shape))
+
+    if isinstance(data, np.ndarray):
+        pCustom = <CFloat32CustomMemory*> new CFloat32CustomPython(data)
+        pDataObject3D = new CFloat32VolumeData3DMemory(pGeometry, pCustom)
+    elif isinstance(data, GPULink):
+        IF HAVE_CUDA==True:
+            hnd = wrapHandle(<float*>PyLong_AsVoidPtr(data.ptr), data.x, data.y, data.z, data.pitch/4)
+            pDataObject3D = new CFloat32VolumeData3DGPU(pGeometry, hnd)
+        ELSE:
+            raise NotImplementedError("CUDA support is not enabled in ASTRA")
+    else:
+        raise TypeError("data should be a numpy.ndarray or a GPULink object")
+    return pDataObject3D
+
+cdef CFloat32ProjectionData3D* linkProjFromGeometry(CProjectionGeometry3D *pGeometry, data) except NULL:
+    cdef CFloat32ProjectionData3D * pDataObject3D = NULL
+    geom_shape = (pGeometry.getDetectorRowCount(), pGeometry.getProjectionCount(), pGeometry.getDetectorColCount())
+    if isinstance(data, np.ndarray):
+        data_shape = data.shape
+    elif isinstance(data, GPULink):
+        data_shape = (data.z, data.y, data.x)
+    if geom_shape != data_shape:
+        raise ValueError(
+            "The dimensions of the data do not match those specified in the geometry.".format(data_shape, geom_shape))
+
+    if isinstance(data, np.ndarray):
+        pCustom = <CFloat32CustomMemory*> new CFloat32CustomPython(data)
+        pDataObject3D = new CFloat32ProjectionData3DMemory(pGeometry, pCustom)
+    elif isinstance(data, GPULink):
+        IF HAVE_CUDA==True:
+            hnd = wrapHandle(<float*>PyLong_AsVoidPtr(data.ptr), data.x, data.y, data.z, data.pitch/4)
+            pDataObject3D = new CFloat32ProjectionData3DGPU(pGeometry, hnd)
+        ELSE:
+            raise NotImplementedError("CUDA support is not enabled in ASTRA")
+    else:
+        raise TypeError("data should be a numpy.ndarray or a GPULink object")
+    return pDataObject3D
+
+
