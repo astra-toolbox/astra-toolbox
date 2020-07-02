@@ -65,6 +65,8 @@ IF HAVE_CUDA==True:
     cdef CData3DManager * man3d = <CData3DManager * >PyData3DManager.getSingletonPtr()
 
     def do_composite(projector_id, vol_ids, proj_ids, mode, t):
+        if mode != MODE_ADD and mode != MODE_SET:
+            raise RuntimeError("internal error: wrong composite mode")
         cdef vector[CFloat32VolumeData3D *] vol
         cdef CFloat32VolumeData3D * pVolObject
         cdef CFloat32ProjectionData3D * pProjObject
@@ -126,6 +128,8 @@ IF HAVE_CUDA==True:
     from .utils cimport linkVolFromGeometry, linkProjFromGeometry
 
     def direct_FPBP3D(projector_id, vol, proj, mode, t):
+        if mode != MODE_ADD and mode != MODE_SET:
+            raise RuntimeError("internal error: wrong composite mode")
         cdef CProjector3D * projector = manProj.get(projector_id)
         if projector == NULL:
             raise Exception("Projector not found")
