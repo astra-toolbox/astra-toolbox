@@ -236,9 +236,17 @@ cdef extern from "astra/ProjectionGeometry3D.h" namespace "astra":
         int getDetectorColCount()
         int getDetectorRowCount()
 
+cdef extern from "astra/Float32VolumeData3D.h" namespace "astra":
+    cdef cppclass CFloat32VolumeData3D(CFloat32Data3D):
+        pass
+
+cdef extern from "astra/Float32ProjectionData3D.h" namespace "astra":
+    cdef cppclass CFloat32ProjectionData3D(CFloat32Data3D):
+        pass
+
 
 cdef extern from "astra/Float32VolumeData3DMemory.h" namespace "astra":
-    cdef cppclass CFloat32VolumeData3DMemory:
+    cdef cppclass CFloat32VolumeData3DMemory(CFloat32VolumeData3D):
         CFloat32VolumeData3DMemory(CVolumeGeometry3D*)
         CFloat32VolumeData3DMemory(CVolumeGeometry3D*, CFloat32CustomMemory*)
         CVolumeGeometry3D* getGeometry()
@@ -266,7 +274,7 @@ cdef extern from "astra/ConeVecProjectionGeometry3D.h" namespace "astra":
         CConeVecProjectionGeometry3D()
 
 cdef extern from "astra/Float32ProjectionData3DMemory.h" namespace "astra":
-    cdef cppclass CFloat32ProjectionData3DMemory:
+    cdef cppclass CFloat32ProjectionData3DMemory(CFloat32ProjectionData3D):
         CFloat32ProjectionData3DMemory(CProjectionGeometry3D*)
         CFloat32ProjectionData3DMemory(CConeProjectionGeometry3D*)
         CFloat32ProjectionData3DMemory(CProjectionGeometry3D*, CFloat32CustomMemory*)
@@ -280,7 +288,7 @@ cdef extern from "astra/Float32ProjectionData3DMemory.h" namespace "astra":
 
 IF HAVE_CUDA==True:
     cdef extern from "astra/Float32VolumeData3DGPU.h" namespace "astra":
-        cdef cppclass CFloat32VolumeData3DGPU:
+        cdef cppclass CFloat32VolumeData3DGPU(CFloat32VolumeData3D):
             CFloat32VolumeData3DGPU(CVolumeGeometry3D*, MemHandle3D)
             CVolumeGeometry3D* getGeometry()
             void changeGeometry(CVolumeGeometry3D*)
@@ -290,7 +298,7 @@ IF HAVE_CUDA==True:
             bool isInitialized()
 
     cdef extern from "astra/Float32ProjectionData3DGPU.h" namespace "astra":
-        cdef cppclass CFloat32ProjectionData3DGPU:
+        cdef cppclass CFloat32ProjectionData3DGPU(CFloat32ProjectionData3D):
             CFloat32ProjectionData3DGPU(CProjectionGeometry3D*, MemHandle3D)
             CProjectionGeometry3D* getGeometry()
             void changeGeometry(CProjectionGeometry3D*)
