@@ -26,6 +26,8 @@
 from . import data2d_c as d
 import numpy as np
 
+from .pythonutils import GPULink, checkArrayForLink
+
 def clear():
     """Clear all 2D data objects."""
     return d.clear()
@@ -65,7 +67,10 @@ def link(datatype, geometry, data):
     :returns: :class:`int` -- the ID of the constructed object.
     
     """
-    checkArrayForLink(data)
+    if not isinstance(data,np.ndarray) and not isinstance(data,GPULink):
+        raise TypeError("Input should be a numpy ndarray or GPULink object")
+    if isinstance(data, np.ndarray):
+        checkArrayForLink(data)
     return d.create(datatype,geometry,data,True)
 
 def store(i, data):
