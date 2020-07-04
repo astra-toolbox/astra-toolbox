@@ -12,7 +12,7 @@ docker build -t astra-build-env buildenv
 
 cp buildenv/build.sh $D
 
-docker run -v $D:/out:z astra-build-env /bin/bash /out/build.sh 1.9.9.dev2 0
+docker run -v $D:/out:z astra-build-env /bin/bash /out/build.sh 1.9.9.dev4 0
 
 rm -f $D/build.sh
 
