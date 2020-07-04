@@ -24,6 +24,8 @@
 # -----------------------------------------------------------------------
 
 from . import data2d_c as d
+from .pythonutils import checkArrayForLink
+
 import numpy as np
 
 def clear():
