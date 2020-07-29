@@ -258,7 +258,7 @@ float dotProduct2D(float* D_data, unsigned int pitch,
 
 bool cudaTextForceKernelsCompletion()
 {
-	cudaError_t returnedCudaError = cudaThreadSynchronize();
+	cudaError_t returnedCudaError = cudaDeviceSynchronize();
 
 	if(returnedCudaError != cudaSuccess) {
 		ASTRA_ERROR("Failed to force completion of cuda kernels: %d: %s.", returnedCudaError, cudaGetErrorString(returnedCudaError));

@@ -320,7 +320,7 @@ bool FanBP_internal(float* D_volumeData, unsigned int volumePitch,
 		else
 			devFanBP<false><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, dims, fOutputScale);
 	}
-	cudaThreadSynchronize();
+	cudaDeviceSynchronize();
 
 	cudaTextForceKernelsCompletion();
 
@@ -352,7 +352,7 @@ bool FanBP_FBPWeighted_internal(float* D_volumeData, unsigned int volumePitch,
 	for (unsigned int i = 0; i < dims.iProjAngles; i += g_anglesPerBlock) {
 		devFanBP<true><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, dims, fOutputScale);
 	}
-	cudaThreadSynchronize();
+	cudaDeviceSynchronize();
 
 	cudaTextForceKernelsCompletion();
 
@@ -380,7 +380,7 @@ bool FanBP_SART(float* D_volumeData, unsigned int volumePitch,
 	             (dims.iVolHeight+g_blockSliceSize-1)/g_blockSliceSize);
 
 	devFanBP_SART<<<dimGrid, dimBlock>>>(D_volumeData, volumePitch, dims, fOutputScale);
-	cudaThreadSynchronize();
+	cudaDeviceSynchronize();
 
 	cudaTextForceKernelsCompletion();
 

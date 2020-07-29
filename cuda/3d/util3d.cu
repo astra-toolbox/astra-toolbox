@@ -432,7 +432,7 @@ float dotProduct3D(cudaPitchedPtr data, unsigned int x, unsigned int y,
 
 bool cudaTextForceKernelsCompletion()
 {
-	cudaError_t returnedCudaError = cudaThreadSynchronize();
+	cudaError_t returnedCudaError = cudaDeviceSynchronize();
 
 	if(returnedCudaError != cudaSuccess) {
 		ASTRA_ERROR("Failed to force completion of cuda kernels: %d: %s.", returnedCudaError, cudaGetErrorString(returnedCudaError));
