@@ -61,7 +61,7 @@ ifeq ($(cuda),yes)
 CPPFLAGS  += @CPPFLAGS_CUDA@ -DASTRA_CUDA
 NVCCFLAGS += @NVCCFLAGS_EXTRA@ @CPPFLAGS_CUDA@ -I$(srcdir)/../../include -DASTRA_CUDA
 LDFLAGS   += @LDFLAGS_CUDA@
-LIBS      += -Wl,-Bstatic,-lcudart_static,-lcufft_static_nocallback,-lculibos,-Bdynamic
+LIBS      += -Wl,-Bstatic,-lcudart_static,-lcufft_static_nocallback,-lculibos,-Bdynamic,-ldl
 NVCC       = @NVCC@
 endif
 
@@ -406,8 +406,8 @@ endif
 endif
 
 ifeq ($(boostutf),yes)
-test.bin: $(ALL_OBJECTS) $(TEST_OBJECTS)
-	./libtool --mode=link $(LD) -o $@ $(LDFLAGS) $+ $(LIBS) $(BOOSTUTF_LIBS)
+test.bin: $(TEST_OBJECTS) libastra.la
+	$(LD) -o $@ $(LDFLAGS) -L$(abs_top_builddir)/.libs -Wl,-rpath=$(abs_top_builddir)/.libs $(BOOSTUTF_LIBS) $(LIBS) -lastra $(TEST_OBJECTS)
 
 test: test.bin
 	./test.bin
