@@ -251,6 +251,10 @@ static void convertAndUploadAngles(const SParProjection *projs, unsigned int nth
 	cudaMemcpyToSymbol(gC_angle, angles, nth*sizeof(float), 0, cudaMemcpyHostToDevice); 
 	cudaMemcpyToSymbol(gC_angle_offset, offsets, nth*sizeof(float), 0, cudaMemcpyHostToDevice);
 	cudaMemcpyToSymbol(gC_angle_detsize, detsizes, nth*sizeof(float), 0, cudaMemcpyHostToDevice); 
+	
+	delete [] angles;
+	delete [] offsets;
+	delete [] detsizes;
 }
 
 
