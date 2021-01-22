@@ -27,6 +27,7 @@ __pycache__
 /build/linux/cuda/*
 /build/linux/install-sh
 /build/linux/libastra.la
+/build/linux/libastra.pc
 /build/linux/libtool
 /build/linux/ltmain.sh
 /build/linux/src/*
