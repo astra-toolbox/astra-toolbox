@@ -213,15 +213,15 @@ __global__ void dev_cone_BP_SS(void* D_volData, unsigned int volPitch, int start
 			float fZs = fZ;
 			for (int iSubZ = 0; iSubZ < iRaysPerVoxelDim; ++iSubZ) {
 
-				const float fUNum = fCu.w + fX * fCu.x + fY * fCu.y + fZ * fCu.z;
-				const float fVNum = fCv.w + fX * fCv.x + fY * fCv.y + fZ * fCv.z;
-				const float fDen  = fCd.w + fX * fCd.x + fY * fCd.y + fZ * fCd.z;
+				const float fUNum = fCu.w + fXs * fCu.x + fYs * fCu.y + fZs * fCu.z;
+				const float fVNum = fCv.w + fXs * fCv.x + fYs * fCv.y + fZs * fCv.z;
+				const float fDen  = fCd.w + fXs * fCd.x + fYs * fCd.y + fZs * fCd.z;
 
 				const float fr = __fdividef(1.0f, fDen);
 				const float fU = fUNum * fr;
 				const float fV = fVNum * fr;
 
-				fVal += tex3D(gT_coneProjTexture, fU, fV, fAngle) * fr;
+				fVal += tex3D(gT_coneProjTexture, fU, fAngle, fV) * fr * fr;
 
 				fZs += fSubStep;
 			}

@@ -76,7 +76,7 @@ def ProjectionGeometries(type):
 
 
 class TestRecScale(unittest.TestCase):
-  def single_test(self, geom_type, proj_type, alg, iters):
+  def single_test(self, geom_type, proj_type, alg, iters, vss, dss):
     if alg == 'FBP' and 'fanflat' in geom_type:
       self.skipTest('CPU FBP is parallel-beam only')
     is3D = (geom_type in ['parallel3d', 'cone'])
@@ -88,7 +88,12 @@ class TestRecScale(unittest.TestCase):
         else:
           vol = np.zeros((64,64,64),dtype=np.float32)
           vol[25:35,25:35,25:35] = 1
-        proj_id = astra.create_projector(proj_type, pg, vg)
+        options = {}
+        if vss > 1:
+          options["VoxelSuperSampling"] = vss
+        if dss > 1:
+          options["DetectorSuperSampling"] = vss
+        proj_id = astra.create_projector(proj_type, pg, vg, options=options)
         if not is3D:
           sino_id, sinogram = astra.create_sino(vol, proj_id)
         else:
@@ -185,6 +190,14 @@ __algs_cone = {
 }
 
 
+__combinations_ss = {
+  'parallel': [ { 'projector': 'cuda', 'alg': 'SIRT_CUDA', 'iters': 50 } ],
+  'fanflat': [ { 'projector': 'cuda', 'alg': 'SIRT_CUDA', 'iters': 50 } ],
+  'parallel3d': [ { 'projector': 'cuda3d', 'alg': 'SIRT3D_CUDA', 'iters': 200 } ],
+  'cone': [ { 'projector': 'cuda3d', 'alg': 'SIRT3D_CUDA', 'iters': 200 } ]
+}
+
+
 
 for k, l in __combinations.items():
   for v in l:
@@ -199,7 +212,7 @@ for k, l in __combinations.items():
       A = __algs
     for a, i in A.items():
       def f(k, v, a, i):
-        return lambda self: self.single_test(k, v, a, i)
+        return lambda self: self.single_test(k, v, a, i, 1, 1)
       setattr(TestRecScale, 'test_' + a + '_' + k + '_' + v, f(k,v,a,i))
 
 for k, l in __combinations_adjoint.items():
@@ -207,6 +220,14 @@ for k, l in __combinations_adjoint.items():
     def g(k, v):
       return lambda self: self.single_test_adjoint3D(k, v)
     setattr(TestRecScale, 'test_adjoint_' + k + '_' + v, g(k,v))
+
+for k, l in __combinations_ss.items():
+  for A in l:
+    for vss in [1, 2]:
+      for dss in [1, 2]:
+        def h(k, v, a, i, vss, dss):
+          return lambda self: self.single_test(k, v, a, i, vss, dss)
+        setattr(TestRecScale, 'test_ss_' + a + '_' + k + '_' + v + '_' + str(vss) + '_' + str(dss), h(k, A['projector'], A['alg'], A['iters'], vss, dss))
 
 if __name__ == '__main__':
   unittest.main()
