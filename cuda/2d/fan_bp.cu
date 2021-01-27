@@ -290,7 +290,7 @@ bool transferConstants(const SFanProjection* angles, unsigned int iProjAngles, b
 	// TODO: Check for errors
 	cudaMemcpyToSymbol(gC_C, p, iProjAngles*sizeof(DevFanParams), 0, cudaMemcpyHostToDevice);
 
-    delete [] p;
+        delete [] p;
 
 	return true;
 }
