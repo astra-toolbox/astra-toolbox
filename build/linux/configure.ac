@@ -85,7 +85,7 @@ fi
 
 # nvcc, cuda
 
-AC_ARG_WITH(cuda, [[  --with-cuda=path        path of CUDA SDK (optional)]],,)
+AC_ARG_WITH(cuda, [[  --with-cuda=path        path of CUDA (optional)]],,)
 
 if test x"$with_cuda" != xno; then
   NVCC_PATH=$PATH
@@ -182,8 +182,8 @@ if test x"$with_matlab" != x; then
   fi
 fi
 
-AC_MSG_CHECKING([if mex requires the -R2017b option])
 if test x"$HAVEMATLAB" = xyes; then
+  AC_MSG_CHECKING([if mex requires the -R2017b option])
   ASTRA_CHECK_MEX_OPTION([-R2017b],[$MEXSUFFIX],[
     MEXFLAGS="-R2017b"
     # TODO: check if this is the best way of emulating -R2017b when using
