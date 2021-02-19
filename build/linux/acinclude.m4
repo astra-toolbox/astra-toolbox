@@ -141,8 +141,12 @@ int main() {
   return 0;
 }
 _ACEOF
-NVCC_lastarch="none"
 NVCC_extra=""
+# Add -Wno-deprecated-gpu-targets option if supported
+ASTRA_RUN_LOGOUTPUT([$NVCC -c -o conftest.o conftest.cu -Wno-deprecated-gpu-targets $NVCCFLAGS $$2]) && {
+  NVCC_extra="-Wno-deprecated-gpu-targets"
+}
+NVCC_lastarch="none"
 NVCC_list=""
 astra_save_IFS=$IFS
 IFS=,
