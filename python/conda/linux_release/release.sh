@@ -19,8 +19,10 @@ docker build -t astra-build-env-archive -f buildenv/archive.Dockerfile buildenv
 
 cp buildenv/build.sh $D
 
-docker run -v $D:/out:z astra-build-env-archive /bin/bash /out/build.sh 1.9.9.dev5 0 archive
-docker run -v $D:/out:z astra-build-env /bin/bash /out/build.sh 1.9.9.dev5 0
+V=1.9.9.dev6
+
+docker run -v $D:/out:z astra-build-env-archive /bin/bash /out/build.sh $V 0 archive
+docker run -v $D:/out:z astra-build-env /bin/bash /out/build.sh $V 0
 
 rm -f $D/build.sh
 
