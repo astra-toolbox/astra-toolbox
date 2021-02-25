@@ -63,7 +63,9 @@ Add $HOME/astra/matlab and its subdirectories (tools, mex) to your matlab path.
 
 If you want to build the Octave interface instead of the Matlab interface,
 specify --enable-octave instead of --with-matlab=... . The Octave files
-will be installed into $HOME/astra/octave .
+will be installed into $HOME/astra/octave . On some Linux distributions
+building the Astra Octave interface will require the Octave development package
+to be installed (e.g., liboctave-dev on Ubuntu).
 
 
 NB: Each matlab version only supports a specific range of g++ versions.
