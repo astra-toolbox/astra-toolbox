@@ -20,13 +20,12 @@ P = scipy.io.loadmat('phantom.mat')['phantom256']
 proj_id = astra.create_projector('cuda',proj_geom,vol_geom)
 sinogram_id, sinogram = astra.create_sino(P, proj_id)
 
-import pylab
-pylab.gray()
-pylab.figure(1)
-pylab.imshow(P)
-pylab.figure(2)
-pylab.imshow(sinogram)
-pylab.show()
+import matplotlib.pyplot as plt
+plt.subplots(1,2,1)
+plt.imshow(P, cmap="gray")
+plt.subplots(1,2,2)
+plt.imshow(sinogram)
+plt.show()
 
 
 # Free memory

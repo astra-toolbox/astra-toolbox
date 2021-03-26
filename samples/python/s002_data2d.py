@@ -38,10 +38,10 @@ astra.data2d.store(v2, A)
 # Retrieve data
 
 R = astra.data2d.get(v2)
-import pylab
-pylab.gray()
-pylab.imshow(R)
-pylab.show()
+
+import matplotlib.pyplot as plt
+plt.imshow(R, cmap="gray")
+plt.show()
 
 
 # Free memory

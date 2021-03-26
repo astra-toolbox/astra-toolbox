@@ -2,7 +2,7 @@ import astra
 import numpy as np
 
 vol_geom = astra.create_vol_geom(256, 256)
-proj_geom = astra.create_proj_geom('parallel', 1.0, 384, np.linspace(0,np.pi,180,False))
+proj_geom = astra.create_proj_geom('parallel', 1.0, 384, np.linspace(0, np.pi, 180, False))
 
 # For CPU-based algorithms, a "projector" object specifies the projection
 # model used. In this case, we use the "strip" model.
@@ -10,15 +10,15 @@ proj_id = astra.create_projector('strip', proj_geom, vol_geom)
 
 # Create a sinogram from a phantom
 import scipy.io
+
 P = scipy.io.loadmat('phantom.mat')['phantom256']
 sinogram_id, sinogram = astra.create_sino(P, proj_id)
 
-import pylab
-pylab.gray()
-pylab.figure(1)
-pylab.imshow(P)
-pylab.figure(2)
-pylab.imshow(sinogram)
+import matplotlib.pyplot as plt
+fig, axs = plt.subplots(nrows=1, ncols=3)
+axs[0].imshow(P, cmap="gray")
+axs[1].imshow(sinogram,cmap="gray")
+
 
 # Create a data object for the reconstruction
 rec_id = astra.data2d.create('-vol', vol_geom)
@@ -44,9 +44,8 @@ astra.algorithm.run(alg_id, 20)
 
 # Get the result
 rec = astra.data2d.get(rec_id)
-pylab.figure(3)
-pylab.imshow(rec)
-pylab.show()
+axs[2].imshow(rec, cmap="gray")
+plt.show()
 
 # Clean up.
 astra.algorithm.delete(alg_id)

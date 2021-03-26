@@ -23,11 +23,9 @@ P = scipy.io.loadmat('phantom.mat')['phantom256']
 s = W.dot(P.ravel())
 s = np.reshape(s, (len(proj_geom['ProjectionAngles']),proj_geom['DetectorCount']))
 
-import pylab
-pylab.gray()
-pylab.figure(1)
-pylab.imshow(s)
-pylab.show()
+import matplotlib.pyplot as plt
+plt.imshow(s, cmap="gray")
+plt.show()
 
 # Each row of the projection matrix corresponds to a detector element.
 # Detector t for angle p is for row 1 + t + p*proj_geom.DetectorCount.
