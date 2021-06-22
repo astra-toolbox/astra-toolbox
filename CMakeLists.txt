@@ -21,4 +21,18 @@ endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
 add_subdirectory(src)
 
-install(TARGETS astra DESTINATION "install")
+# Installs these targets to CMAKE_INSTALL_PREFIX
+install(
+  TARGETS astra
+  EXPORT AstraTargets
+  LIBRARY DESTINATION "lib"
+)
+install(
+  DIRECTORY
+  "${CMAKE_SOURCE_DIR}/include"
+  DESTINATION ".")
+install(
+  EXPORT AstraTargets
+  FILE "AstraTargets.cmake"
+  NAMESPACE "astra::"
+  DESTINATION "lib/cmake/astra")

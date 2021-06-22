@@ -11,6 +11,9 @@ file(GLOB ASTRA_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp"
 
 message(VERBOSE "Complete list of libastra sources: ${ASTRA_SOURCES}")
 
+file(GLOB_RECURSE ASTRA_HEADERS "${CMAKE_SOURCE_DIR}/include/*" LIST_DIRECTORIES false )
+message(VERBOSE "Public headers: ${ASTRA_HEADERS}")
+
 set(ASTRA_INCLUDES
     "${CMAKE_SOURCE_DIR}/include" ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
     "${CMAKE_SOURCE_DIR}/lib/include" ${Boost_INCLUDE_DIRS})
