@@ -1,0 +1,24 @@
+# 3.11.0 is from scikit-build documentation
+cmake_minimum_required(VERSION 3.11.0)
+
+# Get consistent behavior out of all the compilers
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+project(
+  astra-toolbox
+  VERSION 1.9.9
+  DESCRIPTION
+    "a MATLAB and Python toolbox of high-performance GPU primitives for 2D and 3D tomography."
+  LANGUAGES CXX CUDA)
+
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_INSTALL_PREFIX
+      "$HOME/astra-toolbox"
+      CACHE PATH "Because I say so" FORCE)
+endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+
+add_subdirectory(src)
+
+install(TARGETS astra DESTINATION "install")
