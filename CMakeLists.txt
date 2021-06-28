@@ -11,20 +11,24 @@ project(
   VERSION 1.9.9
   DESCRIPTION
     "a MATLAB and Python toolbox of high-performance GPU primitives for 2D and 3D tomography."
-  LANGUAGES CXX CUDA)
+  LANGUAGES CUDA CXX)
 
 add_subdirectory(src)
+
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+  include(CTest)
+endif()
+
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
+  add_subdirectory(tests)
+endif()
 
 # Installs these targets to CMAKE_INSTALL_PREFIX
 install(
   TARGETS astra
   EXPORT AstraTargets
-  LIBRARY DESTINATION "lib"
-)
-install(
-  DIRECTORY
-  "${CMAKE_SOURCE_DIR}/include"
-  DESTINATION ".")
+  LIBRARY DESTINATION "lib")
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/include" DESTINATION ".")
 install(
   EXPORT AstraTargets
   FILE "AstraTargets.cmake"

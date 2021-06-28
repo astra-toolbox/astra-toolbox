@@ -3,7 +3,7 @@
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
-find_package(Boost REQUIRED)
+find_package(Boost REQUIRED COMPONENTS thread)
 
 # Collect source and header files --------------------------------------------
 file(GLOB ASTRA_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp"
@@ -11,7 +11,8 @@ file(GLOB ASTRA_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp"
 
 message(VERBOSE "Complete list of libastra sources: ${ASTRA_SOURCES}")
 
-file(GLOB_RECURSE ASTRA_HEADERS "${CMAKE_SOURCE_DIR}/include/*" LIST_DIRECTORIES false )
+file(GLOB_RECURSE ASTRA_HEADERS "${CMAKE_SOURCE_DIR}/include/*"
+     LIST_DIRECTORIES false)
 message(VERBOSE "Public headers: ${ASTRA_HEADERS}")
 
 set(ASTRA_INCLUDES
@@ -31,7 +32,7 @@ set_target_properties(
   PROPERTIES POSITION_INDEPENDENT_CODE ON
              COMPILE_DEFINITIONS "ASTRA_CUDA"
              INCLUDE_DIRECTORIES "${ASTRA_INCLUDES}"
-             LINK_LIBRARIES "${Boost_LIBRARIES}"
+             LINK_LIBRARIES "Boost::thread;cufft"
              VERSION "${CMAKE_PROJECT_VERSION}"
              SOVERSION "${CMAKE_PROJECT_VERSION_MAJOR}"
              CUDA_ARCHITECTURES 35
