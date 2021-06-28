@@ -13,12 +13,6 @@ project(
     "a MATLAB and Python toolbox of high-performance GPU primitives for 2D and 3D tomography."
   LANGUAGES CXX CUDA)
 
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX
-      "$HOME/astra-toolbox"
-      CACHE PATH "Because I say so" FORCE)
-endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-
 add_subdirectory(src)
 
 # Installs these targets to CMAKE_INSTALL_PREFIX
