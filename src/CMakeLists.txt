@@ -25,12 +25,11 @@ message(VERBOSE "Include directories for libastra: ${ASTRA_INCLUDES}")
 
 add_library(astra SHARED ${ASTRA_SOURCES})
 
-target_compile_features(astra PRIVATE cxx_std_11)
-
 set_target_properties(
   astra
   PROPERTIES POSITION_INDEPENDENT_CODE ON
              COMPILE_DEFINITIONS "ASTRA_CUDA"
+             COMPILE_FEATURES cxx_std_11
              INCLUDE_DIRECTORIES "${ASTRA_INCLUDES}"
              LINK_LIBRARIES "Boost::thread;cufft"
              VERSION "${CMAKE_PROJECT_VERSION}"

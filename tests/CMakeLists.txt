@@ -17,12 +17,11 @@ set(ASTRA_INCLUDES
 
 add_executable(astratest ${ASTRA_TEST_SOURCES})
 
-target_compile_features(astratest PRIVATE cxx_std_11)
-
 set_target_properties(
   astratest
   PROPERTIES POSITION_INDEPENDENT_CODE ON
              COMPILE_DEFINITIONS "ASTRA_CUDA"
+             COMPILE_FEATURES cxx_std_11
              INCLUDE_DIRECTORIES "${ASTRA_INCLUDES}"
              LINK_LIBRARIES "Boost::unit_test_framework;astra")
 
