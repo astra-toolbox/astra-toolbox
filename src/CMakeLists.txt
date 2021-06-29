@@ -3,7 +3,7 @@
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
-find_package(Boost REQUIRED COMPONENTS thread)
+find_package(Boost 1.70 REQUIRED COMPONENTS thread)
 
 # Collect source and header files --------------------------------------------
 file(GLOB ASTRA_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp"
@@ -17,7 +17,7 @@ message(VERBOSE "Public headers: ${ASTRA_HEADERS}")
 
 set(ASTRA_INCLUDES
     "${CMAKE_SOURCE_DIR}/include" ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
-    "${CMAKE_SOURCE_DIR}/lib/include" ${Boost_INCLUDE_DIRS})
+    "${CMAKE_SOURCE_DIR}/lib/include")
 
 message(VERBOSE "Include directories for libastra: ${ASTRA_INCLUDES}")
 
