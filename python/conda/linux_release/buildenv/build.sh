@@ -22,8 +22,8 @@ else
   CONF=linux_build_config.yaml
 fi
 
-conda-build -m astra-toolbox/python/conda/libastra/${CONF} astra-toolbox/python/conda/libastra
+conda-build -c nvidia -m astra-toolbox/python/conda/libastra/${CONF} astra-toolbox/python/conda/libastra
 
-[ x$3 = xarchive ] || conda-build -m astra-toolbox/python/conda/astra-toolbox/linux_build_config.yaml astra-toolbox/python/conda/astra-toolbox
+[ x$3 = xarchive ] || conda-build -c nvidia -m astra-toolbox/python/conda/astra-toolbox/linux_build_config.yaml astra-toolbox/python/conda/astra-toolbox
 
 cp /root/miniconda3/conda-bld/linux-64/*astra* /out
