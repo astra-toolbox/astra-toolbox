@@ -28,7 +28,10 @@ add_library(astra SHARED ${ASTRA_SOURCES})
 set_target_properties(
   astra
   PROPERTIES POSITION_INDEPENDENT_CODE ON
-             COMPILE_DEFINITIONS "ASTRA_CUDA"
+             # ASTRA_CUDA enables CUDA poritions of code
+             # DLL_EXPORTS marks functions as for external use (shared library) on Windows
+             # __SSE2__ enables Streaming SIMD Extensions 2 where available
+             COMPILE_DEFINITIONS "ASTRA_CUDA;DLL_EXPORTS;__SSE2__"
              COMPILE_FEATURES cxx_std_11
              INCLUDE_DIRECTORIES "${ASTRA_INCLUDES}"
              LINK_LIBRARIES "Boost::thread;cufft"
