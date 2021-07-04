@@ -1,28 +1,3 @@
-# -----------------------------------------------------------------------
-# Copyright: 2010-2018, imec Vision Lab, University of Antwerp
-#            2013-2018, CWI, Amsterdam
-#
-# Contact: astra@astra-toolbox.com
-# Website: http://www.astra-toolbox.com/
-#
-# This file is part of the ASTRA Toolbox.
-#
-#
-# The ASTRA Toolbox is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# The ASTRA Toolbox is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
-#
-# -----------------------------------------------------------------------
-
 import astra
 import numpy as np
 
@@ -45,13 +20,12 @@ P = scipy.io.loadmat('phantom.mat')['phantom256']
 proj_id = astra.create_projector('cuda',proj_geom,vol_geom)
 sinogram_id, sinogram = astra.create_sino(P, proj_id)
 
-import pylab
-pylab.gray()
-pylab.figure(1)
-pylab.imshow(P)
-pylab.figure(2)
-pylab.imshow(sinogram)
-pylab.show()
+import matplotlib.pyplot as plt
+plt.subplots(1,2,1)
+plt.imshow(P, cmap="gray")
+plt.subplots(1,2,2)
+plt.imshow(sinogram)
+plt.show()
 
 
 # Free memory

@@ -1,28 +1,3 @@
-# -----------------------------------------------------------------------
-# Copyright: 2010-2018, imec Vision Lab, University of Antwerp
-#            2013-2018, CWI, Amsterdam
-#
-# Contact: astra@astra-toolbox.com
-# Website: http://www.astra-toolbox.com/
-#
-# This file is part of the ASTRA Toolbox.
-#
-#
-# The ASTRA Toolbox is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# The ASTRA Toolbox is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
-#
-# -----------------------------------------------------------------------
-
 import astra
 import numpy as np
 import scipy.io
@@ -100,17 +75,19 @@ astra.algorithm.run(alg_id)
 rec_kernel = astra.data2d.get(rec_id)
 astra.algorithm.delete(alg_id)
 
-import pylab
-pylab.figure()
-pylab.imshow(P)
-pylab.figure()
-pylab.imshow(rec_RL)
-pylab.figure()
-pylab.imshow(rec_filter)
-pylab.figure()
-pylab.imshow(rec_kernel)
-pylab.show()
+import matplotlib.pyplot as plt
+fig, axs = plt.subplots(nrows=1, ncols=4)
+[a.axis("off") for a in axs]
+axs[0].imshow(P, cmap="gray")
+axs[0].title.set_text('P')
+axs[1].imshow(rec_RL,cmap="gray")
+axs[1].title.set_text('rec_RL')
+axs[2].imshow(rec_filter, cmap="gray")
+axs[2].title.set_text('rec_filter')
+axs[3].imshow(rec_kernel, cmap="gray")
+axs[3].title.set_text('rec_kernel')
 
+plt.show()
 astra.data2d.delete(rec_id)
 astra.data2d.delete(sinogram_id)
 astra.projector.delete(proj_id)
