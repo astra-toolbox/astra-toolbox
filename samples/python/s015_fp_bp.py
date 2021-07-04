@@ -23,16 +23,20 @@
 #
 # -----------------------------------------------------------------------
 
-# This example demonstrates using the FP and BP primitives with Matlab's lsqr
-# solver. Calls to FP (astra.create_sino) and
-# BP (astra.create_backprojection) are wrapped in a function astra_wrap,
-# and a handle to this function is passed to lsqr.
+"""Example of using the FP and BP primitives with Scipys's lsqr solver. 
 
-# Because in this case the inputs/outputs of FP and BP have to be vectors
-# instead of images (matrices), the calls require reshaping to and from vectors.
+Calls to FP (astra.create_sino) and BP (astra.create_backprojection) 
+are wrapped in an object of class astra_wrap which is passed to lsqr.
+
+Because in this case the inputs/outputs of FP and BP have to be vectors
+instead of images (matrices), the calls require reshaping to and from vectors.
+"""
 
 import astra
 import numpy as np
+import scipy.io
+import scipy.sparse.linalg
+import pylab
 
 # FP/BP wrapper class
 class astra_wrap(object):
@@ -55,7 +59,6 @@ vol_geom = astra.create_vol_geom(256, 256)
 proj_geom = astra.create_proj_geom('parallel', 1.0, 384, np.linspace(0,np.pi,180,False))
 
 # Create a 256x256 phantom image
-import scipy.io
 P = scipy.io.loadmat('phantom.mat')['phantom256']
 
 # Create a sinogram using the GPU.
@@ -66,14 +69,12 @@ sinogram_id, sinogram = astra.create_sino(P, proj_id)
 b = sinogram.ravel()
 
 # Call lsqr with ASTRA FP and BP
-import scipy.sparse.linalg
 wrapper = astra_wrap(proj_geom,vol_geom)
 result = scipy.sparse.linalg.lsqr(wrapper,b,atol=1e-4,btol=1e-4,iter_lim=25)
 
 # Reshape the result into an image
 Y = np.reshape(result[0],(vol_geom['GridRowCount'], vol_geom['GridColCount']));
 
-import pylab
 pylab.gray()
 pylab.imshow(Y)
 pylab.show()
@@ -81,4 +82,3 @@ pylab.show()
 astra.data2d.delete(sinogram_id)
 astra.projector.delete(proj_id)
 astra.projector.delete(wrapper.proj_id)
-
