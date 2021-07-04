@@ -79,7 +79,7 @@ bool bindProjDataTexture(const cudaArray* array)
 //__launch_bounds__(32*16, 4)
 template<bool FDKWEIGHT>
 __global__ void dev_cone_BP(void* D_volData, unsigned int volPitch, int startAngle,
-                            int angleOffset, const astraCUDA3d::SDimensions3D dims,
+                            int angleOffset, int startZ, const astraCUDA3d::SDimensions3D dims,
                             float fOutputScale)
 {
 	float* volData = (float*)D_volData;
@@ -104,7 +104,10 @@ __global__ void dev_cone_BP(void* D_volData, unsigned int volPitch, int startAng
 	if (Y >= dims.iVolY)
 		return;
 
-	const int startZ = blockIdx.y * g_volBlockZ;
+	startZ += blockIdx.y * g_volBlockZ;
+	if (startZ >= dims.iVolZ)
+		return;
+
 	const float fX = X - 0.5f*dims.iVolX + 0.5f;
 	const float fY = Y - 0.5f*dims.iVolY + 0.5f;
 	const float fZ = startZ - 0.5f*dims.iVolZ + 0.5f;
@@ -145,8 +148,8 @@ __global__ void dev_cone_BP(void* D_volData, unsigned int volPitch, int startAng
 	}
 
 	int endZ = ZSIZE;
-	if (endZ > dims.iVolZ - startZ)
-		endZ = dims.iVolZ - startZ;
+	if (endZ > (int)dims.iVolZ - startZ)
+		endZ = (int)dims.iVolZ - startZ;
 
 	for(int i=0; i < endZ; i++)
 		volData[((startZ+i)*dims.iVolY+Y)*volPitch+X] += Z[i] * fOutputScale;
@@ -155,7 +158,7 @@ __global__ void dev_cone_BP(void* D_volData, unsigned int volPitch, int startAng
 
 
 // supersampling version
-__global__ void dev_cone_BP_SS(void* D_volData, unsigned int volPitch, int startAngle, int angleOffset, const SDimensions3D dims, int iRaysPerVoxelDim, float fOutputScale)
+__global__ void dev_cone_BP_SS(void* D_volData, unsigned int volPitch, int startAngle, int angleOffset, int startZ, const SDimensions3D dims, int iRaysPerVoxelDim, float fOutputScale)
 {
 	float* volData = (float*)D_volData;
 
@@ -181,7 +184,10 @@ __global__ void dev_cone_BP_SS(void* D_volData, unsigned int volPitch, int start
 	if (Y >= dims.iVolY)
 		return;
 
-	const int startZ = blockIdx.y * g_volBlockZ;
+	startZ += blockIdx.y * g_volBlockZ;
+	if (startZ >= dims.iVolZ)
+		return;
+
 	int endZ = startZ + g_volBlockZ;
 	if (endZ > dims.iVolZ)
 		endZ = dims.iVolZ;
@@ -335,19 +341,22 @@ bool ConeBP_Array(cudaPitchedPtr D_volumeData,
 
 		dim3 dimBlock(g_volBlockX, g_volBlockY);
 
-		dim3 dimGrid(((dims.iVolX/1+g_volBlockX-1)/(g_volBlockX))*((dims.iVolY/1+1*g_volBlockY-1)/(1*g_volBlockY)), (dims.iVolZ+g_volBlockZ-1)/g_volBlockZ);
+		dim3 dimGrid(((dims.iVolX/1+g_volBlockX-1)/(g_volBlockX))*((dims.iVolY/1+1*g_volBlockY-1)/(1*g_volBlockY)), 8);
 
 		// timeval t;
 		// tic(t);
 
 		for (unsigned int i = 0; i < angleCount; i += g_anglesPerBlock) {
+		for (unsigned int startZ = 0; startZ < dims.iVolZ; startZ += 8*g_volBlockZ) {
+
 		// printf("Calling BP: %d, %dx%d, %dx%d to %p\n", i, dimBlock.x, dimBlock.y, dimGrid.x, dimGrid.y, (void*)D_volumeData.ptr); 
 			if (params.bFDKWeighting)
-				dev_cone_BP<true><<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, fOutputScale);
+				dev_cone_BP<true><<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, startZ, dims, fOutputScale);
 			else if (params.iRaysPerVoxelDim == 1)
-				dev_cone_BP<false><<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, fOutputScale);
+				dev_cone_BP<false><<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, startZ, dims, fOutputScale);
 			else
-				dev_cone_BP_SS<<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, params.iRaysPerVoxelDim, fOutputScale);
+				dev_cone_BP_SS<<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, startZ, dims, params.iRaysPerVoxelDim, fOutputScale);
+		}
 		}
 
 		cudaTextForceKernelsCompletion();
