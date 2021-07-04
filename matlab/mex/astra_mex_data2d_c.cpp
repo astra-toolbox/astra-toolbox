@@ -128,7 +128,8 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 		}
 		// If data is specified, check dimensions
 		if (nrhs >= 4 && !mexIsScalar(prhs[3])) {
-			if (pGeometry->getGridColCount() != mxGetN(prhs[3]) || pGeometry->getGridRowCount() != mxGetM(prhs[3])) {
+			if (static_cast<size_t>(pGeometry->getGridColCount()) != mxGetN(prhs[3]) 
+          || static_cast<size_t>(pGeometry->getGridRowCount()) != mxGetM(prhs[3])) {
 				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
 				delete cfg;
 				delete pGeometry;
@@ -173,7 +174,8 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 		}
 		// If data is specified, check dimensions
 		if (nrhs >= 4 && !mexIsScalar(prhs[3])) {
-			if (pGeometry->getDetectorCount() != mxGetN(prhs[3]) || pGeometry->getProjectionAngleCount() != mxGetM(prhs[3])) {
+			if (static_cast<size_t>(pGeometry->getDetectorCount()) != mxGetN(prhs[3]) 
+          || static_cast<size_t>(pGeometry->getProjectionAngleCount()) != mxGetM(prhs[3])) {
 				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
 				delete pGeometry;
 				delete cfg;
@@ -199,7 +201,7 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 
 	// Store data
 	if (nrhs == 3) {
-		for (int i = 0; i < pDataObject2D->getSize(); ++i) {
+		for (size_t i = 0; i < pDataObject2D->getSize(); ++i) {
 			pDataObject2D->getData()[i] = 0.0f;
 		}
 	}
@@ -209,7 +211,7 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 		// fill with scalar value
 		if (mexIsScalar(prhs[3])) {
 			float32 fValue = (float32)mxGetScalar(prhs[3]);
-			for (int i = 0; i < pDataObject2D->getSize(); ++i) {
+			for (size_t i = 0; i < pDataObject2D->getSize(); ++i) {
 				pDataObject2D->getData()[i] = fValue;
 			}
 		}
@@ -217,7 +219,8 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 		else {
 			const mwSize* dims = mxGetDimensions(prhs[3]);
 			// Check Data dimensions
-			if (pDataObject2D->getWidth() != mxGetN(prhs[3]) || pDataObject2D->getHeight() != mxGetM(prhs[3])) {
+			if (static_cast<size_t>(pDataObject2D->getWidth()) != mxGetN(prhs[3]) 
+          || static_cast<size_t>(pDataObject2D->getHeight()) != mxGetM(prhs[3])) {
 				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
 				return;
 			}
@@ -226,9 +229,8 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 			if (mxIsLogical(prhs[3])) {
 				mxLogical* pbMatlabData = mxGetLogicals(prhs[3]);
 				int i = 0;
-				int col, row;
-				for (col = 0; col < dims[1]; ++col) {
-					for (row = 0; row < dims[0]; ++row) {
+				for (size_t col = 0; col < dims[1]; ++col) {
+					for (size_t row = 0; row < dims[0]; ++row) {
 						pDataObject2D->getData2D()[row][col] = (float32)pbMatlabData[i];
 						++i;
 					}
@@ -237,9 +239,8 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 			} else if (mxIsDouble(prhs[3])) {
 				double* pdMatlabData = mxGetPr(prhs[3]);
 				int i = 0;
-				int col, row;
-				for (col = 0; col < dims[1]; ++col) {
-					for (row = 0; row < dims[0]; ++row) {
+				for (size_t col = 0; col < dims[1]; ++col) {
+					for (size_t row = 0; row < dims[0]; ++row) {
 						pDataObject2D->getData2D()[row][col] = pdMatlabData[i];
 						++i;
 					}
@@ -248,9 +249,8 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 			} else if (mxIsSingle(prhs[3])) {
 				const float* pfMatlabData = (const float *)mxGetData(prhs[3]);
 				int i = 0;
-				int col, row;
-				for (col = 0; col < dims[1]; ++col) {
-					for (row = 0; row < dims[0]; ++row) {
+				for (size_t col = 0; col < dims[1]; ++col) {
+					for (size_t row = 0; row < dims[0]; ++row) {
 						pDataObject2D->getData2D()[row][col] = pfMatlabData[i];
 						++i;
 					}
@@ -311,12 +311,13 @@ void astra_mex_data2d_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 	// fill with scalar value
 	if (mexIsScalar(prhs[2])) {
 		float32 fValue = (float32)mxGetScalar(prhs[2]);
-		for (int i = 0; i < pDataObject->getSize(); ++i) {
+		for (size_t i = 0; i < pDataObject->getSize(); ++i) {
 			pDataObject->getData()[i] = fValue;
 		}
 	} else {
 		// Check Data dimensions
-		if (pDataObject->getWidth() != mxGetN(prhs[2]) || pDataObject->getHeight() != mxGetM(prhs[2])) {
+		if (static_cast<size_t>(pDataObject->getWidth()) != mxGetN(prhs[2]) 
+        || static_cast<size_t>(pDataObject->getHeight()) != mxGetM(prhs[2])) {
 			mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
 			return;
 		}
@@ -326,9 +327,8 @@ void astra_mex_data2d_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 		if (mxIsLogical(prhs[2])) {
 			mxLogical* pbMatlabData = mxGetLogicals(prhs[2]);
 			int i = 0;
-			int col, row;
-			for (col = 0; col < dims[1]; ++col) {
-				for (row = 0; row < dims[0]; ++row) {
+			for (size_t col = 0; col < dims[1]; ++col) {
+				for (size_t row = 0; row < dims[0]; ++row) {
 					pDataObject->getData2D()[row][col] = (float32)pbMatlabData[i];
 					++i;
 				}
@@ -337,9 +337,8 @@ void astra_mex_data2d_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 		} else if (mxIsDouble(prhs[2])) {
 			double* pdMatlabData = mxGetPr(prhs[2]);
 			int i = 0;
-			int col, row;
-			for (col = 0; col < dims[1]; ++col) {
-				for (row = 0; row < dims[0]; ++row) {
+			for (size_t col = 0; col < dims[1]; ++col) {
+				for (size_t row = 0; row < dims[0]; ++row) {
 					pDataObject->getData2D()[row][col] = pdMatlabData[i];
 					++i;
 				}
@@ -348,9 +347,8 @@ void astra_mex_data2d_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 		} else if (mxIsSingle(prhs[2])) {
 			const float* pfMatlabData = (const float *)mxGetData(prhs[2]);
 			int i = 0;
-			int col, row;
-			for (col = 0; col < dims[1]; ++col) {
-				for (row = 0; row < dims[0]; ++row) {
+			for (size_t col = 0; col < dims[1]; ++col) {
+				for (size_t row = 0; row < dims[0]; ++row) {
 					pDataObject->getData2D()[row][col] = pfMatlabData[i];
 					++i;
 				}

@@ -286,7 +286,7 @@ void CFloat32Data2D::_allocateData()
 	ASTRA_ASSERT(!m_bInitialized);
 
 	ASTRA_ASSERT(m_iSize > 0);
-	ASTRA_ASSERT((size_t)m_iSize == (size_t)m_iWidth * m_iHeight);
+	ASTRA_ASSERT(m_iSize == (size_t)m_iWidth * m_iHeight);
 	ASTRA_ASSERT(m_pfData == NULL);
 	ASTRA_ASSERT(m_ppfData2D == NULL);
 

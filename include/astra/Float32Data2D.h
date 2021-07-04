@@ -53,7 +53,7 @@ protected:
 
 	int m_iWidth;			///< width of the data (x)
 	int m_iHeight;			///< height of the data (y)
-	int m_iSize;			///< total size of the data
+	size_t m_iSize;			///< total size of the data
 
 	/** Pointer to the data block, represented as a 1-dimensional array.
 	 * Note that the data memory is "owned" by this class, meaning that the 
@@ -359,7 +359,7 @@ public:
 	 *
 	 * @return size of the data block
 	 */
-	int getSize() const;
+	size_t getSize() const;
 
 	/** which type is this class?
 	 *
@@ -497,7 +497,7 @@ inline int CFloat32Data2D::getHeight() const
 
 //----------------------------------------------------------------------------------------
 // Get the total size (width*height*depth) of the data block.
-inline int CFloat32Data2D::getSize() const
+inline size_t CFloat32Data2D::getSize() const
 {
 	ASTRA_ASSERT(m_bInitialized);
 	return m_iSize;
