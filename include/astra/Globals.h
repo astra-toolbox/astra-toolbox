@@ -159,11 +159,11 @@ namespace astra {
  *  abort signal has arrived, or NULL to disable. Intended to be used by the
  *  matlab/python interfaces to check if Ctrl-C has been pressed.
  */
-void setShouldAbortHook(bool (*pShouldAbortHook)(void));
+_AstraExport void setShouldAbortHook(bool (*pShouldAbortHook)(void));
 
 /** Check if we should abort execution (due to an external signal).
  */
-bool shouldAbort();
+_AstraExport bool shouldAbort();
 }
 
 //----------------------------------------------------------------------------------------
