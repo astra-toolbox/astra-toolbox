@@ -57,10 +57,10 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 //----------------------------------------------------------------------------------------
 // macro's
 
-#define ASTRA_TOOLBOXVERSION_MAJOR 1
-#define ASTRA_TOOLBOXVERSION_MINOR 9
+#define ASTRA_TOOLBOXVERSION_MAJOR 2
+#define ASTRA_TOOLBOXVERSION_MINOR 0
 #define ASTRA_TOOLBOXVERSION ((ASTRA_TOOLBOXVERSION_MAJOR)*100 + (ASTRA_TOOLBOXVERSION_MINOR))
-#define ASTRA_TOOLBOXVERSION_STRING "1.9.9dev"
+#define ASTRA_TOOLBOXVERSION_STRING "2.0.0"
 
 
 #define ASTRA_ASSERT(a) assert(a)

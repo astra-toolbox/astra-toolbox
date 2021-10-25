@@ -41,7 +41,7 @@ docker build -t astra-build-env-deb11 buildenv.deb11
 
 cp build.sh $D
 
-V=1.9.9.dev7
+V=2.0.0
 
 docker run -v $D:/out:z astra-build-env-deb8 /bin/bash /out/build.sh $V 0 deb8
 docker run -v $D:/out:z astra-build-env-deb9 /bin/bash /out/build.sh $V 0 deb9 full
