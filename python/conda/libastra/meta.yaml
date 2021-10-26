@@ -22,7 +22,10 @@ requirements:
     - boost # [osx or linux]
     - cudatoolkit {{ cudatoolkit }} # [linux]
     # libstdcxx-ng 9.3 introduces extra host system requirements on glibc
+    # For the older systems (debian8, debian9) we use g++ 5.4 and 7.3, resp.
+    {% if cxx_compiler_version in ['5.4', '7.3'] -%}
     - libstdcxx-ng <9.3 # [linux]
+    {% endif %}
   run:
     # See: https://github.com/conda-forge/conda-forge.github.io/issues/687#issuecomment-460095230
     - {{ pin_compatible('cudatoolkit', max_pin='x.x') }} # [linux]

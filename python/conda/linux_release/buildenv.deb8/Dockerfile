@@ -65,3 +65,9 @@ COPY --from=CUDA92 /usr/local/cuda-9.2 /usr/local/cuda-9.2
 COPY --from=CUDA90 /usr/local/cuda-9.0 /usr/local/cuda-9.0
 COPY --from=CUDA80 /usr/local/cuda-8.0 /usr/local/cuda-8.0
 
+RUN conda create -y -n prep -c nvidia --download-only cudatoolkit=10.2 && \
+    conda create -y -n prep -c nvidia --download-only cudatoolkit=10.1 && \
+    conda create -y -n prep -c nvidia --download-only cudatoolkit=10.0 && \
+    conda create -y -n prep -c nvidia --download-only cudatoolkit=9.2 && \
+    conda create -y -n prep -c nvidia --download-only cudatoolkit=9.0 && \
+    conda create -y -n prep -c nvidia --download-only cudatoolkit=8.0
