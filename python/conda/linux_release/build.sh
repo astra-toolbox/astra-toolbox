@@ -20,6 +20,6 @@ CONF=linux_$3_build_config.yaml
 
 conda-build -c nvidia -m astra-toolbox/python/conda/libastra/${CONF} astra-toolbox/python/conda/libastra
 
-[ x$4 = xfull ] && conda-build -c nvidia -m astra-toolbox/python/conda/astra-toolbox/linux_build_config.yaml astra-toolbox/python/conda/astra-toolbox
+[ x$4 = xfull ] && conda-build -c nvidia -m astra-toolbox/python/conda/astra-toolbox/${CONF} astra-toolbox/python/conda/astra-toolbox
 
 cp /root/miniconda3/conda-bld/linux-64/*astra* /out
