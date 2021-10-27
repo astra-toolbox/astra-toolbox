@@ -16,14 +16,10 @@ git clone --depth 1 --branch ${BRANCH} ${URL}
 [ $# -eq 0 ] || perl -pi -e "s/^(\s*string:.+_)[0-9]+/\${1}$2/" astra-toolbox/python/conda/libastra/meta.yaml
 [ $# -eq 0 ] || perl -pi -e "s/^(\s*-\s*libastra\s*==\s*)[0-9a-z+\.]+$/\${1}$1/" astra-toolbox/python/conda/astra-toolbox/meta.yaml
 
-if [ x$3 = xarchive ]; then
-  CONF=linux_archive_build_config.yaml
-else
-  CONF=linux_build_config.yaml
-fi
+CONF=linux_$3_build_config.yaml
 
-conda-build -m astra-toolbox/python/conda/libastra/${CONF} astra-toolbox/python/conda/libastra
+conda-build -c nvidia -m astra-toolbox/python/conda/libastra/${CONF} astra-toolbox/python/conda/libastra
 
-[ x$3 = xarchive ] || conda-build -m astra-toolbox/python/conda/astra-toolbox/linux_build_config.yaml astra-toolbox/python/conda/astra-toolbox
+[ x$4 = xfull ] && conda-build -c nvidia -m astra-toolbox/python/conda/astra-toolbox/${CONF} astra-toolbox/python/conda/astra-toolbox
 
 cp /root/miniconda3/conda-bld/linux-64/*astra* /out

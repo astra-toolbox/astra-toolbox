@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
-dnl Copyright: 2010-2018, imec Vision Lab, University of Antwerp
-dnl            2014-2018, CWI, Amsterdam
+dnl Copyright: 2010-2021, imec Vision Lab, University of Antwerp
+dnl            2014-2021, CWI, Amsterdam
 dnl
 dnl Contact: astra@astra-toolbox.com
 dnl Website: http://www.astra-toolbox.com/
@@ -23,7 +23,7 @@ dnl along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 dnl
 dnl -----------------------------------------------------------------------
 
-AC_INIT(astra, 1.9.9dev)
+AC_INIT(astra, 2.0.0)
 AC_CONFIG_SRCDIR([Makefile.in])
 LT_INIT([disable-static])
 

@@ -26,7 +26,7 @@ your system, it is included as vc_redist.x64.exe in the ASTRA zip file.
 
 ### Linux/Windows, using conda for python 
 
-Requirements: [conda](http://conda.pydata.org/) python environment, with 64 bit Python 2.7, 3.5 or 3.6.
+Requirements: [conda](http://conda.pydata.org/) python environment, with 64 bit Python 3.7, 3.8 or 3.9.
 
 There are packages available for the ASTRA Toolbox in the astra-toolbox
 channel for the conda package manager. To use these, run the following
@@ -47,7 +47,7 @@ conda install -c astra-toolbox/label/dev astra-toolbox
 
 #### For Matlab
 
-Requirements: g++, boost, CUDA (5.5 or higher), Matlab (R2012a or higher)
+Requirements: g++, boost, CUDA (8.0 or higher), Matlab (R2012a or higher)
 
 ```
 cd build/linux
@@ -78,7 +78,7 @@ matlab.
 
 #### For Python
 
-Requirements: g++, boost, CUDA (5.5 or higher), Python (2.7 or 3.x)
+Requirements: g++, boost, CUDA (8.0 or higher), Python (2.7 or 3.x)
 
 ```
 cd build/linux
@@ -94,7 +94,7 @@ This will install Astra into your current Python environment.
 
 #### As a C++ library
 
-Requirements: g++, boost, CUDA (5.5 or higher)
+Requirements: g++, boost, CUDA (8.0 or higher)
 
 ```
 cd build/linux
@@ -125,8 +125,8 @@ make install
 
 ### Windows, from source using Visual Studio 2015
 
-Requirements: Visual Studio 2015 (full or community), boost (recent), CUDA 8.0,
-              Matlab (R2012a or higher) and/or WinPython 2.7/3.x.
+Requirements: Visual Studio 2015 (full or community), boost (recent), CUDA 9.0,
+              Matlab (R2012a or higher) and/or WinPython 3.x.
 
 Using the Visual Studio IDE:
 
@@ -145,7 +145,7 @@ Using .bat scripts in build\msvc:
 Edit build_env.bat and set up the correct directories.
 Run build_setup.bat to automatically copy the boost headers and libraries.
 For matlab: Run build_matlab.bat. The .dll and .mexw64 files will be in bin\x64\Release_Cuda.
-For python 2.7/3.5: Run build_python27.bat or build_python35.bat. Astra will be directly installed into site-packages.
+For python 3.9: Run build_python39.bat. Astra will be directly installed into site-packages.
 
 ## Testing your installation
 
@@ -186,6 +186,6 @@ The ASTRA Toolbox is open source under the GPLv3 license.
 email: astra@astra-toolbox.com
 website: http://www.astra-toolbox.com/
 
-Copyright: 2010-2018, imec Vision Lab, University of Antwerp
-           2014-2018, CWI, Amsterdam
+Copyright: 2010-2021, imec Vision Lab, University of Antwerp
+           2014-2021, CWI, Amsterdam
            http://visielab.uantwerpen.be/ and http://www.cwi.nl/

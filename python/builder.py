@@ -1,6 +1,6 @@
 # -----------------------------------------------------------------------
-# Copyright: 2010-2018, imec Vision Lab, University of Antwerp
-#            2013-2018, CWI, Amsterdam
+# Copyright: 2010-2021, imec Vision Lab, University of Antwerp
+#            2013-2021, CWI, Amsterdam
 #
 # Contact: astra@astra-toolbox.com
 # Website: http://www.astra-toolbox.com/
@@ -74,7 +74,7 @@ for m in ext_modules:
                                       'PythonPluginAlgorithmFactory.cpp'))
 
 setup(name='astra-toolbox',
-      version='1.9.9.dev',
+      version='2.0.0',
       description='Python interface to the ASTRA Toolbox',
       author='D.M. Pelt',
       author_email='D.M.Pelt@cwi.nl',

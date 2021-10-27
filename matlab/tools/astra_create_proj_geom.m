@@ -87,8 +87,8 @@ function proj_geom = astra_create_proj_geom(type, varargin)
 %--------------------------------------------------------------------------
 % This file is part of the ASTRA Toolbox
 % 
-% Copyright: 2010-2018, imec Vision Lab, University of Antwerp
-%            2014-2018, CWI, Amsterdam
+% Copyright: 2010-2021, imec Vision Lab, University of Antwerp
+%            2014-2021, CWI, Amsterdam
 % License: Open Source under GPLv3
 % Contact: astra@astra-toolbox.com
 % Website: http://www.astra-toolbox.com/

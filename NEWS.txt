@@ -1,14 +1,21 @@
 -----------------------------------------------------------------------
 This file is part of the ASTRA Toolbox
 
-Copyright: 2010-2018, imec Vision Lab, University of Antwerp
-           2014-2018, CWI, Amsterdam
+Copyright: 2010-2021, imec Vision Lab, University of Antwerp
+           2014-2021, CWI, Amsterdam
            http://visielab.uantwerpen.be/ and http://www.cwi.nl/
 License: Open Source under GPLv3
 Contact: astra@astra-toolbox.com
 Website: http://www.astra-toolbox.com/
 -----------------------------------------------------------------------
-1.9.0 (2018-??-??)
+2.0.0 (2021-10-27)
+  * fix inconsistent scaling of output value depending on detector pixel size
+      See the 2020-01-17 news entry on astra-toolbox.com for more details
+  * add experimental interfaces to FP3D, BP3D, FDK to make ASTRA calls
+      by 3rd party toolboxes more efficient and flexible
+  * improve compatibility with modern Python, CUDA, Linux and Windows versions
+
+1.9.0 (2018-2019)
   * add 2D parallel_vec geometry
       The old ExtraDetectorOffset option has been removed. Please use
       parallel_vec to achieve this effect now

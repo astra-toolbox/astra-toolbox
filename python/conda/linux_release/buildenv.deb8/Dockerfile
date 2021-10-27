@@ -4,8 +4,8 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && apt-get install -y perl-modules build-essential autoconf libtool automake libboost-dev git libxml2 && rm -rf /var/lib/apt/lists/*
 
 ENV PATH /root/miniconda3/bin:$PATH
-COPY Miniconda3-py38_4.8.3-Linux-x86_64.sh /root/
-RUN /bin/bash /root/Miniconda3-py38_4.8.3-Linux-x86_64.sh -b && \
+COPY Miniconda3-py39_4.10.3-Linux-x86_64.sh /root/
+RUN /bin/bash /root/Miniconda3-py39_4.10.3-Linux-x86_64.sh -b && \
 	rm -f /root/Miniconda3*
 
 RUN conda install -y conda-build conda-verify
@@ -15,6 +15,13 @@ RUN conda install -y conda-build conda-verify
 # See: https://docs.conda.io/projects/conda/en/latest/user-guide/configuration/free-channel.html#troubleshooting
 # TODO: Remove when support for cudatoolkit 8.0 is dropped.
 RUN conda config --set restore_free_channel true
+
+FROM BUILDBASE AS CUDA102
+RUN touch /root/cuda102
+COPY cuda_10.2.89_440.33.01_linux.run /root
+RUN /bin/bash /root/cuda_10.2.89_440.33.01_linux.run --toolkit --silent --installpath=/usr/local/cuda-10.2 && \
+	rm -f /root/cuda_10.2.89_440.33.01_linux.run
+
 
 FROM BUILDBASE AS CUDA101
 RUN touch /root/cuda101
@@ -51,10 +58,16 @@ RUN /bin/bash /root/cuda_8.0.61.2_linux-run --silent --accept-eula && \
 
 FROM BUILDBASE
 RUN touch /root/cuda
+COPY --from=CUDA102 /usr/local/cuda-10.2 /usr/local/cuda-10.2
 COPY --from=CUDA101 /usr/local/cuda-10.1 /usr/local/cuda-10.1
 COPY --from=CUDA100 /usr/local/cuda-10.0 /usr/local/cuda-10.0
 COPY --from=CUDA92 /usr/local/cuda-9.2 /usr/local/cuda-9.2
 COPY --from=CUDA90 /usr/local/cuda-9.0 /usr/local/cuda-9.0
 COPY --from=CUDA80 /usr/local/cuda-8.0 /usr/local/cuda-8.0
 
-
+RUN conda create -y -n prep -c nvidia --download-only cudatoolkit=10.2 && \
+    conda create -y -n prep -c nvidia --download-only cudatoolkit=10.1 && \
+    conda create -y -n prep -c nvidia --download-only cudatoolkit=10.0 && \
+    conda create -y -n prep -c nvidia --download-only cudatoolkit=9.2 && \
+    conda create -y -n prep -c nvidia --download-only cudatoolkit=9.0 && \
+    conda create -y -n prep -c nvidia --download-only cudatoolkit=8.0
