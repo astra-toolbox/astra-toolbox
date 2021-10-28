@@ -79,15 +79,18 @@ def _basic_par3d_cuda():
 
 def test_noCUDA():
   """Perform a very basic functionality test, without CUDA"""
-  
+
+  import astra
+  print("ASTRA Toolbox v%s" % (astra.__version__,))
   ok = _basic_par2d()
   if not ok:
     raise RuntimeError("Test failed")
 
 def test_CUDA():
   """Perform a very basic functionality test, including CUDA"""
-  
+
   import astra
+  print("ASTRA Toolbox v%s" % (astra.__version__,))
   print("Getting GPU info... ", end="")
   print(astra.get_gpu_info())
   ok1 = _basic_par2d()
