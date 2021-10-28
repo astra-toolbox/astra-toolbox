@@ -30,4 +30,4 @@ cd python
 set VS90COMNTOOLS=%VS140COMNTOOLS%
 set CL=/DASTRA_CUDA /DASTRA_PYTHON "/I%R%\include" "/I%R%\lib\include" "/I%CUDA_PATH%\include"
 copy "%LIBRARY_LIB%\AstraCuda64.lib" astra.lib
-python builder.py build_ext --compiler=msvc install
+python setup.py build_ext --compiler=msvc install
