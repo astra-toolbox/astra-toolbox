@@ -209,8 +209,6 @@ void CCglsAlgorithm::run(int _iNrIterations)
 
 
 
-	int i;
-
 	if (m_iIteration == 0) {
 		// r = b;
 		r->copyData(m_pSinogram->getData());
@@ -228,7 +226,7 @@ void CCglsAlgorithm::run(int _iNrIterations)
 
 		// gamma = dot(z,z);
 		gamma = 0.0f;
-		for (i = 0; i < z->getSize(); ++i) {
+		for (size_t i = 0; i < z->getSize(); ++i) {
 			gamma += z->getData()[i] * z->getData()[i];
 		}
 		m_iIteration++;
@@ -243,18 +241,18 @@ void CCglsAlgorithm::run(int _iNrIterations)
 	
 		// alpha = gamma/dot(w,w);
 		float32 tmp = 0;
-		for (i = 0; i < w->getSize(); ++i) {
+		for (size_t i = 0; i < w->getSize(); ++i) {
 			tmp += w->getData()[i] * w->getData()[i];
 		}
 		alpha = gamma / tmp;
 
 		// x = x + alpha*p;
-		for (i = 0; i < m_pReconstruction->getSize(); ++i) {
+		for (size_t i = 0; i < m_pReconstruction->getSize(); ++i) {
 			m_pReconstruction->getData()[i] += alpha * p->getData()[i];
 		}
 
 		// r = r - alpha*w;
-		for (i = 0; i < r->getSize(); ++i) {
+		for (size_t i = 0; i < r->getSize(); ++i) {
 			r->getData()[i] -= alpha * w->getData()[i];
 		}
 
@@ -273,7 +271,7 @@ void CCglsAlgorithm::run(int _iNrIterations)
 
 		// gamma = dot(z,z);
 		gamma = 0;
-		for (i = 0; i < z->getSize(); ++i) {
+		for (size_t i = 0; i < z->getSize(); ++i) {
 			gamma += z->getData()[i] * z->getData()[i];
 		}
 
@@ -281,7 +279,7 @@ void CCglsAlgorithm::run(int _iNrIterations)
 		beta *= gamma; 
 
 		// p = z + beta*p;
-		for (i = 0; i < z->getSize(); ++i) {
+		for (size_t i = 0; i < z->getSize(); ++i) {
 			p->getData()[i] = z->getData()[i] + beta * p->getData()[i];
 		}
 		

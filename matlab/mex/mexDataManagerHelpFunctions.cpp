@@ -119,9 +119,9 @@ checkDataSize(const mxArray * const mArray,
 {
 	mwSize dims[3];
 	get3DMatrixDims(mArray, dims);
-	return (geom->getDetectorColCount() == dims[0]
-			&& geom->getProjectionCount() == dims[1]
-			&& geom->getDetectorRowCount() == dims[2]);
+	return (static_cast<mwSize>(geom->getDetectorColCount()) == dims[0]
+			&& static_cast<mwSize>(geom->getProjectionCount()) == dims[1]
+			&& static_cast<mwSize>(geom->getDetectorRowCount()) == dims[2]);
 }
 
 //-----------------------------------------------------------------------------------------
@@ -131,9 +131,9 @@ checkDataSize(const mxArray * const mArray,
 {
 	mwSize dims[3];
 	get3DMatrixDims(mArray, dims);
-	return (geom->getGridColCount() == dims[0]
-			&& geom->getGridRowCount() == dims[1]
-			&& geom->getGridSliceCount() == dims[2]);
+	return (static_cast<mwSize>(geom->getGridColCount()) == dims[0]
+			&& static_cast<mwSize>(geom->getGridRowCount()) == dims[1]
+			&& static_cast<mwSize>(geom->getGridSliceCount()) == dims[2]);
 }
 
 //-----------------------------------------------------------------------------------------
@@ -144,9 +144,9 @@ checkDataSize(const mxArray * const mArray,
 {
 	mwSize dims[3];
 	get3DMatrixDims(mArray, dims);
-	return (geom->getDetectorColCount() == dims[0]
-			&& geom->getProjectionCount() == dims[1]
-			&& (zOffset + geom->getDetectorRowCount()) <= dims[2]);
+	return (static_cast<mwSize>(geom->getDetectorColCount()) == dims[0]
+			&& static_cast<mwSize>(geom->getProjectionCount()) == dims[1]
+			&& (zOffset + static_cast<mwSize>(geom->getDetectorRowCount())) <= dims[2]);
 }
 
 //-----------------------------------------------------------------------------------------
@@ -157,9 +157,9 @@ checkDataSize(const mxArray * const mArray,
 {
 	mwSize dims[3];
 	get3DMatrixDims(mArray, dims);
-	return (geom->getGridColCount() == dims[0]
-			&& geom->getGridRowCount() == dims[1]
-			&& (zOffset + geom->getGridSliceCount()) <= dims[2]);
+	return (static_cast<mwSize>(geom->getGridColCount()) == dims[0]
+			&& static_cast<mwSize>(geom->getGridRowCount()) == dims[1]
+			&& (zOffset + static_cast<mwSize>(geom->getGridSliceCount())) <= dims[2]);
 }
 
 //-----------------------------------------------------------------------------------------

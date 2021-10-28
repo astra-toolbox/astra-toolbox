@@ -237,6 +237,7 @@ void astra_mex_log_output(int nlhs, mxArray* plhs[], int nrhs, const mxArray* pr
 		eLevel = LOG_ERROR;
 	}else{
 		mexErrMsgTxt("Specify which log level to use ('debug', 'info', 'warn', or 'error')");
+		eLevel = LOG_ERROR; // default to LOG_ERROR
 	}
 	if(sType == "file"){
 		astra::CLogger::setOutputFile(sOutput.c_str(),eLevel);
@@ -248,6 +249,7 @@ void astra_mex_log_output(int nlhs, mxArray* plhs[], int nrhs, const mxArray* pr
 			fd=2;
 		}else{
 			mexErrMsgTxt("Specify which screen to output to ('stdout' or 'stderr')");
+			fd=2; // default to stderr
 		}
 		astra::CLogger::setOutputScreen(fd,eLevel);
 	} else {

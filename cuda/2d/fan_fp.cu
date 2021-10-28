@@ -271,7 +271,7 @@ bool FanFP_internal(float* D_volumeData, unsigned int volumePitch,
 	cudaStreamDestroy(stream1);
 	cudaStreamDestroy(stream2);
 
-	cudaThreadSynchronize();
+	cudaDeviceSynchronize();
 
 	cudaTextForceKernelsCompletion();
 

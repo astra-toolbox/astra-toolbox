@@ -43,7 +43,7 @@ using namespace astra;
 // TODO: evaluate what we want to do in these situations:
 
 #define CHECK_ERROR(errorMessage) do {                                     \
-  cudaError_t err = cudaThreadSynchronize();                               \
+  cudaError_t err = cudaDeviceSynchronize();                               \
   if( cudaSuccess != err) {                                                \
       ASTRA_ERROR("Cuda error %s : %s",                                    \
               errorMessage,cudaGetErrorString( err));                      \
@@ -57,7 +57,7 @@ using namespace astra;
               cudaGetErrorString( err));                                   \
       exit(EXIT_FAILURE);                                                  \
   }                                                                        \
-  err = cudaThreadSynchronize();                                           \
+  err = cudaDeviceSynchronize();                                           \
   if( cudaSuccess != err) {                                                \
       ASTRA_ERROR("Cuda error: %s : ",                                     \
               cudaGetErrorString( err));                                   \

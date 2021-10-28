@@ -328,7 +328,7 @@ bool FP_simple_internal(float* D_volumeData, unsigned int volumePitch,
 
 	streams.clear();
 
-	cudaThreadSynchronize();
+	cudaDeviceSynchronize();
 
 	cudaTextForceKernelsCompletion();
 
