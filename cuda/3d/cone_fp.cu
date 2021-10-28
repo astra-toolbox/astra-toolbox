@@ -63,6 +63,11 @@ __constant__ float gC_DetVY[g_MaxAngles];
 __constant__ float gC_DetVZ[g_MaxAngles];
 
 
+// startAngle, endAngle, startDetectorV
+__constant__ int gC_params[3];
+
+
+
 bool bindVolumeDataTexture(const cudaArray* array)
 {
 	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
@@ -145,14 +150,13 @@ struct SCALE_NONCUBE {
 template<class COORD, class SCALE>
 __global__ void cone_FP_t(float* D_projData, unsigned int projPitch,
                           unsigned int startSlice,
-                          unsigned int startAngle, unsigned int endAngle,
                           const SDimensions3D dims,
                           SCALE sc)
 {
 	COORD c;
 
-	int angle = startAngle + blockIdx.y * g_anglesPerBlock + threadIdx.y;
-	if (angle >= endAngle)
+	int angle = gC_params[0] + blockIdx.y * g_anglesPerBlock + threadIdx.y;
+	if (angle >= gC_params[1])
 		return;
 
 	const float fSrcX = gC_SrcX[angle];
@@ -168,8 +172,8 @@ __global__ void cone_FP_t(float* D_projData, unsigned int projPitch,
 	const float fDetSY = gC_DetSY[angle] + 0.5f * fDetUY + 0.5f * fDetVY;
 	const float fDetSZ = gC_DetSZ[angle] + 0.5f * fDetUZ + 0.5f * fDetVZ;
 
-	const int detectorU = (blockIdx.x%((dims.iProjU+g_detBlockU-1)/g_detBlockU)) * g_detBlockU + threadIdx.x;
-	const int startDetectorV = (blockIdx.x/((dims.iProjU+g_detBlockU-1)/g_detBlockU)) * g_detBlockV;
+	const int detectorU = blockIdx.x * g_detBlockU + threadIdx.x;
+	const int startDetectorV = gC_params[2];
 	int endDetectorV = startDetectorV + g_detBlockV;
 	if (endDetectorV > dims.iProjV)
 		endDetectorV = dims.iProjV;
@@ -221,14 +225,13 @@ __global__ void cone_FP_t(float* D_projData, unsigned int projPitch,
 template<class COORD>
 __global__ void cone_FP_SS_t(float* D_projData, unsigned int projPitch,
                              unsigned int startSlice,
-                             unsigned int startAngle, unsigned int endAngle,
                              const SDimensions3D dims, int iRaysPerDetDim,
                              SCALE_NONCUBE sc)
 {
 	COORD c;
 
-	int angle = startAngle + blockIdx.y * g_anglesPerBlock + threadIdx.y;
-	if (angle >= endAngle)
+	int angle = gC_params[0] + blockIdx.y * g_anglesPerBlock + threadIdx.y;
+	if (angle >= gC_params[1])
 		return;
 
 	const float fSrcX = gC_SrcX[angle];
@@ -244,8 +247,8 @@ __global__ void cone_FP_SS_t(float* D_projData, unsigned int projPitch,
 	const float fDetSY = gC_DetSY[angle] + 0.5f * fDetUY + 0.5f * fDetVY;
 	const float fDetSZ = gC_DetSZ[angle] + 0.5f * fDetUZ + 0.5f * fDetVZ;
 
-	const int detectorU = (blockIdx.x%((dims.iProjU+g_detBlockU-1)/g_detBlockU)) * g_detBlockU + threadIdx.x;
-	const int startDetectorV = (blockIdx.x/((dims.iProjU+g_detBlockU-1)/g_detBlockU)) * g_detBlockV;
+	const int detectorU = blockIdx.x * g_detBlockU + threadIdx.x;
+	const int startDetectorV = gC_params[2];
 	int endDetectorV = startDetectorV + g_detBlockV;
 	if (endDetectorV > dims.iProjV)
 		endDetectorV = dims.iProjV;
@@ -400,7 +403,7 @@ bool ConeFP_Array_internal(cudaPitchedPtr D_projData,
 			if (blockStart != blockEnd) {
 
 				dim3 dimGrid(
-				             ((dims.iProjU+g_detBlockU-1)/g_detBlockU)*((dims.iProjV+g_detBlockV-1)/g_detBlockV),
+				             ((dims.iProjU+g_detBlockU-1)/g_detBlockU),
 (blockEnd-blockStart+g_anglesPerBlock-1)/g_anglesPerBlock);
 				// TODO: check if we can't immediately
 				//       destroy the stream after use
@@ -410,35 +413,38 @@ bool ConeFP_Array_internal(cudaPitchedPtr D_projData,
 
 				// printf("angle block: %d to %d, %d (%dx%d, %dx%d)\n", blockStart, blockEnd, blockDirection, dimGrid.x, dimGrid.y, dimBlock.x, dimBlock.y);
 
-				if (blockDirection == 0) {
-					for (unsigned int i = 0; i < dims.iVolX; i += g_blockSlices)
-						if (params.iRaysPerDetDim == 1)
-							if (cube)
-								cone_FP_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, scube);
+				for (unsigned int startDetectorV = 0; startDetectorV < dims.iProjV; startDetectorV += g_detBlockV) {
+					int p[3] = { (int)blockStart, (int)blockEnd, (int)startDetectorV };
+					cudaMemcpyToSymbol(gC_params, p, 3*sizeof(int), 0, cudaMemcpyHostToDevice);
+					if (blockDirection == 0) {
+						for (unsigned int i = 0; i < dims.iVolX; i += g_blockSlices)
+							if (params.iRaysPerDetDim == 1)
+								if (cube)
+									cone_FP_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, dims, scube);
+								else
+									cone_FP_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, dims, snoncubeX);
 							else
-								cone_FP_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, snoncubeX);
-						else
-							cone_FP_SS_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, params.iRaysPerDetDim, snoncubeX);
-				} else if (blockDirection == 1) {
-					for (unsigned int i = 0; i < dims.iVolY; i += g_blockSlices)
-						if (params.iRaysPerDetDim == 1)
-							if (cube)
-								cone_FP_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, scube);
+								cone_FP_SS_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, dims, params.iRaysPerDetDim, snoncubeX);
+					} else if (blockDirection == 1) {
+						for (unsigned int i = 0; i < dims.iVolY; i += g_blockSlices)
+							if (params.iRaysPerDetDim == 1)
+								if (cube)
+									cone_FP_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, dims, scube);
+								else
+									cone_FP_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, dims, snoncubeY);
 							else
-								cone_FP_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, snoncubeY);
-						else
-							cone_FP_SS_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, params.iRaysPerDetDim, snoncubeY);
-				} else if (blockDirection == 2) {
-					for (unsigned int i = 0; i < dims.iVolZ; i += g_blockSlices)
-						if (params.iRaysPerDetDim == 1)
-							if (cube)
-								cone_FP_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, scube);
+								cone_FP_SS_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, dims, params.iRaysPerDetDim, snoncubeY);
+					} else if (blockDirection == 2) {
+						for (unsigned int i = 0; i < dims.iVolZ; i += g_blockSlices)
+							if (params.iRaysPerDetDim == 1)
+								if (cube)
+									cone_FP_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, dims, scube);
+								else
+									cone_FP_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, dims, snoncubeZ);
 							else
-								cone_FP_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, snoncubeZ);
-						else
-							cone_FP_SS_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, params.iRaysPerDetDim, snoncubeZ);
+								cone_FP_SS_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, dims, params.iRaysPerDetDim, snoncubeZ);
+					}
 				}
-
 			}
 
 			blockDirection = dir;
