@@ -149,13 +149,6 @@ public:
 	virtual void projectPoint(double fX, double fY, double fZ,
 	                          int iAngleIndex,
 	                          double &fU, double &fV) const;
-	virtual void backprojectPointX(int iAngleIndex, double fU, double fV,
-	                               double fX, double &fY, double &fZ) const;
-	virtual void backprojectPointY(int iAngleIndex, double fU, double fV,
-	                               double fY, double &fX, double &fZ) const;
-	virtual void backprojectPointZ(int iAngleIndex, double fU, double fV,
-	                               double fZ, double &fX, double &fY) const;
-
 
 	 /**
 	  * Creates (= allocates) a 2D projection geometry used when projecting one slice using a 2D projector
