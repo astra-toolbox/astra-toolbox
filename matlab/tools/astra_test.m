@@ -11,6 +11,7 @@
 % Website: http://www.astra-toolbox.com/
 %--------------------------------------------------------------------------
 
+astra_mex('version');
 if astra_mex('use_cuda')
   astra_test_CUDA;
 else
