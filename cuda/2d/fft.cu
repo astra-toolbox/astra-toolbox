@@ -40,31 +40,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 using namespace astra;
 
-// TODO: evaluate what we want to do in these situations:
-
-#define CHECK_ERROR(errorMessage) do {                                     \
-  cudaError_t err = cudaThreadSynchronize();                               \
-  if( cudaSuccess != err) {                                                \
-      ASTRA_ERROR("Cuda error %s : %s",                                    \
-              errorMessage,cudaGetErrorString( err));                      \
-      exit(EXIT_FAILURE);                                                  \
-  } } while (0)
-
-#define SAFE_CALL( call) do {                                              \
-  cudaError err = call;                                                    \
-  if( cudaSuccess != err) {                                                \
-      ASTRA_ERROR("Cuda error: %s ",                                       \
-              cudaGetErrorString( err));                                   \
-      exit(EXIT_FAILURE);                                                  \
-  }                                                                        \
-  err = cudaThreadSynchronize();                                           \
-  if( cudaSuccess != err) {                                                \
-      ASTRA_ERROR("Cuda error: %s : ",                                     \
-              cudaGetErrorString( err));                                   \
-      exit(EXIT_FAILURE);                                                  \
-  } } while (0)
-
-
 namespace astraCUDA {
 
 bool checkCufft(cufftResult err, const char *msg)
@@ -125,7 +100,8 @@ static void rescaleInverseFourier(int _iProjectionCount, int _iDetectorCount,
 	rescaleInverseFourier_kernel<<< iBlockCount, iBlockSize >>>(_iProjectionCount,
 	                                                            _iDetectorCount,
 	                                                            _pfInFourierOutput);
-	CHECK_ERROR("rescaleInverseFourier_kernel failed");
+
+	checkCuda(cudaThreadSynchronize(), "rescaleInverseFourier");
 }
 
 void applyFilter(int _iProjectionCount, int _iFreqBinCount,
@@ -138,7 +114,8 @@ void applyFilter(int _iProjectionCount, int _iFreqBinCount,
 	applyFilter_kernel<<< iBlockCount, iBlockSize >>>(_iProjectionCount,
 	                                                  _iFreqBinCount,
 	                                                  _pSinogram, _pFilter);
-	CHECK_ERROR("applyFilter_kernel failed");
+
+	checkCuda(cudaThreadSynchronize(), "applyFilter");
 }
 
 static bool invokeCudaFFT(int _iProjectionCount, int _iDetectorCount,
@@ -196,14 +173,12 @@ bool allocateComplexOnDevice(int _iProjectionCount, int _iDetectorCount,
                              cufftComplex ** _ppDevComplex)
 {
 	size_t bufferSize = sizeof(cufftComplex) * _iProjectionCount * _iDetectorCount;
-	SAFE_CALL(cudaMalloc((void **)_ppDevComplex, bufferSize));
-	return true;
+	return checkCuda(cudaMalloc((void **)_ppDevComplex, bufferSize), "fft allocateComplexOnDevice");
 }
 
 bool freeComplexOnDevice(cufftComplex * _pDevComplex)
 {
-	SAFE_CALL(cudaFree(_pDevComplex));
-	return true;
+	return checkCuda(cudaFree(_pDevComplex), "fft freeComplexOnDevice");
 }
 
 bool uploadComplexArrayToDevice(int _iProjectionCount, int _iDetectorCount,
@@ -211,9 +186,7 @@ bool uploadComplexArrayToDevice(int _iProjectionCount, int _iDetectorCount,
                                 cufftComplex * _pDevComplexTarget)
 {
 	size_t memSize = sizeof(cufftComplex) * _iProjectionCount * _iDetectorCount;
-	SAFE_CALL(cudaMemcpy(_pDevComplexTarget, _pHostComplexSource, memSize, cudaMemcpyHostToDevice));
-
-	return true;
+	return checkCuda(cudaMemcpy(_pDevComplexTarget, _pHostComplexSource, memSize, cudaMemcpyHostToDevice), "fft uploadComplexArrayToDevice");
 }
 
 bool runCudaFFT(int _iProjectionCount, const float * _pfDevRealSource,
@@ -224,8 +197,12 @@ bool runCudaFFT(int _iProjectionCount, const float * _pfDevRealSource,
 	float * pfDevRealFFTSource = NULL;
 	size_t bufferMemSize = sizeof(float) * _iProjectionCount * _iFFTRealDetectorCount;
 
-	SAFE_CALL(cudaMalloc((void **)&pfDevRealFFTSource, bufferMemSize));
-	SAFE_CALL(cudaMemset(pfDevRealFFTSource, 0, bufferMemSize));
+	if (!checkCuda(cudaMalloc((void **)&pfDevRealFFTSource, bufferMemSize), "runCudaFFT malloc"))
+		return false;
+	if (!checkCuda(cudaMemset(pfDevRealFFTSource, 0, bufferMemSize), "runCudaFFT memset")) {
+		cudaFree(pfDevRealFFTSource);
+		return false;
+	}
 
 	for(int iProjectionIndex = 0; iProjectionIndex < _iProjectionCount; iProjectionIndex++)
 	{
@@ -241,11 +218,9 @@ bool runCudaFFT(int _iProjectionCount, const float * _pfDevRealSource,
 	bool bResult = invokeCudaFFT(_iProjectionCount, _iFFTRealDetectorCount,
 	                             pfDevRealFFTSource, _pDevTargetComplex);
 	if(!bResult)
-	{
 		return false;
-	}
 
-	SAFE_CALL(cudaFree(pfDevRealFFTSource));
+	cudaFree(pfDevRealFFTSource);
 
 	return true;
 }
@@ -258,7 +233,8 @@ bool runCudaIFFT(int _iProjectionCount, const cufftComplex* _pDevSourceComplex,
 	float * pfDevRealFFTTarget = NULL;
 	size_t bufferMemSize = sizeof(float) * _iProjectionCount * _iFFTRealDetectorCount;
 
-	SAFE_CALL(cudaMalloc((void **)&pfDevRealFFTTarget, bufferMemSize));
+	if (!checkCuda(cudaMalloc((void **)&pfDevRealFFTTarget, bufferMemSize), "runCudaIFFT malloc"))
+		return false;
 
 	bool bResult = invokeCudaIFFT(_iProjectionCount, _iFFTRealDetectorCount,
 	                              _pDevSourceComplex, pfDevRealFFTTarget);
@@ -270,7 +246,10 @@ bool runCudaIFFT(int _iProjectionCount, const cufftComplex* _pDevSourceComplex,
 	rescaleInverseFourier(_iProjectionCount, _iFFTRealDetectorCount,
 	                      pfDevRealFFTTarget);
 
-	SAFE_CALL(cudaMemset(_pfRealTarget, 0, sizeof(float) * _iProjectionCount * _iTargetPitch));
+	if (!checkCuda(cudaMemset(_pfRealTarget, 0, sizeof(float) * _iProjectionCount * _iTargetPitch), "runCudaIFFT memset")) {
+		cudaFree(pfDevRealFFTTarget);
+		return false;
+	}
 
 	for(int iProjectionIndex = 0; iProjectionIndex < _iProjectionCount; iProjectionIndex++)
 	{
@@ -283,7 +262,7 @@ bool runCudaIFFT(int _iProjectionCount, const cufftComplex* _pDevSourceComplex,
 		}
 	}
 
-	SAFE_CALL(cudaFree(pfDevRealFFTTarget));
+	cudaFree(pfDevRealFFTTarget);
 
 	return true;
 }
