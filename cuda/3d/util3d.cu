@@ -46,12 +46,9 @@ cudaPitchedPtr allocateVolumeData(const SDimensions3D& dims)
 
 	cudaPitchedPtr volData;
 
-	cudaError err = cudaMalloc3D(&volData, extentV);
-	if (err != cudaSuccess) {
-		astraCUDA::reportCudaError(err);
+	if (!checkCuda(cudaMalloc3D(&volData, extentV), "allocateVolumeData 3D")) {
 		ASTRA_ERROR("Failed to allocate %dx%dx%d GPU buffer", dims.iVolX, dims.iVolY, dims.iVolZ);
 		volData.ptr = 0;
-		// TODO: return 0 somehow?
 	}
 
 	return volData;
@@ -65,12 +62,9 @@ cudaPitchedPtr allocateProjectionData(const SDimensions3D& dims)
 
 	cudaPitchedPtr projData;
 
-	cudaError err = cudaMalloc3D(&projData, extentP);
-	if (err != cudaSuccess) {
-		astraCUDA::reportCudaError(err);
+	if (!checkCuda(cudaMalloc3D(&projData, extentP), "allocateProjectionData 3D")) {
 		ASTRA_ERROR("Failed to allocate %dx%dx%d GPU buffer", dims.iProjU, dims.iProjAngles, dims.iProjV);
 		projData.ptr = 0;
-		// TODO: return 0 somehow?
 	}
 
 	return projData;
@@ -303,9 +297,8 @@ cudaArray* allocateVolumeArray(const SDimensions3D& dims)
 	extentA.width = dims.iVolX;
 	extentA.height = dims.iVolY;
 	extentA.depth = dims.iVolZ;
-	cudaError err = cudaMalloc3DArray(&cuArray, &channelDesc, extentA);
-	if (err != cudaSuccess) {
-		astraCUDA::reportCudaError(err);
+
+	if (!checkCuda(cudaMalloc3DArray(&cuArray, &channelDesc, extentA), "allocateVolumeArray 3D")) {
 		ASTRA_ERROR("Failed to allocate %dx%dx%d GPU array", dims.iVolX, dims.iVolY, dims.iVolZ);
 		return 0;
 	}
@@ -320,10 +313,8 @@ cudaArray* allocateProjectionArray(const SDimensions3D& dims)
 	extentA.width = dims.iProjU;
 	extentA.height = dims.iProjAngles;
 	extentA.depth = dims.iProjV;
-	cudaError err = cudaMalloc3DArray(&cuArray, &channelDesc, extentA);
 
-	if (err != cudaSuccess) {
-		astraCUDA::reportCudaError(err);
+	if (!checkCuda(cudaMalloc3DArray(&cuArray, &channelDesc, extentA), "allocateProjectionArray 3D")) {
 		ASTRA_ERROR("Failed to allocate %dx%dx%d GPU array", dims.iProjU, dims.iProjAngles, dims.iProjV);
 		return 0;
 	}

@@ -90,9 +90,7 @@ bool copySinogramToDevice(const float* in_data, unsigned int in_pitch,
 bool allocateVolume(float*& ptr, unsigned int width, unsigned int height, unsigned int& pitch)
 {
 	size_t p;
-	cudaError_t ret = cudaMallocPitch((void**)&ptr, &p, sizeof(float)*width, height);
-	if (ret != cudaSuccess) {
-		reportCudaError(ret);
+	if (!checkCuda(cudaMallocPitch((void**)&ptr, &p, sizeof(float)*width, height), "allocateVolume")) {
 		ASTRA_ERROR("Failed to allocate %dx%d GPU buffer", width, height);
 		return false;
 	}
@@ -266,12 +264,6 @@ bool cudaTextForceKernelsCompletion()
 	}
 
 	return true;
-}
-
-void reportCudaError(cudaError_t err)
-{
-	if(err != cudaSuccess)
-		ASTRA_ERROR("CUDA error %d: %s.", err, cudaGetErrorString(err));
 }
 
 bool checkCuda(cudaError_t err, const char *msg)
