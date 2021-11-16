@@ -72,11 +72,11 @@ cudaPitchedPtr allocateProjectionData(const SDimensions3D& dims)
 bool zeroVolumeData(cudaPitchedPtr& D_data, const SDimensions3D& dims)
 {
 	char* t = (char*)D_data.ptr;
-	cudaError err;
 
 	for (unsigned int z = 0; z < dims.iVolZ; ++z) {
-		err = cudaMemset2D(t, D_data.pitch, 0, dims.iVolX*sizeof(float), dims.iVolY);
-		ASTRA_CUDA_ASSERT(err);
+		if (!checkCuda(cudaMemset2D(t, D_data.pitch, 0, dims.iVolX*sizeof(float), dims.iVolY), "zeroVolumeData 3D")) {
+			return false;
+		}
 		t += D_data.pitch * dims.iVolY;
 	}
 	return true;
@@ -84,11 +84,11 @@ bool zeroVolumeData(cudaPitchedPtr& D_data, const SDimensions3D& dims)
 bool zeroProjectionData(cudaPitchedPtr& D_data, const SDimensions3D& dims)
 {
 	char* t = (char*)D_data.ptr;
-	cudaError err;
 
 	for (unsigned int z = 0; z < dims.iProjV; ++z) {
-		err = cudaMemset2D(t, D_data.pitch, 0, dims.iProjU*sizeof(float), dims.iProjAngles);
-		ASTRA_CUDA_ASSERT(err);
+		if (!checkCuda(cudaMemset2D(t, D_data.pitch, 0, dims.iProjU*sizeof(float), dims.iProjAngles), "zeroProjectionData 3D")) {
+			return false;
+		}
 		t += D_data.pitch * dims.iProjAngles;
 	}
 
@@ -122,11 +122,7 @@ bool copyVolumeToDevice(const float* data, cudaPitchedPtr& D_data, const SDimens
 	p.extent = extentV;
 	p.kind = cudaMemcpyHostToDevice;
 
-	cudaError err;
-	err = cudaMemcpy3D(&p);
-	ASTRA_CUDA_ASSERT(err);
-
-	return err == cudaSuccess;
+	return checkCuda(cudaMemcpy3D(&p), "copyVolumeToDevice 3D");
 }
 
 bool copyProjectionsToDevice(const float* data, cudaPitchedPtr& D_data, const SDimensions3D& dims, unsigned int pitch)
@@ -157,11 +153,7 @@ bool copyProjectionsToDevice(const float* data, cudaPitchedPtr& D_data, const SD
 	p.extent = extentV;
 	p.kind = cudaMemcpyHostToDevice;
 
-	cudaError err;
-	err = cudaMemcpy3D(&p);
-	ASTRA_CUDA_ASSERT(err);
-
-	return err == cudaSuccess;
+	return checkCuda(cudaMemcpy3D(&p), "copyProjectionsToDevice 3D");
 }
 
 bool copyVolumeFromDevice(float* data, const cudaPitchedPtr& D_data, const SDimensions3D& dims, unsigned int pitch)
@@ -192,12 +184,9 @@ bool copyVolumeFromDevice(float* data, const cudaPitchedPtr& D_data, const SDime
 	p.extent = extentV;
 	p.kind = cudaMemcpyDeviceToHost;
 
-	cudaError err;
-	err = cudaMemcpy3D(&p);
-	ASTRA_CUDA_ASSERT(err);
-
-	return err == cudaSuccess;
+	return checkCuda(cudaMemcpy3D(&p), "copyVolumeFromDevice 3D");
 }
+
 bool copyProjectionsFromDevice(float* data, const cudaPitchedPtr& D_data, const SDimensions3D& dims, unsigned int pitch)
 {
 	if (!pitch)
@@ -226,11 +215,7 @@ bool copyProjectionsFromDevice(float* data, const cudaPitchedPtr& D_data, const 
 	p.extent = extentV;
 	p.kind = cudaMemcpyDeviceToHost;
 
-	cudaError err;
-	err = cudaMemcpy3D(&p);
-	ASTRA_CUDA_ASSERT(err);
-
-	return err == cudaSuccess;
+	return checkCuda(cudaMemcpy3D(&p), "copyProjectionsFromDevice 3D");
 }
 
 bool duplicateVolumeData(cudaPitchedPtr& D_dst, const cudaPitchedPtr& D_src, const SDimensions3D& dims)
@@ -252,12 +237,9 @@ bool duplicateVolumeData(cudaPitchedPtr& D_dst, const cudaPitchedPtr& D_src, con
 	p.extent = extentV;
 	p.kind = cudaMemcpyDeviceToDevice;
 
-	cudaError err;
-	err = cudaMemcpy3D(&p);
-	ASTRA_CUDA_ASSERT(err);
-
-	return err == cudaSuccess;
+	return checkCuda(cudaMemcpy3D(&p), "duplicateVolumeData 3D");
 }
+
 bool duplicateProjectionData(cudaPitchedPtr& D_dst, const cudaPitchedPtr& D_src, const SDimensions3D& dims)
 {
 	cudaExtent extentV;
@@ -277,11 +259,7 @@ bool duplicateProjectionData(cudaPitchedPtr& D_dst, const cudaPitchedPtr& D_src,
 	p.extent = extentV;
 	p.kind = cudaMemcpyDeviceToDevice;
 
-	cudaError err;
-	err = cudaMemcpy3D(&p);
-	ASTRA_CUDA_ASSERT(err);
-
-	return err == cudaSuccess;
+	return checkCuda(cudaMemcpy3D(&p), "duplicateProjectionData 3D");
 }
 
 
@@ -343,12 +321,9 @@ bool transferVolumeToArray(cudaPitchedPtr D_volumeData, cudaArray* array, const 
 	p.extent = extentA;
 	p.kind = cudaMemcpyDeviceToDevice;
 
-	cudaError err = cudaMemcpy3D(&p);
-	ASTRA_CUDA_ASSERT(err);
-	// TODO: check errors
-
-	return true;
+	return checkCuda(cudaMemcpy3D(&p), "transferVolumeToArray 3D");
 }
+
 bool transferProjectionsToArray(cudaPitchedPtr D_projData, cudaArray* array, const SDimensions3D& dims)
 {
 	cudaExtent extentA;
@@ -370,13 +345,9 @@ bool transferProjectionsToArray(cudaPitchedPtr D_projData, cudaArray* array, con
 	p.extent = extentA;
 	p.kind = cudaMemcpyDeviceToDevice;
 
-	cudaError err = cudaMemcpy3D(&p);
-	ASTRA_CUDA_ASSERT(err);
-
-	// TODO: check errors
-
-	return true;
+	return checkCuda(cudaMemcpy3D(&p), "transferProjectionsToArray 3D");
 }
+
 bool transferHostProjectionsToArray(const float *projData, cudaArray* array, const SDimensions3D& dims)
 {
 	cudaExtent extentA;
@@ -404,12 +375,7 @@ bool transferHostProjectionsToArray(const float *projData, cudaArray* array, con
 	p.extent = extentA;
 	p.kind = cudaMemcpyHostToDevice;
 
-	cudaError err = cudaMemcpy3D(&p);
-	ASTRA_CUDA_ASSERT(err);
-
-	// TODO: check errors
-
-	return true;
+	return checkCuda(cudaMemcpy3D(&p), "transferHostProjectionsToArray 3D");
 }
 
 
