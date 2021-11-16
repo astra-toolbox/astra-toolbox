@@ -274,5 +274,14 @@ void reportCudaError(cudaError_t err)
 		ASTRA_ERROR("CUDA error %d: %s.", err, cudaGetErrorString(err));
 }
 
+bool checkCuda(cudaError_t err, const char *msg)
+{
+	if (err != cudaSuccess) {
+		ASTRA_ERROR("%s: CUDA error %d: %s.", msg, err, cudaGetErrorString(err));
+		return false;
+	} else {
+		return true;
+	}
+}
 
 }

@@ -74,6 +74,7 @@ void duplicateProjectionData(float* D_dst, float* D_src, unsigned int pitch, con
 bool cudaTextForceKernelsCompletion();
 void reportCudaError(cudaError_t err);
 
+bool checkCuda(cudaError_t err, const char *msg);
 
 
 float dotProduct2D(float* D_data, unsigned int pitch,
