@@ -41,8 +41,7 @@ static texture3D gT_coneProjTexture;
 
 namespace astraCUDA3d {
 
-#define ZSIZE 6
-static const unsigned int g_volBlockZ = ZSIZE;
+static const unsigned int g_volBlockZ = 6;
 
 static const unsigned int g_anglesPerBlock = 32;
 static const unsigned int g_volBlockX = 16;
@@ -77,7 +76,7 @@ bool bindProjDataTexture(const cudaArray* array)
 
 
 //__launch_bounds__(32*16, 4)
-template<bool FDKWEIGHT>
+template<bool FDKWEIGHT, unsigned int ZSIZE>
 __global__ void dev_cone_BP(void* D_volData, unsigned int volPitch, int startAngle,
                             int angleOffset, const astraCUDA3d::SDimensions3D dims,
                             float fOutputScale)
@@ -342,11 +341,19 @@ bool ConeBP_Array(cudaPitchedPtr D_volumeData,
 
 		for (unsigned int i = 0; i < angleCount; i += g_anglesPerBlock) {
 		// printf("Calling BP: %d, %dx%d, %dx%d to %p\n", i, dimBlock.x, dimBlock.y, dimGrid.x, dimGrid.y, (void*)D_volumeData.ptr); 
-			if (params.bFDKWeighting)
-				dev_cone_BP<true><<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, fOutputScale);
-			else if (params.iRaysPerVoxelDim == 1)
-				dev_cone_BP<false><<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, fOutputScale);
-			else
+			if (params.bFDKWeighting) {
+				if (dims.iVolZ == 1) {
+					dev_cone_BP<true, 1><<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, fOutputScale);
+				} else {
+					dev_cone_BP<true, g_volBlockZ><<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, fOutputScale);
+				}
+			} else if (params.iRaysPerVoxelDim == 1) {
+				if (dims.iVolZ == 1) {
+					dev_cone_BP<false, 1><<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, fOutputScale);
+				} else {
+					dev_cone_BP<false, g_volBlockZ><<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, fOutputScale);
+				}
+			} else
 				dev_cone_BP_SS<<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, params.iRaysPerVoxelDim, fOutputScale);
 		}
 
