@@ -55,6 +55,10 @@ fan_cone_BP_density_weighting_by_default
 	weighting by default to more closely approximate the true mathematical adjoint.
 	The DensityWeighting cuda3d projector option is removed.
 
+unpadded_GPULink
+	This is set since FP3D no longer silently fails with GPULink memory
+	that is not padded to a multiple of 32 pixels
+
 For future backward-incompatible changes, extra features will be added here
 
 

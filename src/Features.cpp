@@ -40,6 +40,9 @@ _AstraExport bool hasFeature(const std::string &flag) {
 	if (flag == "fan_cone_BP_density_weighting_by_default") {
 		return true;
 	}
+	if (flag == "unpadded_GPULink") {
+		return true;
+	}
 
 	return false;
 }
