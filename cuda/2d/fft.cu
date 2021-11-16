@@ -232,7 +232,10 @@ bool runCudaFFT(int _iProjectionCount, const float * _pfDevRealSource,
 		const float * pfSourceLocation = _pfDevRealSource + iProjectionIndex * _iSourcePitch;
 		float * pfTargetLocation = pfDevRealFFTSource + iProjectionIndex * _iFFTRealDetectorCount;
 
-		SAFE_CALL(cudaMemcpy(pfTargetLocation, pfSourceLocation, sizeof(float) * _iProjDets, cudaMemcpyDeviceToDevice));
+		if (!checkCuda(cudaMemcpy(pfTargetLocation, pfSourceLocation, sizeof(float) * _iProjDets, cudaMemcpyDeviceToDevice), "runCudaFFT memcpy")) {
+			cudaFree(pfDevRealFFTSource);
+			return false;
+		}
 	}
 
 	bool bResult = invokeCudaFFT(_iProjectionCount, _iFFTRealDetectorCount,
@@ -274,7 +277,10 @@ bool runCudaIFFT(int _iProjectionCount, const cufftComplex* _pDevSourceComplex,
 		const float * pfSourceLocation = pfDevRealFFTTarget + iProjectionIndex * _iFFTRealDetectorCount;
 		float* pfTargetLocation = _pfRealTarget + iProjectionIndex * _iTargetPitch;
 
-		SAFE_CALL(cudaMemcpy(pfTargetLocation, pfSourceLocation, sizeof(float) * _iProjDets, cudaMemcpyDeviceToDevice));
+		if (!checkCuda(cudaMemcpy(pfTargetLocation, pfSourceLocation, sizeof(float) * _iProjDets, cudaMemcpyDeviceToDevice), "runCudaIFFT memcpy")) {
+			cudaFree(pfDevRealFFTTarget);
+			return false;
+		}
 	}
 
 	SAFE_CALL(cudaFree(pfDevRealFFTTarget));
