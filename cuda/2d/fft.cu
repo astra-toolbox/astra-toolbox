@@ -156,8 +156,12 @@ static bool invokeCudaFFT(int _iProjectionCount, int _iDetectorCount,
 		return false;
 	}
 
-	cufftDestroy(plan);
+	if (!checkCuda(cudaDeviceSynchronize(), "invokeCudaFFT sync")) {
+		cufftDestroy(plan);
+		return false;
+	}
 
+	cufftDestroy(plan);
 	return true;
 }
 
@@ -179,8 +183,12 @@ static bool invokeCudaIFFT(int _iProjectionCount, int _iDetectorCount,
 		return false;
 	}
 
-	cufftDestroy(plan);
+	if (!checkCuda(cudaDeviceSynchronize(), "invokeCudaIFFT sync")) {
+		cufftDestroy(plan);
+		return false;
+	}
 
+	cufftDestroy(plan);
 	return true;
 }
 
