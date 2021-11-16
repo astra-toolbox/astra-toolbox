@@ -225,7 +225,7 @@ void processVol(CUdeviceptr* out, unsigned int pitch, unsigned int width, unsign
 
 	devtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pitch, width, height);
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
 }
 
 template<typename op>
@@ -238,7 +238,7 @@ void processVol(CUdeviceptr* out, float fParam, unsigned int pitch, unsigned int
 
 	devFtoD<op, 32><<<gridSize, blockSize>>>(pfOut, fParam, pitch, width, height);
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
 }
 
 template<typename op>
@@ -252,7 +252,7 @@ void processVol(CUdeviceptr* out, const CUdeviceptr* in, unsigned int pitch, uns
 
 	devDtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn, pitch, width, height);
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
 }
 
 template<typename op>
@@ -266,7 +266,7 @@ void processVol(CUdeviceptr* out, const CUdeviceptr* in, float fParam, unsigned 
 
 	devDFtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn, fParam, pitch, width, height);
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
 }
 
 template<typename op>
@@ -281,7 +281,7 @@ void processVol(CUdeviceptr* out, const CUdeviceptr* in1, const CUdeviceptr* in2
 
 	devDDFtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn1, pfIn2, fParam, pitch, width, height);
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
 }
 
 template<typename op>
@@ -296,7 +296,7 @@ void processVol(CUdeviceptr* out, const CUdeviceptr* in1, const CUdeviceptr* in2
 
 	devDDtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn1, pfIn2, pitch, width, height);
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
 }
 
 
@@ -328,7 +328,7 @@ void processVol3D(cudaPitchedPtr& out, const SDimensions3D& dims)
 		pfOut += step;
 	}
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
 }
 
 template<typename op>
@@ -344,7 +344,7 @@ void processVol3D(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims)
 		pfOut += step;
 	}
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
 }
 
 template<typename op>
@@ -362,7 +362,7 @@ void processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensio
 		pfIn += step;
 	}
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
 }
 
 template<typename op>
@@ -380,7 +380,7 @@ void processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, c
 		pfIn += step;
 	}
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
 }
 
 template<typename op>
@@ -400,7 +400,7 @@ void processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitc
 		pfIn2 += step;
 	}
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
 }
 
 template<typename op>
@@ -420,7 +420,7 @@ void processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitc
 		pfIn2 += step;
 	}
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
 }
 
 
@@ -448,7 +448,7 @@ void processSino3D(cudaPitchedPtr& out, const SDimensions3D& dims)
 		pfOut += step;
 	}
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
 }
 
 template<typename op>
@@ -464,7 +464,7 @@ void processSino3D(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims)
 		pfOut += step;
 	}
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
 }
 
 template<typename op>
@@ -482,7 +482,7 @@ void processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensi
 		pfIn += step;
 	}
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
 }
 
 template<typename op>
@@ -500,7 +500,7 @@ void processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, 
 		pfIn += step;
 	}
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
 }
 
 template<typename op>
@@ -520,7 +520,7 @@ void processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPit
 		pfIn2 += step;
 	}
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
 }
 
 template<typename op>
@@ -540,7 +540,7 @@ void processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPit
 		pfIn2 += step;
 	}
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
 }
 
 

@@ -305,8 +305,8 @@ bool FP_simple_internal(float* D_volumeData, unsigned int volumePitch,
 				dim3 dimGrid((blockEnd-blockStart+g_anglesPerBlock-1)/g_anglesPerBlock,
 				             (dims.iProjDets+g_detBlockSize-1)/g_detBlockSize); // angle blocks, detector blocks
 
-				// TODO: check if we can't immediately
-				//       destroy the stream after use
+				// TODO: consider limiting number of handle (chaotic) geoms
+				//       with many alternating directions
 				cudaStream_t stream;
 				cudaStreamCreate(&stream);
 				streams.push_back(stream);
@@ -323,19 +323,16 @@ bool FP_simple_internal(float* D_volumeData, unsigned int volumePitch,
 		}
 	}
 
-	for (std::list<cudaStream_t>::iterator iter = streams.begin(); iter != streams.end(); ++iter)
+	bool ok = true;
+
+	for (std::list<cudaStream_t>::iterator iter = streams.begin(); iter != streams.end(); ++iter) {
+		ok &= checkCuda(cudaStreamSynchronize(*iter), "par_fp");
 		cudaStreamDestroy(*iter);
-
-	streams.clear();
-
-	cudaThreadSynchronize();
-
-	cudaTextForceKernelsCompletion();
+	}
 
 	cudaFreeArray(D_dataArray);
-		
 
-	return true;
+	return ok;
 }
 
 bool FP_simple(float* D_volumeData, unsigned int volumePitch,

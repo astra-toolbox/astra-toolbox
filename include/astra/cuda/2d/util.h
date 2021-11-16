@@ -66,12 +66,7 @@ bool zeroProjectionData(float* D_ptr, unsigned int pitch, const SDimensions& dim
 void duplicateVolumeData(float* D_dst, float* D_src, unsigned int pitch, const SDimensions& dims);
 void duplicateProjectionData(float* D_dst, float* D_src, unsigned int pitch, const SDimensions& dims);
 
-
-
-bool cudaTextForceKernelsCompletion();
-
 bool checkCuda(cudaError_t err, const char *msg);
-
 
 float dotProduct2D(float* D_data, unsigned int pitch,
                    unsigned int width, unsigned int height);

@@ -322,13 +322,12 @@ bool FanBP_internal(float* D_volumeData, unsigned int volumePitch,
 		else
 			devFanBP<false><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, dims, fOutputScale);
 	}
-	cudaThreadSynchronize();
 
-	cudaTextForceKernelsCompletion();
+	ok = checkCuda(cudaStreamSynchronize(stream), "FanBP");
 
 	cudaStreamDestroy(stream);
 
-	return true;
+	return ok;
 }
 
 bool FanBP_FBPWeighted_internal(float* D_volumeData, unsigned int volumePitch,
@@ -354,13 +353,12 @@ bool FanBP_FBPWeighted_internal(float* D_volumeData, unsigned int volumePitch,
 	for (unsigned int i = 0; i < dims.iProjAngles; i += g_anglesPerBlock) {
 		devFanBP<true><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, dims, fOutputScale);
 	}
-	cudaThreadSynchronize();
 
-	cudaTextForceKernelsCompletion();
+	ok = checkCuda(cudaStreamSynchronize(stream), "FanBP_FBPWeighted");
 
 	cudaStreamDestroy(stream);
 
-	return true;
+	return ok;
 }
 
 // D_projData is a pointer to one padded sinogram line
@@ -382,11 +380,8 @@ bool FanBP_SART(float* D_volumeData, unsigned int volumePitch,
 	             (dims.iVolHeight+g_blockSliceSize-1)/g_blockSliceSize);
 
 	devFanBP_SART<<<dimGrid, dimBlock>>>(D_volumeData, volumePitch, dims, fOutputScale);
-	cudaThreadSynchronize();
 
-	cudaTextForceKernelsCompletion();
-
-	return true;
+	return checkCuda(cudaThreadSynchronize(), "FanBP_SART");
 }
 
 bool FanBP(float* D_volumeData, unsigned int volumePitch,
