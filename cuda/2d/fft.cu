@@ -67,6 +67,16 @@ using namespace astra;
 
 namespace astraCUDA {
 
+bool checkCufft(cufftResult err, const char *msg)
+{
+	if (err != CUFFT_SUCCESS) {
+		ASTRA_ERROR("%s: CUFFT error %d.", msg, err);
+		return false;
+	} else {
+		return true;
+	}
+}
+
 __global__ static void applyFilter_kernel(int _iProjectionCount,
                                           int _iFreqBinCount,
                                           cufftComplex * _pSinogram,
@@ -136,23 +146,17 @@ static bool invokeCudaFFT(int _iProjectionCount, int _iDetectorCount,
                           cufftComplex * _pDevTargetComplex)
 {
 	cufftHandle plan;
-	cufftResult result;
 
-	result = cufftPlan1d(&plan, _iDetectorCount, CUFFT_R2C, _iProjectionCount);
-	if(result != CUFFT_SUCCESS)
-	{
-		ASTRA_ERROR("Failed to plan 1d r2c fft");
+	if (!checkCufft(cufftPlan1d(&plan, _iDetectorCount, CUFFT_R2C, _iProjectionCount), "invokeCudaFFT plan")) {
 		return false;
 	}
 
-	result = cufftExecR2C(plan, (cufftReal *)_pfDevSource, _pDevTargetComplex);
+	if (!checkCufft(cufftExecR2C(plan, (cufftReal *)_pfDevSource, _pDevTargetComplex), "invokeCudaFFT exec")) {
+		cufftDestroy(plan);
+		return false;
+	}
+
 	cufftDestroy(plan);
-
-	if(result != CUFFT_SUCCESS)
-	{
-		ASTRA_ERROR("Failed to exec 1d r2c fft");
-		return false;
-	}
 
 	return true;
 }
@@ -162,25 +166,20 @@ static bool invokeCudaIFFT(int _iProjectionCount, int _iDetectorCount,
                            float * _pfDevTarget)
 {
 	cufftHandle plan;
-	cufftResult result;
 
-	result = cufftPlan1d(&plan, _iDetectorCount, CUFFT_C2R, _iProjectionCount);
-	if(result != CUFFT_SUCCESS)
-	{
-		ASTRA_ERROR("Failed to plan 1d c2r fft");
+	if (!checkCufft(cufftPlan1d(&plan, _iDetectorCount, CUFFT_C2R, _iProjectionCount), "invokeCudaIFFT plan")) {
 		return false;
 	}
 
-	// todo: why do we have to get rid of the const qualifier?
-	result = cufftExecC2R(plan, (cufftComplex *)_pDevSourceComplex,
-	                      (cufftReal *)_pfDevTarget);
+	// Getting rid of the const qualifier is due to cufft API issue?
+	if (!checkCufft(cufftExecC2R(plan, (cufftComplex *)_pDevSourceComplex,
+	                      (cufftReal *)_pfDevTarget), "invokeCudaIFFT exec"))
+	{
+		cufftDestroy(plan);
+		return false;
+	}
+
 	cufftDestroy(plan);
-
-	if(result != CUFFT_SUCCESS)
-	{
-		ASTRA_ERROR("Failed to exec 1d c2r fft");
-		return false;
-	}
 
 	return true;
 }
