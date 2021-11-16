@@ -54,7 +54,7 @@ void MUL_SART(float* pfOut, const float* pfIn, unsigned int pitch, unsigned int 
 
 	devMUL_SART<<<gridSize, blockSize>>>(pfOut, pfIn, pitch, width);
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), "MUL_SART");
 }
 
 

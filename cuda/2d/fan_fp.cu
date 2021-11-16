@@ -268,16 +268,17 @@ bool FanFP_internal(float* D_volumeData, unsigned int volumePitch,
 	for (unsigned int i = 0; i < dims.iVolHeight; i += g_blockSlices)
 		FanFPvertical<<<dimGrid, dimBlock, 0, stream2>>>(D_projData, projPitch, i, blockStart, blockEnd, dims, outputScale);
 
+	bool ok = true;
+
+	ok &= checkCuda(cudaStreamSynchronize(stream1), "fan_fp hor");
 	cudaStreamDestroy(stream1);
+
+	ok &= checkCuda(cudaStreamSynchronize(stream2), "fan_fp ver");
 	cudaStreamDestroy(stream2);
-
-	cudaThreadSynchronize();
-
-	cudaTextForceKernelsCompletion();
 
 	cudaFreeArray(D_dataArray);
 
-	return true;
+	return ok;
 }
 
 bool FanFP(float* D_volumeData, unsigned int volumePitch,

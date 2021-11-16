@@ -40,9 +40,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #define M_PI 3.14159265358979323846
 #endif
 
-#define ASTRA_CUDA_ASSERT(err) do {  if (err != cudaSuccess) { astraCUDA::reportCudaError(err); assert(err == cudaSuccess); } } while(0)
-
-
 namespace astraCUDA {
 
 bool copyVolumeToDevice(const float* in_data, unsigned int in_pitch,
@@ -59,22 +56,17 @@ bool copySinogramToDevice(const float* in_data, unsigned int in_pitch,
 		float* outD_data, unsigned int out_pitch);
 
 bool allocateVolume(float*& D_ptr, unsigned int width, unsigned int height, unsigned int& pitch);
-void zeroVolume(float* D_data, unsigned int pitch, unsigned int width, unsigned int height);
+bool zeroVolume(float* D_data, unsigned int pitch, unsigned int width, unsigned int height);
 
 bool allocateVolumeData(float*& D_ptr, unsigned int& pitch, const SDimensions& dims);
 bool allocateProjectionData(float*& D_ptr, unsigned int& pitch, const SDimensions& dims);
-void zeroVolumeData(float* D_ptr, unsigned int pitch, const SDimensions& dims);
-void zeroProjectionData(float* D_ptr, unsigned int pitch, const SDimensions& dims);
+bool zeroVolumeData(float* D_ptr, unsigned int pitch, const SDimensions& dims);
+bool zeroProjectionData(float* D_ptr, unsigned int pitch, const SDimensions& dims);
 
 void duplicateVolumeData(float* D_dst, float* D_src, unsigned int pitch, const SDimensions& dims);
 void duplicateProjectionData(float* D_dst, float* D_src, unsigned int pitch, const SDimensions& dims);
 
-
-
-bool cudaTextForceKernelsCompletion();
-void reportCudaError(cudaError_t err);
-
-
+bool checkCuda(cudaError_t err, const char *msg);
 
 float dotProduct2D(float* D_data, unsigned int pitch,
                    unsigned int width, unsigned int height);

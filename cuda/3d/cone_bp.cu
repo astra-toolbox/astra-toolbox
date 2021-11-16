@@ -357,7 +357,9 @@ bool ConeBP_Array(cudaPitchedPtr D_volumeData,
 				dev_cone_BP_SS<<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, params.iRaysPerVoxelDim, fOutputScale);
 		}
 
-		cudaTextForceKernelsCompletion();
+		// TODO: Consider not synchronizing here, if possible.
+		if (!checkCuda(cudaThreadSynchronize(), "cone_bp"))
+			return false;
 
 		angles = angles + angleCount;
 		// printf("%f\n", toc(t));

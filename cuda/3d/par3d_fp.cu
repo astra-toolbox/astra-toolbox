@@ -501,8 +501,8 @@ bool Par3DFP_Array_internal(cudaPitchedPtr D_projData,
 				dim3 dimGrid(
 				             ((dims.iProjU+g_detBlockU-1)/g_detBlockU)*((dims.iProjV+g_detBlockV-1)/g_detBlockV),
 (blockEnd-blockStart+g_anglesPerBlock-1)/g_anglesPerBlock);
-				// TODO: check if we can't immediately
-				//       destroy the stream after use
+				// TODO: consider limiting number of handle (chaotic) geoms
+				//       with many alternating directions
 				cudaStream_t stream;
 				cudaStreamCreate(&stream);
 				streams.push_back(stream);
@@ -545,17 +545,16 @@ bool Par3DFP_Array_internal(cudaPitchedPtr D_projData,
 		}
 	}
 
-	for (std::list<cudaStream_t>::iterator iter = streams.begin(); iter != streams.end(); ++iter)
+	bool ok = true;
+
+	for (std::list<cudaStream_t>::iterator iter = streams.begin(); iter != streams.end(); ++iter) {
+		ok &= checkCuda(cudaStreamSynchronize(*iter), "par3d_fp");
 		cudaStreamDestroy(*iter);
-
-	streams.clear();
-
-	cudaTextForceKernelsCompletion();
-
+	}
 
 	// printf("%f\n", toc(t));
 
-	return true;
+	return ok;
 }
 
 bool Par3DFP(cudaPitchedPtr D_volumeData,
@@ -726,17 +725,16 @@ bool Par3DFP_SumSqW(cudaPitchedPtr D_volumeData,
 		}
 	}
 
-	for (std::list<cudaStream_t>::iterator iter = streams.begin(); iter != streams.end(); ++iter)
+	bool ok = true;
+
+	for (std::list<cudaStream_t>::iterator iter = streams.begin(); iter != streams.end(); ++iter) {
+		ok = ok &= checkCuda(cudaStreamSynchronize(*iter), "Par3DFP_SumSqW");
 		cudaStreamDestroy(*iter);
-
-	streams.clear();
-
-	cudaTextForceKernelsCompletion();
-
+	}
 
 	// printf("%f\n", toc(t));
 
-	return true;
+	return ok;
 }
 
 

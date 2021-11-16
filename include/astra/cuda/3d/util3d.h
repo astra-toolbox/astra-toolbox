@@ -38,6 +38,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 namespace astraCUDA3d {
 
+using astraCUDA::checkCuda;
+
 cudaPitchedPtr allocateVolumeData(const SDimensions3D& dims);
 cudaPitchedPtr allocateProjectionData(const SDimensions3D& dims);
 bool zeroVolumeData(cudaPitchedPtr& D_data, const SDimensions3D& dims);
@@ -57,8 +59,6 @@ bool zeroProjectionArray(cudaArray* array, const SDimensions3D& dims);
 bool zeroVolumeArray(cudaArray* array, const SDimensions3D& dims);
 cudaArray* allocateProjectionArray(const SDimensions3D& dims);
 cudaArray* allocateVolumeArray(const SDimensions3D& dims);
-
-bool cudaTextForceKernelsCompletion();
 
 float dotProduct3D(cudaPitchedPtr data, unsigned int x, unsigned int y, unsigned int z);
 

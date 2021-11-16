@@ -176,7 +176,8 @@ bool FDK_PreWeight(cudaPitchedPtr D_projData,
 
 	devFDK_preweight<<<dimGrid, dimBlock>>>(D_projData.ptr, projPitch, 0, dims.iProjAngles, fSrcOrigin, fDetOrigin, fZShift, fDetUSize, fDetVSize, dims);
 
-	cudaTextForceKernelsCompletion();
+	if (!checkCuda(cudaThreadSynchronize(), "FDK_PreWeight"))
+		return false;
 
 	if (bShortScan && dims.iProjAngles > 1) {
 		ASTRA_DEBUG("Doing Parker weighting");
@@ -225,9 +226,10 @@ bool FDK_PreWeight(cudaPitchedPtr D_projData,
 
 		devFDK_ParkerWeight<<<dimGrid, dimBlock>>>(D_projData.ptr, projPitch, 0, dims.iProjAngles, fSrcOrigin, fDetOrigin, fDetUSize, fCentralFanAngle, dims);
 
+		if (!checkCuda(cudaThreadSynchronize(), "FDK_PreWeight ParkerWeight"))
+			return false;
 	}
 
-	cudaTextForceKernelsCompletion();
 	return true;
 }
 

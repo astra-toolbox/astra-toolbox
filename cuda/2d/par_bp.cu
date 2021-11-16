@@ -231,13 +231,12 @@ bool BP_internal(float* D_volumeData, unsigned int volumePitch,
 		else
 			devBP<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, dims, fOutputScale);
 	}
-	cudaThreadSynchronize();
 
-	cudaTextForceKernelsCompletion();
+	bool ok = checkCuda(cudaStreamSynchronize(stream), "par_bp");
 
 	cudaStreamDestroy(stream);
 
-	return true;
+	return ok;
 }
 
 bool BP(float* D_volumeData, unsigned int volumePitch,
@@ -284,11 +283,8 @@ bool BP_SART(float* D_volumeData, unsigned int volumePitch,
 	             (dims.iVolHeight+g_blockSliceSize-1)/g_blockSliceSize);
 
 	devBP_SART<<<dimGrid, dimBlock>>>(D_volumeData, volumePitch, angle_offset, angle_scaled_sin, angle_scaled_cos, dims, fOutputScale);
-	cudaThreadSynchronize();
 
-	cudaTextForceKernelsCompletion();
-
-	return true;
+	return checkCuda(cudaThreadSynchronize(), "BP_SART");
 }
 
 
