@@ -25,8 +25,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#ifndef _CUDA_ALGO_H
-#define _CUDA_ALGO_H
+#ifndef _CUDA_ALGO3D_H
+#define _CUDA_ALGO3D_H
 
 #include "dims3d.h"
 #include "util3d.h"

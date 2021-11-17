@@ -25,8 +25,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#ifndef _CUDA_ARITH2_H
-#define _CUDA_ARITH2_H
+#ifndef _CUDA_DARTHELPER_H
+#define _CUDA_DARTHELPER_H
 
 #include "astra/Globals.h"
 

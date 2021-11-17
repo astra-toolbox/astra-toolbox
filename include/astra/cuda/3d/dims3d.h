@@ -25,8 +25,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#ifndef _CUDA_CONE_DIMS_H
-#define _CUDA_CONE_DIMS_H
+#ifndef _CUDA_DIMS3D_H
+#define _CUDA_DIMS3D_H
 
 #include "astra/GeometryUtil3D.h"
 
