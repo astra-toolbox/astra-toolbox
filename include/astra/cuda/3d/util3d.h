@@ -78,6 +78,9 @@ struct Vec3 {
 	Vec3 operator-() const {
 		return Vec3(-x, -y, -z);
 	}
+	Vec3 operator*(double s) {
+		return Vec3(s*x, s*y, s*z);
+	}
 	double norm() const {
 		return sqrt(x*x + y*y + z*z);
 	}
