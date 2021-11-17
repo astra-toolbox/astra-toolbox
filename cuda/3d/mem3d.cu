@@ -58,15 +58,13 @@ struct SMemHandle3D_internal
 int maxBlockDimension()
 {
 	int dev;
-	cudaError_t err = cudaGetDevice(&dev);
-	if (err != cudaSuccess) {
+	if (!checkCuda(cudaGetDevice(&dev), "maxBlockDimension getDevice")) {
 		ASTRA_WARN("Error querying device");
 		return 0;
 	}
 
 	cudaDeviceProp props;
-	err = cudaGetDeviceProperties(&props, dev);
-	if (err != cudaSuccess) {
+	if (!checkCuda(cudaGetDeviceProperties(&props, dev), "maxBlockDimension getDviceProps")) {
 		ASTRA_WARN("Error querying device %d properties", dev);
 		return 0;
 	}
@@ -84,10 +82,7 @@ MemHandle3D allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Me
 
 	size_t free = astraCUDA::availableGPUMemory();
 
-	cudaError_t err;
-	err = cudaMalloc3D(&hnd.ptr, make_cudaExtent(sizeof(float)*x, y, z));
-
-	if (err != cudaSuccess) {
+	if (!checkCuda(cudaMalloc3D(&hnd.ptr, make_cudaExtent(sizeof(float)*x, y, z)), "allocateGPUMemory malloc3d")) {
 		return MemHandle3D();
 	}
 
@@ -98,8 +93,7 @@ MemHandle3D allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Me
 
 
 	if (zero == INIT_ZERO) {
-		err = cudaMemset3D(hnd.ptr, 0, make_cudaExtent(sizeof(float)*x, y, z));
-		if (err != cudaSuccess) {
+		if (!checkCuda(cudaMemset3D(hnd.ptr, 0, make_cudaExtent(sizeof(float)*x, y, z)), "allocateGPUMemory memset3d")) {
 			cudaFree(hnd.ptr.ptr);
 			return MemHandle3D();
 		}
@@ -116,23 +110,22 @@ bool zeroGPUMemory(MemHandle3D handle, unsigned int x, unsigned int y, unsigned 
 {
 	SMemHandle3D_internal& hnd = *handle.d.get();
 	assert(!hnd.arr);
-	cudaError_t err = cudaMemset3D(hnd.ptr, 0, make_cudaExtent(sizeof(float)*x, y, z));
-	return err == cudaSuccess;
+	return checkCuda(cudaMemset3D(hnd.ptr, 0, make_cudaExtent(sizeof(float)*x, y, z)), "zeroGPUMemory");
 }
 
 bool freeGPUMemory(MemHandle3D handle)
 {
 	size_t free = astraCUDA::availableGPUMemory();
-	cudaError_t err;
+	bool ok;
 	if (handle.d->arr)
-		err = cudaFreeArray(handle.d->arr);
+		ok = checkCuda(cudaFreeArray(handle.d->arr), "freeGPUMemory array");
 	else
-		err = cudaFree(handle.d->ptr.ptr);
+		ok = checkCuda(cudaFree(handle.d->ptr.ptr), "freeGPUMemory");
 	size_t free2 = astraCUDA::availableGPUMemory();
 
 	ASTRA_DEBUG("Freeing memory. (Pre: %lu, post: %lu)", free, free2);
 
-	return err == cudaSuccess;
+	return ok;
 }
 
 bool copyToGPUMemory(const float *src, MemHandle3D dst, const SSubDimensions3D &pos)
@@ -160,9 +153,7 @@ bool copyToGPUMemory(const float *src, MemHandle3D dst, const SSubDimensions3D &
 
 	p.kind = cudaMemcpyHostToDevice;
 
-	cudaError_t err = cudaMemcpy3D(&p);
-
-	return err == cudaSuccess;
+	return checkCuda(cudaMemcpy3D(&p), "copyToGPUMemory");
 }
 
 
@@ -197,10 +188,7 @@ bool copyFromGPUMemory(float *dst, MemHandle3D src, const SSubDimensions3D &pos)
 
 	p.kind = cudaMemcpyDeviceToHost;
 
-	cudaError_t err = cudaMemcpy3D(&p);
-
-	return err == cudaSuccess;
-
+	return checkCuda(cudaMemcpy3D(&p), "copyFromGPUMemory");
 }
 
 
@@ -409,9 +397,7 @@ bool copyIntoArray(MemHandle3D handle, MemHandle3D subdata, const SSubDimensions
 
 	p.kind = cudaMemcpyHostToDevice;
 
-	cudaError_t err = cudaMemcpy3D(&p);
-
-	return err == cudaSuccess;
+	return checkCuda(cudaMemcpy3D(&p), "copyIntoArray");
 
 }
 
