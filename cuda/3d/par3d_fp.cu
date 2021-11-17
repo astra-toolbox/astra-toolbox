@@ -735,7 +735,7 @@ bool Par3DFP_SumSqW(cudaPitchedPtr D_volumeData,
 	bool ok = true;
 
 	for (std::list<cudaStream_t>::iterator iter = streams.begin(); iter != streams.end(); ++iter) {
-		ok = ok &= checkCuda(cudaStreamSynchronize(*iter), "Par3DFP_SumSqW");
+		ok &= checkCuda(cudaStreamSynchronize(*iter), "Par3DFP_SumSqW");
 		cudaStreamDestroy(*iter);
 	}
 
