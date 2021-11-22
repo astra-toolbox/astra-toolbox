@@ -133,9 +133,21 @@ fi
 AC_ARG_WITH(cuda_compute, [[  --with-cuda-compute=archs  comma separated list of CUDA compute models (optional)]],,)
 if test x"$HAVECUDA" = xyes; then
   AC_MSG_CHECKING([for nvcc archs])
-  dnl 10 11 12 13 20 21 30 32 35 37 50 52 53 60 61 62 70 72 75
+  dnl 10 11 12 13 20 21 30 32 35 37 50 52 53 60 61 62 70 72 75 80 86
+  dnl
+  dnl Build cubin for range of platforms, and ptx for newest for forward compat.
+  dnl Build cubin x.0 for older platforms, and all x.y for "recent" ones.
+  dnl
+  dnl Include 3.5 since CUDA 11.x doesn't support 3.0, but does support 3.5.
+  dnl (All other CUDA toolkits from 7-10 start support at x.0 versions.)
+  dnl Skip 7.2 cubin since that seems to be Jetson-only (and can use 7.0 cubin).
+  dnl
+  dnl From CUDA Programming Guide:
+  dnl "Binary compatibility is guaranteed from one minor revision to the next one, but not from one minor revision to the previous one or across major revisions."
+  dnl
+
   if test x"$with_cuda_compute" = x; then
-    with_cuda_compute="20,30,35,50,60,70,75"
+    with_cuda_compute="20,30,35,50,60,70,75,80,86"
   fi
   ASTRA_FIND_NVCC_ARCHS([$with_cuda_compute],NVCCFLAGS_EXTRA,NVCCARCHS)
   AC_MSG_RESULT([$NVCCARCHS])
