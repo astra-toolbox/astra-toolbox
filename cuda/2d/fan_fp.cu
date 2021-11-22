@@ -49,36 +49,6 @@ static const unsigned int g_anglesPerBlock = 16;
 static const unsigned int g_detBlockSize = 32;
 static const unsigned int g_blockSlices = 64;
 
-static bool bindVolumeDataTexture(float* data, cudaArray*& dataArray, cudaTextureObject_t& texObj, unsigned int pitch, unsigned int width, unsigned int height)
-{
-	// TODO: For very small sizes (roughly <=512x128) with few angles (<=180)
-	// not using an array is more efficient.
-
-	cudaChannelFormatDesc channelDesc =
-	    cudaCreateChannelDesc(32, 0, 0, 0, cudaChannelFormatKindFloat);
-
-	dataArray = 0;
-	cudaMallocArray(&dataArray, &channelDesc, width, height);
-	cudaMemcpy2DToArray(dataArray, 0, 0, data, pitch*sizeof(float), width*sizeof(float), height, cudaMemcpyDeviceToDevice);
-
-	cudaResourceDesc resDesc;
-	memset(&resDesc, 0, sizeof(resDesc));
-	resDesc.resType = cudaResourceTypeArray;
-	resDesc.res.array.array = dataArray;
-
-	cudaTextureDesc texDesc;
-	memset(&texDesc, 0, sizeof(texDesc));
-	texDesc.addressMode[0] = cudaAddressModeBorder;
-	texDesc.addressMode[1] = cudaAddressModeBorder;
-	texDesc.filterMode = cudaFilterModeLinear;
-	texDesc.readMode = cudaReadModeElementType;
-	texDesc.normalizedCoords = 0;
-
-	texObj = 0;
-
-	return checkCuda(cudaCreateTextureObject(&texObj, &resDesc, &texDesc, NULL), "fan_fp texture");
-}
-
 // projection for angles that are roughly horizontal
 // (detector roughly vertical)
 __global__ void FanFPhorizontal(float* D_projData, unsigned int projPitch, cudaTextureObject_t tex, unsigned int startSlice, unsigned int startAngle, unsigned int endAngle, const SDimensions dims, float outputScale)
@@ -231,7 +201,8 @@ bool FanFP_internal(float* D_volumeData, unsigned int volumePitch,
 	cudaArray* D_dataArray;
 	cudaTextureObject_t D_texObj;
 
-	bindVolumeDataTexture(D_volumeData, D_dataArray, D_texObj, volumePitch, dims.iVolWidth, dims.iVolHeight);
+	if (!createTextureObject2D(D_volumeData, D_dataArray, D_texObj, volumePitch, dims.iVolWidth, dims.iVolHeight))
+		return false;
 
 	// transfer angles to constant memory
 	float* tmp = new float[dims.iProjAngles];

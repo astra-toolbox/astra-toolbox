@@ -51,33 +51,6 @@ __constant__ float gC_angle_scaled_cos[g_MaxAngles];
 __constant__ float gC_angle_offset[g_MaxAngles];
 __constant__ float gC_angle_scale[g_MaxAngles];
 
-static bool bindProjDataTexture(float* data, cudaTextureObject_t& texObj, unsigned int pitch, unsigned int width, unsigned int height, cudaTextureAddressMode mode = cudaAddressModeBorder)
-{
-	cudaChannelFormatDesc channelDesc =
-	    cudaCreateChannelDesc(32, 0, 0, 0, cudaChannelFormatKindFloat);
-
-	cudaResourceDesc resDesc;
-	memset(&resDesc, 0, sizeof(resDesc));
-	resDesc.resType = cudaResourceTypePitch2D;
-	resDesc.res.pitch2D.devPtr = (void*)data;
-	resDesc.res.pitch2D.desc = channelDesc;
-	resDesc.res.pitch2D.width = width;
-	resDesc.res.pitch2D.height = height;
-	resDesc.res.pitch2D.pitchInBytes = sizeof(float)*pitch;
-
-	cudaTextureDesc texDesc;
-	memset(&texDesc, 0, sizeof(texDesc));
-	texDesc.addressMode[0] = mode;
-	texDesc.addressMode[1] = mode;
-	texDesc.filterMode = cudaFilterModeLinear;
-	texDesc.readMode = cudaReadModeElementType;
-	texDesc.normalizedCoords = 0;
-
-	texObj = 0;
-
-	return checkCuda(cudaCreateTextureObject(&texObj, &resDesc, &texDesc, NULL), "par_bp texture");
-}
-
 // TODO: Templated version with/without scale? (Or only the global outputscale)
 __global__ void devBP(float* D_volData, unsigned int volPitch, cudaTextureObject_t tex, unsigned int startAngle, const SDimensions dims, float fOutputScale)
 {
@@ -196,13 +169,14 @@ bool BP_internal(float* D_volumeData, unsigned int volumePitch,
 {
 	assert(dims.iProjAngles <= g_MaxAngles);
 
+	cudaTextureObject_t D_texObj;
+	if (!createTextureObjectPitch2D(D_projData, D_texObj, projPitch, dims.iProjDets, dims.iProjAngles))
+		return false;
+
 	float* angle_scaled_sin = new float[dims.iProjAngles];
 	float* angle_scaled_cos = new float[dims.iProjAngles];
 	float* angle_offset = new float[dims.iProjAngles];
 	float* angle_scale = new float[dims.iProjAngles];
-
-	cudaTextureObject_t D_texObj;
-	bindProjDataTexture(D_projData, D_texObj, projPitch, dims.iProjDets, dims.iProjAngles);
 
 	for (unsigned int i = 0; i < dims.iProjAngles; ++i) {
 		double d = angles[i].fDetUX * angles[i].fRayY - angles[i].fDetUY * angles[i].fRayX;
@@ -284,7 +258,8 @@ bool BP_SART(float* D_volumeData, unsigned int volumePitch,
 	// We need to Clamp to the border pixels instead of to zero, because
 	// SART weights with ray length.
 	cudaTextureObject_t D_texObj;
-	bindProjDataTexture(D_projData, D_texObj, projPitch, dims.iProjDets, 1, cudaAddressModeClamp);
+	if (!createTextureObjectPitch2D(D_projData, D_texObj, projPitch, dims.iProjDets, 1, cudaAddressModeClamp))
+		return false;
 
 	double d = angles[angle].fDetUX * angles[angle].fRayY - angles[angle].fDetUY * angles[angle].fRayX;
 	float angle_scaled_cos = angles[angle].fRayY / d;
