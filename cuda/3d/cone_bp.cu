@@ -53,29 +53,6 @@ struct DevConeParams {
 
 __constant__ DevConeParams gC_C[g_MaxAngles];
 
-bool bindProjDataTexture(cudaArray* array, cudaTextureObject_t& texObj)
-{
-	cudaChannelFormatDesc channelDesc =
-	    cudaCreateChannelDesc(32, 0, 0, 0, cudaChannelFormatKindFloat);
-
-	cudaResourceDesc resDesc;
-	memset(&resDesc, 0, sizeof(resDesc));
-	resDesc.resType = cudaResourceTypeArray;
-	resDesc.res.array.array = array;
-
-	cudaTextureDesc texDesc;
-	memset(&texDesc, 0, sizeof(texDesc));
-	texDesc.addressMode[0] = cudaAddressModeBorder;
-	texDesc.addressMode[1] = cudaAddressModeBorder;
-	texDesc.addressMode[2] = cudaAddressModeBorder;
-	texDesc.filterMode = cudaFilterModeLinear;
-	texDesc.readMode = cudaReadModeElementType;
-	texDesc.normalizedCoords = 0;
-
-	return checkCuda(cudaCreateTextureObject(&texObj, &resDesc, &texDesc, NULL), "cone_bp texture");
-}
-
-
 //__launch_bounds__(32*16, 4)
 template<bool FDKWEIGHT, unsigned int ZSIZE>
 __global__ void dev_cone_BP(void* D_volData, unsigned int volPitch,
@@ -317,7 +294,8 @@ bool ConeBP_Array(cudaPitchedPtr D_volumeData,
                   const SProjectorParams3D& params)
 {
 	cudaTextureObject_t D_texObj;
-	bindProjDataTexture(D_projArray, D_texObj);
+	if (!createTextureObject3D(D_projArray, D_texObj))
+		return false;
 
 	float fOutputScale;
 	if (params.bFDKWeighting) {

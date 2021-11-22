@@ -59,29 +59,6 @@ __constant__ float gC_DetVY[g_MaxAngles];
 __constant__ float gC_DetVZ[g_MaxAngles];
 
 
-static bool bindVolumeDataTexture(cudaArray* array, cudaTextureObject_t& texObj)
-{
-	cudaChannelFormatDesc channelDesc =
-	    cudaCreateChannelDesc(32, 0, 0, 0, cudaChannelFormatKindFloat);
-
-	cudaResourceDesc resDesc;
-	memset(&resDesc, 0, sizeof(resDesc));
-	resDesc.resType = cudaResourceTypeArray;
-	resDesc.res.array.array = array;
-
-	cudaTextureDesc texDesc;
-	memset(&texDesc, 0, sizeof(texDesc));
-	texDesc.addressMode[0] = cudaAddressModeBorder;
-	texDesc.addressMode[1] = cudaAddressModeBorder;
-	texDesc.addressMode[2] = cudaAddressModeBorder;
-	texDesc.filterMode = cudaFilterModeLinear;
-	texDesc.readMode = cudaReadModeElementType;
-	texDesc.normalizedCoords = 0;
-
-	return checkCuda(cudaCreateTextureObject(&texObj, &resDesc, &texDesc, NULL), "par3d_fp texture");
-}
-
-
 // x=0, y=1, z=2
 struct DIR_X {
 	__device__ float nSlices(const SDimensions3D& dims) const { return dims.iVolX; }
@@ -574,12 +551,16 @@ bool Par3DFP(cudaPitchedPtr D_volumeData,
              const SDimensions3D& dims, const SPar3DProjection* angles,
              const SProjectorParams3D& params)
 {
-	cudaTextureObject_t D_texObj;
 
 	// transfer volume to array
 	cudaArray* cuArray = allocateVolumeArray(dims);
 	transferVolumeToArray(D_volumeData, cuArray, dims);
-	bindVolumeDataTexture(cuArray, D_texObj);
+
+	cudaTextureObject_t D_texObj;
+	if (!createTextureObject3D(cuArray, D_texObj)) {
+		cudaFreeArray(cuArray);
+		return false;
+	}
 
 	bool ret;
 

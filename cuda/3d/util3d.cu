@@ -378,6 +378,28 @@ bool transferHostProjectionsToArray(const float *projData, cudaArray* array, con
 	return checkCuda(cudaMemcpy3D(&p), "transferHostProjectionsToArray 3D");
 }
 
+bool createTextureObject3D(cudaArray* array, cudaTextureObject_t& texObj)
+{
+	cudaChannelFormatDesc channelDesc =
+	    cudaCreateChannelDesc(32, 0, 0, 0, cudaChannelFormatKindFloat);
+
+	cudaResourceDesc resDesc;
+	memset(&resDesc, 0, sizeof(resDesc));
+	resDesc.resType = cudaResourceTypeArray;
+	resDesc.res.array.array = array;
+
+	cudaTextureDesc texDesc;
+	memset(&texDesc, 0, sizeof(texDesc));
+	texDesc.addressMode[0] = cudaAddressModeBorder;
+	texDesc.addressMode[1] = cudaAddressModeBorder;
+	texDesc.addressMode[2] = cudaAddressModeBorder;
+	texDesc.filterMode = cudaFilterModeLinear;
+	texDesc.readMode = cudaReadModeElementType;
+	texDesc.normalizedCoords = 0;
+
+	return checkCuda(cudaCreateTextureObject(&texObj, &resDesc, &texDesc, NULL), "createTextureObject3D");
+}
+
 
 
 float dotProduct3D(cudaPitchedPtr data, unsigned int x, unsigned int y,

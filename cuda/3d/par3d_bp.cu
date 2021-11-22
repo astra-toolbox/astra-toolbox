@@ -54,29 +54,6 @@ __constant__ DevPar3DParams gC_C[g_MaxAngles];
 __constant__ float gC_scale[g_MaxAngles];
 
 
-static bool bindProjDataTexture(cudaArray* array, cudaTextureObject_t& texObj)
-{
-	cudaChannelFormatDesc channelDesc =
-	    cudaCreateChannelDesc(32, 0, 0, 0, cudaChannelFormatKindFloat);
-
-	cudaResourceDesc resDesc;
-	memset(&resDesc, 0, sizeof(resDesc));
-	resDesc.resType = cudaResourceTypeArray;
-	resDesc.res.array.array = array;
-
-	cudaTextureDesc texDesc;
-	memset(&texDesc, 0, sizeof(texDesc));
-	texDesc.addressMode[0] = cudaAddressModeBorder;
-	texDesc.addressMode[1] = cudaAddressModeBorder;
-	texDesc.addressMode[2] = cudaAddressModeBorder;
-	texDesc.filterMode = cudaFilterModeLinear;
-	texDesc.readMode = cudaReadModeElementType;
-	texDesc.normalizedCoords = 0;
-
-	return checkCuda(cudaCreateTextureObject(&texObj, &resDesc, &texDesc, NULL), "par3d_bp texture");
-}
-
-
 template<unsigned int ZSIZE>
 __global__ void dev_par3D_BP(void* D_volData, unsigned int volPitch, cudaTextureObject_t tex, int startAngle, int angleOffset, const SDimensions3D dims, float fOutputScale)
 {
@@ -261,7 +238,8 @@ bool Par3DBP_Array(cudaPitchedPtr D_volumeData,
                    const SProjectorParams3D& params)
 {
 	cudaTextureObject_t D_texObj;
-	bindProjDataTexture(D_projArray, D_texObj);
+	if (!createTextureObject3D(D_projArray, D_texObj))
+		return false;
 
 	float fOutputScale = params.fOutputScale * params.fVolScaleX * params.fVolScaleY * params.fVolScaleZ;
 
