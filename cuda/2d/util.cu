@@ -126,7 +126,7 @@ void duplicateProjectionData(float* D_dst, float* D_src, unsigned int pitch, con
 	cudaMemcpy2D(D_dst, sizeof(float)*pitch, D_src, sizeof(float)*pitch, sizeof(float)*dims.iProjDets, dims.iProjAngles, cudaMemcpyDeviceToDevice);
 }
 
-bool createTextureObject2D(float* data, cudaArray*& dataArray, cudaTextureObject_t& texObj, unsigned int pitch, unsigned int width, unsigned int height)
+bool createArrayAndTextureObject2D(float* data, cudaArray*& dataArray, cudaTextureObject_t& texObj, unsigned int pitch, unsigned int width, unsigned int height)
 {
 	// TODO: For very small sizes (roughly <=512x128) with few angles (<=180)
 	// not using an array is more efficient.
@@ -135,8 +135,12 @@ bool createTextureObject2D(float* data, cudaArray*& dataArray, cudaTextureObject
 	    cudaCreateChannelDesc(32, 0, 0, 0, cudaChannelFormatKindFloat);
 
 	dataArray = 0;
-	cudaMallocArray(&dataArray, &channelDesc, width, height);
-	cudaMemcpy2DToArray(dataArray, 0, 0, data, pitch*sizeof(float), width*sizeof(float), height, cudaMemcpyDeviceToDevice);
+	if (!checkCuda(cudaMallocArray(&dataArray, &channelDesc, width, height), "createTextureObject2D malloc"))
+		return false;
+	if (!checkCuda(cudaMemcpy2DToArray(dataArray, 0, 0, data, pitch*sizeof(float), width*sizeof(float), height, cudaMemcpyDeviceToDevice), "createTextureObject2D memcpy")) {
+		cudaFreeArray(dataArray);
+		return false;
+	}
 
 	cudaResourceDesc resDesc;
 	memset(&resDesc, 0, sizeof(resDesc));
@@ -153,7 +157,12 @@ bool createTextureObject2D(float* data, cudaArray*& dataArray, cudaTextureObject
 
 	texObj = 0;
 
-	return checkCuda(cudaCreateTextureObject(&texObj, &resDesc, &texDesc, NULL), "createTextureObject2D");
+	if (!checkCuda(cudaCreateTextureObject(&texObj, &resDesc, &texDesc, NULL), "createTextureObject2D")) {
+		cudaFreeArray(dataArray);
+		return false;
+	}
+
+	return true;
 }
 
 bool createTextureObjectPitch2D(float* data, cudaTextureObject_t& texObj, unsigned int pitch, unsigned int width, unsigned int height, cudaTextureAddressMode mode)

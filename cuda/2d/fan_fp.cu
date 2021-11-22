@@ -201,7 +201,7 @@ bool FanFP_internal(float* D_volumeData, unsigned int volumePitch,
 	cudaArray* D_dataArray;
 	cudaTextureObject_t D_texObj;
 
-	if (!createTextureObject2D(D_volumeData, D_dataArray, D_texObj, volumePitch, dims.iVolWidth, dims.iVolHeight))
+	if (!createArrayAndTextureObject2D(D_volumeData, D_dataArray, D_texObj, volumePitch, dims.iVolWidth, dims.iVolHeight))
 		return false;
 
 	// transfer angles to constant memory

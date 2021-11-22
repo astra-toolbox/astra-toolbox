@@ -66,7 +66,7 @@ bool zeroProjectionData(float* D_ptr, unsigned int pitch, const SDimensions& dim
 void duplicateVolumeData(float* D_dst, float* D_src, unsigned int pitch, const SDimensions& dims);
 void duplicateProjectionData(float* D_dst, float* D_src, unsigned int pitch, const SDimensions& dims);
 
-bool createTextureObject2D(float* data, cudaArray*& dataArray, cudaTextureObject_t& texObj, unsigned int pitch, unsigned int width, unsigned int height);
+bool createArrayAndTextureObject2D(float* data, cudaArray*& dataArray, cudaTextureObject_t& texObj, unsigned int pitch, unsigned int width, unsigned int height);
 bool createTextureObjectPitch2D(float* data, cudaTextureObject_t& texObj, unsigned int pitch, unsigned int width, unsigned int height, cudaTextureAddressMode mode = cudaAddressModeBorder);
 
 
