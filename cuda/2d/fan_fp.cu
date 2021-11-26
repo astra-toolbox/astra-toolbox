@@ -33,12 +33,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 #include <list>
 
-
-typedef texture<float, 2, cudaReadModeElementType> texture2D;
-
-static texture2D gT_FanVolumeTexture;
-
-
 namespace astraCUDA {
 
 static const unsigned g_MaxAngles = 2560;
@@ -55,31 +49,9 @@ static const unsigned int g_anglesPerBlock = 16;
 static const unsigned int g_detBlockSize = 32;
 static const unsigned int g_blockSlices = 64;
 
-static bool bindVolumeDataTexture(float* data, cudaArray*& dataArray, unsigned int pitch, unsigned int width, unsigned int height)
-{
-	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
-	dataArray = 0;
-	cudaMallocArray(&dataArray, &channelDesc, width, height);
-	cudaMemcpy2DToArray(dataArray, 0, 0, data, pitch*sizeof(float), width*sizeof(float), height, cudaMemcpyDeviceToDevice);
-
-	gT_FanVolumeTexture.addressMode[0] = cudaAddressModeBorder;
-	gT_FanVolumeTexture.addressMode[1] = cudaAddressModeBorder;
-	gT_FanVolumeTexture.filterMode = cudaFilterModeLinear;
-	gT_FanVolumeTexture.normalized = false;
-
-	// TODO: For very small sizes (roughly <=512x128) with few angles (<=180)
-	// not using an array is more efficient.
-	//cudaBindTexture2D(0, gT_FanVolumeTexture, (const void*)data, channelDesc, width, height, sizeof(float)*pitch);
-	cudaBindTextureToArray(gT_FanVolumeTexture, dataArray, channelDesc);
-
-	// TODO: error value?
-
-	return true;
-}
-
 // projection for angles that are roughly horizontal
 // (detector roughly vertical)
-__global__ void FanFPhorizontal(float* D_projData, unsigned int projPitch, unsigned int startSlice, unsigned int startAngle, unsigned int endAngle, const SDimensions dims, float outputScale)
+__global__ void FanFPhorizontal(float* D_projData, unsigned int projPitch, cudaTextureObject_t tex, unsigned int startSlice, unsigned int startAngle, unsigned int endAngle, const SDimensions dims, float outputScale)
 {
 	float* projData = (float*)D_projData;
 	const int relDet = threadIdx.x;
@@ -134,7 +106,7 @@ __global__ void FanFPhorizontal(float* D_projData, unsigned int projPitch, unsig
 		float fV = 0.0f;
 		for (int slice = startSlice; slice < endSlice; ++slice)
 		{
-			fV += tex2D(gT_FanVolumeTexture, fX, fY);
+			fV += tex2D<float>(tex, fX, fY);
 			fY -= alpha;
 			fX += 1.0f;
 		}
@@ -149,7 +121,7 @@ __global__ void FanFPhorizontal(float* D_projData, unsigned int projPitch, unsig
 
 // projection for angles that are roughly vertical
 // (detector roughly horizontal)
-__global__ void FanFPvertical(float* D_projData, unsigned int projPitch, unsigned int startSlice, unsigned int startAngle, unsigned int endAngle, const SDimensions dims, float outputScale)
+__global__ void FanFPvertical(float* D_projData, unsigned int projPitch, cudaTextureObject_t tex, unsigned int startSlice, unsigned int startAngle, unsigned int endAngle, const SDimensions dims, float outputScale)
 {
 	const int relDet = threadIdx.x;
 	const int relAngle = threadIdx.y;
@@ -207,7 +179,7 @@ __global__ void FanFPvertical(float* D_projData, unsigned int projPitch, unsigne
 
 		for (int slice = startSlice; slice < endSlice; ++slice)
 		{
-			fV += tex2D(gT_FanVolumeTexture, fX, fY);
+			fV += tex2D<float>(tex, fX, fY);
 			fX -= alpha;
 			fY += 1.0f;
 		}
@@ -227,7 +199,10 @@ bool FanFP_internal(float* D_volumeData, unsigned int volumePitch,
 	assert(dims.iProjAngles <= g_MaxAngles);
 
 	cudaArray* D_dataArray;
-	bindVolumeDataTexture(D_volumeData, D_dataArray, volumePitch, dims.iVolWidth, dims.iVolHeight);
+	cudaTextureObject_t D_texObj;
+
+	if (!createArrayAndTextureObject2D(D_volumeData, D_dataArray, D_texObj, volumePitch, dims.iVolWidth, dims.iVolHeight))
+		return false;
 
 	// transfer angles to constant memory
 	float* tmp = new float[dims.iProjAngles];
@@ -260,13 +235,13 @@ bool FanFP_internal(float* D_volumeData, unsigned int volumePitch,
 	cudaStreamCreate(&stream1);
 	streams.push_back(stream1);
 	for (unsigned int i = 0; i < dims.iVolWidth; i += g_blockSlices)
-		FanFPhorizontal<<<dimGrid, dimBlock, 0, stream1>>>(D_projData, projPitch, i, blockStart, blockEnd, dims, outputScale);
+		FanFPhorizontal<<<dimGrid, dimBlock, 0, stream1>>>(D_projData, projPitch, D_texObj, i, blockStart, blockEnd, dims, outputScale);
 
 	cudaStream_t stream2;
 	cudaStreamCreate(&stream2);
 	streams.push_back(stream2);
 	for (unsigned int i = 0; i < dims.iVolHeight; i += g_blockSlices)
-		FanFPvertical<<<dimGrid, dimBlock, 0, stream2>>>(D_projData, projPitch, i, blockStart, blockEnd, dims, outputScale);
+		FanFPvertical<<<dimGrid, dimBlock, 0, stream2>>>(D_projData, projPitch, D_texObj, i, blockStart, blockEnd, dims, outputScale);
 
 	bool ok = true;
 
@@ -277,6 +252,8 @@ bool FanFP_internal(float* D_volumeData, unsigned int volumePitch,
 	cudaStreamDestroy(stream2);
 
 	cudaFreeArray(D_dataArray);
+
+	cudaDestroyTextureObject(D_texObj);
 
 	return ok;
 }

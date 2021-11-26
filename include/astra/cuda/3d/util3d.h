@@ -60,6 +60,8 @@ bool zeroVolumeArray(cudaArray* array, const SDimensions3D& dims);
 cudaArray* allocateProjectionArray(const SDimensions3D& dims);
 cudaArray* allocateVolumeArray(const SDimensions3D& dims);
 
+bool createTextureObject3D(cudaArray* array, cudaTextureObject_t& texObj);
+
 float dotProduct3D(cudaPitchedPtr data, unsigned int x, unsigned int y, unsigned int z);
 
 int calcNextPowerOfTwo(int _iValue);

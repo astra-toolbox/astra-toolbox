@@ -126,6 +126,75 @@ void duplicateProjectionData(float* D_dst, float* D_src, unsigned int pitch, con
 	cudaMemcpy2D(D_dst, sizeof(float)*pitch, D_src, sizeof(float)*pitch, sizeof(float)*dims.iProjDets, dims.iProjAngles, cudaMemcpyDeviceToDevice);
 }
 
+bool createArrayAndTextureObject2D(float* data, cudaArray*& dataArray, cudaTextureObject_t& texObj, unsigned int pitch, unsigned int width, unsigned int height)
+{
+	// TODO: For very small sizes (roughly <=512x128) with few angles (<=180)
+	// not using an array is more efficient.
+
+	cudaChannelFormatDesc channelDesc =
+	    cudaCreateChannelDesc(32, 0, 0, 0, cudaChannelFormatKindFloat);
+
+	dataArray = 0;
+	if (!checkCuda(cudaMallocArray(&dataArray, &channelDesc, width, height), "createTextureObject2D malloc"))
+		return false;
+	if (!checkCuda(cudaMemcpy2DToArray(dataArray, 0, 0, data, pitch*sizeof(float), width*sizeof(float), height, cudaMemcpyDeviceToDevice), "createTextureObject2D memcpy")) {
+		cudaFreeArray(dataArray);
+		return false;
+	}
+
+	cudaResourceDesc resDesc;
+	memset(&resDesc, 0, sizeof(resDesc));
+	resDesc.resType = cudaResourceTypeArray;
+	resDesc.res.array.array = dataArray;
+
+	cudaTextureDesc texDesc;
+	memset(&texDesc, 0, sizeof(texDesc));
+	texDesc.addressMode[0] = cudaAddressModeBorder;
+	texDesc.addressMode[1] = cudaAddressModeBorder;
+	texDesc.filterMode = cudaFilterModeLinear;
+	texDesc.readMode = cudaReadModeElementType;
+	texDesc.normalizedCoords = 0;
+
+	texObj = 0;
+
+	if (!checkCuda(cudaCreateTextureObject(&texObj, &resDesc, &texDesc, NULL), "createTextureObject2D")) {
+		cudaFreeArray(dataArray);
+		return false;
+	}
+
+	return true;
+}
+
+bool createTextureObjectPitch2D(float* data, cudaTextureObject_t& texObj, unsigned int pitch, unsigned int width, unsigned int height, cudaTextureAddressMode mode)
+{
+	cudaChannelFormatDesc channelDesc =
+	    cudaCreateChannelDesc(32, 0, 0, 0, cudaChannelFormatKindFloat);
+
+	cudaResourceDesc resDesc;
+	memset(&resDesc, 0, sizeof(resDesc));
+	resDesc.resType = cudaResourceTypePitch2D;
+	resDesc.res.pitch2D.devPtr = (void*)data;
+	resDesc.res.pitch2D.desc = channelDesc;
+	resDesc.res.pitch2D.width = width;
+	resDesc.res.pitch2D.height = height;
+	resDesc.res.pitch2D.pitchInBytes = sizeof(float)*pitch;
+
+	cudaTextureDesc texDesc;
+	memset(&texDesc, 0, sizeof(texDesc));
+	texDesc.addressMode[0] = mode;
+	texDesc.addressMode[1] = mode;
+	texDesc.filterMode = cudaFilterModeLinear;
+	texDesc.readMode = cudaReadModeElementType;
+	texDesc.normalizedCoords = 0;
+
+	texObj = 0;
+
+	return checkCuda(cudaCreateTextureObject(&texObj, &resDesc, &texDesc, NULL), "createTextureObjectPitch2D");
+}
+
+
+
+
 template <unsigned int blockSize>
 __global__ void reduce1D(float *g_idata, float *g_odata, unsigned int n)
 {

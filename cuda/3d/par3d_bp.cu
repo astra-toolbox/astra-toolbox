@@ -35,10 +35,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include <cuda.h>
 
-typedef texture<float, 3, cudaReadModeElementType> texture3D;
-
-static texture3D gT_par3DProjTexture;
-
 namespace astraCUDA3d {
 
 static const unsigned int g_volBlockZ = 6;
@@ -58,26 +54,8 @@ __constant__ DevPar3DParams gC_C[g_MaxAngles];
 __constant__ float gC_scale[g_MaxAngles];
 
 
-static bool bindProjDataTexture(const cudaArray* array)
-{
-	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
-
-	gT_par3DProjTexture.addressMode[0] = cudaAddressModeBorder;
-	gT_par3DProjTexture.addressMode[1] = cudaAddressModeBorder;
-	gT_par3DProjTexture.addressMode[2] = cudaAddressModeBorder;
-	gT_par3DProjTexture.filterMode = cudaFilterModeLinear;
-	gT_par3DProjTexture.normalized = false;
-
-	cudaBindTextureToArray(gT_par3DProjTexture, array, channelDesc);
-
-	// TODO: error value?
-
-	return true;
-}
-
-
 template<unsigned int ZSIZE>
-__global__ void dev_par3D_BP(void* D_volData, unsigned int volPitch, int startAngle, int angleOffset, const SDimensions3D dims, float fOutputScale)
+__global__ void dev_par3D_BP(void* D_volData, unsigned int volPitch, cudaTextureObject_t tex, int startAngle, int angleOffset, const SDimensions3D dims, float fOutputScale)
 {
 	float* volData = (float*)D_volData;
 
@@ -125,7 +103,7 @@ __global__ void dev_par3D_BP(void* D_volData, unsigned int volPitch, int startAn
 
 			for (int idx = 0; idx < ZSIZE; ++idx) {
 
-				float fVal = tex3D(gT_par3DProjTexture, fU, fAngle, fV);
+				float fVal = tex3D<float>(tex, fU, fAngle, fV);
 				Z[idx] += fVal * fS;
 
 				fU += fCu.z;
@@ -144,7 +122,7 @@ __global__ void dev_par3D_BP(void* D_volData, unsigned int volPitch, int startAn
 }
 
 // supersampling version
-__global__ void dev_par3D_BP_SS(void* D_volData, unsigned int volPitch, int startAngle, int angleOffset, const SDimensions3D dims, int iRaysPerVoxelDim, float fOutputScale)
+__global__ void dev_par3D_BP_SS(void* D_volData, unsigned int volPitch, cudaTextureObject_t tex, int startAngle, int angleOffset, const SDimensions3D dims, int iRaysPerVoxelDim, float fOutputScale)
 {
 	float* volData = (float*)D_volData;
 
@@ -206,7 +184,7 @@ __global__ void dev_par3D_BP_SS(void* D_volData, unsigned int volPitch, int star
 				const float fU = fCu.w + fXs * fCu.x + fYs * fCu.y + fZs * fCu.z;
 				const float fV = fCv.w + fXs * fCv.x + fYs * fCv.y + fZs * fCv.z;
 
-				fVal += tex3D(gT_par3DProjTexture, fU, fAngle, fV) * fS;
+				fVal += tex3D<float>(tex, fU, fAngle, fV) * fS;
 				fZs += fSubStep;
 			}
 			fYs += fSubStep;
@@ -259,18 +237,22 @@ bool Par3DBP_Array(cudaPitchedPtr D_volumeData,
                    const SDimensions3D& dims, const SPar3DProjection* angles,
                    const SProjectorParams3D& params)
 {
-	bindProjDataTexture(D_projArray);
+	cudaTextureObject_t D_texObj;
+	if (!createTextureObject3D(D_projArray, D_texObj))
+		return false;
 
 	float fOutputScale = params.fOutputScale * params.fVolScaleX * params.fVolScaleY * params.fVolScaleZ;
+
+	bool ok = true;
 
 	for (unsigned int th = 0; th < dims.iProjAngles; th += g_MaxAngles) {
 		unsigned int angleCount = g_MaxAngles;
 		if (th + angleCount > dims.iProjAngles)
 			angleCount = dims.iProjAngles - th;
 
-		bool ok = transferConstants(angles, angleCount, params);
+		ok = transferConstants(angles, angleCount, params);
 		if (!ok)
-			return false;
+			break;
 
 		dim3 dimBlock(g_volBlockX, g_volBlockY);
 
@@ -283,22 +265,25 @@ bool Par3DBP_Array(cudaPitchedPtr D_volumeData,
 			// printf("Calling BP: %d, %dx%d, %dx%d to %p\n", i, dimBlock.x, dimBlock.y, dimGrid.x, dimGrid.y, (void*)D_volumeData.ptr); 
 			if (params.iRaysPerVoxelDim == 1) {
 				if (dims.iVolZ == 1) {
-					dev_par3D_BP<1><<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, fOutputScale);
+					dev_par3D_BP<1><<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), D_texObj, i, th, dims, fOutputScale);
 				} else {
-					dev_par3D_BP<g_volBlockZ><<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, fOutputScale);
+					dev_par3D_BP<g_volBlockZ><<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), D_texObj, i, th, dims, fOutputScale);
 				}
 			} else
-				dev_par3D_BP_SS<<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), i, th, dims, params.iRaysPerVoxelDim, fOutputScale);
+				dev_par3D_BP_SS<<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), D_texObj, i, th, dims, params.iRaysPerVoxelDim, fOutputScale);
 		}
 
 		// TODO: Consider not synchronizing here, if possible.
-		if (!checkCuda(cudaThreadSynchronize(), "cone_bp"))
-			return false;
+		ok = checkCuda(cudaThreadSynchronize(), "cone_bp");
+		if (!ok)
+			break;
 
 		angles = angles + angleCount;
 		// printf("%f\n", toc(t));
 
 	}
+
+	cudaDestroyTextureObject(D_texObj);
 
 	return true;
 }

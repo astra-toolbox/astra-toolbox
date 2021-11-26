@@ -35,10 +35,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include <cuda.h>
 
-typedef texture<float, 3, cudaReadModeElementType> texture3D;
-
-static texture3D gT_coneVolumeTexture;
-
 namespace astraCUDA3d {
 
 static const unsigned int g_anglesPerBlock = 4;
@@ -63,24 +59,6 @@ __constant__ float gC_DetVY[g_MaxAngles];
 __constant__ float gC_DetVZ[g_MaxAngles];
 
 
-bool bindVolumeDataTexture(const cudaArray* array)
-{
-	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
-
-	gT_coneVolumeTexture.addressMode[0] = cudaAddressModeBorder;
-	gT_coneVolumeTexture.addressMode[1] = cudaAddressModeBorder;
-	gT_coneVolumeTexture.addressMode[2] = cudaAddressModeBorder;
-	gT_coneVolumeTexture.filterMode = cudaFilterModeLinear;
-	gT_coneVolumeTexture.normalized = false;
-
-	cudaBindTextureToArray(gT_coneVolumeTexture, array, channelDesc);
-
-	// TODO: error value?
-
-	return true;
-}
-
-
 // x=0, y=1, z=2
 struct DIR_X {
 	__device__ float nSlices(const SDimensions3D& dims) const { return dims.iVolX; }
@@ -89,7 +67,7 @@ struct DIR_X {
 	__device__ float c0(float x, float y, float z) const { return x; }
 	__device__ float c1(float x, float y, float z) const { return y; }
 	__device__ float c2(float x, float y, float z) const { return z; }
-	__device__ float tex(float f0, float f1, float f2) const { return tex3D(gT_coneVolumeTexture, f0, f1, f2); }
+	__device__ float tex(cudaTextureObject_t tex, float f0, float f1, float f2) const { return tex3D<float>(tex, f0, f1, f2); }
 	__device__ float x(float f0, float f1, float f2) const { return f0; }
 	__device__ float y(float f0, float f1, float f2) const { return f1; }
 	__device__ float z(float f0, float f1, float f2) const { return f2; }
@@ -103,7 +81,7 @@ struct DIR_Y {
 	__device__ float c0(float x, float y, float z) const { return y; }
 	__device__ float c1(float x, float y, float z) const { return x; }
 	__device__ float c2(float x, float y, float z) const { return z; }
-	__device__ float tex(float f0, float f1, float f2) const { return tex3D(gT_coneVolumeTexture, f1, f0, f2); }
+	__device__ float tex(cudaTextureObject_t tex, float f0, float f1, float f2) const { return tex3D<float>(tex, f1, f0, f2); }
 	__device__ float x(float f0, float f1, float f2) const { return f1; }
 	__device__ float y(float f0, float f1, float f2) const { return f0; }
 	__device__ float z(float f0, float f1, float f2) const { return f2; }
@@ -117,7 +95,7 @@ struct DIR_Z {
 	__device__ float c0(float x, float y, float z) const { return z; }
 	__device__ float c1(float x, float y, float z) const { return x; }
 	__device__ float c2(float x, float y, float z) const { return y; }
-	__device__ float tex(float f0, float f1, float f2) const { return tex3D(gT_coneVolumeTexture, f1, f2, f0); }
+	__device__ float tex(cudaTextureObject_t tex, float f0, float f1, float f2) const { return tex3D<float>(tex, f1, f2, f0); }
 	__device__ float x(float f0, float f1, float f2) const { return f1; }
 	__device__ float y(float f0, float f1, float f2) const { return f2; }
 	__device__ float z(float f0, float f1, float f2) const { return f0; }
@@ -144,6 +122,7 @@ struct SCALE_NONCUBE {
 
 template<class COORD, class SCALE>
 __global__ void cone_FP_t(float* D_projData, unsigned int projPitch,
+                          cudaTextureObject_t tex,
                           unsigned int startSlice,
                           unsigned int startAngle, unsigned int endAngle,
                           const SDimensions3D dims,
@@ -208,7 +187,7 @@ __global__ void cone_FP_t(float* D_projData, unsigned int projPitch,
 
 		for (int s = startSlice; s < endSlice; ++s)
 		{
-			fVal += c.tex(f0, f1, f2);
+			fVal += c.tex(tex, f0, f1, f2);
 			f0 += 1.0f;
 			f1 += a1;
 			f2 += a2;
@@ -222,6 +201,7 @@ __global__ void cone_FP_t(float* D_projData, unsigned int projPitch,
 
 template<class COORD>
 __global__ void cone_FP_SS_t(float* D_projData, unsigned int projPitch,
+                             cudaTextureObject_t tex,
                              unsigned int startSlice,
                              unsigned int startAngle, unsigned int endAngle,
                              const SDimensions3D dims, int iRaysPerDetDim,
@@ -295,7 +275,7 @@ __global__ void cone_FP_SS_t(float* D_projData, unsigned int projPitch,
 
 		for (int s = startSlice; s < endSlice; ++s)
 		{
-			fVal += c.tex(f0, f1, f2);
+			fVal += c.tex(tex, f0, f1, f2);
 			f0 += 1.0f;
 			f1 += a1;
 			f2 += a2;
@@ -313,7 +293,9 @@ __global__ void cone_FP_SS_t(float* D_projData, unsigned int projPitch,
 
 
 bool ConeFP_Array_internal(cudaPitchedPtr D_projData,
-                  const SDimensions3D& dims, unsigned int angleCount, const SConeProjection* angles,
+                  cudaTextureObject_t D_texObj,
+                  const SDimensions3D& dims,
+                  unsigned int angleCount, const SConeProjection* angles,
                   const SProjectorParams3D& params)
 {
 	// transfer angles to constant memory
@@ -419,29 +401,29 @@ bool ConeFP_Array_internal(cudaPitchedPtr D_projData,
 					for (unsigned int i = 0; i < dims.iVolX; i += g_blockSlices)
 						if (params.iRaysPerDetDim == 1)
 							if (cube)
-								cone_FP_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, scube);
+								cone_FP_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, i, blockStart, blockEnd, dims, scube);
 							else
-								cone_FP_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, snoncubeX);
+								cone_FP_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, i, blockStart, blockEnd, dims, snoncubeX);
 						else
-							cone_FP_SS_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, params.iRaysPerDetDim, snoncubeX);
+							cone_FP_SS_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, i, blockStart, blockEnd, dims, params.iRaysPerDetDim, snoncubeX);
 				} else if (blockDirection == 1) {
 					for (unsigned int i = 0; i < dims.iVolY; i += g_blockSlices)
 						if (params.iRaysPerDetDim == 1)
 							if (cube)
-								cone_FP_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, scube);
+								cone_FP_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, i, blockStart, blockEnd, dims, scube);
 							else
-								cone_FP_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, snoncubeY);
+								cone_FP_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, i, blockStart, blockEnd, dims, snoncubeY);
 						else
-							cone_FP_SS_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, params.iRaysPerDetDim, snoncubeY);
+							cone_FP_SS_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, i, blockStart, blockEnd, dims, params.iRaysPerDetDim, snoncubeY);
 				} else if (blockDirection == 2) {
 					for (unsigned int i = 0; i < dims.iVolZ; i += g_blockSlices)
 						if (params.iRaysPerDetDim == 1)
 							if (cube)
-								cone_FP_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, scube);
+								cone_FP_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, i, blockStart, blockEnd, dims, scube);
 							else
-								cone_FP_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, snoncubeZ);
+								cone_FP_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, i, blockStart, blockEnd, dims, snoncubeZ);
 						else
-							cone_FP_SS_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, params.iRaysPerDetDim, snoncubeZ);
+							cone_FP_SS_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, i, blockStart, blockEnd, dims, params.iRaysPerDetDim, snoncubeZ);
 				}
 
 			}
@@ -470,10 +452,14 @@ bool ConeFP(cudaPitchedPtr D_volumeData,
             const SProjectorParams3D& params)
 {
 	// transfer volume to array
-
 	cudaArray* cuArray = allocateVolumeArray(dims);
 	transferVolumeToArray(D_volumeData, cuArray, dims);
-	bindVolumeDataTexture(cuArray);
+
+	cudaTextureObject_t D_texObj;
+	if (!createTextureObject3D(cuArray, D_texObj)) {
+		cudaFreeArray(cuArray);
+		return false;
+	}
 
 	bool ret;
 
@@ -485,7 +471,7 @@ bool ConeFP(cudaPitchedPtr D_volumeData,
 		cudaPitchedPtr D_subprojData = D_projData;
 		D_subprojData.ptr = (char*)D_projData.ptr + iAngle * D_projData.pitch;
 
-		ret = ConeFP_Array_internal(D_subprojData,
+		ret = ConeFP_Array_internal(D_subprojData, D_texObj,
 		                            dims, iEndAngle - iAngle, angles + iAngle,
 		                            params);
 		if (!ret)

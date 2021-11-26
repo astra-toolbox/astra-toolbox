@@ -34,11 +34,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include <list>
 #include <cmath>
 
-typedef texture<float, 2, cudaReadModeElementType> texture2D;
-
-static texture2D gT_volumeTexture;
-
-
 namespace astraCUDA {
 
 static const unsigned g_MaxAngles = 2560;
@@ -52,37 +47,9 @@ static const unsigned int g_anglesPerBlock = 16;
 static const unsigned int g_detBlockSize = 32;
 static const unsigned int g_blockSlices = 64;
 
-// fixed point scaling factor
-#define fPREC_FACTOR 16.0f
-#define iPREC_FACTOR 16
-
-
-static bool bindVolumeDataTexture(float* data, cudaArray*& dataArray, unsigned int pitch, unsigned int width, unsigned int height)
-{
-	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
-	dataArray = 0;
-	cudaMallocArray(&dataArray, &channelDesc, width, height);
-	cudaMemcpy2DToArray(dataArray, 0, 0, data, pitch*sizeof(float), width*sizeof(float), height, cudaMemcpyDeviceToDevice);
-
-	gT_volumeTexture.addressMode[0] = cudaAddressModeBorder;
-	gT_volumeTexture.addressMode[1] = cudaAddressModeBorder;
-	gT_volumeTexture.filterMode = cudaFilterModeLinear;
-	gT_volumeTexture.normalized = false;
-
-	// TODO: For very small sizes (roughly <=512x128) with few angles (<=180)
-	// not using an array is more efficient.
-//	cudaBindTexture2D(0, gT_volumeTexture, (const void*)data, channelDesc, width, height, sizeof(float)*pitch);
-	cudaBindTextureToArray(gT_volumeTexture, dataArray, channelDesc);
-
-	// TODO: error value?
-
-	return true;
-}
-
-
 // projection for angles that are roughly horizontal
 // (detector roughly vertical)
-__global__ void FPhorizontal_simple(float* D_projData, unsigned int projPitch, unsigned int startSlice, unsigned int startAngle, unsigned int endAngle, const SDimensions dims, float outputScale)
+__global__ void FPhorizontal_simple(float* D_projData, unsigned int projPitch, cudaTextureObject_t tex, unsigned int startSlice, unsigned int startAngle, unsigned int endAngle, const SDimensions dims, float outputScale)
 {
 	const int relDet = threadIdx.x;
 	const int relAngle = threadIdx.y;
@@ -134,7 +101,7 @@ __global__ void FPhorizontal_simple(float* D_projData, unsigned int projPitch, u
 		for (int slice = startSlice; slice < endSlice; ++slice)
 		{
 			for (int iSubT = 0; iSubT < dims.iRaysPerDet; ++iSubT) {
-				fVal += tex2D(gT_volumeTexture, fS, fP);
+				fVal += tex2D<float>(tex, fS, fP);
 				fP += fSubDetStep;
 			}
 			fP += fSliceStep;
@@ -145,7 +112,7 @@ __global__ void FPhorizontal_simple(float* D_projData, unsigned int projPitch, u
 
 		for (int slice = startSlice; slice < endSlice; ++slice)
 		{
-			fVal += tex2D(gT_volumeTexture, fS, fP);
+			fVal += tex2D<float>(tex, fS, fP);
 			fP += fSliceStep;
 			fS += 1.0f;
 		}
@@ -159,7 +126,7 @@ __global__ void FPhorizontal_simple(float* D_projData, unsigned int projPitch, u
 
 // projection for angles that are roughly vertical
 // (detector roughly horizontal)
-__global__ void FPvertical_simple(float* D_projData, unsigned int projPitch, unsigned int startSlice, unsigned int startAngle, unsigned int endAngle, const SDimensions dims, float outputScale)
+__global__ void FPvertical_simple(float* D_projData, unsigned int projPitch, cudaTextureObject_t tex, unsigned int startSlice, unsigned int startAngle, unsigned int endAngle, const SDimensions dims, float outputScale)
 {
 	const int relDet = threadIdx.x;
 	const int relAngle = threadIdx.y;
@@ -210,7 +177,7 @@ __global__ void FPvertical_simple(float* D_projData, unsigned int projPitch, uns
 		for (int slice = startSlice; slice < endSlice; ++slice)
 		{
 			for (int iSubT = 0; iSubT < dims.iRaysPerDet; ++iSubT) {
-				fVal += tex2D(gT_volumeTexture, fP, fS);
+				fVal += tex2D<float>(tex, fP, fS);
 				fP += fSubDetStep;
 			}
 			fP += fSliceStep;
@@ -221,7 +188,7 @@ __global__ void FPvertical_simple(float* D_projData, unsigned int projPitch, uns
 
 		for (int slice = startSlice; slice < endSlice; ++slice)
 		{
-			fVal += tex2D(gT_volumeTexture, fP, fS);
+			fVal += tex2D<float>(tex, fP, fS);
 			fP += fSliceStep;
 			fS += 1.0f;
 		}
@@ -269,7 +236,10 @@ bool FP_simple_internal(float* D_volumeData, unsigned int volumePitch,
 	assert(angles);
 
 	cudaArray* D_dataArray;
-	bindVolumeDataTexture(D_volumeData, D_dataArray, volumePitch, dims.iVolWidth, dims.iVolHeight);
+	cudaTextureObject_t D_texObj;
+
+	if (!createArrayAndTextureObject2D(D_volumeData, D_dataArray, D_texObj, volumePitch, dims.iVolWidth, dims.iVolHeight))
+		return false;
 
 
 	convertAndUploadAngles(angles, dims.iProjAngles, dims.iProjDets);
@@ -313,10 +283,10 @@ bool FP_simple_internal(float* D_volumeData, unsigned int volumePitch,
 				//printf("angle block: %d to %d, %d\n", blockStart, blockEnd, blockVertical);
 				if (!blockVertical)
 					for (unsigned int i = 0; i < dims.iVolWidth; i += g_blockSlices)
-						FPhorizontal_simple<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, i, blockStart, blockEnd, dims, outputScale);
+						FPhorizontal_simple<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, D_texObj, i, blockStart, blockEnd, dims, outputScale);
 				else
 					for (unsigned int i = 0; i < dims.iVolHeight; i += g_blockSlices)
-						FPvertical_simple<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, i, blockStart, blockEnd, dims, outputScale);
+						FPvertical_simple<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, D_texObj, i, blockStart, blockEnd, dims, outputScale);
 			}
 			blockVertical = vertical;
 			blockStart = a;
@@ -331,6 +301,8 @@ bool FP_simple_internal(float* D_volumeData, unsigned int volumePitch,
 	}
 
 	cudaFreeArray(D_dataArray);
+
+	cudaDestroyTextureObject(D_texObj);
 
 	return ok;
 }

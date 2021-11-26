@@ -57,25 +57,8 @@ struct DevFanParams {
 
 __constant__ DevFanParams gC_C[g_MaxAngles];
 
-
-static bool bindProjDataTexture(float* data, unsigned int pitch, unsigned int width, unsigned int height, cudaTextureAddressMode mode = cudaAddressModeBorder)
-{
-	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
-
-	gT_FanProjTexture.addressMode[0] = mode;
-	gT_FanProjTexture.addressMode[1] = mode;
-	gT_FanProjTexture.filterMode = cudaFilterModeLinear;
-	gT_FanProjTexture.normalized = false;
-
-	cudaBindTexture2D(0, gT_FanProjTexture, (const void*)data, channelDesc, width, height, sizeof(float)*pitch);
-
-	// TODO: error value?
-
-	return true;
-}
-
 template<bool FBPWEIGHT>
-__global__ void devFanBP(float* D_volData, unsigned int volPitch, unsigned int startAngle, const SDimensions dims, float fOutputScale)
+__global__ void devFanBP(float* D_volData, unsigned int volPitch, cudaTextureObject_t tex, unsigned int startAngle, const SDimensions dims, float fOutputScale)
 {
 	const int relX = threadIdx.x;
 	const int relY = threadIdx.y;
@@ -115,7 +98,7 @@ __global__ void devFanBP(float* D_volData, unsigned int volPitch, unsigned int s
 
 		const float fr = __fdividef(1.0f, fDen);
 		const float fT = fNum * fr;
-		fVal += tex2D(gT_FanProjTexture, fT, fA) * (FBPWEIGHT ? fr * fr : fr);
+		fVal += tex2D<float>(tex, fT, fA) * (FBPWEIGHT ? fr * fr : fr);
 		fA += 1.0f;
 	}
 
@@ -123,7 +106,7 @@ __global__ void devFanBP(float* D_volData, unsigned int volPitch, unsigned int s
 }
 
 // supersampling version
-__global__ void devFanBP_SS(float* D_volData, unsigned int volPitch, unsigned int startAngle, const SDimensions dims, float fOutputScale)
+__global__ void devFanBP_SS(float* D_volData, unsigned int volPitch, cudaTextureObject_t tex, unsigned int startAngle, const SDimensions dims, float fOutputScale)
 {
 	const int relX = threadIdx.x;
 	const int relY = threadIdx.y;
@@ -169,7 +152,7 @@ __global__ void devFanBP_SS(float* D_volData, unsigned int volPitch, unsigned in
 				const float fr = __fdividef(1.0f, fDen);
 
 				const float fT = fNum * fr;
-				fVal += tex2D(gT_FanProjTexture, fT, fA) * fr;
+				fVal += tex2D<float>(tex, fT, fA) * fr;
 				fY -= fSubStep;
 			}
 			fX += fSubStep;
@@ -184,7 +167,7 @@ __global__ void devFanBP_SS(float* D_volData, unsigned int volPitch, unsigned in
 // BP specifically for SART.
 // It includes (free) weighting with voxel weight.
 // It assumes the proj texture is set up _without_ padding, unlike regular BP.
-__global__ void devFanBP_SART(float* D_volData, unsigned int volPitch, const SDimensions dims, float fOutputScale)
+__global__ void devFanBP_SART(float* D_volData, unsigned int volPitch, cudaTextureObject_t tex, const SDimensions dims, float fOutputScale)
 {
 	const int relX = threadIdx.x;
 	const int relY = threadIdx.y;
@@ -213,7 +196,7 @@ __global__ void devFanBP_SART(float* D_volData, unsigned int volPitch, const SDi
 	const float fr = __fdividef(1.0f, fDen);
 	const float fT = fNum * fr;
 	// NB: The scale constant in devBP is cancelled out by the SART weighting
-	const float fVal = tex2D(gT_FanProjTexture, fT, 0.5f);
+	const float fVal = tex2D<float>(tex, fT, 0.5f);
 
 	volData[Y*volPitch+X] += fVal * fOutputScale;
 }
@@ -303,11 +286,15 @@ bool FanBP_internal(float* D_volumeData, unsigned int volumePitch,
 {
 	assert(dims.iProjAngles <= g_MaxAngles);
 
-	bindProjDataTexture(D_projData, projPitch, dims.iProjDets, dims.iProjAngles);
+	cudaTextureObject_t D_texObj;
+	if (!createTextureObjectPitch2D(D_projData, D_texObj, projPitch, dims.iProjDets, dims.iProjAngles))
+		return false;
 
 	bool ok = transferConstants(angles, dims.iProjAngles, false);
-	if (!ok)
+	if (!ok) {
+		cudaDestroyTextureObject(D_texObj);
 		return false;
+	}
 
 	dim3 dimBlock(g_blockSlices, g_blockSliceSize);
 	dim3 dimGrid((dims.iVolWidth+g_blockSlices-1)/g_blockSlices,
@@ -318,14 +305,16 @@ bool FanBP_internal(float* D_volumeData, unsigned int volumePitch,
 
 	for (unsigned int i = 0; i < dims.iProjAngles; i += g_anglesPerBlock) {
 		if (dims.iRaysPerPixelDim > 1)
-			devFanBP_SS<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, dims, fOutputScale);
+			devFanBP_SS<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, D_texObj, i, dims, fOutputScale);
 		else
-			devFanBP<false><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, dims, fOutputScale);
+			devFanBP<false><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, D_texObj, i, dims, fOutputScale);
 	}
 
 	ok = checkCuda(cudaStreamSynchronize(stream), "FanBP");
 
 	cudaStreamDestroy(stream);
+
+	cudaDestroyTextureObject(D_texObj);
 
 	return ok;
 }
@@ -337,11 +326,15 @@ bool FanBP_FBPWeighted_internal(float* D_volumeData, unsigned int volumePitch,
 {
 	assert(dims.iProjAngles <= g_MaxAngles);
 
-	bindProjDataTexture(D_projData, projPitch, dims.iProjDets, dims.iProjAngles);
+	cudaTextureObject_t D_texObj;
+	if (!createTextureObjectPitch2D(D_projData, D_texObj, projPitch, dims.iProjDets, dims.iProjAngles))
+		return false;
 
 	bool ok = transferConstants(angles, dims.iProjAngles, true);
-	if (!ok)
+	if (!ok) {
+		cudaDestroyTextureObject(D_texObj);
 		return false;
+	}
 
 	dim3 dimBlock(g_blockSlices, g_blockSliceSize);
 	dim3 dimGrid((dims.iVolWidth+g_blockSlices-1)/g_blockSlices,
@@ -351,12 +344,14 @@ bool FanBP_FBPWeighted_internal(float* D_volumeData, unsigned int volumePitch,
 	cudaStreamCreate(&stream);
 
 	for (unsigned int i = 0; i < dims.iProjAngles; i += g_anglesPerBlock) {
-		devFanBP<true><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, i, dims, fOutputScale);
+		devFanBP<true><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, D_texObj, i, dims, fOutputScale);
 	}
 
 	ok = checkCuda(cudaStreamSynchronize(stream), "FanBP_FBPWeighted");
 
 	cudaStreamDestroy(stream);
+
+	cudaDestroyTextureObject(D_texObj);
 
 	return ok;
 }
@@ -369,19 +364,27 @@ bool FanBP_SART(float* D_volumeData, unsigned int volumePitch,
                 float fOutputScale)
 {
 	// only one angle
-	bindProjDataTexture(D_projData, projPitch, dims.iProjDets, 1, cudaAddressModeClamp);
+	cudaTextureObject_t D_texObj;
+	if (!createTextureObjectPitch2D(D_projData, D_texObj, projPitch, dims.iProjDets, 1, cudaAddressModeClamp))
+		return false;
 
 	bool ok = transferConstants(angles + angle, 1, false);
-	if (!ok)
+	if (!ok) {
+		cudaDestroyTextureObject(D_texObj);
 		return false;
+	}
 
 	dim3 dimBlock(g_blockSlices, g_blockSliceSize);
 	dim3 dimGrid((dims.iVolWidth+g_blockSlices-1)/g_blockSlices,
 	             (dims.iVolHeight+g_blockSliceSize-1)/g_blockSliceSize);
 
-	devFanBP_SART<<<dimGrid, dimBlock>>>(D_volumeData, volumePitch, dims, fOutputScale);
+	devFanBP_SART<<<dimGrid, dimBlock>>>(D_volumeData, volumePitch, D_texObj, dims, fOutputScale);
 
-	return checkCuda(cudaThreadSynchronize(), "FanBP_SART");
+	ok = checkCuda(cudaThreadSynchronize(), "FanBP_SART");
+
+	cudaDestroyTextureObject(D_texObj);
+
+	return ok;
 }
 
 bool FanBP(float* D_volumeData, unsigned int volumePitch,
