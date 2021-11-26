@@ -95,6 +95,9 @@ class OpTomo(scipy.sparse.linalg.LinearOperator):
     def _transpose(self):
         return self.transposeOpTomo
 
+    # real operator
+    _adjoint = _transpose
+
     def __checkArray(self, arr, shp):
         if len(arr.shape)==1:
             arr = arr.reshape(shp)
@@ -248,6 +251,9 @@ class OpTomoTranspose(scipy.sparse.linalg.LinearOperator):
 
     def _transpose(self):
         return self.parent
+
+    # real operator
+    _adjoint = _transpose
 
     def __mul__(self,s):
         # Catch the case of a backprojection of 2D/3D data
