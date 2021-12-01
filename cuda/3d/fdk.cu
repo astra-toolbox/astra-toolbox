@@ -218,6 +218,10 @@ bool FDK_PreWeight(cudaPitchedPtr D_projData,
 		}
 
 		float fRange = fabs(fRelAngles[dims.iProjAngles-1] - fRelAngles[0]);
+		// Adjust for discretisation
+		fRange /= dims.iProjAngles - 1;
+		fRange *= dims.iProjAngles;
+
 		ASTRA_DEBUG("Assuming angles are linearly ordered and equally spaced for Parker weighting. Angular range %f radians", fRange);
 		float fScale = fRange / M_PI;
 
@@ -230,8 +234,7 @@ bool FDK_PreWeight(cudaPitchedPtr D_projData,
 		float fCentralFanAngle = fabs(atanf(fDetUSize * (dims.iProjU*0.5f) /
 		                               (fSrcOrigin + fDetOrigin)));
 
-		// Check range, but take possible discretisation and rounding into affect
-		if (fRange + 1e-3 < (M_PI + 2*fCentralFanAngle) * (dims.iProjAngles - 1)/ dims.iProjAngles) {
+		if (fRange + 1e-3 < M_PI + 2*fCentralFanAngle) {
 			ASTRA_WARN("Angular range (%f rad) smaller than Parker weighting range (%f rad)", fRange, M_PI + 2*fCentralFanAngle);
 		}
 
