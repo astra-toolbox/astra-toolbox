@@ -324,53 +324,21 @@ bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div
 
 static std::pair<double, double> reduceProjectionVertical(const CVolumeGeometry3D* pVolGeom, const CProjectionGeometry3D* pProjGeom)
 {
+	double umin_g, umax_g;
 	double vmin_g, vmax_g;
 
-	// reduce self to only cover intersection with projection of VolumePart
-	// (Project corners of volume, take bounding box)
+	double pixx = pVolGeom->getPixelLengthX();
+	double pixy = pVolGeom->getPixelLengthY();
+	double pixz = pVolGeom->getPixelLengthZ();
 
-	assert(pProjGeom->getProjectionCount() > 0);
-	for (int i = 0; i < pProjGeom->getProjectionCount(); ++i) {
-
-		double vol_u[8];
-		double vol_v[8];
-
-		double pixx = pVolGeom->getPixelLengthX();
-		double pixy = pVolGeom->getPixelLengthY();
-		double pixz = pVolGeom->getPixelLengthZ();
-
-		// TODO: Is 0.5 sufficient?
-		double xmin = pVolGeom->getWindowMinX() - 0.5 * pixx;
-		double xmax = pVolGeom->getWindowMaxX() + 0.5 * pixx;
-		double ymin = pVolGeom->getWindowMinY() - 0.5 * pixy;
-		double ymax = pVolGeom->getWindowMaxY() + 0.5 * pixy;
-		double zmin = pVolGeom->getWindowMinZ() - 0.5 * pixz;
-		double zmax = pVolGeom->getWindowMaxZ() + 0.5 * pixz;
-
-		pProjGeom->projectPoint(xmin, ymin, zmin, i, vol_u[0], vol_v[0]);
-		pProjGeom->projectPoint(xmin, ymin, zmax, i, vol_u[1], vol_v[1]);
-		pProjGeom->projectPoint(xmin, ymax, zmin, i, vol_u[2], vol_v[2]);
-		pProjGeom->projectPoint(xmin, ymax, zmax, i, vol_u[3], vol_v[3]);
-		pProjGeom->projectPoint(xmax, ymin, zmin, i, vol_u[4], vol_v[4]);
-		pProjGeom->projectPoint(xmax, ymin, zmax, i, vol_u[5], vol_v[5]);
-		pProjGeom->projectPoint(xmax, ymax, zmin, i, vol_u[6], vol_v[6]);
-		pProjGeom->projectPoint(xmax, ymax, zmax, i, vol_u[7], vol_v[7]);
-
-		double vmin = vol_v[0];
-		double vmax = vol_v[0];
-
-		for (int j = 1; j < 8; ++j) {
-			if (vol_v[j] < vmin)
-				vmin = vol_v[j];
-			if (vol_v[j] > vmax)
-				vmax = vol_v[j];
-		}
-
-		if (i == 0 || vmin < vmin_g)
-			vmin_g = vmin;
-		if (i == 0 || vmax > vmax_g)
-			vmax_g = vmax;
-	}
+	pProjGeom->getProjectedBBox(pVolGeom->getWindowMinX() - 0.5 * pixx,
+	                            pVolGeom->getWindowMaxX() + 0.5 * pixx,
+	                            pVolGeom->getWindowMinY() - 0.5 * pixy,
+	                            pVolGeom->getWindowMaxY() + 0.5 * pixy,
+	                            pVolGeom->getWindowMinZ() - 0.5 * pixz,
+	                            pVolGeom->getWindowMaxZ() + 0.5 * pixz,
+	                            umin_g, umax_g,
+	                            vmin_g, vmax_g);
 
 	if (vmin_g < -1.0)
 		vmin_g = -1.0;

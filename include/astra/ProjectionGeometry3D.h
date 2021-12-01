@@ -307,6 +307,16 @@ public:
 	 */
 	virtual void indexToAngleDetectorIndex(int _iIndex, int& _iAngleIndex, int& _iDetectorIndex) const;
 
+	/** Find a bounding box of the projections of a box in the volume.
+	 *  It may not be the tighest possible bounding box.
+	 *  This may fall (partially or fully) outside of the actual detector.
+	 */
+	virtual void getProjectedBBox(double fXMin, double fXMax,
+	                              double fYMin, double fYMax,
+	                              double fZMin, double fZMax,
+	                              double &fUMin, double &fUMax,
+	                              double &fVMin, double &fVMax) const;
+
 	/** Project a point onto the detector. The 3D point coordinates
 	 * are in units. The output fU,fV are the (unrounded) indices of the
 	 * detector column and row.
