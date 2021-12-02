@@ -113,6 +113,32 @@ struct SCALE_NONCUBE {
 	__device__ float scale(float a1, float a2) const { return sqrt(a1*a1*fScale1+a2*a2*fScale2+1.0f) * fOutputScale; }
 };
 
+bool transferConstants(const SPar3DProjection* angles, unsigned int iProjAngles)
+{
+	// transfer angles to constant memory
+	float* tmp = new float[iProjAngles];
+
+#define TRANSFER_TO_CONSTANT(name) do { for (unsigned int i = 0; i < iProjAngles; ++i) tmp[i] = angles[i].f##name ; cudaMemcpyToSymbol(gC_##name, tmp, iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice); } while (0)
+
+	TRANSFER_TO_CONSTANT(RayX);
+	TRANSFER_TO_CONSTANT(RayY);
+	TRANSFER_TO_CONSTANT(RayZ);
+	TRANSFER_TO_CONSTANT(DetSX);
+	TRANSFER_TO_CONSTANT(DetSY);
+	TRANSFER_TO_CONSTANT(DetSZ);
+	TRANSFER_TO_CONSTANT(DetUX);
+	TRANSFER_TO_CONSTANT(DetUY);
+	TRANSFER_TO_CONSTANT(DetUZ);
+	TRANSFER_TO_CONSTANT(DetVX);
+	TRANSFER_TO_CONSTANT(DetVY);
+	TRANSFER_TO_CONSTANT(DetVZ);
+
+#undef TRANSFER_TO_CONSTANT
+
+	delete[] tmp;
+
+	return true;
+}
 
 
 // threadIdx: x = u detector
@@ -400,27 +426,8 @@ bool Par3DFP_Array_internal(cudaPitchedPtr D_projData,
                    unsigned int angleCount, const SPar3DProjection* angles,
                    const SProjectorParams3D& params)
 {
-	// transfer angles to constant memory
-	float* tmp = new float[angleCount];
-
-#define TRANSFER_TO_CONSTANT(name) do { for (unsigned int i = 0; i < angleCount; ++i) tmp[i] = angles[i].f##name ; cudaMemcpyToSymbol(gC_##name, tmp, angleCount*sizeof(float), 0, cudaMemcpyHostToDevice); } while (0)
-
-	TRANSFER_TO_CONSTANT(RayX);
-	TRANSFER_TO_CONSTANT(RayY);
-	TRANSFER_TO_CONSTANT(RayZ);
-	TRANSFER_TO_CONSTANT(DetSX);
-	TRANSFER_TO_CONSTANT(DetSY);
-	TRANSFER_TO_CONSTANT(DetSZ);
-	TRANSFER_TO_CONSTANT(DetUX);
-	TRANSFER_TO_CONSTANT(DetUY);
-	TRANSFER_TO_CONSTANT(DetUZ);
-	TRANSFER_TO_CONSTANT(DetVX);
-	TRANSFER_TO_CONSTANT(DetVY);
-	TRANSFER_TO_CONSTANT(DetVZ);
-
-#undef TRANSFER_TO_CONSTANT
-
-	delete[] tmp;
+	if (!transferConstants(angles, angleCount))
+		return false;
 
 	std::list<cudaStream_t> streams;
 	dim3 dimBlock(g_detBlockU, g_anglesPerBlock); // region size, angles
