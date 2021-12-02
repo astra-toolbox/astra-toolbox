@@ -401,7 +401,7 @@ bool Par3DFP_Array_internal(cudaPitchedPtr D_projData,
                    const SProjectorParams3D& params)
 {
 	// transfer angles to constant memory
-	float* tmp = new float[dims.iProjAngles];
+	float* tmp = new float[angleCount];
 
 #define TRANSFER_TO_CONSTANT(name) do { for (unsigned int i = 0; i < angleCount; ++i) tmp[i] = angles[i].f##name ; cudaMemcpyToSymbol(gC_##name, tmp, angleCount*sizeof(float), 0, cudaMemcpyHostToDevice); } while (0)
 
@@ -468,7 +468,7 @@ bool Par3DFP_Array_internal(cudaPitchedPtr D_projData,
 
 	for (unsigned int a = 0; a <= angleCount; ++a) {
 		int dir = -1;
-		if (a != dims.iProjAngles) {
+		if (a != angleCount) {
 			float dX = fabsf(angles[a].fRayX);
 			float dY = fabsf(angles[a].fRayY);
 			float dZ = fabsf(angles[a].fRayZ);
