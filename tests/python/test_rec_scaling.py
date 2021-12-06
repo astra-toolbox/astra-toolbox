@@ -137,7 +137,7 @@ class TestRecScale(unittest.TestCase):
 
   def single_test_adjoint3D(self, geom_type, proj_type):
     for vg in VolumeGeometries(True, True):
-      for pg in ProjectionGeometries(geom_type):
+      for pg in ProjectionGeometries(geom_type, False):
         for i in range(5):
           X = np.random.random(astra.geom_size(vg))
           Y = np.random.random(astra.geom_size(pg))
