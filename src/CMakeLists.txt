@@ -35,8 +35,8 @@ set_target_properties(
              COMPILE_FEATURES cxx_std_11
              INCLUDE_DIRECTORIES "${ASTRA_INCLUDES}"
              LINK_LIBRARIES "Boost::thread;cufft"
-             VERSION "${CMAKE_PROJECT_VERSION}"
-             SOVERSION "${CMAKE_PROJECT_VERSION_MAJOR}"
+             VERSION 0.0.0
+             SOVERSION 0
              CUDA_ARCHITECTURES 35
              37 50
              52 53
