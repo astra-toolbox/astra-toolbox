@@ -2,7 +2,6 @@ import numpy as np
 import unittest
 import astra
 import math
-import pylab
 
 # Display sinograms with mismatch on test failure
 DISPLAY=False
@@ -356,6 +355,7 @@ def proj_type_to_fan(t):
     return t + '_fanflat'
 
 def display_mismatch(data, sinogram, a):
+  import pylab
   pylab.gray()
   pylab.imshow(data)
   pylab.figure()
@@ -367,6 +367,7 @@ def display_mismatch(data, sinogram, a):
   pylab.show()
 
 def display_mismatch_triple(data, sinogram, a, b, c):
+  import pylab
   pylab.gray()
   pylab.imshow(data)
   pylab.figure()
