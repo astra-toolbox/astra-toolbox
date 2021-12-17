@@ -37,3 +37,4 @@ __pycache__
 /build/linux/ltmain.sh
 /build/linux/src/*
 /build/linux/matlab/*
+/build/cmake*
