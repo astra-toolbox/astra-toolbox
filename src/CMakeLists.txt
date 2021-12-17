@@ -25,6 +25,12 @@ message(VERBOSE "Include directories for libastra: ${ASTRA_INCLUDES}")
 
 add_library(astra SHARED ${ASTRA_SOURCES})
 
+if(WIN32)
+     set(OUTPUT_NAME "AstraCuda64")
+else()
+     set(OUTPUT_NAME "astra")
+endif()
+
 set_target_properties(
   astra
   PROPERTIES POSITION_INDEPENDENT_CODE ON
@@ -37,6 +43,7 @@ set_target_properties(
              LINK_LIBRARIES "Boost::thread;cufft"
              VERSION 0.0.0
              SOVERSION 0
+             OUTPUT_NAME "${OUTPUT_NAME}"
              CUDA_ARCHITECTURES 35
              37 50
              52 53
