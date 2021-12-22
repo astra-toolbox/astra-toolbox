@@ -13,8 +13,7 @@ git clone --depth 1 --branch ${BRANCH} ${URL}
 
 [ $# -eq 0 ] || perl -pi -e "s/^(\s*version:\s*)[0-9a-z+\.']+$/\${1}'$1'/" astra-toolbox/python/conda/libastra/meta.yaml astra-toolbox/python/conda/astra-toolbox/meta.yaml
 [ $# -eq 0 ] || perl -pi -e "s/^(\s*number:\s*)[0-9]+$/\${1}$2/" astra-toolbox/python/conda/libastra/meta.yaml astra-toolbox/python/conda/astra-toolbox/meta.yaml
-[ $# -eq 0 ] || perl -pi -e "s/^(\s*string:.+_)[0-9]+/\${1}$2/" astra-toolbox/python/conda/libastra/meta.yaml
-[ $# -eq 0 ] || perl -pi -e "s/^(\s*-\s*libastra\s*==\s*)[0-9a-z+\.]+$/\${1}$1/" astra-toolbox/python/conda/astra-toolbox/meta.yaml
+[ $# -eq 0 ] || perl -pi -e "s/^(\s*-\s*libastra\s*==\s*)[0-9a-z+\.]+(\s+[0-9a-z_+\.]+)$/\${1}$1\${2}/" astra-toolbox/python/conda/astra-toolbox/meta.yaml
 
 CONF=linux_$3_build_config.yaml
 

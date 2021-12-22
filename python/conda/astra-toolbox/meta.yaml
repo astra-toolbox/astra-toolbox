@@ -38,7 +38,12 @@ requirements:
     - {{ pin_compatible('numpy', min_pin='x.x', max_pin='x') }}
     - scipy
     - six
-    - libastra ==2.0.0
+    # We make this libastra requirement as strict as possible because we
+    # want to enforce matching astra-toolbox and libastra packages to limit
+    # chances of API/ABI incompatibility.
+    # The 'cuda_*' build string is designed to match our packages but not
+    # current conda-forge/libastra packages which use a different format.
+    - libastra ==2.0.0 cuda_*
 
 
 about:
