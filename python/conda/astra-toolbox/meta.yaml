@@ -43,7 +43,8 @@ requirements:
     # chances of API/ABI incompatibility.
     # The 'cuda_*' build string is designed to match our packages but not
     # current conda-forge/libastra packages which use a different format.
-    - libastra ==2.0.9 cuda_*
+    - libastra ==2.0.9 cuda_* # [win or linux]
+    - libastra ==2.0.9 nocuda_* # [osx]
 
 
 about:

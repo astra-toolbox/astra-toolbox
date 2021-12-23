@@ -44,11 +44,11 @@ cp build.sh $D
 V=2.0.9
 B=0
 
-docker run -v $D:/out:z astra-build-env-deb8 /bin/bash /out/build.sh $V $B deb8
-docker run -v $D:/out:z astra-build-env-deb9 /bin/bash /out/build.sh $V $B deb9 full
+docker run --rm -v $D:/out:z astra-build-env-deb8 /bin/bash /out/build.sh $V $B deb8
+docker run --rm -v $D:/out:z astra-build-env-deb9 /bin/bash /out/build.sh $V $B deb9 full
 #Disable this until scipy is available for python 3.10 in conda
-#docker run -v $D:/out:z astra-build-env-deb11 /bin/bash /out/build.sh $V $B deb11 full
-docker run -v $D:/out:z astra-build-env-deb11 /bin/bash /out/build.sh $V $B deb11
+#docker run --rm -v $D:/out:z astra-build-env-deb11 /bin/bash /out/build.sh $V $B deb11 full
+docker run --rm -v $D:/out:z astra-build-env-deb11 /bin/bash /out/build.sh $V $B deb11
 
 rm -f $D/build.sh
 

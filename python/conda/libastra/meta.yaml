@@ -9,6 +9,8 @@ source:
 build:
   number: 0
   string: cuda_{{ cudatoolkit }}_{{ PKG_BUILDNUM }} # [linux]
+  string: cuda_9.0_{{ PKG_BUILDNUM }} # [win]
+  string: nocuda_{{ PKG_BUILDNUM }} # [osx]
 
 requirements:
   build:
