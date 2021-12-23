@@ -41,13 +41,14 @@ docker build -t astra-build-env-deb11 buildenv.deb11
 
 cp build.sh $D
 
-V=2.0.0
+V=2.0.9
+B=0
 
-docker run -v $D:/out:z astra-build-env-deb8 /bin/bash /out/build.sh $V 0 deb8
-docker run -v $D:/out:z astra-build-env-deb9 /bin/bash /out/build.sh $V 0 deb9 full
-#Disable this until cython is available for python 3.10 in conda
-#docker run -v $D:/out:z astra-build-env-deb11 /bin/bash /out/build.sh $V 0 deb11 full
-docker run -v $D:/out:z astra-build-env-deb11 /bin/bash /out/build.sh $V 0 deb11
+docker run -v $D:/out:z astra-build-env-deb8 /bin/bash /out/build.sh $V $B deb8
+docker run -v $D:/out:z astra-build-env-deb9 /bin/bash /out/build.sh $V $B deb9 full
+#Disable this until scipy is available for python 3.10 in conda
+#docker run -v $D:/out:z astra-build-env-deb11 /bin/bash /out/build.sh $V $B deb11 full
+docker run -v $D:/out:z astra-build-env-deb11 /bin/bash /out/build.sh $V $B deb11
 
 rm -f $D/build.sh
 
