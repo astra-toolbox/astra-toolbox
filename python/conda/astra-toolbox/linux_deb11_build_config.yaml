@@ -1,7 +1,7 @@
 python:
   - 3.10
 numpy:
-  - 1.16
+  - 1.21
 zip_keys:
   - python
   - numpy
