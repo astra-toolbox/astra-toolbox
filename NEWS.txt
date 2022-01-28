@@ -8,7 +8,7 @@ License: Open Source under GPLv3
 Contact: astra@astra-toolbox.com
 Website: http://www.astra-toolbox.com/
 -----------------------------------------------------------------------
-2.1.0 (2022-01-..)
+2.1.0 (2022-01-31)
   * fix potential hang in CUDA FFT, and speed it up (for FBP_CUDA and FDK_CUDA)
   * fix GPULink with rows not padded to multiple of 32 pixels
   * fix output value scaling for short-scan FDK
