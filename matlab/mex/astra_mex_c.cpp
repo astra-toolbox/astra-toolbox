@@ -40,7 +40,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #ifdef ASTRA_CUDA
 #include "astra/cuda/2d/astra.h"
-#include "astra/cuda/2d/util.h"
 #include "astra/CompositeGeometryManager.h"
 #endif
 
