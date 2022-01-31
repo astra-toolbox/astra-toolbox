@@ -38,8 +38,8 @@ mkdir mex
 copy %R%\bin\x64\Release_CUDA\*.mexw64 mex
 copy %R%\bin\x64\Release_CUDA\AstraCuda64.dll mex
 copy %R%\bin\x64\Release_CUDA\AstraCuda64.lib mex
-copy "%CUDA_PATH%\bin\cudart64_90.dll" mex
-copy "%CUDA_PATH%\bin\cufft64_90.dll" mex
+copy "%CUDA_PATH%\bin\cudart64_102.dll" mex
+copy "%CUDA_PATH%\bin\cufft64_10.dll" mex
 
 pause
 
@@ -60,15 +60,15 @@ call "%B_WINPYTHON3%\scripts\env.bat"
 copy %WINPYDIR%\lib\site-packages\astra\*.* astra
 copy %WINPYDIR%\lib\site-packages\astra\plugins\*.* astra\plugins
 copy %R%\bin\x64\Release_CUDA\AstraCuda64.lib astra
-copy "%CUDA_PATH%\bin\cudart64_90.dll" astra
-copy "%CUDA_PATH%\bin\cufft64_90.dll" astra
+copy "%CUDA_PATH%\bin\cudart64_102.dll" astra
+copy "%CUDA_PATH%\bin\cufft64_10.dll" astra
 
 (
 echo -----------------------------------------------------------------------
 echo This file is part of the ASTRA Toolbox
 echo.
-echo Copyright: 2010-2021, imec Vision Lab, University of Antwerp
-echo            2014-2021, CWI, Amsterdam
+echo Copyright: 2010-2022, imec Vision Lab, University of Antwerp
+echo            2014-2022, CWI, Amsterdam
 echo            http://visielab.uantwerpen.be/ and http://www.cwi.nl/
 echo License: Open Source under GPLv3
 echo Contact: astra@astra-toolbox.com
@@ -78,7 +78,7 @@ echo.
 echo.
 echo This directory contains pre-built Python modules for the ASTRA Toolbox.
 echo.
-echo It has been built with WinPython-64bit-%B_WP3%.
+echo It has been built with python %B_WP3% (installed via Chocolatey).
 echo.
 echo To use it, move the astra\ directory to your existing site-packages directory.
 echo Its exact location depends on your Python installation, but should look

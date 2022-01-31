@@ -8,8 +8,7 @@ source:
 
 build:
   number: 0
-  string: cuda_{{ cudatoolkit }}_{{ PKG_BUILDNUM }} # [linux]
-  string: cuda_9.0_{{ PKG_BUILDNUM }} # [win]
+  string: cuda_{{ cudatoolkit }}_{{ PKG_BUILDNUM }} # [win or linux]
   string: nocuda_{{ PKG_BUILDNUM }} # [osx]
 
 requirements:
@@ -22,7 +21,7 @@ requirements:
     - libtool # [osx]
   host:
     - boost # [osx or linux]
-    - cudatoolkit {{ cudatoolkit_dep }} # [linux]
+    - cudatoolkit {{ cudatoolkit_dep }} # [win or linux]
     # libstdcxx-ng 9.3 introduces extra host system requirements on glibc
     # For the older systems (debian8, debian9) we use g++ 5.4 and 7.3, resp.
     {% if linux and cxx_compiler_version in ['5.4', '7.3'] -%}
@@ -33,7 +32,7 @@ requirements:
     # conda_build_config.yaml , forgoing pin_compatible.
     # This is because the cudatoolkit version numbering for 11.0/11.1/11.2 is
     # non-chronological on the nvidia conda channel.
-    - cudatoolkit {{ cudatoolkit_dep }} # [linux]
+    - cudatoolkit {{ cudatoolkit_dep }} # [win or linux]
 
 about:
   home: http://www.astra-toolbox.com
