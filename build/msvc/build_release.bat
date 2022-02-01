@@ -38,8 +38,8 @@ mkdir mex
 copy %R%\bin\x64\Release_CUDA\*.mexw64 mex
 copy %R%\bin\x64\Release_CUDA\AstraCuda64.dll mex
 copy %R%\bin\x64\Release_CUDA\AstraCuda64.lib mex
-copy "%CUDA_PATH%\bin\cudart64_102.dll" mex
-copy "%CUDA_PATH%\bin\cufft64_10.dll" mex
+copy "%CUDA_PATH_V10_2%\bin\cudart64_102.dll" mex
+copy "%CUDA_PATH_V10_2%\bin\cufft64_10.dll" mex
 
 pause
 
@@ -57,11 +57,11 @@ copy %B_VCREDIST% .
 mkdir astra
 mkdir astra\plugins
 call "%B_WINPYTHON3%\scripts\env.bat"
-copy %WINPYDIR%\lib\site-packages\astra\*.* astra
-copy %WINPYDIR%\lib\site-packages\astra\plugins\*.* astra\plugins
+copy %B_WINPYTHON3%\lib\site-packages\astra\*.* astra
+copy %B_WINPYTHON3%\lib\site-packages\astra\plugins\*.* astra\plugins
 copy %R%\bin\x64\Release_CUDA\AstraCuda64.lib astra
-copy "%CUDA_PATH%\bin\cudart64_102.dll" astra
-copy "%CUDA_PATH%\bin\cufft64_10.dll" astra
+copy "%CUDA_PATH_V10_2%\bin\cudart64_102.dll" astra
+copy "%CUDA_PATH_V10_2%\bin\cufft64_10.dll" astra
 
 (
 echo -----------------------------------------------------------------------
@@ -78,7 +78,7 @@ echo.
 echo.
 echo This directory contains pre-built Python modules for the ASTRA Toolbox.
 echo.
-echo It has been built with python %B_WP3% (installed via Chocolatey).
+echo It has been built with python %B_WP3%, installed via Chocolatey.
 echo.
 echo To use it, move the astra\ directory to your existing site-packages directory.
 echo Its exact location depends on your Python installation, but should look
@@ -90,8 +90,8 @@ echo Sample code can be found in the samples\ directory.
 pause
 
 cd %R%\release
-python -c "import shutil; shutil.make_archive('astra-%B_RELEASE%-matlab-win-x64', 'zip', 'matlab')"
-python -c "import shutil; shutil.make_archive('astra-%B_RELEASE%-python39-win-x64', 'zip', 'python39')"
-python -c "import shutil; shutil.make_archive('astra-%B_RELEASE%', 'zip', 'src')"
+%B_WINPYTHON3%\python -c "import shutil; shutil.make_archive('astra-%B_RELEASE%-matlab-win-x64', 'zip', 'matlab')"
+%B_WINPYTHON3%\python -c "import shutil; shutil.make_archive('astra-%B_RELEASE%-python39-win-x64', 'zip', 'python39')"
+%B_WINPYTHON3%\python -c "import shutil; shutil.make_archive('astra-%B_RELEASE%', 'zip', 'src')"
 
 pause
