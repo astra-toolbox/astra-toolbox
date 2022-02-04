@@ -26,7 +26,7 @@
 import os
 import numpy as np
 
-from setuptools import setup
+from distutils.core import setup
 from pkg_resources import parse_version
 
 from Cython.Distutils import build_ext
