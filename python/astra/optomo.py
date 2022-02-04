@@ -1,6 +1,6 @@
 # -----------------------------------------------------------------------
-# Copyright: 2010-2021, imec Vision Lab, University of Antwerp
-#            2013-2021, CWI, Amsterdam
+# Copyright: 2010-2022, imec Vision Lab, University of Antwerp
+#            2013-2022, CWI, Amsterdam
 #
 # Contact: astra@astra-toolbox.com
 # Website: http://www.astra-toolbox.com/
@@ -94,6 +94,9 @@ class OpTomo(scipy.sparse.linalg.LinearOperator):
 
     def _transpose(self):
         return self.transposeOpTomo
+
+    # real operator
+    _adjoint = _transpose
 
     def __checkArray(self, arr, shp):
         if len(arr.shape)==1:
@@ -248,6 +251,9 @@ class OpTomoTranspose(scipy.sparse.linalg.LinearOperator):
 
     def _transpose(self):
         return self.parent
+
+    # real operator
+    _adjoint = _transpose
 
     def __mul__(self,s):
         # Catch the case of a backprojection of 2D/3D data

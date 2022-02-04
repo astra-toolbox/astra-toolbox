@@ -1,7 +1,7 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2021, imec Vision Lab, University of Antwerp
-           2014-2021, CWI, Amsterdam
+Copyright: 2010-2022, imec Vision Lab, University of Antwerp
+           2014-2022, CWI, Amsterdam
 
 Contact: astra@astra-toolbox.com
 Website: http://www.astra-toolbox.com/
@@ -214,79 +214,6 @@ CParallelProjectionGeometry2D * CParallelProjectionGeometry3D::createProjectionG
 
 	return pOutput;
 }
-
-void CParallelProjectionGeometry3D::backprojectPointX(int iAngleIndex, double fU, double fV,
-	                               double fX, double &fY, double &fZ) const
-{
-	ASTRA_ASSERT(iAngleIndex >= 0);
-	ASTRA_ASSERT(iAngleIndex < m_iProjectionAngleCount);
-
-	SPar3DProjection *projs = genPar3DProjections(1, m_iDetectorColCount, m_iDetectorRowCount,
-	                                           m_fDetectorSpacingX, m_fDetectorSpacingY,
-	                                           &m_pfProjectionAngles[iAngleIndex]);
-
-	SPar3DProjection &proj = projs[0];
-
-	double px = proj.fDetSX + fU * proj.fDetUX + fV * proj.fDetVX;
-	double py = proj.fDetSY + fU * proj.fDetUY + fV * proj.fDetVY;
-	double pz = proj.fDetSZ + fU * proj.fDetUZ + fV * proj.fDetVZ;
-
-	double a = (fX - px) / proj.fRayX;
-
-	fY = py + a * proj.fRayY;
-	fZ = pz + a * proj.fRayZ;
-
-	delete[] projs;
-}
-
-void CParallelProjectionGeometry3D::backprojectPointY(int iAngleIndex, double fU, double fV,
-	                               double fY, double &fX, double &fZ) const
-{
-	ASTRA_ASSERT(iAngleIndex >= 0);
-	ASTRA_ASSERT(iAngleIndex < m_iProjectionAngleCount);
-
-	SPar3DProjection *projs = genPar3DProjections(1, m_iDetectorColCount, m_iDetectorRowCount,
-	                                           m_fDetectorSpacingX, m_fDetectorSpacingY,
-	                                           &m_pfProjectionAngles[iAngleIndex]);
-
-	SPar3DProjection &proj = projs[0];
-
-	double px = proj.fDetSX + fU * proj.fDetUX + fV * proj.fDetVX;
-	double py = proj.fDetSY + fU * proj.fDetUY + fV * proj.fDetVY;
-	double pz = proj.fDetSZ + fU * proj.fDetUZ + fV * proj.fDetVZ;
-
-	double a = (fY - py) / proj.fRayY;
-
-	fX = px + a * proj.fRayX;
-	fZ = pz + a * proj.fRayZ;
-
-	delete[] projs;
-}
-
-void CParallelProjectionGeometry3D::backprojectPointZ(int iAngleIndex, double fU, double fV,
-	                               double fZ, double &fX, double &fY) const
-{
-	ASTRA_ASSERT(iAngleIndex >= 0);
-	ASTRA_ASSERT(iAngleIndex < m_iProjectionAngleCount);
-
-	SPar3DProjection *projs = genPar3DProjections(1, m_iDetectorColCount, m_iDetectorRowCount,
-	                                           m_fDetectorSpacingX, m_fDetectorSpacingY,
-	                                           &m_pfProjectionAngles[iAngleIndex]);
-
-	SPar3DProjection &proj = projs[0];
-
-	double px = proj.fDetSX + fU * proj.fDetUX + fV * proj.fDetVX;
-	double py = proj.fDetSY + fU * proj.fDetUY + fV * proj.fDetVY;
-	double pz = proj.fDetSZ + fU * proj.fDetUZ + fV * proj.fDetVZ;
-
-	double a = (fZ - pz) / proj.fRayZ;
-
-	fX = px + a * proj.fRayX;
-	fY = py + a * proj.fRayY;
-
-	delete[] projs;
-}
-
 
 //----------------------------------------------------------------------------------------
 

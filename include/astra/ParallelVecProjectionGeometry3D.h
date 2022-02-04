@@ -1,7 +1,7 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2021, imec Vision Lab, University of Antwerp
-           2014-2021, CWI, Amsterdam
+Copyright: 2010-2022, imec Vision Lab, University of Antwerp
+           2014-2022, CWI, Amsterdam
 
 Contact: astra@astra-toolbox.com
 Website: http://www.astra-toolbox.com/
@@ -151,12 +151,6 @@ public:
 	virtual void projectPoint(double fX, double fY, double fZ,
 	                          int iAngleIndex,
 	                          double &fU, double &fV) const;
-	virtual void backprojectPointX(int iAngleIndex, double fU, double fV,
-	                               double fX, double &fY, double &fZ) const;
-	virtual void backprojectPointY(int iAngleIndex, double fU, double fV,
-	                               double fY, double &fX, double &fZ) const;
-	virtual void backprojectPointZ(int iAngleIndex, double fU, double fV,
-	                               double fZ, double &fX, double &fY) const;
 
 protected:
 	virtual bool initializeAngles(const Config& _cfg);

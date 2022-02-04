@@ -20,7 +20,7 @@ def VolumeGeometries(is3D,noncube):
       yield astra.create_vol_geom(64, 64, 64, -32*s, 32*s, -32*s, 32*s, -32*s, 32*s)
 
 
-def ProjectionGeometries(type):
+def ProjectionGeometries(type,shortscan):
   if type == 'parallel':
     for dU in [0.8, 1.0, 1.25]:
       yield astra.create_proj_geom('parallel', dU, 256, np.linspace(0,np.pi,180,False))
@@ -51,11 +51,13 @@ def ProjectionGeometries(type):
        pg = astra.create_proj_geom('parallel3d_vec', 128, 128, Vectors)
        yield pg
   elif type == 'cone':
+    A = [1.5, 2] if shortscan else [ 2 ]
     for dU in [0.8, 1.0]:
       for dV in [0.8, 1.0]:
         for src in [500, 1000]:
           for det in [0, 250]:
-            yield astra.create_proj_geom('cone', dU, dV, 128, 128, np.linspace(0,2*np.pi,180,False), src, det)
+            for a in A:
+              yield astra.create_proj_geom('cone', dU, dV, 128, 128, np.linspace(0,a*np.pi,180,False), src, det)
   elif type == 'cone_vec':
     for j in range(10):
        Vectors = np.zeros([180,12])
@@ -81,7 +83,7 @@ class TestRecScale(unittest.TestCase):
       self.skipTest('CPU FBP is parallel-beam only')
     is3D = (geom_type in ['parallel3d', 'cone'])
     for vg in VolumeGeometries(is3D, 'FDK' not in alg):
-      for pg in ProjectionGeometries(geom_type):
+      for pg in ProjectionGeometries(geom_type, 'FDK' in alg):
         if not is3D:
           vol = np.zeros((128,128),dtype=np.float32)
           vol[50:70,50:70] = 1
@@ -109,6 +111,8 @@ class TestRecScale(unittest.TestCase):
         cfg['ReconstructionDataId'] = rec_id
         cfg['ProjectionDataId'] = sino_id
         cfg['ProjectorId'] = proj_id
+        if 'FDK' in alg and geom_type == "cone" and pg["ProjectionAngles"][-1] < 1.8*np.pi:
+          cfg['option'] = { 'ShortScan': True }
         alg_id = astra.algorithm.create(cfg)
 
         for i in range(iters):
@@ -133,7 +137,7 @@ class TestRecScale(unittest.TestCase):
 
   def single_test_adjoint3D(self, geom_type, proj_type):
     for vg in VolumeGeometries(True, True):
-      for pg in ProjectionGeometries(geom_type):
+      for pg in ProjectionGeometries(geom_type, False):
         for i in range(5):
           X = np.random.random(astra.geom_size(vg))
           Y = np.random.random(astra.geom_size(pg))

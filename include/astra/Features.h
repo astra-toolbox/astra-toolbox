@@ -1,7 +1,7 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2021, imec Vision Lab, University of Antwerp
-           2014-2021, CWI, Amsterdam
+Copyright: 2010-2022, imec Vision Lab, University of Antwerp
+           2014-2022, CWI, Amsterdam
 
 Contact: astra@astra-toolbox.com
 Website: http://www.astra-toolbox.com/
@@ -54,6 +54,10 @@ fan_cone_BP_density_weighting_by_default
 	This is set since fan beam and cone beam BP operations perform ray density
 	weighting by default to more closely approximate the true mathematical adjoint.
 	The DensityWeighting cuda3d projector option is removed.
+
+unpadded_GPULink
+	This is set since FP3D no longer silently fails with GPULink memory
+	that is not padded to a multiple of 32 pixels
 
 For future backward-incompatible changes, extra features will be added here
 

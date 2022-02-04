@@ -1,7 +1,7 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2021, imec Vision Lab, University of Antwerp
-           2014-2021, CWI, Amsterdam
+Copyright: 2010-2022, imec Vision Lab, University of Antwerp
+           2014-2022, CWI, Amsterdam
 
 Contact: astra@astra-toolbox.com
 Website: http://www.astra-toolbox.com/
@@ -156,90 +156,6 @@ void computeBP_UV_Coeffs(const SConeProjection& proj, double &fUX, double &fUY, 
 	fDY = proj.fDetUZ*proj.fDetVX - proj.fDetUX*proj.fDetVZ;
 	fDZ = proj.fDetUX*proj.fDetVY - proj.fDetUY*proj.fDetVX;
 	fDC = -proj.fSrcX * (proj.fDetUY*proj.fDetVZ - proj.fDetUZ*proj.fDetVY) - proj.fSrcY * (proj.fDetUZ*proj.fDetVX - proj.fDetUX*proj.fDetVZ) - proj.fSrcZ * (proj.fDetUX*proj.fDetVY - proj.fDetUY*proj.fDetVX);
-}
-
-
-// TODO: Handle cases of rays parallel to coordinate planes
-
-void backprojectPointX(const SPar3DProjection& proj, double fU, double fV,
-                       double fX, double &fY, double &fZ)
-{
-	double px = proj.fDetSX + fU * proj.fDetUX + fV * proj.fDetVX;
-	double py = proj.fDetSY + fU * proj.fDetUY + fV * proj.fDetVY;
-	double pz = proj.fDetSZ + fU * proj.fDetUZ + fV * proj.fDetVZ;
-
-	double a = (fX - px) / proj.fRayX;
-
-	fY = py + a * proj.fRayY;
-	fZ = pz + a * proj.fRayZ;
-}
-
-void backprojectPointY(const SPar3DProjection& proj, double fU, double fV,
-                       double fY, double &fX, double &fZ)
-{
-	double px = proj.fDetSX + fU * proj.fDetUX + fV * proj.fDetVX;
-	double py = proj.fDetSY + fU * proj.fDetUY + fV * proj.fDetVY;
-	double pz = proj.fDetSZ + fU * proj.fDetUZ + fV * proj.fDetVZ;
-
-	double a = (fY - py) / proj.fRayY;
-
-	fX = px + a * proj.fRayX;
-	fZ = pz + a * proj.fRayZ;
-
-}
-
-void backprojectPointZ(const SPar3DProjection& proj, double fU, double fV,
-                       double fZ, double &fX, double &fY)
-{
-	double px = proj.fDetSX + fU * proj.fDetUX + fV * proj.fDetVX;
-	double py = proj.fDetSY + fU * proj.fDetUY + fV * proj.fDetVY;
-	double pz = proj.fDetSZ + fU * proj.fDetUZ + fV * proj.fDetVZ;
-
-	double a = (fZ - pz) / proj.fRayZ;
-
-	fX = px + a * proj.fRayX;
-	fY = py + a * proj.fRayY;
-}
-
-
-
-void backprojectPointX(const SConeProjection& proj, double fU, double fV,
-                       double fX, double &fY, double &fZ)
-{
-	double px = proj.fDetSX + fU * proj.fDetUX + fV * proj.fDetVX;
-	double py = proj.fDetSY + fU * proj.fDetUY + fV * proj.fDetVY;
-	double pz = proj.fDetSZ + fU * proj.fDetUZ + fV * proj.fDetVZ;
-
-	double a = (fX - proj.fSrcX) / (px - proj.fSrcX);
-
-	fY = proj.fSrcY + a * (py - proj.fSrcY);
-	fZ = proj.fSrcZ + a * (pz - proj.fSrcZ);
-}
-
-void backprojectPointY(const SConeProjection& proj, double fU, double fV,
-                       double fY, double &fX, double &fZ)
-{
-	double px = proj.fDetSX + fU * proj.fDetUX + fV * proj.fDetVX;
-	double py = proj.fDetSY + fU * proj.fDetUY + fV * proj.fDetVY;
-	double pz = proj.fDetSZ + fU * proj.fDetUZ + fV * proj.fDetVZ;
-
-	double a = (fY - proj.fSrcY) / (py - proj.fSrcY);
-
-	fX = proj.fSrcX + a * (px - proj.fSrcX);
-	fZ = proj.fSrcZ + a * (pz - proj.fSrcZ);
-}
-
-void backprojectPointZ(const SConeProjection& proj, double fU, double fV,
-                       double fZ, double &fX, double &fY)
-{
-	double px = proj.fDetSX + fU * proj.fDetUX + fV * proj.fDetVX;
-	double py = proj.fDetSY + fU * proj.fDetUY + fV * proj.fDetVY;
-	double pz = proj.fDetSZ + fU * proj.fDetUZ + fV * proj.fDetVZ;
-
-	double a = (fZ - proj.fSrcZ) / (pz - proj.fSrcZ);
-
-	fX = proj.fSrcX + a * (px - proj.fSrcX);
-	fY = proj.fSrcY + a * (py - proj.fSrcY);
 }
 
 

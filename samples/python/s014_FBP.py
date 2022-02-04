@@ -1,6 +1,6 @@
 # -----------------------------------------------------------------------
-# Copyright: 2010-2021, imec Vision Lab, University of Antwerp
-#            2013-2021, CWI, Amsterdam
+# Copyright: 2010-2022, imec Vision Lab, University of Antwerp
+#            2013-2022, CWI, Amsterdam
 #
 # Contact: astra@astra-toolbox.com
 # Website: http://www.astra-toolbox.com/
