@@ -1,7 +1,7 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2021, imec Vision Lab, University of Antwerp
-           2014-2021, CWI, Amsterdam
+Copyright: 2010-2022, imec Vision Lab, University of Antwerp
+           2014-2022, CWI, Amsterdam
 
 Contact: astra@astra-toolbox.com
 Website: http://www.astra-toolbox.com/
@@ -103,7 +103,7 @@ __global__ void devFDK_preweight(void* D_projData, unsigned int projPitch, unsig
 	}
 }
 
-__global__ void devFDK_ParkerWeight(void* D_projData, unsigned int projPitch, unsigned int startAngle, unsigned int endAngle, float fSrcOrigin, float fDetOrigin, float fDetUSize, float fCentralFanAngle, const SDimensions3D dims)
+__global__ void devFDK_ParkerWeight(void* D_projData, unsigned int projPitch, unsigned int startAngle, unsigned int endAngle, float fSrcOrigin, float fDetOrigin, float fDetUSize, float fCentralFanAngle, float fScale, const SDimensions3D dims)
 {
 	float* projData = (float*)D_projData;
 	int angle = startAngle + blockIdx.y * g_anglesPerWeightBlock + threadIdx.y;
@@ -145,7 +145,7 @@ __global__ void devFDK_ParkerWeight(void* D_projData, unsigned int projPitch, un
 		fWeight = 0.0f;
 	}
 
-	fWeight *= 2; // adjust to effectively halved angular range
+	fWeight *= fScale;
 
 	for (int detectorV = startDetectorV; detectorV < endDetectorV; ++detectorV)
 	{
@@ -176,7 +176,8 @@ bool FDK_PreWeight(cudaPitchedPtr D_projData,
 
 	devFDK_preweight<<<dimGrid, dimBlock>>>(D_projData.ptr, projPitch, 0, dims.iProjAngles, fSrcOrigin, fDetOrigin, fZShift, fDetUSize, fDetVSize, dims);
 
-	cudaTextForceKernelsCompletion();
+	if (!checkCuda(cudaThreadSynchronize(), "FDK_PreWeight"))
+		return false;
 
 	if (bShortScan && dims.iProjAngles > 1) {
 		ASTRA_DEBUG("Doing Parker weighting");
@@ -196,9 +197,11 @@ bool FDK_PreWeight(cudaPitchedPtr D_projData,
 		if (fdA >= 0.0f) {
 			// going up from angles[0]
 			fAngleBase = angles[0];
+			ASTRA_DEBUG("Second angle >= first angle, so assuming angles are incrementing");
 		} else {
 			// going down from angles[0]
 			fAngleBase = angles[dims.iProjAngles - 1];
+			ASTRA_DEBUG("Second angle < first angle, so assuming angles are decrementing");
 		}
 
 		// We pick the lowest end of the range, and then
@@ -214,20 +217,33 @@ bool FDK_PreWeight(cudaPitchedPtr D_projData,
 			fRelAngles[i] = f;
 		}
 
+		float fRange = fabs(fRelAngles[dims.iProjAngles-1] - fRelAngles[0]);
+		// Adjust for discretisation
+		fRange /= dims.iProjAngles - 1;
+		fRange *= dims.iProjAngles;
+
+		ASTRA_DEBUG("Assuming angles are linearly ordered and equally spaced for Parker weighting. Angular range %f radians", fRange);
+		float fScale = fRange / M_PI;
+
 		cudaError_t e1 = cudaMemcpyToSymbol(gC_angle, fRelAngles,
 		                                    dims.iProjAngles*sizeof(float), 0,
 		                                    cudaMemcpyHostToDevice);
 		assert(!e1);
 		delete[] fRelAngles;
 
-		float fCentralFanAngle = atanf(fDetUSize * (dims.iProjU*0.5f) /
-		                               (fSrcOrigin + fDetOrigin));
+		float fCentralFanAngle = fabs(atanf(fDetUSize * (dims.iProjU*0.5f) /
+		                               (fSrcOrigin + fDetOrigin)));
 
-		devFDK_ParkerWeight<<<dimGrid, dimBlock>>>(D_projData.ptr, projPitch, 0, dims.iProjAngles, fSrcOrigin, fDetOrigin, fDetUSize, fCentralFanAngle, dims);
+		if (fRange + 1e-3 < M_PI + 2*fCentralFanAngle) {
+			ASTRA_WARN("Angular range (%f rad) smaller than Parker weighting range (%f rad)", fRange, M_PI + 2*fCentralFanAngle);
+		}
 
+		devFDK_ParkerWeight<<<dimGrid, dimBlock>>>(D_projData.ptr, projPitch, 0, dims.iProjAngles, fSrcOrigin, fDetOrigin, fDetUSize, fCentralFanAngle, fScale, dims);
+
+		if (!checkCuda(cudaThreadSynchronize(), "FDK_PreWeight ParkerWeight"))
+			return false;
 	}
 
-	cudaTextForceKernelsCompletion();
 	return true;
 }
 

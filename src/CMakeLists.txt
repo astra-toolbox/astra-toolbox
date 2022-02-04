@@ -21,6 +21,37 @@ set(ASTRA_INCLUDES
 
 message(VERBOSE "Include directories for libastra: ${ASTRA_INCLUDES}")
 
+# Set CUDA target architectures ----------------------------------------------
+
+if(NOT DEFINED ENV{CUDAARCHS})
+     set(CMAKE_CUDA_ARCHITECTURES "")
+     if((CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 5) AND
+        (CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 11))
+          list(APPEND CMAKE_CUDA_ARCHITECTURES "30;32")
+     endif()
+     if((CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 5) AND
+        (CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 12))
+          list(APPEND CMAKE_CUDA_ARCHITECTURES "35;37")
+     endif()
+     if((CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 6) AND
+        (CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 12))
+          list(APPEND CMAKE_CUDA_ARCHITECTURES "50;52;53")
+     endif()
+     if(CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 8)
+          list(APPEND CMAKE_CUDA_ARCHITECTURES "60;61;62")
+     endif()
+     if(CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 9)
+          list(APPEND CMAKE_CUDA_ARCHITECTURES "70;72")
+     endif()
+     if(CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 10)
+          list(APPEND CMAKE_CUDA_ARCHITECTURES "75")
+     endif()
+     if(CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 11.1)
+          list(APPEND CMAKE_CUDA_ARCHITECTURES "80;86")
+     endif()
+endif()
+message(STATUS "CUDA ${CMAKE_CUDA_COMPILER_VERSION} built for archs ${CMAKE_CUDA_ARCHITECTURES}")
+
 # Declare libastra and assign all the properties -----------------------------
 
 add_library(astra SHARED ${ASTRA_SOURCES})
@@ -43,10 +74,4 @@ set_target_properties(
              LINK_LIBRARIES "Boost::thread;cufft"
              VERSION 0.0.0
              SOVERSION 0
-             OUTPUT_NAME "${OUTPUT_NAME}"
-             CUDA_ARCHITECTURES 35
-             37 50
-             52 53
-             60 61
-             62 70
-             72 75)
+             OUTPUT_NAME "${OUTPUT_NAME}")

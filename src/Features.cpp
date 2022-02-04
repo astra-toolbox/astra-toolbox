@@ -1,7 +1,7 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2021, imec Vision Lab, University of Antwerp
-           2014-2021, CWI, Amsterdam
+Copyright: 2010-2022, imec Vision Lab, University of Antwerp
+           2014-2022, CWI, Amsterdam
 
 Contact: astra@astra-toolbox.com
 Website: http://www.astra-toolbox.com/
@@ -38,6 +38,9 @@ _AstraExport bool hasFeature(const std::string &flag) {
 		return true;
 	}
 	if (flag == "fan_cone_BP_density_weighting_by_default") {
+		return true;
+	}
+	if (flag == "unpadded_GPULink") {
 		return true;
 	}
 

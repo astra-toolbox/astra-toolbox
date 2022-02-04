@@ -1,7 +1,7 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2021, imec Vision Lab, University of Antwerp
-           2014-2021, CWI, Amsterdam
+Copyright: 2010-2022, imec Vision Lab, University of Antwerp
+           2014-2022, CWI, Amsterdam
 
 Contact: astra@astra-toolbox.com
 Website: http://www.astra-toolbox.com/
@@ -451,7 +451,7 @@ void processData(float* pfOut, unsigned int pitch, unsigned int width, unsigned 
 
 	devtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pitch, width, height);
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
 }
 
 template<typename op>
@@ -462,7 +462,7 @@ void processData(float* pfOut, float fParam, unsigned int pitch, unsigned int wi
 
 	devFtoD<op, 32><<<gridSize, blockSize>>>(pfOut, fParam, pitch, width, height);
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
 }
 
 template<typename op>
@@ -473,7 +473,7 @@ void processData(float* pfOut1, float* pfOut2, float fParam1, float fParam2, uns
 
 	devFFtoDD<op, 32><<<gridSize, blockSize>>>(pfOut1, pfOut2, fParam1, fParam2, pitch, width, height);
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
 }
 
 
@@ -485,7 +485,7 @@ void processData(float* pfOut, const float* pfIn, unsigned int pitch, unsigned i
 
 	devDtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn, pitch, width, height);
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
 }
 
 template<typename op>
@@ -496,7 +496,7 @@ void processData(float* pfOut, const float* pfIn, float fParam, unsigned int pit
 
 	devDFtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn, fParam, pitch, width, height);
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
 }
 
 template<typename op>
@@ -507,7 +507,7 @@ void processData(float* pfOut, const float* pfIn1, const float* pfIn2, float fPa
 
 	devDDFtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn1, pfIn2, fParam, pitch, width, height);
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
 }
 
 template<typename op>
@@ -518,7 +518,7 @@ void processData(float* pfOut, const float* pfIn1, const float* pfIn2, unsigned 
 
 	devDDtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn1, pfIn2, pitch, width, height);
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
 }
 
 

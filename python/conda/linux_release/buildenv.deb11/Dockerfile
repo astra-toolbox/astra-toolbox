@@ -45,6 +45,6 @@ COPY --from=CUDA112 /usr/local/cuda-11.2 /usr/local/cuda-11.2
 
 RUN conda create -y -n prep -c nvidia --download-only cudatoolkit=11.4 && \
     conda create -y -n prep -c nvidia --download-only cudatoolkit=11.3 && \
-    conda create -y -n prep -c nvidia --download-only cudatoolkit=11.2
+    conda create -y -n prep -c nvidia --download-only "cudatoolkit=11.2.*,<11.2.72"
 # 11.5 still has unresolved dependencies in default channels
 # conda create -y -n prep -c nvidia --download-only cudatoolkit=11.5

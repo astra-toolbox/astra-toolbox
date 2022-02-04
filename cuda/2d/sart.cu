@@ -1,7 +1,7 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2021, imec Vision Lab, University of Antwerp
-           2014-2021, CWI, Amsterdam
+Copyright: 2010-2022, imec Vision Lab, University of Antwerp
+           2014-2022, CWI, Amsterdam
 
 Contact: astra@astra-toolbox.com
 Website: http://www.astra-toolbox.com/
@@ -54,7 +54,7 @@ void MUL_SART(float* pfOut, const float* pfIn, unsigned int pitch, unsigned int 
 
 	devMUL_SART<<<gridSize, blockSize>>>(pfOut, pfIn, pitch, width);
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), "MUL_SART");
 }
 
 

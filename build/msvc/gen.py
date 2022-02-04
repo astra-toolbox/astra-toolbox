@@ -12,6 +12,23 @@ siguid = "2150E333-8FDC-42A3-9474-1A3956D46DE8" # project group
 # import uuid
 # uuid.uuid4().__str__().upper()
 
+
+# see configure.ac
+CUDA_CC = {
+  (9,0): "compute_30,sm_30;compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_70,compute_70",
+  (9,2): "compute_30,sm_30;compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_70,compute_70",
+  (10,0): "compute_30,sm_30;compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_75,compute_75",
+  (10,1): "compute_30,sm_30;compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_75,compute_75",
+  (10,2): "compute_30,sm_30;compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_75,compute_75",
+  (11,0): "compute_35,sm_35;compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_80,compute_80",
+  (11,1): "compute_35,sm_35;compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_86,compute_86",
+  (11,2): "compute_35,sm_35;compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_86,compute_86",
+  (11,3): "compute_35,sm_35;compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_86,compute_86",
+  (11,4): "compute_35,sm_35;compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_86,compute_86",
+  (11,5): "compute_35,sm_35;compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_86,compute_86",
+  (11,6): "compute_35,sm_35;compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_86,compute_86",
+}
+
 def create_mex_project(name, uuid14, uuid11, uuid09):
     return { "type": vcppguid, "name": name, "file14": "matlab\\mex\\" + name + "_vc14.vcxproj", "file11": "matlab\\mex\\" + name + "_vc11.vcxproj", "file09": "matlab\\mex\\" + name + "_vc09.vcproj", "uuid14": uuid14, "uuid11": uuid11, "uuid09": uuid09, "files": [] }
 
@@ -498,11 +515,11 @@ configs = [ Configuration(a,b,c) for a in [ True, False ] for b in [ True, False
 def write_sln(version):
   main_project = P_astra
   if version == 9:
-    F = open("astra_vc09.sln", "w")
+    F = open("astra_vc09.sln", "w", encoding="utf-8")
   elif version == 11:
-    F = open("astra_vc11.sln", "w")
+    F = open("astra_vc11.sln", "w", encoding="utf-8")
   elif version == 14:
-    F = open("astra_vc14.sln", "w")
+    F = open("astra_vc14.sln", "w", encoding="utf-8")
   else:
     assert(False)
   print(bom, file=F)
@@ -559,7 +576,7 @@ def write_sln(version):
 
 def write_project11_14_start(P, F, version):
   print(bom + '<?xml version="1.0" encoding="utf-8"?>', file=F)
-  print('<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">', file=F)
+  print('<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">', file=F)
   print('  <ItemGroup Label="ProjectConfigurations">', file=F)
   for c in configs:
     print('    <ProjectConfiguration Include="' + c.name() + '">', file=F)
@@ -578,6 +595,7 @@ def write_project11_14_start(P, F, version):
     print('    <RootNamespace>astraMatlab</RootNamespace>', file=F)
   else:
     print('    <RootNamespace>' + P["name"] + '</RootNamespace>', file=F)
+  print('    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>', file=F)
   print('  </PropertyGroup>', file=F)
   print('  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />', file=F)
   for c in configs:
@@ -591,7 +609,7 @@ def write_project11_14_start(P, F, version):
     if version == 11:
       print('    <PlatformToolset>v110</PlatformToolset>', file=F)
     else:
-      print('    <PlatformToolset>v140</PlatformToolset>', file=F)
+      print('    <PlatformToolset>v141</PlatformToolset>', file=F)
     if 'mex' not in P["name"]:
       if not c.debug:
         print('    <WholeProgramOptimization>true</WholeProgramOptimization>', file=F)
@@ -600,7 +618,7 @@ def write_project11_14_start(P, F, version):
   print('  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />', file=F)
   print('  <ImportGroup Label="ExtensionSettings">', file=F)
   if "mex" not in P["name"]:
-    print('    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 8.0.props" />', file=F)
+    print(f'    <Import Project="$(CUDA_PATH_V{CUDA_MAJOR}_{CUDA_MINOR})\\extras\\visual_studio_integration\\MSBuildExtensions\\CUDA {CUDA_MAJOR}.{CUDA_MINOR}.props" />', file=F)
   print('  </ImportGroup>', file=F)
   for c in configs:
     print('''  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='%s'">''' % (c.name(), ), file=F)
@@ -647,7 +665,7 @@ def write_project11_14_end(P, F):
   print('  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />', file=F)
   print('  <ImportGroup Label="ExtensionTargets">', file=F)
   if "mex" not in P["name"]:
-    print('    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 8.0.targets" />', file=F)
+    print(f'    <Import Project="$(CUDA_PATH_V{CUDA_MAJOR}_{CUDA_MINOR})\\extras\\visual_studio_integration\\MSBuildExtensions\\CUDA {CUDA_MAJOR}.{CUDA_MINOR}.targets" />', file=F)
   print('  </ImportGroup>', file=F)
   print('</Project>', end="", file=F)
 
@@ -655,9 +673,9 @@ def write_project11_14_end(P, F):
 def write_main_project11_14(version):
   P = P_astra;
   if version == 11:
-    F = open(P["file11"], "w")
+    F = open(P["file11"], "w", encoding="utf-8")
   else:
-    F = open(P["file14"], "w")
+    F = open(P["file14"], "w", encoding="utf-8")
   write_project11_14_start(P, F, version)
   for c in configs:
     print('''  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='%s'">''' % (c.name(), ), file=F)
@@ -726,7 +744,7 @@ def write_main_project11_14(version):
       else:
         print('      <TargetMachinePlatform>32</TargetMachinePlatform>', file=F)
       print('      <GenerateLineInfo>true</GenerateLineInfo>', file=F)
-      print('      <CodeGeneration>compute_20,sm_20;compute_30,sm_30;compute_35,sm_35;compute_50,sm_50;compute_60,sm_60;compute_60,compute_60</CodeGeneration>', file=F)
+      print(f'      <CodeGeneration>{CUDA_CC[(CUDA_MAJOR,CUDA_MINOR)]}</CodeGeneration>', file=F)
       print('    </CudaCompile>', file=F)
     print('  </ItemDefinitionGroup>', file=F)
   write_project11_14_end(P, F)
@@ -734,9 +752,9 @@ def write_main_project11_14(version):
 
 def write_mex_project11_14(P, version):
   if version == 11:
-    F = open("matlab/mex/" + P["name"] + "_vc11.vcxproj", "w")
+    F = open("matlab/mex/" + P["name"] + "_vc11.vcxproj", "w", encoding="utf-8")
   else:
-    F = open("matlab/mex/" + P["name"] + "_vc14.vcxproj", "w")
+    F = open("matlab/mex/" + P["name"] + "_vc14.vcxproj", "w", encoding="utf-8")
   write_project11_14_start(P, F, version)
   print('  <PropertyGroup>', file=F)
   print('    <_ProjectFileVersion>11.0.60610.1</_ProjectFileVersion>', file=F)
@@ -817,7 +835,7 @@ def write_mex_project11_14(P, version):
 
 def write_main_filters11_14():
   P = P_astra
-  F = open(P["name"] + ".vcxproj.filters", "w")
+  F = open(P["name"] + ".vcxproj.filters", "w", encoding="utf-8")
   print(bom + '<?xml version="1.0" encoding="utf-8"?>', file=F)
   print('<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">', file=F)
   print('  <ItemGroup>', file=F)
@@ -938,7 +956,7 @@ def write_project09_unused_tools(F):
 
 def write_main_project09():
   P = P_astra;
-  F = open(P["file09"], "w")
+  F = open(P["file09"], "w", encoding="utf-8")
   write_project09_start(P, F)
   print(r'''	<ToolFiles>
 		<DefaultToolFile
@@ -1076,7 +1094,7 @@ def write_main_project09():
   F.close()
 
 def write_mex_project09(P):
-  F = open("matlab/mex/" + P["name"] + "_vc09.vcproj", "w")
+  F = open("matlab/mex/" + P["name"] + "_vc09.vcproj", "w", encoding="utf-8")
   write_project09_start(P, F)
   print('\t<ToolFiles>', file=F)
   print('\t</ToolFiles>', file=F)
@@ -1146,11 +1164,23 @@ def write_mex_project09(P):
 
 
 
-if (len(sys.argv) != 2) or (sys.argv[1] not in ["vc09", "vc11", "vc14", "all"]):
-  print("Usage: python gen.py [vc09|vc11|vc14|all]", file=sys.stderr)
+def parse_cuda_version(ver):
+  return [ int(x) for x in ver.split('.') ]
+
+def check_cuda_version(ver):
+  try:
+    major, minor = parse_cuda_version(ver)
+    if major >= 9 and minor >= 0:
+      return True
+  except:
+    pass
+  return False
+
+if (len(sys.argv) != 3) or (sys.argv[1] not in ["vc09", "vc11", "vc14", "all"]) or not check_cuda_version(sys.argv[2]):
+  print("Usage: python gen.py [vc09|vc11|vc14|all] [9.0|9.2|10.0|10.1|10.2...]", file=sys.stderr)
   sys.exit(1)
 
-
+CUDA_MAJOR, CUDA_MINOR = parse_cuda_version(sys.argv[2])
 
 try:
   open("../../src/AstraObjectManager.cpp", "r")

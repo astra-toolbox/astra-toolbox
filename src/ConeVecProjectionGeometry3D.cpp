@@ -1,7 +1,7 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2021, imec Vision Lab, University of Antwerp
-           2014-2021, CWI, Amsterdam
+Copyright: 2010-2022, imec Vision Lab, University of Antwerp
+           2014-2022, CWI, Amsterdam
 
 Contact: astra@astra-toolbox.com
 Website: http://www.astra-toolbox.com/
@@ -257,60 +257,6 @@ void CConeVecProjectionGeometry3D::projectPoint(double fX, double fY, double fZ,
 	fV = (fVX*fX + fVY*fY + fVZ*fZ + fVC) / fD - 0.5f;
 }
 
-
-void CConeVecProjectionGeometry3D::backprojectPointX(int iAngleIndex, double fU, double fV,
-	                               double fX, double &fY, double &fZ) const
-{
-	ASTRA_ASSERT(iAngleIndex >= 0);
-	ASTRA_ASSERT(iAngleIndex < m_iProjectionAngleCount);
-
-	SConeProjection &proj = m_pProjectionAngles[iAngleIndex];
-
-	double px = proj.fDetSX + fU * proj.fDetUX + fV * proj.fDetVX;
-	double py = proj.fDetSY + fU * proj.fDetUY + fV * proj.fDetVY;
-	double pz = proj.fDetSZ + fU * proj.fDetUZ + fV * proj.fDetVZ;
-
-	double a = (fX - proj.fSrcX) / (px - proj.fSrcX);
-
-	fY = proj.fSrcY + a * (py - proj.fSrcY);
-	fZ = proj.fSrcZ + a * (pz - proj.fSrcZ);
-}
-
-void CConeVecProjectionGeometry3D::backprojectPointY(int iAngleIndex, double fU, double fV,
-	                               double fY, double &fX, double &fZ) const
-{
-	ASTRA_ASSERT(iAngleIndex >= 0);
-	ASTRA_ASSERT(iAngleIndex < m_iProjectionAngleCount);
-
-	SConeProjection &proj = m_pProjectionAngles[iAngleIndex];
-
-	double px = proj.fDetSX + fU * proj.fDetUX + fV * proj.fDetVX;
-	double py = proj.fDetSY + fU * proj.fDetUY + fV * proj.fDetVY;
-	double pz = proj.fDetSZ + fU * proj.fDetUZ + fV * proj.fDetVZ;
-
-	double a = (fY - proj.fSrcY) / (py - proj.fSrcY);
-
-	fX = proj.fSrcX + a * (px - proj.fSrcX);
-	fZ = proj.fSrcZ + a * (pz - proj.fSrcZ);
-}
-
-void CConeVecProjectionGeometry3D::backprojectPointZ(int iAngleIndex, double fU, double fV,
-	                               double fZ, double &fX, double &fY) const
-{
-	ASTRA_ASSERT(iAngleIndex >= 0);
-	ASTRA_ASSERT(iAngleIndex < m_iProjectionAngleCount);
-
-	SConeProjection &proj = m_pProjectionAngles[iAngleIndex];
-
-	double px = proj.fDetSX + fU * proj.fDetUX + fV * proj.fDetVX;
-	double py = proj.fDetSY + fU * proj.fDetUY + fV * proj.fDetVY;
-	double pz = proj.fDetSZ + fU * proj.fDetUZ + fV * proj.fDetVZ;
-
-	double a = (fZ - proj.fSrcZ) / (pz - proj.fSrcZ);
-
-	fX = proj.fSrcX + a * (px - proj.fSrcX);
-	fY = proj.fSrcY + a * (py - proj.fSrcY);
-}
 
 //----------------------------------------------------------------------------------------
 

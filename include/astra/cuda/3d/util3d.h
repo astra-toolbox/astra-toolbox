@@ -1,7 +1,7 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2021, imec Vision Lab, University of Antwerp
-           2014-2021, CWI, Amsterdam
+Copyright: 2010-2022, imec Vision Lab, University of Antwerp
+           2014-2022, CWI, Amsterdam
 
 Contact: astra@astra-toolbox.com
 Website: http://www.astra-toolbox.com/
@@ -38,6 +38,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 namespace astraCUDA3d {
 
+using astraCUDA::checkCuda;
+
 cudaPitchedPtr allocateVolumeData(const SDimensions3D& dims);
 cudaPitchedPtr allocateProjectionData(const SDimensions3D& dims);
 bool zeroVolumeData(cudaPitchedPtr& D_data, const SDimensions3D& dims);
@@ -58,7 +60,7 @@ bool zeroVolumeArray(cudaArray* array, const SDimensions3D& dims);
 cudaArray* allocateProjectionArray(const SDimensions3D& dims);
 cudaArray* allocateVolumeArray(const SDimensions3D& dims);
 
-bool cudaTextForceKernelsCompletion();
+bool createTextureObject3D(cudaArray* array, cudaTextureObject_t& texObj);
 
 float dotProduct3D(cudaPitchedPtr data, unsigned int x, unsigned int y, unsigned int z);
 
@@ -77,6 +79,9 @@ struct Vec3 {
 	}
 	Vec3 operator-() const {
 		return Vec3(-x, -y, -z);
+	}
+	Vec3 operator*(double s) {
+		return Vec3(s*x, s*y, s*z);
 	}
 	double norm() const {
 		return sqrt(x*x + y*y + z*z);

@@ -1,7 +1,7 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2021, imec Vision Lab, University of Antwerp
-           2014-2021, CWI, Amsterdam
+Copyright: 2010-2022, imec Vision Lab, University of Antwerp
+           2014-2022, CWI, Amsterdam
 
 Contact: astra@astra-toolbox.com
 Website: http://www.astra-toolbox.com/
@@ -58,9 +58,9 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 // macro's
 
 #define ASTRA_TOOLBOXVERSION_MAJOR 2
-#define ASTRA_TOOLBOXVERSION_MINOR 0
+#define ASTRA_TOOLBOXVERSION_MINOR 1
 #define ASTRA_TOOLBOXVERSION ((ASTRA_TOOLBOXVERSION_MAJOR)*100 + (ASTRA_TOOLBOXVERSION_MINOR))
-#define ASTRA_TOOLBOXVERSION_STRING "2.0.0"
+#define ASTRA_TOOLBOXVERSION_STRING "2.1.0"
 
 
 #define ASTRA_ASSERT(a) assert(a)
@@ -75,17 +75,17 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #ifdef _MSC_VER
 
-	#ifdef DLL_EXPORTS
-		#define _AstraExport __declspec(dllexport)
-		#define EXPIMP_TEMPLATE
-	#else
-		#define _AstraExport __declspec(dllimport)
-		#define EXPIMP_TEMPLATE extern
-	#endif
+#ifdef DLL_EXPORTS
+#define _AstraExport __declspec(dllexport)
+#define EXPIMP_TEMPLATE
+#else
+#define _AstraExport __declspec(dllimport)
+#define EXPIMP_TEMPLATE extern
+#endif
 
 #else
 
-	#define _AstraExport
+#define _AstraExport
 
 #endif
 

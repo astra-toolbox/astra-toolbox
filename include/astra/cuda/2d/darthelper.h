@@ -1,7 +1,7 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2021, imec Vision Lab, University of Antwerp
-           2014-2021, CWI, Amsterdam
+Copyright: 2010-2022, imec Vision Lab, University of Antwerp
+           2014-2022, CWI, Amsterdam
 
 Contact: astra@astra-toolbox.com
 Website: http://www.astra-toolbox.com/
@@ -25,8 +25,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#ifndef _CUDA_ARITH2_H
-#define _CUDA_ARITH2_H
+#ifndef _CUDA_DARTHELPER_H
+#define _CUDA_DARTHELPER_H
 
 #include "astra/Globals.h"
 

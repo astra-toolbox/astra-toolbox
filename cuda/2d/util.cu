@@ -1,7 +1,7 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2021, imec Vision Lab, University of Antwerp
-           2014-2021, CWI, Amsterdam
+Copyright: 2010-2022, imec Vision Lab, University of Antwerp
+           2014-2022, CWI, Amsterdam
 
 Contact: astra@astra-toolbox.com
 Website: http://www.astra-toolbox.com/
@@ -40,12 +40,8 @@ bool copyVolumeToDevice(const float* in_data, unsigned int in_pitch,
 {
 	size_t width = dims.iVolWidth;
 	size_t height = dims.iVolHeight;
-	// TODO: memory order
-	cudaError_t err;
-	err = cudaMemcpy2D(outD_data, sizeof(float)*out_pitch, in_data, sizeof(float)*in_pitch, sizeof(float)*width, height, cudaMemcpyHostToDevice);
-	ASTRA_CUDA_ASSERT(err);
-	assert(err == cudaSuccess);
-	return true;
+
+	return checkCuda(cudaMemcpy2D(outD_data, sizeof(float)*out_pitch, in_data, sizeof(float)*in_pitch, sizeof(float)*width, height, cudaMemcpyHostToDevice), "copyVolumeToDevice");
 }
 
 bool copyVolumeFromDevice(float* out_data, unsigned int out_pitch,
@@ -54,10 +50,8 @@ bool copyVolumeFromDevice(float* out_data, unsigned int out_pitch,
 {
 	size_t width = dims.iVolWidth;
 	size_t height = dims.iVolHeight;
-	// TODO: memory order
-	cudaError_t err = cudaMemcpy2D(out_data, sizeof(float)*out_pitch, inD_data, sizeof(float)*in_pitch, sizeof(float)*width, height, cudaMemcpyDeviceToHost);
-	ASTRA_CUDA_ASSERT(err);
-	return true;
+
+	return checkCuda(cudaMemcpy2D(out_data, sizeof(float)*out_pitch, inD_data, sizeof(float)*in_pitch, sizeof(float)*width, height, cudaMemcpyDeviceToHost), "copyVolumeFromDevice");
 }
 
 
@@ -67,10 +61,8 @@ bool copySinogramFromDevice(float* out_data, unsigned int out_pitch,
 {
 	size_t width = dims.iProjDets;
 	size_t height = dims.iProjAngles;
-	// TODO: memory order
-	cudaError_t err = cudaMemcpy2D(out_data, sizeof(float)*out_pitch, inD_data, sizeof(float)*in_pitch, sizeof(float)*width, height, cudaMemcpyDeviceToHost);
-	ASTRA_CUDA_ASSERT(err);
-	return true;
+
+	return checkCuda(cudaMemcpy2D(out_data, sizeof(float)*out_pitch, inD_data, sizeof(float)*in_pitch, sizeof(float)*width, height, cudaMemcpyDeviceToHost), "copySinogramFromDevice");
 }
 
 bool copySinogramToDevice(const float* in_data, unsigned int in_pitch,
@@ -79,20 +71,15 @@ bool copySinogramToDevice(const float* in_data, unsigned int in_pitch,
 {
 	size_t width = dims.iProjDets;
 	size_t height = dims.iProjAngles;
-	// TODO: memory order
-	cudaError_t err;
-	err = cudaMemcpy2D(outD_data, sizeof(float)*out_pitch, in_data, sizeof(float)*in_pitch, sizeof(float)*width, height, cudaMemcpyHostToDevice);
-	ASTRA_CUDA_ASSERT(err);
-	return true;
+
+	return checkCuda(cudaMemcpy2D(outD_data, sizeof(float)*out_pitch, in_data, sizeof(float)*in_pitch, sizeof(float)*width, height, cudaMemcpyHostToDevice), "copySinogramToDevice");
 }
 
 
 bool allocateVolume(float*& ptr, unsigned int width, unsigned int height, unsigned int& pitch)
 {
 	size_t p;
-	cudaError_t ret = cudaMallocPitch((void**)&ptr, &p, sizeof(float)*width, height);
-	if (ret != cudaSuccess) {
-		reportCudaError(ret);
+	if (!checkCuda(cudaMallocPitch((void**)&ptr, &p, sizeof(float)*width, height), "allocateVolume")) {
 		ASTRA_ERROR("Failed to allocate %dx%d GPU buffer", width, height);
 		return false;
 	}
@@ -104,11 +91,9 @@ bool allocateVolume(float*& ptr, unsigned int width, unsigned int height, unsign
 	return true;
 }
 
-void zeroVolume(float* data, unsigned int pitch, unsigned int width, unsigned int height)
+bool zeroVolume(float* data, unsigned int pitch, unsigned int width, unsigned int height)
 {
-	cudaError_t err;
-	err = cudaMemset2D(data, sizeof(float)*pitch, 0, sizeof(float)*width, height);
-	ASTRA_CUDA_ASSERT(err);
+	return checkCuda(cudaMemset2D(data, sizeof(float)*pitch, 0, sizeof(float)*width, height), "zeroVolume");
 }
 
 bool allocateVolumeData(float*& D_ptr, unsigned int& pitch, const SDimensions& dims)
@@ -121,14 +106,14 @@ bool allocateProjectionData(float*& D_ptr, unsigned int& pitch, const SDimension
 	return allocateVolume(D_ptr, dims.iProjDets, dims.iProjAngles, pitch);
 }
 
-void zeroVolumeData(float* D_ptr, unsigned int pitch, const SDimensions& dims)
+bool zeroVolumeData(float* D_ptr, unsigned int pitch, const SDimensions& dims)
 {
-	zeroVolume(D_ptr, pitch, dims.iVolWidth, dims.iVolHeight);
+	return zeroVolume(D_ptr, pitch, dims.iVolWidth, dims.iVolHeight);
 }
 
-void zeroProjectionData(float* D_ptr, unsigned int pitch, const SDimensions& dims)
+bool zeroProjectionData(float* D_ptr, unsigned int pitch, const SDimensions& dims)
 {
-	zeroVolume(D_ptr, pitch, dims.iProjDets, dims.iProjAngles);
+	return zeroVolume(D_ptr, pitch, dims.iProjDets, dims.iProjAngles);
 }
 
 void duplicateVolumeData(float* D_dst, float* D_src, unsigned int pitch, const SDimensions& dims)
@@ -140,6 +125,75 @@ void duplicateProjectionData(float* D_dst, float* D_src, unsigned int pitch, con
 {
 	cudaMemcpy2D(D_dst, sizeof(float)*pitch, D_src, sizeof(float)*pitch, sizeof(float)*dims.iProjDets, dims.iProjAngles, cudaMemcpyDeviceToDevice);
 }
+
+bool createArrayAndTextureObject2D(float* data, cudaArray*& dataArray, cudaTextureObject_t& texObj, unsigned int pitch, unsigned int width, unsigned int height)
+{
+	// TODO: For very small sizes (roughly <=512x128) with few angles (<=180)
+	// not using an array is more efficient.
+
+	cudaChannelFormatDesc channelDesc =
+	    cudaCreateChannelDesc(32, 0, 0, 0, cudaChannelFormatKindFloat);
+
+	dataArray = 0;
+	if (!checkCuda(cudaMallocArray(&dataArray, &channelDesc, width, height), "createTextureObject2D malloc"))
+		return false;
+	if (!checkCuda(cudaMemcpy2DToArray(dataArray, 0, 0, data, pitch*sizeof(float), width*sizeof(float), height, cudaMemcpyDeviceToDevice), "createTextureObject2D memcpy")) {
+		cudaFreeArray(dataArray);
+		return false;
+	}
+
+	cudaResourceDesc resDesc;
+	memset(&resDesc, 0, sizeof(resDesc));
+	resDesc.resType = cudaResourceTypeArray;
+	resDesc.res.array.array = dataArray;
+
+	cudaTextureDesc texDesc;
+	memset(&texDesc, 0, sizeof(texDesc));
+	texDesc.addressMode[0] = cudaAddressModeBorder;
+	texDesc.addressMode[1] = cudaAddressModeBorder;
+	texDesc.filterMode = cudaFilterModeLinear;
+	texDesc.readMode = cudaReadModeElementType;
+	texDesc.normalizedCoords = 0;
+
+	texObj = 0;
+
+	if (!checkCuda(cudaCreateTextureObject(&texObj, &resDesc, &texDesc, NULL), "createTextureObject2D")) {
+		cudaFreeArray(dataArray);
+		return false;
+	}
+
+	return true;
+}
+
+bool createTextureObjectPitch2D(float* data, cudaTextureObject_t& texObj, unsigned int pitch, unsigned int width, unsigned int height, cudaTextureAddressMode mode)
+{
+	cudaChannelFormatDesc channelDesc =
+	    cudaCreateChannelDesc(32, 0, 0, 0, cudaChannelFormatKindFloat);
+
+	cudaResourceDesc resDesc;
+	memset(&resDesc, 0, sizeof(resDesc));
+	resDesc.resType = cudaResourceTypePitch2D;
+	resDesc.res.pitch2D.devPtr = (void*)data;
+	resDesc.res.pitch2D.desc = channelDesc;
+	resDesc.res.pitch2D.width = width;
+	resDesc.res.pitch2D.height = height;
+	resDesc.res.pitch2D.pitchInBytes = sizeof(float)*pitch;
+
+	cudaTextureDesc texDesc;
+	memset(&texDesc, 0, sizeof(texDesc));
+	texDesc.addressMode[0] = mode;
+	texDesc.addressMode[1] = mode;
+	texDesc.filterMode = cudaFilterModeLinear;
+	texDesc.readMode = cudaReadModeElementType;
+	texDesc.normalizedCoords = 0;
+
+	texObj = 0;
+
+	return checkCuda(cudaCreateTextureObject(&texObj, &resDesc, &texDesc, NULL), "createTextureObjectPitch2D");
+}
+
+
+
 
 template <unsigned int blockSize>
 __global__ void reduce1D(float *g_idata, float *g_odata, unsigned int n)
@@ -231,7 +285,7 @@ float dotProduct2D(float* D_data, unsigned int pitch,
 	// Step 1: reduce 2D from image to a single vector, taking sum of squares
 
 	reduce2D<<< dimGrid2, dimBlock2, shared_mem2>>>(D_data, D_buf, pitch, width, height);
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), "dotProduct2D reduce2D");
 
 	// Step 2: reduce 1D: add up elements in vector
 	if (bx * by > 512)
@@ -248,31 +302,21 @@ float dotProduct2D(float* D_data, unsigned int pitch,
 	float x;
 	cudaMemcpy(&x, D_res, 4, cudaMemcpyDeviceToHost);
 
-	cudaTextForceKernelsCompletion();
+	checkCuda(cudaThreadSynchronize(), "dotProduct2D");
 
 	cudaFree(D_buf);
 
 	return x;
 }
 
-
-bool cudaTextForceKernelsCompletion()
+bool checkCuda(cudaError_t err, const char *msg)
 {
-	cudaError_t returnedCudaError = cudaThreadSynchronize();
-
-	if(returnedCudaError != cudaSuccess) {
-		ASTRA_ERROR("Failed to force completion of cuda kernels: %d: %s.", returnedCudaError, cudaGetErrorString(returnedCudaError));
+	if (err != cudaSuccess) {
+		ASTRA_ERROR("%s: CUDA error %d: %s.", msg, err, cudaGetErrorString(err));
 		return false;
+	} else {
+		return true;
 	}
-
-	return true;
 }
-
-void reportCudaError(cudaError_t err)
-{
-	if(err != cudaSuccess)
-		ASTRA_ERROR("CUDA error %d: %s.", err, cudaGetErrorString(err));
-}
-
 
 }
