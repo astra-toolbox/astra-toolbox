@@ -1,5 +1,6 @@
 # 3.11.0 is from scikit-build documentation
-cmake_minimum_required(VERSION 3.11.0)
+# 3.18.0 is required for CUDA_ARCHITECTURES property
+cmake_minimum_required(VERSION 3.18.0)
 
 # Get consistent behavior out of all the compilers
 set(CMAKE_CXX_STANDARD 11)
@@ -8,7 +9,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 project(
   astra-toolbox
-  VERSION 2.0.0
+  VERSION 2.1.0
   DESCRIPTION
     "a MATLAB and Python toolbox of high-performance GPU primitives for 2D and 3D tomography."
   LANGUAGES CUDA CXX)
