@@ -1,5 +1,5 @@
-# 3.11.0 is from scikit-build documentation
-# 3.18.0 is required for CUDA_ARCHITECTURES property
+# 3.11.0 is from scikit-build documentation 3.18.0 is required for
+# CUDA_ARCHITECTURES property
 cmake_minimum_required(VERSION 3.18.0)
 
 # Get consistent behavior out of all the compilers
@@ -12,7 +12,13 @@ project(
   VERSION 2.1.0
   DESCRIPTION
     "a MATLAB and Python toolbox of high-performance GPU primitives for 2D and 3D tomography."
-  LANGUAGES CUDA CXX)
+  LANGUAGES CXX)
+
+option(ASTRA_USE_CUDA "Whether libastra is built with CUDA." ON)
+
+if(ASTRA_USE_CUDA)
+  enable_language(CUDA)
+endif()
 
 add_subdirectory(src)
 
