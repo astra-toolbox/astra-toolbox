@@ -42,19 +42,3 @@ install(
   NAMESPACE "astra::"
   DESTINATION "lib/cmake/astra")
 
-if(WIN32)
-  # For link compatability with upstream. For some reason the windows library
-  # has a different name.
-  install(
-    CODE "execute_process( \
-      COMMAND ${CMAKE_COMMAND} -E create_symlink \
-      ${CMAKE_INSTALL_PREFIX}/bin/astra.dll \
-      ${CMAKE_INSTALL_PREFIX}/bin/AstraCuda64.dll \
-    )")
-  install(
-    CODE "execute_process( \
-      COMMAND ${CMAKE_COMMAND} -E create_symlink \
-      ${CMAKE_INSTALL_PREFIX}/bin/astra.lib \
-      ${CMAKE_INSTALL_PREFIX}/lib/AstraCuda64.lib \
-    )")
-endif()
