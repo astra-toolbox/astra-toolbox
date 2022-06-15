@@ -84,12 +84,6 @@ message(VERBOSE "Include directories for libastra: ${ASTRA_INCLUDES}")
 
 add_library(astra SHARED ${ASTRA_SOURCES})
 
-if(WIN32)
-  set(OUTPUT_NAME "AstraCuda64")
-else()
-  set(OUTPUT_NAME "astra")
-endif()
-
 set_target_properties(
   astra
   PROPERTIES POSITION_INDEPENDENT_CODE ON
