@@ -2,10 +2,16 @@ cudatoolkit_dep:
   - ">=11.2.2,<11.2.72"
   - ">=11.3.1,<11.4.0a0"
   - ">=11.4.1,<11.5.0a0"
+  - ">=11.5.1,<11.6.0a0"
+  - ">=11.6.0,<11.7.0a0"
+  - ">=11.7.0,<11.8.0a0"
 cudatoolkit:
   - 11.2
   - 11.3
   - 11.4
+  - 11.5
+  - 11.6
+  - 11.7
 c_compiler_version:    # [linux or win]
   - 9.3                # [linux or win]
 cxx_compiler_version:  # [linux or win]
