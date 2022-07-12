@@ -82,10 +82,13 @@ def use_cuda():
 
 IF HAVE_CUDA==True:
   def set_gpu_index(idx, memory=0):
-    import collections
+    try:
+      import collections.abc as abc
+    except:
+      import collections as abc
     cdef SGPUParams params
     if use_cuda()==True:
-        if not isinstance(idx, collections.Iterable) or isinstance(idx, six.string_types + (six.text_type,six.binary_type)):
+        if not isinstance(idx, abc.Iterable) or isinstance(idx, six.string_types + (six.text_type,six.binary_type)):
             idx = (idx,)
         if memory != 0 and memory < 1024*1024:
             raise ValueError("Setting GPU memory lower than 1MB is not supported.")
