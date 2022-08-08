@@ -1,7 +1,7 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2022, imec Vision Lab, University of Antwerp
-           2014-2022, CWI, Amsterdam
+Copyright: 2010-2018, imec Vision Lab, University of Antwerp
+           2014-2018, CWI, Amsterdam
 
 Contact: astra@astra-toolbox.com
 Website: http://www.astra-toolbox.com/
@@ -114,6 +114,14 @@ bool CCudaSirtAlgorithm::initialize(CProjector2D* _pProjector,
 	m_fLambda = 1.0f;
 
 	return true;
+}
+
+//---------------------------------------------------------------------------------------
+void CCudaSirtAlgorithm::updateSlice(CFloat32ProjectionData2D* _pSinogram,
+                                     CFloat32VolumeData2D* _pReconstruction)
+{
+    m_pSinogram = _pSinogram;
+    m_pReconstruction = _pReconstruction;
 }
 
 //----------------------------------------------------------------------------------------

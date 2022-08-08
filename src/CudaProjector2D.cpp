@@ -1,7 +1,7 @@
 /*
 -----------------------------------------------------------------------
-Copyright: 2010-2022, imec Vision Lab, University of Antwerp
-           2014-2022, CWI, Amsterdam
+Copyright: 2010-2018, imec Vision Lab, University of Antwerp
+           2014-2018, CWI, Amsterdam
 
 Contact: astra@astra-toolbox.com
 Website: http://www.astra-toolbox.com/
@@ -40,6 +40,17 @@ std::string CCudaProjector2D::type = "cuda";
 CCudaProjector2D::CCudaProjector2D()
 {
 	_clear();
+}
+
+//----------------------------------------------------------------------------------------
+// Constructor
+CCudaProjector2D::CCudaProjector2D(CParallelProjectionGeometry2D* _pProjectionGeometry,
+                                   CVolumeGeometry2D* _pReconstructionGeometry)
+{
+    _clear();
+    m_pProjectionGeometry = _pProjectionGeometry->clone();
+    m_pVolumeGeometry = _pReconstructionGeometry->clone();
+    m_bIsInitialized = true;
 }
 
 //----------------------------------------------------------------------------------------
