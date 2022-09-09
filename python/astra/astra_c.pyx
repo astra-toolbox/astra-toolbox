@@ -106,9 +106,12 @@ ELSE:
     raise NotImplementedError("CUDA support is not enabled in ASTRA")
 
 def delete(ids):
-    import collections
+    try:
+      import collections.abc as abc
+    except:
+      import collections as abc
     cdef CAstraObjectManagerBase* ptr
-    if not isinstance(ids, collections.Iterable) or isinstance(ids, six.string_types + (six.text_type,six.binary_type)):
+    if not isinstance(ids, abc.Iterable) or isinstance(ids, six.string_types + (six.text_type,six.binary_type)):
         ids = (ids,)
     for i in ids:
         ptr = PyIndexManager.getSingletonPtr().get(i)
@@ -116,9 +119,12 @@ def delete(ids):
             ptr.remove(i)
 
 def info(ids):
-    import collections
+    try:
+      import collections.abc as abc
+    except:
+      import collections as abc
     cdef CAstraObjectManagerBase* ptr
-    if not isinstance(ids, collections.Iterable) or isinstance(ids, six.string_types + (six.text_type,six.binary_type)):
+    if not isinstance(ids, abc.Iterable) or isinstance(ids, six.string_types + (six.text_type,six.binary_type)):
         ids = (ids,)
     for i in ids:
         ptr = PyIndexManager.getSingletonPtr().get(i)
