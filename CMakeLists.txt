@@ -9,7 +9,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 project(
   astra-toolbox
-  VERSION 2.1.0
+  VERSION 2.1.2
   DESCRIPTION
     "a MATLAB and Python toolbox of high-performance GPU primitives for 2D and 3D tomography."
   LANGUAGES CXX)
