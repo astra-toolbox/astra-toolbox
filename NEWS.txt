@@ -8,6 +8,13 @@ License: Open Source under GPLv3
 Contact: astra@astra-toolbox.com
 Website: http://www.astra-toolbox.com/
 -----------------------------------------------------------------------
+2.1.2 (2022-09-09)
+  * fix set_gpu_index with Python 3.10
+  * fix set_gpu_index initializing GPU #0 before switching to the desired GPU
+
+2.1.1 (2022-06-30)
+  * fix memory leak in cone beam FP
+
 2.1.0 (2022-01-31)
   * fix potential hang in CUDA FFT, and speed it up (for FBP_CUDA and FDK_CUDA)
   * fix GPULink with rows not padded to multiple of 32 pixels

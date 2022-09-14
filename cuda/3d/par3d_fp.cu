@@ -586,9 +586,9 @@ bool Par3DFP(cudaPitchedPtr D_volumeData,
 			break;
 	}
 
-	cudaFreeArray(cuArray);
-
 	cudaDestroyTextureObject(D_texObj);
+
+	cudaFreeArray(cuArray);
 
 	return ret;
 }

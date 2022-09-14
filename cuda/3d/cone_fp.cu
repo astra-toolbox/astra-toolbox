@@ -487,6 +487,7 @@ bool ConeFP(cudaPitchedPtr D_volumeData,
 			break;
 	}
 
+	cudaDestroyTextureObject(D_texObj);
 	cudaFreeArray(cuArray);
 
 	return ret;

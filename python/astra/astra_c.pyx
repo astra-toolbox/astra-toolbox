@@ -82,19 +82,21 @@ def use_cuda():
 
 IF HAVE_CUDA==True:
   def set_gpu_index(idx, memory=0):
-    import collections
+    try:
+      import collections.abc as abc
+    except:
+      import collections as abc
     cdef SGPUParams params
-    if use_cuda()==True:
-        if not isinstance(idx, collections.Iterable) or isinstance(idx, six.string_types + (six.text_type,six.binary_type)):
-            idx = (idx,)
-        if memory != 0 and memory < 1024*1024:
-            raise ValueError("Setting GPU memory lower than 1MB is not supported.")
-        params.memory = memory
-        params.GPUIndices = idx
-        setGlobalGPUParams(params)
-        ret = setGPUIndex(params.GPUIndices[0])
-        if not ret:
-            six.print_("Failed to set GPU " + str(params.GPUIndices[0]))
+    if not isinstance(idx, abc.Iterable) or isinstance(idx, six.string_types + (six.text_type,six.binary_type)):
+        idx = (idx,)
+    if memory != 0 and memory < 1024*1024:
+        raise ValueError("Setting GPU memory lower than 1MB is not supported.")
+    params.memory = memory
+    params.GPUIndices = idx
+    setGlobalGPUParams(params)
+    ret = setGPUIndex(params.GPUIndices[0])
+    if not ret:
+        six.print_("Failed to set GPU " + str(params.GPUIndices[0]))
   def get_gpu_info(idx=-1):
     return wrap_from_bytes(getCudaDeviceString(idx))
 ELSE:
@@ -104,9 +106,12 @@ ELSE:
     raise NotImplementedError("CUDA support is not enabled in ASTRA")
 
 def delete(ids):
-    import collections
+    try:
+      import collections.abc as abc
+    except:
+      import collections as abc
     cdef CAstraObjectManagerBase* ptr
-    if not isinstance(ids, collections.Iterable) or isinstance(ids, six.string_types + (six.text_type,six.binary_type)):
+    if not isinstance(ids, abc.Iterable) or isinstance(ids, six.string_types + (six.text_type,six.binary_type)):
         ids = (ids,)
     for i in ids:
         ptr = PyIndexManager.getSingletonPtr().get(i)
@@ -114,9 +119,12 @@ def delete(ids):
             ptr.remove(i)
 
 def info(ids):
-    import collections
+    try:
+      import collections.abc as abc
+    except:
+      import collections as abc
     cdef CAstraObjectManagerBase* ptr
-    if not isinstance(ids, collections.Iterable) or isinstance(ids, six.string_types + (six.text_type,six.binary_type)):
+    if not isinstance(ids, abc.Iterable) or isinstance(ids, six.string_types + (six.text_type,six.binary_type)):
         ids = (ids,)
     for i in ids:
         ptr = PyIndexManager.getSingletonPtr().get(i)

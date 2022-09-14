@@ -1,6 +1,6 @@
 package:
   name: libastra
-  version: '2.1.0'
+  version: '2.1.2'
 
 source:
   git_url: https://github.com/astra-toolbox/astra-toolbox.git
@@ -19,13 +19,20 @@ requirements:
     - automake # [osx]
     - autoconf # [osx]
     - libtool # [osx]
-  host:
-    - boost # [osx or linux]
-    - cudatoolkit {{ cudatoolkit_dep }} # [win or linux]
-    # libstdcxx-ng 9.3 introduces extra host system requirements on glibc
+    # libgcc-ng/libstdcxx-ng 9.3 introduce extra system requirements on glibc
     # For the older systems (debian8, debian9) we use g++ 5.4 and 7.3, resp.
     {% if linux and cxx_compiler_version in ['5.4', '7.3'] -%}
     - libstdcxx-ng <9.3 # [linux]
+    - libgcc-ng <9.3 # [linux]
+    - libgomp <9.3 # [linux]
+    {% endif %}
+  host:
+    - boost # [osx or linux]
+    - cudatoolkit {{ cudatoolkit_dep }} # [win or linux]
+    {% if linux and cxx_compiler_version in ['5.4', '7.3'] -%}
+    - libstdcxx-ng <9.3 # [linux]
+    - libgcc-ng <9.3 # [linux]
+    - libgomp <9.3 # [linux]
     {% endif %}
   run:
     # We explicitly specify the cudatoolkit dependency string in

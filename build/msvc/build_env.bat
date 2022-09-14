@@ -10,4 +10,4 @@ set B_VCREDIST=C:\Users\User\vc_redist.x64.exe
 set B_README_WP3=%B_WINPYTHON3%\Lib\site-packages
 
 set B_RELEASE_TAG=master
-set B_RELEASE=2.1.0
+set B_RELEASE=2.1.2

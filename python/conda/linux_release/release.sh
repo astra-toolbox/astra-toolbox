@@ -29,7 +29,9 @@ for F in \
  https://developer.download.nvidia.com/compute/cuda/11.2.2/local_installers/cuda_11.2.2_460.32.03_linux.run \
  https://developer.download.nvidia.com/compute/cuda/11.3.1/local_installers/cuda_11.3.1_465.19.01_linux.run \
  https://developer.download.nvidia.com/compute/cuda/11.4.1/local_installers/cuda_11.4.1_470.57.02_linux.run \
- https://developer.download.nvidia.com/compute/cuda/11.5.0/local_installers/cuda_11.5.0_495.29.05_linux.run \
+ https://developer.download.nvidia.com/compute/cuda/11.5.1/local_installers/cuda_11.5.1_495.29.05_linux.run \
+ https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run \
+ https://developer.download.nvidia.com/compute/cuda/11.7.0/local_installers/cuda_11.7.0_515.43.04_linux.run \
 ; do
 	[ -f buildenv.deb11/`basename $F` ] || (cd buildenv.deb11; wget $F )
 done
@@ -41,7 +43,7 @@ docker build -t astra-build-env-deb11 buildenv.deb11
 
 cp build.sh $D
 
-V=2.1.0
+V=2.1.2
 B=0
 
 docker run --rm -v $D:/out:z astra-build-env-deb8 /bin/bash /out/build.sh $V $B deb8

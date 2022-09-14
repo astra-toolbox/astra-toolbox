@@ -1,6 +1,6 @@
 package:
   name: astra-toolbox
-  version: '2.1.0'
+  version: '2.1.2'
 
 source:
   git_url: https://github.com/astra-toolbox/astra-toolbox.git
@@ -32,7 +32,7 @@ requirements:
     - numpy {{ numpy }}
     - scipy
     - six
-    - libastra ==2.1.0
+    - libastra ==2.1.2
   run:
     - python
     - {{ pin_compatible('numpy', min_pin='x.x', max_pin='x') }}
@@ -43,8 +43,8 @@ requirements:
     # chances of API/ABI incompatibility.
     # The 'cuda_*' build string is designed to match our packages but not
     # current conda-forge/libastra packages which use a different format.
-    - libastra ==2.1.0 cuda_* # [win or linux]
-    - libastra ==2.1.0 nocuda_* # [osx]
+    - libastra ==2.1.2 cuda_* # [win or linux]
+    - libastra ==2.1.2 nocuda_* # [osx]
 
 
 about:
