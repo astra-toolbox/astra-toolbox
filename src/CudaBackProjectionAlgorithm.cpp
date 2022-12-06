@@ -72,6 +72,15 @@ bool CCudaBackProjectionAlgorithm::initialize(const Config& _cfg)
 }
 
 //---------------------------------------------------------------------------------------
+// Update Slices 
+void CCudaBackProjectionAlgorithm::updateSlice(CFloat32ProjectionData2D* _pSinogram,
+                                     CFloat32VolumeData2D* _pReconstruction)
+{
+    m_pSinogram = _pSinogram;
+    m_pReconstruction = _pReconstruction;
+}
+
+//---------------------------------------------------------------------------------------
 // Initialize - C++
 bool CCudaBackProjectionAlgorithm::initialize(CProjector2D* _pProjector,
                                      CFloat32ProjectionData2D* _pSinogram, 

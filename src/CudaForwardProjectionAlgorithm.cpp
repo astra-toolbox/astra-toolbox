@@ -221,6 +221,15 @@ boost::any CCudaForwardProjectionAlgorithm::getInformation(std::string _sIdentif
 	return CAlgorithm::getInformation(_sIdentifier);
 };
 
+//---------------------------------------------------------------------------------------
+// Update Slices 
+void CCudaForwardProjectionAlgorithm::updateSlice(CFloat32ProjectionData2D* _pSinogram,
+                                     			  CFloat32VolumeData2D* _pVolume)
+{
+    m_pSinogram = _pSinogram;
+    m_pVolume = _pVolume;
+}
+
 //----------------------------------------------------------------------------------------
 // Run
 void CCudaForwardProjectionAlgorithm::run(int)
