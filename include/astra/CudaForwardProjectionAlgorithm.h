@@ -130,6 +130,9 @@ public:
 	 */
 	bool check();
 
+	void updateSlice(CFloat32ProjectionData2D* _pSinogram,
+                     CFloat32VolumeData2D* _pVolume);
+
 	CFloat32VolumeData2D* getVolume() { return m_pVolume; }
 	CFloat32ProjectionData2D* getSinogram() { return m_pSinogram; }
 

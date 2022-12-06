@@ -104,8 +104,8 @@ public:
 	                CFloat32ProjectionData2D* _pSinogram,
 	                CFloat32VolumeData2D* _pReconstruction);
     
-        void updateSlice(CFloat32ProjectionData2D* _pSinogram,
-                         CFloat32VolumeData2D* _pReconstruction);
+	void updateSlice(CFloat32ProjectionData2D* _pSinogram,
+						CFloat32VolumeData2D* _pReconstruction);
 
 	/** Get a description of the class.
 	 *
