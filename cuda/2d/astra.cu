@@ -517,8 +517,7 @@ _AstraExport std::string getCudaDeviceString(int device)
 _AstraExport bool setGPUIndex(int iGPUIndex)
 {
         if (iGPUIndex != -1) {
-                cudaSetDevice(iGPUIndex);
-                cudaError_t err = cudaGetLastError();
+                cudaError_t err = cudaSetDevice(iGPUIndex);
 
                 // Ignore errors caused by calling cudaSetDevice multiple times
                 if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
