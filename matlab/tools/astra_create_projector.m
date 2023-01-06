@@ -42,7 +42,7 @@ if exist('options', 'var')
     cfg_proj.options = options;
 end
 
-if strcmp(type,'linear3d') || strcmp(type,'linearcone') || strcmp(type,'cuda3d')
+if strcmp(type,'cuda3d')
 	proj_id = astra_mex_projector3d('create', cfg_proj);
 else
 	proj_id = astra_mex_projector('create', cfg_proj);

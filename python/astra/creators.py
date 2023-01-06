@@ -560,7 +560,7 @@ def create_projector(proj_type, proj_geom, vol_geom, options=None):
     cfg['VolumeGeometry'] = vol_geom
     if options is not None:
         cfg['options'] = options
-    types3d = ['linear3d', 'linearcone', 'cuda3d']
+    types3d = ['cuda3d']
     if proj_type in types3d:
         return projector3d.create(cfg)
     else:

@@ -33,11 +33,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 
 
-typedef texture<float, 2, cudaReadModeElementType> texture2D;
-
-static texture2D gT_FanProjTexture;
-
-
 namespace astraCUDA {
 
 const unsigned int g_anglesPerBlock = 16;
