@@ -61,7 +61,7 @@ ifeq ($(cuda),yes)
 CPPFLAGS  += @CPPFLAGS_CUDA@ -DASTRA_CUDA
 NVCCFLAGS += @NVCCFLAGS_EXTRA@ @CPPFLAGS_CUDA@ -I$(srcdir)/../../include -DASTRA_CUDA
 LDFLAGS   += @LDFLAGS_CUDA@
-LIBS      += -lcudart -lcufft
+LIBS      += -lcudart_static -lcufft
 NVCC       = @NVCC@
 endif
 
