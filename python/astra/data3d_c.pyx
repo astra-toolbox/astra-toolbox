@@ -44,7 +44,7 @@ from .PyXMLDocument cimport XMLDocument
 
 cimport utils
 from .utils import wrap_from_bytes
-from .utils cimport linkVolFromGeometry, linkProjFromGeometry, createProjectionGeometry
+from .utils cimport linkVolFromGeometry, linkProjFromGeometry, createProjectionGeometry, createVolumeGeometry
 
 from .pythonutils import geom_size, GPULink
 
@@ -68,7 +68,6 @@ cdef CFloat32Data3DMemory * dynamic_cast_mem_safe(CFloat32Data3D *obj) except NU
 
 
 def create(datatype,geometry,data=None, link=False):
-    cdef Config *cfg
     cdef CVolumeGeometry3D * pGeometry
     cdef CProjectionGeometry3D * ppGeometry
     cdef CFloat32Data3D * pDataObject3D
@@ -88,17 +87,11 @@ def create(datatype,geometry,data=None, link=False):
             raise ValueError("The dimensions of the data do not match those specified in the geometry: {} != {}".format(data_shape, geom_shape))
 
     if datatype == '-vol':
-        cfg = utils.dictToConfig(six.b('VolumeGeometry'), geometry)
-        pGeometry = new CVolumeGeometry3D()
-        if not pGeometry.initialize(cfg[0]):
-            del cfg
-            del pGeometry
-            raise RuntimeError('Geometry class not initialized.')
+        pGeometry = createVolumeGeometry(geometry)
         if link:
             pDataObject3D = linkVolFromGeometry(pGeometry, data)
         else:
             pDataObject3D = new CFloat32VolumeData3DMemory(pGeometry)
-        del cfg
         del pGeometry
     elif datatype == '-sino' or datatype == '-proj3d' or datatype == '-sinocone':
         ppGeometry = createProjectionGeometry(geometry)
@@ -151,13 +144,7 @@ def change_geometry(i, geom):
 
     elif pDataObject.getType() == THREEVOLUME:
         pDataObject3 = <CFloat32VolumeData3DMemory * >pDataObject
-        cfg = utils.dictToConfig(six.b('VolumeGeometry'), geom)
-        pGeometry = new CVolumeGeometry3D()
-        if not pGeometry.initialize(cfg[0]):
-            del cfg
-            del pGeometry
-            raise RuntimeError('Geometry class not initialized.')
-        del cfg
+        pGeometry = createVolumeGeometry(geom)
         geom_shape = (pGeometry.getGridSliceCount(), pGeometry.getGridRowCount(), pGeometry.getGridColCount())
         obj_shape = (pDataObject3.getSliceCount(), pDataObject3.getRowCount(), pDataObject3.getColCount())
         if geom_shape != obj_shape:

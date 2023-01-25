@@ -319,3 +319,16 @@ cdef CProjectionGeometry3D* createProjectionGeometry(geometry) except NULL:
 
     return ppGeometry
 
+cdef CVolumeGeometry3D* createVolumeGeometry(geometry) except NULL:
+    cdef Config *cfg
+    cdef CVolumeGeometry3D * pGeometry
+    cfg = dictToConfig(six.b('VolumeGeometry'), geometry)
+    pGeometry = new CVolumeGeometry3D()
+    if not pGeometry.initialize(cfg[0]):
+        del cfg
+        del pGeometry
+        raise RuntimeError('Geometry class not initialized.')
+
+    del cfg
+
+    return pGeometry

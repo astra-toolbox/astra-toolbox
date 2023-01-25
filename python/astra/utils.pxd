@@ -36,4 +36,5 @@ cdef Config * dictToConfig(string rootname, dc) except NULL
 cdef CFloat32VolumeData3D* linkVolFromGeometry(CVolumeGeometry3D *pGeometry, data) except NULL
 cdef CFloat32ProjectionData3D* linkProjFromGeometry(CProjectionGeometry3D *pGeometry, data) except NULL
 cdef CProjectionGeometry3D* createProjectionGeometry(geometry) except NULL
+cdef CVolumeGeometry3D* createVolumeGeometry(geometry) except NULL
 
