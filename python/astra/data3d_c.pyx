@@ -44,7 +44,7 @@ from .PyXMLDocument cimport XMLDocument
 
 cimport utils
 from .utils import wrap_from_bytes
-from .utils cimport linkVolFromGeometry, linkProjFromGeometry
+from .utils cimport linkVolFromGeometry, linkProjFromGeometry, createProjectionGeometry
 
 from .pythonutils import geom_size, GPULink
 
@@ -101,29 +101,12 @@ def create(datatype,geometry,data=None, link=False):
         del cfg
         del pGeometry
     elif datatype == '-sino' or datatype == '-proj3d' or datatype == '-sinocone':
-        cfg = utils.dictToConfig(six.b('ProjectionGeometry'), geometry)
-        tpe = wrap_from_bytes(cfg.self.getAttribute(six.b('type')))
-        if (tpe == "parallel3d"):
-            ppGeometry = <CProjectionGeometry3D*> new CParallelProjectionGeometry3D();
-        elif (tpe == "parallel3d_vec"):
-            ppGeometry = <CProjectionGeometry3D*> new CParallelVecProjectionGeometry3D();
-        elif (tpe == "cone"):
-            ppGeometry = <CProjectionGeometry3D*> new CConeProjectionGeometry3D();
-        elif (tpe == "cone_vec"):
-            ppGeometry = <CProjectionGeometry3D*> new CConeVecProjectionGeometry3D();
-        else:
-            raise ValueError("Invalid geometry type.")
-
-        if not ppGeometry.initialize(cfg[0]):
-            del cfg
-            del ppGeometry
-            raise RuntimeError('Geometry class not initialized.')
+        ppGeometry = createProjectionGeometry(geometry)
         if link:
             pDataObject3D = linkProjFromGeometry(ppGeometry, data)
         else:
             pDataObject3D = new CFloat32ProjectionData3DMemory(ppGeometry)
         del ppGeometry
-        del cfg
     else:
         raise ValueError("Invalid datatype.  Please specify '-vol' or '-proj3d'.")
 
@@ -156,24 +139,7 @@ def change_geometry(i, geom):
     cdef CFloat32VolumeData3DMemory * pDataObject3
     if pDataObject.getType() == THREEPROJECTION:
         pDataObject2 = <CFloat32ProjectionData3DMemory * >pDataObject
-        # TODO: Reduce code duplication here
-        cfg = utils.dictToConfig(six.b('ProjectionGeometry'), geom)
-        tpe = wrap_from_bytes(cfg.self.getAttribute(six.b('type')))
-        if (tpe == "parallel3d"):
-            ppGeometry = <CProjectionGeometry3D*> new CParallelProjectionGeometry3D();
-        elif (tpe == "parallel3d_vec"):
-            ppGeometry = <CProjectionGeometry3D*> new CParallelVecProjectionGeometry3D();
-        elif (tpe == "cone"):
-            ppGeometry = <CProjectionGeometry3D*> new CConeProjectionGeometry3D();
-        elif (tpe == "cone_vec"):
-            ppGeometry = <CProjectionGeometry3D*> new CConeVecProjectionGeometry3D();
-        else:
-            raise ValueError("Invalid geometry type.")
-        if not ppGeometry.initialize(cfg[0]):
-            del cfg
-            del ppGeometry
-            raise RuntimeError('Geometry class not initialized.')
-        del cfg
+        ppGeometry = createProjectionGeometry(geom)
         geom_shape = (ppGeometry.getDetectorRowCount(), ppGeometry.getProjectionCount(), ppGeometry.getDetectorColCount())
         obj_shape = (pDataObject2.getDetectorRowCount(), pDataObject2.getAngleCount(), pDataObject2.getDetectorColCount())
         if geom_shape != obj_shape:
