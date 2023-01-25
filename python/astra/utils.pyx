@@ -293,33 +293,33 @@ cdef CFloat32ProjectionData3D* linkProjFromGeometry(CProjectionGeometry3D *pGeom
         raise TypeError("data should be a numpy.ndarray or a GPULink object")
     return pDataObject3D
 
-cdef CProjectionGeometry3D* createProjectionGeometry(geometry) except NULL:
+cdef CProjectionGeometry3D* createProjectionGeometry3D(geometry) except NULL:
     cdef Config *cfg
-    cdef CProjectionGeometry3D * ppGeometry
+    cdef CProjectionGeometry3D * pGeometry
 
     cfg = dictToConfig(six.b('ProjectionGeometry'), geometry)
     tpe = wrap_from_bytes(cfg.self.getAttribute(six.b('type')))
     if (tpe == "parallel3d"):
-        ppGeometry = <CProjectionGeometry3D*> new CParallelProjectionGeometry3D();
+        pGeometry = <CProjectionGeometry3D*> new CParallelProjectionGeometry3D();
     elif (tpe == "parallel3d_vec"):
-        ppGeometry = <CProjectionGeometry3D*> new CParallelVecProjectionGeometry3D();
+        pGeometry = <CProjectionGeometry3D*> new CParallelVecProjectionGeometry3D();
     elif (tpe == "cone"):
-        ppGeometry = <CProjectionGeometry3D*> new CConeProjectionGeometry3D();
+        pGeometry = <CProjectionGeometry3D*> new CConeProjectionGeometry3D();
     elif (tpe == "cone_vec"):
-        ppGeometry = <CProjectionGeometry3D*> new CConeVecProjectionGeometry3D();
+        pGeometry = <CProjectionGeometry3D*> new CConeVecProjectionGeometry3D();
     else:
         raise ValueError("Invalid geometry type.")
 
-    if not ppGeometry.initialize(cfg[0]):
+    if not pGeometry.initialize(cfg[0]):
         del cfg
-        del ppGeometry
+        del pGeometry
         raise RuntimeError('Geometry class not initialized.')
 
     del cfg
 
-    return ppGeometry
+    return pGeometry
 
-cdef CVolumeGeometry3D* createVolumeGeometry(geometry) except NULL:
+cdef CVolumeGeometry3D* createVolumeGeometry3D(geometry) except NULL:
     cdef Config *cfg
     cdef CVolumeGeometry3D * pGeometry
     cfg = dictToConfig(six.b('VolumeGeometry'), geometry)

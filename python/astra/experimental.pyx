@@ -30,7 +30,7 @@ include "config.pxi"
 
 cimport utils
 from .utils import wrap_from_bytes
-from .utils cimport createProjectionGeometry
+from .utils cimport createProjectionGeometry3D
 
 IF HAVE_CUDA==True:
 
@@ -186,7 +186,7 @@ IF HAVE_CUDA==True:
     def getProjectedBBox(geometry, minx, maxx, miny, maxy, minz, maxz):
         cdef CProjectionGeometry3D * ppGeometry
         cdef double minu, maxu, minv, maxv
-        ppGeometry = createProjectionGeometry(geometry)
+        ppGeometry = createProjectionGeometry3D(geometry)
         ppGeometry.getProjectedBBox(minx, maxx, miny, maxy, minz, maxz, minu, maxu, minv, maxv)
         del ppGeometry
         return (minv, maxv)
