@@ -235,6 +235,7 @@ cdef extern from "astra/ProjectionGeometry3D.h" namespace "astra":
         int getProjectionCount()
         int getDetectorColCount()
         int getDetectorRowCount()
+        void getProjectedBBox(double, double, double, double, double, double, double&, double&, double&, double&)
 
 cdef extern from "astra/Float32VolumeData3D.h" namespace "astra":
     cdef cppclass CFloat32VolumeData3D(CFloat32Data3D):

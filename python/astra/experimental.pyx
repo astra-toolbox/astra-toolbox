@@ -28,6 +28,9 @@
 
 include "config.pxi"
 
+cimport utils
+from .utils import wrap_from_bytes
+
 IF HAVE_CUDA==True:
 
     import six
@@ -178,3 +181,28 @@ IF HAVE_CUDA==True:
         :type datatype: :class:`numpy.ndarray` or :class:`astra.data3d.GPULink`
         """
         direct_FPBP3D(projector_id, vol, proj, MODE_SET, "BP")
+
+    def getProjectedBBox(geometry, minx, maxx, miny, maxy, minz, maxz):
+        cdef Config *cfg
+        cdef CProjectionGeometry3D * ppGeometry
+        cdef double minu, maxu, minv, maxv
+        cfg = utils.dictToConfig(six.b('ProjectionGeometry'), geometry)
+        tpe = wrap_from_bytes(cfg.self.getAttribute(six.b('type')))
+        if (tpe == "parallel3d"):
+            ppGeometry = <CProjectionGeometry3D*> new CParallelProjectionGeometry3D();
+        elif (tpe == "parallel3d_vec"):
+            ppGeometry = <CProjectionGeometry3D*> new CParallelVecProjectionGeometry3D();
+        elif (tpe == "cone"):
+            ppGeometry = <CProjectionGeometry3D*> new CConeProjectionGeometry3D();
+        elif (tpe == "cone_vec"):
+            ppGeometry = <CProjectionGeometry3D*> new CConeVecProjectionGeometry3D();
+        else:
+            raise ValueError("Invalid geometry type.")
+
+        if not ppGeometry.initialize(cfg[0]):
+            del cfg
+            del ppGeometry
+            raise RuntimeError('Geometry class not initialized.')
+
+        ppGeometry.getProjectedBBox(minx, maxx, miny, maxy, minz, maxz, minu, maxu, minv, maxv)
+        return (minv, maxv)
