@@ -298,12 +298,13 @@ bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, con
 
 }
 
-bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, bool bShortScan, const float *pfFilter)
+bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, bool bShortScan, const float *pfFilter, float fOutputScale)
 {
 	assert(!projData.d->arr);
 	assert(!volData.d->arr);
 	SDimensions3D dims;
 	SProjectorParams3D params;
+	params.fOutputScale = fOutputScale;
 
 	bool ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
 	if (!ok)

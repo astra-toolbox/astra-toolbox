@@ -1490,13 +1490,19 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 			assert(dynamic_cast<CCompositeGeometryManager::CVolumePart*>(j.pOutput.get()));
 			assert(dynamic_cast<CCompositeGeometryManager::CProjectionPart*>(j.pInput.get()));
 
-			if (srcdims.subx || srcdims.suby) {
+			float fOutputScale = srcdims.subny;
+			fOutputScale /= srcdims.ny;
+
+			if (j.FDKSettings.bShortScan && srcdims.subny != srcdims.ny) {
+				ASTRA_ERROR("CCompositeGeometryManager::doJobs: shortscan FDK unsupported for this data size currently");
+				ok = false;
+			} else if (srcdims.subx) {
 				ASTRA_ERROR("CCompositeGeometryManager::doJobs: data too large for FDK");
 				ok = false;
 			} else {
 				ASTRA_DEBUG("CCompositeGeometryManager::doJobs: doing FDK");
 
-				ok = astraCUDA3d::FDK(((CCompositeGeometryManager::CProjectionPart*)j.pInput.get())->pGeom, srcMem->hnd, ((CCompositeGeometryManager::CVolumePart*)j.pOutput.get())->pGeom, dstMem->hnd, j.FDKSettings.bShortScan, j.FDKSettings.pfFilter);
+				ok = astraCUDA3d::FDK(((CCompositeGeometryManager::CProjectionPart*)j.pInput.get())->pGeom, srcMem->hnd, ((CCompositeGeometryManager::CVolumePart*)j.pOutput.get())->pGeom, dstMem->hnd, j.FDKSettings.bShortScan, j.FDKSettings.pfFilter, fOutputScale );
 				if (!ok) ASTRA_ERROR("Error performing sub-FDK");
 				ASTRA_DEBUG("CCompositeGeometryManager::doJobs: FDK done");
 			}
