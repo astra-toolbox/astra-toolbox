@@ -28,8 +28,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _INC_ASTRA_ALGORITHM
 #define _INC_ASTRA_ALGORITHM
 
-#include <boost/any.hpp>
-
 #include "Globals.h"
 #include "Config.h"
 

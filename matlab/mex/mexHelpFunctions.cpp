@@ -124,36 +124,6 @@ mxArray* vector2DToMxArray(std::vector<std::vector<astra::float32> > mInput)
 	return res;
 }
 
-//-----------------------------------------------------------------------------------------
-// turn a boost::any object to an mxArray
-mxArray* anyToMxArray(boost::any _any) 
-{
-	if (_any.type() == typeid(std::string)) {
-		std::string str = boost::any_cast<std::string>(_any);
-		return mxCreateString(str.c_str());     
-	}
-	if (_any.type() == typeid(int)) {
-		return mxCreateDoubleScalar(boost::any_cast<int>(_any));
-	}
-	if (_any.type() == typeid(float32)) {
-		return mxCreateDoubleScalar(boost::any_cast<float32>(_any));
-	}
-	if (_any.type() == typeid(std::vector<astra::float32>)) {
-		return vectorToMxArray(boost::any_cast<std::vector<float32> >(_any));
-	}
-	if (_any.type() == typeid(std::vector<std::vector<astra::float32> >)) {
-		return vector2DToMxArray(boost::any_cast<std::vector<std::vector<float32> > >(_any));
-	}
-	return NULL;
-}
-
-
-
-
-
-
-
-
 
 //-----------------------------------------------------------------------------------------
 // turn a MATLAB struct into a Config object

@@ -40,8 +40,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <mex.h>
 
-#include <boost/any.hpp>
-
 #include "astra/Globals.h"
 #include "astra/Utilities.h"
 
@@ -54,9 +52,8 @@ std::string mexToString(const mxArray* pInput);
 bool mexIsScalar(const mxArray* pInput);
 void get3DMatrixDims(const mxArray* x, mwSize *dims);
 
-// convert boost::any into a MALTAB object
+// convert float vector into a MATLAB object
 mxArray* vectorToMxArray(std::vector<astra::float32> mInput);
-mxArray* anyToMxArray(boost::any _any);
 
 // turn a MATLAB struct into a Config object
 astra::Config* structToConfig(std::string rootname, const mxArray* pStruct);
