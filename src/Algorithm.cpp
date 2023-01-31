@@ -43,22 +43,4 @@ CAlgorithm::~CAlgorithm() {
 
 }
 
-//---------------------------------------------------------------------------------------
-// Information - All
-map<string,boost::any> CAlgorithm::getInformation() 
-{
-	map<string, boost::any> result;
-	result["Initialized"] = getInformation("Initialized");
-	return result;
-};
-
-//----------------------------------------------------------------------------------------
-// Information - Specific
-boost::any CAlgorithm::getInformation(std::string _sIdentifier)
-{
-	if (_sIdentifier == "Initialized") { return m_bIsInitialized ? "yes" : "no"; } 
-	return std::string("not found");
-}
-
-
 } // namespace astra

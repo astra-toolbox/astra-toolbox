@@ -154,23 +154,6 @@ bool CCudaDartMaskAlgorithm::_check()
 	return true;
 }
 
-//---------------------------------------------------------------------------------------
-// Information - All
-map<string,boost::any> CCudaDartMaskAlgorithm::getInformation()
-{
-	map<string,boost::any> res;
-	// TODO: add PDART-specific options
-	return mergeMap<string,boost::any>(CAlgorithm::getInformation(), res);
-}
-
-//---------------------------------------------------------------------------------------
-// Information - Specific
-boost::any CCudaDartMaskAlgorithm::getInformation(std::string _sIdentifier)
-{
-	return NULL;
-}
-
-
 } // namespace astra
 
 #endif // ASTRA_CUDA

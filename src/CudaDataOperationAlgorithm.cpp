@@ -174,23 +174,6 @@ bool CCudaDataOperationAlgorithm::_check()
 	return true;
 }
 
-//---------------------------------------------------------------------------------------
-// Information - All
-map<string,boost::any> CCudaDataOperationAlgorithm::getInformation()
-{
-	map<string,boost::any> res;
-	// TODO: add PDART-specific options
-	return mergeMap<string,boost::any>(CAlgorithm::getInformation(), res);
-}
-
-//---------------------------------------------------------------------------------------
-// Information - Specific
-boost::any CCudaDataOperationAlgorithm::getInformation(std::string _sIdentifier)
-{
-	return NULL;
-}
-
-
 } // namespace astra
 
 #endif // ASTRA_CUDA

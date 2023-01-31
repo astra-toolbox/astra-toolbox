@@ -177,21 +177,6 @@ void CSirtAlgorithm::_init()
 	m_pTmpVolume = new CFloat32VolumeData2D(m_pProjector->getVolumeGeometry());
 }
 
-//---------------------------------------------------------------------------------------
-// Information - All
-map<string,boost::any> CSirtAlgorithm::getInformation() 
-{
-	map<string, boost::any> res;
-	return mergeMap<string,boost::any>(CReconstructionAlgorithm2D::getInformation(), res);
-};
-
-//---------------------------------------------------------------------------------------
-// Information - Specific
-boost::any CSirtAlgorithm::getInformation(std::string _sIdentifier) 
-{
-	return CAlgorithm::getInformation(_sIdentifier);
-};
-
 //----------------------------------------------------------------------------------------
 // Iterate
 void CSirtAlgorithm::run(int _iNrIterations)

@@ -232,44 +232,6 @@ void CCudaForwardProjectionAlgorithm3D::setGPUIndex(int _iGPUIndex)
 	m_iGPUIndex = _iGPUIndex;
 }
 
-//---------------------------------------------------------------------------------------
-// Information - All
-map<string,boost::any> CCudaForwardProjectionAlgorithm3D::getInformation()
-{
-	map<string,boost::any> res;
-	res["ProjectionGeometry"] = getInformation("ProjectionGeometry");
-	res["VolumeGeometry"] = getInformation("VolumeGeometry");
-	res["ProjectionDataId"] = getInformation("ProjectionDataId");
-	res["VolumeDataId"] = getInformation("VolumeDataId");
-	res["GPUindex"] = getInformation("GPUindex");
-	res["GPUindex"] = getInformation("GPUindex");
-	res["DetectorSuperSampling"] = getInformation("DetectorSuperSampling");
-	return mergeMap<string,boost::any>(CAlgorithm::getInformation(), res);
-}
-
-//---------------------------------------------------------------------------------------
-// Information - Specific
-boost::any CCudaForwardProjectionAlgorithm3D::getInformation(std::string _sIdentifier)
-{
-	// TODO: store these so we can return them?
-	if (_sIdentifier == "ProjectionGeometry")	{ return string("not implemented"); }
-	if (_sIdentifier == "VolumeGeometry")	{ return string("not implemented"); }
-	if (_sIdentifier == "GPUindex")	{ return m_iGPUIndex; }
-	if (_sIdentifier == "DetectorSuperSampling")	{ return m_iDetectorSuperSampling; }
-
-	if (_sIdentifier == "ProjectionDataId") {
-		int iIndex = CData3DManager::getSingleton().getIndex(m_pProjections);
-		if (iIndex != 0) return iIndex;
-		return std::string("not in manager");
-	}
-	if (_sIdentifier == "VolumeDataId") {
-		int iIndex = CData3DManager::getSingleton().getIndex(m_pVolume);
-		if (iIndex != 0) return iIndex;
-		return std::string("not in manager");
-	}
-	return CAlgorithm::getInformation(_sIdentifier);
-}
-
 //----------------------------------------------------------------------------------------
 // Run
 void CCudaForwardProjectionAlgorithm3D::run(int)

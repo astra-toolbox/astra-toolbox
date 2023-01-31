@@ -186,66 +186,6 @@ void CCudaReconstructionAlgorithm2D::setGPUIndex(int _iGPUIndex)
 	m_iGPUIndex = _iGPUIndex;
 }
 
-
-//---------------------------------------------------------------------------------------
-// Information - All
-map<string,boost::any> CCudaReconstructionAlgorithm2D::getInformation()
-{
-	// TODO: Verify and clean up
-
-	map<string,boost::any> res;
-	res["ProjectionGeometry"] = getInformation("ProjectionGeometry");
-	res["ReconstructionGeometry"] = getInformation("ReconstructionGeometry");
-	res["ProjectionDataId"] = getInformation("ProjectionDataId");
-	res["ReconstructionDataId"] = getInformation("ReconstructionDataId");
-	res["ReconstructionMaskId"] = getInformation("ReconstructionMaskId");
-	res["GPUindex"] = getInformation("GPUindex");
-	res["DetectorSuperSampling"] = getInformation("DetectorSuperSampling");
-	res["PixelSuperSampling"] = getInformation("PixelSuperSampling");
-	res["UseMinConstraint"] = getInformation("UseMinConstraint");
-	res["MinConstraintValue"] = getInformation("MinConstraintValue");
-	res["UseMaxConstraint"] = getInformation("UseMaxConstraint");
-	res["MaxConstraintValue"] = getInformation("MaxConstraintValue");
-	return mergeMap<string,boost::any>(CReconstructionAlgorithm2D::getInformation(), res);
-}
-
-//---------------------------------------------------------------------------------------
-// Information - Specific
-boost::any CCudaReconstructionAlgorithm2D::getInformation(std::string _sIdentifier)
-{
-	// TODO: Verify and clean up
-
-	if (_sIdentifier == "UseMinConstraint")		{ return m_bUseMinConstraint ? string("yes") : string("no"); }
-	if (_sIdentifier == "MinConstraintValue")	{ return m_fMinValue; }
-	if (_sIdentifier == "UseMaxConstraint")		{ return m_bUseMaxConstraint ? string("yes") : string("no"); }
-	if (_sIdentifier == "MaxConstraintValue")	{ return m_fMaxValue; }
-
-	// TODO: store these so we can return them?
-	if (_sIdentifier == "ProjectionGeometry")	{ return string("not implemented"); }
-	if (_sIdentifier == "ReconstructionGeometry")	{ return string("not implemented"); }
-	if (_sIdentifier == "GPUindex")	{ return m_iGPUIndex; }
-	if (_sIdentifier == "DetectorSuperSampling")	{ return m_iDetectorSuperSampling; }
-	if (_sIdentifier == "PixelSuperSampling")	{ return m_iPixelSuperSampling; }
-
-	if (_sIdentifier == "ProjectionDataId") {
-		int iIndex = CData2DManager::getSingleton().getIndex(m_pSinogram);
-		if (iIndex != 0) return iIndex;
-		return std::string("not in manager");
-	}
-	if (_sIdentifier == "ReconstructionDataId") {
-		int iIndex = CData2DManager::getSingleton().getIndex(m_pReconstruction);
-		if (iIndex != 0) return iIndex;
-		return std::string("not in manager");
-	}
-	if (_sIdentifier == "ReconstructionMaskId") {
-		if (!m_bUseReconstructionMask) return string("not used");
-		int iIndex = CData2DManager::getSingleton().getIndex(m_pReconstructionMask);
-		if (iIndex != 0) return iIndex;
-		return std::string("not in manager");
-	}
-	return CReconstructionAlgorithm2D::getInformation(_sIdentifier);
-}
-
 bool CCudaReconstructionAlgorithm2D::setupGeometry()
 {
 	ASTRA_ASSERT(m_bIsInitialized);

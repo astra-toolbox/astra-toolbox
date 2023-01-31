@@ -145,19 +145,6 @@ public:
 	 */
 	void setRayOrder(int* _piProjectionOrder, int* _piDetectorOrder, int _piRayCount);
 
-	/** Get all information parameters
-	 *
-	 * @return map with all boost::any object
-	 */
-	virtual std::map<std::string,boost::any> getInformation();
-
-	/** Get a single piece of information represented as a boost::any
-	 *
-	 * @param _sIdentifier identifier string to specify which piece of information you want
-	 * @return boost::any object
-	 */
-	virtual boost::any getInformation(std::string _sIdentifier);
-
 	/** Perform a number of iterations.
 	 *
 	 * @param _iNrIterations amount of iterations to perform.

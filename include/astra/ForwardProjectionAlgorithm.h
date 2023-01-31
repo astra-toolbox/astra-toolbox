@@ -151,19 +151,6 @@ public:
 	 */
 	virtual bool initialize(const Config& _cfg);
 
-	/** Get all information parameters
-	 *
-	 * @return map with all boost::any object
-	 */
-	virtual std::map<std::string,boost::any> getInformation();
-
-	/** Get a single piece of information represented as a boost::any
-	 *
-	 * @param _sIdentifier identifier string to specify which piece of information you want
-	 * @return boost::any object
-	 */
-	virtual boost::any getInformation(std::string _sIdentifier);
-
 	/** Set a fixed reconstruction mask. A pixel will only be used in the reconstruction if the 
 	 * corresponding value in the mask is 1.
 	 *
