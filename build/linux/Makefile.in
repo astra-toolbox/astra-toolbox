@@ -333,10 +333,11 @@ endif
 ifeq ($(python),yes)
 py: libastra.la
 	$(MKDIR) python/build
+	$(MKDIR) python/config
 # TODO: Avoid writing into source dir
 	ln -s $(abs_top_builddir)/.libs/$(SONAME) $(srcdir)/../../python/astra
 # Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
-	(cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS='${PYLDFLAGS}' $(PYTHON) builder.py build --build-base=$(abs_top_builddir)/python/build) || (rm $(srcdir)/../../python/astra/$(SONAME); false)
+	(cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS='${PYLDFLAGS}' $(PYTHON) builder.py --astra_build_config_dir $(abs_top_builddir)/python/config build --build-base=$(abs_top_builddir)/python/build) || (rm $(srcdir)/../../python/astra/$(SONAME); false)
 	rm $(srcdir)/../../python/astra/$(SONAME)
 
 endif

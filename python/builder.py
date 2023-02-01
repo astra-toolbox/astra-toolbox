@@ -31,19 +31,38 @@ from pkg_resources import parse_version
 
 from Cython.Distutils import build_ext
 from Cython.Build import cythonize
+
+import argparse
+import sys
+
 import Cython
 if parse_version(Cython.__version__) < parse_version('0.13'):
     raise ImportError('Cython version should be at least 0.13')
 
+# We write a cython include file config.pxi containing the HAVE_CUDA setting
+# to the directory passed by --astra_build_config_dir on the command line,
+# or to the source dir otherwise.
+
+parser = argparse.ArgumentParser(allow_abbrev=False, add_help=False)
+parser.add_argument('--astra_build_config_dir')
+args, script_args = parser.parse_known_args()
+
 use_cuda = ('-DASTRA_CUDA' in os.environ.get('CPPFLAGS', '') or
             '/DASTRA_CUDA' in os.environ.get('CL', ''))
 
-self_path = os.path.dirname(os.path.abspath(__file__))
-
 cfg_string = 'DEF HAVE_CUDA=' + str(use_cuda) + '\n'
 update_cfg = True
+
+include_path = ['.']
+if args.astra_build_config_dir is None:
+    self_path = os.path.dirname(os.path.abspath(__file__))
+    cfg_file = os.path.join(self_path, 'astra', 'config.pxi')
+else:
+    include_path += [args.astra_build_config_dir]
+    cfg_file = os.path.join(args.astra_build_config_dir, 'config.pxi')
+
 try:
-    with open(os.path.join(self_path, 'astra', 'config.pxi'), 'r') as cfg:
+    with open(cfg_file, 'r') as cfg:
         cfg_fromfile = cfg.read()
     if cfg_fromfile == cfg_string:
         update_cfg = False
@@ -51,7 +70,7 @@ except IOError:
     pass
 
 if update_cfg:
-    with open(os.path.join(self_path, 'astra', 'config.pxi'), 'w') as cfg:
+    with open(cfg_file, 'w') as cfg:
         cfg.write(cfg_string)
 
 pkgdata = {}
@@ -59,9 +78,9 @@ if os.environ.get('ASTRA_INSTALL_LIBRARY_AS_DATA', ''):
     pkgdata['astra'] = [os.environ['ASTRA_INSTALL_LIBRARY_AS_DATA']]
 
 cmdclass = {}
-ext_modules = []
 
 ext_modules = cythonize(os.path.join('.', 'astra', '*.pyx'),
+                        include_path=include_path,
                         language_level=3)
 cmdclass = {'build_ext': build_ext}
 
@@ -73,7 +92,8 @@ for m in ext_modules:
         m.sources.append(os.path.join('.', 'astra', 'src',
                                       'PythonPluginAlgorithmFactory.cpp'))
 
-setup(name='astra-toolbox',
+setup(script_args=script_args,
+      name='astra-toolbox',
       version='2.1.2',
       description='Python interface to the ASTRA Toolbox',
       author='D.M. Pelt',
