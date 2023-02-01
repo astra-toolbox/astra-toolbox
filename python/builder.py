@@ -74,8 +74,10 @@ if update_cfg:
         cfg.write(cfg_string)
 
 pkgdata = {}
+data_files = []
 if os.environ.get('ASTRA_INSTALL_LIBRARY_AS_DATA', ''):
-    pkgdata['astra'] = [os.environ['ASTRA_INSTALL_LIBRARY_AS_DATA']]
+    data_files=[('astra', [os.environ['ASTRA_INSTALL_LIBRARY_AS_DATA']])]
+    pkgdata['astra'] = [os.path.basename(os.environ['ASTRA_INSTALL_LIBRARY_AS_DATA'])]
 
 cmdclass = {}
 
@@ -110,6 +112,7 @@ setup(script_args=script_args,
       cmdclass=cmdclass,
       # ext_modules = [Extension("astra","astra/astra.pyx")],
       packages=['astra', 'astra.plugins'],
+      data_files=data_files,
       package_data=pkgdata,
       requires=['numpy', 'scipy', 'six'],
       )
