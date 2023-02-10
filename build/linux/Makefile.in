@@ -96,6 +96,7 @@ MODLDFLAGS += -L$(PYLIBDIR)
 MODPYLIBS=-l$(PYLIBVER)
 
 PYBUILDERFLAGS=--astra_build_config_dir $(abs_top_builddir)/python/config --astra_build_cython_dir $(abs_top_builddir)/python/cython
+PYBUILDER_BUILD_FLAGS=--build-base=$(abs_top_builddir)/python/build
 endif
 
 # This is below where PYCPPFLAGS copies CPPFLAGS.  The python code is built
@@ -339,7 +340,7 @@ py: libastra.la
 # Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
 	cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS='${PYLDFLAGS}' \
 	$(PYTHON) builder.py $(PYBUILDERFLAGS) \
-	build --build-base=$(abs_top_builddir)/python/build
+	build $(PYBUILDER_BUILD_FLAGS)
 endif
 
 
@@ -491,7 +492,7 @@ install-python: py
 	# Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
 	cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" \
 	$(PYTHON) builder.py $(PYBUILDERFLAGS) \
-	build --build-base=$(abs_top_builddir)/python/build \
+	build $(PYBUILDER_BUILD_FLAGS) \
 	install --install-base=$(abs_top_builddir)/python/finalbuild --install-headers=$(abs_top_builddir)/python/finalbuild --install-purelib=$(abs_top_builddir)/python/finalbuild \
 	--install-platlib=$(abs_top_builddir)/python/finalbuild --install-scripts=$(abs_top_builddir)/python/finalbuild --install-data=$(abs_top_builddir)/python/finalbuild
 	$(INSTALL_SH) -m 755 -d @prefix@/python
@@ -507,7 +508,7 @@ install-python-site-packages: py
 # Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
 	cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" \
 	$(PYTHON) builder.py $(PYBUILDERFLAGS) \
-	build --build-base=$(abs_top_builddir)/python/build \
+	build $(PYBUILDER_BUILD_FLAGS) \
 	install
 else
 install-python-site-packages:
