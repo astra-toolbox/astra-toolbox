@@ -185,7 +185,7 @@ IF HAVE_CUDA==True:
 
     def getProjectedBBox(geometry, minx, maxx, miny, maxy, minz, maxz):
         cdef CProjectionGeometry3D * ppGeometry
-        cdef double minu, maxu, minv, maxv
+        cdef double minu=0., maxu=0., minv=0., maxv=0.
         ppGeometry = createProjectionGeometry3D(geometry)
         ppGeometry.getProjectedBBox(minx, maxx, miny, maxy, minz, maxz, minu, maxu, minv, maxv)
         del ppGeometry
