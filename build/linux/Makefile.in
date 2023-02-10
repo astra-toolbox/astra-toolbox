@@ -492,6 +492,7 @@ install-python: py
 	cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" \
 	$(PYTHON) builder.py $(PYBUILDERFLAGS) \
 	build $(PYBUILDER_BUILD_FLAGS) \
+	egg_info --egg-base=$(abs_top_builddir)/python \
 	install --install-base=@prefix@/python --install-headers=@prefix@/python --install-purelib=@prefix@/python --install-platlib=@prefix@/python --install-scripts=@prefix@/python --install-data=@prefix@/python --old-and-unmanageable --no-compile
 # TODO: docs
 
@@ -500,6 +501,7 @@ install-python-site-packages: py
 	cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" \
 	$(PYTHON) builder.py $(PYBUILDERFLAGS) \
 	build $(PYBUILDER_BUILD_FLAGS) \
+	egg_info --egg-base=$(abs_top_builddir)/python \
 	install
 else
 install-python-site-packages:
