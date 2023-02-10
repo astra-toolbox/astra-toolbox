@@ -7,8 +7,6 @@
 *.o
 __pycache__
 
-/python/dist/*
-
 /python/conda/linux_release/buildenv*/*.sh
 /python/conda/linux_release/buildenv*/*.run
 /python/conda/linux_release/buildenv*/cuda*

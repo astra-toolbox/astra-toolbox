@@ -32,6 +32,8 @@ from pkg_resources import parse_version
 from Cython.Distutils import build_ext
 from Cython.Build import cythonize
 
+from setuptools import Command
+
 import argparse
 import sys
 
@@ -88,11 +90,30 @@ if os.environ.get('ASTRA_INSTALL_LIBRARY_AS_DATA', ''):
 
 cmdclass = {}
 
+# Custom command to (forcefully) override bdist's dist_dir setting used
+# by install/easy_install internally.
+# We use this to allow setting dist_dir to an out-of-tree build directory.
+class SetDistDirCommand(Command):
+    user_options = [
+        ('dist-dir=', 'd', "directory to put final built distributions in")
+    ]
+    def initialize_options(self):
+        self.dist_dir = None
+
+    def finalize_options(self):
+        bdist = self.reinitialize_command('bdist')
+        bdist.dist_dir = self.dist_dir
+        bdist.ensure_finalized()
+
+    def run(self):
+        pass
+
+
 ext_modules = cythonize(os.path.join('.', 'astra', '*.pyx'),
                         include_path=include_path,
                         build_dir=build_dir,
                         language_level=3)
-cmdclass = {'build_ext': build_ext}
+cmdclass = {'build_ext': build_ext, 'set_dist_dir': SetDistDirCommand }
 
 for m in ext_modules:
     if m.name in ('astra.plugin_c', 'astra.algorithm_c'):
