@@ -62,7 +62,7 @@ cmdclass = {}
 ext_modules = []
 
 ext_modules = cythonize(os.path.join('.', 'astra', '*.pyx'),
-                        language_level=2)
+                        language_level=3)
 cmdclass = {'build_ext': build_ext}
 
 for m in ext_modules:

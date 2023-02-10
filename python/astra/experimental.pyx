@@ -28,7 +28,7 @@
 
 include "config.pxi"
 
-cimport utils
+from . cimport utils
 from .utils import wrap_from_bytes
 from .utils cimport createProjectionGeometry3D
 
@@ -60,9 +60,9 @@ IF HAVE_CUDA==True:
             bool isInitialized()
 
 
-    cimport PyProjector3DManager
+    from . cimport PyProjector3DManager
     from .PyProjector3DManager cimport CProjector3DManager
-    cimport PyData3DManager
+    from . cimport PyData3DManager
     from .PyData3DManager cimport CData3DManager
 
     cdef CProjector3DManager * manProj = <CProjector3DManager * >PyProjector3DManager.getSingletonPtr()
@@ -128,7 +128,7 @@ IF HAVE_CUDA==True:
         if not m.doFDK(projector, pVolObject, pProjObject, False, NULL, MODE_ADD):
             raise Exception("Failed to perform FDK")
 
-    cimport utils
+    from . cimport utils
     from .utils cimport linkVolFromGeometry, linkProjFromGeometry
 
     def direct_FPBP3D(projector_id, vol, proj, mode, t):

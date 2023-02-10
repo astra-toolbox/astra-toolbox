@@ -25,7 +25,7 @@
 
 from libcpp.string cimport string
 
-cimport PyXMLDocument
+from . cimport PyXMLDocument
 from .PyXMLDocument cimport XMLDocument
 from .PyXMLDocument cimport XMLNode
 

@@ -33,7 +33,7 @@ from .utils import wrap_from_bytes, wrap_to_bytes
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libcpp cimport bool
-cimport PyIndexManager
+from . cimport PyIndexManager
 from .PyIndexManager cimport CAstraObjectManagerBase
 
 cdef extern from "astra/Globals.h" namespace "astra":
