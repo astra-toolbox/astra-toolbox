@@ -45,7 +45,13 @@ if parse_version(Cython.__version__) < parse_version('0.13'):
 
 parser = argparse.ArgumentParser(allow_abbrev=False, add_help=False)
 parser.add_argument('--astra_build_config_dir')
+parser.add_argument('--astra_build_cython_dir')
 args, script_args = parser.parse_known_args()
+
+if args.astra_build_cython_dir is None:
+    build_dir = '.'
+else:
+    build_dir = args.astra_build_cython_dir
 
 use_cuda = ('-DASTRA_CUDA' in os.environ.get('CPPFLAGS', '') or
             '/DASTRA_CUDA' in os.environ.get('CL', ''))
@@ -53,9 +59,10 @@ use_cuda = ('-DASTRA_CUDA' in os.environ.get('CPPFLAGS', '') or
 cfg_string = 'DEF HAVE_CUDA=' + str(use_cuda) + '\n'
 update_cfg = True
 
-include_path = ['.']
+self_path = os.path.dirname(os.path.abspath(__file__))
+
+include_path = []
 if args.astra_build_config_dir is None:
-    self_path = os.path.dirname(os.path.abspath(__file__))
     cfg_file = os.path.join(self_path, 'astra', 'config.pxi')
 else:
     include_path += [args.astra_build_config_dir]
@@ -83,6 +90,7 @@ cmdclass = {}
 
 ext_modules = cythonize(os.path.join('.', 'astra', '*.pyx'),
                         include_path=include_path,
+                        build_dir=build_dir,
                         language_level=3)
 cmdclass = {'build_ext': build_ext}
 
