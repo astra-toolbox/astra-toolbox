@@ -1609,7 +1609,7 @@ bool CCompositeGeometryManager::doJobs(TJobList &jobs)
 {
 	// TODO: Proper clean up if substeps fail (Or as proper as possible)
 
-	ASTRA_DEBUG("CCompositeGeometryManager::doJobs");
+	ASTRA_DEBUG("CCompositeGeometryManager::doJobs starting");
 
 	// Sort job list into job set by output part
 	TJobSet jobset;
@@ -1666,6 +1666,8 @@ bool CCompositeGeometryManager::doJobs(TJobList &jobs)
 		runWorkQueue(wq, m_GPUIndices);
 
 	}
+
+	ASTRA_DEBUG("CCompositeGeometryManager::doJobs done");
 
 	return true;
 }
