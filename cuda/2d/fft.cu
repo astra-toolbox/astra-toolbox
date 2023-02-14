@@ -204,15 +204,10 @@ bool runCudaFFT(int _iProjectionCount,
 		return false;
 	}
 
-	for(int iProjectionIndex = 0; iProjectionIndex < _iProjectionCount; iProjectionIndex++)
-	{
-		const float * pfSourceLocation = D_pfSource + iProjectionIndex * _iSourcePitch;
-		float * pfTargetLocation = D_pfPaddedSource + iProjectionIndex * _iPaddedSize;
-
-		if (!checkCuda(cudaMemcpy(pfTargetLocation, pfSourceLocation, sizeof(float) * _iProjDets, cudaMemcpyDeviceToDevice), "runCudaFFT memcpy")) {
-			cudaFree(D_pfPaddedSource);
-			return false;
-		}
+	// pitched memcpy 2D to handle both source pitch and target padding
+	if (!checkCuda(cudaMemcpy2D(D_pfPaddedSource, _iPaddedSize*sizeof(float), D_pfSource, _iSourcePitch*sizeof(float), _iProjDets*sizeof(float), _iProjectionCount, cudaMemcpyDeviceToDevice), "runCudaFFT memcpy")) {
+		cudaFree(D_pfPaddedSource);
+		return false;
 	}
 
 	bool bResult = invokeCudaFFT(_iProjectionCount, _iPaddedSize,
@@ -250,16 +245,12 @@ bool runCudaIFFT(int _iProjectionCount, const cufftComplex *D_pcSource,
 		return false;
 	}
 
-	for(int iProjectionIndex = 0; iProjectionIndex < _iProjectionCount; iProjectionIndex++)
-	{
-		const float * pfSourceLocation = D_pfPaddedTarget + iProjectionIndex * _iPaddedSize;
-		float* pfTargetLocation = D_pfTarget + iProjectionIndex * _iTargetPitch;
-
-		if (!checkCuda(cudaMemcpy(pfTargetLocation, pfSourceLocation, sizeof(float) * _iProjDets, cudaMemcpyDeviceToDevice), "runCudaIFFT memcpy")) {
-			cudaFree(D_pfPaddedTarget);
-			return false;
-		}
+	// pitched memcpy 2D to handle both source padding and target pitch
+	if (!checkCuda(cudaMemcpy2D(D_pfTarget, _iTargetPitch*sizeof(float), D_pfPaddedTarget, _iPaddedSize*sizeof(float), _iProjDets*sizeof(float), _iProjectionCount, cudaMemcpyDeviceToDevice), "runCudaIFFT memcpy")) {
+		cudaFree(D_pfPaddedTarget);
+		return false;
 	}
+
 
 	cudaFree(D_pfPaddedTarget);
 
