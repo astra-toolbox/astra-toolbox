@@ -45,15 +45,15 @@ bool uploadComplexArrayToDevice(int _iProjectionCount, int _iDetectorCount,
                                 cufftComplex * _pHostComplexSource,
                                 cufftComplex * _pDevComplexTarget);
 
-bool runCudaFFT(int _iProjectionCount, const float * _pfDevRealSource,
+bool runCudaFFT(int _iProjectionCount, const float * D_pfSource,
                 int _iSourcePitch, int _iProjDets,
-                int _iFFTRealDetectorCount, int _iFFTFourierDetectorCount,
-                cufftComplex * _pDevTargetComplex);
+                int _iPaddedSize,
+                cufftComplex * D_pcTarget);
 
-bool runCudaIFFT(int _iProjectionCount, const cufftComplex* _pDevSourceComplex,
-                 float * _pfRealTarget,
+bool runCudaIFFT(int _iProjectionCount, const cufftComplex* D_pcSource,
+                 float * D_pfTarget,
                  int _iTargetPitch, int _iProjDets,
-                 int _iFFTRealDetectorCount, int _iFFTFourierDetectorCount);
+                 int _iPaddedSize);
 
 void applyFilter(int _iProjectionCount, int _iFreqBinCount,
                  cufftComplex * _pSinogram, cufftComplex * _pFilter);

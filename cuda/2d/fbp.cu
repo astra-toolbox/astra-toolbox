@@ -200,7 +200,7 @@ bool FBP::setFilter(const astra::SFilterConfig &_cfg)
 			cudaMemcpy(pfDevRealFilter, pfHostRealFilter, sizeof(float) * iRealFilterElementCount, cudaMemcpyHostToDevice);
 			delete[] pfHostRealFilter;
 
-			runCudaFFT(iProjectionCount, pfDevRealFilter, iFFTRealDetCount, iFFTRealDetCount, iFFTRealDetCount, iFreqBinCount, (cufftComplex*)D_filter);
+			runCudaFFT(iProjectionCount, pfDevRealFilter, iFFTRealDetCount, iFFTRealDetCount, iFFTRealDetCount, (cufftComplex*)D_filter);
 
 			cudaFree(pfDevRealFilter);
 
@@ -235,7 +235,7 @@ bool FBP::setFilter(const astra::SFilterConfig &_cfg)
 			cudaMemcpy(pfDevRealFilter, pfHostRealFilter, sizeof(float) * iRealFilterElementCount, cudaMemcpyHostToDevice);
 			delete[] pfHostRealFilter;
 
-			runCudaFFT(iProjectionCount, pfDevRealFilter, iFFTRealDetCount, iFFTRealDetCount, iFFTRealDetCount, iFreqBinCount, (cufftComplex*)D_filter);
+			runCudaFFT(iProjectionCount, pfDevRealFilter, iFFTRealDetCount, iFFTRealDetCount, iFFTRealDetCount, (cufftComplex*)D_filter);
 
 			cudaFree(pfDevRealFilter);
 
@@ -317,11 +317,11 @@ bool FBP::iterate(unsigned int iterations)
 
 		allocateComplexOnDevice(dims.iProjAngles, iFFTFourDetCount, &pDevComplexSinogram);
 
-		runCudaFFT(dims.iProjAngles, D_sinoData, sinoPitch, dims.iProjDets, iFFTRealDetCount, iFFTFourDetCount, pDevComplexSinogram);
+		runCudaFFT(dims.iProjAngles, D_sinoData, sinoPitch, dims.iProjDets, iFFTRealDetCount, pDevComplexSinogram);
 
 		applyFilter(dims.iProjAngles, iFFTFourDetCount, pDevComplexSinogram, (cufftComplex*)D_filter);
 
-		runCudaIFFT(dims.iProjAngles, pDevComplexSinogram, D_sinoData, sinoPitch, dims.iProjDets, iFFTRealDetCount, iFFTFourDetCount);
+		runCudaIFFT(dims.iProjAngles, pDevComplexSinogram, D_sinoData, sinoPitch, dims.iProjDets, iFFTRealDetCount);
 
 		freeComplexOnDevice(pDevComplexSinogram);
 

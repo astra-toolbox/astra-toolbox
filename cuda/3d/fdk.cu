@@ -297,16 +297,15 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 	for (int v = 0; v < dims.iProjV; ++v) {
 
 		ok = astraCUDA::runCudaFFT(dims.iProjAngles, D_sinoData, projPitch,
-		                dims.iProjU, iPaddedDetCount, iHalfFFTSize,
+		                dims.iProjU, iPaddedDetCount,
 		                D_sinoFFT);
 
 		if (!ok) break;
 
 		astraCUDA::applyFilter(dims.iProjAngles, iHalfFFTSize, D_sinoFFT, D_filter);
 
-
 		ok = astraCUDA::runCudaIFFT(dims.iProjAngles, D_sinoFFT, D_sinoData, projPitch,
-		                 dims.iProjU, iPaddedDetCount, iHalfFFTSize);
+		                 dims.iProjU, iPaddedDetCount);
 
 		if (!ok) break;
 
