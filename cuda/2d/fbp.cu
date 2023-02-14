@@ -310,20 +310,20 @@ bool FBP::iterate(unsigned int iterations)
 
 	if (D_filter) {
 
-		int iFFTRealDetCount = astra::calcNextPowerOfTwo(2 * dims.iProjDets);
-		int iFFTFourDetCount = astra::calcFFTFourierSize(iFFTRealDetCount);
+		int iPaddedSize = astra::calcNextPowerOfTwo(2 * dims.iProjDets);
+		int iFourierSize = astra::calcFFTFourierSize(iPaddedSize);
 
-		cufftComplex * pDevComplexSinogram = NULL;
+		cufftComplex * D_pcFourier = NULL;
 
-		allocateComplexOnDevice(dims.iProjAngles, iFFTFourDetCount, &pDevComplexSinogram);
+		allocateComplexOnDevice(dims.iProjAngles, iFourierSize, &D_pcFourier);
 
-		runCudaFFT(dims.iProjAngles, D_sinoData, sinoPitch, dims.iProjDets, iFFTRealDetCount, pDevComplexSinogram);
+		runCudaFFT(dims.iProjAngles, D_sinoData, sinoPitch, dims.iProjDets, iPaddedSize, D_pcFourier);
 
-		applyFilter(dims.iProjAngles, iFFTFourDetCount, pDevComplexSinogram, (cufftComplex*)D_filter);
+		applyFilter(dims.iProjAngles, iFourierSize, D_pcFourier, (cufftComplex*)D_filter);
 
-		runCudaIFFT(dims.iProjAngles, pDevComplexSinogram, D_sinoData, sinoPitch, dims.iProjDets, iFFTRealDetCount);
+		runCudaIFFT(dims.iProjAngles, D_pcFourier, D_sinoData, sinoPitch, dims.iProjDets, iPaddedSize);
 
-		freeComplexOnDevice(pDevComplexSinogram);
+		freeComplexOnDevice(D_pcFourier);
 
 	}
 
