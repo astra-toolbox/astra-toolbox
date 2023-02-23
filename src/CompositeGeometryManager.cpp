@@ -469,7 +469,7 @@ CCompositeGeometryManager::CPart* CCompositeGeometryManager::CVolumePart::reduce
 			bool ok = testVolumeRange(fullRange, pGeom, other->pGeom,
 			                          0, zmid);
 
-			ASTRA_DEBUG("binsearch min: [%d,%d], %d, %s", zmin, zmax, zmid, ok ? "ok" : "removed too much");
+			//ASTRA_DEBUG("binsearch min: [%d,%d], %d, %s", zmin, zmax, zmid, ok ? "ok" : "removed too much");
 
 			if (ok)
 				zmin = zmid;
@@ -493,7 +493,7 @@ CCompositeGeometryManager::CPart* CCompositeGeometryManager::CVolumePart::reduce
 			bool ok = testVolumeRange(fullRange, pGeom, other->pGeom,
 			                          zmid, pGeom->getGridSliceCount());
 
-			ASTRA_DEBUG("binsearch max: [%d,%d], %d, %s", zmin, zmax, zmid, ok ? "ok" : "removed too much");
+			//ASTRA_DEBUG("binsearch max: [%d,%d], %d, %s", zmin, zmax, zmid, ok ? "ok" : "removed too much");
 
 			if (ok)
 				zmax = zmid;
