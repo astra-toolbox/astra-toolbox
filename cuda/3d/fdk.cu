@@ -379,7 +379,7 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 			break;
 		}
 
-		if (!astraCUDA::applyFilter(dims.iProjAngles, iHalfFFTSize, D_pcSinoFFT, D_filter, stream)) {
+		if (!astraCUDA::applyFilter(dims.iProjAngles, iHalfFFTSize, D_pcSinoFFT, D_filter, false, stream)) {
 			ok = false;
 			break;
 		}
