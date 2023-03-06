@@ -29,16 +29,16 @@
 import six
 from .PyIncludes cimport *
 
-cimport PyAlgorithmManager
+from . cimport PyAlgorithmManager
 from .PyAlgorithmManager cimport CAlgorithmManager
 
-cimport PyAlgorithmFactory
+from . cimport PyAlgorithmFactory
 from .PyAlgorithmFactory cimport CAlgorithmFactory
 
-cimport PyXMLDocument
+from . cimport PyXMLDocument
 from .PyXMLDocument cimport XMLDocument
 
-cimport utils
+from . cimport utils
 from .utils import wrap_from_bytes
 
 cdef CAlgorithmManager * manAlg = <CAlgorithmManager * >PyAlgorithmManager.getSingletonPtr()

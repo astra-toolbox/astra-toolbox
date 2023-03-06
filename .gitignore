@@ -7,14 +7,6 @@
 *.o
 __pycache__
 
-/python/build/*
-/python/finalbuild/*
-/python/dist/*
-/python/astra/*.pyc
-/python/astra/*.cpp
-/python/astra/*.c
-/python/astra/config.pxi
-
 /python/conda/linux_release/buildenv*/*.sh
 /python/conda/linux_release/buildenv*/*.run
 /python/conda/linux_release/buildenv*/cuda*

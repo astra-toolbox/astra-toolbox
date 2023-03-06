@@ -29,16 +29,16 @@
 import six
 from .PyIncludes cimport *
 
-cimport utils
+from . cimport utils
 from .utils import wrap_from_bytes
 
-cimport PyProjector3DFactory
+from . cimport PyProjector3DFactory
 from .PyProjector3DFactory cimport CProjector3DFactory
 
-cimport PyProjector3DManager
+from . cimport PyProjector3DManager
 from .PyProjector3DManager cimport CProjector3DManager
 
-cimport PyXMLDocument
+from . cimport PyXMLDocument
 from .PyXMLDocument cimport XMLDocument
 
 cdef CProjector3DManager * manProj = <CProjector3DManager * >PyProjector3DManager.getSingletonPtr()

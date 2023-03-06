@@ -38,7 +38,7 @@ import scipy.sparse as ss
 
 from libcpp cimport bool
 
-cimport PyMatrixManager
+from . cimport PyMatrixManager
 from .PyMatrixManager cimport CMatrixManager
 from .PyIncludes cimport *
 from .utils import wrap_from_bytes

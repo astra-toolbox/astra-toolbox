@@ -30,7 +30,7 @@ import six
 
 cimport cython
 
-cimport PyData3DManager
+from . cimport PyData3DManager
 from .PyData3DManager cimport CData3DManager
 
 from .PyIncludes cimport *
@@ -39,10 +39,10 @@ import numpy as np
 cimport numpy as np
 np.import_array()
 
-cimport PyXMLDocument
+from . cimport PyXMLDocument
 from .PyXMLDocument cimport XMLDocument
 
-cimport utils
+from . cimport utils
 from .utils import wrap_from_bytes
 from .utils cimport linkVolFromGeometry, linkProjFromGeometry, createProjectionGeometry3D, createVolumeGeometry3D
 

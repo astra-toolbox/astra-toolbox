@@ -40,7 +40,7 @@ from libcpp.list cimport list
 from cython.operator cimport dereference as deref, preincrement as inc
 from cpython.version cimport PY_MAJOR_VERSION
 
-cimport PyXMLDocument
+from . cimport PyXMLDocument
 from .PyXMLDocument cimport XMLDocument
 from .PyXMLDocument cimport XMLNode
 from .PyIncludes cimport *
@@ -233,10 +233,10 @@ cdef XMLNode2dict(XMLNode node):
     while it != nodes.end():
         subnode = deref(it)
         if castString(subnode.getName())=="Option":
-            if subnode.hasAttribute('value'):
-                opts[castString(subnode.getAttribute('key'))] = stringToPythonValue(subnode.getAttribute('value'))
+            if subnode.hasAttribute(six.b('value')):
+                opts[castString(subnode.getAttribute(six.b('key')))] = stringToPythonValue(subnode.getAttribute(six.b('value')))
             else:
-                opts[castString(subnode.getAttribute('key'))] = stringToPythonValue(subnode.getContent())
+                opts[castString(subnode.getAttribute(six.b('key')))] = stringToPythonValue(subnode.getContent())
         else:
             dct[castString(subnode.getName())] = stringToPythonValue(subnode.getContent())
         inc(it)
