@@ -71,6 +71,30 @@ __global__ static void applyFilter_kernel(int _iProjectionCount,
 	_pSinogram[iIndex].y = fA * fD + fC * fB;
 }
 
+__global__ static void applyFilter_singleFilter_kernel(int _iProjectionCount,
+                                          int _iFreqBinCount,
+                                          cufftComplex * _pSinogram,
+                                          cufftComplex * _pFilter)
+{
+	int iIndex = threadIdx.x + blockIdx.x * blockDim.x;
+	int iProjectionIndex = iIndex / _iFreqBinCount;
+	int iFilterIndex = iIndex % _iFreqBinCount;
+
+	if(iProjectionIndex >= _iProjectionCount)
+	{
+		return;
+	}
+
+	float fA = _pSinogram[iIndex].x;
+	float fB = _pSinogram[iIndex].y;
+	float fC = _pFilter[iFilterIndex].x;
+	float fD = _pFilter[iFilterIndex].y;
+
+	_pSinogram[iIndex].x = fA * fC - fB * fD;
+	_pSinogram[iIndex].y = fA * fD + fC * fB;
+}
+
+
 __global__ static void rescaleInverseFourier_kernel(int _iProjectionCount,
                                                     int _iDetectorCount,
                                                     float* _pfInFourierOutput)
@@ -108,6 +132,7 @@ bool rescaleInverseFourier(int _iProjectionCount, int _iDetectorCount,
 
 bool applyFilter(int _iProjectionCount, int _iFreqBinCount,
                  cufftComplex * _pSinogram, cufftComplex * _pFilter,
+		 bool singleFilter,
                  std::optional<cudaStream_t> _stream)
 {
 	StreamHelper stream(_stream);
@@ -118,9 +143,16 @@ bool applyFilter(int _iProjectionCount, int _iFreqBinCount,
 	int iElementCount = _iProjectionCount * _iFreqBinCount;
 	int iBlockCount = (iElementCount + iBlockSize - 1) / iBlockSize;
 
-	applyFilter_kernel<<< iBlockCount, iBlockSize, 0, stream() >>>(_iProjectionCount,
-	                                                  _iFreqBinCount,
-	                                                  _pSinogram, _pFilter);
+	if (singleFilter) {
+		applyFilter_singleFilter_kernel<<< iBlockCount, iBlockSize, 0, stream() >>>(_iProjectionCount,
+		                                                  _iFreqBinCount,
+		                                                  _pSinogram, _pFilter);
+	} else {
+		applyFilter_kernel<<< iBlockCount, iBlockSize, 0, stream() >>>(_iProjectionCount,
+		                                                  _iFreqBinCount,
+		                                                  _pSinogram, _pFilter);
+
+	}
 
 	return stream.syncIfSync("applyFilter");
 }
