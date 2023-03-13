@@ -29,7 +29,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/AstraObjectFactory.h"
 
 #ifndef USE_PTHREAD
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #endif
 
 namespace astra {
