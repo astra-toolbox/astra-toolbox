@@ -46,7 +46,10 @@ void logPythonError();
 CPythonPluginAlgorithmFactory::CPythonPluginAlgorithmFactory(){
     if(!Py_IsInitialized()){
         Py_Initialize();
+// This function is no longer required as of Python 3.7 and deprecated as of Python 3.9
+#if PY_VERSION_HEX < 0x03070000
         PyEval_InitThreads();
+#endif
     }
     pluginDict = PyDict_New();
     inspect = PyImport_ImportModule("inspect");
