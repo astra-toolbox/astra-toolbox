@@ -101,7 +101,7 @@ static void rescaleInverseFourier(int _iProjectionCount, int _iDetectorCount,
 	                                                            _iDetectorCount,
 	                                                            _pfInFourierOutput);
 
-	checkCuda(cudaThreadSynchronize(), "rescaleInverseFourier");
+	checkCuda(cudaDeviceSynchronize(), "rescaleInverseFourier");
 }
 
 void applyFilter(int _iProjectionCount, int _iFreqBinCount,
@@ -115,7 +115,7 @@ void applyFilter(int _iProjectionCount, int _iFreqBinCount,
 	                                                  _iFreqBinCount,
 	                                                  _pSinogram, _pFilter);
 
-	checkCuda(cudaThreadSynchronize(), "applyFilter");
+	checkCuda(cudaDeviceSynchronize(), "applyFilter");
 }
 
 static bool invokeCudaFFT(int _iProjectionCount, int _iDetectorCount,

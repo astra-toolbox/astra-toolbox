@@ -269,7 +269,7 @@ bool BP_SART(float* D_volumeData, unsigned int volumePitch,
 
 	devBP_SART<<<dimGrid, dimBlock>>>(D_volumeData, volumePitch, D_texObj, angle_offset, angle_scaled_sin, angle_scaled_cos, dims, fOutputScale);
 
-	bool ok = checkCuda(cudaThreadSynchronize(), "BP_SART");
+	bool ok = checkCuda(cudaDeviceSynchronize(), "BP_SART");
 
 	cudaDestroyTextureObject(D_texObj);
 

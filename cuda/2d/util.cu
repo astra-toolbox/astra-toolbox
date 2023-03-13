@@ -285,7 +285,7 @@ float dotProduct2D(float* D_data, unsigned int pitch,
 	// Step 1: reduce 2D from image to a single vector, taking sum of squares
 
 	reduce2D<<< dimGrid2, dimBlock2, shared_mem2>>>(D_data, D_buf, pitch, width, height);
-	checkCuda(cudaThreadSynchronize(), "dotProduct2D reduce2D");
+	checkCuda(cudaDeviceSynchronize(), "dotProduct2D reduce2D");
 
 	// Step 2: reduce 1D: add up elements in vector
 	if (bx * by > 512)
@@ -302,7 +302,7 @@ float dotProduct2D(float* D_data, unsigned int pitch,
 	float x;
 	cudaMemcpy(&x, D_res, 4, cudaMemcpyDeviceToHost);
 
-	checkCuda(cudaThreadSynchronize(), "dotProduct2D");
+	checkCuda(cudaDeviceSynchronize(), "dotProduct2D");
 
 	cudaFree(D_buf);
 

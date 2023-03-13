@@ -176,7 +176,7 @@ bool FDK_PreWeight(cudaPitchedPtr D_projData,
 
 	devFDK_preweight<<<dimGrid, dimBlock>>>(D_projData.ptr, projPitch, 0, dims.iProjAngles, fSrcOrigin, fDetOrigin, fZShift, fDetUSize, fDetVSize, dims);
 
-	if (!checkCuda(cudaThreadSynchronize(), "FDK_PreWeight"))
+	if (!checkCuda(cudaDeviceSynchronize(), "FDK_PreWeight"))
 		return false;
 
 	if (bShortScan && dims.iProjAngles > 1) {
@@ -240,7 +240,7 @@ bool FDK_PreWeight(cudaPitchedPtr D_projData,
 
 		devFDK_ParkerWeight<<<dimGrid, dimBlock>>>(D_projData.ptr, projPitch, 0, dims.iProjAngles, fSrcOrigin, fDetOrigin, fDetUSize, fCentralFanAngle, fScale, dims);
 
-		if (!checkCuda(cudaThreadSynchronize(), "FDK_PreWeight ParkerWeight"))
+		if (!checkCuda(cudaDeviceSynchronize(), "FDK_PreWeight ParkerWeight"))
 			return false;
 	}
 

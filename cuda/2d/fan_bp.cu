@@ -375,7 +375,7 @@ bool FanBP_SART(float* D_volumeData, unsigned int volumePitch,
 
 	devFanBP_SART<<<dimGrid, dimBlock>>>(D_volumeData, volumePitch, D_texObj, dims, fOutputScale);
 
-	ok = checkCuda(cudaThreadSynchronize(), "FanBP_SART");
+	ok = checkCuda(cudaDeviceSynchronize(), "FanBP_SART");
 
 	cudaDestroyTextureObject(D_texObj);
 

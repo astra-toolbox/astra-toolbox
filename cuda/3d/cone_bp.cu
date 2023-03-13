@@ -342,7 +342,7 @@ bool ConeBP_Array(cudaPitchedPtr D_volumeData,
 		}
 
 		// TODO: Consider not synchronizing here, if possible.
-		ok = checkCuda(cudaThreadSynchronize(), "cone_bp");
+		ok = checkCuda(cudaDeviceSynchronize(), "cone_bp");
 		if (!ok)
 			break;
 
