@@ -51,9 +51,9 @@ class _AstraExport CFloat32Data2D : public CFloat32Data {
 
 protected:
 
-	int m_iWidth;			///< width of the data (x)
-	int m_iHeight;			///< height of the data (y)
-	int m_iSize;			///< total size of the data
+	size_t m_iWidth;			///< width of the data (x)
+	size_t m_iHeight;			///< height of the data (y)
+	size_t m_iSize;			///< total size of the data
 
 	/** Pointer to the data block, represented as a 1-dimensional array.
 	 * Note that the data memory is "owned" by this class, meaning that the 

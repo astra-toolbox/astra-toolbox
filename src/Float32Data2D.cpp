@@ -306,7 +306,7 @@ void CFloat32Data2D::_allocateData()
 
 	// create array of pointers to each row of the data block
 	m_ppfData2D = new float32*[m_iHeight];
-	for (int iy = 0; iy < m_iHeight; iy++)
+	for (size_t iy = 0; iy < m_iHeight; iy++)
 	{
 		m_ppfData2D[iy] = &(m_pfData[iy * m_iWidth]);
 	}
