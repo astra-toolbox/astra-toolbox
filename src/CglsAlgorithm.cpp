@@ -194,7 +194,7 @@ void CCglsAlgorithm::run(int _iNrIterations)
 
 
 
-	int i;
+	size_t i;
 
 	if (m_iIteration == 0) {
 		// r = b;

@@ -106,7 +106,7 @@ cdef extern from "astra/Float32Data3D.h" namespace "astra::CFloat32Data3D":
 cdef extern from "astra/Float32Data2D.h" namespace "astra":
     cdef cppclass CFloat32Data2D:
         bool isInitialized()
-        int getSize()
+        size_t getSize()
         float32 *getData()
         float32 **getData2D()
         int getWidth()
@@ -204,7 +204,7 @@ cdef extern from "astra/SparseMatrix.h" namespace "astra":
 cdef extern from "astra/Float32Data3D.h" namespace "astra":
     cdef cppclass CFloat32Data3D:
         bool isInitialized()
-        int getSize()
+        size_t getSize()
         int getWidth()
         int getHeight()
         int getDepth()

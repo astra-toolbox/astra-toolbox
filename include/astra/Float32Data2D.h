@@ -359,7 +359,7 @@ public:
 	 *
 	 * @return size of the data block
 	 */
-	int getSize() const;
+	size_t getSize() const;
 
 	/** which type is this class?
 	 *
@@ -497,7 +497,7 @@ inline int CFloat32Data2D::getHeight() const
 
 //----------------------------------------------------------------------------------------
 // Get the total size (width*height*depth) of the data block.
-inline int CFloat32Data2D::getSize() const
+inline size_t CFloat32Data2D::getSize() const
 {
 	ASTRA_ASSERT(m_bInitialized);
 	return m_iSize;

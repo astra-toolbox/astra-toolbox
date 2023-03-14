@@ -231,7 +231,7 @@ void CSirtAlgorithm::run(int _iNrIterations)
 	pFirstForwardProjector->project();
 
 	float32* pfT = m_pTotalPixelWeight->getData();
-	for (int i = 0; i < m_pTotalPixelWeight->getSize(); ++i) {
+	for (size_t i = 0; i < m_pTotalPixelWeight->getSize(); ++i) {
 		float32 x = pfT[i];
 		if (x < -eps || x > eps)
 			x = 1.0f / x;
@@ -240,7 +240,7 @@ void CSirtAlgorithm::run(int _iNrIterations)
 		pfT[i] = m_fLambda * x;
 	}
 	pfT = m_pTotalRayLength->getData();
-	for (int i = 0; i < m_pTotalRayLength->getSize(); ++i) {
+	for (size_t i = 0; i < m_pTotalRayLength->getSize(); ++i) {
 		float32 x = pfT[i];
 		if (x < -eps || x > eps)
 			x = 1.0f / x;
