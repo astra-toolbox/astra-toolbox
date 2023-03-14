@@ -133,7 +133,6 @@ DEPDIR=.deps
 
 BASE_OBJECTS=\
 	src/Algorithm.lo \
-	src/AsyncAlgorithm.lo \
 	src/ReconstructionAlgorithm2D.lo \
 	src/ReconstructionAlgorithm3D.lo \
 	src/ArtAlgorithm.lo \
