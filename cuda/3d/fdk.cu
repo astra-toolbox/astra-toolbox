@@ -51,6 +51,16 @@ static const unsigned g_MaxAngles = 12000;
 
 __constant__ float gC_angle[g_MaxAngles];
 
+bool checkCufft(cufftResult err, const char *msg)
+{
+	if (err != CUFFT_SUCCESS) {
+		ASTRA_ERROR("%s: CUFFT error %d.", msg, err);
+		return false;
+	} else {
+		return true;
+	}
+}
+
 
 
 // TODO: To support non-cube voxels, preweighting needs per-view
@@ -281,7 +291,19 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 	delete [] pHostFilter;
 
 
+	cufftHandle planF;
+	cufftHandle planI;
 
+	if (!checkCufft(cufftPlan1d(&planF, iPaddedDetCount, CUFFT_R2C, dims.iProjAngles), "FDK filter FFT plan")) {
+		astraCUDA::freeComplexOnDevice(D_filter);
+		return false;
+	}
+
+	if (!checkCufft(cufftPlan1d(&planI, iPaddedDetCount, CUFFT_C2R, dims.iProjAngles), "FDK filter IFFT plan")) {
+		astraCUDA::freeComplexOnDevice(D_filter);
+		cufftDestroy(planF);
+		return false;
+	}
 
 	int projPitch = D_projData.pitch/sizeof(float);
 	
@@ -289,30 +311,75 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 	// We process one sinogram at a time.
 	float* D_sinoData = (float*)D_projData.ptr;
 
-	cufftComplex * D_sinoFFT = NULL;
-	astraCUDA::allocateComplexOnDevice(dims.iProjAngles, iHalfFFTSize, &D_sinoFFT);
+	cufftComplex * D_pcSinoFFT = NULL;
+	astraCUDA::allocateComplexOnDevice(dims.iProjAngles, iHalfFFTSize, &D_pcSinoFFT);
 
 	bool ok = true;
 
+	float * D_pfPadded = NULL;
+	size_t bufferMemSize = sizeof(float) * dims.iProjAngles * iPaddedDetCount;
+	if (!checkCuda(cudaMalloc((void **)&D_pfPadded, bufferMemSize), "FDK filter malloc")) {
+		astraCUDA::freeComplexOnDevice(D_pcSinoFFT);
+		astraCUDA::freeComplexOnDevice(D_filter);
+		cufftDestroy(planF);
+		cufftDestroy(planI);
+		return false;
+	}
+
+
 	for (int v = 0; v < dims.iProjV; ++v) {
+		if (!checkCuda(cudaMemset(D_pfPadded, 0, bufferMemSize), "FDK filter memset")) {
+			ok = false;
+			break;
+		}
 
-		ok = astraCUDA::runCudaFFT(dims.iProjAngles, D_sinoData, projPitch,
-		                dims.iProjU, iPaddedDetCount,
-		                D_sinoFFT);
+		// pitched memcpy 2D to handle both source pitch and target padding
+		if (!checkCuda(cudaMemcpy2D(D_pfPadded, iPaddedDetCount*sizeof(float), D_sinoData, projPitch*sizeof(float), dims.iProjU*sizeof(float), dims.iProjAngles, cudaMemcpyDeviceToDevice), "FDK filter memcpy")) {
+			ok = false;
+			break;
+		}
 
-		if (!ok) break;
 
-		astraCUDA::applyFilter(dims.iProjAngles, iHalfFFTSize, D_sinoFFT, D_filter);
+		if (!checkCufft(cufftExecR2C(planF, (cufftReal *)D_pfPadded, D_pcSinoFFT), "FDK filter forward exec")) {
+			ok = false;
+			break;
+		}
 
-		ok = astraCUDA::runCudaIFFT(dims.iProjAngles, D_sinoFFT, D_sinoData, projPitch,
-		                 dims.iProjU, iPaddedDetCount);
+		astraCUDA::applyFilter(dims.iProjAngles, iHalfFFTSize, D_pcSinoFFT, D_filter);
 
-		if (!ok) break;
+		// Getting rid of the const qualifier is due to cufft API issue?
+		if (!checkCufft(cufftExecC2R(planI, (cufftComplex *)D_pcSinoFFT,
+	                      (cufftReal *)D_pfPadded), "FDK filter inverse exec"))
+		{
+			ok = false;
+			break;
+		}
+
+		astraCUDA::rescaleInverseFourier(dims.iProjAngles, iPaddedDetCount, D_pfPadded);
+
+		if (!checkCuda(cudaMemset(D_sinoData, 0, sizeof(float) * dims.iProjAngles * projPitch), "FDK filter memset")) {
+			ok = false;
+			break;
+		}
+
+		// pitched memcpy 2D to handle both source padding and target pitch
+		if (!checkCuda(cudaMemcpy2D(D_sinoData, projPitch*sizeof(float), D_pfPadded, iPaddedDetCount*sizeof(float), dims.iProjU*sizeof(float), dims.iProjAngles, cudaMemcpyDeviceToDevice), "FDK filter memcpy")) {
+			ok = false;
+			break;
+		}
 
 		D_sinoData += (dims.iProjAngles * projPitch);
 	}
 
-	astraCUDA::freeComplexOnDevice(D_sinoFFT);
+	if (!checkCuda(cudaDeviceSynchronize(), "FDK filter sync")) {
+		ok = false;
+	}
+
+	cufftDestroy(planF);
+	cufftDestroy(planI);
+
+	cudaFree(D_pfPadded);
+	astraCUDA::freeComplexOnDevice(D_pcSinoFFT);
 	astraCUDA::freeComplexOnDevice(D_filter);
 
 	return ok;

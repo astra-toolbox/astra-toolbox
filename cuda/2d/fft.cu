@@ -90,8 +90,8 @@ __global__ static void rescaleInverseFourier_kernel(int _iProjectionCount,
 	_pfInFourierOutput[iProjectionIndex * _iDetectorCount + iDetectorIndex] /= (float)_iDetectorCount;
 }
 
-static void rescaleInverseFourier(int _iProjectionCount, int _iDetectorCount,
-                                  float * _pfInFourierOutput)
+void rescaleInverseFourier(int _iProjectionCount, int _iDetectorCount,
+                           float * _pfInFourierOutput)
 {
 	const int iBlockSize = 256;
 	int iElementCount = _iProjectionCount * _iDetectorCount;

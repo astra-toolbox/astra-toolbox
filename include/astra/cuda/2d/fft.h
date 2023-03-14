@@ -65,6 +65,9 @@ void genCuFFTFilter(const astra::SFilterConfig &_cfg, int _iProjectionCount,
 void genIdenFilter(int _iProjectionCount, cufftComplex * _pFilter,
                    int _iFFTRealDetectorCount, int _iFFTFourierDetectorCount);
 
+void rescaleInverseFourier(int _iProjectionCount, int _iDetectorCount,
+                           float * _pfInFourierOutput);
+
 }
 
 #endif /* FFT_H */
