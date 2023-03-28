@@ -240,17 +240,6 @@ public:
 	 */
 	 virtual bool isOfType(const std::string& _sType) = 0;
 
-	/**
-	 * Returns a vector describing the direction of a ray belonging to a certain detector
-	 *
-	 * @param _iProjectionIndex index of projection
-	 * @param _iProjectionIndex index of detector
-	 *
-	 * @return a unit vector describing the direction
-	 */
-	 virtual CVector3D getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex) = 0;
-
-
 	//< For Config unused argument checking
 	ConfigCheckData* configCheckData;
 	friend class ConfigStackCheck<CProjectionGeometry2D>;

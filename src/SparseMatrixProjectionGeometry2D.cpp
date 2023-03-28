@@ -200,15 +200,4 @@ Config* CSparseMatrixProjectionGeometry2D::getConfiguration() const
 	return cfg;
 }
 
-//----------------------------------------------------------------------------------------
-CVector3D CSparseMatrixProjectionGeometry2D::getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex)
-{
-	CVector3D vOutput(0.0f, 0.0f, 0.0f);
-
-	// not implemented, yet
-	ASTRA_ASSERT(false);
-
-	return vOutput;
-}
-
 } // end namespace astra

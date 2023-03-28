@@ -180,20 +180,6 @@ Config* CParallelProjectionGeometry2D::getConfiguration() const
 }
 
 //----------------------------------------------------------------------------------------
-CVector3D CParallelProjectionGeometry2D::getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex /* = 0 */)
-{
-	CVector3D vOutput;
-
-	float32 fProjectionAngle = getProjectionAngle(_iProjectionIndex);
-
-	vOutput.setX(cosf(fProjectionAngle));
-	vOutput.setY(sinf(fProjectionAngle));
-	vOutput.setZ(0.0f);
-
-	return vOutput;
-}
-
-//----------------------------------------------------------------------------------------
 CParallelVecProjectionGeometry2D* CParallelProjectionGeometry2D::toVectorGeometry()
 {
 	SParProjection* vectors = genParProjections(m_iProjectionAngleCount,

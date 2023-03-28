@@ -200,16 +200,6 @@ bool CFanFlatProjectionGeometry2D::isOfType(const std::string& _sType)
 	 return (_sType == "fanflat");
 }
 
-CVector3D CFanFlatProjectionGeometry2D::getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex /* = 0 */)
-{
-	CVector3D vOutput(0.0f, 0.0f, 0.0f);
-
-	// not implemented
-	ASTRA_ASSERT(false);
-
-	return vOutput;
-}
-
 //----------------------------------------------------------------------------------------
 // Get the configuration object
 Config* CFanFlatProjectionGeometry2D::getConfiguration() const 

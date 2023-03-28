@@ -212,32 +212,6 @@ Config* CConeProjectionGeometry3D::getConfiguration() const
 
 //----------------------------------------------------------------------------------------
 
-CVector3D CConeProjectionGeometry3D::getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex) const
-{
-	float32 fSrcX = -m_fOriginSourceDistance;
-	float32 fSrcY = 0.0f;
-	float32 fSrcZ = 0.0f;
-
-	float32 fDetX = m_fOriginDetectorDistance;
-	float32 fDetY = 0.0f;
-	float32 fDetZ = 0.0f;
-
-	fDetY += indexToDetectorOffsetX(_iDetectorIndex);
-	fDetZ += indexToDetectorOffsetY(_iDetectorIndex);
-
-	float32 angle = m_pfProjectionAngles[_iProjectionIndex];
-
-	#define ROTATE(name,alpha) do { float32 tX = f##name##X * cos(alpha) - f##name##Y * sin(alpha); f##name##Y = f##name##X * sin(alpha) + f##name##Y * cos(alpha); f##name##X = tX; } while(0)
-
-	ROTATE(Src, angle);
-	ROTATE(Det, angle);
-
-	#undef ROTATE
-
-	CVector3D ret(fDetX - fSrcX, fDetY - fSrcY, fDetZ - fSrcZ);
-	return ret;
-}
-
 void CConeProjectionGeometry3D::projectPoint(double fX, double fY, double fZ,
                                              int iAngleIndex,
                                              double &fU, double &fV) const

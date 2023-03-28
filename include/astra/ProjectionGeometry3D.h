@@ -337,12 +337,6 @@ public:
 	 */
 	 virtual bool isOfType(const std::string& _sType) const = 0;
 
-	 /**
-	  * Returns a vector giving the projection direction for a projection and detector index
-	  */
-	 virtual CVector3D getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex) const = 0;
-
-
 	//< For Config unused argument checking
 	ConfigCheckData* configCheckData;
 	friend class ConfigStackCheck<CProjectionGeometry3D>;
