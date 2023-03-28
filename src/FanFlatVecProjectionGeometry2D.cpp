@@ -200,14 +200,6 @@ bool CFanFlatVecProjectionGeometry2D::isOfType(const std::string& _sType)
 
 //----------------------------------------------------------------------------------------
 
-void CFanFlatVecProjectionGeometry2D::getRayParams(int _iRow, int _iColumn, float32& _fT, float32& _fTheta) const
-{
-	// not implemented
-	ASTRA_ASSERT(false);
-}
-
-//----------------------------------------------------------------------------------------
-
 bool CFanFlatVecProjectionGeometry2D::_check()
 {
 	// TODO

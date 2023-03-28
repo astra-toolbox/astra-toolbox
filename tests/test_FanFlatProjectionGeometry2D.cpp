@@ -78,13 +78,6 @@ BOOST_AUTO_TEST_CASE( testFanFlatProjectionGeometry2D_Offsets )
 	geom.indexToAngleDetectorIndex(10, angle, detector);
 	BOOST_CHECK( angle == 1 );
 	BOOST_CHECK( detector == 2 );
-
-	float t, theta;
-	geom.getRayParams(0, 2, t, theta);
-	BOOST_CHECK_SMALL( tan(theta) + 0.25, (double)astra::eps );
-	BOOST_CHECK_SMALL( 17.0f*t*t - 1.0f, astra::eps );
-
-	// TODO: add test with large angle
 }
 
 

@@ -136,16 +136,6 @@ public:
 	 */
 	virtual Config* getConfiguration() const;
 
-
-	/** Get the value for t and theta, based upon the row and column index.
-	 *
-	 * @param _iRow		row index 
-	 * @param _iColumn	column index
-	 * @param _fT		output: value of t
-	 * @param _fTheta	output: value of theta, always lies within the [0,pi[ interval.
-	 */
-	virtual void getRayParams(int _iRow, int _iColumn, float32& _fT, float32& _fTheta) const;
-
 	const SFanProjection* getProjectionVectors() const { return m_pProjectionAngles; }
 protected:
 	virtual bool initializeAngles(const Config& _cfg);

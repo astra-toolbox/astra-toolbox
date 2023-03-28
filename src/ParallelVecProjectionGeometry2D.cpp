@@ -184,14 +184,6 @@ bool CParallelVecProjectionGeometry2D::isOfType(const std::string& _sType)
 
 //----------------------------------------------------------------------------------------
 
-void CParallelVecProjectionGeometry2D::getRayParams(int _iRow, int _iColumn, float32& _fT, float32& _fTheta) const
-{
-	// not implemented
-	ASTRA_ASSERT(false);
-}
-
-//----------------------------------------------------------------------------------------
-
 bool CParallelVecProjectionGeometry2D::_check()
 {
 	// TODO
