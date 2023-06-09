@@ -31,6 +31,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/cuda/2d/sart.h"
 
+#include "astra/Logging.h"
+
 using namespace std;
 
 namespace astra {
@@ -69,6 +71,10 @@ bool CCudaSartAlgorithm::initialize(const Config& _cfg)
 
 	m_pAlgo = sart;
 	m_bAlgoInit = false;
+
+	if (_cfg.self.hasOption("SinogramMaskId")) {
+		ASTRA_CONFIG_CHECK(false, "SART_CUDA", "Sinogram mask option is not supported.")
+	}
 
 	// projection order
 	int projectionCount = m_pSinogram->getGeometry()->getProjectionAngleCount();
