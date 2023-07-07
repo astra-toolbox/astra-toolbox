@@ -100,7 +100,7 @@ MemHandle3D allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Me
 	}
 
 	MemHandle3D ret;
-	ret.d = boost::shared_ptr<SMemHandle3D_internal>(new SMemHandle3D_internal);
+	ret.d = std::make_shared<SMemHandle3D_internal>();
 	*ret.d = hnd;
 
 	return ret;
@@ -346,7 +346,7 @@ _AstraExport MemHandle3D wrapHandle(float *D_ptr, unsigned int x, unsigned int y
 	h.arr = 0;
 
 	MemHandle3D hnd;
-	hnd.d = boost::shared_ptr<SMemHandle3D_internal>(new SMemHandle3D_internal);
+	hnd.d = std::make_shared<SMemHandle3D_internal>();
 	*hnd.d = h;
 
 	return hnd;
@@ -367,7 +367,7 @@ MemHandle3D createProjectionArrayHandle(const float *ptr, unsigned int x, unsign
 	h.ptr.ptr = 0;
 
 	MemHandle3D hnd;
-	hnd.d = boost::shared_ptr<SMemHandle3D_internal>(new SMemHandle3D_internal);
+	hnd.d = std::make_shared<SMemHandle3D_internal>();
 	*hnd.d = h;
 
 	return hnd;
