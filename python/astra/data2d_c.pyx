@@ -151,7 +151,7 @@ cdef fillDataObject(CFloat32Data2D * obj, data):
             fillDataObjectScalar(obj, np.float32(data))
 
 cdef fillDataObjectScalar(CFloat32Data2D * obj, float s):
-    cdef int i
+    cdef size_t i
     for i in range(obj.getSize()):
         obj.getData()[i] = s
 
