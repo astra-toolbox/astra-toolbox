@@ -72,18 +72,6 @@ fi
 AC_SUBST(HAVEBOOSTUTF)
 AC_SUBST(LIBS_BOOSTUTF)
 
-BOOSTok=yes
-dnl AC_CHECK_HEADER([boost/any.hpp],[],[BOOSTok=no],[])
-dnl AC_CHECK_HEADER([boost/thread.hpp],[],[BOOSTok=no],[])
-dnl AC_CHECK_HEADER([boost/bind.hpp],[],[BOOSTok=no],[])
-dnl AC_CHECK_HEADER([boost/static_assert.hpp],[],[BOOSTok=no],[])
-dnl AC_CHECK_HEADER([boost/throw_exception.hpp],[],[BOOSTok=no],[])
-AC_CHECK_HEADER([boost/shared_ptr.hpp],[],[BOOSTok=no],[])
-
-if test x$BOOSTok = xno; then
-  AC_MSG_ERROR([boost not found])
-fi
-
 # nvcc, cuda
 
 AC_ARG_WITH(cuda, [[  --with-cuda=path        path of CUDA (optional)]],,)
@@ -121,14 +109,6 @@ if test x"$HAVECUDA" = xyes; then
   AC_MSG_CHECKING([if nvcc works])
   ASTRA_CHECK_NVCC(HAVECUDA,NVCCFLAGS_EXTRA)
   AC_MSG_RESULT($HAVECUDA)
-fi
-
-if test x"$HAVECUDA" = xyes; then
-  AC_MSG_CHECKING([if boost and CUDA versions are compatible])
-  ASTRA_CHECK_CUDA_BOOST(AC_MSG_RESULT([yes]),[
-    AC_MSG_RESULT([no])
-    AC_MSG_ERROR([Boost and CUDA versions are incompatible. You probably have to upgrade boost.])
-  ])
 fi
 
 AC_ARG_WITH(cuda_compute, [[  --with-cuda-compute=archs  comma separated list of CUDA compute models (optional)]],,)

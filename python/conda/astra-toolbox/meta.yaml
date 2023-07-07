@@ -27,7 +27,6 @@ requirements:
   host:
     - python
     - cython >=0.13
-    - boost # [osx or linux]
     - nomkl # [not win]
     - numpy {{ numpy }}
     - scipy

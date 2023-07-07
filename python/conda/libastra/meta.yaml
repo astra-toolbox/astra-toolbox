@@ -15,7 +15,6 @@ requirements:
   build:
     - {{ compiler('c') }}    # [win or linux]
     - {{ compiler('cxx') }}  # [linux]
-    - boost # [osx]
     - automake # [osx]
     - autoconf # [osx]
     - libtool # [osx]
@@ -27,7 +26,6 @@ requirements:
     - libgomp <9.3 # [linux]
     {% endif %}
   host:
-    - boost # [osx or linux]
     - cudatoolkit {{ cudatoolkit_dep }} # [win or linux]
     {% if linux and cxx_compiler_version in ['5.4', '7.3'] -%}
     - libstdcxx-ng <9.3 # [linux]
