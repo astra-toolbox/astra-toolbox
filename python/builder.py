@@ -29,10 +29,10 @@ import numpy as np
 from distutils.core import setup
 from pkg_resources import parse_version
 
+from setuptools import Command
+
 from Cython.Distutils import build_ext
 from Cython.Build import cythonize
-
-from setuptools import Command
 
 import argparse
 import sys
