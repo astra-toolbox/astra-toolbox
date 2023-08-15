@@ -145,21 +145,6 @@ void CBackProjectionAlgorithm::_init()
 
 }
 
-//---------------------------------------------------------------------------------------
-// Information - All
-map<string,boost::any> CBackProjectionAlgorithm::getInformation() 
-{
-	map<string, boost::any> res;
-	return mergeMap<string,boost::any>(CReconstructionAlgorithm2D::getInformation(), res);
-};
-
-//---------------------------------------------------------------------------------------
-// Information - Specific
-boost::any CBackProjectionAlgorithm::getInformation(std::string _sIdentifier) 
-{
-	return CAlgorithm::getInformation(_sIdentifier);
-};
-
 //----------------------------------------------------------------------------------------
 // Iterate
 void CBackProjectionAlgorithm::run(int _iNrIterations)

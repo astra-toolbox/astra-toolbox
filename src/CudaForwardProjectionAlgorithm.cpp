@@ -186,41 +186,6 @@ void CCudaForwardProjectionAlgorithm::setGPUIndex(int _iGPUIndex)
 	m_iGPUIndex = _iGPUIndex;
 }
 
-//---------------------------------------------------------------------------------------
-// Information - All
-map<string,boost::any> CCudaForwardProjectionAlgorithm::getInformation() 
-{
-	map<string, boost::any> res;
-	res["ProjectionGeometry"] = getInformation("ProjectionGeometry");
-	res["ReconstructionGeometry"] = getInformation("ReconstructionGeometry");
-	res["ProjectionDataId"] = getInformation("ProjectionDataId");
-	res["VolumeDataId"] = getInformation("VolumeDataId");
-	res["GPUindex"] = getInformation("GPUindex");
-	res["DetectorSuperSampling"] = getInformation("DetectorSuperSampling");
-	return mergeMap<string,boost::any>(CAlgorithm::getInformation(), res);
-};
-
-//---------------------------------------------------------------------------------------
-// Information - Specific
-boost::any CCudaForwardProjectionAlgorithm::getInformation(std::string _sIdentifier) 
-{
-	if (_sIdentifier == "ProjectionGeometry")	{ return string("not implemented"); }
-	if (_sIdentifier == "ReconstructionGeometry")	{ return string("not implemented"); }
-	if (_sIdentifier == "ProjectionDataId") {
-		int iIndex = CData2DManager::getSingleton().getIndex(m_pSinogram);
-		if (iIndex != 0) return iIndex;
-		return std::string("not in manager");
-	} 
-	if (_sIdentifier == "VolumeDataId") {
-		int iIndex = CData2DManager::getSingleton().getIndex(m_pVolume);
-		if (iIndex != 0) return iIndex;
-		return std::string("not in manager");
-	}
-	if (_sIdentifier == "GPUindex")	{ return m_iGPUIndex; }
-	if (_sIdentifier == "DetectorSuperSampling")	{ return m_iDetectorSuperSampling; }
-	return CAlgorithm::getInformation(_sIdentifier);
-};
-
 //----------------------------------------------------------------------------------------
 // Run
 void CCudaForwardProjectionAlgorithm::run(int)

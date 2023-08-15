@@ -230,13 +230,6 @@ Config* CParallelVecProjectionGeometry3D::getConfiguration() const
 }
 //----------------------------------------------------------------------------------------
 
-CVector3D CParallelVecProjectionGeometry3D::getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex) const
-{
-	const SPar3DProjection& p = m_pProjectionAngles[_iProjectionIndex];
-
-	return CVector3D(p.fRayX, p.fRayY, p.fRayZ);
-}
-
 void CParallelVecProjectionGeometry3D::projectPoint(double fX, double fY, double fZ,
                                                     int iAngleIndex,
                                                     double &fU, double &fV) const

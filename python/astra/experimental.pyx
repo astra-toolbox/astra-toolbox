@@ -28,6 +28,10 @@
 
 include "config.pxi"
 
+from . cimport utils
+from .utils import wrap_from_bytes
+from .utils cimport createProjectionGeometry3D
+
 IF HAVE_CUDA==True:
 
     import six
@@ -56,9 +60,9 @@ IF HAVE_CUDA==True:
             bool isInitialized()
 
 
-    cimport PyProjector3DManager
+    from . cimport PyProjector3DManager
     from .PyProjector3DManager cimport CProjector3DManager
-    cimport PyData3DManager
+    from . cimport PyData3DManager
     from .PyData3DManager cimport CData3DManager
 
     cdef CProjector3DManager * manProj = <CProjector3DManager * >PyProjector3DManager.getSingletonPtr()
@@ -124,7 +128,7 @@ IF HAVE_CUDA==True:
         if not m.doFDK(projector, pVolObject, pProjObject, False, NULL, MODE_ADD):
             raise Exception("Failed to perform FDK")
 
-    cimport utils
+    from . cimport utils
     from .utils cimport linkVolFromGeometry, linkProjFromGeometry
 
     def direct_FPBP3D(projector_id, vol, proj, mode, t):
@@ -178,3 +182,11 @@ IF HAVE_CUDA==True:
         :type datatype: :class:`numpy.ndarray` or :class:`astra.data3d.GPULink`
         """
         direct_FPBP3D(projector_id, vol, proj, MODE_SET, "BP")
+
+    def getProjectedBBox(geometry, minx, maxx, miny, maxy, minz, maxz):
+        cdef CProjectionGeometry3D * ppGeometry
+        cdef double minu=0., maxu=0., minv=0., maxv=0.
+        ppGeometry = createProjectionGeometry3D(geometry)
+        ppGeometry.getProjectedBBox(minx, maxx, miny, maxy, minz, maxz, minu, maxu, minv, maxv)
+        del ppGeometry
+        return (minv, maxv)

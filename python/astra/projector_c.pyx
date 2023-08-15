@@ -29,19 +29,19 @@
 import six
 from .PyIncludes cimport *
 
-cimport utils
+from . cimport utils
 from .utils import wrap_from_bytes
 
-cimport PyProjector2DFactory
+from . cimport PyProjector2DFactory
 from .PyProjector2DFactory cimport CProjector2DFactory
 
-cimport PyProjector2DManager
+from . cimport PyProjector2DManager
 from .PyProjector2DManager cimport CProjector2DManager
 
-cimport PyXMLDocument
+from . cimport PyXMLDocument
 from .PyXMLDocument cimport XMLDocument
 
-cimport PyMatrixManager
+from . cimport PyMatrixManager
 from .PyMatrixManager cimport CMatrixManager
 
 cdef CProjector2DManager * manProj = <CProjector2DManager * >PyProjector2DManager.getSingletonPtr()

@@ -341,8 +341,10 @@ static void cftfx41(int n, float32 *a, int nw, float32 *w);
 static void cftleaf(int n, int isplt, float32 *a, int nw, float32 *w);
 static void cftmdl1(int n, float32 *a, float32 *w);
 static void cftmdl2(int n, float32 *a, float32 *w);
+#ifdef USE_CDFT_THREADS
 static void *cftrec1_th(void *p);
 static void *cftrec2_th(void *p);
+#endif
 static void cftrec4(int n, float32 *a, int nw, float32 *w);
 static void cftx020(float32 *a);
 static void dctsub(int n, float32 *a, int nc, float32 *c);

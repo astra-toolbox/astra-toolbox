@@ -93,9 +93,6 @@
     <ClCompile Include="src\ArtAlgorithm.cpp">
       <Filter>Algorithms\source</Filter>
     </ClCompile>
-    <ClCompile Include="src\AsyncAlgorithm.cpp">
-      <Filter>Algorithms\source</Filter>
-    </ClCompile>
     <ClCompile Include="src\BackProjectionAlgorithm.cpp">
       <Filter>Algorithms\source</Filter>
     </ClCompile>
@@ -357,9 +354,6 @@
       <Filter>Algorithms\headers</Filter>
     </ClInclude>
     <ClInclude Include="include\astra\ArtAlgorithm.h">
-      <Filter>Algorithms\headers</Filter>
-    </ClInclude>
-    <ClInclude Include="include\astra\AsyncAlgorithm.h">
       <Filter>Algorithms\headers</Filter>
     </ClInclude>
     <ClInclude Include="include\astra\BackProjectionAlgorithm.h">

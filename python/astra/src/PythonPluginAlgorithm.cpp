@@ -62,7 +62,7 @@ void logPythonError(){
                     if(iter!=NULL){
                         PyObject *line;
                         std::string errStr = "";
-                        while(line = PyIter_Next(iter)){
+                        while((line = PyIter_Next(iter))){
                             PyObject *retb = PyObject_CallMethod(six,"b","O",line);
                             if(retb!=NULL){
                                 errStr += std::string(PyBytes_AsString(retb));

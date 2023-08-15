@@ -229,34 +229,6 @@ void CArtAlgorithm::setRayOrder(int* _piProjectionOrder, int* _piDetectorOrder, 
 	}
 }
 
-//---------------------------------------------------------------------------------------
-// Information - All
-map<string,boost::any> CArtAlgorithm::getInformation() 
-{
-	map<string, boost::any> res;
-	res["RayOrder"] = getInformation("RayOrder");
-	res["Relaxation"] = getInformation("Relaxation");
-	return mergeMap<string,boost::any>(CReconstructionAlgorithm2D::getInformation(), res);
-};
-
-//---------------------------------------------------------------------------------------
-// Information - Specific
-boost::any CArtAlgorithm::getInformation(std::string _sIdentifier) 
-{
-	if (_sIdentifier == "Relaxation")	{ return m_fLambda; }
-	if (_sIdentifier == "RayOrder") {
-		vector<float32> res;
-		for (int i = 0; i < m_iRayCount; i++) {
-			res.push_back(m_piProjectionOrder[i]);
-		}
-		for (int i = 0; i < m_iRayCount; i++) {
-			res.push_back(m_piDetectorOrder[i]);
-		}
-		return res;
-	}
-	return CAlgorithm::getInformation(_sIdentifier);
-};
-
 //----------------------------------------------------------------------------------------
 // Iterate
 void CArtAlgorithm::run(int _iNrIterations)

@@ -180,37 +180,6 @@ bool CFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 	return m_bIsInitialized;
 }
 
-//---------------------------------------------------------------------------------------
-// Get Information - all
-map<string,boost::any> CFilteredBackProjectionAlgorithm::getInformation() 
-{
-	map<string, boost::any> result;
-	result["ProjectorId"] = getInformation("ProjectorId");
-	result["ProjectionDataId"] = getInformation("ProjectionDataId");
-	result["VolumeDataId"] = getInformation("VolumeDataId");
-	return mergeMap<string,boost::any>(CAlgorithm::getInformation(), result);
-};
-
-//---------------------------------------------------------------------------------------
-// Get Information - specific
-boost::any CFilteredBackProjectionAlgorithm::getInformation(std::string _sIdentifier) 
-{
-	if (_sIdentifier == "ProjectorId") {
-		int iIndex = CProjector2DManager::getSingleton().getIndex(m_pProjector);
-		if (iIndex != 0) return iIndex;
-		return std::string("not in manager");
-	} else if (_sIdentifier == "ProjectionDataId") {
-		int iIndex = CData2DManager::getSingleton().getIndex(m_pSinogram);
-		if (iIndex != 0) return iIndex;
-		return std::string("not in manager");
-	} else if (_sIdentifier == "VolumeDataId") {
-		int iIndex = CData2DManager::getSingleton().getIndex(m_pReconstruction);
-		if (iIndex != 0) return iIndex;
-		return std::string("not in manager");
-	}
-	return CAlgorithm::getInformation(_sIdentifier);
-};
-
 //----------------------------------------------------------------------------------------
 // Initialize
 bool CFilteredBackProjectionAlgorithm::initialize(CProjector2D* _pProjector, 

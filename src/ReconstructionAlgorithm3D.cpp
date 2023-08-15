@@ -275,55 +275,6 @@ bool CReconstructionAlgorithm3D::_check()
 	return true;
 }
 
-//---------------------------------------------------------------------------------------
-// Information - All
-map<string,boost::any> CReconstructionAlgorithm3D::getInformation() 
-{
-	map<string, boost::any> res;
-	res["ProjectorId"] = getInformation("ProjectorId");
-	res["ProjectionDataId"] = getInformation("ProjectionDataId");
-	res["ReconstructionDataId"] = getInformation("ReconstructionDataId");
-	res["UseMinConstraint"] = getInformation("UseMinConstraint");
-	res["MinConstraintValue"] = getInformation("MinConstraintValue");
-	res["UseMaxConstraint"] = getInformation("UseMaxConstraint");
-	res["MaxConstraintValue"] = getInformation("MaxConstraintValue");
-	res["ReconstructionMaskId"] = getInformation("ReconstructionMaskId");
-	return mergeMap<string,boost::any>(CAlgorithm::getInformation(), res);
-};
-
-//---------------------------------------------------------------------------------------
-// Information - Specific
-boost::any CReconstructionAlgorithm3D::getInformation(std::string _sIdentifier) 
-{
-	if (_sIdentifier == "UseMinConstraint")		{ return m_bUseMinConstraint ? string("yes") : string("no"); }
-	if (_sIdentifier == "MinConstraintValue")	{ return m_fMinValue; }
-	if (_sIdentifier == "UseMaxConstraint")		{ return m_bUseMaxConstraint ? string("yes") : string("no"); }
-	if (_sIdentifier == "MaxConstraintValue")	{ return m_fMaxValue; }
-#if 0
-	if (_sIdentifier == "ProjectorId")	{ 
-		int iIndex = CProjector3DManager::getSingleton().getIndex(m_pProjector);
-		if (iIndex != 0) return iIndex;
-		return std::string("not in manager");
-	}
-#endif
-	if (_sIdentifier == "ProjectionDataId") {
-		int iIndex = CData3DManager::getSingleton().getIndex(m_pSinogram);
-		if (iIndex != 0) return iIndex;
-		return std::string("not in manager");
-	} 
-	if (_sIdentifier == "ReconstructionDataId") {
-		int iIndex = CData3DManager::getSingleton().getIndex(m_pReconstruction);
-		if (iIndex != 0) return iIndex;
-		return std::string("not in manager");
-	}
-	if (_sIdentifier == "ReconstructionMaskId") {
-		if (!m_bUseReconstructionMask) return string("not used");
-		int iIndex = CData3DManager::getSingleton().getIndex(m_pReconstructionMask);
-		if (iIndex != 0) return iIndex;
-		return std::string("not in manager");
-	}
-	return CAlgorithm::getInformation(_sIdentifier);
-};
 //----------------------------------------------------------------------------------------
 
 } // namespace astra

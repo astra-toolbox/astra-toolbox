@@ -61,7 +61,7 @@ ifeq ($(cuda),yes)
 CPPFLAGS  += @CPPFLAGS_CUDA@ -DASTRA_CUDA
 NVCCFLAGS += @NVCCFLAGS_EXTRA@ @CPPFLAGS_CUDA@ -I$(srcdir)/../../include -DASTRA_CUDA
 LDFLAGS   += @LDFLAGS_CUDA@
-LIBS      += -lcudart -lcufft
+LIBS      += -lcudart_static -lcufft
 NVCC       = @NVCC@
 endif
 
@@ -94,6 +94,9 @@ PYLDFLAGS := $(MODLDFLAGS)
 MODLDFLAGS += -L$(PYLIBDIR)
 
 MODPYLIBS=-l$(PYLIBVER)
+
+PYBUILDERFLAGS=--astra_build_config_dir $(abs_top_builddir)/python/config --astra_build_cython_dir $(abs_top_builddir)/python/cython
+PYBUILDER_BUILD_FLAGS=--build-base=$(abs_top_builddir)/python/build
 endif
 
 # This is below where PYCPPFLAGS copies CPPFLAGS.  The python code is built
@@ -130,7 +133,6 @@ DEPDIR=.deps
 
 BASE_OBJECTS=\
 	src/Algorithm.lo \
-	src/AsyncAlgorithm.lo \
 	src/ReconstructionAlgorithm2D.lo \
 	src/ReconstructionAlgorithm3D.lo \
 	src/ArtAlgorithm.lo \
@@ -333,12 +335,11 @@ endif
 ifeq ($(python),yes)
 py: libastra.la
 	$(MKDIR) python/build
-# TODO: Avoid writing into source dir
-	ln -s $(abs_top_builddir)/.libs/$(SONAME) $(srcdir)/../../python/astra
+	$(MKDIR) python/config
 # Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
-	(cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS='${PYLDFLAGS}' $(PYTHON) builder.py build --build-base=$(abs_top_builddir)/python/build) || (rm $(srcdir)/../../python/astra/$(SONAME); false)
-	rm $(srcdir)/../../python/astra/$(SONAME)
-
+	cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS='${PYLDFLAGS}' \
+	$(PYTHON) builder.py $(PYBUILDERFLAGS) \
+	build $(PYBUILDER_BUILD_FLAGS)
 endif
 
 
@@ -423,10 +424,7 @@ clean:
 	rm -f $(addsuffix /*.d,$(DEPDIRS))
 	rm -f $(addsuffix /*,$(LIBDIRS))
 	rm -f $(TEST_OBJECTS) test.bin
-	rm -fr python/finalbuild/
-	rm -fr python/build/
-	rm -f $(srcdir)/../../python/astra/*.cpp
-	rm -f $(srcdir)/../../python/astra/*.c
+	rm -fr python/
 
 distclean: clean
 	rm -f $(srcdir)/config.guess $(srcdir)/config.sub $(srcdir)/ltmain.sh libtool $(srcdir)/install-sh
@@ -470,7 +468,7 @@ ifeq ($(install_type),module)
 # modules built with rpath=$ORIGIN
 install: install-matlab install-python-site-packages install-octave
 
-PYPKGDATA=$(SONAME)
+PYPKGDATA=$(abs_top_builddir)/.libs/$(SONAME)
 MATLABBASE=@prefix@/matlab
 OCTAVEBASE=@prefix@/octave
 
@@ -489,23 +487,23 @@ endif
 
 ifeq ($(python),yes)
 install-python: py
-	$(MKDIR) python/finalbuild
 	# Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
-	cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" $(PYTHON) builder.py build --build-base=$(abs_top_builddir)/python/build install \
-	--install-base=$(abs_top_builddir)/python/finalbuild --install-headers=$(abs_top_builddir)/python/finalbuild --install-purelib=$(abs_top_builddir)/python/finalbuild \
-	--install-platlib=$(abs_top_builddir)/python/finalbuild --install-scripts=$(abs_top_builddir)/python/finalbuild --install-data=$(abs_top_builddir)/python/finalbuild
-	$(INSTALL_SH) -m 755 -d @prefix@/python
-	$(INSTALL_SH) -m 755 -d @prefix@/python/astra
-	$(INSTALL_SH) -m 755 -d @prefix@/python/astra/plugins
-	$(INSTALL_SH) -m 755 python/finalbuild/astra/*.so @prefix@/python/astra
-	$(INSTALL_SH) -m 644 python/finalbuild/astra/*.py @prefix@/python/astra
-	$(INSTALL_SH) -m 644 python/finalbuild/astra/plugins/*.py @prefix@/python/astra/plugins
-	$(INSTALL_SH) -m 644 python/finalbuild/*.egg-info @prefix@/python/
+	cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" \
+	$(PYTHON) builder.py $(PYBUILDERFLAGS) \
+	set_dist_dir --dist-dir=$(abs_top_builddir)/python/dist \
+	build $(PYBUILDER_BUILD_FLAGS) \
+	egg_info --egg-base=$(abs_top_builddir)/python \
+	install --install-base=@prefix@/python --install-headers=@prefix@/python --install-purelib=@prefix@/python --install-platlib=@prefix@/python --install-scripts=@prefix@/python --install-data=@prefix@/python --old-and-unmanageable --no-compile
 # TODO: docs
 
 install-python-site-packages: py
 # Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
-	cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" $(PYTHON) builder.py build --build-base=$(abs_top_builddir)/python/build install
+	cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" \
+	$(PYTHON) builder.py $(PYBUILDERFLAGS) \
+	set_dist_dir --dist-dir=$(abs_top_builddir)/python/dist \
+	build $(PYBUILDER_BUILD_FLAGS) \
+	egg_info --egg-base=$(abs_top_builddir)/python \
+	install
 else
 install-python-site-packages:
 install-python:

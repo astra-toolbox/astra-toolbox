@@ -25,7 +25,7 @@
 
 from libcpp.string cimport string
 
-cimport PyXMLDocument
+from . cimport PyXMLDocument
 from .PyXMLDocument cimport XMLDocument
 from .PyXMLDocument cimport XMLNode
 
@@ -35,4 +35,6 @@ cdef configToDict(Config *)
 cdef Config * dictToConfig(string rootname, dc) except NULL
 cdef CFloat32VolumeData3D* linkVolFromGeometry(CVolumeGeometry3D *pGeometry, data) except NULL
 cdef CFloat32ProjectionData3D* linkProjFromGeometry(CProjectionGeometry3D *pGeometry, data) except NULL
+cdef CProjectionGeometry3D* createProjectionGeometry3D(geometry) except NULL
+cdef CVolumeGeometry3D* createVolumeGeometry3D(geometry) except NULL
 

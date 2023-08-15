@@ -130,22 +130,6 @@ bool CCudaRoiSelectAlgorithm::_check()
 	return true;
 }
 
-//---------------------------------------------------------------------------------------
-// Information - All
-map<string,boost::any> CCudaRoiSelectAlgorithm::getInformation()
-{
-	map<string,boost::any> res;
-	return mergeMap<string,boost::any>(CAlgorithm::getInformation(), res);
-}
-
-//---------------------------------------------------------------------------------------
-// Information - Specific
-boost::any CCudaRoiSelectAlgorithm::getInformation(std::string _sIdentifier)
-{
-	return NULL;
-}
-
-
 } // namespace astra
 
 #endif // ASTRA_CUDA

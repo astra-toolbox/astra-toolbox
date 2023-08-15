@@ -370,7 +370,6 @@
     <ClCompile Include="src\ArtAlgorithm.cpp" />
     <ClCompile Include="src\AstraObjectFactory.cpp" />
     <ClCompile Include="src\AstraObjectManager.cpp" />
-    <ClCompile Include="src\AsyncAlgorithm.cpp" />
     <ClCompile Include="src\BackProjectionAlgorithm.cpp" />
     <ClCompile Include="src\CglsAlgorithm.cpp" />
     <ClCompile Include="src\CompositeGeometryManager.cpp" />
@@ -565,7 +564,6 @@
     <ClInclude Include="include\astra\ArtAlgorithm.h" />
     <ClInclude Include="include\astra\AstraObjectFactory.h" />
     <ClInclude Include="include\astra\AstraObjectManager.h" />
-    <ClInclude Include="include\astra\AsyncAlgorithm.h" />
     <ClInclude Include="include\astra\BackProjectionAlgorithm.h" />
     <ClInclude Include="include\astra\CglsAlgorithm.h" />
     <ClInclude Include="include\astra\CompositeGeometryManager.h" />

@@ -184,26 +184,6 @@ bool CParallelVecProjectionGeometry2D::isOfType(const std::string& _sType)
 
 //----------------------------------------------------------------------------------------
 
-CVector3D CParallelVecProjectionGeometry2D::getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex /* = 0 */)
-{
-	CVector3D vOutput(0.0f, 0.0f, 0.0f);
-
-	// not implemented
-	ASTRA_ASSERT(false);
-
-	return vOutput;
-}
-
-//----------------------------------------------------------------------------------------
-
-void CParallelVecProjectionGeometry2D::getRayParams(int _iRow, int _iColumn, float32& _fT, float32& _fTheta) const
-{
-	// not implemented
-	ASTRA_ASSERT(false);
-}
-
-//----------------------------------------------------------------------------------------
-
 bool CParallelVecProjectionGeometry2D::_check()
 {
 	// TODO

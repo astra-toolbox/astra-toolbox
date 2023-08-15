@@ -177,21 +177,6 @@ void CSirtAlgorithm::_init()
 	m_pTmpVolume = new CFloat32VolumeData2D(m_pProjector->getVolumeGeometry());
 }
 
-//---------------------------------------------------------------------------------------
-// Information - All
-map<string,boost::any> CSirtAlgorithm::getInformation() 
-{
-	map<string, boost::any> res;
-	return mergeMap<string,boost::any>(CReconstructionAlgorithm2D::getInformation(), res);
-};
-
-//---------------------------------------------------------------------------------------
-// Information - Specific
-boost::any CSirtAlgorithm::getInformation(std::string _sIdentifier) 
-{
-	return CAlgorithm::getInformation(_sIdentifier);
-};
-
 //----------------------------------------------------------------------------------------
 // Iterate
 void CSirtAlgorithm::run(int _iNrIterations)
@@ -246,7 +231,7 @@ void CSirtAlgorithm::run(int _iNrIterations)
 	pFirstForwardProjector->project();
 
 	float32* pfT = m_pTotalPixelWeight->getData();
-	for (int i = 0; i < m_pTotalPixelWeight->getSize(); ++i) {
+	for (size_t i = 0; i < m_pTotalPixelWeight->getSize(); ++i) {
 		float32 x = pfT[i];
 		if (x < -eps || x > eps)
 			x = 1.0f / x;
@@ -255,7 +240,7 @@ void CSirtAlgorithm::run(int _iNrIterations)
 		pfT[i] = m_fLambda * x;
 	}
 	pfT = m_pTotalRayLength->getData();
-	for (int i = 0; i < m_pTotalRayLength->getSize(); ++i) {
+	for (size_t i = 0; i < m_pTotalRayLength->getSize(); ++i) {
 		float32 x = pfT[i];
 		if (x < -eps || x > eps)
 			x = 1.0f / x;

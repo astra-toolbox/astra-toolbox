@@ -141,11 +141,6 @@ public:
 	 */
 	 virtual bool isOfType(const std::string& _sType) const;
 
-	 /**
-	  * Returns a vector giving the projection direction for a projection and detector index
-	  */
-	virtual CVector3D getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex) const;
-
 	virtual void projectPoint(double fX, double fY, double fZ,
 	                          int iAngleIndex,
 	                          double &fU, double &fV) const;

@@ -38,7 +38,7 @@ import scipy.sparse as ss
 
 from libcpp cimport bool
 
-cimport PyMatrixManager
+from . cimport PyMatrixManager
 from .PyMatrixManager cimport CMatrixManager
 from .PyIncludes cimport *
 from .utils import wrap_from_bytes
@@ -72,8 +72,8 @@ cdef int csr_matrix_to_astra(data,CSparseMatrix *mat) except -1:
         mat.m_pfValues[i] = csrD.data[i]
 
 cdef astra_to_csr_matrix(CSparseMatrix *mat):
-    indptr = np.zeros(mat.m_iHeight+1,dtype=np.int)
-    indices = np.zeros(mat.m_plRowStarts[mat.m_iHeight],dtype=np.int)
+    indptr = np.zeros(mat.m_iHeight+1,dtype=int)
+    indices = np.zeros(mat.m_plRowStarts[mat.m_iHeight],dtype=int)
     data = np.zeros(mat.m_plRowStarts[mat.m_iHeight])
     for i in range(mat.m_iHeight+1):
         indptr[i] = mat.m_plRowStarts[i]

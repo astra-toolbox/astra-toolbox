@@ -31,13 +31,13 @@ import six
 cimport cython
 from cython cimport view
 
-cimport PyData2DManager
+from . cimport PyData2DManager
 from .PyData2DManager cimport CData2DManager
 
-cimport PyProjector2DManager
+from . cimport PyProjector2DManager
 from .PyProjector2DManager cimport CProjector2DManager
 
-cimport PyXMLDocument
+from . cimport PyXMLDocument
 from .PyXMLDocument cimport XMLDocument
 
 import numpy as np
@@ -47,7 +47,7 @@ np.import_array()
 
 
 from .PyIncludes cimport *
-cimport utils
+from . cimport utils
 from .utils import wrap_from_bytes
 
 from .pythonutils import geom_size
@@ -151,7 +151,7 @@ cdef fillDataObject(CFloat32Data2D * obj, data):
             fillDataObjectScalar(obj, np.float32(data))
 
 cdef fillDataObjectScalar(CFloat32Data2D * obj, float s):
-    cdef int i
+    cdef size_t i
     for i in range(obj.getSize()):
         obj.getData()[i] = s
 
