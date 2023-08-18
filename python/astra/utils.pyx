@@ -64,10 +64,9 @@ cdef Config * dictToConfig(string rootname, dc) except NULL:
     cfg.initialize(rootname)
     try:
         readDict(cfg.self, dc)
-    except Exception:
+    except:
         del cfg
-        exc = sys.exc_info()
-        raise exc[0], exc[1], exc[2]
+        raise
     return cfg
 
 def convert_item(item):
