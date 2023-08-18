@@ -142,7 +142,6 @@ Config* structToConfig(string rootname, const mxArray* pStruct)
 {
 	if (!mxIsStruct(pStruct)) {
 		mexErrMsgTxt("Input must be a struct.");
-		return NULL;
 	}
 
 	// create the document
@@ -154,7 +153,6 @@ Config* structToConfig(string rootname, const mxArray* pStruct)
 	if (!ret) {
 		delete cfg;
 		mexErrMsgTxt("Error parsing struct.");
-		return NULL;		
 	}
 	return cfg;
 }
@@ -190,7 +188,6 @@ bool structToXMLNode(XMLNode node, const mxArray* pStruct)
 		else if (mxIsNumeric(pField) && mxGetM(pField)*mxGetN(pField) > 1) {
 			if (!mxIsDouble(pField)) {
 				mexErrMsgTxt("Numeric input must be double.");
-				return false;
 			}
 			XMLNode listbase = node.addChildNode(sFieldName);
 			double* pdValues = mxGetPr(pField);
@@ -227,7 +224,6 @@ bool optionsToXMLNode(XMLNode node, const mxArray* pOptionStruct)
 
 		if (node.hasOption(sFieldName)) {
 			mexErrMsgTxt("Duplicate option");
-			return false;
 		}
 	
 		// string or scalar
@@ -239,7 +235,6 @@ bool optionsToXMLNode(XMLNode node, const mxArray* pOptionStruct)
 		else if (mxIsNumeric(pField) && mxGetM(pField)*mxGetN(pField) > 1) {
 			if (!mxIsDouble(pField)) {
 				mexErrMsgTxt("Numeric input must be double.");
-				return false;
 			}
 
 			XMLNode listbase = node.addChildNode("Option");
@@ -248,7 +243,6 @@ bool optionsToXMLNode(XMLNode node, const mxArray* pOptionStruct)
 			listbase.setContent(pdValues, mxGetN(pField), mxGetM(pField), true);
 		} else {
 			mexErrMsgTxt("Unsupported option type");
-			return false;
 		}
 	}
 	return true;
@@ -262,7 +256,6 @@ std::map<std::string, mxArray*> parseStruct(const mxArray* pInput)
 	// check type
 	if (!mxIsStruct(pInput)) {
       mexErrMsgTxt("Input must be a struct.");
-	  return res;
 	}
 
 	// get field names

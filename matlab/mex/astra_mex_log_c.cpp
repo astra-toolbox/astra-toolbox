@@ -48,8 +48,7 @@ using namespace astra;
 void astra_mex_log_debug(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 	if (nrhs < 4) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	string filename = mexToString(prhs[1]);
 	int linenumber = (int)mxGetScalar(prhs[2]);
@@ -68,8 +67,7 @@ void astra_mex_log_debug(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prh
 void astra_mex_log_info(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 	if (nrhs < 4) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	string filename = mexToString(prhs[1]);
 	int linenumber = (int)mxGetScalar(prhs[2]);
@@ -88,8 +86,7 @@ void astra_mex_log_info(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs
 void astra_mex_log_warn(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 	if (nrhs < 4) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	string filename = mexToString(prhs[1]);
 	int linenumber = (int)mxGetScalar(prhs[2]);
@@ -108,7 +105,7 @@ void astra_mex_log_warn(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs
 void astra_mex_log_error(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 	if (nrhs < 4) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 		return;
 	}
 	string filename = mexToString(prhs[1]);
@@ -126,8 +123,7 @@ void astra_mex_log_error(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prh
 void astra_mex_log_enable(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	string sType = mexToString(prhs[1]);
 	if(sType == "all"){
@@ -150,8 +146,7 @@ void astra_mex_log_enable(int nlhs, mxArray* plhs[], int nrhs, const mxArray* pr
 void astra_mex_log_disable(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	string sType = mexToString(prhs[1]);
 	if(sType == "all"){
@@ -184,8 +179,7 @@ void astra_mex_log_disable(int nlhs, mxArray* plhs[], int nrhs, const mxArray* p
 void astra_mex_log_format(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 	if (nrhs < 3) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	string sType = mexToString(prhs[1]);
 	string sFormat = mexToString(prhs[2]);
@@ -220,8 +214,7 @@ void astra_mex_log_format(int nlhs, mxArray* plhs[], int nrhs, const mxArray* pr
 void astra_mex_log_output(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 	if (nrhs < 4) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	string sType = mexToString(prhs[1]);
 	string sOutput = mexToString(prhs[2]);
