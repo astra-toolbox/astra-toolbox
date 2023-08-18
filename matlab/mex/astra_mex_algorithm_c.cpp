@@ -89,8 +89,7 @@ void astra_mex_algorithm_create(int nlhs, mxArray* plhs[], int nrhs, const mxArr
 	if (!pAlg->initialize(*cfg)) {
 		delete cfg;
 		delete pAlg;
-		mexErrMsgTxt("Unable to initialize Algorithm. \n");
-		return;
+		mexErrMsgWithAstraLog("Unable to initialize Algorithm.");
 	}
 	delete cfg;
 

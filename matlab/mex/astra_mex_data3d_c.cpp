@@ -355,10 +355,9 @@ void astra_mex_data3d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 		}
 
 		if (!pGeometry->initialize(*cfg)) {
-			mexErrMsgTxt("Geometry class not initialized. \n");
 			delete pGeometry;
 			delete cfg;
-			return;
+			mexErrMsgWithAstraLog("Geometry class not initialized.");
 		}
 		delete cfg;
 
@@ -385,10 +384,9 @@ void astra_mex_data3d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 		astra::CVolumeGeometry3D* pGeometry = new astra::CVolumeGeometry3D();
 		if (!pGeometry->initialize(*cfg))
 		{
-			mexErrMsgTxt("Geometry class not initialized. \n");
 			delete pGeometry;
 			delete cfg;
-			return;
+			mexErrMsgWithAstraLog("Geometry class not initialized.");
 		}
 		delete cfg;
 

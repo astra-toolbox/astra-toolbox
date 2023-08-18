@@ -88,8 +88,7 @@ void astra_mex_projector_create(int nlhs, mxArray* plhs[], int nrhs, const mxArr
 	if (!pProj->initialize(*cfg)) {
 		delete cfg;
 		delete pProj;
-		mexErrMsgTxt("Unable to initialize Projector2D. \n");
-		return;
+		mexErrMsgWithAstraLog("Unable to initialize Projector2D.");
 	}
 	delete cfg;
 
@@ -361,9 +360,8 @@ void astra_mex_projector_matrix(int nlhs, mxArray* plhs[], int nrhs, const mxArr
 
 	CSparseMatrix* pMatrix = pProjector->getMatrix();
 	if (!pMatrix || !pMatrix->isInitialized()) {
-		mexErrMsgTxt("Couldn't initialize data object.\n");
 		delete pMatrix;
-		return;
+		mexErrMsgWithAstraLog("Couldn't initialize data object.");
 	}
 
 	// store data object

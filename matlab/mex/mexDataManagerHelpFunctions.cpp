@@ -227,10 +227,9 @@ allocateDataObject(const std::string & sDataType,
 		astra::CVolumeGeometry3D* pGeometry = new astra::CVolumeGeometry3D();
 		if (!pGeometry->initialize(*cfg))
 		{
-			mexErrMsgTxt("Geometry class not initialized. \n");
 			delete pGeometry;
 			delete cfg;
-			return NULL;
+			mexErrMsgWithAstraLog("Geometry class not initialized.");
 		}
 		delete cfg;
 
@@ -287,10 +286,9 @@ allocateDataObject(const std::string & sDataType,
 		}
 
 		if (!pGeometry->initialize(*cfg)) {
-			mexErrMsgTxt("Geometry class not initialized. \n");
 			delete pGeometry;
 			delete cfg;
-			return NULL;
+			mexErrMsgWithAstraLog("Geometry class not initialized.");
 		}
 		delete cfg;
 

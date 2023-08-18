@@ -31,11 +31,22 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "mexHelpFunctions.h"
 #include "astra/Utilities.h"
+#include "astra/Logging.h"
 
 using namespace std;
 using namespace astra;
 
 
+void mexErrMsgWithAstraLog(string message)
+{
+    string last_err_msg = CLogger::getLastErrMsg();
+	if (!last_err_msg.empty()) {
+		message.append(" ");
+		message.append(last_err_msg);
+	}
+	message.append("\n");
+	mexErrMsgTxt(message.c_str());
+}
 //-----------------------------------------------------------------------------------------
 // get string from matlab 
 string mexToString(const mxArray* pInput)

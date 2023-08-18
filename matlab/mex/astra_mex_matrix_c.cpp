@@ -254,17 +254,15 @@ void astra_mex_matrix_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 
 	// Check initialization
 	if (!pMatrix->isInitialized()) {
-		mexErrMsgTxt("Couldn't initialize data object.\n");
 		delete pMatrix;
-		return;
+		mexErrMsgTxt("Couldn't initialize data object.");
 	}
 
 	bool bResult = matlab_to_astra(prhs[1], pMatrix);
 
 	if (!bResult) {
-		mexErrMsgTxt("Failed to create data object.\n");
 		delete pMatrix;
-		return;
+		mexErrMsgWithAstraLog("Failed to create data object.");
 	}
 
 	// store data object
@@ -305,7 +303,7 @@ void astra_mex_matrix_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 
 	bool bResult = matlab_to_astra(prhs[2], pMatrix);
 	if (!bResult) {
-		mexErrMsgTxt("Failed to store matrix.\n");
+		mexErrMsgWithAstraLog("Failed to store matrix.");
 	}
 }
 
@@ -371,7 +369,7 @@ void astra_mex_matrix_get(int nlhs, mxArray* plhs[], int nrhs, const mxArray* pr
 	if (1 <= nlhs) {
 		bool bResult = astra_to_matlab(pMatrix, plhs[0]);
 		if (!bResult) {
-			mexErrMsgTxt("Failed to get matrix.\n");
+			mexErrMsgWithAstraLog("Failed to get matrix.");
 		}
 	}
 	

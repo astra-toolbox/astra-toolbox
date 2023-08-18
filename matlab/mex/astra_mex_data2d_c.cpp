@@ -121,10 +121,9 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 		Config* cfg = structToConfig("VolumeGeometry", prhs[2]);
 		CVolumeGeometry2D* pGeometry = new CVolumeGeometry2D();
 		if (!pGeometry->initialize(*cfg)) {
-			mexErrMsgTxt("Geometry class not initialized. \n");
 			delete cfg;
 			delete pGeometry;
-			return;
+			mexErrMsgWithAstraLog("Geometry class could not be initialized.");
 		}
 		// If data is specified, check dimensions
 		if (nrhs >= 4 && !mexIsScalar(prhs[3])) {
@@ -166,10 +165,9 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 			pGeometry = new CParallelProjectionGeometry2D();	
 		}
 		if (!pGeometry->initialize(*cfg)) {
-			mexErrMsgTxt("Geometry class not initialized. \n");
 			delete pGeometry;
 			delete cfg;
-			return;
+			mexErrMsgWithAstraLog("Geometry class could not be initialized.");
 		}
 		// If data is specified, check dimensions
 		if (nrhs >= 4 && !mexIsScalar(prhs[3])) {
@@ -192,9 +190,8 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 
 	// Check initialization
 	if (!pDataObject2D->isInitialized()) {
-		mexErrMsgTxt("Couldn't initialize data object.\n");
 		delete pDataObject2D;
-		return;
+		mexErrMsgWithAstraLog("Couldn't initialize data object.");
 	}
 
 	// Store data
@@ -457,10 +454,9 @@ void astra_mex_data2d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 			pGeometry = new CParallelProjectionGeometry2D();	
 		}
 		if (!pGeometry->initialize(*cfg)) {
-			mexErrMsgTxt("Geometry class not initialized. \n");
 			delete pGeometry;
 			delete cfg;
-			return;
+			mexErrMsgWithAstraLog("Geometry class not initialized.");
 		}
 		// If data is specified, check dimensions
 		if (pGeometry->getDetectorCount() != pSinogram->getDetectorCount() || pGeometry->getProjectionAngleCount() != pSinogram->getAngleCount()) {
@@ -490,10 +486,9 @@ void astra_mex_data2d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 		Config* cfg = structToConfig("VolumeGeometry2D", prhs[2]);
 		CVolumeGeometry2D* pGeometry = new CVolumeGeometry2D();
 		if (!pGeometry->initialize(*cfg)) {
-			mexErrMsgTxt("Geometry class not initialized. \n");
 			delete cfg;
 			delete pGeometry;
-			return;
+			mexErrMsgWithAstraLog("Geometry class not initialized.");
 		}
 		// If data is specified, check dimensions
 		if (pGeometry->getGridColCount() != pVolume->getWidth() || pGeometry->getGridRowCount() != pVolume->getHeight()) {

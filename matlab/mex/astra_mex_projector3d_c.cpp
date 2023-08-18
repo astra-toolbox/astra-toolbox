@@ -79,8 +79,7 @@ void astra_mex_projector3d_create(int nlhs, mxArray* plhs[], int nrhs, const mxA
 	if (!pProj->initialize(*cfg)) {
 		delete cfg;
 		delete pProj;
-		mexErrMsgTxt("Unable to initialize Projector3D. \n");
-		return;
+		mexErrMsgWithAstraLog("Unable to initialize Projector3D.");
 	}
 	delete cfg;
 

@@ -155,12 +155,11 @@ void astra_mex_direct_fp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 	pAlg->initialize(pProjector, pOutput, pInput);
 
 	if (!pAlg->isInitialized()) {
-		mexErrMsgTxt("Error initializing algorithm.");
 		// TODO: Delete pOutputMx?
 		delete pAlg;
 		delete pInput;
 		delete pOutput;
-		return;
+		mexErrMsgWithAstraLog("Error initializing algorithm.");
 	}
 
 	pAlg->run();
@@ -271,12 +270,11 @@ void astra_mex_direct_bp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 	pAlg->initialize(pProjector, pInput, pOutput);
 
 	if (!pAlg->isInitialized()) {
-		mexErrMsgTxt("Error initializing algorithm.");
 		// TODO: Delete pOutputMx?
 		delete pAlg;
 		delete pInput;
 		delete pOutput;
-		return;
+		mexErrMsgWithAstraLog("Error initializing algorithm.");
 	}
 
 	pAlg->run();
