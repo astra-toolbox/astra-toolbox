@@ -208,8 +208,7 @@ function astra_geom_visualize(proj_geom, vol_geom)
 
 
 		else
-			error('invalid projector type')
-
+			error(['Invalid projection geometry type: ' proj_geom.type '.'])
 		end
     end
 

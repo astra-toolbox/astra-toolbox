@@ -101,7 +101,7 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 	CFloat32Data2D* pDataObject2D = NULL;
 
 	if (nrhs >= 4 && !(mexIsScalar(prhs[3])|| mxIsDouble(prhs[3]) || mxIsLogical(prhs[3]) || mxIsSingle(prhs[3]) )) {
-		mexErrMsgTxt("Data must be single, double or logical.");
+		mexErrMsgTxt("Data type must be single, double or logical.");
 		return;
 	}
 	if (mxIsSparse(prhs[2])) {
@@ -113,7 +113,7 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 	if (sDataType == "-vol") {
 		// Read geometry
 		if (!mxIsStruct(prhs[2])) {
-			mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.\n");
+			mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.");
 		}
 		
 		Config* cfg = structToConfig("VolumeGeometry", prhs[2]);
@@ -139,7 +139,7 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 	else if (sDataType == "-sino") {
 		// Read geometry
 		if (!mxIsStruct(prhs[2])) {
-			mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.\n");
+			mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.");
 		}
 		
 		Config* cfg = structToConfig("ProjectionGeometry", prhs[2]);
@@ -210,7 +210,7 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 			const mwSize* dims = mxGetDimensions(prhs[3]);
 			// Check Data dimensions
 			if (pDataObject2D->getWidth() != mxGetN(prhs[3]) || pDataObject2D->getHeight() != mxGetM(prhs[3])) {
-				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
+				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry.");
 			}
 
 			// logical data		
@@ -281,7 +281,7 @@ void astra_mex_data2d_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 	int iDataID = (int)(mxGetScalar(prhs[1]));
 
 	if (!(mexIsScalar(prhs[2]) || mxIsDouble(prhs[2]) || mxIsLogical(prhs[2]) || mxIsSingle(prhs[2]))) {
-		mexErrMsgTxt("Data must be single, double or logical.");
+		mexErrMsgTxt("Data type must be single, double or logical.");
 	}
 	if (mxIsSparse(prhs[2])) {
 		mexErrMsgTxt("Data may not be sparse.");
@@ -438,7 +438,7 @@ void astra_mex_data2d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 		if (!pGeometry->initialize(*cfg)) {
 			delete pGeometry;
 			delete cfg;
-			mexErrMsgWithAstraLog("Geometry class not initialized.");
+			mexErrMsgWithAstraLog("Geometry could not be initialized.");
 		}
 		// If data is specified, check dimensions
 		if (pGeometry->getDetectorCount() != pSinogram->getDetectorCount() || pGeometry->getProjectionAngleCount() != pSinogram->getAngleCount()) {
@@ -469,7 +469,7 @@ void astra_mex_data2d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 		if (!pGeometry->initialize(*cfg)) {
 			delete cfg;
 			delete pGeometry;
-			mexErrMsgWithAstraLog("Geometry class not initialized.");
+			mexErrMsgWithAstraLog("Geometry class could not be initialized.");
 		}
 		// If data is specified, check dimensions
 		if (pGeometry->getGridColCount() != pVolume->getWidth() || pGeometry->getGridRowCount() != pVolume->getHeight()) {

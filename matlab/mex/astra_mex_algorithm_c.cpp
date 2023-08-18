@@ -132,7 +132,7 @@ void astra_mex_algorithm_run(int nlhs, mxArray* plhs[], int nrhs, const mxArray*
 		mexErrMsgTxt("Invalid algorithm ID.");
 	}
 	if (!pAlg->isInitialized()) {
-		mexErrMsgTxt("Algorithm not initialized.");
+		mexErrMsgTxt("Algorithm ID exists but is not initialized.");
 	}
 
 	// step3: perform actions
@@ -163,7 +163,7 @@ void astra_mex_algorithm_get_res_norm(int nlhs, mxArray* plhs[], int nrhs, const
 		mexErrMsgTxt("Invalid algorithm ID.");
 	}
 	if (!pAlg->isInitialized()) {
-		mexErrMsgTxt("Algorithm not initialized.");
+		mexErrMsgTxt("Algorithm ID exists but is not initialized.");
 	}
 
 	CReconstructionAlgorithm2D* pAlg2D = dynamic_cast<CReconstructionAlgorithm2D*>(pAlg);

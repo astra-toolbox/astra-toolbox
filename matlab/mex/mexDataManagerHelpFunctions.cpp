@@ -201,7 +201,7 @@ allocateDataObject(const std::string & sDataType,
 	{
 		if (!mexIsScalar(unshare))
 		{
-			mexErrMsgTxt("Argument 5 (read-only) must be scalar");
+			mexErrMsgTxt("Argument 5 (read-only) must be scalar.");
 		}
 		// unshare the array if we're not linking read-only
 		bUnshare = !(bool)mxGetScalar(unshare);
@@ -212,7 +212,7 @@ allocateDataObject(const std::string & sDataType,
 	{
 		if (!mexIsScalar(zIndex))
 		{
-			mexErrMsgTxt("Argument 6 (Z) must be scalar");
+			mexErrMsgTxt("Argument 6 (Z) must be scalar.");
 		}
 		iZ = (mwSignedIndex)mxGetScalar(zIndex);
 	}
@@ -227,7 +227,7 @@ allocateDataObject(const std::string & sDataType,
 		{
 			delete pGeometry;
 			delete cfg;
-			mexErrMsgWithAstraLog("Geometry class not initialized.");
+			mexErrMsgWithAstraLog("Geometry class could not be initialized.");
 		}
 		delete cfg;
 
@@ -239,7 +239,7 @@ allocateDataObject(const std::string & sDataType,
 					: checkDataSize(data, pGeometry)) )
 			{
 				delete pGeometry;
-				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
+				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry.");
 			}
 		}
 
@@ -284,7 +284,7 @@ allocateDataObject(const std::string & sDataType,
 		if (!pGeometry->initialize(*cfg)) {
 			delete pGeometry;
 			delete cfg;
-			mexErrMsgWithAstraLog("Geometry class not initialized.");
+			mexErrMsgWithAstraLog("Geometry class could not be initialized.");
 		}
 		delete cfg;
 

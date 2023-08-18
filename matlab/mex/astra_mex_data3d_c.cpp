@@ -75,7 +75,7 @@ void astra_mex_data3d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 	}
 
 	if (data && !checkDataType(data)) {
-		mexErrMsgTxt("Data must be single, double or logical.");
+		mexErrMsgTxt("Data type must be single, double or logical.");
 	}
 
 	const string sDataType = mexToString(prhs[1]);
@@ -210,7 +210,7 @@ void astra_mex_data3d_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 	}
 
 	if (!checkDataType(prhs[2])) {
-		mexErrMsgTxt("Data must be single or double.");
+		mexErrMsgTxt("Data type must be single or double.");
 	}
 
 	// step2: get data object
@@ -233,7 +233,7 @@ void astra_mex_data3d_dimensions(int nlhs, mxArray* plhs[], int nrhs, const mxAr
 	// step2: get data object
 	CFloat32Data3D* pData;
 	if (!(pData = CData3DManager::getSingleton().get(iDid))) {
-		mexErrMsgTxt("DataObject not valid.");
+		mexErrMsgTxt("Data object not found.");
 	}
 
 	// step3: output
@@ -339,7 +339,7 @@ void astra_mex_data3d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 		if (!pGeometry->initialize(*cfg)) {
 			delete pGeometry;
 			delete cfg;
-			mexErrMsgWithAstraLog("Geometry class not initialized.");
+			mexErrMsgWithAstraLog("Geometry class could not be initialized.");
 		}
 		delete cfg;
 
@@ -367,7 +367,7 @@ void astra_mex_data3d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 		{
 			delete pGeometry;
 			delete cfg;
-			mexErrMsgWithAstraLog("Geometry class not initialized.");
+			mexErrMsgWithAstraLog("Geometry class could not be initialized.");
 		}
 		delete cfg;
 

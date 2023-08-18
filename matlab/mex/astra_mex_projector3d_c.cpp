@@ -131,9 +131,9 @@ void astra_mex_projector3d_get_projection_geometry(int nlhs, mxArray* plhs[], in
 	int iPid = (int)(mxGetScalar(prhs[1]));
 
 	// step2: get projector
-	CProjector3D* pProjector;
-	if (!(pProjector = CProjector3DManager::getSingleton().get(iPid))) {
-		mexErrMsgTxt("Projector not found.");
+	CProjector3D* pProjector = CProjector3DManager::getSingleton().get(iPid);
+	if (!pProjector || !pProjector->isInitialized()) {
+		mexErrMsgTxt("Projector could not be found or is not initialized.");
 	}
 
 	// step3: get projection_geometry and turn it into a MATLAB struct
@@ -159,7 +159,7 @@ void astra_mex_projector3d_get_volume_geometry(int nlhs, mxArray* plhs[], int nr
 	// step2: get projector
 	CProjector3D* pProjector = CProjector3DManager::getSingleton().get(iPid);
 	if (!pProjector || !pProjector->isInitialized()) {
-		mexErrMsgTxt("Projector could not be found or is not found.");
+		mexErrMsgTxt("Projector could not be found or is not initialized.");
 	}
 
 	// step3: get projection_geometry and turn it into a MATLAB struct

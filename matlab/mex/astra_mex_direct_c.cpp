@@ -73,7 +73,7 @@ void astra_mex_direct_fp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 	// TODO: Add an optional way of specifying extra options
 
 	if (nrhs < 3) {
-		mexErrMsgTxt("Not enough arguments. Syntax: astra_mex_direct_c('FP3D', projector_id, data)");
+		mexErrMsgTxt("Not enough arguments. Syntax: astra_mex_direct_c('FP3D', projector_id, data);");
 	}
 
 	int iPid = (int)(mxGetScalar(prhs[1]));
@@ -83,7 +83,7 @@ void astra_mex_direct_fp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 		mexErrMsgTxt("Projector not found.");
 	}
 	if (!pProjector->isInitialized()) {
-		mexErrMsgTxt("Projector not initialized.");
+		mexErrMsgTxt("Projector exists but is not initialized.");
 	}
 	bool isCuda = false;
 	if (dynamic_cast<CCudaProjector3D*>(pProjector))
@@ -97,7 +97,7 @@ void astra_mex_direct_fp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 
 	const mxArray* const data = prhs[2];
 	if (!checkDataType(data)) {
-		mexErrMsgTxt("Data must be single or double.");
+		mexErrMsgTxt("Data type must be single or double.");
 	}
 
 	if (!checkDataSize(data, pVolGeom)) {
@@ -182,7 +182,7 @@ void astra_mex_direct_bp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 	// TODO: Add an optional way of specifying extra options
 
 	if (nrhs < 3) {
-		mexErrMsgTxt("Not enough arguments. Syntax: astra_mex_direct_c('BP3D', projector_id, data)");
+		mexErrMsgTxt("Not enough arguments. Syntax: astra_mex_direct_c('BP3D', projector_id, data);");
 	}
 
 	int iPid = (int)(mxGetScalar(prhs[1]));
@@ -192,7 +192,7 @@ void astra_mex_direct_bp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 		mexErrMsgTxt("Projector not found.");
 	}
 	if (!pProjector->isInitialized()) {
-		mexErrMsgTxt("Projector not initialized.");
+		mexErrMsgTxt("Projector exists but is not initialized.");
 	}
 	bool isCuda = false;
 	if (dynamic_cast<CCudaProjector3D*>(pProjector))
@@ -206,7 +206,7 @@ void astra_mex_direct_bp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 
 	const mxArray* const data = prhs[2];
 	if (!checkDataType(data)) {
-		mexErrMsgTxt("Data must be single or double.");
+		mexErrMsgTxt("Data type must be single or double.");
 	}
 
 	if (!checkDataSize(data, pProjGeom)) {

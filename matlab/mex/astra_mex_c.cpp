@@ -218,7 +218,7 @@ void astra_mex_info(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 void astra_mex_delete(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments. Usage: astra_mex('delete', index/indices);\n");
+		mexErrMsgTxt("Not enough arguments. Usage: astra_mex('delete', index/indices);");
 	}
 
 	for (int i = 1; i < nrhs; i++) {

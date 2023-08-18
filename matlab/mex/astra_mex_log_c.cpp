@@ -133,7 +133,7 @@ void astra_mex_log_enable(int nlhs, mxArray* plhs[], int nrhs, const mxArray* pr
 	}else if(sType == "screen"){
 		astra::CLogger::enableScreen();
 	} else {
-		mexErrMsgTxt("Specify which output to enable ('all', 'file', or 'screen')");
+		mexErrMsgTxt("Specify which output to enable ('all', 'file', or 'screen').");
 	}
 }
 
@@ -156,7 +156,7 @@ void astra_mex_log_disable(int nlhs, mxArray* plhs[], int nrhs, const mxArray* p
 	}else if(sType == "screen"){
 		astra::CLogger::disableScreen();
 	} else {
-		mexErrMsgTxt("Specify which output to disable ('all', 'file', or 'screen')");
+		mexErrMsgTxt("Specify which output to disable ('all', 'file', or 'screen').");
 	}
 }
 
@@ -197,7 +197,7 @@ void astra_mex_log_format(int nlhs, mxArray* plhs[], int nrhs, const mxArray* pr
 	}else if(sType == "screen"){
 		astra::CLogger::setFormatScreen(sFormat.c_str());
 	} else {
-		mexErrMsgTxt("Specify which output to format ('file' or 'screen')");
+		mexErrMsgTxt("Specify which output to format ('file' or 'screen').");
 	}
 }
 
@@ -229,7 +229,7 @@ void astra_mex_log_output(int nlhs, mxArray* plhs[], int nrhs, const mxArray* pr
 	}else if(sLevel == "error"){
 		eLevel = LOG_ERROR;
 	}else{
-		mexErrMsgTxt("Specify which log level to use ('debug', 'info', 'warn', or 'error')");
+		mexErrMsgTxt("Specify which log level to use ('debug', 'info', 'warn', or 'error').");
 	}
 	if(sType == "file"){
 		astra::CLogger::setOutputFile(sOutput.c_str(),eLevel);
@@ -240,11 +240,11 @@ void astra_mex_log_output(int nlhs, mxArray* plhs[], int nrhs, const mxArray* pr
 		}else if(sOutput == "stderr"){
 			fd=2;
 		}else{
-			mexErrMsgTxt("Specify which screen to output to ('stdout' or 'stderr')");
+			mexErrMsgTxt("Specify which screen to output to ('stdout' or 'stderr').");
 		}
 		astra::CLogger::setOutputScreen(fd,eLevel);
 	} else {
-		mexErrMsgTxt("Specify which output to set ('file' or 'screen')");
+		mexErrMsgTxt("Specify which output to set ('file' or 'screen')".);
 	}
 }
 

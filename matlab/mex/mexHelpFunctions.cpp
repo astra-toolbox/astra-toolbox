@@ -223,7 +223,7 @@ bool optionsToXMLNode(XMLNode node, const mxArray* pOptionStruct)
 		const mxArray* pField = mxGetFieldByNumber(pOptionStruct, 0, i);
 
 		if (node.hasOption(sFieldName)) {
-			mexErrMsgTxt("Duplicate option");
+			mexErrMsgTxt("Duplicate option.");
 		}
 	
 		// string or scalar
@@ -242,7 +242,7 @@ bool optionsToXMLNode(XMLNode node, const mxArray* pOptionStruct)
 			double* pdValues = mxGetPr(pField);
 			listbase.setContent(pdValues, mxGetN(pField), mxGetM(pField), true);
 		} else {
-			mexErrMsgTxt("Unsupported option type");
+			mexErrMsgTxt("Unsupported option type.");
 		}
 	}
 	return true;
