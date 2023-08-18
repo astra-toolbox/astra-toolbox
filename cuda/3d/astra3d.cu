@@ -1304,7 +1304,7 @@ bool astraCudaBP_SIRTWeighted(float* pfVolume,
 
 }
 
-_AstraExport void uploadMultipleProjections(CFloat32ProjectionData3DGPU *proj,
+_AstraExport bool uploadMultipleProjections(CFloat32ProjectionData3DGPU *proj,
                                          const float *data,
                                          unsigned int y_min, unsigned int y_max)
 {
@@ -1317,8 +1317,10 @@ _AstraExport void uploadMultipleProjections(CFloat32ProjectionData3DGPU *proj,
 
 	cudaPitchedPtr D_proj = allocateProjectionData(dims1);
 	bool ok = copyProjectionsToDevice(data, D_proj, dims1);
-	if (!ok)
+	if (!ok) {
 		ASTRA_ERROR("Failed to upload projection to GPU");
+		return false;
+	}
 
 	astraCUDA3d::MemHandle3D hnd1 = astraCUDA3d::wrapHandle(
 			(float *)D_proj.ptr,
@@ -1338,11 +1340,13 @@ _AstraExport void uploadMultipleProjections(CFloat32ProjectionData3DGPU *proj,
 	subdims.subz = 0;
 
 	ok = astraCUDA3d::copyIntoArray(hnd, hnd1, subdims);
-	if (!ok)
+	if (!ok) {
 		ASTRA_ERROR("Failed to copy projection into 3d data");
+		return false;
+	}
 
 	cudaFree(D_proj.ptr);
-
+	return true;
 }
 
 

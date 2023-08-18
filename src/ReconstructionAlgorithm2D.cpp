@@ -92,8 +92,8 @@ bool CReconstructionAlgorithm2D::initialize(const Config& _cfg)
 		id = StringUtil::stringToInt(node.getContent(), -1);
 		m_pProjector = CProjector2DManager::getSingleton().get(id);
 		if (!m_pProjector) {
-			// Report this explicitly since projector is optional
 			ASTRA_ERROR("ProjectorId is not a valid id");
+			return false;
 		}
 	}
 	CC.markNodeParsed("ProjectorId");
@@ -138,6 +138,7 @@ bool CReconstructionAlgorithm2D::initialize(const Config& _cfg)
 		} catch (const astra::StringUtil::bad_cast &e) {
 			m_fMinValue = 0.0f;
 			ASTRA_ERROR("MinConstraint must be numerical");
+			return false;
 		}
 		CC.markOptionParsed("MinConstraint");
 	} else {
@@ -150,6 +151,7 @@ bool CReconstructionAlgorithm2D::initialize(const Config& _cfg)
 			} catch (const astra::StringUtil::bad_cast &e) {
 				m_fMinValue = 0.0f;
 				ASTRA_ERROR("MinConstraintValue must be numerical");
+				return false;
 			}
 			CC.markOptionParsed("MinConstraintValue");
 		}
@@ -161,6 +163,7 @@ bool CReconstructionAlgorithm2D::initialize(const Config& _cfg)
 		} catch (const astra::StringUtil::bad_cast &e) {
 			m_fMinValue = 255.0f;
 			ASTRA_ERROR("MaxConstraint must be numerical");
+			return false;
 		}
 		CC.markOptionParsed("MaxConstraint");
 	} else {
@@ -173,6 +176,7 @@ bool CReconstructionAlgorithm2D::initialize(const Config& _cfg)
 			} catch (const astra::StringUtil::bad_cast &e) {
 				m_fMaxValue = 255.0f;
 				ASTRA_ERROR("MaxConstraintValue must be numerical");
+				return false;
 			}
 			CC.markOptionParsed("MaxConstraintValue");
 		}

@@ -157,6 +157,7 @@ bool CReconstructionAlgorithm3D::initialize(const Config& _cfg)
 		} catch (const astra::StringUtil::bad_cast &e) {
 			m_fMinValue = 0.0f;
 			ASTRA_ERROR("MinConstraint must be numerical");
+			return false;
 		}
 		CC.markOptionParsed("MinConstraint");
 	} else {
@@ -169,6 +170,7 @@ bool CReconstructionAlgorithm3D::initialize(const Config& _cfg)
 			} catch (const astra::StringUtil::bad_cast &e) {
 				m_fMinValue = 0.0f;
 				ASTRA_ERROR("MinConstraintValue must be numerical");
+				return false;
 			}
 			CC.markOptionParsed("MinConstraintValue");
 		}
@@ -180,6 +182,7 @@ bool CReconstructionAlgorithm3D::initialize(const Config& _cfg)
 		} catch (const astra::StringUtil::bad_cast &e) {
 			m_fMinValue = 255.0f;
 			ASTRA_ERROR("MaxConstraint must be numerical");
+			return false;
 		}
 		CC.markOptionParsed("MaxConstraint");
 	} else {
@@ -192,6 +195,7 @@ bool CReconstructionAlgorithm3D::initialize(const Config& _cfg)
 			} catch (const astra::StringUtil::bad_cast &e) {
 				m_fMaxValue = 255.0f;
 				ASTRA_ERROR("MaxConstraintValue must be numerical");
+				return false;
 			}
 			CC.markOptionParsed("MaxConstraintValue");
 		}

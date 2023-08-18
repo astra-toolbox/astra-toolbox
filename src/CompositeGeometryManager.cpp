@@ -1413,6 +1413,7 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 	CFloat32CustomGPUMemory *dstMem = createGPUMemoryHandler(output->pData);
 
 	bool ok = dstMem->allocateGPUMemory(outx, outy, outz, zero ? astraCUDA3d::INIT_ZERO : astraCUDA3d::INIT_NO);
+	// TODO: cleanup and return error code after any error
 	if (!ok) ASTRA_ERROR("Error allocating GPU memory");
 
 	if (!zero) {
