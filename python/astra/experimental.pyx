@@ -31,6 +31,7 @@ include "config.pxi"
 from . cimport utils
 from .utils import wrap_from_bytes
 from .utils cimport createProjectionGeometry3D
+from .log import AstraError
 
 IF HAVE_CUDA==True:
 
@@ -93,10 +94,10 @@ IF HAVE_CUDA==True:
         cdef CProjector3D * projector = manProj.get(projector_id) # may be NULL
         if t == "FP":
             if not m.doFP(projector, vol, proj, mode):
-                raise Exception("Failed to perform FP")
+                raise AstraError("Failed to perform FP", append_log=True)
         elif t == "BP":
             if not m.doBP(projector, vol, proj, mode):
-                raise Exception("Failed to perform BP")
+                raise AstraError("Failed to perform BP", append_log=True)
         else:
             raise RuntimeError("internal error: wrong composite op type")
 
@@ -126,7 +127,7 @@ IF HAVE_CUDA==True:
         cdef CCompositeGeometryManager m
         cdef CProjector3D * projector = manProj.get(projector_id) # may be NULL
         if not m.doFDK(projector, pVolObject, pProjObject, False, NULL, MODE_ADD):
-            raise Exception("Failed to perform FDK")
+            raise AstraError("Failed to perform FDK", append_log=True)
 
     from . cimport utils
     from .utils cimport linkVolFromGeometry, linkProjFromGeometry
@@ -149,10 +150,10 @@ IF HAVE_CUDA==True:
         try:
             if t == "FP":
                 if not m.doFP(projector, vols, projs, mode):
-                    raise Exception("Failed to perform FP")
+                    AstraError("Failed to perform FP", append_log=True)
             elif t == "BP":
                 if not m.doBP(projector, vols, projs, mode):
-                    raise Exception("Failed to perform BP")
+                    AstraError("Failed to perform BP", append_log=True)
             else:
                 raise RuntimeError("internal error: wrong op type")
         finally:

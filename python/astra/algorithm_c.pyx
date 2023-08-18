@@ -41,6 +41,8 @@ from .PyXMLDocument cimport XMLDocument
 from . cimport utils
 from .utils import wrap_from_bytes
 
+from .log import AstraError
+
 cdef CAlgorithmManager * manAlg = <CAlgorithmManager * >PyAlgorithmManager.getSingletonPtr()
 
 cdef extern from *:
@@ -65,7 +67,7 @@ def create(config):
     if not alg.initialize(cfg[0]):
         del cfg
         del alg
-        raise Exception("Unable to initialize Algorithm.")
+        raise AstraError("Unable to initialize algorithm", append_log=True)
     del cfg
     return manAlg.store(alg)
 

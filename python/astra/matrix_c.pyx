@@ -42,6 +42,7 @@ from . cimport PyMatrixManager
 from .PyMatrixManager cimport CMatrixManager
 from .PyIncludes cimport *
 from .utils import wrap_from_bytes
+from .log import AstraError
 
 cdef CMatrixManager * manM = <CMatrixManager * >PyMatrixManager.getSingletonPtr()
 
@@ -87,7 +88,7 @@ def create(data):
     pMatrix = new CSparseMatrix(data.shape[0], data.shape[1], data.nnz)
     if not pMatrix.isInitialized():
         del pMatrix
-        raise Exception("Couldn't initialize data object.")
+        raise AstraError("Couldn't initialize data object", append_log=True)
     try:
         csr_matrix_to_astra(data,pMatrix)
     except:

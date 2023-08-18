@@ -27,6 +27,7 @@
 # distutils: libraries = astra
 
 import six
+from libcpp.string cimport string
 
 cdef extern from "astra/Logging.h" namespace "astra":
     cdef enum log_level:
@@ -50,6 +51,7 @@ cdef extern from "astra/Logging.h" namespace "astra::CLogger":
     void disableFile()
     void setFormatFile(const char *fmt)
     void setFormatScreen(const char *fmt)
+    string getLastErrMsg()
 
 def log_debug(sfile, sline, message):
     cstr = list(map(six.b,(sfile,message)))
@@ -101,3 +103,6 @@ def log_setOutputScreen(fd, level):
 def log_setOutputFile(filename, level):
     cstr = six.b(filename)
     setOutputFile(cstr, enumList[level])
+
+def log_getLastErrMsg():
+    return getLastErrMsg().decode('UTF-8')

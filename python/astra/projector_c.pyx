@@ -31,6 +31,7 @@ from .PyIncludes cimport *
 
 from . cimport utils
 from .utils import wrap_from_bytes
+from .log import AstraError
 
 from . cimport PyProjector2DFactory
 from .PyProjector2DFactory cimport CProjector2DFactory
@@ -64,7 +65,7 @@ def create(config):
     if not proj.initialize(cfg[0]):
         del cfg
         del proj
-        raise Exception("Unable to initialize Projector2D.")
+        raise AstraError("Unable to initialize Projector2D", append_log=True)
     del cfg
     return manProj.store(proj)
 

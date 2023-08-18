@@ -49,6 +49,7 @@ np.import_array()
 from .PyIncludes cimport *
 from . cimport utils
 from .utils import wrap_from_bytes
+from .log import AstraError
 
 from .pythonutils import geom_size
 
@@ -94,7 +95,7 @@ def create(datatype, geometry, data=None, link=False):
         if not pGeometry.initialize(cfg[0]):
             del cfg
             del pGeometry
-            raise RuntimeError('Geometry class not initialized.')
+            raise AstraError('Geometry class could not be initialized', append_log=True)
         if link:
             pCustom = <CFloat32CustomMemory*> new CFloat32CustomPython(data)
             pDataObject2D = <CFloat32Data2D * > new CFloat32VolumeData2D(pGeometry, pCustom)
@@ -118,7 +119,7 @@ def create(datatype, geometry, data=None, link=False):
         if not ppGeometry.initialize(cfg[0]):
             del cfg
             del ppGeometry
-            raise RuntimeError('Geometry class not initialized.')
+            raise AstraError('Geometry class could not be initialized', append_log=True)
         if link:
             pCustom = <CFloat32CustomMemory*> new CFloat32CustomPython(data)
             pDataObject2D = <CFloat32Data2D * > new CFloat32ProjectionData2D(ppGeometry, pCustom)
@@ -131,7 +132,7 @@ def create(datatype, geometry, data=None, link=False):
 
     if not pDataObject2D.isInitialized():
         del pDataObject2D
-        raise RuntimeError("Couldn't initialize data object.")
+        raise AstraError("Couldn't initialize data object", append_log=True)
 
     if not link: fillDataObject(pDataObject2D, data)
 
@@ -234,7 +235,7 @@ def change_geometry(i, geom):
         if not ppGeometry.initialize(cfg[0]):
             del cfg
             del ppGeometry
-            raise RuntimeError('Geometry class not initialized.')
+            AstraError('Geometry class could not be initialized', append_log=True)
         geom_shape = (ppGeometry.getProjectionAngleCount(), ppGeometry.getDetectorCount())
         obj_shape = (pDataObject2.getAngleCount(), pDataObject2.getDetectorCount())
         if geom_shape != obj_shape:
@@ -252,7 +253,7 @@ def change_geometry(i, geom):
         if not pGeometry.initialize(cfg[0]):
             del cfg
             del pGeometry
-            raise RuntimeError('Geometry class not initialized.')
+            raise AstraError('Geometry class could not be initialized', append_log=True)
         geom_shape = (pGeometry.getGridRowCount(), pGeometry.getGridColCount())
         obj_shape = (pDataObject3.getHeight(), pDataObject3.getWidth())
         if geom_shape != obj_shape:

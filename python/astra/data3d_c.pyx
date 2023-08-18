@@ -45,6 +45,7 @@ from .PyXMLDocument cimport XMLDocument
 from . cimport utils
 from .utils import wrap_from_bytes
 from .utils cimport linkVolFromGeometry, linkProjFromGeometry, createProjectionGeometry3D, createVolumeGeometry3D
+from .log import AstraError
 
 from .pythonutils import geom_size, GPULink
 
@@ -105,7 +106,7 @@ def create(datatype,geometry,data=None, link=False):
 
     if not pDataObject3D.isInitialized():
         del pDataObject3D
-        raise RuntimeError("Couldn't initialize data object.")
+        raise AstraError("Couldn't initialize data object", append_log=True)
 
     if not link:
         fillDataObject(dynamic_cast_mem_safe(pDataObject3D), data)

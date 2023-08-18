@@ -46,6 +46,7 @@ from .PyXMLDocument cimport XMLNode
 from .PyIncludes cimport *
 
 from .pythonutils import GPULink, checkArrayForLink
+from .log import AstraError
 
 cdef extern from "CFloat32CustomPython.h":
     cdef cppclass CFloat32CustomPython:
@@ -313,7 +314,7 @@ cdef CProjectionGeometry3D* createProjectionGeometry3D(geometry) except NULL:
     if not pGeometry.initialize(cfg[0]):
         del cfg
         del pGeometry
-        raise RuntimeError('Geometry class not initialized.')
+        raise AstraError('Geometry class could not be initialized', append_log=True)
 
     del cfg
 
@@ -327,7 +328,7 @@ cdef CVolumeGeometry3D* createVolumeGeometry3D(geometry) except NULL:
     if not pGeometry.initialize(cfg[0]):
         del cfg
         del pGeometry
-        raise RuntimeError('Geometry class not initialized.')
+        raise AstraError('Geometry class could not be initialized', append_log=True)
 
     del cfg
 
