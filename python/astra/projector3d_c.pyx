@@ -57,7 +57,7 @@ def create(config):
     proj = PyProjector3DFactory.getSingletonPtr().create(cfg.self.getAttribute(six.b('type')))
     if proj == NULL:
         del cfg
-        raise Exception("Unknown Projector3D type.")
+        raise AstraError("Unknown Projector3D type")
     if not proj.initialize(cfg[0]):
         del cfg
         del proj
@@ -84,9 +84,9 @@ def info():
 cdef CProjector3D * getObject(i) except NULL:
     cdef CProjector3D * proj = manProj.get(i)
     if proj == NULL:
-        raise Exception("Projector not initialized.")
+        raise AstraError("Projector not found")
     if not proj.isInitialized():
-        raise Exception("Projector not initialized.")
+        raise AstraError("Projector not initialized")
     return proj
 
 
@@ -107,15 +107,15 @@ def volume_geometry(i):
 
 
 def weights_single_ray(i, projection_index, detector_index):
-    raise Exception("Not yet implemented")
+    raise NotImplementedError("Not yet implemented")
 
 
 def weights_projection(i, projection_index):
-    raise Exception("Not yet implemented")
+    raise NotImplementedError("Not yet implemented")
 
 
 def splat(i, row, col):
-    raise Exception("Not yet implemented")
+    raise NotImplementedError("Not yet implemented")
 
 def is_cuda(i):
     cdef CProjector3D * proj = getObject(i)

@@ -71,24 +71,24 @@ IF HAVE_CUDA==True:
 
     def do_composite(projector_id, vol_ids, proj_ids, mode, t):
         if mode != MODE_ADD and mode != MODE_SET:
-            raise RuntimeError("internal error: wrong composite mode")
+            raise AstraError("Internal error: wrong composite mode")
         cdef vector[CFloat32VolumeData3D *] vol
         cdef CFloat32VolumeData3D * pVolObject
         cdef CFloat32ProjectionData3D * pProjObject
         for v in vol_ids:
             pVolObject = dynamic_cast_vol_mem(man3d.get(v))
             if pVolObject == NULL:
-                raise Exception("Data object not found")
+                raise AstraError("Data object not found")
             if not pVolObject.isInitialized():
-                raise Exception("Data object not initialized properly")
+                raise AstraError("Data object not initialized properly")
             vol.push_back(pVolObject)
         cdef vector[CFloat32ProjectionData3D *] proj
         for v in proj_ids:
             pProjObject = dynamic_cast_proj_mem(man3d.get(v))
             if pProjObject == NULL:
-                raise Exception("Data object not found")
+                raise AstraError("Data object not found")
             if not pProjObject.isInitialized():
-                raise Exception("Data object not initialized properly")
+                raise AstraError("Data object not initialized properly")
             proj.push_back(pProjObject)
         cdef CCompositeGeometryManager m
         cdef CProjector3D * projector = manProj.get(projector_id) # may be NULL
@@ -99,7 +99,7 @@ IF HAVE_CUDA==True:
             if not m.doBP(projector, vol, proj, mode):
                 raise AstraError("Failed to perform BP", append_log=True)
         else:
-            raise RuntimeError("internal error: wrong composite op type")
+            raise AstraError("Internal error: wrong composite op type")
 
     def do_composite_FP(projector_id, vol_ids, proj_ids):
         do_composite(projector_id, vol_ids, proj_ids, MODE_SET, "FP")
@@ -116,14 +116,14 @@ IF HAVE_CUDA==True:
         cdef CFloat32ProjectionData3D * pProjObject
         pVolObject = dynamic_cast_vol_mem(man3d.get(vol_id))
         if pVolObject == NULL:
-            raise Exception("Data object not found")
+            raise AstraError("Data object not found")
         if not pVolObject.isInitialized():
-            raise Exception("Data object not initialized properly")
+            raise AstraError("Data object not initialized properly")
         pProjObject = dynamic_cast_proj_mem(man3d.get(proj_id))
         if pProjObject == NULL:
-            raise Exception("Data object not found")
+            raise AstraError("Data object not found")
         if not pProjObject.isInitialized():
-            raise Exception("Data object not initialized properly")
+            raise AstraError("Data object not initialized properly")
         cdef CCompositeGeometryManager m
         cdef CProjector3D * projector = manProj.get(projector_id) # may be NULL
         if not m.doFDK(projector, pVolObject, pProjObject, False, NULL, MODE_ADD):
@@ -134,10 +134,10 @@ IF HAVE_CUDA==True:
 
     def direct_FPBP3D(projector_id, vol, proj, mode, t):
         if mode != MODE_ADD and mode != MODE_SET:
-            raise RuntimeError("internal error: wrong composite mode")
+            raise AstraError("Internal error: wrong composite mode")
         cdef CProjector3D * projector = manProj.get(projector_id)
         if projector == NULL:
-            raise Exception("Projector not found")
+            raise AstraError("Projector not found")
         cdef CVolumeGeometry3D *pGeometry = projector.getVolumeGeometry()
         cdef CProjectionGeometry3D *ppGeometry = projector.getProjectionGeometry()
         cdef CFloat32VolumeData3D * pVol = linkVolFromGeometry(pGeometry, vol)
@@ -155,7 +155,7 @@ IF HAVE_CUDA==True:
                 if not m.doBP(projector, vols, projs, mode):
                     AstraError("Failed to perform BP", append_log=True)
             else:
-                raise RuntimeError("internal error: wrong op type")
+                AstraError("Internal error: wrong op type")
         finally:
             del pVol
             del pProj

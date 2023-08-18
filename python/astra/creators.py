@@ -31,6 +31,7 @@ from . import data3d
 from . import projector
 from . import projector3d
 from . import algorithm
+from .log import AstraError
 
 def astra_dict(intype):
     """Creates a dict to use with the ASTRA Toolbox.
@@ -238,52 +239,52 @@ This method can be called in a number of ways:
 """
     if intype == 'parallel':
         if len(args) < 3:
-            raise Exception(
-                'not enough variables: astra_create_proj_geom(parallel, detector_spacing, det_count, angles)')
+            raise AstraError(
+                'Not enough variables. Usage: astra.create_proj_geom(parallel, detector_spacing, det_count, angles)')
         return {'type': 'parallel', 'DetectorWidth': args[0], 'DetectorCount': args[1], 'ProjectionAngles': args[2]}
     elif intype == 'parallel_vec':
         if len(args) < 2:
-            raise Exception('not enough variables: astra_create_proj_geom(parallel_vec, det_count, V)')
+            raise AstraError('Not enough variables. Usage: astra.create_proj_geom(parallel_vec, det_count, V)')
         if not args[1].shape[1] == 6:
-            raise Exception('V should be a Nx6 matrix, with N the number of projections')
+            raise AstraError('V should be a Nx6 matrix, with N the number of projections')
         return {'type':'parallel_vec', 'DetectorCount':args[0], 'Vectors':args[1]}
     elif intype == 'fanflat':
         if len(args) < 5:
-            raise Exception('not enough variables: astra_create_proj_geom(fanflat, det_width, det_count, angles, source_origin, origin_det)')
+            raise AstraError('Not enough variables. Usage: astra.create_proj_geom(fanflat, det_width, det_count, angles, source_origin, origin_det)')
         return {'type': 'fanflat', 'DetectorWidth': args[0], 'DetectorCount': args[1], 'ProjectionAngles': args[2], 'DistanceOriginSource': args[3], 'DistanceOriginDetector': args[4]}
     elif intype == 'fanflat_vec':
         if len(args) < 2:
-            raise Exception('not enough variables: astra_create_proj_geom(fanflat_vec, det_count, V)')
+            raise AstraError('Not enough variables. Usage: astra.create_proj_geom(fanflat_vec, det_count, V)')
         if not args[1].shape[1] == 6:
-            raise Exception('V should be a Nx6 matrix, with N the number of projections')
+            raise AstraError('V should be a Nx6 matrix, with N the number of projections')
         return {'type':'fanflat_vec', 'DetectorCount':args[0], 'Vectors':args[1]}
     elif intype == 'parallel3d':
         if len(args) < 5:
-            raise Exception('not enough variables: astra_create_proj_geom(parallel3d, detector_spacing_x, detector_spacing_y, det_row_count, det_col_count, angles)')
+            raise AstraError('Not enough variables. Usage: astra.reate_proj_geom(parallel3d, detector_spacing_x, detector_spacing_y, det_row_count, det_col_count, angles)')
         return {'type':'parallel3d', 'DetectorSpacingX':args[0], 'DetectorSpacingY':args[1], 'DetectorRowCount':args[2], 'DetectorColCount':args[3],'ProjectionAngles':args[4]}
     elif intype == 'cone':
         if len(args) < 7:
-            raise Exception('not enough variables: astra_create_proj_geom(cone, detector_spacing_x, detector_spacing_y, det_row_count, det_col_count, angles, source_origin, origin_det)')
+            raise AstraError('Not enough variables. Usage: astra.create_proj_geom(cone, detector_spacing_x, detector_spacing_y, det_row_count, det_col_count, angles, source_origin, origin_det)')
         return {'type': 'cone','DetectorSpacingX':args[0], 'DetectorSpacingY':args[1], 'DetectorRowCount':args[2],'DetectorColCount':args[3],'ProjectionAngles':args[4],'DistanceOriginSource': args[5],'DistanceOriginDetector':args[6]}
     elif intype == 'cone_vec':
         if len(args) < 3:
-            raise Exception('not enough variables: astra_create_proj_geom(cone_vec, det_row_count, det_col_count, V)')
+            raise AstraError('Not enough variables. Usage: astra.create_proj_geom(cone_vec, det_row_count, det_col_count, V)')
         if not args[2].shape[1] == 12:
-            raise Exception('V should be a Nx12 matrix, with N the number of projections')
+            raise AstraError('V should be a Nx12 matrix, with N the number of projections')
         return {'type': 'cone_vec','DetectorRowCount':args[0],'DetectorColCount':args[1],'Vectors':args[2]}
     elif intype == 'parallel3d_vec':
         if len(args) < 3:
-            raise Exception('not enough variables: astra_create_proj_geom(parallel3d_vec, det_row_count, det_col_count, V)')
+            raise AstraError('Not enough variables. Usage: astra.create_proj_geom(parallel3d_vec, det_row_count, det_col_count, V)')
         if not args[2].shape[1] == 12:
-            raise Exception('V should be a Nx12 matrix, with N the number of projections')
+            raise AstraError('V should be a Nx12 matrix, with N the number of projections')
         return {'type': 'parallel3d_vec','DetectorRowCount':args[0],'DetectorColCount':args[1],'Vectors':args[2]}
     elif intype == 'sparse_matrix':
         if len(args) < 4:
-            raise Exception(
-                'not enough variables: astra_create_proj_geom(sparse_matrix, det_width, det_count, angles, matrix_id)')
+            raise AstraError(
+                'Not enough variables. Usage: astra.create_proj_geom(sparse_matrix, det_width, det_count, angles, matrix_id)')
         return {'type': 'sparse_matrix', 'DetectorWidth': args[0], 'DetectorCount': args[1], 'ProjectionAngles': args[2], 'MatrixID': args[3]}
     else:
-        raise Exception('Error: unknown type ' + intype)
+        raise AstraError('Unknown projection geometry type: ' + intype)
 
 
 def create_backprojection(data, proj_id, returnData=True):
@@ -554,7 +555,7 @@ def create_projector(proj_type, proj_geom, vol_geom, options=None):
 
 """
     if proj_type == 'blob':
-        raise Exception('Blob type not yet implemented')
+        raise NotImplementedError('Blob type not yet implemented')
     cfg = astra_dict(proj_type)
     cfg['ProjectionGeometry'] = proj_geom
     cfg['VolumeGeometry'] = vol_geom

@@ -44,6 +44,7 @@ from . import projector
 from . import algorithm
 from . import pythonutils
 
+from .log import AstraError
 
 
 def clear():
@@ -268,8 +269,7 @@ def geom_2vec(proj_geom):
         'parallel3d_vec', proj_geom['DetectorRowCount'], proj_geom['DetectorColCount'], vectors)
 
     else:
-        raise ValueError(
-        'No suitable vector geometry found for type: ' + proj_geom['type'])
+        raise AstraError('No suitable vector geometry found for type: ' + proj_geom['type'])
     return proj_geom_out
 
 
@@ -302,7 +302,7 @@ def geom_postalignment(proj_geom, factor):
         if len(factor) > 1:
             V[:,3:6] = V[:,3:6] + factor[1] * V[:,9:12]
     else:
-        raise RuntimeError('No suitable geometry for postalignment: ' + proj_geom['type'])
+        raise AstraError(proj_geom['type'] + 'geometry is not suitable for postalignment')
 
     return proj_geom
 

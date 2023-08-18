@@ -87,7 +87,8 @@ def create(datatype, geometry, data=None, link=False):
     if link:
         geom_shape = geom_size(geometry)
         if data.shape != geom_shape:
-            raise ValueError("The dimensions of the data do not match those specified in the geometry: {} != {}".format(data.shape, geom_shape))
+            raise ValueError("The dimensions of the data do not match those specified in the geometry: "
+                             "{} (data) != {} (geometry)".format(data.shape, geom_shape))
 
     if datatype == '-vol':
         cfg = utils.dictToConfig(six.b('VolumeGeometry'), geometry)
@@ -128,7 +129,7 @@ def create(datatype, geometry, data=None, link=False):
         del ppGeometry
         del cfg
     else:
-        raise ValueError("Invalid datatype.  Please specify '-vol' or '-sino'.")
+        raise ValueError("Invalid datatype. Please specify '-vol' or '-sino'")
 
     if not pDataObject2D.isInitialized():
         del pDataObject2D
@@ -146,7 +147,8 @@ cdef fillDataObject(CFloat32Data2D * obj, data):
             obj_shape = (obj.getHeight(), obj.getWidth())
             if data.shape != obj_shape:
                 raise ValueError(
-                  "The dimensions of the data do not match those specified in the geometry: {} != {}".format(data.shape, obj_shape))
+                  "The dimensions of the data do not match those specified in the geometry: "
+                  "{} (data) != {} (geometry)".format(data.shape, obj_shape))
             fillDataObjectArray(obj, np.ascontiguousarray(data,dtype=np.float32))
         else:
             fillDataObjectScalar(obj, np.float32(data))
@@ -165,9 +167,9 @@ cdef fillDataObjectArray(CFloat32Data2D * obj, float [:,::1] data):
 cdef CFloat32Data2D * getObject(i) except NULL:
     cdef CFloat32Data2D * pDataObject = man2d.get(i)
     if pDataObject == NULL:
-        raise ValueError("Data object not found")
+        raise AstraError("Data object not found")
     if not pDataObject.isInitialized():
-        raise RuntimeError("Data object not initialized properly.")
+        raise AstraError("Data object not initialized properly")
     return pDataObject
 
 
@@ -186,15 +188,15 @@ def get_geometry(i):
         pDataObject3 = <CFloat32VolumeData2D * >pDataObject
         geom = utils.configToDict(pDataObject3.getGeometry().getConfiguration())
     else:
-        raise RuntimeError("Not a known data object")
+        raise AstraError("Not a known data object")
     return geom
 
 cdef CProjector2D * getProjector(i) except NULL:
     cdef CProjector2D * proj = manProj.get(i)
     if proj == NULL:
-        raise RuntimeError("Projector not initialized.")
+        raise AstraError("Projector not found")
     if not proj.isInitialized():
-        raise RuntimeError("Projector not initialized.")
+        raise AstraError("Projector not initialized")
     return proj
 
 def check_compatible(i, proj_id):
@@ -209,7 +211,7 @@ def check_compatible(i, proj_id):
         pDataObject3 = <CFloat32VolumeData2D * >pDataObject
         return pDataObject3.getGeometry().isEqual(proj.getVolumeGeometry())
     else:
-        raise RuntimeError("Not a known data object")
+        raise AstraError("Not a known data object type")
 
 def change_geometry(i, geom):
     cdef Config *cfg
@@ -242,7 +244,8 @@ def change_geometry(i, geom):
             del ppGeometry
             del cfg
             raise ValueError(
-                "The dimensions of the data do not match those specified in the geometry: {} != {}", obj_shape, geom_shape)
+                "The dimensions of the data do not match those specified in the geometry: "
+                "{} (data) != {} (geometry)", obj_shape, geom_shape)
         pDataObject2.changeGeometry(ppGeometry)
         del ppGeometry
         del cfg
@@ -260,12 +263,13 @@ def change_geometry(i, geom):
             del cfg
             del pGeometry
             raise ValueError(
-                "The dimensions of the data do not match those specified in the geometry: {} != {}", obj_shape, geom_shape)
+                "The dimensions of the data do not match those specified in the geometry: "
+                "{} (data) != {} (geometry)", obj_shape, geom_shape)
         pDataObject3.changeGeometry(pGeometry)
         del cfg
         del pGeometry
     else:
-        raise RuntimeError("Not a known data object")
+        raise AstraError("Not a known data object")
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
