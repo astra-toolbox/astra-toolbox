@@ -54,7 +54,9 @@ class _AstraExport CLogger
   static bool m_bEnabledScreen;
   static bool m_bFileProvided;
   static bool m_bInitialized;
+  static std::string m_sLastErrMsg;
   static void _assureIsInitialized();
+  static void _setLastErrMsg(const char *sfile, int sline, const char *fmt, va_list ap);
   static void _setLevel(int id, log_level m_eLevel);
 
 public:
@@ -152,6 +154,11 @@ public:
    */
   static bool setCallbackScreen(void (*cb)(const char *msg, size_t len));
 
+  /**
+   * Get last error message received by the logger.
+   *
+   */
+  static std::string getLastErrMsg();
 };
 
 }
