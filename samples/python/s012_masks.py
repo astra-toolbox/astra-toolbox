@@ -33,7 +33,7 @@ import numpy as np
 
 c = np.linspace(-127.5,127.5,256)
 x, y = np.meshgrid(c,c)
-mask = np.array((x**2 + y**2 < 127.5**2),dtype=np.float)
+mask = np.array((x**2 + y**2 < 127.5**2),dtype=np.float32)
 
 import pylab
 pylab.gray()

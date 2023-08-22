@@ -39,7 +39,7 @@ class astra_wrap(object):
     def __init__(self,proj_geom,vol_geom):
         self.proj_id = astra.create_projector('cuda',proj_geom,vol_geom)
         self.shape = (proj_geom['DetectorCount']*len(proj_geom['ProjectionAngles']),vol_geom['GridColCount']*vol_geom['GridRowCount'])
-        self.dtype = np.float
+        self.dtype = np.float32
     
     def matvec(self,v):
         sid, s = astra.create_sino(np.reshape(v,(vol_geom['GridRowCount'],vol_geom['GridColCount'])),self.proj_id)
