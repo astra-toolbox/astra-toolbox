@@ -222,6 +222,7 @@ P_astra["filters"]["Data Structures\\source"] = [
 "src\\Float32VolumeData2D.cpp",
 "src\\Float32VolumeData3D.cpp",
 "src\\Float32VolumeData3DMemory.cpp",
+"src\\SheppLogan.cpp",
 "src\\SparseMatrix.cpp",
 ]
 P_astra["filters"]["Global &amp; Other\\source"] = [
@@ -362,6 +363,7 @@ P_astra["filters"]["Data Structures\\headers"] = [
 "include\\astra\\Float32VolumeData2D.h",
 "include\\astra\\Float32VolumeData3D.h",
 "include\\astra\\Float32VolumeData3DMemory.h",
+"include\\astra\\SheppLogan.h",
 "include\\astra\\SparseMatrix.h",
 ]
 P_astra["filters"]["Global &amp; Other\\headers"] = [
