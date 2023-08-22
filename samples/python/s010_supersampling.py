@@ -28,12 +28,10 @@ import numpy as np
 
 vol_geom = astra.create_vol_geom(256, 256)
 proj_geom = astra.create_proj_geom('parallel', 3.0, 128, np.linspace(0,np.pi,180,False))
-import scipy.io
-P = scipy.io.loadmat('phantom.mat')['phantom256']
+phantom_id, P = astra.data2d.shepp_logan(vol_geom)
 
 # Because the astra.create_sino method does not have support for
 # all possible algorithm options, we manually create a sinogram
-phantom_id = astra.data2d.create('-vol', vol_geom, P)
 sinogram_id = astra.data2d.create('-sino', proj_geom)
 cfg = astra.astra_dict('FP_CUDA')
 cfg['VolumeDataId'] = phantom_id
