@@ -35,9 +35,8 @@ vol_geom = astra.create_vol_geom(256, 256)
 # function astra_create_proj_geom .
 proj_geom = astra.create_proj_geom('parallel', 1.0, 384, np.linspace(0,np.pi,180,False))
 
-# Load a 256x256 phantom image
-import scipy.io
-P = scipy.io.loadmat('phantom.mat')['phantom256']
+# Generate a 256x256 phantom image
+phantom_id, P = astra.data2d.shepp_logan(vol_geom)
 
 # Create a sinogram using the GPU.
 # Note that the first time the GPU is accessed, there may be a delay
@@ -56,4 +55,5 @@ pylab.show()
 
 # Free memory
 astra.data2d.delete(sinogram_id)
+astra.data2d.delete(phantom_id)
 astra.projector.delete(proj_id)
