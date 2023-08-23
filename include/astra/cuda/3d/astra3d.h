@@ -42,7 +42,7 @@ class CParallelVecProjectionGeometry3D;
 class CConeProjectionGeometry3D;
 class CConeVecProjectionGeometry3D;
 class CVolumeGeometry3D;
-class CFloat32ProjectionData3DGPU;
+class CFloat32ProjectionData3D;
 class AstraSIRT3d_internal;
 
 using astraCUDA3d::Cuda3DProjectionKernel;
@@ -301,7 +301,7 @@ _AstraExport bool astraCudaBP_SIRTWeighted(float* pfVolume, const float* pfProje
                       const CProjectionGeometry3D* pProjGeom,
                       int iGPUIndex, int iVoxelSuperSampling);
 
-_AstraExport bool uploadMultipleProjections(CFloat32ProjectionData3DGPU *proj,
+_AstraExport bool uploadMultipleProjections(CFloat32ProjectionData3D *proj,
                                             const float *data,
                                             unsigned int y_min,
                                             unsigned int y_max);
