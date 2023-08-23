@@ -214,16 +214,11 @@ P_astra["filters"]["Algorithms\\source"] = [
 ]
 P_astra["filters"]["Data Structures\\source"] = [
 "95346487-8185-487b-a794-3e7fb5fcbd4c",
+"src\\Data3D.cpp",
 "src\\Float32Data.cpp",
 "src\\Float32Data2D.cpp",
-"src\\Float32Data3D.cpp",
-"src\\Float32Data3DMemory.cpp",
 "src\\Float32ProjectionData2D.cpp",
-"src\\Float32ProjectionData3D.cpp",
-"src\\Float32ProjectionData3DMemory.cpp",
 "src\\Float32VolumeData2D.cpp",
-"src\\Float32VolumeData3D.cpp",
-"src\\Float32VolumeData3DMemory.cpp",
 "src\\SheppLogan.cpp",
 "src\\SparseMatrix.cpp",
 ]
@@ -299,9 +294,6 @@ P_astra["filters"]["CUDA\\astra source"] = [
 "src\\CudaSartAlgorithm.cpp",
 "src\\CudaSirtAlgorithm.cpp",
 "src\\CudaSirtAlgorithm3D.cpp",
-"src\\Float32Data3DGPU.cpp",
-"src\\Float32ProjectionData3DGPU.cpp",
-"src\\Float32VolumeData3DGPU.cpp",
 ]
 P_astra["filters"]["CUDA\\cuda headers"] = [
 "4e17872e-db7d-41bc-9760-fad1c253b583",
@@ -355,16 +347,11 @@ P_astra["filters"]["Algorithms\\headers"] = [
 ]
 P_astra["filters"]["Data Structures\\headers"] = [
 "444c44b0-6454-483a-be26-7cb9c8ab0b98",
+"include\\astra\\Data3D.h",
 "include\\astra\\Float32Data.h",
 "include\\astra\\Float32Data2D.h",
-"include\\astra\\Float32Data3D.h",
-"include\\astra\\Float32Data3DMemory.h",
 "include\\astra\\Float32ProjectionData2D.h",
-"include\\astra\\Float32ProjectionData3D.h",
-"include\\astra\\Float32ProjectionData3DMemory.h",
 "include\\astra\\Float32VolumeData2D.h",
-"include\\astra\\Float32VolumeData3D.h",
-"include\\astra\\Float32VolumeData3DMemory.h",
 "include\\astra\\SheppLogan.h",
 "include\\astra\\SparseMatrix.h",
 ]
@@ -443,9 +430,6 @@ P_astra["filters"]["CUDA\\astra headers"] = [
 "include\\astra\\CudaSartAlgorithm.h",
 "include\\astra\\CudaSirtAlgorithm.h",
 "include\\astra\\CudaSirtAlgorithm3D.h",
-"include\\astra\\Float32Data3DGPU.h",
-"include\\astra\\Float32ProjectionData3DGPU.h",
-"include\\astra\\Float32VolumeData3DGPU.h",
 ]
 P_astra["filters"]["Projectors\\inline"] = [
 "0daffd63-ba49-4a5f-8d7a-5322e0e74f22",

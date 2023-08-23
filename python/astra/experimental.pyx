@@ -50,15 +50,9 @@ IF HAVE_CUDA==True:
             bool doFDK(CProjector3D *, CFloat32VolumeData3D *, CFloat32ProjectionData3D *, bool, const float*, EMode)
 
     cdef extern from *:
-        CFloat32VolumeData3D * dynamic_cast_vol_mem "dynamic_cast<astra::CFloat32VolumeData3D*>" (CFloat32Data3D * )
-        CFloat32ProjectionData3D * dynamic_cast_proj_mem "dynamic_cast<astra::CFloat32ProjectionData3D*>" (CFloat32Data3D * )
+        CFloat32VolumeData3D * dynamic_cast_vol_mem "dynamic_cast<astra::CFloat32VolumeData3D*>" (CData3D * )
+        CFloat32ProjectionData3D * dynamic_cast_proj_mem "dynamic_cast<astra::CFloat32ProjectionData3D*>" (CData3D * )
 
-    cdef extern from "astra/Float32ProjectionData3D.h" namespace "astra":
-        cdef cppclass CFloat32ProjectionData3D:
-            bool isInitialized()
-    cdef extern from "astra/Float32VolumeData3D.h" namespace "astra":
-        cdef cppclass CFloat32VolumeData3D:
-            bool isInitialized()
 
 
     from . cimport PyProjector3DManager
@@ -146,6 +140,8 @@ IF HAVE_CUDA==True:
         cdef vector[CFloat32ProjectionData3D *] projs
         vols.push_back(pVol)
         projs.push_back(pProj)
+        del pGeometry
+        del ppGeometry
         cdef CCompositeGeometryManager m
         try:
             if t == "FP":

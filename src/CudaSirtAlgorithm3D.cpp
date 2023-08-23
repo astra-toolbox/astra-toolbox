@@ -33,6 +33,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/ParallelProjectionGeometry3D.h"
 #include "astra/ParallelVecProjectionGeometry3D.h"
 #include "astra/ConeVecProjectionGeometry3D.h"
+#include "astra/VolumeGeometry3D.h"
 #include "astra/CudaProjector3D.h"
 
 #include "astra/Logging.h"
@@ -60,9 +61,9 @@ CCudaSirtAlgorithm3D::CCudaSirtAlgorithm3D()
 
 //----------------------------------------------------------------------------------------
 // Constructor with initialization
-CCudaSirtAlgorithm3D::CCudaSirtAlgorithm3D(CProjector3D* _pProjector, 
-								   CFloat32ProjectionData3DMemory* _pProjectionData, 
-								   CFloat32VolumeData3DMemory* _pReconstruction)
+CCudaSirtAlgorithm3D::CCudaSirtAlgorithm3D(CProjector3D* _pProjector,
+								   CFloat32ProjectionData3D* _pProjectionData,
+								   CFloat32VolumeData3D* _pReconstruction)
 {
 	_clear();
 	initialize(_pProjector, _pProjectionData, _pReconstruction);
@@ -158,9 +159,9 @@ bool CCudaSirtAlgorithm3D::initialize(const Config& _cfg)
 
 //----------------------------------------------------------------------------------------
 // Initialize - C++
-bool CCudaSirtAlgorithm3D::initialize(CProjector3D* _pProjector, 
-								  CFloat32ProjectionData3DMemory* _pSinogram, 
-								  CFloat32VolumeData3DMemory* _pReconstruction)
+bool CCudaSirtAlgorithm3D::initialize(CProjector3D* _pProjector,
+								  CFloat32ProjectionData3D* _pSinogram,
+								  CFloat32VolumeData3D* _pReconstruction)
 {
 	// if already initialized, clear first
 	if (m_bIsInitialized) {
@@ -220,27 +221,23 @@ void CCudaSirtAlgorithm3D::run(int _iNrIterations)
 
 	}
 
-	CFloat32ProjectionData3DMemory* pSinoMem = dynamic_cast<CFloat32ProjectionData3DMemory*>(m_pSinogram);
-	ASTRA_ASSERT(pSinoMem);
+	ASTRA_ASSERT(m_pSinogram->isFloat32Memory());
 
-	ok = m_pSirt->setSinogram(pSinoMem->getDataConst(), m_pSinogram->getGeometry()->getDetectorColCount());
+	ok = m_pSirt->setSinogram(m_pSinogram->getFloat32Memory(), m_pSinogram->getGeometry()->getDetectorColCount());
 
 	ASTRA_ASSERT(ok);
 
 	if (m_bUseReconstructionMask) {
-		CFloat32VolumeData3DMemory* pRMaskMem = dynamic_cast<CFloat32VolumeData3DMemory*>(m_pReconstructionMask);
-		ASTRA_ASSERT(pRMaskMem);
-		ok &= m_pSirt->setVolumeMask(pRMaskMem->getDataConst(), volgeom.getGridColCount());
+		ASTRA_ASSERT(m_pReconstructionMask->isFloat32Memory());
+		ok &= m_pSirt->setVolumeMask(m_pReconstructionMask->getFloat32Memory(), volgeom.getGridColCount());
 	}
 	if (m_bUseSinogramMask) {
-		CFloat32ProjectionData3DMemory* pSMaskMem = dynamic_cast<CFloat32ProjectionData3DMemory*>(m_pSinogramMask);
-		ASTRA_ASSERT(pSMaskMem);
-		ok &= m_pSirt->setSinogramMask(pSMaskMem->getDataConst(), m_pSinogramMask->getGeometry()->getDetectorColCount());
+		ASTRA_ASSERT(m_pSinogramMask->isFloat32Memory());
+		ok &= m_pSirt->setSinogramMask(m_pSinogramMask->getFloat32Memory(), m_pSinogramMask->getGeometry()->getDetectorColCount());
 	}
 
-	CFloat32VolumeData3DMemory* pReconMem = dynamic_cast<CFloat32VolumeData3DMemory*>(m_pReconstruction);
-	ASTRA_ASSERT(pReconMem);
-	ok &= m_pSirt->setStartReconstruction(pReconMem->getDataConst(),
+	ASTRA_ASSERT(m_pReconstruction->isFloat32Memory());
+	ok &= m_pSirt->setStartReconstruction(m_pReconstruction->getFloat32Memory(),
 	                                      volgeom.getGridColCount());
 
 	ASTRA_ASSERT(ok);
@@ -253,7 +250,7 @@ void CCudaSirtAlgorithm3D::run(int _iNrIterations)
 	ok &= m_pSirt->iterate(_iNrIterations);
 	ASTRA_ASSERT(ok);
 
-	ok &= m_pSirt->getReconstruction(pReconMem->getData(),
+	ok &= m_pSirt->getReconstruction(m_pReconstruction->getFloat32Memory(),
 	                                 volgeom.getGridColCount());
 	ASTRA_ASSERT(ok);
 

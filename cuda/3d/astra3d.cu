@@ -42,7 +42,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/ConeProjectionGeometry3D.h"
 #include "astra/ConeVecProjectionGeometry3D.h"
 #include "astra/VolumeGeometry3D.h"
-#include "astra/Float32ProjectionData3DGPU.h"
+#include "astra/Data3D.h"
 #include "astra/Logging.h"
 
 #include <iostream>
@@ -1306,11 +1306,13 @@ bool astraCudaBP_SIRTWeighted(float* pfVolume,
 
 }
 
-_AstraExport bool uploadMultipleProjections(CFloat32ProjectionData3DGPU *proj,
+_AstraExport bool uploadMultipleProjections(CFloat32ProjectionData3D *proj,
                                          const float *data,
                                          unsigned int y_min, unsigned int y_max)
 {
-	astraCUDA3d::MemHandle3D hnd = proj->getHandle();
+	assert(proj->getStorage()->isGPU());
+	CDataGPU *storage = dynamic_cast<CDataGPU*>(proj->getStorage());
+	astraCUDA3d::MemHandle3D hnd = storage->getHandle();
 
 	astraCUDA3d::SDimensions3D dims1;
 	dims1.iProjU = proj->getDetectorColCount();

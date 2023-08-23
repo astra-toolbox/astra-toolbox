@@ -145,6 +145,7 @@ BASE_OBJECTS=\
 	src/ConeProjectionGeometry3D.lo \
 	src/ConeVecProjectionGeometry3D.lo \
 	src/Config.lo \
+	src/Data3D.lo \
 	src/DataProjector.lo \
 	src/DataProjectorPolicies.lo \
 	src/FanFlatBeamLineKernelProjector2D.lo \
@@ -154,16 +155,10 @@ BASE_OBJECTS=\
 	src/Features.lo \
 	src/FilteredBackProjectionAlgorithm.lo \
 	src/Filters.lo \
-	src/Float32Data2D.lo \
-	src/Float32Data3D.lo \
-	src/Float32Data3DMemory.lo \
 	src/Float32Data.lo \
+	src/Float32Data2D.lo \
 	src/Float32ProjectionData2D.lo \
-	src/Float32ProjectionData3D.lo \
-	src/Float32ProjectionData3DMemory.lo \
 	src/Float32VolumeData2D.lo \
-	src/Float32VolumeData3D.lo \
-	src/Float32VolumeData3DMemory.lo \
 	src/ForwardProjectionAlgorithm.lo \
 	src/Fourier.lo \
 	src/GeometryUtil2D.lo \
@@ -218,10 +213,7 @@ CUDA_CXX_OBJECTS=\
 	src/CudaFDKAlgorithm3D.lo \
 	src/CudaSirtAlgorithm3D.lo \
 	src/CudaBackProjectionAlgorithm3D.lo \
-	src/CudaForwardProjectionAlgorithm3D.lo \
-	src/Float32Data3DGPU.lo \
-	src/Float32ProjectionData3DGPU.lo \
-	src/Float32VolumeData3DGPU.lo
+	src/CudaForwardProjectionAlgorithm3D.lo
 
 CUDA_OBJECTS=\
 	cuda/2d/algo.lo \

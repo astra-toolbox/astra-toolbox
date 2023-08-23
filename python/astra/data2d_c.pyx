@@ -64,7 +64,7 @@ cdef extern from "CFloat32CustomPython.h":
         CFloat32CustomPython(np.ndarray arrIn)
 
 cdef extern from "astra/SheppLogan.h" namespace "astra":
-    cdef void generateSheppLogan(CFloat32Data2D*, bool)
+    cdef void generateSheppLogan(CFloat32VolumeData2D*, bool)
 
 def clear():
     man2d.clear()
@@ -295,7 +295,8 @@ def get_single(i):
 
 def shepp_logan(i, modified=True):
     cdef CFloat32Data2D * pDataObject = getObject(i)
-    generateSheppLogan(pDataObject, modified);
+    cdef CFloat32VolumeData2D * pVolumeDataObject = <CFloat32VolumeData2D *>getObject(i)
+    generateSheppLogan(pVolumeDataObject, modified);
 
 def info():
     print(wrap_from_bytes(man2d.info()))
