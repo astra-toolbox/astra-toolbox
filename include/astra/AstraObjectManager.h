@@ -36,7 +36,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "Projector2D.h"
 #include "Projector3D.h"
 #include "Float32Data2D.h"
-#include "Float32Data3D.h"
+#include "Data3D.h"
 #include "SparseMatrix.h"
 #include "Algorithm.h"
 
@@ -323,7 +323,7 @@ class _AstraExport CData2DManager : public Singleton<CData2DManager>, public CAs
  * assigned to each data object by which it can be accessed in the future.
  * Indices are always >= 1.
  */
-class _AstraExport CData3DManager : public Singleton<CData3DManager>, public CAstraObjectManager<CFloat32Data3D>
+class _AstraExport CData3DManager : public Singleton<CData3DManager>, public CAstraObjectManager<CData3D>
 {
 	virtual std::string getType() const { return "data3d"; }
 };

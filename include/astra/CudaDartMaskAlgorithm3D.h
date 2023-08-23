@@ -31,7 +31,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "Globals.h"
 #include "Config.h"
 #include "Algorithm.h"
-#include "Float32VolumeData3DMemory.h"
+#include "Data3D.h"
 
 
 #ifdef ASTRA_CUDA
@@ -93,8 +93,8 @@ protected:
 	unsigned int m_iRadius;
 	int m_iGPUIndex;
 
-	CFloat32VolumeData3DMemory* m_pSegmentation;
-	CFloat32VolumeData3DMemory* m_pMask;
+	CFloat32VolumeData3D* m_pSegmentation;
+	CFloat32VolumeData3D* m_pMask;
 
 };
 

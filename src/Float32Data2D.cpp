@@ -38,7 +38,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 namespace astra {
 
-CFloat32CustomMemory::~CFloat32CustomMemory() {
+template<typename T>
+CCustomMemory<T>::~CCustomMemory() {
 
 }
 
