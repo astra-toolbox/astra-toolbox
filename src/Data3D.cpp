@@ -25,31 +25,47 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#include "astra/Float32VolumeData3D.h"
+#include <sstream>
 
-namespace astra
+#include "astra/Data3D.h"
+
+namespace astra {
+
+std::string CData3D::description() const
 {
-
-//----------------------------------------------------------------------------------------
-// Default constructor.
-CFloat32VolumeData3D::CFloat32VolumeData3D() :
-	CFloat32Data3D() {
-
+	std::stringstream res;
+	res << m_iDims[0] << "x" << m_iDims[1] << "x" << m_iDims[2];
+	if (getType() == CData3D::PROJECTION) res << " sinogram data \t";
+	if (getType() == CData3D::VOLUME) res << " volume data \t";
+	return res.str();
 }
 
-//----------------------------------------------------------------------------------------
-// Destructor
-CFloat32VolumeData3D::~CFloat32VolumeData3D() {
-
-}
-
-void CFloat32VolumeData3D::changeGeometry(CVolumeGeometry3D* _pGeometry)
+template<typename T>
+void CDataMemory<T>::_allocateData(size_t size)
 {
-	if (!m_bInitialized) return;
+	ASTRA_ASSERT(m_pfData == NULL);
 
-	delete m_pGeometry;
-	m_pGeometry = _pGeometry->clone();
+	// allocate contiguous block
+#ifdef _MSC_VER
+	m_pfData = (T*)_aligned_malloc(size * sizeof(T), 16);
+#else
+	int ret = posix_memalign((void**)&m_pfData, 16, size * sizeof(T));
+	ASTRA_ASSERT(ret == 0);
+#endif
+	ASTRA_ASSERT(((size_t)m_pfData & 15) == 0);
 }
 
+template<typename T>
+void CDataMemory<T>::_freeData()
+{
+	// free memory for data block
+#ifdef _MSC_VER
+	_aligned_free(m_pfData);
+#else
+	free(m_pfData);
+#endif
 
-} // end namespace astra
+	m_pfData = nullptr;
+}
+
+}

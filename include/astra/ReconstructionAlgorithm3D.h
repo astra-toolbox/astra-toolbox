@@ -33,8 +33,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "Algorithm.h"
 
-#include "Float32ProjectionData3D.h"
-#include "Float32VolumeData3D.h"
+#include "Data3D.h"
 
 
 namespace astra {
