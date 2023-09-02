@@ -35,6 +35,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "mexDataManagerHelpFunctions.h"
 
 #include <list>
+#include <vector>
 
 #include "astra/Globals.h"
 
@@ -47,12 +48,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/Float32ProjectionData3DMemory.h"
 #include "astra/Float32VolumeData3DMemory.h"
 
-#include "astra/CudaForwardProjectionAlgorithm3D.h"
-
-#include "astra/CudaBackProjectionAlgorithm3D.h"
-
-using namespace std;
-using namespace astra;
+#include "astra/CompositeGeometryManager.h"
 
 
 class CFloat32CustomMemory_simple : public astra::CFloat32CustomMemory {
@@ -62,6 +58,107 @@ public:
 };
 
 #ifdef ASTRA_CUDA
+
+template<typename Type>
+void clean_vector(std::vector<Type *> & vec, const size_t limit)
+{
+	for (mwIndex itClean = 0; itClean < limit; itClean++) {
+		delete vec[itClean];
+	}
+}
+
+bool is_cuda(std::vector<astra::CProjector3D *> & pProjectors)
+{
+	// I know the logic is counter intuitive here, but it uses an implicit
+	// conversion from pointer to boolean of the operator !
+	const mwSize num_projectors = pProjectors.size();
+	bool is_not_cuda = false;
+	for (mwIndex itProj = 0; itProj < num_projectors; itProj++)
+	{
+		is_not_cuda |= !(dynamic_cast<astra::CCudaProjector3D*>(pProjectors[itProj]));
+	}
+	return !is_not_cuda;
+}
+
+bool get_projectors(const mxArray * const projs,
+                    std::vector<astra::CProjector3D *> & pProjectors,
+                    std::vector<astra::CVolumeGeometry3D *> & pVolGeoms,
+                    std::vector<astra::CProjectionGeometry3D *> & pProjGeoms)
+{
+	const double * const dPids = (const double *)mxGetData(projs);
+	const mwSize num_projectors = pProjectors.size();
+	for (mwIndex itPid = 0; itPid < num_projectors; itPid++) {
+		int iPid = (int)(dPids[itPid]);
+		pProjectors[itPid] = astra::CProjector3DManager::getSingleton().get(iPid);
+		if (!pProjectors[itPid]) {
+			mexErrMsgTxt("One of the projectors was not found.");
+			return false;
+		}
+		if (!pProjectors[itPid]->isInitialized()) {
+			mexErrMsgTxt("One of the projectors was not initialized.");
+			return false;
+		}
+		pVolGeoms[itPid] = pProjectors[itPid]->getVolumeGeometry();
+		pProjGeoms[itPid] = pProjectors[itPid]->getProjectionGeometry();
+	}
+	return true;
+}
+
+template<typename DataType, typename GeometryType>
+DataType * load_data(const mxArray * const data, GeometryType * const pGeom)
+{
+	if (!checkDataType(data)) {
+		mexErrMsgTxt("Data must be single or double.");
+		return 0;
+	}
+
+	if (!checkDataSize(data, pGeom)) {
+		mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry.");
+		return 0;
+	}
+
+	// Allocate input data
+	DataType * pInput;
+	if (mxIsSingle(data)) {
+		astra::CFloat32CustomMemory * m = new CFloat32CustomMemory_simple((float *)mxGetData(data));
+		pInput = new DataType(pGeom, m);
+	} else {
+		pInput = new DataType(pGeom);
+		copyMexToCFloat32Array(data, pInput->getData(), pInput->getSize());
+	}
+	return pInput;
+}
+
+template<typename DataType>
+mxArray * produce_output(std::vector<mxArray *> & pOutputMxs,
+                         const std::vector<DataType *> & pOutput,
+                         const std::vector<const mxArray * > & data,
+                         const bool & force_cell)
+{
+	mxArray * pOutputMx;
+	const mwSize num_projectors = data.size();
+
+	if (force_cell || num_projectors > 1)	{
+		pOutputMx = mxCreateCellMatrix(num_projectors, 1);
+
+		for (mwIndex itPid = 0; itPid < num_projectors; itPid++) {
+			if (mxIsSingle(data[itPid])) {
+
+			} else {
+				pOutputMxs[itPid] = createEquivMexArray<mxDOUBLE_CLASS>(pOutput[itPid]);
+				copyCFloat32ArrayToMex(pOutput[itPid]->getData(), pOutputMxs[itPid]);
+			}
+			mxSetCell(pOutputMx, itPid, pOutputMxs[itPid]);
+		}
+	} else if (mxIsSingle(data[0])) {
+		pOutputMx = pOutputMxs[0];
+	} else {
+		pOutputMx = createEquivMexArray<mxDOUBLE_CLASS>(pOutput[0]);
+		copyCFloat32ArrayToMex(pOutput[0]->getData(), pOutputMx);
+	}
+
+	return pOutputMx;
+}
 
 //-----------------------------------------------------------------------------------------
 /**
@@ -77,107 +174,95 @@ void astra_mex_direct_fp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 		return;
 	}
 
-	int iPid = (int)(mxGetScalar(prhs[1]));
-	astra::CProjector3D* pProjector;
-	pProjector = astra::CProjector3DManager::getSingleton().get(iPid);
-	if (!pProjector) {
-		mexErrMsgTxt("Projector not found.");
+	const mxArray * const mxProjectors = prhs[1];
+	const mxArray * const mxVolData = prhs[2];
+
+	mwSize num_projectors = mxGetNumberOfElements(mxProjectors);
+	if (!num_projectors) {
+		mexErrMsgTxt("No projectors passed!");
 		return;
 	}
-	if (!pProjector->isInitialized()) {
-		mexErrMsgTxt("Projector not initialized.");
+	if (num_projectors > 1 && (!mxIsCell(mxVolData) || (mxGetNumberOfElements(mxVolData) != num_projectors))) {
+		mexErrMsgTxt("When using multiple projectors, a cell array with an equal number of volumes should be passed");
 		return;
 	}
-	bool isCuda = false;
-	if (dynamic_cast<CCudaProjector3D*>(pProjector))
-		isCuda = true;
-	if (!isCuda) {
+
+	std::vector<astra::CProjector3D *> pProjectors(num_projectors);
+	std::vector<astra::CVolumeGeometry3D *> pVolGeoms(num_projectors);
+	std::vector<astra::CProjectionGeometry3D *> pProjGeoms(num_projectors);
+
+	if (!get_projectors(mxProjectors, pProjectors, pVolGeoms, pProjGeoms)) {
+		return;
+	}
+	if (!is_cuda(pProjectors)) {
 		mexErrMsgTxt("Only CUDA projectors are currently supported.");
 		return;
 	}
 
-	astra::CVolumeGeometry3D* pVolGeom = pProjector->getVolumeGeometry();
-	astra::CProjectionGeometry3D* pProjGeom = pProjector->getProjectionGeometry();
+	std::vector<const mxArray *> data(num_projectors);
+	bool force_cell = false;
 
-	const mxArray* const data = prhs[2];
-	if (!checkDataType(data)) {
-		mexErrMsgTxt("Data must be single or double.");
-		return;
-	}
-
-	if (!checkDataSize(data, pVolGeom)) {
-		mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry.");
-		return;
-	}
-
-
-	// Allocate input data
-	astra::CFloat32VolumeData3DMemory* pInput;
-	if (mxIsSingle(data)) {
-		astra::CFloat32CustomMemory* m = new CFloat32CustomMemory_simple((float *)mxGetData(data));
-		pInput = new astra::CFloat32VolumeData3DMemory(pVolGeom, m);
+	if (mxIsCell(mxVolData)) {
+		for (mwIndex itPid = 0; itPid < num_projectors; itPid++) {
+			data[itPid] = mxGetCell(mxVolData, itPid);
+		}
+		force_cell = true;
 	} else {
-		pInput = new astra::CFloat32VolumeData3DMemory(pVolGeom);
-		copyMexToCFloat32Array(data, pInput->getData(), pInput->getSize());
+		data[0] = mxVolData;
 	}
 
+	std::vector<astra::CFloat32VolumeData3DMemory *> pInput(num_projectors);
+
+	for (mwIndex itPid = 0; itPid < num_projectors; itPid++) {
+		pInput[itPid] = load_data<astra::CFloat32VolumeData3DMemory>(data[itPid], pVolGeoms[itPid]);
+		if (!pInput[itPid]) {
+			// Cleaning
+			clean_vector(pInput, itPid);
+			return;
+		}
+	}
 
 	// Allocate output data
 	// If the input is single, we also allocate single output.
 	// Otherwise, double.
-	astra::CFloat32ProjectionData3DMemory* pOutput;
-	mxArray *pOutputMx;
-	if (mxIsSingle(data)) {
-		mwSize dims[3];
-		dims[0] = pProjGeom->getDetectorColCount();
-		dims[1] = pProjGeom->getProjectionCount();
-		dims[2] = pProjGeom->getDetectorRowCount();
+	std::vector<astra::CFloat32ProjectionData3DMemory *> pOutput(num_projectors);
+	std::vector<mxArray *> pOutputMxs(num_projectors);
 
-		// Allocate uninitialized mxArray of size dims.
-		// (It will be zeroed by CudaForwardProjectionAlgorithm3D)
-		const mwSize zero_dims[2] = {0, 0};
-		pOutputMx = mxCreateNumericArray(2, zero_dims, mxSINGLE_CLASS, mxREAL);
-		mxSetDimensions(pOutputMx, dims, 3);
-		const mwSize num_elems = mxGetNumberOfElements(pOutputMx);
-		const mwSize elem_size = mxGetElementSize(pOutputMx);
-		mxSetData(pOutputMx, mxMalloc(elem_size * num_elems));
+	for (mwIndex itPid = 0; itPid < num_projectors; itPid++) {
+		if (mxIsSingle(data[itPid])) {
+			mwSize dims[3];
+			dims[0] = pProjGeoms[itPid]->getDetectorColCount();
+			dims[1] = pProjGeoms[itPid]->getProjectionCount();
+			dims[2] = pProjGeoms[itPid]->getDetectorRowCount();
 
-		astra::CFloat32CustomMemory* m = new CFloat32CustomMemory_simple((float *)mxGetData(pOutputMx));
-		pOutput = new astra::CFloat32ProjectionData3DMemory(pProjGeom, m);
-	} else {
-		pOutput = new astra::CFloat32ProjectionData3DMemory(pProjGeom);
+			// Allocate uninitialized mxArray of size dims.
+			// (It will be zeroed by CudaForwardProjectionAlgorithm3D)
+			const mwSize zero_dims[2] = {0, 0};
+			pOutputMxs[itPid] = mxCreateNumericArray(2, zero_dims, mxSINGLE_CLASS, mxREAL);
+			mxSetDimensions(pOutputMxs[itPid], dims, 3);
+			const mwSize num_elems = mxGetNumberOfElements(pOutputMxs[itPid]);
+			const mwSize elem_size = mxGetElementSize(pOutputMxs[itPid]);
+			mxSetData(pOutputMxs[itPid], mxMalloc(elem_size * num_elems));
+
+			astra::CFloat32CustomMemory* m = new CFloat32CustomMemory_simple((float *)mxGetData(pOutputMxs[itPid]));
+			pOutput[itPid] = new astra::CFloat32ProjectionData3DMemory(pProjGeoms[itPid], m);
+		} else {
+			pOutput[itPid] = new astra::CFloat32ProjectionData3DMemory(pProjGeoms[itPid]);
+		}
 	}
 
 	// Perform FP
-
-	astra::CCudaForwardProjectionAlgorithm3D* pAlg;
-	pAlg = new astra::CCudaForwardProjectionAlgorithm3D();
-	pAlg->initialize(pProjector, pOutput, pInput);
-
-	if (!pAlg->isInitialized()) {
-		mexErrMsgTxt("Error initializing algorithm.");
-		// TODO: Delete pOutputMx?
-		delete pAlg;
-		delete pInput;
-		delete pOutput;
-		return;
+	astra::CCompositeGeometryManager cgm;
+	astra::CCompositeGeometryManager::TJobList L;
+	for (mwIndex itPid = 0; itPid < num_projectors; itPid++) {
+		L.push_back(cgm.createJobFP(pProjectors[itPid], pInput[itPid], pOutput[itPid]));
 	}
+	cgm.doJobs(L);
 
-	pAlg->run();
+	plhs[0] = produce_output(pOutputMxs, pOutput, data, force_cell);
 
-	delete pAlg;
-
-
-	if (mxIsSingle(data)) {
-
-	} else {
-		pOutputMx = createEquivMexArray<mxDOUBLE_CLASS>(pOutput);
-		copyCFloat32ArrayToMex(pOutput->getData(), pOutputMx);
-	}
-	plhs[0] = pOutputMx;
-
-	delete pOutput;
-	delete pInput;
+	clean_vector(pOutput, num_projectors);
+	clean_vector(pInput, num_projectors);
 }
 //-----------------------------------------------------------------------------------------
 /**
@@ -193,107 +278,97 @@ void astra_mex_direct_bp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 		return;
 	}
 
-	int iPid = (int)(mxGetScalar(prhs[1]));
-	astra::CProjector3D* pProjector;
-	pProjector = astra::CProjector3DManager::getSingleton().get(iPid);
-	if (!pProjector) {
-		mexErrMsgTxt("Projector not found.");
+	const mxArray * const mxProjectors = prhs[1];
+	const mxArray * const mxProjData = prhs[2];
+
+	mwSize num_projectors = mxGetNumberOfElements(mxProjectors);
+	if (!num_projectors) {
+		mexErrMsgTxt("No projectors passed!");
 		return;
 	}
-	if (!pProjector->isInitialized()) {
-		mexErrMsgTxt("Projector not initialized.");
+	if (num_projectors > 1 && (!mxIsCell(mxProjData) || (mxGetNumberOfElements(mxProjData) != num_projectors))) {
+		mexErrMsgTxt("When using multiple projectors, a cell array with an equal number of projection data stacks should be passed");
 		return;
 	}
-	bool isCuda = false;
-	if (dynamic_cast<CCudaProjector3D*>(pProjector))
-		isCuda = true;
-	if (!isCuda) {
+
+	std::vector<astra::CProjector3D *> pProjectors(num_projectors);
+	std::vector<astra::CVolumeGeometry3D *> pVolGeoms(num_projectors);
+	std::vector<astra::CProjectionGeometry3D *> pProjGeoms(num_projectors);
+
+	if (!get_projectors(prhs[1], pProjectors, pVolGeoms, pProjGeoms)) {
+		return;
+	}
+
+	if (!is_cuda(pProjectors)) {
 		mexErrMsgTxt("Only CUDA projectors are currently supported.");
 		return;
 	}
 
-	astra::CVolumeGeometry3D* pVolGeom = pProjector->getVolumeGeometry();
-	astra::CProjectionGeometry3D* pProjGeom = pProjector->getProjectionGeometry();
+	std::vector<const mxArray *> data(num_projectors);
+	bool force_cell = false;
 
-	const mxArray* const data = prhs[2];
-	if (!checkDataType(data)) {
-		mexErrMsgTxt("Data must be single or double.");
-		return;
+	if (mxIsCell(mxProjData)) {
+		for (mwIndex itPid = 0; itPid < num_projectors; itPid++) {
+			data[itPid] = mxGetCell(mxProjData, itPid);
+		}
+		force_cell = true;
+	} else {
+		data[0] = mxProjData;
 	}
-
-	if (!checkDataSize(data, pProjGeom)) {
-		mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry.");
-		return;
-	}
-
 
 	// Allocate input data
-	astra::CFloat32ProjectionData3DMemory* pInput;
-	if (mxIsSingle(data)) {
-		astra::CFloat32CustomMemory* m = new CFloat32CustomMemory_simple((float *)mxGetData(data));
-		pInput = new astra::CFloat32ProjectionData3DMemory(pProjGeom, m);
-	} else {
-		pInput = new astra::CFloat32ProjectionData3DMemory(pProjGeom);
-		copyMexToCFloat32Array(data, pInput->getData(), pInput->getSize());
-	}
+	std::vector<astra::CFloat32ProjectionData3DMemory *> pInput(num_projectors);
 
+	for (mwIndex itPid = 0; itPid < num_projectors; itPid++) {
+		pInput[itPid] = load_data<astra::CFloat32ProjectionData3DMemory>(data[itPid], pProjGeoms[itPid]);
+		if (!pInput[itPid]) {
+			// Cleaning
+			clean_vector(pInput, itPid);
+			return;
+		}
+	}
 
 	// Allocate output data
 	// If the input is single, we also allocate single output.
 	// Otherwise, double.
-	astra::CFloat32VolumeData3DMemory* pOutput;
-	mxArray *pOutputMx;
-	if (mxIsSingle(data)) {
-		mwSize dims[3];
-		dims[0] = pVolGeom->getGridColCount();
-		dims[1] = pVolGeom->getGridRowCount();
-		dims[2] = pVolGeom->getGridSliceCount();
+	std::vector<astra::CFloat32VolumeData3DMemory *> pOutput(num_projectors);
+	std::vector<mxArray *> pOutputMxs(num_projectors);
 
-		// Allocate uninitialized mxArray of size dims.
-		// (It will be zeroed by CudaBackProjectionAlgorithm3D)
-		const mwSize zero_dims[2] = {0, 0};
-		pOutputMx = mxCreateNumericArray(2, zero_dims, mxSINGLE_CLASS, mxREAL);
-		mxSetDimensions(pOutputMx, dims, 3);
-		const mwSize num_elems = mxGetNumberOfElements(pOutputMx);
-		const mwSize elem_size = mxGetElementSize(pOutputMx);
-		mxSetData(pOutputMx, mxMalloc(elem_size * num_elems));
+	for (mwIndex itPid = 0; itPid < num_projectors; itPid++) {
+		if (mxIsSingle(data[itPid])) {
+			mwSize dims[3];
+			dims[0] = pVolGeoms[itPid]->getGridColCount();
+			dims[1] = pVolGeoms[itPid]->getGridRowCount();
+			dims[2] = pVolGeoms[itPid]->getGridSliceCount();
 
-		astra::CFloat32CustomMemory* m = new CFloat32CustomMemory_simple((float *)mxGetData(pOutputMx));
-		pOutput = new astra::CFloat32VolumeData3DMemory(pVolGeom, m);
-	} else {
-		pOutput = new astra::CFloat32VolumeData3DMemory(pVolGeom);
+			// Allocate uninitialized mxArray of size dims.
+			// (It will be zeroed by CudaForwardProjectionAlgorithm3D)
+			const mwSize zero_dims[2] = {0, 0};
+			pOutputMxs[itPid] = mxCreateNumericArray(2, zero_dims, mxSINGLE_CLASS, mxREAL);
+			mxSetDimensions(pOutputMxs[itPid], dims, 3);
+			const mwSize num_elems = mxGetNumberOfElements(pOutputMxs[itPid]);
+			const mwSize elem_size = mxGetElementSize(pOutputMxs[itPid]);
+			mxSetData(pOutputMxs[itPid], mxMalloc(elem_size * num_elems));
+
+			astra::CFloat32CustomMemory* m = new CFloat32CustomMemory_simple((float *)mxGetData(pOutputMxs[itPid]));
+			pOutput[itPid] = new astra::CFloat32VolumeData3DMemory(pVolGeoms[itPid], m);
+		} else {
+			pOutput[itPid] = new astra::CFloat32VolumeData3DMemory(pVolGeoms[itPid]);
+		}
 	}
 
 	// Perform BP
-
-	astra::CCudaBackProjectionAlgorithm3D* pAlg;
-	pAlg = new astra::CCudaBackProjectionAlgorithm3D();
-	pAlg->initialize(pProjector, pInput, pOutput);
-
-	if (!pAlg->isInitialized()) {
-		mexErrMsgTxt("Error initializing algorithm.");
-		// TODO: Delete pOutputMx?
-		delete pAlg;
-		delete pInput;
-		delete pOutput;
-		return;
+	astra::CCompositeGeometryManager cgm;
+	astra::CCompositeGeometryManager::TJobList L;
+	for (mwIndex itPid = 0; itPid < num_projectors; itPid++) {
+		L.push_back(cgm.createJobBP(pProjectors[itPid], pOutput[itPid], pInput[itPid]));
 	}
+	cgm.doJobs(L);
 
-	pAlg->run();
+	plhs[0] = produce_output(pOutputMxs, pOutput, data, force_cell);
 
-	delete pAlg;
-
-
-	if (mxIsSingle(data)) {
-
-	} else {
-		pOutputMx = createEquivMexArray<mxDOUBLE_CLASS>(pOutput);
-		copyCFloat32ArrayToMex(pOutput->getData(), pOutputMx);
-	}
-	plhs[0] = pOutputMx;
-
-	delete pOutput;
-	delete pInput;
+	clean_vector(pOutput, num_projectors);
+	clean_vector(pInput, num_projectors);
 }
 
 #endif
@@ -316,7 +391,7 @@ void mexFunction(int nlhs, mxArray* plhs[],
 {
 
 	// INPUT: Mode
-	string sMode;
+	std::string sMode;
 	if (1 <= nrhs) {
 		sMode = mexToString(prhs[0]);
 	} else {

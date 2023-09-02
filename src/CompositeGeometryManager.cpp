@@ -67,6 +67,9 @@ CCompositeGeometryManager::CCompositeGeometryManager()
 	if (s_params) {
 		m_iMaxSize = s_params->memory;
 		m_GPUIndices = s_params->GPUIndices;
+		e_distrib = s_params->distrib;
+	} else {
+		e_distrib = TRY_AVOID_SPLIT;
 	}
 }
 
@@ -1691,7 +1694,9 @@ bool CCompositeGeometryManager::doJobs(TJobList &jobs)
 
 	maxSize /= sizeof(float);
 	int div = 1;
-	if (!m_GPUIndices.empty())
+	if (!m_GPUIndices.empty()
+			&& (jobset.size() <= 1 || e_distrib == FORCE_SPLIT)
+			&& (e_distrib != FORCE_AVOID_SPLIT) )
 		div = m_GPUIndices.size();
 
 	// Split jobs to fit
@@ -1699,7 +1704,7 @@ bool CCompositeGeometryManager::doJobs(TJobList &jobs)
 	splitJobs(jobset, maxSize, div, split);
 	jobset.clear();
 
-	if (m_GPUIndices.size() <= 1) {
+	if (m_GPUIndices.size() <= 1 || split.size() <= 1) {
 
 		// Run jobs
 		ASTRA_DEBUG("Running single-threaded");
@@ -1745,6 +1750,18 @@ void CCompositeGeometryManager::setGlobalGPUParams(const SGPUParams& params)
 	ASTRA_DEBUG("Memory: %llu", params.memory);
 }
 
+SGPUParams CCompositeGeometryManager::getGlobalGPUParams()
+{
+	if (s_params) {
+		return *s_params;
+	} else {
+		SGPUParams params;
+		params.GPUIndices.push_back(-1);
+		params.memory = 0;
+		params.distrib = TRY_AVOID_SPLIT;
+		return params;
+	}
+}
 
 }
 
