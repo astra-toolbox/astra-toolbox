@@ -244,7 +244,7 @@ void astra_mex_log_output(int nlhs, mxArray* plhs[], int nrhs, const mxArray* pr
 		}
 		astra::CLogger::setOutputScreen(fd,eLevel);
 	} else {
-		mexErrMsgTxt("Specify which output to set ('file' or 'screen')".);
+		mexErrMsgTxt("Specify which output to set ('file' or 'screen').");
 	}
 }
 
