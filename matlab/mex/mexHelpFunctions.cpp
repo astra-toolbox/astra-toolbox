@@ -44,7 +44,6 @@ void mexErrMsgWithAstraLog(string message)
 		message.append(" ");
 		message.append(last_err_msg);
 	}
-	message.append("\n");
 	mexErrMsgTxt(message.c_str());
 }
 //-----------------------------------------------------------------------------------------
