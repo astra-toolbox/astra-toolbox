@@ -278,7 +278,8 @@ allocateDataObject(const std::string & sDataType,
 		} else if (type == "cone_vec") {
 			pGeometry = new astra::CConeVecProjectionGeometry3D();
 		} else {
-			mexErrMsgTxt("Invalid geometry type.");
+			std::string message = "'" + type + "' is not a valid 3D geometry type.";
+			mexErrMsgTxt(message.c_str());
 		}
 
 		if (!pGeometry->initialize(*cfg)) {

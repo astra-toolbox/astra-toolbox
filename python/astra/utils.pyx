@@ -308,7 +308,7 @@ cdef CProjectionGeometry3D* createProjectionGeometry3D(geometry) except NULL:
     elif (tpe == "cone_vec"):
         pGeometry = <CProjectionGeometry3D*> new CConeVecProjectionGeometry3D();
     else:
-        raise ValueError(tpe + " is an invalid geometry type")
+        raise ValueError("'{}' is not a valid 3D geometry type".format(tpe))
 
     if not pGeometry.initialize(cfg[0]):
         del cfg

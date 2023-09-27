@@ -157,9 +157,12 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 		} else if (type == "fanflat_vec") {
 			pGeometry = new CFanFlatVecProjectionGeometry2D();	
 		} else if (type == "parallel_vec") {
-			pGeometry = new CParallelVecProjectionGeometry2D();	
+			pGeometry = new CParallelVecProjectionGeometry2D();
+		} else if (type == "parallel") {
+			pGeometry = new CParallelProjectionGeometry2D();
 		} else {
-			pGeometry = new CParallelProjectionGeometry2D();	
+			std::string message = "'" + type + "' is not a valid 2D geometry type.";
+			mexErrMsgTxt(message.c_str());
 		}
 		if (!pGeometry->initialize(*cfg)) {
 			delete pGeometry;

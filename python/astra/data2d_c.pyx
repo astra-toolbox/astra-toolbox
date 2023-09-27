@@ -115,8 +115,10 @@ def create(datatype, geometry, data=None, link=False):
             ppGeometry = <CProjectionGeometry2D * >new CFanFlatVecProjectionGeometry2D()
         elif (tpe == 'parallel_vec'):
             ppGeometry = <CProjectionGeometry2D * >new CParallelVecProjectionGeometry2D()
-        else:
+        elif (tpe == 'parallel'):
             ppGeometry = <CProjectionGeometry2D * >new CParallelProjectionGeometry2D()
+        else:
+            raise ValueError("'{}' is not a valid 2D geometry type".format(tpe))
         if not ppGeometry.initialize(cfg[0]):
             del cfg
             del ppGeometry
