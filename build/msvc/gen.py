@@ -603,7 +603,7 @@ def write_project11_14_start(P, F, version):
     print('    <RootNamespace>astraMatlab</RootNamespace>', file=F)
   else:
     print('    <RootNamespace>' + P["name"] + '</RootNamespace>', file=F)
-  print('    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>', file=F)
+  print('    <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>', file=F)
   print('  </PropertyGroup>', file=F)
   print('  <Import Project="$(VCTargetsPath)\\Microsoft.Cpp.Default.props" />', file=F)
   for c in configs:
