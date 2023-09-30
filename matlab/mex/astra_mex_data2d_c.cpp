@@ -488,6 +488,9 @@ void astra_mex_data2d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 
 		return;
 	}
+
+	// Neither sinogram nor volume object
+	mexErrMsgTxt("Data object not found or not initialized properly.");
 }
 
 //-----------------------------------------------------------------------------------------
