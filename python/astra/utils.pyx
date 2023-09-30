@@ -251,8 +251,8 @@ cdef CFloat32VolumeData3D* linkVolFromGeometry(CVolumeGeometry3D *pGeometry, dat
     elif isinstance(data, GPULink):
         data_shape = (data.z, data.y, data.x)
     if geom_shape != data_shape:
-        raise ValueError("The dimensions of the data do not match those specified in the geometry: "
-                         "{} (data) != {} (geometry)".format(data_shape, geom_shape))
+        raise ValueError("The dimensions of the data {} do not match those "
+                         "specified in the geometry {}".format(data_shape, geom_shape))
 
     if isinstance(data, np.ndarray):
         checkArrayForLink(data)
@@ -276,8 +276,8 @@ cdef CFloat32ProjectionData3D* linkProjFromGeometry(CProjectionGeometry3D *pGeom
     elif isinstance(data, GPULink):
         data_shape = (data.z, data.y, data.x)
     if geom_shape != data_shape:
-        raise ValueError("The dimensions of the data do not match those specified in the geometry: "
-                         "{} (data) != {} (geometry)".format(data_shape, geom_shape))
+        raise ValueError("The dimensions of the data {} do not match those "
+                         "specified in the geometry {}".format(data_shape, geom_shape))
 
     if isinstance(data, np.ndarray):
         checkArrayForLink(data)

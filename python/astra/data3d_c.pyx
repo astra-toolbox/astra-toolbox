@@ -85,8 +85,8 @@ def create(datatype,geometry,data=None, link=False):
         else:
             raise TypeError("data should be a numpy.ndarray or a GPULink object")
         if geom_shape != data_shape:
-            raise ValueError("The dimensions of the data do not match those specified in the geometry: "
-                             "{} (data) != {} (geometry)".format(data_shape, geom_shape))
+            raise ValueError("The dimensions of the data {} do not match those "
+                             "specified in the geometry {}".format(data_shape, geom_shape))
 
     if datatype == '-vol':
         pGeometry = createVolumeGeometry3D(geometry)
@@ -139,8 +139,8 @@ def change_geometry(i, geom):
         obj_shape = (pDataObject2.getDetectorRowCount(), pDataObject2.getAngleCount(), pDataObject2.getDetectorColCount())
         if geom_shape != obj_shape:
             del ppGeometry
-            raise ValueError("The dimensions of the data do not match those specified in the geometry: "
-                             "{} (data) != {} (geometry)".format(obj_shape, geom_shape))
+            raise ValueError("The dimensions of the data {} do not match those "
+                             "specified in the geometry {}".format(obj_shape, geom_shape))
         pDataObject2.changeGeometry(ppGeometry)
         del ppGeometry
 
@@ -151,8 +151,8 @@ def change_geometry(i, geom):
         obj_shape = (pDataObject3.getSliceCount(), pDataObject3.getRowCount(), pDataObject3.getColCount())
         if geom_shape != obj_shape:
             del pGeometry
-            raise ValueError("The dimensions of the data do not match those specified in the geometry."
-                             "{} (data) != {} (geometry)".format(obj_shape, geom_shape))
+            raise ValueError("The dimensions of the data {} do not match those "
+                             "specified in the geometry {}".format(obj_shape, geom_shape))
         pDataObject3.changeGeometry(pGeometry)
         del pGeometry
 
@@ -167,8 +167,8 @@ cdef fillDataObject(CFloat32Data3DMemory * obj, data):
         if isinstance(data, np.ndarray):
             obj_shape = (obj.getDepth(), obj.getHeight(), obj.getWidth())
             if data.shape != obj_shape:
-                raise ValueError("The dimensions of the data do not match those specified in the geometry: "
-                                 "{} (data) != {} (geometry)".format(data.shape, obj_shape))
+                raise ValueError("The dimensions of the data {} do not match those "
+                                 "specified in the geometry {}".format(data.shape, obj_shape))
             fillDataObjectArray(obj, np.ascontiguousarray(data,dtype=np.float32))
         else:
             fillDataObjectScalar(obj, np.float32(data))

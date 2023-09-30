@@ -87,8 +87,8 @@ def create(datatype, geometry, data=None, link=False):
     if link:
         geom_shape = geom_size(geometry)
         if data.shape != geom_shape:
-            raise ValueError("The dimensions of the data do not match those specified in the geometry: "
-                             "{} (data) != {} (geometry)".format(data.shape, geom_shape))
+            raise ValueError("The dimensions of the data {} do not match those "
+                             "specified in the geometry {}".format(data.shape, geom_shape))
 
     if datatype == '-vol':
         cfg = utils.dictToConfig(six.b('VolumeGeometry'), geometry)
@@ -149,8 +149,8 @@ cdef fillDataObject(CFloat32Data2D * obj, data):
             obj_shape = (obj.getHeight(), obj.getWidth())
             if data.shape != obj_shape:
                 raise ValueError(
-                  "The dimensions of the data do not match those specified in the geometry: "
-                  "{} (data) != {} (geometry)".format(data.shape, obj_shape))
+                  "The dimensions of the data {} do not match those specified "
+                  "in the geometry {}".format(data.shape, obj_shape))
             fillDataObjectArray(obj, np.ascontiguousarray(data,dtype=np.float32))
         else:
             fillDataObjectScalar(obj, np.float32(data))
@@ -245,9 +245,8 @@ def change_geometry(i, geom):
         if geom_shape != obj_shape:
             del ppGeometry
             del cfg
-            raise ValueError(
-                "The dimensions of the data do not match those specified in the geometry: "
-                "{} (data) != {} (geometry)", obj_shape, geom_shape)
+            raise ValueError("The dimensions of the data {} do not match those "
+                             "specified in the geometry {}".format(obj_shape, geom_shape))
         pDataObject2.changeGeometry(ppGeometry)
         del ppGeometry
         del cfg
@@ -264,9 +263,8 @@ def change_geometry(i, geom):
         if geom_shape != obj_shape:
             del cfg
             del pGeometry
-            raise ValueError(
-                "The dimensions of the data do not match those specified in the geometry: "
-                "{} (data) != {} (geometry)", obj_shape, geom_shape)
+            raise ValueError("The dimensions of the data {} do not match those "
+                             "specified in the geometry {}".format(obj_shape, geom_shape))
         pDataObject3.changeGeometry(pGeometry)
         del cfg
         del pGeometry
