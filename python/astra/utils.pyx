@@ -46,6 +46,7 @@ from .PyXMLDocument cimport XMLNode
 from .PyIncludes cimport *
 
 from .pythonutils import GPULink, checkArrayForLink
+from .log import AstraError
 
 cdef extern from "CFloat32CustomPython.h":
     cdef cppclass CFloat32CustomPython:
@@ -63,10 +64,9 @@ cdef Config * dictToConfig(string rootname, dc) except NULL:
     cfg.initialize(rootname)
     try:
         readDict(cfg.self, dc)
-    except Exception:
+    except:
         del cfg
-        exc = sys.exc_info()
-        raise exc[0], exc[1], exc[2]
+        raise
     return cfg
 
 def convert_item(item):
@@ -121,7 +121,7 @@ cdef bool readDict(XMLNode root, _dc) except False:
             elif val.ndim == 1:
                 listbase.setContent(data, val.shape[0])
             else:
-                raise Exception("Only 1 or 2 dimensions are allowed")
+                raise AstraError("Only 1 or 2 dimensions are allowed")
         elif isinstance(val, dict):
             if item == six.b('option') or item == six.b('options') or item == six.b('Option') or item == six.b('Options'):
                 readOptions(root, val)
@@ -146,7 +146,7 @@ cdef bool readOptions(XMLNode node, dc) except False:
     for item in dc:
         val = dc[item]
         if node.hasOption(item):
-            raise Exception('Duplicate Option: %s' % item)
+            raise AstraError('Duplicate Option: %s' % item)
         if isinstance(val, builtins.list) or isinstance(val, tuple):
             val = np.array(val,dtype=np.float64)
         if isinstance(val, np.ndarray):
@@ -161,7 +161,7 @@ cdef bool readOptions(XMLNode node, dc) except False:
             elif val.ndim == 1:
                 listbase.setContent(data, val.shape[0])
             else:
-                raise Exception("Only 1 or 2 dimensions are allowed")
+                raise AstraError("Only 1 or 2 dimensions are allowed")
         else:
             if isinstance(val, builtins.bool):
                 val = int(val)
@@ -251,8 +251,8 @@ cdef CFloat32VolumeData3D* linkVolFromGeometry(CVolumeGeometry3D *pGeometry, dat
     elif isinstance(data, GPULink):
         data_shape = (data.z, data.y, data.x)
     if geom_shape != data_shape:
-        raise ValueError(
-            "The dimensions of the data do not match those specified in the geometry: {} != {}".format(data_shape, geom_shape))
+        raise ValueError("The dimensions of the data {} do not match those "
+                         "specified in the geometry {}".format(data_shape, geom_shape))
 
     if isinstance(data, np.ndarray):
         checkArrayForLink(data)
@@ -263,7 +263,7 @@ cdef CFloat32VolumeData3D* linkVolFromGeometry(CVolumeGeometry3D *pGeometry, dat
             hnd = wrapHandle(<float*>PyLong_AsVoidPtr(data.ptr), data.x, data.y, data.z, data.pitch/4)
             pDataObject3D = new CFloat32VolumeData3DGPU(pGeometry, hnd)
         ELSE:
-            raise NotImplementedError("CUDA support is not enabled in ASTRA")
+            raise AstraError("CUDA support is not enabled in ASTRA")
     else:
         raise TypeError("data should be a numpy.ndarray or a GPULink object")
     return pDataObject3D
@@ -276,8 +276,8 @@ cdef CFloat32ProjectionData3D* linkProjFromGeometry(CProjectionGeometry3D *pGeom
     elif isinstance(data, GPULink):
         data_shape = (data.z, data.y, data.x)
     if geom_shape != data_shape:
-        raise ValueError(
-            "The dimensions of the data do not match those specified in the geometry: {} != {}".format(data_shape, geom_shape))
+        raise ValueError("The dimensions of the data {} do not match those "
+                         "specified in the geometry {}".format(data_shape, geom_shape))
 
     if isinstance(data, np.ndarray):
         checkArrayForLink(data)
@@ -288,7 +288,7 @@ cdef CFloat32ProjectionData3D* linkProjFromGeometry(CProjectionGeometry3D *pGeom
             hnd = wrapHandle(<float*>PyLong_AsVoidPtr(data.ptr), data.x, data.y, data.z, data.pitch/4)
             pDataObject3D = new CFloat32ProjectionData3DGPU(pGeometry, hnd)
         ELSE:
-            raise NotImplementedError("CUDA support is not enabled in ASTRA")
+            raise AstraError("CUDA support is not enabled in ASTRA")
     else:
         raise TypeError("data should be a numpy.ndarray or a GPULink object")
     return pDataObject3D
@@ -308,12 +308,12 @@ cdef CProjectionGeometry3D* createProjectionGeometry3D(geometry) except NULL:
     elif (tpe == "cone_vec"):
         pGeometry = <CProjectionGeometry3D*> new CConeVecProjectionGeometry3D();
     else:
-        raise ValueError("Invalid geometry type.")
+        raise ValueError("'{}' is not a valid 3D geometry type".format(tpe))
 
     if not pGeometry.initialize(cfg[0]):
         del cfg
         del pGeometry
-        raise RuntimeError('Geometry class not initialized.')
+        raise AstraError('Geometry class could not be initialized', append_log=True)
 
     del cfg
 
@@ -327,7 +327,7 @@ cdef CVolumeGeometry3D* createVolumeGeometry3D(geometry) except NULL:
     if not pGeometry.initialize(cfg[0]):
         del cfg
         del pGeometry
-        raise RuntimeError('Geometry class not initialized.')
+        raise AstraError('Geometry class could not be initialized', append_log=True)
 
     del cfg
 

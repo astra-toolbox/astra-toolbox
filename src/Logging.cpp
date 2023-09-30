@@ -128,6 +128,7 @@ void CLogger::error(const char *sfile, int sline, const char *fmt, ...)
         clog_error(sfile,sline,1,fmt,apf);
         va_end(apf);
     }
+	_setLastErrMsg(sfile,sline,fmt,ap);
 }
 
 void CLogger::_setLevel(int id, log_level m_eLevel)
@@ -182,6 +183,22 @@ void CLogger::_assureIsInitialized()
 	}
 }
 
+void CLogger::_setLastErrMsg(const char *sfile, int sline, const char *fmt, va_list ap)
+{
+	va_list ap_copy;
+	va_copy(ap_copy, ap);
+	char buf[1024];
+	vsprintf(buf, fmt, ap_copy);
+	m_sLastErrMsg.assign(buf);
+}
+
+std::string CLogger::getLastErrMsg()
+{
+	std::string err_msg = m_sLastErrMsg;
+	m_sLastErrMsg.clear();
+	return err_msg;
+}
+
 void CLogger::setFormatFile(const char *fmt)
 {
 	if(m_bFileProvided){
@@ -209,3 +226,4 @@ bool CLogger::m_bEnabledScreen = true;
 bool CLogger::m_bEnabledFile = true;
 bool CLogger::m_bFileProvided = false;
 bool CLogger::m_bInitialized = false;
+std::string CLogger::m_sLastErrMsg;

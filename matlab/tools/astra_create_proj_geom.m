@@ -97,7 +97,7 @@ function proj_geom = astra_create_proj_geom(type, varargin)
 
 if strcmp(type,'parallel')
 	if numel(varargin) < 3
-		error('not enough input arguments: astra_create_proj_geom(parallel, detector_spacing, det_count, angles)');
+		error('Not enough input arguments. Usage: astra_create_proj_geom(parallel, detector_spacing, det_count, angles);');
 	end
 	proj_geom = struct( ...
 		'type',					'parallel', ...
@@ -108,10 +108,10 @@ if strcmp(type,'parallel')
 
 elseif strcmp(type,'parallel_vec')
 	if numel(varargin) < 2
-		error('not enough input arguments: astra_create_proj_geom(parallel_vec, det_count, V')
+		error('Not enough input arguments. Usage: astra_create_proj_geom(parallel_vec, det_count, V);')
 	end
 	if size(varargin{2}, 2) ~= 6
-		error('V should be a Nx6 matrix, with N the number of projections')
+		error('V should be a Nx6 matrix, with N the number of projections.')
 	end
 	proj_geom = struct( ...
 		'type',					'parallel_vec',  ...
@@ -121,7 +121,7 @@ elseif strcmp(type,'parallel_vec')
 
 elseif strcmp(type,'fanflat')
 	if numel(varargin) < 5
-		error('not enough input arguments: astra_create_proj_geom(fanflat, det_width, det_count, angles, source_origin, source_det)');
+		error('Not enough input arguments. Usage: astra_create_proj_geom(fanflat, det_width, det_count, angles, source_origin, source_det);');
 	end	
 	proj_geom = struct( ...
 		'type',						'fanflat', ...
@@ -134,7 +134,7 @@ elseif strcmp(type,'fanflat')
 
 elseif strcmp(type,'fanflat_vec')
 	if numel(varargin) < 2
-		error('not enough input arguments: astra_create_proj_geom(fanflat_vec, det_count, V')
+		error('Not enough input arguments. Usage: astra_create_proj_geom(fanflat_vec, det_count, V).')
 	end
 	if size(varargin{2}, 2) ~= 6
 		error('V should be a Nx6 matrix, with N the number of projections')
@@ -147,7 +147,7 @@ elseif strcmp(type,'fanflat_vec')
 
 elseif strcmp(type,'parallel3d')
 	if numel(varargin) < 5
-		error('not enough input arguments: astra_create_proj_geom(parallel3d, detector_spacing_x, detector_spacing_y, det_row_count, det_col_count, angles)');
+		error('Not enough input arguments: astra_create_proj_geom(parallel3d, detector_spacing_x, detector_spacing_y, det_row_count, det_col_count, angles);');
 	end
 	proj_geom = struct( ...
 		'type',					'parallel3d', ...
@@ -159,7 +159,7 @@ elseif strcmp(type,'parallel3d')
 	);
 elseif strcmp(type,'cone')
 	if numel(varargin) < 7
-		error('not enough input arguments: astra_create_proj_geom(cone, detector_spacing_x, detector_spacing_y, det_row_count, det_col_count, angles, source_origin, source_det)');
+		error('Not enough input arguments. Usage: astra_create_proj_geom(cone, detector_spacing_x, detector_spacing_y, det_row_count, det_col_count, angles, source_origin, source_det);');
 	end
 	proj_geom = struct( ...
 		'type',					'cone', ...
@@ -173,7 +173,7 @@ elseif strcmp(type,'cone')
 	);
 elseif strcmp(type,'cone_vec')
 	if numel(varargin) < 3
-		error('not enough input arguments: astra_create_proj_geom(cone_vec, det_row_count, det_col_count, V')
+		error('Not enough input arguments. Usage: astra_create_proj_geom(cone_vec, det_row_count, det_col_count, V);')
 	end
 	if size(varargin{3}, 2) ~= 12
 		error('V should be a Nx12 matrix, with N the number of projections')
@@ -186,10 +186,10 @@ elseif strcmp(type,'cone_vec')
 	);
 elseif strcmp(type,'parallel3d_vec')
 	if numel(varargin) < 3
-		error('not enough input arguments: astra_create_proj_geom(parallel3d_vec, det_row_count, det_col_count, V')
+		error('Not enough input arguments. Usage: astra_create_proj_geom(parallel3d_vec, det_row_count, det_col_count, V);')
 	end
 	if size(varargin{3}, 2) ~= 12
-		error('V should be a Nx12 matrix, with N the number of projections')
+		error('V should be a Nx12 matrix, with N the number of projections.')
 	end
 	proj_geom = struct( ...
 		'type',					'parallel3d_vec',  ...
@@ -199,7 +199,7 @@ elseif strcmp(type,'parallel3d_vec')
 	);
 elseif strcmp(type,'sparse_matrix')
 	if numel(varargin) < 3
-		error('not enough input arguments: astra_create_proj_geom(sparse_matrix, det_width, det_count, angles, matrix_id)')
+		error('Not enough input arguments. Usage: astra_create_proj_geom(sparse_matrix, det_width, det_count, angles, matrix_id);')
 	end
 	proj_geom = struct( ...
 		'type',					'sparse_matrix', ...
@@ -210,7 +210,6 @@ elseif strcmp(type,'sparse_matrix')
 	);
 
 else
-	disp(['Error: unknown type ' type]);
-	proj_geom = struct();
+	error(['Unknown projection geometry type: ' type '.']);
 end
 

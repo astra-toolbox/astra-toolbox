@@ -48,8 +48,7 @@ using namespace astra;
 void astra_mex_log_debug(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 	if (nrhs < 4) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	string filename = mexToString(prhs[1]);
 	int linenumber = (int)mxGetScalar(prhs[2]);
@@ -68,8 +67,7 @@ void astra_mex_log_debug(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prh
 void astra_mex_log_info(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 	if (nrhs < 4) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	string filename = mexToString(prhs[1]);
 	int linenumber = (int)mxGetScalar(prhs[2]);
@@ -88,8 +86,7 @@ void astra_mex_log_info(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs
 void astra_mex_log_warn(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 	if (nrhs < 4) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	string filename = mexToString(prhs[1]);
 	int linenumber = (int)mxGetScalar(prhs[2]);
@@ -108,7 +105,7 @@ void astra_mex_log_warn(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs
 void astra_mex_log_error(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 	if (nrhs < 4) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 		return;
 	}
 	string filename = mexToString(prhs[1]);
@@ -126,8 +123,7 @@ void astra_mex_log_error(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prh
 void astra_mex_log_enable(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	string sType = mexToString(prhs[1]);
 	if(sType == "all"){
@@ -137,7 +133,7 @@ void astra_mex_log_enable(int nlhs, mxArray* plhs[], int nrhs, const mxArray* pr
 	}else if(sType == "screen"){
 		astra::CLogger::enableScreen();
 	} else {
-		mexErrMsgTxt("Specify which output to enable ('all', 'file', or 'screen')");
+		mexErrMsgTxt("Specify which output to enable ('all', 'file', or 'screen').");
 	}
 }
 
@@ -150,8 +146,7 @@ void astra_mex_log_enable(int nlhs, mxArray* plhs[], int nrhs, const mxArray* pr
 void astra_mex_log_disable(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	string sType = mexToString(prhs[1]);
 	if(sType == "all"){
@@ -161,7 +156,7 @@ void astra_mex_log_disable(int nlhs, mxArray* plhs[], int nrhs, const mxArray* p
 	}else if(sType == "screen"){
 		astra::CLogger::disableScreen();
 	} else {
-		mexErrMsgTxt("Specify which output to disable ('all', 'file', or 'screen')");
+		mexErrMsgTxt("Specify which output to disable ('all', 'file', or 'screen').");
 	}
 }
 
@@ -184,8 +179,7 @@ void astra_mex_log_disable(int nlhs, mxArray* plhs[], int nrhs, const mxArray* p
 void astra_mex_log_format(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 	if (nrhs < 3) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	string sType = mexToString(prhs[1]);
 	string sFormat = mexToString(prhs[2]);
@@ -203,7 +197,7 @@ void astra_mex_log_format(int nlhs, mxArray* plhs[], int nrhs, const mxArray* pr
 	}else if(sType == "screen"){
 		astra::CLogger::setFormatScreen(sFormat.c_str());
 	} else {
-		mexErrMsgTxt("Specify which output to format ('file' or 'screen')");
+		mexErrMsgTxt("Specify which output to format ('file' or 'screen').");
 	}
 }
 
@@ -220,8 +214,7 @@ void astra_mex_log_format(int nlhs, mxArray* plhs[], int nrhs, const mxArray* pr
 void astra_mex_log_output(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 	if (nrhs < 4) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	string sType = mexToString(prhs[1]);
 	string sOutput = mexToString(prhs[2]);
@@ -236,7 +229,7 @@ void astra_mex_log_output(int nlhs, mxArray* plhs[], int nrhs, const mxArray* pr
 	}else if(sLevel == "error"){
 		eLevel = LOG_ERROR;
 	}else{
-		mexErrMsgTxt("Specify which log level to use ('debug', 'info', 'warn', or 'error')");
+		mexErrMsgTxt("Specify which log level to use ('debug', 'info', 'warn', or 'error').");
 	}
 	if(sType == "file"){
 		astra::CLogger::setOutputFile(sOutput.c_str(),eLevel);
@@ -247,11 +240,11 @@ void astra_mex_log_output(int nlhs, mxArray* plhs[], int nrhs, const mxArray* pr
 		}else if(sOutput == "stderr"){
 			fd=2;
 		}else{
-			mexErrMsgTxt("Specify which screen to output to ('stdout' or 'stderr')");
+			mexErrMsgTxt("Specify which screen to output to ('stdout' or 'stderr').");
 		}
 		astra::CLogger::setOutputScreen(fd,eLevel);
 	} else {
-		mexErrMsgTxt("Specify which output to set ('file' or 'screen')");
+		mexErrMsgTxt("Specify which output to set ('file' or 'screen').");
 	}
 }
 

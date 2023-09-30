@@ -30,6 +30,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/AstraObjectManager.h"
 #include "astra/DataProjectorPolicies.h"
 
+#include "astra/Logging.h"
+
 using namespace std;
 
 namespace astra {

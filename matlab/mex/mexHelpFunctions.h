@@ -48,6 +48,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/XMLNode.h"
 
 // utility functions
+void mexErrMsgWithAstraLog(std::string message);
 std::string mexToString(const mxArray* pInput);
 bool mexIsScalar(const mxArray* pInput);
 void get3DMatrixDims(const mxArray* x, mwSize *dims);

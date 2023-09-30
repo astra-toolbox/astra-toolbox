@@ -29,6 +29,7 @@
 include "config.pxi"
 import six
 from .utils import wrap_from_bytes, wrap_to_bytes
+from .log import AstraError
 
 from libcpp.string cimport string
 from libcpp.vector cimport vector
@@ -90,7 +91,7 @@ IF HAVE_CUDA==True:
     if not isinstance(idx, abc.Iterable) or isinstance(idx, six.string_types + (six.text_type,six.binary_type)):
         idx = (idx,)
     if memory != 0 and memory < 1024*1024:
-        raise ValueError("Setting GPU memory lower than 1MB is not supported.")
+        raise AstraError("Setting GPU memory lower than 1MB is not supported")
     params.memory = memory
     params.GPUIndices = idx
     setGlobalGPUParams(params)
@@ -101,9 +102,9 @@ IF HAVE_CUDA==True:
     return wrap_from_bytes(getCudaDeviceString(idx))
 ELSE:
   def set_gpu_index(idx, memory=0):
-    raise NotImplementedError("CUDA support is not enabled in ASTRA")
+    raise AstraError("CUDA support is not enabled in ASTRA")
   def get_gpu_info(idx=-1):
-    raise NotImplementedError("CUDA support is not enabled in ASTRA")
+    raise AstraError("CUDA support is not enabled in ASTRA")
 
 def delete(ids):
     try:

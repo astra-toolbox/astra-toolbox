@@ -118,8 +118,7 @@ bool CCudaForwardProjectionAlgorithm3D::initialize(const Config& _cfg)
 		id = StringUtil::stringToInt(node.getContent(), -1);
 		m_pProjector = CProjector3DManager::getSingleton().get(id);
 		if (!m_pProjector) {
-			// Report this explicitly since projector is optional
-			ASTRA_ERROR("ProjectorId is not a valid id");
+			ASTRA_WARN("Optional parameter ProjectorId is not a valid id");
 		}
 	}
 	CC.markNodeParsed("ProjectorId");

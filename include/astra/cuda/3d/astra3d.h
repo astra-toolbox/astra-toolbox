@@ -301,7 +301,7 @@ _AstraExport bool astraCudaBP_SIRTWeighted(float* pfVolume, const float* pfProje
                       const CProjectionGeometry3D* pProjGeom,
                       int iGPUIndex, int iVoxelSuperSampling);
 
-_AstraExport void uploadMultipleProjections(CFloat32ProjectionData3DGPU *proj,
+_AstraExport bool uploadMultipleProjections(CFloat32ProjectionData3DGPU *proj,
                                             const float *data,
                                             unsigned int y_min,
                                             unsigned int y_max);

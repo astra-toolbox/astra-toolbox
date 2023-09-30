@@ -119,7 +119,7 @@ function proj_geom_vec = astra_geom_2vec(proj_geom)
 		proj_geom_vec = astra_create_proj_geom('parallel3d_vec', proj_geom.DetectorRowCount, proj_geom.DetectorColCount, vectors);
 
 	else
-		error(['No suitable vector geometry found for type: ' proj_geom.type])
+		error(['No suitable vector geometry found for type: ' proj_geom.type '.'])
 	end
 
 end

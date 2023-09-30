@@ -45,6 +45,7 @@ from .PyXMLDocument cimport XMLDocument
 from . cimport utils
 from .utils import wrap_from_bytes
 from .utils cimport linkVolFromGeometry, linkProjFromGeometry, createProjectionGeometry3D, createVolumeGeometry3D
+from .log import AstraError
 
 from .pythonutils import geom_size, GPULink
 
@@ -63,7 +64,7 @@ cdef extern from *:
 cdef CFloat32Data3DMemory * dynamic_cast_mem_safe(CFloat32Data3D *obj) except NULL:
     cdef CFloat32Data3DMemory *ret = dynamic_cast_mem(obj)
     if not ret:
-        raise RuntimeError("Not a memory 3D data object")
+        raise AstraError("Not a memory 3D data object")
     return ret
 
 
@@ -84,7 +85,8 @@ def create(datatype,geometry,data=None, link=False):
         else:
             raise TypeError("data should be a numpy.ndarray or a GPULink object")
         if geom_shape != data_shape:
-            raise ValueError("The dimensions of the data do not match those specified in the geometry: {} != {}".format(data_shape, geom_shape))
+            raise ValueError("The dimensions of the data {} do not match those "
+                             "specified in the geometry {}".format(data_shape, geom_shape))
 
     if datatype == '-vol':
         pGeometry = createVolumeGeometry3D(geometry)
@@ -101,11 +103,11 @@ def create(datatype,geometry,data=None, link=False):
             pDataObject3D = new CFloat32ProjectionData3DMemory(ppGeometry)
         del ppGeometry
     else:
-        raise ValueError("Invalid datatype.  Please specify '-vol' or '-proj3d'.")
+        raise ValueError("Invalid datatype. Please specify '-vol' or '-proj3d'")
 
     if not pDataObject3D.isInitialized():
         del pDataObject3D
-        raise RuntimeError("Couldn't initialize data object.")
+        raise AstraError("Couldn't initialize data object", append_log=True)
 
     if not link:
         fillDataObject(dynamic_cast_mem_safe(pDataObject3D), data)
@@ -123,7 +125,7 @@ def get_geometry(i):
         pDataObject3 = <CFloat32VolumeData3DMemory * >pDataObject
         geom = utils.configToDict(pDataObject3.getGeometry().getConfiguration())
     else:
-        raise RuntimeError("Not a known data object")
+        raise AstraError("Not a known data object")
     return geom
 
 def change_geometry(i, geom):
@@ -137,8 +139,8 @@ def change_geometry(i, geom):
         obj_shape = (pDataObject2.getDetectorRowCount(), pDataObject2.getAngleCount(), pDataObject2.getDetectorColCount())
         if geom_shape != obj_shape:
             del ppGeometry
-            raise ValueError(
-                "The dimensions of the data do not match those specified in the geometry: {} != {}".format(obj_shape, geom_shape))
+            raise ValueError("The dimensions of the data {} do not match those "
+                             "specified in the geometry {}".format(obj_shape, geom_shape))
         pDataObject2.changeGeometry(ppGeometry)
         del ppGeometry
 
@@ -149,13 +151,13 @@ def change_geometry(i, geom):
         obj_shape = (pDataObject3.getSliceCount(), pDataObject3.getRowCount(), pDataObject3.getColCount())
         if geom_shape != obj_shape:
             del pGeometry
-            raise ValueError(
-                "The dimensions of the data do not match those specified in the geometry.".format(obj_shape, geom_shape))
+            raise ValueError("The dimensions of the data {} do not match those "
+                             "specified in the geometry {}".format(obj_shape, geom_shape))
         pDataObject3.changeGeometry(pGeometry)
         del pGeometry
 
     else:
-        raise RuntimeError("Not a known data object")
+        raise AstraError("Not a known data object")
 
 
 cdef fillDataObject(CFloat32Data3DMemory * obj, data):
@@ -165,8 +167,8 @@ cdef fillDataObject(CFloat32Data3DMemory * obj, data):
         if isinstance(data, np.ndarray):
             obj_shape = (obj.getDepth(), obj.getHeight(), obj.getWidth())
             if data.shape != obj_shape:
-                raise ValueError(
-                  "The dimensions of the data do not match those specified in the geometry: {} != {}".format(data.shape, obj_shape))
+                raise ValueError("The dimensions of the data {} do not match those "
+                                 "specified in the geometry {}".format(data.shape, obj_shape))
             fillDataObjectArray(obj, np.ascontiguousarray(data,dtype=np.float32))
         else:
             fillDataObjectScalar(obj, np.float32(data))
@@ -185,9 +187,9 @@ cdef fillDataObjectArray(CFloat32Data3DMemory * obj, float [:,:,::1] data):
 cdef CFloat32Data3D * getObject(i) except NULL:
     cdef CFloat32Data3D * pDataObject = man3d.get(i)
     if pDataObject == NULL:
-        raise ValueError("Data object not found")
+        raise AstraError("Data object not found")
     if not pDataObject.isInitialized():
-        raise RuntimeError("Data object not initialized properly.")
+        raise AstraError("Data object not initialized properly")
     return pDataObject
 
 @cython.boundscheck(False)

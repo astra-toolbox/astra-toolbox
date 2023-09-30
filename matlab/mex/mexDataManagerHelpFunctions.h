@@ -66,15 +66,13 @@ void generic_astra_mex_data3d_get(int nlhs, mxArray* plhs[], int nrhs,
 {
 	// step1: input
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 
 	// step2: get data object/s
 	astra::CFloat32Data3DMemory* pDataObject = NULL;
 	if (!checkID(mxGetScalar(prhs[1]), pDataObject)) {
-		mexErrMsgTxt("Data object not found or not initialized properly.\n");
-		return;
+		mexErrMsgTxt("Data object not found or not initialized properly.");
 	}
 
 	// create output

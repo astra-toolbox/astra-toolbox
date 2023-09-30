@@ -150,3 +150,19 @@ def setOutputFile(filename, level):
     :type level: :class:`int`
     """
     l.log_setOutputFile(filename, level)
+
+class AstraError(Exception):
+    def __init__(self, message='', append_log=False):
+        """Error in Astra Toolbox operation.
+
+        :param message: Error message, defaults to empty string.
+        :type message: str, optional
+        :param append_log: Append last error message recorded by the Astra
+            shared library to the Python error message, defaults to False.
+        :type append_log: bool, optional
+        """
+        if append_log:
+            last_err_msg = l.log_getLastErrMsg()
+            if last_err_msg:
+                message += ': ' + last_err_msg
+        super(AstraError, self).__init__(message)

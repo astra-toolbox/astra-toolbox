@@ -56,12 +56,11 @@ using namespace astra;
 void astra_mex_projector3d_create(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 { 
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 
 	if (!mxIsStruct(prhs[1])) {
-		mexErrMsgTxt("Argument 1 not a valid MATLAB struct. \n");
+		mexErrMsgTxt("Argument 1 not a valid MATLAB struct.");
 	}
 
 	// turn MATLAB struct to an XML-based Config object
@@ -71,16 +70,14 @@ void astra_mex_projector3d_create(int nlhs, mxArray* plhs[], int nrhs, const mxA
 	CProjector3D* pProj = CProjector3DFactory::getSingleton().create(cfg->self.getAttribute("type"));
 	if (pProj == NULL) {
 		delete cfg;
-		mexErrMsgTxt("Unknown Projector3D. \n");
-		return;
+		mexErrMsgTxt("Unknown Projector3D type.");
 	}
 
 	// create algorithm
 	if (!pProj->initialize(*cfg)) {
 		delete cfg;
 		delete pProj;
-		mexErrMsgTxt("Unable to initialize Projector3D. \n");
-		return;
+		mexErrMsgWithAstraLog("Unable to initialize Projector3D.");
 	}
 	delete cfg;
 
@@ -102,8 +99,7 @@ void astra_mex_projector3d_destroy(int nlhs, mxArray* plhs[], int nrhs, const mx
 {
 	// step1: read input
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 
 	for (int i = 1; i < nrhs; i++) {
@@ -130,16 +126,14 @@ void astra_mex_projector3d_get_projection_geometry(int nlhs, mxArray* plhs[], in
 {
 	// step1: read input
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	int iPid = (int)(mxGetScalar(prhs[1]));
 
 	// step2: get projector
-	CProjector3D* pProjector;
-	if (!(pProjector = CProjector3DManager::getSingleton().get(iPid))) {
-		mexErrMsgTxt("Projector not found.\n");
-		return;
+	CProjector3D* pProjector = CProjector3DManager::getSingleton().get(iPid);
+	if (!pProjector || !pProjector->isInitialized()) {
+		mexErrMsgTxt("Projector could not be found or is not initialized.");
 	}
 
 	// step3: get projection_geometry and turn it into a MATLAB struct
@@ -158,16 +152,14 @@ void astra_mex_projector3d_get_volume_geometry(int nlhs, mxArray* plhs[], int nr
 {
 	// step1: read input
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	int iPid = (int)(mxGetScalar(prhs[1]));
 
 	// step2: get projector
-	CProjector3D* pProjector;
-	if (!(pProjector = CProjector3DManager::getSingleton().get(iPid))) {
-		mexErrMsgTxt("Projector not found.\n");
-		return;
+	CProjector3D* pProjector = CProjector3DManager::getSingleton().get(iPid);
+	if (!pProjector || !pProjector->isInitialized()) {
+		mexErrMsgTxt("Projector could not be found or is not initialized.");
 	}
 
 	// step3: get projection_geometry and turn it into a MATLAB struct
@@ -188,16 +180,14 @@ void astra_mex_projector3d_is_cuda(int nlhs, mxArray* plhs[], int nrhs, const mx
 { 
 	// step1: get input
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	int iPid = (int)(mxGetScalar(prhs[1]));
 
 	// step2: get projector
 	CProjector3D* pProjector = CProjector3DManager::getSingleton().get(iPid);
 	if (!pProjector || !pProjector->isInitialized()) {
-		mexErrMsgTxt("Projector not initialized.\n");
-		return;
+		mexErrMsgTxt("Projector could not be found or is not initialized.");
 	}
 
 #ifdef ASTRA_CUDA

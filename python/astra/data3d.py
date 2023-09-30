@@ -55,7 +55,7 @@ def link(datatype, geometry, data):
     
     """
     if not isinstance(data,np.ndarray) and not isinstance(data,GPULink):
-        raise TypeError("Input should be a numpy ndarray or GPULink object")
+        raise TypeError("Input should be a numpy.ndarray or GPULink object")
     if isinstance(data, np.ndarray):
         checkArrayForLink(data)
     return d.create(datatype,geometry,data,True)

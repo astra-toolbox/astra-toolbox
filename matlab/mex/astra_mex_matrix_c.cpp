@@ -54,8 +54,7 @@ void astra_mex_matrix_delete(int nlhs, mxArray* plhs[], int nrhs, const mxArray*
 { 
 	// step1: read input
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 
 	// step2: delete all specified data objects
@@ -81,12 +80,10 @@ static bool matlab_to_astra(const mxArray* _rhs, CSparseMatrix* _pMatrix)
 {
 	// Check input
 	if (!mxIsSparse (_rhs)) {
-		mexErrMsgTxt("Argument is not a valid MATLAB sparse matrix.\n");
-		return false;
+		mexErrMsgTxt("Argument is not a valid MATLAB sparse matrix.");
 	}
 	if (!_pMatrix->isInitialized()) {
-		mexErrMsgTxt("Couldn't initialize data object.\n");
-		return false;
+		mexErrMsgTxt("Couldn't initialize data object.");
 	}
 
 	unsigned int iHeight = mxGetM(_rhs);
@@ -95,8 +92,7 @@ static bool matlab_to_astra(const mxArray* _rhs, CSparseMatrix* _pMatrix)
 
 	if (_pMatrix->m_lSize < lSize || _pMatrix->m_iHeight < iHeight) {
 		// TODO: support resizing?
-		mexErrMsgTxt("Matrix too large to store in this object.\n");
-		return false;
+		mexErrMsgTxt("Matrix too large to store in this object.");
 	}
 
 	// Transpose matrix, as matlab stores a matrix column-by-column
@@ -172,8 +168,7 @@ static bool matlab_to_astra(const mxArray* _rhs, CSparseMatrix* _pMatrix)
 static bool astra_to_matlab(const CSparseMatrix* _pMatrix, mxArray*& _lhs)
 {
 	if (!_pMatrix->isInitialized()) {
-		mexErrMsgTxt("Uninitialized data object.\n");
-		return false;
+		mexErrMsgTxt("Uninitialized data object.");
 	}
 
 	unsigned int iHeight = _pMatrix->m_iHeight;
@@ -182,8 +177,7 @@ static bool astra_to_matlab(const CSparseMatrix* _pMatrix, mxArray*& _lhs)
 
 	_lhs = mxCreateSparse(iHeight, iWidth, lSize, mxREAL);
 	if (!mxIsSparse (_lhs)) {
-		mexErrMsgTxt("Couldn't initialize matlab sparse matrix.\n");
-		return false;
+		mexErrMsgTxt("Couldn't initialize matlab sparse matrix.");
 	}
 	
 	mwIndex *colStarts = mxGetJc(_lhs);
@@ -237,13 +231,11 @@ void astra_mex_matrix_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 { 
 	// step1: get datatype
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 
 	if (!mxIsSparse (prhs[1])) {
-		mexErrMsgTxt("Argument is not a valid MATLAB sparse matrix.\n");
-		return;
+		mexErrMsgTxt("Argument is not a valid MATLAB sparse matrix.");
 	}
 
 	unsigned int iHeight = mxGetM(prhs[1]);
@@ -254,17 +246,15 @@ void astra_mex_matrix_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 
 	// Check initialization
 	if (!pMatrix->isInitialized()) {
-		mexErrMsgTxt("Couldn't initialize data object.\n");
 		delete pMatrix;
-		return;
+		mexErrMsgTxt("Couldn't initialize data object.");
 	}
 
 	bool bResult = matlab_to_astra(prhs[1], pMatrix);
 
 	if (!bResult) {
-		mexErrMsgTxt("Failed to create data object.\n");
 		delete pMatrix;
-		return;
+		mexErrMsgWithAstraLog("Failed to create data object.");
 	}
 
 	// store data object
@@ -287,12 +277,10 @@ void astra_mex_matrix_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 {
 	// step1: input
 	if (nrhs < 3) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	if (!mxIsDouble(prhs[1])) {
-		mexErrMsgTxt("Identifier should be a scalar value. \n");
-		return;
+		mexErrMsgTxt("Identifier should be a scalar value.");
 	}
 	int iDataID = (int)(mxGetScalar(prhs[1]));
 
@@ -305,7 +293,7 @@ void astra_mex_matrix_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 
 	bool bResult = matlab_to_astra(prhs[2], pMatrix);
 	if (!bResult) {
-		mexErrMsgTxt("Failed to store matrix.\n");
+		mexErrMsgWithAstraLog("Failed to store matrix.");
 	}
 }
 
@@ -320,20 +308,17 @@ void astra_mex_matrix_get_size(int nlhs, mxArray* plhs[], int nrhs, const mxArra
 { 
 	// step1: input
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	if (!mxIsDouble(prhs[1])) {
-		mexErrMsgTxt("Identifier should be a scalar value. \n");
-		return;
+		mexErrMsgTxt("Identifier should be a scalar value.");
 	}
 	int iDataID = (int)(mxGetScalar(prhs[1]));
 
 	// step2: get data object
 	CSparseMatrix* pMatrix = astra::CMatrixManager::getSingleton().get(iDataID);
 	if (!pMatrix || !pMatrix->isInitialized()) {
-		mexErrMsgTxt("Data object not found or not initialized properly.\n");
-		return;
+		mexErrMsgTxt("Data object not found or not initialized properly.");
 	}
 
 	// create output
@@ -351,27 +336,24 @@ void astra_mex_matrix_get(int nlhs, mxArray* plhs[], int nrhs, const mxArray* pr
 { 
 	// step1: check input
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	if (!mxIsDouble(prhs[1])) {
-		mexErrMsgTxt("Identifier should be a scalar value. \n");
-		return;
+		mexErrMsgTxt("Identifier should be a scalar value.");
 	}
 	int iDataID = (int)(mxGetScalar(prhs[1]));
 
 	// step2: get data object
 	CSparseMatrix* pMatrix = astra::CMatrixManager::getSingleton().get(iDataID);
 	if (!pMatrix || !pMatrix->isInitialized()) {
-		mexErrMsgTxt("Data object not found or not initialized properly.\n");
-		return;
+		mexErrMsgTxt("Data object not found or not initialized properly.");
 	}
 
 	// create output
 	if (1 <= nlhs) {
 		bool bResult = astra_to_matlab(pMatrix, plhs[0]);
 		if (!bResult) {
-			mexErrMsgTxt("Failed to get matrix.\n");
+			mexErrMsgWithAstraLog("Failed to get matrix.");
 		}
 	}
 	

@@ -38,7 +38,7 @@ function proj_geom = astra_geom_postalignment(proj_geom, factor)
 		end
 
 	else
-		error('Projection geometry not suited for postalignment correction.')
+		error(['Projection geometry of type ' proj_geom.type ' is not suited for postalignment correction.'])
 	end
 
 end
