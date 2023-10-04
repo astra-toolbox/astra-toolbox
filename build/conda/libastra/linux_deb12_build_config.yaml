@@ -1,0 +1,40 @@
+cuda_dep_type:
+  - modular
+
+cudatoolkit:
+  - 12.0
+  - 12.1
+  - 12.2
+
+# Version ranges from the pytorch-cuda libcufft dependency:
+# 12.1_5: >=11.0.2.4,<11.0.2.54
+libcufft_dep:
+  - ">=11.0.0,<11.0.2"
+  - ">=11.0.2,<11.0.3"
+  - ">=11.0.8,<11.0.9"
+
+cudacudart_dep:
+  - ">=12.0,<12.1"
+  - ">=12.1,<12.2"
+  - ">=12.2,<12.3"
+
+pytorchcuda_dep:
+  - ">=12.0,<12.1"
+  - ">=12.1,<12.2"
+  - ">=12.2,<12.3"
+
+cudatoolkit_dep:
+  - ">=12.0,<12.1"
+  - ">=12.1,<12.2"
+  - ">=12.2,<12.3"
+
+c_compiler_version:    # [linux or win]
+  - 11.2               # [linux or win]
+cxx_compiler_version:  # [linux or win]
+  - 11.2               # [linux or win]
+zip_keys:
+  - cudatoolkit
+  - libcufft_dep
+  - cudacudart_dep
+  - pytorchcuda_dep
+  - cudatoolkit_dep

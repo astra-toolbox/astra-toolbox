@@ -21,6 +21,8 @@ __pycache__
 /python/conda/linux_release/buildenv*/cuda*
 /python/conda/linux_release/pkgs/*
 
+/build/conda/containers/sw/*
+
 /build/linux/.libs/*
 /build/linux/Makefile
 /build/linux/aclocal.m4

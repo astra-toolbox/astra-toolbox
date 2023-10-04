@@ -2,8 +2,8 @@ Building conda packages:
 
 Linux:
 
-start docker
-linux_release/release.sh
+Build container images by running the containers/setup*.sh scripts
+./release.sh
 
 Windows:
 

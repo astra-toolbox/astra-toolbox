@@ -3,8 +3,8 @@ package:
   version: '2.1.2'
 
 source:
-  git_url: https://github.com/astra-toolbox/astra-toolbox.git
-  git_tag: master
+  git_url: https://github.com/wjp/astra-toolbox.git
+  git_tag: conda
 
 build:
   number: 0

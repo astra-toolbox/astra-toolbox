@@ -1,18 +1,14 @@
 python:
-  - 2.7
-  - 3.7
-  - 3.8
-  - 3.9
+  - 3.10
+  - 3.11
 numpy:
-  - 1.11
-  - 1.11
-  - 1.11
-  - 1.16
+  - 1.21
+  - 1.23
 zip_keys:
   - python
   - numpy
 
 c_compiler_version:
-  - 7.3
+  - 9.3
 cxx_compiler_version:
-  - 7.3
+  - 9.3
