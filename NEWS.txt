@@ -8,6 +8,13 @@ License: Open Source under GPLv3
 Contact: astra@astra-toolbox.com
 Website: http://www.astra-toolbox.com/
 -----------------------------------------------------------------------
+2.1.3 (2023-10-04)
+  * astra conda packages for cuda 11.6 and above now depend on nvidia's
+    modular cuda packages instead of on the monolithic cudatoolkit package.
+    This improve compatibility of our conda packages with pytorch.
+  * speed up FDK, especially when using multiple GPUs
+  * improve error reporting
+
 2.1.2 (2022-09-09)
   * fix set_gpu_index with Python 3.10
   * fix set_gpu_index initializing GPU #0 before switching to the desired GPU
