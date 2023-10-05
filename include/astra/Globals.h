@@ -53,6 +53,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 #include <fstream>
 #include <math.h>
+#include <string>
+#include <algorithm>
 
 //----------------------------------------------------------------------------------------
 // macro's
