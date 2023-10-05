@@ -117,7 +117,7 @@ void CLogger::warn(const char *sfile, int sline, const char *fmt, ...)
 void CLogger::error(const char *sfile, int sline, const char *fmt, ...)
 {
 	_assureIsInitialized();
-	va_list ap, apf;
+	va_list ap, apf, apl;
 	if(m_bEnabledScreen){
 		va_start(ap, fmt);
 		clog_error(sfile,sline,0,fmt,ap);
@@ -128,7 +128,9 @@ void CLogger::error(const char *sfile, int sline, const char *fmt, ...)
 		clog_error(sfile,sline,1,fmt,apf);
 		va_end(apf);
 	}
-	_setLastErrMsg(sfile,sline,fmt,ap);
+	va_start(apl, fmt);
+	_setLastErrMsg(sfile,sline,fmt,apl);
+	va_end(apl);
 }
 
 void CLogger::_setLevel(int id, log_level m_eLevel)
@@ -185,10 +187,8 @@ void CLogger::_assureIsInitialized()
 
 void CLogger::_setLastErrMsg(const char *sfile, int sline, const char *fmt, va_list ap)
 {
-	va_list ap_copy;
-	va_copy(ap_copy, ap);
 	char buf[1024];
-	vsprintf(buf, fmt, ap_copy);
+	vsprintf(buf, fmt, ap);
 	m_sLastErrMsg.assign(buf);
 }
 
