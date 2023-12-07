@@ -267,9 +267,13 @@ def geom_2vec(proj_geom):
 
         proj_geom_out = ac.create_proj_geom(
         'parallel3d_vec', proj_geom['DetectorRowCount'], proj_geom['DetectorColCount'], vectors)
-
+        
+    elif proj_geom['type'] in ['parallel_vec', 'fanflat_vec', 'parallel3d_vec', 'cone_vec']:
+        return proj_geom
+    
     else:
         raise AstraError('No suitable vector geometry found for type: ' + proj_geom['type'])
+    
     return proj_geom_out
 
 
