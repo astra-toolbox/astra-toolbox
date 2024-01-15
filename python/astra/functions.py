@@ -301,9 +301,11 @@ def geom_postalignment(proj_geom, factor):
         V[:,2:4] = V[:,2:4] + factor * V[:,4:6]
 
     elif proj_geom['type'] == 'parallel3d_vec' or proj_geom['type'] == 'cone_vec':
+        if isinstance(factor, (float, int)):
+            factor = factor, 0
         V = proj_geom['Vectors']
         V[:,3:6] = V[:,3:6] + factor[0] * V[:,6:9]
-        if len(factor) > 1:
+        if len(factor) > 1:  # Accommodate factor = (number,) semantics
             V[:,3:6] = V[:,3:6] + factor[1] * V[:,9:12]
     else:
         raise AstraError(proj_geom['type'] + 'geometry is not suitable for postalignment')
