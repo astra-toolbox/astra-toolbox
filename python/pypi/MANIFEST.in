@@ -1,0 +1,11 @@
+include requirements.txt
+recursive-include astra-toolbox *
+recursive-include astra *.pyx
+recursive-include astra *.pxd
+recursive-include astra *.h
+recursive-exclude astra *.cpp
+recursive-include astra/src *.cpp
+recursive-exclude astra-toolbox/.git *
+recursive-exclude astra-toolbox/matlab *
+recursive-exclude astra-toolbox/matlab *
+recursive-exclude astra-toolbox/samples/matlab *
