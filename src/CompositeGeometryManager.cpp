@@ -1683,10 +1683,18 @@ bool CCompositeGeometryManager::doJobs(TJobList &jobs)
 			ASTRA_WARN("Unable to get available GPU memory. Defaulting to 1GB.");
 			maxSize = 1024 * 1024 * 1024;
 		} else {
-			ASTRA_DEBUG("Detected %lu bytes of GPU memory", maxSize);
+#if defined(_MSC_VER) && _MSC_VER < 1800
+			ASTRA_DEBUG("Detected %Iu bytes of GPU memory", maxSize);
+#else
+			ASTRA_DEBUG("Detected %zu bytes of GPU memory", maxSize);
+#endif
 		}
 	} else {
-		ASTRA_DEBUG("Set to %lu bytes of GPU memory", maxSize);
+#if defined(_MSC_VER) && _MSC_VER < 1800
+		ASTRA_DEBUG("Set to %Iu bytes of GPU memory", maxSize);
+#else
+		ASTRA_DEBUG("Set to %zu bytes of GPU memory", maxSize);
+#endif
 	}
 	maxSize = (maxSize * 9) / 10;
 
