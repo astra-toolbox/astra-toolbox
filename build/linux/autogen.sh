@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 aclocal
 if test $? -ne 0; then
