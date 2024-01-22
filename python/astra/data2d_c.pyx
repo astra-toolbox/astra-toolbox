@@ -65,6 +65,9 @@ cdef extern from "CFloat32CustomPython.h":
     cdef cppclass CFloat32CustomPython:
         CFloat32CustomPython(arrIn)
 
+cdef extern from "astra/SheppLogan.h" namespace "astra":
+    cdef void generateSheppLogan(CFloat32Data2D*, bool)
+
 def clear():
     man2d.clear()
 
@@ -292,6 +295,9 @@ def get_shared(i):
 def get_single(i):
     raise NotImplementedError("Not yet implemented")
 
+def shepp_logan(i, modified=True):
+    cdef CFloat32Data2D * pDataObject = getObject(i)
+    generateSheppLogan(pDataObject, modified);
 
 def info():
     six.print_(wrap_from_bytes(man2d.info()))
