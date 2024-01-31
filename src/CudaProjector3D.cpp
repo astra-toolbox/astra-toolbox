@@ -101,6 +101,18 @@ bool CCudaProjector3D::initialize(const Config& _cfg)
 		m_projectionKernel = ker3d_2d_weighting;
 	} else if (sProjKernel == "matched_bp") {
 		m_projectionKernel = ker3d_matched_bp;
+	} else if (sProjKernel == "dfdx") {
+		m_projectionKernel = astraCUDA3d::ker3d_dfdx;
+	} else if (sProjKernel == "dfdy") {
+		m_projectionKernel = astraCUDA3d::ker3d_dfdy;
+	} else if (sProjKernel == "dfdz") {
+		m_projectionKernel = astraCUDA3d::ker3d_dfdz;
+	} else if (sProjKernel == "dfdxs") {
+		m_projectionKernel = astraCUDA3d::ker3d_dfdxs;
+	} else if (sProjKernel == "dfdys") {
+		m_projectionKernel = astraCUDA3d::ker3d_dfdys;
+	} else if (sProjKernel == "dfdzs") {
+		m_projectionKernel = astraCUDA3d::ker3d_dfdzs;
 	} else {
 		ASTRA_ERROR("Unknown ProjectionKernel");
 		return false;

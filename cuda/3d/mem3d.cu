@@ -363,6 +363,8 @@ bool FP(astra::CData3D *projData, const astra::CData3D *volData, const astra::Ge
 		case ker3d_fdk_weighting:
 		case ker3d_2d_weighting:
 		case ker3d_matched_bp:
+		case ker3d_dfdx: case ker3d_dfdy: case ker3d_dfdz:
+		case ker3d_dfdxs: case ker3d_dfdys: case ker3d_dfdzs:
 			ok &= ConeFP(vols->getPtr(), projs->getPtr(), geom.getDims(), pConeProjs, params);
 			break;
 		default:
