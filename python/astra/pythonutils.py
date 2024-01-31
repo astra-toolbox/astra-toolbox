@@ -55,7 +55,7 @@ def geom_size(geom, dim=None):
             geom['ProjectionAngles']), geom['DetectorColCount'])
     elif geom['type'] == 'fanflat_vec' or geom['type'] == 'parallel_vec':
         s = (geom['Vectors'].shape[0], geom['DetectorCount'])
-    elif geom['type'] == 'parallel3d_vec' or geom['type'] == 'cone_vec':
+    elif geom['type'] == 'parallel3d_vec' or geom['type'] == 'cone_vec' or geom['type'] == 'cyl_cone_vec':
         s = (geom['DetectorRowCount'], geom[
              'Vectors'].shape[0], geom['DetectorColCount'])
 
