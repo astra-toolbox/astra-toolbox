@@ -28,6 +28,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _INC_ASTRA_GEOMETRYUTIL3D
 #define _INC_ASTRA_GEOMETRYUTIL3D
 
+#include <cmath>
 #include <vector>
 
 namespace astra {
@@ -112,6 +113,86 @@ struct SPar3DProjection {
 	}
 };
 
+struct SCylConeProjection {
+	// the source
+	double fSrcX, fSrcY, fSrcZ;
+
+	// the center of the (cylinder-section) detector
+	double fDetCX, fDetCY, fDetCZ;
+
+	// the U-edge of a detector pixel
+	double fDetUX, fDetUY, fDetUZ;
+
+	// the V-edge of a detector pixel
+	double fDetVX, fDetVY, fDetVZ;
+
+	// the radius of the cylinder
+	double fDetR;
+
+
+	void translate(double dx, double dy, double dz) {
+		fSrcX += dx;
+		fSrcY += dy;
+		fSrcZ += dz;
+		fDetCX += dx;
+		fDetCY += dy;
+		fDetCZ += dz;
+	}
+
+	// NB: no anisotropic scale function
+};
+
+
+struct Vec3 {
+	double x;
+	double y;
+	double z;
+	Vec3(double x_, double y_, double z_) : x(x_), y(y_), z(z_) { }
+	Vec3() : x(0.), y(0.), z(0.) { }
+	Vec3 operator+(const Vec3 &b) const {
+		return Vec3(x + b.x, y + b.y, z + b.z);
+	}
+	Vec3 operator-(const Vec3 &b) const {
+		return Vec3(x - b.x, y - b.y, z - b.z);
+	}
+	Vec3 operator-() const {
+		return Vec3(-x, -y, -z);
+	}
+	Vec3 operator*(double s) {
+		return Vec3(s*x, s*y, s*z);
+	}
+	double norm() const {
+		return sqrt(x*x + y*y + z*z);
+	}
+	double dot(const Vec3 &b) const {
+		return x*b.x + y*b.y + z*b.z;
+	}
+};
+
+inline double det3x(const Vec3 &b, const Vec3 &c) {
+	return (b.y * c.z - b.z * c.y);
+}
+inline double det3y(const Vec3 &b, const Vec3 &c) {
+	return -(b.x * c.z - b.z * c.x);
+}
+
+inline double det3z(const Vec3 &b, const Vec3 &c) {
+	return (b.x * c.y - b.y * c.x);
+}
+
+inline double det3(const Vec3 &a, const Vec3 &b, const Vec3 &c) {
+	return a.x * det3x(b,c) + a.y * det3y(b,c) + a.z * det3z(b,c);
+}
+
+inline Vec3 cross3(const Vec3 &a, const Vec3 &b) {
+	return Vec3(det3x(a,b), det3y(a,b), det3z(a,b));
+}
+
+
+
+
+
+
 void computeBP_UV_Coeffs(const SPar3DProjection& proj,
                          double &fUX, double &fUY, double &fUZ, double &fUC,
                          double &fVX, double &fVY, double &fVZ, double &fVC);
@@ -138,10 +219,21 @@ std::vector<SPar3DProjection> genPar3DProjections(unsigned int iProjAngles,
                                       double fDetVSize,
                                       const float *pfAngles);
 
+std::vector<SCylConeProjection> genCylConeProjections(unsigned int iProjAngles,
+                                          unsigned int iProjU,
+                                          unsigned int iProjV,
+                                          double fOriginSourceDistance,
+                                          double fOriginDetectorDistance,
+                                          double fDetUSize,
+                                          double fDetVSize,
+                                          double fDetRadius,
+                                          const float *pfAngles);
+
+void getCylConeAxes(const SCylConeProjection &p, Vec3 &cyla, Vec3 &cylb, Vec3 &cylc, Vec3 &cylaxis);
+
 CProjectionGeometry3D* getSubProjectionGeometry_U(const CProjectionGeometry3D* pProjGeom, int u, int size);
 CProjectionGeometry3D* getSubProjectionGeometry_V(const CProjectionGeometry3D* pProjGeom, int v, int size);
 CProjectionGeometry3D* getSubProjectionGeometry_Angle(const CProjectionGeometry3D* pProjGeom, int th, int size);
-
 
 
 
