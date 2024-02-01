@@ -45,7 +45,8 @@ static const unsigned int g_anglesPerBlock = 32;
 static const unsigned int g_volBlockX = 16;
 static const unsigned int g_volBlockY = 32;
 
-static const unsigned g_MaxAngles = 760;
+// must be divisible by anglesPerBlock
+static const unsigned g_MaxAngles = 768;
 
 struct DevCylConeParamsBP {
 	float4 fCa;
