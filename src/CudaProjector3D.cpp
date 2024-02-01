@@ -64,7 +64,7 @@ void CCudaProjector3D::_clear()
 	m_pVolumeGeometry = NULL;
 	m_bIsInitialized = false;
 
-	m_projectionKernel = ker3d_default;
+	m_projectionKernel = astraCUDA3d::ker3d_default;
 	m_iVoxelSuperSampling = 1;
 	m_iDetectorSuperSampling = 1;
 	m_iGPUIndex = -1;
@@ -112,14 +112,16 @@ bool CCudaProjector3D::initialize(const Config& _cfg)
 	}
 
 	XMLNode node = _cfg.self.getSingleNode("ProjectionKernel");
-	m_projectionKernel = ker3d_default;
+	m_projectionKernel = astraCUDA3d::ker3d_default;
 	if (node) {
 		std::string sProjKernel = node.getContent();
 
 		if (sProjKernel == "default") {
 
 		} else if (sProjKernel == "sum_square_weights") {
-			m_projectionKernel = ker3d_sum_square_weights;
+			m_projectionKernel = astraCUDA3d::ker3d_sum_square_weights;
+		} else if (sProjKernel == "matched_bp") {
+			m_projectionKernel = astraCUDA3d::ker3d_matched_bp;
 		} else {
 			return false;
 		}

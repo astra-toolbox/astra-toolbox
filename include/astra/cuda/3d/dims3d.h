@@ -34,12 +34,14 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 namespace astraCUDA3d {
 
 using astra::SConeProjection;
+using astra::SCylConeProjection;
 using astra::SPar3DProjection;
 
 
 enum Cuda3DProjectionKernel {
 	ker3d_default = 0,
-	ker3d_sum_square_weights
+	ker3d_sum_square_weights,
+	ker3d_matched_bp
 };
 
 

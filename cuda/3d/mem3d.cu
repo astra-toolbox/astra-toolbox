@@ -30,6 +30,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/cuda/3d/astra3d.h"
 #include "astra/cuda/3d/cone_fp.h"
 #include "astra/cuda/3d/cone_bp.h"
+#include "astra/cuda/3d/cone_cyl.h"
 #include "astra/cuda/3d/par3d_fp.h"
 #include "astra/cuda/3d/par3d_bp.h"
 #include "astra/cuda/3d/fdk.h"
@@ -203,60 +204,59 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, con
 	if (!ok)
 		return false;
 
+	params.ker = projKernel;
+
 #if 1
 	params.iRaysPerDetDim = iDetectorSuperSampling;
 	if (iDetectorSuperSampling == 0)
 		return false;
 #else
-	astra::Cuda3DProjectionKernel projKernel = astra::ker3d_default;
+	astra::Cuda3DProjectionKernel projKernel = ker3d_default;
 #endif
 
+	auto result = convertAstraGeometry(pVolGeom, pProjGeom,
+	                                   params);
 
-	SPar3DProjection* pParProjs;
-	SConeProjection* pConeProjs;
-
-	ok = convertAstraGeometry(pVolGeom, pProjGeom,
-	                          pParProjs, pConeProjs,
-	                          params);
-
-	if (pParProjs) {
-#if 0
-		for (int i = 0; i < dims.iProjAngles; ++i) {
-			ASTRA_DEBUG("Vec: %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f\n",
-			    pParProjs[i].fRayX, pParProjs[i].fRayY, pParProjs[i].fRayZ,
-			    pParProjs[i].fDetSX, pParProjs[i].fDetSY, pParProjs[i].fDetSZ,
-			    pParProjs[i].fDetUX, pParProjs[i].fDetUY, pParProjs[i].fDetUZ,
-			    pParProjs[i].fDetVX, pParProjs[i].fDetVY, pParProjs[i].fDetVZ);
-		}
-#endif
-
+	if (SPar3DProjection** pp = std::get_if<SPar3DProjection*>(&result)) {
+		SPar3DProjection* pParProjs = *pp;
 		switch (projKernel) {
-		case astra::ker3d_default:
+		case ker3d_default: case ker3d_matched_bp:
 			ok &= Par3DFP(volData.d->ptr, projData.d->ptr, dims, pParProjs, params);
 			break;
-		case astra::ker3d_sum_square_weights:
+		case ker3d_sum_square_weights:
 			ok &= Par3DFP_SumSqW(volData.d->ptr, projData.d->ptr, dims, pParProjs, params);
 			break;
 		default:
 			ok = false;
 		}
-	} else {
+		delete[] pParProjs;
+	} else if (SConeProjection** pp = std::get_if<SConeProjection*>(&result)) {
+		SConeProjection* pConeProjs = *pp;
 		switch (projKernel) {
-		case astra::ker3d_default:
+		case ker3d_default: case ker3d_matched_bp:
 			ok &= ConeFP(volData.d->ptr, projData.d->ptr, dims, pConeProjs, params);
 			break;
 		default:
 			ok = false;
 		}
-	}
-
-	delete[] pParProjs;
-	delete[] pConeProjs;
+		delete[] pConeProjs;
+	} else if (SCylConeProjection** pp = std::get_if<SCylConeProjection*>(&result)) {
+		SCylConeProjection* pCylConeProjs = *pp;
+		switch (projKernel) {
+		case ker3d_default: case ker3d_matched_bp:
+			ok &= ConeCylFP(volData.d->ptr, projData.d->ptr, dims, pCylConeProjs, params);
+			break;
+		default:
+			ok = false;
+		}
+		delete[] pCylConeProjs;
+	} else
+		ok = false;
 
 	return ok;
 }
 
-bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, int iVoxelSuperSampling)
+bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, int iVoxelSuperSampling, astra::Cuda3DProjectionKernel projKernel)
 {
 	assert(!volData.d->arr);
 	SDimensions3D dims;
@@ -270,32 +270,45 @@ bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, con
 	params.iRaysPerVoxelDim = iVoxelSuperSampling;
 #endif
 
-	SPar3DProjection* pParProjs;
-	SConeProjection* pConeProjs;
-
-	ok = convertAstraGeometry(pVolGeom, pProjGeom,
-	                          pParProjs, pConeProjs,
-	                          params);
+	auto result = convertAstraGeometry(pVolGeom, pProjGeom,
+	                                   params);
 
 	params.bFDKWeighting = false;
 
-	if (pParProjs) {
+	if (SPar3DProjection** pp = std::get_if<SPar3DProjection*>(&result)) {
+		SPar3DProjection* pParProjs = *pp;
 		if (projData.d->arr)
-			ok &= Par3DBP_Array(volData.d->ptr, projData.d->arr, dims, pParProjs, params);
+			ok = Par3DBP_Array(volData.d->ptr, projData.d->arr, dims, pParProjs, params);
 		else
-			ok &= Par3DBP(volData.d->ptr, projData.d->ptr, dims, pParProjs, params);
-	} else {
+			ok = Par3DBP(volData.d->ptr, projData.d->ptr, dims, pParProjs, params);
+		delete[] pParProjs;
+	} else if (SConeProjection** pp = std::get_if<SConeProjection*>(&result)) {
+		SConeProjection* pConeProjs = *pp;
 		if (projData.d->arr)
-			ok &= ConeBP_Array(volData.d->ptr, projData.d->arr, dims, pConeProjs, params);
+			ok = ConeBP_Array(volData.d->ptr, projData.d->arr, dims, pConeProjs, params);
 		else
-			ok &= ConeBP(volData.d->ptr, projData.d->ptr, dims, pConeProjs, params);
-	}
-
-	delete[] pParProjs;
-	delete[] pConeProjs;
+			ok = ConeBP(volData.d->ptr, projData.d->ptr, dims, pConeProjs, params);
+		delete[] pConeProjs;
+	} else if (SCylConeProjection** pp = std::get_if<SCylConeProjection*>(&result)) {
+		SCylConeProjection* pCylConeProjs = *pp;
+		if (projKernel == ker3d_default) {
+			if (projData.d->arr)
+				ok = ConeCylBP_Array(volData.d->ptr, projData.d->arr, dims, pCylConeProjs, params);
+			else
+				ok = ConeCylBP(volData.d->ptr, projData.d->ptr, dims, pCylConeProjs, params);
+		} else if (projKernel == ker3d_matched_bp) {
+			if (projData.d->arr)
+				ok = ConeCylBP_Array_matched(volData.d->ptr, projData.d->arr, dims, pCylConeProjs, params);
+			else
+				ok = ConeCylBP_matched(volData.d->ptr, projData.d->ptr, dims, pCylConeProjs, params);
+		} else {
+			ok = false;
+		}
+		delete[] pCylConeProjs;
+	} else
+		ok = false;
 
 	return ok;
-
 }
 
 bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, bool bShortScan, const float *pfFilter)
@@ -309,28 +322,24 @@ bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, co
 	if (!ok)
 		return false;
 
-	SPar3DProjection* pParProjs;
-	SConeProjection* pConeProjs;
+	auto result = convertAstraGeometry(pVolGeom, pProjGeom,
+	                                   params);
 
-	ok = convertAstraGeometry(pVolGeom, pProjGeom,
-	                          pParProjs, pConeProjs,
-	                          params);
-
-	if (!ok || !pConeProjs) {
+	if (SPar3DProjection** pp = std::get_if<SPar3DProjection*>(&result)) {
+		SPar3DProjection* pParProjs = *pp;
 		delete[] pParProjs;
-		delete[] pConeProjs;
 		return false;
-	}
-
-	ok &= FDK(volData.d->ptr, projData.d->ptr, pConeProjs, dims, params, bShortScan, pfFilter);
-
-	delete[] pParProjs;
-	delete[] pConeProjs;
-
-	return ok;
-
-
-
+	} else if (SConeProjection** pp = std::get_if<SConeProjection*>(&result)) {
+		SConeProjection* pConeProjs = *pp;
+		ok = FDK(volData.d->ptr, projData.d->ptr, pConeProjs, dims, params, bShortScan, pfFilter);
+		delete[] pConeProjs;
+		return ok;
+	} else if (SCylConeProjection** pp = std::get_if<SCylConeProjection*>(&result)) {
+		SCylConeProjection* pCylConeProjs = *pp;
+		delete[] pCylConeProjs;
+		return false;
+	} else
+		return false;
 }
 
 _AstraExport MemHandle3D wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch)

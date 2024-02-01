@@ -48,18 +48,20 @@ NVCCFLAGS=@SAVED_NVCCFLAGS@
 LDFLAGS=@SAVED_LDFLAGS@
 LIBS=@SAVED_LIBS@
 
-CXXFLAGS+=-g -O3 -Wall -Wshadow
+CXXFLAGS+=-g -O3 -Wall -Wshadow -std=c++17
+PYCXXFLAGS=-g -O3 -std=c++17
 LIBS+=-lpthread
 LDFLAGS+=-g
 
 CXXFLAGS+=@CXXFLAGS_OS@
+PYCXXFLAGS+=@CXXFLAGS_OS@
 LDFLAGS+=@LDFLAGS_OS@
 
 BOOSTUTF_LIBS=@LIBS_BOOSTUTF@
 
 ifeq ($(cuda),yes)
 CPPFLAGS  += @CPPFLAGS_CUDA@ -DASTRA_CUDA
-NVCCFLAGS += @NVCCFLAGS_EXTRA@ @CPPFLAGS_CUDA@ -I$(srcdir)/../../include -DASTRA_CUDA
+NVCCFLAGS += @NVCCFLAGS_EXTRA@ @CPPFLAGS_CUDA@ -I$(srcdir)/../../include -DASTRA_CUDA --std c++17
 LDFLAGS   += @LDFLAGS_CUDA@
 LIBS      += -lcudart -lcufft
 NVCC       = @NVCC@
@@ -143,6 +145,7 @@ BASE_OBJECTS=\
 	src/CompositeGeometryManager.lo \
 	src/ConeProjectionGeometry3D.lo \
 	src/ConeVecProjectionGeometry3D.lo \
+	src/CylConeVecProjectionGeometry3D.lo \
 	src/Config.lo \
 	src/DataProjector.lo \
 	src/DataProjectorPolicies.lo \
@@ -242,6 +245,8 @@ CUDA_OBJECTS=\
 	cuda/3d/cgls3d.lo \
 	cuda/3d/cone_fp.lo \
 	cuda/3d/cone_bp.lo \
+	cuda/3d/cone_cyl.lo \
+	cuda/3d/cone_cyl_bp.lo \
 	cuda/3d/fdk.lo \
 	cuda/3d/par3d_fp.lo \
 	cuda/3d/par3d_bp.lo \
@@ -336,8 +341,8 @@ ifeq ($(python),yes)
 py: libastra.la
 	$(MKDIR) python/build
 	$(MKDIR) python/config
-# Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
-	cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS='${PYLDFLAGS}' \
+	# Note: setting CC/CFLAGS to CXX/CXXFLAGS is intentional. Python uses CC for compilation even if input is C++.
+	cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CFLAGS="${PYCXXFLAGS}" CXXFLAGS="${PYCXXFLAGS}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS='${PYLDFLAGS}' \
 	$(PYTHON) builder.py $(PYBUILDERFLAGS) \
 	build $(PYBUILDER_BUILD_FLAGS)
 endif
@@ -487,8 +492,8 @@ endif
 
 ifeq ($(python),yes)
 install-python: py
-	# Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
-	cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" \
+	# Note: setting CC/CFLAGS to CXX/CXXFLAGS is intentional. Python uses CC for compilation even if input is C++.
+	cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CFLAGS="${PYCXXFLAGS}" CXXFLAGS="${PYCXXFLAGS}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" \
 	$(PYTHON) builder.py $(PYBUILDERFLAGS) \
 	set_dist_dir --dist-dir=$(abs_top_builddir)/python/dist \
 	build $(PYBUILDER_BUILD_FLAGS) \
@@ -497,8 +502,8 @@ install-python: py
 # TODO: docs
 
 install-python-site-packages: py
-# Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
-	cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" \
+	# Note: setting CC/CFLAGS to CXX/CXXFLAGS is intentional. Python uses CC for compilation even if input is C++.
+	cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CFLAGS="${PYCXXFLAGS}" CXXFLAGS="${PYCXXFLAGS}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" \
 	$(PYTHON) builder.py $(PYBUILDERFLAGS) \
 	set_dist_dir --dist-dir=$(abs_top_builddir)/python/dist \
 	build $(PYBUILDER_BUILD_FLAGS) \

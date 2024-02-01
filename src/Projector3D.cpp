@@ -32,6 +32,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/ParallelVecProjectionGeometry3D.h"
 #include "astra/ConeProjectionGeometry3D.h"
 #include "astra/ConeVecProjectionGeometry3D.h"
+#include "astra/CylConeVecProjectionGeometry3D.h"
 
 #include "astra/Logging.h"
 
@@ -106,6 +107,8 @@ bool CProjector3D::initialize(const Config& _cfg)
 		pProjGeometry = new CConeProjectionGeometry3D();
 	} else if (type == "cone_vec") {
 		pProjGeometry = new CConeVecProjectionGeometry3D();
+	} else if (type == "cyl_cone_vec") {
+		pProjGeometry = new CCylConeVecProjectionGeometry3D();
 	} else {
 		// Invalid geometry type
 		ASTRA_CONFIG_CHECK(false, "Projector3D", "Invalid projection geometry type specified.");

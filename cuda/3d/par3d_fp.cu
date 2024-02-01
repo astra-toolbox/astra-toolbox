@@ -420,6 +420,94 @@ __global__ void par3D_FP_SumSqW_t(float* D_projData, unsigned int projPitch,
 // TODO
 
 
+static void dispatchDefault(cudaStream_t stream,
+                            int blockDirection, bool cube,
+                            float* D_projData, unsigned int projPitch,
+                            cudaTextureObject_t tex,
+                            unsigned int blockStart, unsigned int blockEnd,
+                            const SDimensions3D dims, int iRaysPerDetDim,
+                            SCALE_CUBE sc,
+                            SCALE_NONCUBE scX, SCALE_NONCUBE scY, SCALE_NONCUBE scZ)
+{
+	dim3 dimBlock(g_detBlockU, g_anglesPerBlock); // region size, angles
+	dim3 dimGrid(
+	             ((dims.iProjU+g_detBlockU-1)/g_detBlockU)*((dims.iProjV+g_detBlockV-1)/g_detBlockV),
+	             (blockEnd-blockStart+g_anglesPerBlock-1)/g_anglesPerBlock
+	            );
+	if (blockDirection == 0) {
+		for (unsigned int i = 0; i < dims.iVolX; i += g_blockSlices)
+			if (cube)
+				par3D_FP_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, tex, i, blockStart, blockEnd, dims, sc);
+			else
+				par3D_FP_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, tex, i, blockStart, blockEnd, dims, scX);
+	} else if (blockDirection == 1) {
+		for (unsigned int i = 0; i < dims.iVolY; i += g_blockSlices)
+			if (cube)
+				par3D_FP_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, tex, i, blockStart, blockEnd, dims, sc);
+			else
+				par3D_FP_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, tex, i, blockStart, blockEnd, dims, scY);
+	} else if (blockDirection == 2) {
+		for (unsigned int i = 0; i < dims.iVolZ; i += g_blockSlices)
+			if (cube)
+				par3D_FP_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, tex, i, blockStart, blockEnd, dims, sc);
+			else
+				par3D_FP_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, tex, i, blockStart, blockEnd, dims, scZ);
+	}
+}
+
+
+static void dispatchSS(cudaStream_t stream,
+                       int blockDirection,
+                       float* D_projData, unsigned int projPitch,
+                       cudaTextureObject_t tex,
+                       unsigned int blockStart, unsigned int blockEnd,
+                       const SDimensions3D dims, int iRaysPerDetDim,
+                       SCALE_NONCUBE scX, SCALE_NONCUBE scY, SCALE_NONCUBE scZ)
+{
+	dim3 dimBlock(g_detBlockU, g_anglesPerBlock); // region size, angles
+	dim3 dimGrid(
+	             ((dims.iProjU+g_detBlockU-1)/g_detBlockU)*((dims.iProjV+g_detBlockV-1)/g_detBlockV),
+	             (blockEnd-blockStart+g_anglesPerBlock-1)/g_anglesPerBlock
+	            );
+	if (blockDirection == 0) {
+		for (unsigned int i = 0; i < dims.iVolX; i += g_blockSlices)
+			par3D_FP_SS_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, tex, i, blockStart, blockEnd, dims, iRaysPerDetDim, scX);
+	} else if (blockDirection == 1) {
+		for (unsigned int i = 0; i < dims.iVolY; i += g_blockSlices)
+			par3D_FP_SS_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, tex, i, blockStart, blockEnd, dims, iRaysPerDetDim, scY);
+	} else if (blockDirection == 2) {
+		for (unsigned int i = 0; i < dims.iVolZ; i += g_blockSlices)
+			par3D_FP_SS_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, tex, i, blockStart, blockEnd, dims, iRaysPerDetDim, scZ);
+	}
+}
+
+static void dispatchSumSqW(cudaStream_t stream,
+                       int blockDirection,
+                       float* D_projData, unsigned int projPitch,
+                       //cudaTextureObject_t tex,
+                       unsigned int blockStart, unsigned int blockEnd,
+                       const SDimensions3D dims, int iRaysPerDetDim,
+                       SCALE_NONCUBE scX, SCALE_NONCUBE scY, SCALE_NONCUBE scZ)
+{
+	dim3 dimBlock(g_detBlockU, g_anglesPerBlock); // region size, angles
+	dim3 dimGrid(
+	             ((dims.iProjU+g_detBlockU-1)/g_detBlockU)*((dims.iProjV+g_detBlockV-1)/g_detBlockV),
+	             (blockEnd-blockStart+g_anglesPerBlock-1)/g_anglesPerBlock
+	            );
+	if (blockDirection == 0) {
+		for (unsigned int i = 0; i < dims.iVolX; i += g_blockSlices)
+			par3D_FP_SumSqW_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, /*tex,*/ i, blockStart, blockEnd, dims, scX);
+	} else if (blockDirection == 1) {
+		for (unsigned int i = 0; i < dims.iVolY; i += g_blockSlices)
+			par3D_FP_SumSqW_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, /*tex,*/ i, blockStart, blockEnd, dims, scY);
+	} else if (blockDirection == 2) {
+		for (unsigned int i = 0; i < dims.iVolZ; i += g_blockSlices)
+			par3D_FP_SumSqW_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, /*tex,*/ i, blockStart, blockEnd, dims, scZ);
+	}
+}
+
+
+
 bool Par3DFP_Array_internal(cudaPitchedPtr D_projData,
                    cudaTextureObject_t D_texObj,
                    const SDimensions3D& dims,
@@ -430,7 +518,6 @@ bool Par3DFP_Array_internal(cudaPitchedPtr D_projData,
 		return false;
 
 	std::list<cudaStream_t> streams;
-	dim3 dimBlock(g_detBlockU, g_anglesPerBlock); // region size, angles
 
 	// Run over all angles, grouping them into groups of the same
 	// orientation (roughly horizontal vs. roughly vertical).
@@ -493,46 +580,31 @@ bool Par3DFP_Array_internal(cudaPitchedPtr D_projData,
 
 			blockEnd = a;
 			if (blockStart != blockEnd) {
-
-				dim3 dimGrid(
-				             ((dims.iProjU+g_detBlockU-1)/g_detBlockU)*((dims.iProjV+g_detBlockV-1)/g_detBlockV),
-(blockEnd-blockStart+g_anglesPerBlock-1)/g_anglesPerBlock);
-				// TODO: consider limiting number of handle (chaotic) geoms
-				//       with many alternating directions
+				// TODO: consider limiting number of streams to handle
+				// (chaotic) geoms with many alternating directions
 				cudaStream_t stream;
 				cudaStreamCreate(&stream);
 				streams.push_back(stream);
 
-				// printf("angle block: %d to %d, %d (%dx%d, %dx%d)\n", blockStart, blockEnd, blockDirection, dimGrid.x, dimGrid.y, dimBlock.x, dimBlock.y);
+				switch (params.ker) {
+				case ker3d_default:
+					if (params.iRaysPerDetDim != 1) {
+						dispatchSS(stream, blockDirection, (float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, blockStart, blockEnd, dims, params.iRaysPerDetDim, snoncubeX, snoncubeY, snoncubeZ);
+					} else {
+						dispatchDefault(stream, blockDirection, cube, (float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, blockStart, blockEnd, dims, params.iRaysPerDetDim, scube, snoncubeX, snoncubeY, snoncubeZ);
+					}
+					break;
+				case ker3d_sum_square_weights:
+					if (params.iRaysPerDetDim != 1) {
+						// Unsupported (TODO: warn)
+						return false;
+					}
+					dispatchSumSqW(stream, blockDirection, (float*)D_projData.ptr, D_projData.pitch/sizeof(float), /*D_texObj,*/ blockStart, blockEnd, dims, params.iRaysPerDetDim, snoncubeX, snoncubeY, snoncubeZ);
+					break;
 
-				if (blockDirection == 0) {
-					for (unsigned int i = 0; i < dims.iVolX; i += g_blockSlices)
-						if (params.iRaysPerDetDim == 1)
-								if (cube)
-										par3D_FP_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, i, blockStart, blockEnd, dims, scube);
-								else
-										par3D_FP_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float),  D_texObj,i, blockStart, blockEnd, dims, snoncubeX);
-						else
-							par3D_FP_SS_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float),  D_texObj,i, blockStart, blockEnd, dims, params.iRaysPerDetDim, snoncubeX);
-				} else if (blockDirection == 1) {
-					for (unsigned int i = 0; i < dims.iVolY; i += g_blockSlices)
-						if (params.iRaysPerDetDim == 1)
-								if (cube)
-										par3D_FP_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float),  D_texObj,i, blockStart, blockEnd, dims, scube);
-								else
-										par3D_FP_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float),  D_texObj,i, blockStart, blockEnd, dims, snoncubeY);
-						else
-							par3D_FP_SS_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float),  D_texObj,i, blockStart, blockEnd, dims, params.iRaysPerDetDim, snoncubeY);
-				} else if (blockDirection == 2) {
-					for (unsigned int i = 0; i < dims.iVolZ; i += g_blockSlices)
-						if (params.iRaysPerDetDim == 1)
-								if (cube)
-										par3D_FP_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float),  D_texObj,i, blockStart, blockEnd, dims, scube);
-								else
-										par3D_FP_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float),  D_texObj,i, blockStart, blockEnd, dims, snoncubeZ);
-						else
-							par3D_FP_SS_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float),  D_texObj,i, blockStart, blockEnd, dims, params.iRaysPerDetDim, snoncubeZ);
 				}
+
+				// printf("angle block: %d to %d, %d (%dx%d, %dx%d)\n", blockStart, blockEnd, blockDirection, dimGrid.x, dimGrid.y, dimBlock.x, dimBlock.y);
 
 			}
 
@@ -623,7 +695,6 @@ bool Par3DFP_SumSqW(cudaPitchedPtr D_volumeData,
 	delete[] tmp;
 
 	std::list<cudaStream_t> streams;
-	dim3 dimBlock(g_detBlockU, g_anglesPerBlock); // region size, angles
 
 	// Run over all angles, grouping them into groups of the same
 	// orientation (roughly horizontal vs. roughly vertical).
@@ -679,9 +750,6 @@ bool Par3DFP_SumSqW(cudaPitchedPtr D_volumeData,
 			blockEnd = a;
 			if (blockStart != blockEnd) {
 
-				dim3 dimGrid(
-				             ((dims.iProjU+g_detBlockU-1)/g_detBlockU)*((dims.iProjV+g_detBlockV-1)/g_detBlockV),
-(blockEnd-blockStart+g_anglesPerBlock-1)/g_anglesPerBlock);
 				// TODO: check if we can't immediately
 				//       destroy the stream after use
 				cudaStream_t stream;
@@ -690,37 +758,7 @@ bool Par3DFP_SumSqW(cudaPitchedPtr D_volumeData,
 
 				// printf("angle block: %d to %d, %d (%dx%d, %dx%d)\n", blockStart, blockEnd, blockDirection, dimGrid.x, dimGrid.y, dimBlock.x, dimBlock.y);
 
-				if (blockDirection == 0) {
-					for (unsigned int i = 0; i < dims.iVolX; i += g_blockSlices)
-						if (params.iRaysPerDetDim == 1)
-							par3D_FP_SumSqW_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, snoncubeX);
-						else
-#if 0
-							par3D_FP_SS_SumSqW_dirX<<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, fOutputScale);
-#else
-							assert(false);
-#endif
-				} else if (blockDirection == 1) {
-					for (unsigned int i = 0; i < dims.iVolY; i += g_blockSlices)
-						if (params.iRaysPerDetDim == 1)
-							par3D_FP_SumSqW_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, snoncubeY);
-						else
-#if 0
-							par3D_FP_SS_SumSqW_dirY<<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, fOutputScale);
-#else
-							assert(false);
-#endif
-				} else if (blockDirection == 2) {
-					for (unsigned int i = 0; i < dims.iVolZ; i += g_blockSlices)
-						if (params.iRaysPerDetDim == 1)
-							par3D_FP_SumSqW_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, snoncubeZ);
-						else
-#if 0
-							par3D_FP_SS_SumSqW_dirZ<<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, fOutputScale);
-#else
-							assert(false);
-#endif
-				}
+				dispatchSumSqW(stream, blockDirection, (float*)D_projData.ptr, D_projData.pitch/sizeof(float), /*D_texObj,*/ blockStart, blockEnd, dims, params.iRaysPerDetDim, snoncubeX, snoncubeY, snoncubeZ);
 
 			}
 
