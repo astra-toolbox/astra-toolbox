@@ -35,7 +35,6 @@ from Cython.Distutils import build_ext
 from Cython.Build import cythonize
 
 import argparse
-import sys
 
 import Cython
 if parse_version(Cython.__version__) < parse_version('0.13'):

@@ -35,7 +35,6 @@ from .log import AstraError
 
 IF HAVE_CUDA==True:
 
-    import six
     from .PyIncludes cimport *
     from libcpp.vector cimport vector
 

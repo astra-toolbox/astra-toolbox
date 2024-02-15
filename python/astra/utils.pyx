@@ -29,11 +29,7 @@
 import sys
 cimport numpy as np
 import numpy as np
-import six
-if six.PY3:
-    import builtins
-else:
-    import __builtin__ as builtins
+import builtins
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libcpp.list cimport list
@@ -70,7 +66,7 @@ cdef Config * dictToConfig(string rootname, dc) except NULL:
     return cfg
 
 def convert_item(item):
-    if isinstance(item, six.string_types):
+    if isinstance(item, str):
         return item.encode('ascii')
 
     if type(item) is not dict:
@@ -83,7 +79,7 @@ def convert_item(item):
 
 
 def wrap_to_bytes(value):
-    if isinstance(value, six.binary_type):
+    if isinstance(value, bytes):
         return value
     s = str(value)
     if PY_MAJOR_VERSION == 3:
@@ -123,14 +119,14 @@ cdef bool readDict(XMLNode root, _dc) except False:
             else:
                 raise AstraError("Only 1 or 2 dimensions are allowed")
         elif isinstance(val, dict):
-            if item == six.b('option') or item == six.b('options') or item == six.b('Option') or item == six.b('Options'):
+            if item == b'option' or item == b'options' or item == b'Option' or item == b'Options':
                 readOptions(root, val)
             else:
                 itm = root.addChildNode(item)
                 readDict(itm, val)
         else:
-            if item == six.b('type'):
-                root.addAttribute(< string > six.b('type'), <string> wrap_to_bytes(val))
+            if item == b'type':
+                root.addAttribute(< string > b'type', <string> wrap_to_bytes(val))
             else:
                 if isinstance(val, builtins.bool):
                     val = int(val)
@@ -152,8 +148,8 @@ cdef bool readOptions(XMLNode node, dc) except False:
         if isinstance(val, np.ndarray):
             if val.size == 0:
                 break
-            listbase = node.addChildNode(six.b('Option'))
-            listbase.addAttribute(< string > six.b('key'), < string > item)
+            listbase = node.addChildNode(b'Option')
+            listbase.addAttribute(< string > b'key', < string > item)
             contig_data = np.ascontiguousarray(val,dtype=np.float64)
             data = <double*>np.PyArray_DATA(contig_data)
             if val.ndim == 2:
@@ -171,16 +167,8 @@ cdef bool readOptions(XMLNode node, dc) except False:
 cdef configToDict(Config *cfg):
     return XMLNode2dict(cfg.self)
 
-def castString3(input):
+def castString(input):
     return input.decode('utf-8')
-
-def castString2(input):
-    return input
-
-if six.PY3:
-    castString = castString3
-else:
-    castString = castString2
 
 def stringToPythonValue(inputIn):
     input = castString(inputIn)
@@ -226,17 +214,17 @@ cdef XMLNode2dict(XMLNode node):
     cdef list[XMLNode].iterator it
     dct = {}
     opts = {}
-    if node.hasAttribute(six.b('type')):
-        dct['type'] = castString(node.getAttribute(six.b('type')))
+    if node.hasAttribute(b'type'):
+        dct['type'] = castString(node.getAttribute(b'type'))
     nodes = node.getNodes()
     it = nodes.begin()
     while it != nodes.end():
         subnode = deref(it)
         if castString(subnode.getName())=="Option":
-            if subnode.hasAttribute(six.b('value')):
-                opts[castString(subnode.getAttribute(six.b('key')))] = stringToPythonValue(subnode.getAttribute(six.b('value')))
+            if subnode.hasAttribute(b'value'):
+                opts[castString(subnode.getAttribute(b'key'))] = stringToPythonValue(subnode.getAttribute(b'value'))
             else:
-                opts[castString(subnode.getAttribute(six.b('key')))] = stringToPythonValue(subnode.getContent())
+                opts[castString(subnode.getAttribute(b'key'))] = stringToPythonValue(subnode.getContent())
         else:
             dct[castString(subnode.getName())] = stringToPythonValue(subnode.getContent())
         inc(it)
@@ -297,8 +285,8 @@ cdef CProjectionGeometry3D* createProjectionGeometry3D(geometry) except NULL:
     cdef Config *cfg
     cdef CProjectionGeometry3D * pGeometry
 
-    cfg = dictToConfig(six.b('ProjectionGeometry'), geometry)
-    tpe = wrap_from_bytes(cfg.self.getAttribute(six.b('type')))
+    cfg = dictToConfig(b'ProjectionGeometry', geometry)
+    tpe = wrap_from_bytes(cfg.self.getAttribute(b'type'))
     if (tpe == "parallel3d"):
         pGeometry = <CProjectionGeometry3D*> new CParallelProjectionGeometry3D();
     elif (tpe == "parallel3d_vec"):
@@ -322,7 +310,7 @@ cdef CProjectionGeometry3D* createProjectionGeometry3D(geometry) except NULL:
 cdef CVolumeGeometry3D* createVolumeGeometry3D(geometry) except NULL:
     cdef Config *cfg
     cdef CVolumeGeometry3D * pGeometry
-    cfg = dictToConfig(six.b('VolumeGeometry'), geometry)
+    cfg = dictToConfig(b'VolumeGeometry', geometry)
     pGeometry = new CVolumeGeometry3D()
     if not pGeometry.initialize(cfg[0]):
         del cfg

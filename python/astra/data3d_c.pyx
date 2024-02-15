@@ -26,8 +26,6 @@
 # distutils: language = c++
 # distutils: libraries = astra
 
-import six
-
 cimport cython
 
 from . cimport PyData3DManager
@@ -50,8 +48,6 @@ from .log import AstraError
 from .pythonutils import geom_size, GPULink
 
 import operator
-
-from six.moves import reduce
 
 include "config.pxi"
 
@@ -232,4 +228,4 @@ def clear():
     man3d.clear()
 
 def info():
-    six.print_(wrap_from_bytes(man3d.info()))
+    print(wrap_from_bytes(man3d.info()))

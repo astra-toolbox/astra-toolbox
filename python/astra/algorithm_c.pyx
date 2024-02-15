@@ -26,7 +26,6 @@
 # distutils: language = c++
 # distutils: libraries = astra
 
-import six
 from .PyIncludes cimport *
 
 from . cimport PyAlgorithmManager
@@ -58,9 +57,9 @@ cdef extern from *:
 
 
 def create(config):
-    cdef Config * cfg = utils.dictToConfig(six.b('Algorithm'), config)
+    cdef Config * cfg = utils.dictToConfig(b'Algorithm', config)
     cdef CAlgorithm * alg
-    alg = PyAlgorithmFactory.getSingletonPtr().create(cfg.self.getAttribute(six.b('type')))
+    alg = PyAlgorithmFactory.getSingletonPtr().create(cfg.self.getAttribute(b'type'))
     if alg == NULL:
         del cfg
         raise AstraError("Unknown algorithm type")
@@ -128,4 +127,4 @@ def clear():
 
 
 def info():
-    six.print_(wrap_from_bytes(manAlg.info()))
+    print(wrap_from_bytes(manAlg.info()))

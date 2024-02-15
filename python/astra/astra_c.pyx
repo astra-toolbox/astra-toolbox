@@ -27,7 +27,6 @@
 # distutils: libraries = astra
 
 include "config.pxi"
-import six
 from .utils import wrap_from_bytes, wrap_to_bytes
 from .log import AstraError
 
@@ -63,7 +62,7 @@ cdef extern from "astra/CompositeGeometryManager.h" namespace "astra::CComposite
 
 
 def credits():
-    six.print_("""The ASTRA Toolbox has been developed at the University of Antwerp and CWI, Amsterdam by
+    print("""The ASTRA Toolbox has been developed at the University of Antwerp and CWI, Amsterdam by
  * Prof. dr. Joost Batenburg
  * Prof. dr. Jan Sijbers
  * Dr. Jeroen Bedorf
@@ -88,7 +87,7 @@ IF HAVE_CUDA==True:
     except:
       import collections as abc
     cdef SGPUParams params
-    if not isinstance(idx, abc.Iterable) or isinstance(idx, six.string_types + (six.text_type,six.binary_type)):
+    if not isinstance(idx, abc.Iterable) or isinstance(idx, (str, bytes)):
         idx = (idx,)
     if memory != 0 and memory < 1024*1024:
         raise AstraError("Setting GPU memory lower than 1MB is not supported")
@@ -97,7 +96,7 @@ IF HAVE_CUDA==True:
     setGlobalGPUParams(params)
     ret = setGPUIndex(params.GPUIndices[0])
     if not ret:
-        six.print_("Failed to set GPU " + str(params.GPUIndices[0]))
+        print("Failed to set GPU " + str(params.GPUIndices[0]))
   def get_gpu_info(idx=-1):
     return wrap_from_bytes(getCudaDeviceString(idx))
 ELSE:
@@ -112,7 +111,7 @@ def delete(ids):
     except:
       import collections as abc
     cdef CAstraObjectManagerBase* ptr
-    if not isinstance(ids, abc.Iterable) or isinstance(ids, six.string_types + (six.text_type,six.binary_type)):
+    if not isinstance(ids, abc.Iterable) or isinstance(ids, (str, bytes)):
         ids = (ids,)
     for i in ids:
         ptr = PyIndexManager.getSingletonPtr().get(i)
@@ -125,13 +124,13 @@ def info(ids):
     except:
       import collections as abc
     cdef CAstraObjectManagerBase* ptr
-    if not isinstance(ids, abc.Iterable) or isinstance(ids, six.string_types + (six.text_type,six.binary_type)):
+    if not isinstance(ids, abc.Iterable) or isinstance(ids, (str, bytes)):
         ids = (ids,)
     for i in ids:
         ptr = PyIndexManager.getSingletonPtr().get(i)
         if ptr:
-            s = ptr.getType() + six.b("\t") + ptr.getInfo(i)
-            six.print_(wrap_from_bytes(s))
+            s = ptr.getType() + b"\t" + ptr.getInfo(i)
+            print(wrap_from_bytes(s))
 
 def has_feature(feature):
     return hasFeature(wrap_to_bytes(feature))

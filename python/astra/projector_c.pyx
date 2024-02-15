@@ -26,7 +26,6 @@
 # distutils: language = c++
 # distutils: libraries = astra
 
-import six
 from .PyIncludes cimport *
 
 from . cimport utils
@@ -56,9 +55,9 @@ IF HAVE_CUDA:
 
 
 def create(config):
-    cdef Config * cfg = utils.dictToConfig(six.b('Projector2D'), config)
+    cdef Config * cfg = utils.dictToConfig(b'Projector2D', config)
     cdef CProjector2D * proj
-    proj = PyProjector2DFactory.getSingletonPtr().create(cfg.self.getAttribute(six.b('type')))
+    proj = PyProjector2DFactory.getSingletonPtr().create(cfg.self.getAttribute(b'type'))
     if proj == NULL:
         del cfg
         raise AstraError("Unknown Projector2D type")
@@ -83,7 +82,7 @@ def clear():
 
 
 def info():
-    six.print_(wrap_from_bytes(manProj.info()))
+    print(wrap_from_bytes(manProj.info()))
 
 cdef CProjector2D * getObject(i) except NULL:
     cdef CProjector2D * proj = manProj.get(i)

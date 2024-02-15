@@ -26,8 +26,6 @@
 # distutils: language = c++
 # distutils: libraries = astra
 
-import six
-
 cimport cython
 from cython cimport view
 
@@ -54,8 +52,6 @@ from .log import AstraError
 from .pythonutils import geom_size
 
 import operator
-
-from six.moves import reduce
 
 cdef CData2DManager * man2d = <CData2DManager * >PyData2DManager.getSingletonPtr()
 cdef CProjector2DManager * manProj = <CProjector2DManager * >PyProjector2DManager.getSingletonPtr()
@@ -91,7 +87,7 @@ def create(datatype, geometry, data=None, link=False):
                              "specified in the geometry {}".format(data.shape, geom_shape))
 
     if datatype == '-vol':
-        cfg = utils.dictToConfig(six.b('VolumeGeometry'), geometry)
+        cfg = utils.dictToConfig(b'VolumeGeometry', geometry)
         pGeometry = new CVolumeGeometry2D()
         if not pGeometry.initialize(cfg[0]):
             del cfg
@@ -105,8 +101,8 @@ def create(datatype, geometry, data=None, link=False):
         del cfg
         del pGeometry
     elif datatype == '-sino':
-        cfg = utils.dictToConfig(six.b('ProjectionGeometry'), geometry)
-        tpe = wrap_from_bytes(cfg.self.getAttribute(six.b('type')))
+        cfg = utils.dictToConfig(b'ProjectionGeometry', geometry)
+        tpe = wrap_from_bytes(cfg.self.getAttribute(b'type'))
         if (tpe == 'sparse_matrix'):
             ppGeometry = <CProjectionGeometry2D * >new CSparseMatrixProjectionGeometry2D()
         elif (tpe == 'fanflat'):
@@ -224,8 +220,8 @@ def change_geometry(i, geom):
     cdef CFloat32VolumeData2D * pDataObject3
     if pDataObject.getType() == TWOPROJECTION:
         pDataObject2 = <CFloat32ProjectionData2D * >pDataObject
-        cfg = utils.dictToConfig(six.b('ProjectionGeometry'), geom)
-        tpe = wrap_from_bytes(cfg.self.getAttribute(six.b('type')))
+        cfg = utils.dictToConfig(b'ProjectionGeometry', geom)
+        tpe = wrap_from_bytes(cfg.self.getAttribute(b'type'))
         if (tpe == 'sparse_matrix'):
             ppGeometry = <CProjectionGeometry2D * >new CSparseMatrixProjectionGeometry2D()
         elif (tpe == 'fanflat'):
@@ -252,7 +248,7 @@ def change_geometry(i, geom):
         del cfg
     elif pDataObject.getType() == TWOVOLUME:
         pDataObject3 = <CFloat32VolumeData2D * >pDataObject
-        cfg = utils.dictToConfig(six.b('VolumeGeometry'), geom)
+        cfg = utils.dictToConfig(b'VolumeGeometry', geom)
         pGeometry = new CVolumeGeometry2D()
         if not pGeometry.initialize(cfg[0]):
             del cfg
@@ -294,4 +290,4 @@ def get_single(i):
 
 
 def info():
-    six.print_(wrap_from_bytes(man2d.info()))
+    print(wrap_from_bytes(man2d.info()))

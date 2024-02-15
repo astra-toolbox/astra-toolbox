@@ -26,7 +26,6 @@
 
 import astra
 import numpy as np
-import six
 
 class SIRTPlugin(astra.plugin.base):
     """SIRT.
