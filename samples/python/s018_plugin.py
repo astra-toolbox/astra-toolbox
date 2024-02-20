@@ -22,10 +22,10 @@
 # along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #
 # -----------------------------------------------------------------------
+from __future__ import print_function
 
 import astra
 import numpy as np
-import six
 
 # Define the plugin class (has to subclass astra.plugin.base)
 # Note that usually, these will be defined in a separate package/module
@@ -85,10 +85,10 @@ if __name__=='__main__':
     astra.plugin.register(s018_plugin.LandweberPlugin)
 
     # Get a list of registered plugins
-    six.print_(astra.plugin.get_registered())
+    print(astra.plugin.get_registered())
 
     # To get help on a registered plugin, use get_help
-    six.print_(astra.plugin.get_help('LANDWEBER-PLUGIN'))
+    print(astra.plugin.get_help('LANDWEBER-PLUGIN'))
 
     # Create data structures
     sid = astra.data2d.create('-sino', proj_geom, sinogram)

@@ -26,7 +26,7 @@
 # distutils: language = c++
 # distutils: libraries = astra
 
-import six
+from __future__ import print_function
 
 cimport cython
 
@@ -232,4 +232,4 @@ def clear():
     man3d.clear()
 
 def info():
-    six.print_(wrap_from_bytes(man3d.info()))
+    print(wrap_from_bytes(man3d.info()))

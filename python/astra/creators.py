@@ -22,8 +22,8 @@
 # along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #
 # -----------------------------------------------------------------------
+from __future__ import print_function
 
-import six
 import numpy as np
 import math
 from . import data2d
@@ -43,10 +43,10 @@ def astra_dict(intype):
     """
     if intype == 'SIRT_CUDA2':
         intype = 'SIRT_CUDA'
-        six.print_('SIRT_CUDA2 has been deprecated. Use SIRT_CUDA instead.')
+        print('SIRT_CUDA2 has been deprecated. Use SIRT_CUDA instead.')
     elif intype == 'FP_CUDA2':
         intype = 'FP_CUDA'
-        six.print_('FP_CUDA2 has been deprecated. Use FP_CUDA instead.')
+        print('FP_CUDA2 has been deprecated. Use FP_CUDA instead.')
     return {'type': intype}
 
 def create_vol_geom(*varargin):
