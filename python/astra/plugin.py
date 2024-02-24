@@ -36,7 +36,10 @@ import traceback
 class base(object):
 
     def astra_init(self, cfg):
-        args, varargs, varkw, defaults = inspect.getargspec(self.initialize)
+        try:
+            args, varargs, varkw, defaults = inspect.getargspec(self.initialize)
+        except AttributeError:
+            args, varargs, varkw, defaults, *rest = inspect.getfullargspec(self.initialize)
         if not defaults is None:
             nopt = len(defaults)
         else:
