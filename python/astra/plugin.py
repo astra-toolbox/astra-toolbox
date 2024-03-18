@@ -39,7 +39,8 @@ class base(object):
         try:
             args, varargs, varkw, defaults = inspect.getargspec(self.initialize)
         except AttributeError:
-            args, varargs, varkw, defaults, *rest = inspect.getfullargspec(self.initialize)
+            fullargspec = inspect.getfullargspec(self.initialize)
+            args, defaults = fullargspec.args, fullargspec.defaults
         if not defaults is None:
             nopt = len(defaults)
         else:

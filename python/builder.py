@@ -24,6 +24,7 @@
 # -----------------------------------------------------------------------
 
 import os
+import sys
 import numpy as np
 
 from distutils.core import setup
@@ -45,7 +46,10 @@ if parse_version(Cython.__version__) < parse_version('0.13'):
 # to the directory passed by --astra_build_config_dir on the command line,
 # or to the source dir otherwise.
 
-parser = argparse.ArgumentParser(allow_abbrev=False, add_help=False)
+if sys.version_info.major > 2:
+    parser = argparse.ArgumentParser(allow_abbrev=False, add_help=False)
+else:
+    parser = argparse.ArgumentParser(add_help=False)
 parser.add_argument('--astra_build_config_dir')
 parser.add_argument('--astra_build_cython_dir')
 args, script_args = parser.parse_known_args()
