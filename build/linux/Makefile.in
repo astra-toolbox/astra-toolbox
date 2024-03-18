@@ -83,7 +83,7 @@ endif
 ifeq ($(python),yes)
 PYTHON      = @PYTHON@
 PYINCDIR := $(shell $(PYTHON) -c 'from __future__ import print_function; from distutils.sysconfig import get_python_inc; print(get_python_inc())')
-PYLIBDIR := $(shell $(PYTHON) -c 'from distutils.sysconfig import get_config_var; import six; six.print_(get_config_var("LIBDIR"))')
+PYLIBDIR := $(shell $(PYTHON) -c 'from __future__ import print_function; from distutils.sysconfig import get_config_var; print(get_config_var("LIBDIR"))')
 PYLIBVER = `basename $(PYINCDIR)`
 CPPFLAGS += -DASTRA_PYTHON -I$(PYINCDIR)
 PYCPPFLAGS  := $(CPPFLAGS)

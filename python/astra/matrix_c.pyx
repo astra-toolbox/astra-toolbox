@@ -26,7 +26,8 @@
 # distutils: language = c++
 # distutils: libraries = astra
 
-import six
+from __future__ import print_function
+
 try:
     from six.moves import range
 except ImportError:
@@ -119,4 +120,4 @@ def get(i):
     return astra_to_csr_matrix(pDataObject)
 
 def info():
-    six.print_(wrap_from_bytes(manM.info()))
+    print(wrap_from_bytes(manM.info()))
