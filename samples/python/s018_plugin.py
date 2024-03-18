@@ -41,7 +41,7 @@ class LandweberPlugin(astra.plugin.base):
     # call the plugin from ASTRA
     astra_name = "LANDWEBER-PLUGIN"
 
-    def initialize(self,cfg, Relaxation = 1):
+    def initialize(self,cfg, Relaxation = 1.0):
         self.W = astra.OpTomo(cfg['ProjectorId'])
         self.vid = cfg['ReconstructionDataId']
         self.sid = cfg['ProjectionDataId']
