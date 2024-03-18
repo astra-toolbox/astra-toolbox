@@ -51,8 +51,6 @@ from .pythonutils import geom_size, GPULink
 
 import operator
 
-from six.moves import reduce
-
 include "config.pxi"
 
 

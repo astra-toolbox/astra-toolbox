@@ -64,7 +64,7 @@ cdef extern from "astra/CompositeGeometryManager.h" namespace "astra::CComposite
 
 
 def credits():
-    six.print_("""The ASTRA Toolbox has been developed at the University of Antwerp and CWI, Amsterdam by
+    print("""The ASTRA Toolbox has been developed at the University of Antwerp and CWI, Amsterdam by
  * Prof. dr. Joost Batenburg
  * Prof. dr. Jan Sijbers
  * Dr. Jeroen Bedorf

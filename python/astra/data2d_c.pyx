@@ -26,7 +26,7 @@
 # distutils: language = c++
 # distutils: libraries = astra
 
-import six
+from __future__ import print_function
 
 cimport cython
 from cython cimport view
@@ -54,8 +54,6 @@ from .log import AstraError
 from .pythonutils import geom_size
 
 import operator
-
-from six.moves import reduce
 
 cdef CData2DManager * man2d = <CData2DManager * >PyData2DManager.getSingletonPtr()
 cdef CProjector2DManager * manProj = <CProjector2DManager * >PyProjector2DManager.getSingletonPtr()
@@ -294,4 +292,4 @@ def get_single(i):
 
 
 def info():
-    six.print_(wrap_from_bytes(man2d.info()))
+    print(wrap_from_bytes(man2d.info()))
