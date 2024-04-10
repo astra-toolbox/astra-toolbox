@@ -436,9 +436,9 @@ distclean: clean
 	rm -f $(srcdir)/configure Makefile
 
 install-libraries: libastra.la
-	$(INSTALL_SH) -m 755 -d $(libdir)
-	./libtool --mode=install $(INSTALL_SH) -m 644 libastra.la $(libdir)
-	./libtool --mode=finish $(libdir)
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(libdir)
+	./libtool --mode=install $(INSTALL_SH) -m 644 libastra.la $(DESTDIR)$(libdir)
+	./libtool --mode=finish $(DESTDIR)$(libdir)
 
 
 # ------------------------
@@ -475,11 +475,11 @@ MATLABBASE=@prefix@/matlab
 OCTAVEBASE=@prefix@/octave
 
 install-matlab-so: libastra.la
-	$(INSTALL_SH) -m 755 -d $(MATLABBASE)/mex
-	$(INSTALL_SH) -m 755 $(abs_top_builddir)/.libs/$(SONAME) $(MATLABBASE)/mex
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(MATLABBASE)/mex
+	$(INSTALL_SH) -m 755 $(abs_top_builddir)/.libs/$(SONAME) $(DESTDIR)$(MATLABBASE)/mex
 install-octave-so: libastra.la
-	$(INSTALL_SH) -m 755 -d $(OCTAVEBASE)/mex
-	$(INSTALL_SH) -m 755 $(abs_top_builddir)/.libs/$(SONAME) $(OCTAVEBASE)/mex
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(OCTAVEBASE)/mex
+	$(INSTALL_SH) -m 755 $(abs_top_builddir)/.libs/$(SONAME) $(DESTDIR)$(OCTAVEBASE)/mex
 else
 install-matlab-so:
 install-octave-so:
@@ -496,7 +496,7 @@ install-python: py
 	build $(PYBUILDER_BUILD_FLAGS) \
 	egg_info --egg-base=$(abs_top_builddir)/python \
 	$(patsubst %,add_extra_lib --file=%,$(PYPKGDATA)) \
-	install --install-base=@prefix@/python --install-headers=@prefix@/python --install-purelib=@prefix@/python --install-platlib=@prefix@/python --install-scripts=@prefix@/python --install-data=@prefix@/python --old-and-unmanageable --no-compile
+	install $(patsubst %,--root=%,$(DESTDIR)) --install-base=@prefix@/python --install-headers=@prefix@/python --install-purelib=@prefix@/python --install-platlib=@prefix@/python --install-scripts=@prefix@/python --install-data=@prefix@/python --old-and-unmanageable --no-compile
 # TODO: docs
 
 install-python-site-packages: py
@@ -507,7 +507,7 @@ install-python-site-packages: py
 	build $(PYBUILDER_BUILD_FLAGS) \
 	egg_info --egg-base=$(abs_top_builddir)/python \
 	$(patsubst %,add_extra_lib --file=%,$(PYPKGDATA)) \
-	install
+	install $(patsubst %,--root=% --single-version-externally-managed,$(DESTDIR))
 python-wheel: py
 # Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
 	cd $(srcdir)/../../python; CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" \
@@ -524,16 +524,16 @@ endif
 
 ifeq ($(matlab),yes)
 install-matlab: $(MATLAB_MEX) install-matlab-so
-	$(INSTALL_SH) -m 755 -d $(MATLABBASE)
-	$(INSTALL_SH) -m 755 -d $(MATLABBASE)/mex
-	$(INSTALL_SH) -m 755 -d $(MATLABBASE)/tools
-	$(INSTALL_SH) -m 755 -d $(MATLABBASE)/algorithms
-	$(INSTALL_SH) -m 755 $(MATLAB_MEX) $(MATLABBASE)/mex
-	$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/tools/*.m $(MATLABBASE)/tools
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(MATLABBASE)
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(MATLABBASE)/mex
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(MATLABBASE)/tools
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(MATLABBASE)/algorithms
+	$(INSTALL_SH) -m 755 $(MATLAB_MEX) $(DESTDIR)$(MATLABBASE)/mex
+	$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/tools/*.m $(DESTDIR)$(MATLABBASE)/tools
 
 	for D in DART DART/tools DART/examples plot_geom plot_geom/private plot_geom/+draw plot_geom/+draw/private plot_geom/+parseargs plot_geom/+stlTools; do \
-		$(INSTALL_SH) -m 755 -d $(MATLABBASE)/algorithms/$$D; \
-		$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/algorithms/$$D/*.m $(MATLABBASE)/algorithms/$$D; \
+		$(INSTALL_SH) -m 755 -d $(DESTDIR)$(MATLABBASE)/algorithms/$$D; \
+		$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/algorithms/$$D/*.m $(DESTDIR)$(MATLABBASE)/algorithms/$$D; \
 	done
 
 # TODO: docs
@@ -544,11 +544,11 @@ endif
 
 ifeq ($(octave),yes)
 install-octave: $(OCTAVE_MEX) install-octave-so
-	$(INSTALL_SH) -m 755 -d $(OCTAVEBASE)
-	$(INSTALL_SH) -m 755 -d $(OCTAVEBASE)/mex
-	$(INSTALL_SH) -m 755 -d $(OCTAVEBASE)/tools
-	$(INSTALL_SH) -m 755 $(OCTAVE_MEX) $(OCTAVEBASE)/mex
-	$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/tools/*.m $(OCTAVEBASE)/tools
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(OCTAVEBASE)
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(OCTAVEBASE)/mex
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(OCTAVEBASE)/tools
+	$(INSTALL_SH) -m 755 $(OCTAVE_MEX) $(DESTDIR)$(OCTAVEBASE)/mex
+	$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/tools/*.m $(DESTDIR)$(OCTAVEBASE)/tools
 # TODO: docs
 else
 install-octave:
@@ -567,20 +567,20 @@ install-headers:
 else
 
 install-headers:
-	$(INSTALL_SH) -m 755 -d $(includedir)
-	$(INSTALL_SH) -m 755 -d $(includedir)/astra
-	$(INSTALL_SH) -m 755 -d $(includedir)/astra/cuda
-	$(INSTALL_SH) -m 755 -d $(includedir)/astra/cuda/2d
-	$(INSTALL_SH) -m 755 -d $(includedir)/astra/cuda/3d
-	$(INSTALL_SH) -m 644 $(srcdir)/../../include/astra/*.h $(includedir)/astra
-	$(INSTALL_SH) -m 644 $(srcdir)/../../include/astra/*.inl $(includedir)/astra
-	$(INSTALL_SH) -m 644 $(srcdir)/../../include/astra/cuda/2d/*.h $(includedir)/astra/cuda/2d
-	$(INSTALL_SH) -m 644 $(srcdir)/../../include/astra/cuda/3d/*.h $(includedir)/astra/cuda/3d
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(includedir)
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(includedir)/astra
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(includedir)/astra/cuda
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(includedir)/astra/cuda/2d
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(includedir)/astra/cuda/3d
+	$(INSTALL_SH) -m 644 $(srcdir)/../../include/astra/*.h $(DESTDIR)$(includedir)/astra
+	$(INSTALL_SH) -m 644 $(srcdir)/../../include/astra/*.inl $(DESTDIR)$(includedir)/astra
+	$(INSTALL_SH) -m 644 $(srcdir)/../../include/astra/cuda/2d/*.h $(DESTDIR)$(includedir)/astra/cuda/2d
+	$(INSTALL_SH) -m 644 $(srcdir)/../../include/astra/cuda/3d/*.h $(DESTDIR)$(includedir)/astra/cuda/3d
 
 install-dev: install-libraries install-headers libastra.pc
-	$(INSTALL_SH) -m 755 -d $(libdir)
-	$(INSTALL_SH) -m 755 -d $(libdir)/pkgconfig/
-	$(INSTALL_SH) -m 644 libastra.pc $(libdir)/pkgconfig/
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(libdir)
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(libdir)/pkgconfig/
+	$(INSTALL_SH) -m 644 libastra.pc $(DESTDIR)$(libdir)/pkgconfig/
 endif
 
 
