@@ -35,8 +35,10 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 namespace astra {
 
 class CFloat32Data2D;
+class CFloat32Data3DMemory;
 
 _AstraExport void generateSheppLogan(CFloat32Data2D *data, bool modified);
+_AstraExport void generateSheppLogan3D(CFloat32Data3DMemory *data, bool modified);
 
 }
 

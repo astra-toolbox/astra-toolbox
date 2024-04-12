@@ -53,6 +53,8 @@ import operator
 
 include "config.pxi"
 
+cdef extern from "astra/SheppLogan.h" namespace "astra":
+    cdef void generateSheppLogan3D(CFloat32Data3DMemory*, bool)
 
 cdef CData3DManager * man3d = <CData3DManager * >PyData3DManager.getSingletonPtr()
 
@@ -218,6 +220,10 @@ def store(i,data):
 def dimensions(i):
     cdef CFloat32Data3D * pDataObject = getObject(i)
     return (pDataObject.getDepth(),pDataObject.getHeight(),pDataObject.getWidth())
+
+def shepp_logan(i, modified=True):
+    cdef CFloat32Data3D * pDataObject = getObject(i)
+    generateSheppLogan3D(dynamic_cast_mem_safe(pDataObject), modified);
 
 def delete(ids):
     try:
