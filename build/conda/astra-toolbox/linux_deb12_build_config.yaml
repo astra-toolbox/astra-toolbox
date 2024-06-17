@@ -1,0 +1,12 @@
+python:
+  - 3.12
+numpy:
+  - 1.26
+zip_keys:
+  - python
+  - numpy
+
+c_compiler_version:
+  - 11.2
+cxx_compiler_version:
+  - 11.2
