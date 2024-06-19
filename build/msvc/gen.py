@@ -595,7 +595,7 @@ def write_project11_14_start(P, F, version):
     print('    <RootNamespace>' + P["name"] + '</RootNamespace>', file=F)
   print('    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>', file=F)
   print('  </PropertyGroup>', file=F)
-  print('  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />', file=F)
+  print('  <Import Project="$(VCTargetsPath)\\Microsoft.Cpp.Default.props" />', file=F)
   for c in configs:
     print('''  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='%s'" Label="Configuration">''' % (c.name(), ), file=F)
     print('    <ConfigurationType>DynamicLibrary</ConfigurationType>', file=F)
@@ -613,14 +613,14 @@ def write_project11_14_start(P, F, version):
         print('    <WholeProgramOptimization>true</WholeProgramOptimization>', file=F)
       print('    <CharacterSet>MultiByte</CharacterSet>', file=F)
     print('  </PropertyGroup>', file=F)
-  print('  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />', file=F)
+  print('  <Import Project="$(VCTargetsPath)\\Microsoft.Cpp.props" />', file=F)
   print('  <ImportGroup Label="ExtensionSettings">', file=F)
   if "mex" not in P["name"]:
     print(f'    <Import Project="$(CUDA_PATH_V{CUDA_MAJOR}_{CUDA_MINOR})\\extras\\visual_studio_integration\\MSBuildExtensions\\CUDA {CUDA_MAJOR}.{CUDA_MINOR}.props" />', file=F)
   print('  </ImportGroup>', file=F)
   for c in configs:
     print('''  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='%s'">''' % (c.name(), ), file=F)
-    print('''    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />''', file=F)
+    print('''    <Import Project="$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />''', file=F)
     print('''  </ImportGroup>''', file=F)
   print('  <PropertyGroup Label="UserMacros" />', file=F)
 
@@ -660,7 +660,7 @@ def write_project11_14_end(P, F):
     for f in l:
       print('    <None Include="' + f + '" />', file=F)
     print('  </ItemGroup>', file=F)
-  print('  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />', file=F)
+  print('  <Import Project="$(VCTargetsPath)\\Microsoft.Cpp.targets" />', file=F)
   print('  <ImportGroup Label="ExtensionTargets">', file=F)
   if "mex" not in P["name"]:
     print(f'    <Import Project="$(CUDA_PATH_V{CUDA_MAJOR}_{CUDA_MINOR})\\extras\\visual_studio_integration\\MSBuildExtensions\\CUDA {CUDA_MAJOR}.{CUDA_MINOR}.targets" />', file=F)
@@ -694,7 +694,7 @@ def write_main_project11_14(version):
     else:
       print('      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>', file=F)
     print('      <WarningLevel>Level3</WarningLevel>', file=F)
-    print('      <AdditionalIncludeDirectories>lib\include;include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
+    print('      <AdditionalIncludeDirectories>lib\\include;include\\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
     print('      <OpenMPSupport>true</OpenMPSupport>', file=F)
     if not c.x64: # /arch:SSE2 is implicit on x64
       print('      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>', file=F)
@@ -775,9 +775,9 @@ def write_mex_project11_14(P, version):
     else:
       print('      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>', file=F)
 #    print('      <WarningLevel>Level3</WarningLevel>', file=F)
-    #print('      <AdditionalIncludeDirectories>$(MATLAB_ROOT)\extern\include\;..\..\lib\include;..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
+    #print('      <AdditionalIncludeDirectories>$(MATLAB_ROOT)\\extern\\include\\;..\\..\\lib\\include;..\\..\\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
     # FIXME: This CUDA_PATH shouldn't be necessary
-    print('      <AdditionalIncludeDirectories>$(MATLAB_ROOT)\extern\include\;$(CUDA_PATH)\include;..\..\lib\include;..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
+    print('      <AdditionalIncludeDirectories>$(MATLAB_ROOT)\\extern\\include\\;$(CUDA_PATH)\\include;..\\..\\lib\\include;..\\..\\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
     print('      <OpenMPSupport>true</OpenMPSupport>', file=F)
     if not c.x64: # /arch:SSE2 is implicit on x64
       print('      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>', file=F)
@@ -818,9 +818,9 @@ def write_mex_project11_14(P, version):
       l += '..\\..\\lib\\win32\\;..\\..\\bin\\win32\\'
     l += c.config()
     if c.x64:
-      l += ';$(MATLAB_ROOT)\extern\lib\win64\microsoft'
+      l += ';$(MATLAB_ROOT)\\extern\\lib\\win64\\microsoft'
     else:
-      l += ';$(MATLAB_ROOT)\extern\lib\win32\microsoft'
+      l += ';$(MATLAB_ROOT)\\extern\\lib\\win32\\microsoft'
     l += ';%(AdditionalLibraryDirectories)'
     l += '</AdditionalLibraryDirectories>'
     print(l, file=F)
@@ -965,7 +965,7 @@ def write_main_project09():
   for c in configs:
     print('\t\t<Configuration', file=F)
     print('\t\t\tName="%s"' % (c.name(), ), file=F)
-    print('\t\t\tOutputDirectory="$(SolutionDir)bin\$(PlatformName)\%s"' % (c.config(), ), file=F)
+    print('\t\t\tOutputDirectory="$(SolutionDir)bin\\$(PlatformName)\\%s"' % (c.config(), ), file=F)
     print(r'''			IntermediateDirectory="$(OutDir)/obj"
 			ConfigurationType="2"
 			>''', file=F)
@@ -1100,7 +1100,7 @@ def write_mex_project09(P):
   for c in configs:
     print('\t\t<Configuration', file=F)
     print('\t\t\tName="%s"' % (c.name(), ), file=F)
-    print('\t\t\tOutputDirectory="$(SolutionDir)bin\$(PlatformName)\$(ConfigurationName)"', file=F)
+    print('\t\t\tOutputDirectory="$(SolutionDir)bin\\$(PlatformName)\\$(ConfigurationName)"', file=F)
     print(r'''			IntermediateDirectory="$(OutDir)\obj\$(ProjectName)"
 			ConfigurationType="2"
 			>''', file=F)
