@@ -68,8 +68,7 @@ if __name__=='__main__':
     proj_geom = astra.create_proj_geom('parallel', 1.0, 384, np.linspace(0,np.pi,180,False))
 
     # As before, create a sinogram from a phantom
-    import scipy.io
-    P = scipy.io.loadmat('phantom.mat')['phantom256']
+    phantom_id, P = astra.data2d.shepp_logan(vol_geom)
     proj_id = astra.create_projector('cuda',proj_geom,vol_geom)
 
     # construct the OpTomo object
@@ -148,4 +147,4 @@ if __name__=='__main__':
     # Clean up.
     astra.projector.delete(proj_id)
     astra.algorithm.delete([alg_id, alg_id_rel])
-    astra.data2d.delete([vid, sid])
+    astra.data2d.delete([vid, sid, phantom_id])

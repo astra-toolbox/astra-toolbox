@@ -40,8 +40,8 @@ v0 = astra.data2d.create('-vol', vol_geom)
 v1 = astra.data2d.create('-vol', vol_geom, 3.0)
 
 # initialized to a matrix. A may be a single, double or logical (0/1) array.
-import scipy.io
-A = scipy.io.loadmat('phantom.mat')['phantom256']
+phantom_id, A = astra.data2d.shepp_logan(vol_geom)
+
 v2 = astra.data2d.create('-vol', vol_geom, A)
 
 
@@ -74,3 +74,4 @@ astra.data2d.delete(v0)
 astra.data2d.delete(v1)
 astra.data2d.delete(v2)
 astra.data2d.delete(s0)
+astra.data2d.delete(phantom_id)
