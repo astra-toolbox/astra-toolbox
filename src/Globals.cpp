@@ -26,7 +26,10 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "astra/Globals.h"
+
+#ifdef ASTRA_CUDA
 #include "astra/cuda/2d/astra.h"
+#endif
 
 namespace astra {
 
