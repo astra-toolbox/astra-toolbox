@@ -114,6 +114,62 @@ struct SCALE_NONCUBE {
 };
 
 
+// Full set of scale-related kernel parameters that the various dispatch
+// functions can take a subset of to pass to the actual kernel
+struct KernelParams {
+	SCALE_CUBE scube;
+	SCALE_NONCUBE snoncubeX;
+	SCALE_NONCUBE snoncubeY;
+	SCALE_NONCUBE snoncubeZ;
+	bool cube;
+
+	float fVoxelSizeX;
+	float fVoxelSizeY;
+	float fVoxelSizeZ;
+
+	float fOutputScale;
+};
+
+KernelParams computeKernelParams(const SProjectorParams3D& params)
+{
+	KernelParams p;
+
+	p.fVoxelSizeX = params.fVolScaleX;
+	p.fVoxelSizeY = params.fVolScaleY;
+	p.fVoxelSizeZ = params.fVolScaleZ;
+	p.fOutputScale = params.fOutputScale;
+
+	p.cube = true;
+	if (abs(params.fVolScaleX / params.fVolScaleY - 1.0) > 0.00001)
+		p.cube = false;
+	if (abs(params.fVolScaleX / params.fVolScaleZ - 1.0) > 0.00001)
+		p.cube = false;
+
+	p.scube.fOutputScale = params.fOutputScale * params.fVolScaleX;
+
+	float fS1 = params.fVolScaleY / params.fVolScaleX;
+	p.snoncubeX.fScale1 = fS1 * fS1;
+	float fS2 = params.fVolScaleZ / params.fVolScaleX;
+	p.snoncubeX.fScale2 = fS2 * fS2;
+	p.snoncubeX.fOutputScale = params.fOutputScale * params.fVolScaleX;
+
+	fS1 = params.fVolScaleX / params.fVolScaleY;
+	p.snoncubeY.fScale1 = fS1 * fS1;
+	fS2 = params.fVolScaleZ / params.fVolScaleY;
+	p.snoncubeY.fScale2 = fS2 * fS2;
+	p.snoncubeY.fOutputScale = params.fOutputScale * params.fVolScaleY;
+
+	fS1 = params.fVolScaleX / params.fVolScaleZ;
+	p.snoncubeZ.fScale1 = fS1 * fS1;
+	fS2 = params.fVolScaleY / params.fVolScaleZ;
+	p.snoncubeZ.fScale2 = fS2 * fS2;
+	p.snoncubeZ.fOutputScale = params.fOutputScale * params.fVolScaleZ;
+
+	return p;
+}
+
+
+
 bool transferConstants(const SConeProjection* angles, unsigned int iProjAngles)
 {
 	// transfer angles to constant memory
@@ -320,6 +376,67 @@ __global__ void cone_FP_SS_t(float* D_projData, unsigned int projPitch,
 }
 
 
+
+static void dispatchDefault(cudaStream_t stream,
+                            int blockDirection,
+                            float* D_projData, unsigned int projPitch,
+                            cudaTextureObject_t tex,
+                            unsigned int blockStart, unsigned int blockEnd,
+                            const SDimensions3D dims, int iRaysPerDetDim,
+                            const KernelParams &kp)
+{
+	dim3 dimBlock(g_detBlockU, g_anglesPerBlock); // region size, angles
+	dim3 dimGrid(
+	             ((dims.iProjU+g_detBlockU-1)/g_detBlockU)*((dims.iProjV+g_detBlockV-1)/g_detBlockV),
+	             (blockEnd-blockStart+g_anglesPerBlock-1)/g_anglesPerBlock
+	            );
+	if (blockDirection == 0) {
+		for (unsigned int i = 0; i < dims.iVolX; i += g_blockSlices)
+			if (kp.cube)
+				cone_FP_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, tex, i, blockStart, blockEnd, dims, kp.scube);
+			else
+				cone_FP_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, tex, i, blockStart, blockEnd, dims, kp.snoncubeX);
+	} else if (blockDirection == 1) {
+		for (unsigned int i = 0; i < dims.iVolY; i += g_blockSlices)
+			if (kp.cube)
+				cone_FP_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, tex, i, blockStart, blockEnd, dims, kp.scube);
+			else
+				cone_FP_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, tex, i, blockStart, blockEnd, dims, kp.snoncubeY);
+	} else if (blockDirection == 2) {
+		for (unsigned int i = 0; i < dims.iVolZ; i += g_blockSlices)
+			if (kp.cube)
+				cone_FP_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, tex, i, blockStart, blockEnd, dims, kp.scube);
+			else
+				cone_FP_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, tex, i, blockStart, blockEnd, dims, kp.snoncubeZ);
+	}
+}
+
+static void dispatchSS(cudaStream_t stream,
+                       int blockDirection,
+                       float* D_projData, unsigned int projPitch,
+                       cudaTextureObject_t tex,
+                       unsigned int blockStart, unsigned int blockEnd,
+                       const SDimensions3D dims, int iRaysPerDetDim,
+                       const KernelParams &kp)
+{
+	dim3 dimBlock(g_detBlockU, g_anglesPerBlock); // region size, angles
+	dim3 dimGrid(
+	             ((dims.iProjU+g_detBlockU-1)/g_detBlockU)*((dims.iProjV+g_detBlockV-1)/g_detBlockV),
+	             (blockEnd-blockStart+g_anglesPerBlock-1)/g_anglesPerBlock
+	            );
+	if (blockDirection == 0) {
+		for (unsigned int i = 0; i < dims.iVolX; i += g_blockSlices)
+			cone_FP_SS_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, tex, i, blockStart, blockEnd, dims, iRaysPerDetDim, kp.snoncubeX);
+	} else if (blockDirection == 1) {
+		for (unsigned int i = 0; i < dims.iVolY; i += g_blockSlices)
+			cone_FP_SS_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, tex, i, blockStart, blockEnd, dims, iRaysPerDetDim, kp.snoncubeY);
+	} else if (blockDirection == 2) {
+		for (unsigned int i = 0; i < dims.iVolZ; i += g_blockSlices)
+			cone_FP_SS_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, tex, i, blockStart, blockEnd, dims, iRaysPerDetDim, kp.snoncubeZ);
+	}
+}
+
+
 bool ConeFP_Array_internal(cudaPitchedPtr D_projData,
                   cudaTextureObject_t D_texObj,
                   const SDimensions3D& dims,
@@ -330,7 +447,6 @@ bool ConeFP_Array_internal(cudaPitchedPtr D_projData,
 		return false;
 
 	std::list<cudaStream_t> streams;
-	dim3 dimBlock(g_detBlockU, g_anglesPerBlock); // region size, angles
 
 	// Run over all angles, grouping them into groups of the same
 	// orientation (roughly horizontal vs. roughly vertical).
@@ -340,35 +456,7 @@ bool ConeFP_Array_internal(cudaPitchedPtr D_projData,
 	unsigned int blockEnd = 0;
 	int blockDirection = 0;
 
-	bool cube = true;
-	if (abs(params.fVolScaleX / params.fVolScaleY - 1.0) > 0.00001)
-		cube = false;
-	if (abs(params.fVolScaleX / params.fVolScaleZ - 1.0) > 0.00001)
-		cube = false;
-
-	SCALE_CUBE scube;
-	scube.fOutputScale = params.fOutputScale * params.fVolScaleX;
-
-	SCALE_NONCUBE snoncubeX;
-	float fS1 = params.fVolScaleY / params.fVolScaleX;
-	snoncubeX.fScale1 = fS1 * fS1;
-	float fS2 = params.fVolScaleZ / params.fVolScaleX;
-	snoncubeX.fScale2 = fS2 * fS2;
-	snoncubeX.fOutputScale = params.fOutputScale * params.fVolScaleX;
-
-	SCALE_NONCUBE snoncubeY;
-	fS1 = params.fVolScaleX / params.fVolScaleY;
-	snoncubeY.fScale1 = fS1 * fS1;
-	fS2 = params.fVolScaleZ / params.fVolScaleY;
-	snoncubeY.fScale2 = fS2 * fS2;
-	snoncubeY.fOutputScale = params.fOutputScale * params.fVolScaleY;
-
-	SCALE_NONCUBE snoncubeZ;
-	fS1 = params.fVolScaleX / params.fVolScaleZ;
-	snoncubeZ.fScale1 = fS1 * fS1;
-	fS2 = params.fVolScaleY / params.fVolScaleZ;
-	snoncubeZ.fScale2 = fS2 * fS2;
-	snoncubeZ.fOutputScale = params.fOutputScale * params.fVolScaleZ;
+	KernelParams kp = computeKernelParams(params);
 
 	// timeval t;
 	// tic(t);
@@ -394,47 +482,28 @@ bool ConeFP_Array_internal(cudaPitchedPtr D_projData,
 			blockEnd = a;
 			if (blockStart != blockEnd) {
 
-				dim3 dimGrid(
-				             ((dims.iProjU+g_detBlockU-1)/g_detBlockU)*((dims.iProjV+g_detBlockV-1)/g_detBlockV),
-(blockEnd-blockStart+g_anglesPerBlock-1)/g_anglesPerBlock);
 
-				// TODO: consider limiting number of handle (chaotic) geoms
-				//       with many alternating directions
+				// TODO: consider limiting number of streams to handle
+				// (chaotic) geoms with many alternating directions
 				cudaStream_t stream;
 				cudaStreamCreate(&stream);
 				streams.push_back(stream);
 
 				// printf("angle block: %d to %d, %d (%dx%d, %dx%d)\n", blockStart, blockEnd, blockDirection, dimGrid.x, dimGrid.y, dimBlock.x, dimBlock.y);
 
-				if (blockDirection == 0) {
-					for (unsigned int i = 0; i < dims.iVolX; i += g_blockSlices)
-						if (params.iRaysPerDetDim == 1)
-							if (cube)
-								cone_FP_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, i, blockStart, blockEnd, dims, scube);
-							else
-								cone_FP_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, i, blockStart, blockEnd, dims, snoncubeX);
-						else
-							cone_FP_SS_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, i, blockStart, blockEnd, dims, params.iRaysPerDetDim, snoncubeX);
-				} else if (blockDirection == 1) {
-					for (unsigned int i = 0; i < dims.iVolY; i += g_blockSlices)
-						if (params.iRaysPerDetDim == 1)
-							if (cube)
-								cone_FP_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, i, blockStart, blockEnd, dims, scube);
-							else
-								cone_FP_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, i, blockStart, blockEnd, dims, snoncubeY);
-						else
-							cone_FP_SS_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, i, blockStart, blockEnd, dims, params.iRaysPerDetDim, snoncubeY);
-				} else if (blockDirection == 2) {
-					for (unsigned int i = 0; i < dims.iVolZ; i += g_blockSlices)
-						if (params.iRaysPerDetDim == 1)
-							if (cube)
-								cone_FP_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, i, blockStart, blockEnd, dims, scube);
-							else
-								cone_FP_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, i, blockStart, blockEnd, dims, snoncubeZ);
-						else
-							cone_FP_SS_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, i, blockStart, blockEnd, dims, params.iRaysPerDetDim, snoncubeZ);
+				switch (params.ker) {
+				case ker3d_matched_bp:
+				case ker3d_sum_square_weights:
+					// Unsupported (TODO: warn)
+					return false;
+				case ker3d_default:
+					if (params.iRaysPerDetDim != 1) {
+						dispatchSS(stream, blockDirection, (float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, blockStart, blockEnd, dims, params.iRaysPerDetDim, kp);
+					} else {
+						dispatchDefault(stream, blockDirection, (float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, blockStart, blockEnd, dims, params.iRaysPerDetDim, kp);
+					}
+					break;
 				}
-
 			}
 
 			blockDirection = dir;

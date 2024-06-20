@@ -30,6 +30,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "dims3d.h"
 
+#include <variant>
+
 namespace astra {
 
 
@@ -46,9 +48,6 @@ class CFloat32ProjectionData3DGPU;
 class AstraSIRT3d_internal;
 
 using astraCUDA3d::Cuda3DProjectionKernel;
-using astraCUDA3d::ker3d_default;
-using astraCUDA3d::ker3d_sum_square_weights;
-
 
 class _AstraExport AstraSIRT3d {
 public:
@@ -278,28 +277,10 @@ bool convertAstraGeometry_dims(const CVolumeGeometry3D* pVolGeom,
                                const CProjectionGeometry3D* pProjGeom,
                                astraCUDA3d::SDimensions3D& dims);
 
-bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
+std::variant<SPar3DProjection*, SConeProjection*, SCylConeProjection*, bool>
+convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
                           const CProjectionGeometry3D* pProjGeom,
-                          SPar3DProjection*& pParProjs,
-                          SConeProjection*& pConeProjs,
                           astraCUDA3d::SProjectorParams3D& params);
-
-_AstraExport bool astraCudaFP(const float* pfVolume, float* pfProjections,
-                      const CVolumeGeometry3D* pVolGeom,
-                      const CProjectionGeometry3D* pProjGeom,
-                      int iGPUIndex, int iDetectorSuperSampling,
-                      Cuda3DProjectionKernel projKernel);
-
-
-_AstraExport bool astraCudaBP(float* pfVolume, const float* pfProjections,
-                      const CVolumeGeometry3D* pVolGeom,
-                      const CProjectionGeometry3D* pProjGeom,
-                      int iGPUIndex, int iVoxelSuperSampling);
-
-_AstraExport bool astraCudaBP_SIRTWeighted(float* pfVolume, const float* pfProjections,
-                      const CVolumeGeometry3D* pVolGeom,
-                      const CProjectionGeometry3D* pProjGeom,
-                      int iGPUIndex, int iVoxelSuperSampling);
 
 _AstraExport bool uploadMultipleProjections(CFloat32ProjectionData3DGPU *proj,
                                             const float *data,

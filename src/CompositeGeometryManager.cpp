@@ -33,6 +33,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/VolumeGeometry3D.h"
 #include "astra/ConeProjectionGeometry3D.h"
 #include "astra/ConeVecProjectionGeometry3D.h"
+#include "astra/CylConeVecProjectionGeometry3D.h"
 #include "astra/ParallelProjectionGeometry3D.h"
 #include "astra/ParallelVecProjectionGeometry3D.h"
 #include "astra/Projector3D.h"
@@ -228,6 +229,8 @@ bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div
 
 	split.clear();
 
+	size_t costHeuristic = 0;
+
 	for (TJobSet::const_iterator i = jobs.begin(); i != jobs.end(); ++i)
 	{
 		CPart* pOutput = i->first;
@@ -240,7 +243,14 @@ bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div
 		//    c. create jobs for new (input,output) subparts
 
 		TPartList splitOutput;
-		pOutput->splitZ(splitOutput, maxSize/3, UINT_MAX, div);
+
+		// Primarily split projection data over the angle axis,
+		// and primarily split volume data over the z axis
+		if (pOutput->eType == CPart::PART_PROJ)
+			pOutput->splitY(splitOutput, maxSize/3, UINT_MAX, div);
+		else
+			pOutput->splitZ(splitOutput, maxSize/3, UINT_MAX, div);
+
 #if 0
 		TPartList splitOutput2;
 		for (TPartList::iterator i_out = splitOutput.begin(); i_out != splitOutput.end(); ++i_out) {
@@ -307,6 +317,20 @@ bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div
 
 					split[outputPart.get()].push_back(newjob);
 
+					size_t tx, ty, tz;
+					newjob.pInput->getDims(tx, ty, tz);
+
+					switch (newjob.eType) {
+						case SJob::JOB_FP:
+							costHeuristic += outputPart.get()->getSize() * cbrt(tx * ty * tz);
+							break;
+						case SJob::JOB_BP: case SJob::JOB_FDK:
+							costHeuristic += outputPart.get()->getSize() * ty;
+							break;
+						case SJob::JOB_NOP:
+							break;
+					}
+
 					// Second and later (input) parts should always be added to
 					// output of first (input) part.
 					newjob.eMode = SJob::MODE_ADD;
@@ -317,6 +341,8 @@ bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div
 
 		}
 	}
+
+	ASTRA_DEBUG("splitJobs cost heuristic: %zu", costHeuristic);
 
 	return true;
 }
@@ -442,6 +468,12 @@ static bool testVolumeRange(const std::pair<double, double>& fullRange,
 
 CCompositeGeometryManager::CPart* CCompositeGeometryManager::CVolumePart::reduce(const CPart *_other)
 {
+#if 0
+	// HACK
+	const CProjectionPart *yy = dynamic_cast<const CProjectionPart *>(_other);
+	std::pair<double, double> xx = reduceProjectionVertical(pGeom, yy->pGeom);
+#endif
+
 	if (!canSplitAndReduce())
 		return clone();
 
@@ -466,6 +498,7 @@ CCompositeGeometryManager::CPart* CCompositeGeometryManager::CVolumePart::reduce
 		while (zmin < zmax) {
 			int zmid = (zmin + zmax + 1) / 2;
 
+			// Test if this top area is entirely out of range
 			bool ok = testVolumeRange(fullRange, pGeom, other->pGeom,
 			                          0, zmid);
 
@@ -490,6 +523,7 @@ CCompositeGeometryManager::CPart* CCompositeGeometryManager::CVolumePart::reduce
 		while (zmin < zmax) {
 			int zmid = (zmin + zmax) / 2;
 
+			// Test if this bottom area is entirely out of range
 			bool ok = testVolumeRange(fullRange, pGeom, other->pGeom,
 			                          zmid, pGeom->getGridSliceCount());
 
@@ -613,6 +647,18 @@ SConeProjection* getProjectionVectors(const CConeVecProjectionGeometry3D* pProjG
 }
 
 template<>
+SCylConeProjection* getProjectionVectors(const CCylConeVecProjectionGeometry3D* pProjGeom)
+{
+	int nth = pProjGeom->getProjectionCount();
+
+	SCylConeProjection* pProjs = new SCylConeProjection[nth];
+	for (int i = 0; i < nth; ++i)
+		pProjs[i] = pProjGeom->getProjectionVectors()[i];
+
+	return pProjs;
+}
+
+template<>
 SPar3DProjection* getProjectionVectors(const CParallelProjectionGeometry3D* pProjGeom)
 {
 	return genPar3DProjections(pProjGeom->getProjectionCount(),
@@ -656,6 +702,49 @@ static void translateProjectionVectorsV(V* pProjs, int count, double dv)
 	}
 }
 
+template<>
+void translateProjectionVectorsV<SCylConeProjection>(SCylConeProjection* pProjs, int count, double dv)
+{
+	for (int i = 0; i < count; ++i) {
+		pProjs[i].fDetCX += dv * pProjs[i].fDetVX;
+		pProjs[i].fDetCY += dv * pProjs[i].fDetVY;
+		pProjs[i].fDetCZ += dv * pProjs[i].fDetVZ;
+	}
+}
+
+void rotateProjectionVectorsU(SCylConeProjection* pProjs, int count, double du)
+{
+	for (int i = 0; i < count; ++i) {
+		// TODO: reduce code duplication
+
+		SCylConeProjection& p = pProjs[i];
+		double R = p.fDetR;
+		Vec3 u(p.fDetUX, p.fDetUY, p.fDetUZ); // u (tangential) direction
+		Vec3 v(p.fDetVX, p.fDetVY, p.fDetVZ); // v (axial) direction
+		Vec3 s(p.fSrcX, p.fSrcY, p.fSrcZ);    // source
+		Vec3 d(p.fDetCX, p.fDetCY, p.fDetCZ); // center of detector
+
+		double fDetUT = u.norm() / R; // angular increment
+
+		Vec3 cyla = -cross3(u, v) * (R / (u.norm() * v.norm())); // radial direction
+		Vec3 cylc = d - cyla;                                    // center of cylinder
+		Vec3 cylb = u * (R / u.norm());                          // tangential direction
+
+		double theta = fDetUT * du;
+
+		Vec3 dd = cylc + cyla * cos(theta) + cylb * sin(theta);
+		Vec3 uu = (cylb * cos(theta) - cyla * sin(theta)) * (u.norm() / R);
+
+		p.fDetCX = dd.x;
+		p.fDetCY = dd.y;
+		p.fDetCZ = dd.z;
+		p.fDetUX = uu.x;
+		p.fDetUY = uu.y;
+		p.fDetUZ = uu.z;
+	}
+}
+
+
 
 static CProjectionGeometry3D* getSubProjectionGeometryU(const CProjectionGeometry3D* pProjGeom, int u, int size)
 {
@@ -665,6 +754,7 @@ static CProjectionGeometry3D* getSubProjectionGeometryU(const CProjectionGeometr
 	const CParallelProjectionGeometry3D* par3dgeom = dynamic_cast<const CParallelProjectionGeometry3D*>(pProjGeom);
 	const CParallelVecProjectionGeometry3D* parvec3dgeom = dynamic_cast<const CParallelVecProjectionGeometry3D*>(pProjGeom);
 	const CConeVecProjectionGeometry3D* conevec3dgeom = dynamic_cast<const CConeVecProjectionGeometry3D*>(pProjGeom);
+	const CCylConeVecProjectionGeometry3D* cylconevec3dgeom = dynamic_cast<const CCylConeVecProjectionGeometry3D*>(pProjGeom);
 
 	if (conegeom || conevec3dgeom) {
 		SConeProjection* pConeProjs;
@@ -683,6 +773,22 @@ static CProjectionGeometry3D* getSubProjectionGeometryU(const CProjectionGeometr
 
 
 		delete[] pConeProjs;
+		return ret;
+	} else if (cylconevec3dgeom) {
+		SCylConeProjection* pCylConeProjs;
+		pCylConeProjs = getProjectionVectors<SCylConeProjection>(cylconevec3dgeom);
+
+		// relative position of center
+		double du = (u + 0.5 * size) - 0.5 * pProjGeom->getDetectorColCount();
+
+		rotateProjectionVectorsU(pCylConeProjs, pProjGeom->getProjectionCount(), du);
+
+		CProjectionGeometry3D* ret = new CCylConeVecProjectionGeometry3D(pProjGeom->getProjectionCount(),
+		                                                                 pProjGeom->getDetectorRowCount(),
+		                                                                 size,
+		                                                                 pCylConeProjs);
+
+		delete[] pCylConeProjs;
 		return ret;
 	} else {
 		assert(par3dgeom || parvec3dgeom);
@@ -716,6 +822,7 @@ static CProjectionGeometry3D* getSubProjectionGeometryV(const CProjectionGeometr
 	const CParallelProjectionGeometry3D* par3dgeom = dynamic_cast<const CParallelProjectionGeometry3D*>(pProjGeom);
 	const CParallelVecProjectionGeometry3D* parvec3dgeom = dynamic_cast<const CParallelVecProjectionGeometry3D*>(pProjGeom);
 	const CConeVecProjectionGeometry3D* conevec3dgeom = dynamic_cast<const CConeVecProjectionGeometry3D*>(pProjGeom);
+	const CCylConeVecProjectionGeometry3D* cylconevec3dgeom = dynamic_cast<const CCylConeVecProjectionGeometry3D*>(pProjGeom);
 
 	if (conegeom || conevec3dgeom) {
 		SConeProjection* pConeProjs;
@@ -735,6 +842,23 @@ static CProjectionGeometry3D* getSubProjectionGeometryV(const CProjectionGeometr
 
 		delete[] pConeProjs;
 		return ret;
+	} else if (cylconevec3dgeom) {
+		SCylConeProjection* pCylConeProjs;
+		pCylConeProjs = getProjectionVectors<SCylConeProjection>(cylconevec3dgeom);
+
+		double dv = (v + 0.5 * size) - 0.5 * pProjGeom->getDetectorRowCount();
+
+		translateProjectionVectorsV(pCylConeProjs, pProjGeom->getProjectionCount(), dv);
+
+		CProjectionGeometry3D* ret = new CCylConeVecProjectionGeometry3D(pProjGeom->getProjectionCount(),
+		                                                              size,
+		                                                              pProjGeom->getDetectorColCount(),
+		                                                              pCylConeProjs);
+
+
+		delete[] pCylConeProjs;
+		return ret;
+
 	} else {
 		assert(par3dgeom || parvec3dgeom);
 		SPar3DProjection* pParProjs;
@@ -765,6 +889,7 @@ static CProjectionGeometry3D* getSubProjectionGeometryAngle(const CProjectionGeo
 	const CParallelProjectionGeometry3D* par3dgeom = dynamic_cast<const CParallelProjectionGeometry3D*>(pProjGeom);
 	const CParallelVecProjectionGeometry3D* parvec3dgeom = dynamic_cast<const CParallelVecProjectionGeometry3D*>(pProjGeom);
 	const CConeVecProjectionGeometry3D* conevec3dgeom = dynamic_cast<const CConeVecProjectionGeometry3D*>(pProjGeom);
+	const CCylConeVecProjectionGeometry3D* cylconevec3dgeom = dynamic_cast<const CCylConeVecProjectionGeometry3D*>(pProjGeom);
 
 	if (conegeom || conevec3dgeom) {
 		SConeProjection* pConeProjs;
@@ -781,6 +906,16 @@ static CProjectionGeometry3D* getSubProjectionGeometryAngle(const CProjectionGeo
 
 
 		delete[] pConeProjs;
+		return ret;
+	} else if (cylconevec3dgeom) {
+		SCylConeProjection* pCylConeProjs;
+		pCylConeProjs = getProjectionVectors<SCylConeProjection>(cylconevec3dgeom);
+		CProjectionGeometry3D* ret = new CCylConeVecProjectionGeometry3D(size,
+		                                                                 pProjGeom->getDetectorRowCount(),
+		                                                                 pProjGeom->getDetectorColCount(),
+		                                                                 pCylConeProjs + th);
+
+		delete[] pCylConeProjs;
 		return ret;
 	} else {
 		assert(par3dgeom || parvec3dgeom);
@@ -981,6 +1116,41 @@ void CCompositeGeometryManager::CProjectionPart::getDims(size_t &x, size_t &y, s
 }
 
 
+static std::pair<int, int> reduceProjectionAngular(const CVolumeGeometry3D* pVolGeom, const CProjectionGeometry3D* pProjGeom)
+{
+	int iFirstAngle = pProjGeom->getProjectionCount();
+	int iLastAngle = -1;
+	for (int i = 0; i < pProjGeom->getProjectionCount(); ++i) {
+		double umin, umax;
+		double vmin, vmax;
+
+		double pixx = pVolGeom->getPixelLengthX();
+		double pixy = pVolGeom->getPixelLengthY();
+		double pixz = pVolGeom->getPixelLengthZ();
+
+		pProjGeom->getProjectedBBoxSingleAngle(i,
+		                            pVolGeom->getWindowMinX() - 0.5 * pixx,
+		                            pVolGeom->getWindowMaxX() + 0.5 * pixx,
+		                            pVolGeom->getWindowMinY() - 0.5 * pixy,
+		                            pVolGeom->getWindowMaxY() + 0.5 * pixy,
+		                            pVolGeom->getWindowMinZ() - 0.5 * pixz,
+		                            pVolGeom->getWindowMaxZ() + 0.5 * pixz,
+		                            umin, umax,
+		                            vmin, vmax);
+
+		bool out = umin >= pProjGeom->getDetectorColCount() || umax <= 0 ||
+		           vmin >= pProjGeom->getDetectorRowCount() || vmax <= 0;
+
+		if (!out && i <= iFirstAngle)
+			iFirstAngle = i;
+		if (!out)
+			iLastAngle = i;
+	}
+
+	ASTRA_DEBUG("reduceProjectionAngular: found [%d,%d]", iFirstAngle, iLastAngle);
+
+	return std::pair<int, int>(iFirstAngle, iLastAngle);
+}
 
 CCompositeGeometryManager::CPart* CCompositeGeometryManager::CProjectionPart::reduce(const CPart *_other)
 {
@@ -990,7 +1160,25 @@ CCompositeGeometryManager::CPart* CCompositeGeometryManager::CProjectionPart::re
 	const CVolumePart *other = dynamic_cast<const CVolumePart *>(_other);
 	assert(other);
 
-	std::pair<double, double> r = reduceProjectionVertical(other->pGeom, pGeom);
+	CProjectionPart *sub = new CProjectionPart();
+	sub->subX = this->subX;
+	sub->subY = this->subY;
+	sub->subZ = this->subZ;
+
+	sub->pData = pData;
+
+
+	std::pair<int, int> angleRange = reduceProjectionAngular(other->pGeom, pGeom);
+	if (angleRange.first > angleRange.second) {
+		sub->pGeom = 0;
+		return sub;
+	} else {
+		sub->subY += angleRange.first;
+		sub->pGeom = getSubProjectionGeometryAngle(pGeom, angleRange.first, angleRange.second - angleRange.first + 1);
+	}
+
+
+	std::pair<double, double> r = reduceProjectionVertical(other->pGeom, sub->pGeom);
 	// fprintf(stderr, "v extent: %f %f\n", r.first, r.second);
 	int _vmin = (int)floor(r.first - 1.0);
 	int _vmax = (int)ceil(r.second + 1.0);
@@ -1003,20 +1191,16 @@ CCompositeGeometryManager::CPart* CCompositeGeometryManager::CProjectionPart::re
 		_vmin = _vmax = 0;
 	}
 
-	CProjectionPart *sub = new CProjectionPart();
-	sub->subX = this->subX;
-	sub->subY = this->subY;
-	sub->subZ = this->subZ + _vmin;
-
-	sub->pData = pData;
+	ASTRA_DEBUG("Reduce projection from %d - %d to %d - %d", this->subZ, this->subZ + pGeom->getDetectorRowCount(), this->subZ + _vmin, this->subZ + _vmax);
+	sub->subZ += _vmin;
 
 	if (_vmin == _vmax) {
 		sub->pGeom = 0;
 	} else {
-		sub->pGeom = getSubProjectionGeometryV(pGeom, _vmin, _vmax - _vmin);
+		CProjectionGeometry3D *pTmp = sub->pGeom;
+		sub->pGeom = getSubProjectionGeometryV(sub->pGeom, _vmin, _vmax - _vmin);
+		delete pTmp;
 	}
-
-	ASTRA_DEBUG("Reduce projection from %d - %d to %d - %d", this->subZ, this->subZ + pGeom->getDetectorRowCount(), this->subZ + _vmin, this->subZ + _vmax);
 
 	return sub;
 }
@@ -1428,7 +1612,7 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 		assert(j.pInput);
 
 		CCudaProjector3D *projector = dynamic_cast<CCudaProjector3D*>(j.pProjector);
-		Cuda3DProjectionKernel projKernel = ker3d_default;
+		Cuda3DProjectionKernel projKernel = astraCUDA3d::ker3d_default;
 		int detectorSuperSampling = 1;
 		int voxelSuperSampling = 1;
 		if (projector) {
@@ -1480,7 +1664,7 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 
 			ASTRA_DEBUG("CCompositeGeometryManager::doJobs: doing BP");
 
-			ok = astraCUDA3d::BP(((CCompositeGeometryManager::CProjectionPart*)j.pInput.get())->pGeom, srcMem->hnd, ((CCompositeGeometryManager::CVolumePart*)j.pOutput.get())->pGeom, dstMem->hnd, voxelSuperSampling);
+			ok = astraCUDA3d::BP(((CCompositeGeometryManager::CProjectionPart*)j.pInput.get())->pGeom, srcMem->hnd, ((CCompositeGeometryManager::CVolumePart*)j.pOutput.get())->pGeom, dstMem->hnd, voxelSuperSampling, projKernel);
 			if (!ok) ASTRA_ERROR("Error performing sub-BP");
 			ASTRA_DEBUG("CCompositeGeometryManager::doJobs: BP done");
 		}

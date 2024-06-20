@@ -274,6 +274,10 @@ cdef extern from "astra/ConeVecProjectionGeometry3D.h" namespace "astra":
     cdef cppclass CConeVecProjectionGeometry3D:
         CConeVecProjectionGeometry3D()
 
+cdef extern from "astra/CylConeVecProjectionGeometry3D.h" namespace "astra":
+    cdef cppclass CCylConeVecProjectionGeometry3D:
+        CCylConeVecProjectionGeometry3D()
+
 cdef extern from "astra/Float32ProjectionData3DMemory.h" namespace "astra":
     cdef cppclass CFloat32ProjectionData3DMemory(CFloat32ProjectionData3D):
         CFloat32ProjectionData3DMemory(CProjectionGeometry3D*)

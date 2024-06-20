@@ -179,18 +179,8 @@ void CCudaBackProjectionAlgorithm3D::run(int _iNrIterations)
 	CFloat32VolumeData3D* pReconMem = dynamic_cast<CFloat32VolumeData3D*>(m_pReconstruction);
 	ASTRA_ASSERT(pReconMem);
 
-	const CProjectionGeometry3D* projgeom = pSinoMem->getGeometry();
-	const CVolumeGeometry3D& volgeom = *pReconMem->getGeometry();
-
 	if (m_bSIRTWeighting) {
-		CFloat32ProjectionData3DMemory* pSinoMemory = dynamic_cast<CFloat32ProjectionData3DMemory*>(m_pSinogram);
-		ASTRA_ASSERT(pSinoMemory);
-		CFloat32VolumeData3DMemory* pReconMemory = dynamic_cast<CFloat32VolumeData3DMemory*>(m_pReconstruction);
-		ASTRA_ASSERT(pReconMemory);
-		astraCudaBP_SIRTWeighted(pReconMemory->getData(),
-		                         pSinoMemory->getDataConst(),
-		                         &volgeom, projgeom,
-		                         m_iGPUIndex, m_iVoxelSuperSampling);
+		ASTRA_ERROR("SIRTWeighting currently not supported.");
 	} else {
 
 #if 1
