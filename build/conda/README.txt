@@ -7,8 +7,11 @@ Build container images by running the containers/setup*.sh scripts
 
 Windows:
 
-Open anaconda command prompt
-call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64 8.1 -vcvars_ver=14.0
+call C:\tools\miniconda3\condabin\activate.bat
 Change to astra-toolbox\python\conda directory
-conda build -m libastra\win64_build_config.yaml  libastra
-conda build -m astra-toolbox\win64_build_config.yaml astra-toolbox
+# Build libastra packages, skipping the testing phase
+conda build -m libastra\win64_build_config.yaml -c nvidia --no-test libastra
+# Build and test astra-toolbox packages
+conda build -m astra-toolbox\win64_build_config.yaml -c nvidia astra-toolbox
+# Test the previously built libastra packages
+conda build -c nvidia --test C:\tools\miniconda3\conda-bld\win-64\libastra*.tar.bz2

@@ -11,6 +11,12 @@ build:
   string: cuda_{{ cudatoolkit }}_{{ PKG_BUILDNUM }} # [win or linux]
   string: nocuda_{{ PKG_BUILDNUM }} # [osx]
 
+test:
+  imports:
+    - astra
+  requires:
+    - astra-toolbox
+
 requirements:
   build:
     - {{ compiler('c') }}    # [win or linux]
