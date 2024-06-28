@@ -39,7 +39,10 @@ requirements:
     {% endif %}
     {% if cuda_dep_type == 'modular' %}
     - cuda-cudart {{ cudacudart_dep }} # [win or linux]
+    # The cudart dll is (mistakenly?) in the *dev* package in win-64 before cuda-12.5
+    - cuda-cudart-dev {{ cudacudart_dep }} # [win]
     - libcufft {{ libcufft_dep }} # [win or linux]
+    - libcufft-dev {{ libcufft_dep }} # [win]
     {% else %}
     # We explicitly specify the cudatoolkit dependency string in
     # conda_build_config.yaml , forgoing pin_compatible.
@@ -50,7 +53,9 @@ requirements:
   run:
     {% if cuda_dep_type == 'modular' %}
     - cuda-cudart {{ cudacudart_dep }} # [win or linux]
+    - cuda-cudart-dev {{ cudacudart_dep }} # [win]
     - libcufft {{ libcufft_dep }} # [win or linux]
+    - libcufft-dev {{ libcufft_dep }} # [win]
     {% else %}
     - cudatoolkit {{ cudatoolkit_dep }} # [win or linux]
     {% endif %}
@@ -60,7 +65,9 @@ requirements:
     - cudatoolkit {{ cudatoolkit_dep }} # [win or linux]
   {% else %}
     - cuda-cudart {{ cudacudart_dep }} # [win or linux]
+    - cuda-cudart-dev {{ cudacudart_dep }} # [win]
     - libcufft {{ libcufft_dep }} # [win or linux]
+    - libcufft-dev {{ libcufft_dep }} # [win]
   {% endif %}
 
 about:
