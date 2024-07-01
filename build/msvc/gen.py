@@ -2,7 +2,6 @@ from __future__ import print_function
 import sys
 import os
 import codecs
-import six
 
 vcppguid = "8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942" # C++ project
 siguid = "2150E333-8FDC-42A3-9474-1A3956D46DE8" # project group 
@@ -473,10 +472,7 @@ P_astra["files"].sort()
 
 projects = [ P_astra, F_astra_mex, P0, P1, P2, P3, P4, P5, P6, P7, P8 ]
 
-if six.PY2:
-  bom = "\xef\xbb\xbf"
-else:
-  bom = codecs.BOM_UTF8.decode("utf-8")
+bom = codecs.BOM_UTF8.decode("utf-8")
 
 class Configuration:
   def __init__(self, debug, cuda, x64):
