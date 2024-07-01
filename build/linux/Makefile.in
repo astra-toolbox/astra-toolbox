@@ -338,9 +338,10 @@ py: libastra.la
 	$(MKDIR) python/build
 	$(MKDIR) python/config
 # Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
-	cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS='${PYLDFLAGS}' \
+	cd $(srcdir)/../../python; CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS='${PYLDFLAGS}' \
 	$(PYTHON) builder.py $(PYBUILDERFLAGS) \
-	build $(PYBUILDER_BUILD_FLAGS)
+	build $(PYBUILDER_BUILD_FLAGS) \
+	$(patsubst %,add_extra_lib --file=%,$(PYPKGDATA))
 endif
 
 
@@ -489,21 +490,23 @@ endif
 ifeq ($(python),yes)
 install-python: py
 	# Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
-	cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" \
+	cd $(srcdir)/../../python; CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" \
 	$(PYTHON) builder.py $(PYBUILDERFLAGS) \
 	set_dist_dir --dist-dir=$(abs_top_builddir)/python/dist \
 	build $(PYBUILDER_BUILD_FLAGS) \
 	egg_info --egg-base=$(abs_top_builddir)/python \
+	$(patsubst %,add_extra_lib --file=%,$(PYPKGDATA)) \
 	install --install-base=@prefix@/python --install-headers=@prefix@/python --install-purelib=@prefix@/python --install-platlib=@prefix@/python --install-scripts=@prefix@/python --install-data=@prefix@/python --old-and-unmanageable --no-compile
 # TODO: docs
 
 install-python-site-packages: py
 # Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
-	cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" \
+	cd $(srcdir)/../../python; CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" \
 	$(PYTHON) builder.py $(PYBUILDERFLAGS) \
 	set_dist_dir --dist-dir=$(abs_top_builddir)/python/dist \
 	build $(PYBUILDER_BUILD_FLAGS) \
 	egg_info --egg-base=$(abs_top_builddir)/python \
+	$(patsubst %,add_extra_lib --file=%,$(PYPKGDATA)) \
 	install
 else
 install-python-site-packages:
