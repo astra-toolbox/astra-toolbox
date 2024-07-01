@@ -112,12 +112,33 @@ class SetDistDirCommand(Command):
     def run(self):
         pass
 
+# Custom command to add files (typically .so/.dll) to the module's directory
+# when installing (or building a wheel)
+class AddExtraLibCommand(Command):
+    user_options = [
+        ('file=', 'f', "extra platlib file(s) to install"),
+    ]
+    def initialize_options(self):
+        self.file = None
+
+    def finalize_options(self):
+        build_ext = self.get_finalized_command('build_ext')
+        self.build_lib = os.path.join(build_ext.build_lib, 'astra')
+
+    def run(self):
+        import shutil
+        for F in self.file.split(';'):
+            print("Installing", F, "to", self.build_lib)
+            shutil.copy2(F, self.build_lib)
+
+    # TODO: Do we need get_outputs()?
+
 
 ext_modules = cythonize(os.path.join('.', 'astra', '*.pyx'),
                         include_path=include_path,
                         build_dir=build_dir,
                         language_level=3)
-cmdclass = {'build_ext': build_ext, 'set_dist_dir': SetDistDirCommand }
+cmdclass = {'build_ext': build_ext, 'set_dist_dir': SetDistDirCommand, 'add_extra_lib': AddExtraLibCommand }
 
 for m in ext_modules:
     if m.name in ('astra.plugin_c', 'astra.algorithm_c'):
