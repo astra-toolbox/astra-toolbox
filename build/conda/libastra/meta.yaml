@@ -60,6 +60,7 @@ requirements:
     - cudatoolkit {{ cudatoolkit_dep }} # [win or linux]
     {% endif %}
   run_constrained:
+    - cuda-version {{ cudatoolkit }} # [win or linux]
     - pytorch-cuda {{ pytorchcuda_dep }} # [win or linux]
   {% if cuda_dep_type == 'modular' %}
     - cudatoolkit {{ cudatoolkit_dep }} # [win or linux]
