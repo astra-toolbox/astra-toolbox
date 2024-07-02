@@ -16,11 +16,7 @@ __pycache__
 /python/dist/*
 /python/astra_toolbox.egg-info/*
 
-/python/conda/linux_release/buildenv*/*.sh
-/python/conda/linux_release/buildenv*/*.run
-/python/conda/linux_release/buildenv*/cuda*
-/python/conda/linux_release/pkgs/*
-
+/build/conda/pkgs/*
 /build/conda/containers/sw/*
 
 /build/linux/.libs/*
