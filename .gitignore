@@ -23,7 +23,7 @@ __pycache__
 /python/astra.lib
 
 /build/conda/pkgs/*
-/build/conda/containers/sw/*
+/build/containers/podman/sw/*
 
 /build/linux/.libs/*
 /build/linux/Makefile
