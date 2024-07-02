@@ -4,7 +4,7 @@ public:
     {
         arr = arrIn;
         // Set pointer to numpy data pointer
-        m_fPtr = (float *)PyArray_DATA(arr);
+        m_fPtr = (float *)PyArray_DATA((PyArrayObject*)arr);
         // Increase reference count since ASTRA has a reference
         Py_INCREF(arr);
     }
