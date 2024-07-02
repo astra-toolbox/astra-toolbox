@@ -503,7 +503,7 @@ install-python-site-packages: py
 	set_dist_dir --dist-dir=$(abs_top_builddir)/python/dist \
 	build $(PYBUILDER_BUILD_FLAGS) \
 	egg_info --egg-base=$(abs_top_builddir)/python \
-	install
+	install --prefix=$(prefix)
 else
 install-python-site-packages:
 install-python:
