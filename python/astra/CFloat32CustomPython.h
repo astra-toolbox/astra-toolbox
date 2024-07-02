@@ -1,6 +1,6 @@
 class CFloat32CustomPython : public astra::CFloat32CustomMemory {
 public:
-    CFloat32CustomPython(PyObject * arrIn)
+    CFloat32CustomPython(PyArrayObject * arrIn)
     {
         arr = arrIn;
         // Set pointer to numpy data pointer
@@ -13,5 +13,5 @@ public:
         Py_DECREF(arr);
     }
 private:
-    PyObject* arr;
+    PyArrayObject* arr;
 };

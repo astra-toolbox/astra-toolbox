@@ -61,7 +61,7 @@ cdef CProjector2DManager * manProj = <CProjector2DManager * >PyProjector2DManage
 
 cdef extern from "CFloat32CustomPython.h":
     cdef cppclass CFloat32CustomPython:
-        CFloat32CustomPython(arrIn)
+        CFloat32CustomPython(np.ndarray arrIn)
 
 cdef extern from "astra/SheppLogan.h" namespace "astra":
     cdef void generateSheppLogan(CFloat32Data2D*, bool)
