@@ -508,6 +508,15 @@ install-python-site-packages: py
 	egg_info --egg-base=$(abs_top_builddir)/python \
 	$(patsubst %,add_extra_lib --file=%,$(PYPKGDATA)) \
 	install
+python-wheel: py
+# Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
+	cd $(srcdir)/../../python; CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" \
+	$(PYTHON) builder.py $(PYBUILDERFLAGS) \
+	set_dist_dir --dist-dir=$(abs_top_builddir)/python/dist \
+	build $(PYBUILDER_BUILD_FLAGS) \
+	egg_info --egg-base=$(abs_top_builddir)/python \
+	$(patsubst %,add_extra_lib --file=%,$(PYPKGDATA)) \
+	bdist_wheel
 else
 install-python-site-packages:
 install-python:
@@ -586,7 +595,7 @@ $(srcdir)/configure: $(srcdir)/configure.ac
 	@echo "configure.ac has been changed. Regenerating configure script"
 	cd $(srcdir) && $(SHELL) ./autogen.sh
 
-.PHONY: all mex test clean distclean install install-libraries py install-python-site-packages install-python install-octave install-matlab-so install-octave-so install-headers install-dev
+.PHONY: all mex test clean distclean install install-libraries py install-python-site-packages install-python install-octave install-matlab-so install-octave-so install-headers install-dev python-wheel
 
 # don't remove intermediate files:
 .SECONDARY:
