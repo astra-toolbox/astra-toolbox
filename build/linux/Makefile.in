@@ -185,6 +185,7 @@ BASE_OBJECTS=\
 	src/Projector2D.lo \
 	src/Projector3D.lo \
 	src/SartAlgorithm.lo \
+	src/SheppLogan.lo \
 	src/SirtAlgorithm.lo \
 	src/SparseMatrixProjectionGeometry2D.lo \
 	src/SparseMatrixProjector2D.lo \

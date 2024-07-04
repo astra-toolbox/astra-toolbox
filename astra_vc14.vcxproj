@@ -548,6 +548,7 @@
     <ClCompile Include="src\ReconstructionAlgorithm2D.cpp" />
     <ClCompile Include="src\ReconstructionAlgorithm3D.cpp" />
     <ClCompile Include="src\SartAlgorithm.cpp" />
+    <ClCompile Include="src\SheppLogan.cpp" />
     <ClCompile Include="src\SirtAlgorithm.cpp" />
     <ClCompile Include="src\SparseMatrix.cpp" />
     <ClCompile Include="src\SparseMatrixProjectionGeometry2D.cpp" />
@@ -638,6 +639,7 @@
     <ClInclude Include="include\astra\ReconstructionAlgorithm2D.h" />
     <ClInclude Include="include\astra\ReconstructionAlgorithm3D.h" />
     <ClInclude Include="include\astra\SartAlgorithm.h" />
+    <ClInclude Include="include\astra\SheppLogan.h" />
     <ClInclude Include="include\astra\Singleton.h" />
     <ClInclude Include="include\astra\SirtAlgorithm.h" />
     <ClInclude Include="include\astra\SparseMatrix.h" />
