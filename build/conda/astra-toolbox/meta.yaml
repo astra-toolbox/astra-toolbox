@@ -47,7 +47,7 @@ requirements:
 
 
 about:
-  home: http://www.astra-toolbox.com
+  home: https://www.astra-toolbox.com
   license: GPLv3
   summary: 'The ASTRA Toolbox is a Python toolbox of high-performance GPU primitives for 2D and 3D tomography.'
 
