@@ -8,6 +8,10 @@
 __pycache__
 .vscode/*
 
+# Boost
+/lib/include/boost/
+/lib/x64/
+
 # Cython-generated files
 /python/astra/*.cpp
 /python/astra/config.pxi
@@ -15,6 +19,8 @@ __pycache__
 # Build files
 /python/dist/*
 /python/astra_toolbox.egg-info/*
+/python/build/
+/python/astra.lib
 
 /build/conda/pkgs/*
 /build/conda/containers/sw/*
@@ -37,3 +43,8 @@ __pycache__
 /build/linux/src/*
 /build/linux/matlab/*
 /build/linux/python/*
+
+# MSVC build output
+/bin/
+/release/
+/x64/
