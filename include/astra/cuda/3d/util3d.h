@@ -66,6 +66,14 @@ float dotProduct3D(cudaPitchedPtr data, unsigned int x, unsigned int y, unsigned
 
 int calcNextPowerOfTwo(int _iValue);
 
+using astra::Vec3;
+using astra::det3x;
+using astra::det3y;
+using astra::det3z;
+using astra::det3;
+using astra::cross3;
+
+#if 0
 struct Vec3 {
 	double x;
 	double y;
@@ -85,6 +93,9 @@ struct Vec3 {
 	}
 	double norm() const {
 		return sqrt(x*x + y*y + z*z);
+	}
+	double dot(const Vec3 &b) const {
+		return x*b.x + y*b.y + z*b.z;
 	}
 };
 
@@ -106,8 +117,9 @@ static double det3(const Vec3 &a, const Vec3 &b, const Vec3 &c) {
 static Vec3 cross3(const Vec3 &a, const Vec3 &b) {
 	return Vec3(det3x(a,b), det3y(a,b), det3z(a,b));
 }
+#endif
 
-static Vec3 scaled_cross3(const Vec3 &a, const Vec3 &b, const Vec3 &sc) {
+inline Vec3 scaled_cross3(const Vec3 &a, const Vec3 &b, const Vec3 &sc) {
 	Vec3 ret = cross3(a, b);
 	ret.x *= sc.y * sc.z;
 	ret.y *= sc.x * sc.z;

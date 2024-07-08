@@ -259,39 +259,14 @@ void CProjectionGeometry3D::getProjectedBBox(double fXMin, double fXMax,
 	double vmin_g, vmax_g;
 	double umin_g, umax_g;
 
-	// Default implementation, correct for flat panel detectors:
-	// Project corners of volume, take bounding box
-
 	assert(getProjectionCount() > 0);
 	for (int i = 0; i < getProjectionCount(); ++i) {
 
-		double vol_u[8];
-		double vol_v[8];
+		double umin, umax;
+		double vmin, vmax;
 
-		projectPoint(fXMin, fYMin, fZMin, i, vol_u[0], vol_v[0]);
-		projectPoint(fXMin, fYMin, fZMax, i, vol_u[1], vol_v[1]);
-		projectPoint(fXMin, fYMax, fZMin, i, vol_u[2], vol_v[2]);
-		projectPoint(fXMin, fYMax, fZMax, i, vol_u[3], vol_v[3]);
-		projectPoint(fXMax, fYMin, fZMin, i, vol_u[4], vol_v[4]);
-		projectPoint(fXMax, fYMin, fZMax, i, vol_u[5], vol_v[5]);
-		projectPoint(fXMax, fYMax, fZMin, i, vol_u[6], vol_v[6]);
-		projectPoint(fXMax, fYMax, fZMax, i, vol_u[7], vol_v[7]);
-
-		double umin = vol_u[0];
-		double umax = vol_u[0];
-		double vmin = vol_v[0];
-		double vmax = vol_v[0];
-
-		for (int j = 1; j < 8; ++j) {
-			if (vol_u[j] < umin)
-				umin = vol_u[j];
-			if (vol_u[j] > umax)
-				umax = vol_u[j];
-			if (vol_v[j] < vmin)
-				vmin = vol_v[j];
-			if (vol_v[j] > vmax)
-				vmax = vol_v[j];
-		}
+		getProjectedBBoxSingleAngle(i, fXMin, fXMax, fYMin, fYMax, fZMin, fZMax,
+		                 umin, umax, vmin, vmax);
 
 		if (i == 0 || umin < umin_g)
 			umin_g = umin;
@@ -307,6 +282,48 @@ void CProjectionGeometry3D::getProjectedBBox(double fXMin, double fXMax,
 	fUMax = umax_g;
 	fVMin = vmin_g;
 	fVMax = vmax_g;
+
+}
+
+void CProjectionGeometry3D::getProjectedBBoxSingleAngle(int iAngle,
+                                             double fXMin, double fXMax,
+                                             double fYMin, double fYMax,
+                                             double fZMin, double fZMax,
+                                             double &fUMin, double &fUMax,
+                                             double &fVMin, double &fVMax) const
+{
+	double vol_u[8];
+	double vol_v[8];
+
+	projectPoint(fXMin, fYMin, fZMin, iAngle, vol_u[0], vol_v[0]);
+	projectPoint(fXMin, fYMin, fZMax, iAngle, vol_u[1], vol_v[1]);
+	projectPoint(fXMin, fYMax, fZMin, iAngle, vol_u[2], vol_v[2]);
+	projectPoint(fXMin, fYMax, fZMax, iAngle, vol_u[3], vol_v[3]);
+	projectPoint(fXMax, fYMin, fZMin, iAngle, vol_u[4], vol_v[4]);
+	projectPoint(fXMax, fYMin, fZMax, iAngle, vol_u[5], vol_v[5]);
+	projectPoint(fXMax, fYMax, fZMin, iAngle, vol_u[6], vol_v[6]);
+	projectPoint(fXMax, fYMax, fZMax, iAngle, vol_u[7], vol_v[7]);
+
+	double umin = vol_u[0];
+	double umax = vol_u[0];
+	double vmin = vol_v[0];
+	double vmax = vol_v[0];
+
+	for (int j = 1; j < 8; ++j) {
+		if (vol_u[j] < umin)
+			umin = vol_u[j];
+		if (vol_u[j] > umax)
+			umax = vol_u[j];
+		if (vol_v[j] < vmin)
+			vmin = vol_v[j];
+		if (vol_v[j] > vmax)
+			vmax = vol_v[j];
+	}
+
+	fUMin = umin;
+	fUMax = umax;
+	fVMin = vmin;
+	fVMax = vmax;
 }
 
 

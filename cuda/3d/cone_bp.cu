@@ -249,7 +249,7 @@ bool transferConstants(const SConeProjection* angles, unsigned int iProjAngles, 
 		if (!params.bFDKWeighting) {
 			// goal: 1/fDen^2 = || u v (s-d) ||^2 / ( |cross(u,v)| * || u v (s-x) ||^2 )
 			// fDen = ( sqrt(|cross(u,v)|) * || u v (s-x) || ) / || u v (s-d) || 
-			// i.e. scale = sqrt(|cross(u,v)|) * / || u v (s-d) ||
+			// i.e. scale = sqrt(|cross(u,v)|) / || u v (s-d) ||
 
 
 			// NB: for cross(u,v) we invert the volume scaling (for the voxel

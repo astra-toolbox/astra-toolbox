@@ -74,6 +74,53 @@ SConeProjection* genConeProjections(unsigned int iProjAngles,
 	return p;
 }
 
+SCylConeProjection* genCylConeProjections(unsigned int iProjAngles,
+                                          unsigned int iProjU,
+                                          unsigned int iProjV,
+                                          double fOriginSourceDistance,
+                                          double fOriginDetectorDistance,
+                                          double fDetUSize,
+                                          double fDetVSize,
+                                          double fDetRadius,
+                                          const float *pfAngles)
+{
+	SCylConeProjection base;
+	base.fSrcX = 0.0f;
+	base.fSrcY = -fOriginSourceDistance;
+	base.fSrcZ = 0.0f;
+
+	base.fDetCX = 0.0f;
+	base.fDetCY = fOriginDetectorDistance;
+	base.fDetCZ = 0.0f;
+
+	base.fDetUX = fDetUSize;
+	base.fDetUY = 0.0f;
+	base.fDetUZ = 0.0f;
+
+	base.fDetVX = 0.0f;
+	base.fDetVY = 0.0f;
+	base.fDetVZ = fDetVSize;
+
+    base.fDetR = fDetRadius;
+
+	SCylConeProjection* p = new SCylConeProjection[iProjAngles];
+
+#define ROTATE0(name,i,alpha) do { p[i].f##name##X = base.f##name##X * cos(alpha) - base.f##name##Y * sin(alpha); p[i].f##name##Y = base.f##name##X * sin(alpha) + base.f##name##Y * cos(alpha); p[i].f##name##Z = base.f##name##Z; } while(0)
+
+	for (unsigned int i = 0; i < iProjAngles; ++i) {
+		ROTATE0(Src, i, pfAngles[i]);
+		ROTATE0(DetC, i, pfAngles[i]);
+		ROTATE0(DetU, i, pfAngles[i]);
+		ROTATE0(DetV, i, pfAngles[i]);
+		p[i].fDetR = base.fDetR;
+	}
+
+#undef ROTATE0
+
+	return p;
+}
+
+
 SPar3DProjection* genPar3DProjections(unsigned int iProjAngles,
                                       unsigned int iProjU,
                                       unsigned int iProjV,
@@ -156,6 +203,28 @@ void computeBP_UV_Coeffs(const SConeProjection& proj, double &fUX, double &fUY, 
 	fDY = proj.fDetUZ*proj.fDetVX - proj.fDetUX*proj.fDetVZ;
 	fDZ = proj.fDetUX*proj.fDetVY - proj.fDetUY*proj.fDetVX;
 	fDC = -proj.fSrcX * (proj.fDetUY*proj.fDetVZ - proj.fDetUZ*proj.fDetVY) - proj.fSrcY * (proj.fDetUZ*proj.fDetVX - proj.fDetUX*proj.fDetVZ) - proj.fSrcZ * (proj.fDetUX*proj.fDetVY - proj.fDetUY*proj.fDetVX);
+}
+
+
+void getCylConeAxes(const SCylConeProjection &p, Vec3 &cyla, Vec3 &cylb, Vec3 &cylc, Vec3 &cylaxis)
+{
+	double R = p.fDetR;
+	Vec3 u(p.fDetUX, p.fDetUY, p.fDetUZ); // u (tangential) direction
+	Vec3 v(p.fDetVX, p.fDetVY, p.fDetVZ); // v (axial) direction
+	Vec3 s(p.fSrcX, p.fSrcY, p.fSrcZ);    // source
+	Vec3 d(p.fDetCX, p.fDetCY, p.fDetCZ); // center of detector
+
+	double fDetUT = u.norm() / R; // angular increment
+
+	cyla = -cross3(u, v) * (R / (u.norm() * v.norm())); // radial direction
+
+	if ((d - cyla - s).norm() > (d + cyla - s).norm())
+		cyla = cyla * -1.0;
+
+	cylc = d - cyla;                                    // center of cylinder
+	cylb = u * (R / u.norm());                          // tangential direction
+	//Vec3 cylaxis_n = v * (1.0 / v.norm());
+	cylaxis = v;
 }
 
 

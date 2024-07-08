@@ -307,6 +307,8 @@ cdef CProjectionGeometry3D* createProjectionGeometry3D(geometry) except NULL:
         pGeometry = <CProjectionGeometry3D*> new CConeProjectionGeometry3D();
     elif (tpe == "cone_vec"):
         pGeometry = <CProjectionGeometry3D*> new CConeVecProjectionGeometry3D();
+    elif (tpe == "cyl_cone_vec"):
+        pGeometry = <CProjectionGeometry3D*> new CCylConeVecProjectionGeometry3D();
     else:
         raise ValueError("'{}' is not a valid 3D geometry type".format(tpe))
 
