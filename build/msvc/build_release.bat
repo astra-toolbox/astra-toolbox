@@ -11,14 +11,8 @@ rd /s /q release
 
 mkdir release
 cd release
-mkdir src
 mkdir matlab
 mkdir python312
-
-cd src
-git clone -b %B_RELEASE_TAG% https://github.com/astra-toolbox/astra-toolbox astra-%B_RELEASE%
-cd astra-%B_RELEASE%
-rd /s /q .git
 
 pause
 
@@ -83,6 +77,5 @@ pause
 cd %R%\release
 %B_WINPYTHON3%\python -c "import shutil; shutil.make_archive('astra-%B_RELEASE%-matlab-win-x64', 'zip', 'matlab')"
 %B_WINPYTHON3%\python -c "import shutil; shutil.make_archive('astra-%B_RELEASE%-python312-win-x64', 'zip', 'python312')"
-%B_WINPYTHON3%\python -c "import shutil; shutil.make_archive('astra-%B_RELEASE%', 'zip', 'src')"
 
 pause
