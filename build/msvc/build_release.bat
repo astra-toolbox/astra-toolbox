@@ -54,12 +54,12 @@ copy %R%\python\dist\*.whl .
 echo -----------------------------------------------------------------------
 echo This file is part of the ASTRA Toolbox
 echo.
-echo Copyright: 2010-2022, imec Vision Lab, University of Antwerp
-echo            2014-2022, CWI, Amsterdam
-echo            http://visielab.uantwerpen.be/ and http://www.cwi.nl/
+echo Copyright: 2010-2024, imec Vision Lab, University of Antwerp
+echo            2014-2024, CWI, Amsterdam
+echo            https://visielab.uantwerpen.be/ and https://www.cwi.nl/
 echo License: Open Source under GPLv3
 echo Contact: astra@astra-toolbox.com
-echo Website: http://www.astra-toolbox.com/
+echo Website: https://www.astra-toolbox.com/
 echo -----------------------------------------------------------------------
 echo.
 echo.
@@ -67,7 +67,7 @@ echo This directory contains pre-built Python modules for the ASTRA Toolbox.
 echo.
 echo It has been built with python %B_WP3%, installed via Chocolatey.
 echo.
-echo To use it, run 'pip3 install astra_toolbox-2.1.3-cp312-cp312-win_amd64.whl'
+echo To use it, run 'pip3 install astra_toolbox-%B_RELEASE%-cp312-cp312-win_amd64.whl'
 echo.
 echo Sample code can be found in the samples\ directory.
 ) > README.txt
