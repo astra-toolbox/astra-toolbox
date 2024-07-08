@@ -19,7 +19,7 @@ See the MATLAB and Python code samples in `samples/` directory and on http://www
 
 ### Windows/Linux, using conda for Python packages
 
-Requirements: [conda](http://conda.pydata.org/) Python environment, with 64 bit Python 3.7-3.11.
+Requirements: [conda](http://conda.pydata.org/) Python environment, with 64 bit Python 3.9-3.12.
 
 Conda packages for ASTRA Toolbox are available from the `astra-toolbox` channel, whereas CUDA-related packages can be installed from `nvidia` channel.
 To install ASTRA into the desired conda environment, run:
@@ -36,16 +36,16 @@ conda install astra-toolbox -c astra-toolbox/label/dev -c nvidia
 
 ### Windows, binary
 
-Add the mex and tools subdirectories to your MATLAB path, or copy the Python
-astra module to your Python site-packages directory. We require the Microsoft
-Visual Studio 2015 redistributable package. If this is not already installed on
-your system, it is included as vc_redist.x64.exe in the ASTRA zip file.
+Add the mex and tools subdirectories to your MATLAB path, or install the Python
+wheel using pip. We require the Microsoft Visual Studio 2017 redistributable
+package. If this is not already installed on your system, it is included as
+vc_redist.x64.exe in the ASTRA zip file.
 
 ### Linux, from source
 
 #### For MATLAB
 
-Requirements: g++ (7.1 or higher), CUDA (5.5 or higher), MATLAB (R2012a or higher)
+Requirements: g++, CUDA (10.2 or higher), MATLAB (R2012a or higher)
 
 ```
 cd build/linux
@@ -76,7 +76,7 @@ MATLAB.
 
 #### For Python
 
-Requirements: g++ (7.1 or higher), CUDA (5.5 or higher), Python (2.7 or 3.x), Cython, six, scipy
+Requirements: g++, CUDA (10.2 or higher), Python (3.x), Cython, six, scipy
 
 ```
 cd build/linux
@@ -92,7 +92,7 @@ This will install Astra into your current Python environment.
 
 #### As a C++ library
 
-Requirements: g++, boost, CUDA (8.0 or higher)
+Requirements: g++, CUDA (10.2 or higher)
 
 ```
 cd build/linux
@@ -121,9 +121,9 @@ make
 make install
 ```
 
-### Windows, from source using Visual Studio 2015
+### Windows, from source using Visual Studio 2017
 
-Requirements: Visual Studio 2015 (full or community), boost (recent), CUDA 9.0,
+Requirements: Visual Studio 2017 (full or community), boost (recent), CUDA 10.2,
               MATLAB (R2012a or higher) and/or WinPython 3.x.
 
 Using the Visual Studio IDE:
@@ -143,7 +143,7 @@ Using .bat scripts in build\msvc:
 Edit build_env.bat and set up the correct directories.
 Run build_setup.bat to automatically copy the boost headers and libraries.
 For MATLAB: Run build_matlab.bat. The .dll and .mexw64 files will be in bin\x64\Release_Cuda.
-For Python 3.9: Run build_python39.bat. Astra will be directly installed into site-packages.
+For Python 3.12: Run build_python312.bat. Astra will be directly installed into site-packages.
 
 ## Testing your installation
 
@@ -184,6 +184,6 @@ The ASTRA Toolbox is open source under the GPLv3 license.
 email: astra@astra-toolbox.com
 website: http://www.astra-toolbox.com/
 
-Copyright: 2010-2021, imec Vision Lab, University of Antwerp
-           2014-2021, CWI, Amsterdam
+Copyright: 2010-2024, imec Vision Lab, University of Antwerp
+           2014-2024, CWI, Amsterdam
            http://visielab.uantwerpen.be/ and http://www.cwi.nl/
