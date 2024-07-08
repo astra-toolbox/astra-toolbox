@@ -59,7 +59,7 @@ static void add_ellipse(T *data, unsigned int width, unsigned int height, const 
 	double b = (0.5 - 0.5 * ell.y) * height - 0.5;
 	double c = 0.5 * ell.axisx * width;
 	double d = 0.5 * ell.axisy * height;
-	double th = ell.rotation * M_PI / 180.0;
+	double th = ell.rotation * PI / 180.0;
 
 	double costh = cos(th);
 	double costh2 = costh * costh;
@@ -117,7 +117,7 @@ static void add_ellipsoid(T *data, unsigned int width, unsigned int height, unsi
 	double d = 0.5 * ell.axisy * height;
 	double e = (0.5 - 0.5 * ell.z) * depth - 0.5;
 	double f = 0.5 * ell.axisz * depth;
-	double th = ell.rotation * M_PI / 180.0;
+	double th = ell.rotation * PI / 180.0;
 
 	double costh = cos(th);
 	double costh2 = costh * costh;
