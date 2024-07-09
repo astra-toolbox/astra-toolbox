@@ -123,8 +123,9 @@ make install
 
 ### Windows, from source using Visual Studio 2017
 
-Requirements: Visual Studio 2017 (full or community), boost (recent), CUDA 10.2,
-              MATLAB (R2012a or higher) and/or WinPython 3.x.
+Requirements: Visual Studio 2017 (full or community), boost (recent),
+              CUDA (10.2 or higher), MATLAB (R2012a or higher)
+              and/or WinPython 3.x.
 
 Using the Visual Studio IDE:
 
