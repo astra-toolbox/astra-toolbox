@@ -127,9 +127,10 @@ def shepp_logan(geometry, modified=True, returnData=True):
     """Create a 3D data object with a Shepp-Logan phantom.
 
     :param geometry: Volume geometry
-    :param modified If False, generate the original Shepp-Logan phantom
-    :param returnData If False, only return the ID of the new data object
+    :param modified: If False, generate the original Shepp-Logan phantom
+    :param returnData: If False, only return the ID of the new data object
     :returns: :class:`int` or (:class:`int`, :class`numpy.ndarray`)
+
     """
     i = create('-vol', geometry)
     d.shepp_logan(i, modified)
