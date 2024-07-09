@@ -9,4 +9,4 @@ set B_VCREDIST=C:\Users\Vagrant\vc_redist.x64.exe
 
 set B_README_WP3=%B_WINPYTHON3%\Lib\site-packages
 
-set B_RELEASE=2.1.3
+set B_RELEASE=2.2.0

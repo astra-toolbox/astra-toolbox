@@ -8,7 +8,7 @@ License: Open Source under GPLv3
 Contact: astra@astra-toolbox.com
 Website: https://www.astra-toolbox.com/
 -----------------------------------------------------------------------
-2.2.0 (2024-07-xx)
+2.2.0 (2024-07-12)
   * update Windows conda packages
   * add support for python 3.12, cuda 12.5, and numpy 2.0
 
