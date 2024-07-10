@@ -52,12 +52,18 @@ else:
     parser = argparse.ArgumentParser(add_help=False)
 parser.add_argument('--astra_build_config_dir')
 parser.add_argument('--astra_build_cython_dir')
+parser.add_argument('--astra_cuda_dependencies', action='store_true')
 args, script_args = parser.parse_known_args()
 
 if args.astra_build_cython_dir is None:
     build_dir = '.'
 else:
     build_dir = args.astra_build_cython_dir
+
+if args.astra_cuda_dependencies:
+    extra_install_requires = ['nvidia-cuda-runtime-cu12', 'nvidia-cufft-cu12']
+else:
+    extra_install_requires = [ ]
 
 use_cuda = ('-DASTRA_CUDA' in os.environ.get('CPPFLAGS', '') or
             '/DASTRA_CUDA' in os.environ.get('CL', ''))
@@ -160,5 +166,5 @@ setup(script_args=script_args,
       cmdclass=cmdclass,
       # ext_modules = [Extension("astra","astra/astra.pyx")],
       packages=['astra', 'astra.plugins'],
-      install_requires=['numpy', 'scipy', 'six'],
+      install_requires=['numpy', 'scipy', 'six'] + extra_install_requires,
       )

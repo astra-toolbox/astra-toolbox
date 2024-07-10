@@ -97,6 +97,8 @@ MODPYLIBS=-l$(PYLIBVER)
 
 PYBUILDERFLAGS=--astra_build_config_dir $(abs_top_builddir)/python/config --astra_build_cython_dir $(abs_top_builddir)/python/cython
 PYBUILDER_BUILD_FLAGS=--build-base=$(abs_top_builddir)/python/build
+
+PYTHON_WHEEL_PLATFORM = @PYTHON_WHEEL_PLATFORM@
 endif
 
 # This is below where PYCPPFLAGS copies CPPFLAGS.  The python code is built
@@ -511,12 +513,12 @@ install-python-site-packages: py
 python-wheel: py
 # Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
 	cd $(srcdir)/../../python; CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" \
-	$(PYTHON) builder.py $(PYBUILDERFLAGS) \
+	$(PYTHON) builder.py $(PYBUILDERFLAGS) --astra_cuda_dependencies \
 	set_dist_dir --dist-dir=$(abs_top_builddir)/python/dist \
 	build $(PYBUILDER_BUILD_FLAGS) \
 	egg_info --egg-base=$(abs_top_builddir)/python \
 	$(patsubst %,add_extra_lib --file=%,$(PYPKGDATA)) \
-	bdist_wheel
+	bdist_wheel $(patsubst %,--plat-name %,$(PYTHON_WHEEL_PLATFORM))
 else
 install-python-site-packages:
 install-python:

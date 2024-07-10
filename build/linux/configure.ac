@@ -270,6 +270,17 @@ fi
 
 AC_SUBST(HAVEPYTHON)
 
+AC_ARG_WITH(python-wheel-platform, [[  --with-python-wheel-platform=platform  platform name to use for .whl (optional)]],,)
+PYTHON_WHEEL_PLATFORM=
+AC_MSG_CHECKING(for platform name to use for Python wheel)
+if test x"$with_python_wheel_platform" != x -a x"$with_python_wheel_platform" != xno; then
+  PYTHON_WHEEL_PLATFORM=$with_python_wheel_platform
+  AC_MSG_RESULT($PYTHON_WHEEL_PLATFORM)
+else
+  AC_MSG_RESULT(default)
+fi
+AC_SUBST(PYTHON_WHEEL_PLATFORM)
+
 #OS specific setup
 AC_CANONICAL_HOST
 case $host_os in
