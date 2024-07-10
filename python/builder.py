@@ -160,5 +160,5 @@ setup(script_args=script_args,
       cmdclass=cmdclass,
       # ext_modules = [Extension("astra","astra/astra.pyx")],
       packages=['astra', 'astra.plugins'],
-      requires=['numpy', 'scipy', 'six'],
+      install_requires=['numpy', 'scipy', 'six'],
       )
