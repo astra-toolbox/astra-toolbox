@@ -72,3 +72,10 @@ setup_cache_conda() {
   done
 }
 
+setup_pip_install() {
+  PYTHON=$1
+  shift
+  buildah run $ctr $PYTHON -m pip install --upgrade pip
+  buildah run $ctr $PYTHON -m pip install $@
+}
+
