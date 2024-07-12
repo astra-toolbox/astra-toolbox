@@ -41,12 +41,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/AstraObjectManager.h"
 
-#include "astra/Float32ProjectionData2D.h"
-#include "astra/Float32VolumeData2D.h"
-#include "astra/Float32ProjectionData3D.h"
-#include "astra/Float32ProjectionData3DMemory.h"
-#include "astra/Float32VolumeData3D.h"
-#include "astra/Float32VolumeData3DMemory.h"
+#include "astra/Data3D.h"
 #include "astra/ParallelProjectionGeometry3D.h"
 #include "astra/ParallelVecProjectionGeometry3D.h"
 #include "astra/ConeProjectionGeometry3D.h"
@@ -81,8 +76,7 @@ void astra_mex_data3d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 	const string sDataType = mexToString(prhs[1]);
 
 	// step2: Allocate data
-	CFloat32Data3DMemory* pDataObject3D =
-			allocateDataObject(sDataType, geometry, data);
+	CData3D* pDataObject3D = allocateDataObject(sDataType, geometry, data);
 	if (!pDataObject3D) {
 		// Error message was already set by the function
 		return;
@@ -91,11 +85,11 @@ void astra_mex_data3d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 	// step3: Initialize data
 	if (!data) {
 		mxArray * emptyArray = mxCreateDoubleMatrix(0, 0, mxREAL);
-		copyMexToCFloat32Array(emptyArray, pDataObject3D->getData(),
+		copyMexToCFloat32Array(emptyArray, pDataObject3D->getFloat32Memory(),
 				pDataObject3D->getSize());
 		mxDestroyArray(emptyArray);
 	} else {
-		copyMexToCFloat32Array(data, pDataObject3D->getData(),
+		copyMexToCFloat32Array(data, pDataObject3D->getFloat32Memory(),
 				pDataObject3D->getSize());
 	}
 
@@ -146,8 +140,7 @@ void astra_mex_data3d_link(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 	string sDataType = mexToString(prhs[1]);
 
 	// step2: Allocate data
-	CFloat32Data3DMemory* pDataObject3D =
-			allocateDataObject(sDataType, geometry, data, unshare, zIndex);
+	CData3D* pDataObject3D = allocateDataObject(sDataType, geometry, data, unshare, zIndex);
 	if (!pDataObject3D) {
 		// Error message was already set by the function
 		return;
@@ -214,12 +207,12 @@ void astra_mex_data3d_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 	}
 
 	// step2: get data object
-	CFloat32Data3DMemory* pDataObject = NULL;
+	CData3D* pDataObject = NULL;
 	if (!checkID(mxGetScalar(prhs[1]), pDataObject)) {
 		mexErrMsgTxt("Data object not found or not initialized properly.\n");
 	}
 
-	copyMexToCFloat32Array(prhs[2], pDataObject->getData(), pDataObject->getSize());
+	copyMexToCFloat32Array(prhs[2], pDataObject->getFloat32Memory(), pDataObject->getSize());
 }
 
 void astra_mex_data3d_dimensions(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
@@ -231,7 +224,7 @@ void astra_mex_data3d_dimensions(int nlhs, mxArray* plhs[], int nrhs, const mxAr
 	int iDid = (int)(mxGetScalar(prhs[1]));
 
 	// step2: get data object
-	CFloat32Data3D* pData;
+	CData3D* pData;
 	if (!(pData = CData3DManager::getSingleton().get(iDid))) {
 		mexErrMsgTxt("Data object not found.");
 	}
@@ -267,20 +260,20 @@ void astra_mex_data3d_get_geometry(int nlhs, mxArray* plhs[], int nrhs, const mx
 	int iDataID = (int)(mxGetScalar(prhs[1]));
 
 	// fetch data object
-	CFloat32Data3D* pDataObject = astra::CData3DManager::getSingleton().get(iDataID);
+	CData3D* pDataObject = astra::CData3DManager::getSingleton().get(iDataID);
 	if (!pDataObject || !pDataObject->isInitialized()) {
 		mexErrMsgTxt("Data object not found or not initialized properly.");
 	}
 
 	// create output
 	if (1 <= nlhs) {
-		if (pDataObject->getType() == CFloat32Data3D::PROJECTION) {
-			CFloat32ProjectionData3DMemory* pDataObject2 = dynamic_cast<CFloat32ProjectionData3DMemory*>(pDataObject);
+		if (pDataObject->getType() == CData3D::PROJECTION) {
+			CFloat32ProjectionData3D* pDataObject2 = dynamic_cast<CFloat32ProjectionData3D*>(pDataObject);
 			plhs[0] = configToStruct(pDataObject2->getGeometry()->getConfiguration());
 			
 		}
-		else if (pDataObject->getType() == CFloat32Data3D::VOLUME) {
-			CFloat32VolumeData3DMemory* pDataObject2 = dynamic_cast<CFloat32VolumeData3DMemory*>(pDataObject);
+		else if (pDataObject->getType() == CData3D::VOLUME) {
+			CFloat32VolumeData3D* pDataObject2 = dynamic_cast<CFloat32VolumeData3D*>(pDataObject);
 			plhs[0] = configToStruct(pDataObject2->getGeometry()->getConfiguration());
 		}
 	}
@@ -303,7 +296,7 @@ void astra_mex_data3d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 	}
 
 	// get data object
-	CFloat32Data3DMemory* pDataObject = NULL;
+	CData3D* pDataObject = NULL;
 	if (!checkID(mxGetScalar(prhs[1]), pDataObject)) {
 		mexErrMsgTxt("Data object not found or not initialized properly.");
 	}
