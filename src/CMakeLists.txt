@@ -11,7 +11,6 @@ set(ASTRA_SOURCES
     ArtAlgorithm.cpp
     AstraObjectFactory.cpp
     AstraObjectManager.cpp
-    AsyncAlgorithm.cpp
     BackProjectionAlgorithm.cpp
     CglsAlgorithm.cpp
     CompositeGeometryManager.cpp
