@@ -242,14 +242,10 @@ if test x"$with_python" != x -a x"$with_python" != xno; then
   fi
   AC_MSG_RESULT(yes)
   AC_MSG_CHECKING(for Cython module)
-  ASTRA_TRY_PYTHON([
-import Cython
-from pkg_resources import parse_version
-assert(parse_version(Cython.__version__) >= parse_version("0.13"))
-],,HAVEPYTHON=no)
+  ASTRA_TRY_PYTHON([import Cython],,HAVEPYTHON=no)
   if test x$HAVEPYTHON = xno; then
     AC_MSG_RESULT(no)
-    AC_MSG_ERROR(You need the Cython module (version >=0.13) to use the ASTRA toolbox in Python)
+    AC_MSG_ERROR(You need the Cython module to use the ASTRA toolbox in Python)
   fi
   AC_MSG_RESULT(yes)
   AC_MSG_CHECKING(for six module)

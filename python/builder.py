@@ -28,7 +28,6 @@ import sys
 import numpy as np
 
 from distutils.core import setup
-from pkg_resources import parse_version
 
 from setuptools import Command
 
@@ -37,10 +36,6 @@ from Cython.Build import cythonize
 
 import argparse
 import sys
-
-import Cython
-if parse_version(Cython.__version__) < parse_version('0.13'):
-    raise ImportError('Cython version should be at least 0.13')
 
 # We write a cython include file config.pxi containing the HAVE_CUDA setting
 # to the directory passed by --astra_build_config_dir on the command line,
