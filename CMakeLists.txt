@@ -18,6 +18,7 @@ option(ASTRA_USE_CUDA "Whether libastra is built with CUDA." ON)
 
 if(ASTRA_USE_CUDA)
   enable_language(CUDA)
+  find_package(CUDAToolkit REQUIRED COMPONENTS cudart cufft)
 endif()
 
 add_subdirectory(src)
