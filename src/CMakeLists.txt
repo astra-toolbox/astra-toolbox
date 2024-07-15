@@ -158,19 +158,23 @@ if(ASTRA_USE_CUDA)
 
   target_sources(
     astra
+    PRIVATE
     ${ASTRA_CUDA_SOURCES})
 
   target_include_directories(
     astra
+    PUBLIC
     ${ASTRA_CUDA_INCLUDES})
 
   # ASTRA_CUDA enables CUDA poritions of code
   target_compile_definitions(
     astra
+    PUBLIC
     "ASTRA_CUDA")
 
   target_link_libraries(
     astra
+    PUBLIC
     CUDA::cufft CUDA::cudart)
 
 endif()
