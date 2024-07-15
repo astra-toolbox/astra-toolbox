@@ -166,7 +166,7 @@ if(ASTRA_USE_CUDA)
     PUBLIC
     ${ASTRA_CUDA_INCLUDES})
 
-  # ASTRA_CUDA enables CUDA poritions of code
+  # ASTRA_CUDA enables CUDA portions of code
   target_compile_definitions(
     astra
     PUBLIC
