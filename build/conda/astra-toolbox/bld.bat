@@ -2,7 +2,7 @@
 
 set R=%SRC_DIR%
 
-set B_BV=1_78
+set B_BV=1_74
 set B_BOOST=C:\local\boost_%B_BV%_0
 
 cd /D "%B_BOOST%\lib64-msvc-14.1"

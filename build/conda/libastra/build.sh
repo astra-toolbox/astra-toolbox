@@ -12,6 +12,7 @@ case `uname` in
     ;;
 esac
 
+[ -x "$CUDA_ROOT" ] || echo "CUDA_ROOT=$CUDA_ROOT not found"
 [ -x "$CUDA_ROOT" ] || exit 1
 
 cd $SRC_DIR/build/linux

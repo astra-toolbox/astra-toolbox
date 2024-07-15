@@ -156,9 +156,8 @@ void astra_mex_get_gpu_info(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
  */
 void astra_mex_has_feature(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
-	if (2 > nrhs) {
-		mexErrMsgTxt("Usage: astra_mex('has_feature', feature);\n");
-		return;
+	if (nrhs < 2) {
+		mexErrMsgTxt("Not enough arguments. Usage: astra_mex('has_feature', feature);");
 	}
 
 	string sMode = mexToString(prhs[0]);
@@ -200,8 +199,7 @@ void astra_mex_version(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[
 void astra_mex_info(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 	if (nrhs < 2) {
-		mexErrMsgTxt("Usage: astra_mex('info', index/indices);\n");
-		return;
+		mexErrMsgTxt("Not enough arguments. Usage: astra_mex('info', index/indices);");
 	}
 
 	for (int i = 1; i < nrhs; i++) {
@@ -220,8 +218,7 @@ void astra_mex_info(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 void astra_mex_delete(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
 	if (nrhs < 2) {
-		mexErrMsgTxt("Usage: astra_mex('delete', index/indices);\n");
-		return;
+		mexErrMsgTxt("Not enough arguments. Usage: astra_mex('delete', index/indices);");
 	}
 
 	for (int i = 1; i < nrhs; i++) {

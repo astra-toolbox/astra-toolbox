@@ -46,10 +46,11 @@ from .PyXMLDocument cimport XMLNode
 from .PyIncludes cimport *
 
 from .pythonutils import GPULink, checkArrayForLink
+from .log import AstraError
 
 cdef extern from "CFloat32CustomPython.h":
     cdef cppclass CFloat32CustomPython:
-        CFloat32CustomPython(arrIn)
+        CFloat32CustomPython(np.ndarray arrIn)
 
 cdef extern from "Python.h":
     void* PyLong_AsVoidPtr(object)
@@ -63,10 +64,9 @@ cdef Config * dictToConfig(string rootname, dc) except NULL:
     cfg.initialize(rootname)
     try:
         readDict(cfg.self, dc)
-    except Exception:
+    except:
         del cfg
-        exc = sys.exc_info()
-        raise exc[0], exc[1], exc[2]
+        raise
     return cfg
 
 def convert_item(item):
@@ -121,16 +121,16 @@ cdef bool readDict(XMLNode root, _dc) except False:
             elif val.ndim == 1:
                 listbase.setContent(data, val.shape[0])
             else:
-                raise Exception("Only 1 or 2 dimensions are allowed")
+                raise AstraError("Only 1 or 2 dimensions are allowed")
         elif isinstance(val, dict):
-            if item == six.b('option') or item == six.b('options') or item == six.b('Option') or item == six.b('Options'):
+            if item == b'option' or item == b'options' or item == b'Option' or item == b'Options':
                 readOptions(root, val)
             else:
                 itm = root.addChildNode(item)
                 readDict(itm, val)
         else:
-            if item == six.b('type'):
-                root.addAttribute(< string > six.b('type'), <string> wrap_to_bytes(val))
+            if item == b'type':
+                root.addAttribute(< string > b'type', <string> wrap_to_bytes(val))
             else:
                 if isinstance(val, builtins.bool):
                     val = int(val)
@@ -146,14 +146,14 @@ cdef bool readOptions(XMLNode node, dc) except False:
     for item in dc:
         val = dc[item]
         if node.hasOption(item):
-            raise Exception('Duplicate Option: %s' % item)
+            raise AstraError('Duplicate Option: %s' % item)
         if isinstance(val, builtins.list) or isinstance(val, tuple):
             val = np.array(val,dtype=np.float64)
         if isinstance(val, np.ndarray):
             if val.size == 0:
                 break
-            listbase = node.addChildNode(six.b('Option'))
-            listbase.addAttribute(< string > six.b('key'), < string > item)
+            listbase = node.addChildNode(b'Option')
+            listbase.addAttribute(< string > b'key', < string > item)
             contig_data = np.ascontiguousarray(val,dtype=np.float64)
             data = <double*>np.PyArray_DATA(contig_data)
             if val.ndim == 2:
@@ -161,7 +161,7 @@ cdef bool readOptions(XMLNode node, dc) except False:
             elif val.ndim == 1:
                 listbase.setContent(data, val.shape[0])
             else:
-                raise Exception("Only 1 or 2 dimensions are allowed")
+                raise AstraError("Only 1 or 2 dimensions are allowed")
         else:
             if isinstance(val, builtins.bool):
                 val = int(val)
@@ -226,17 +226,17 @@ cdef XMLNode2dict(XMLNode node):
     cdef list[XMLNode].iterator it
     dct = {}
     opts = {}
-    if node.hasAttribute(six.b('type')):
-        dct['type'] = castString(node.getAttribute(six.b('type')))
+    if node.hasAttribute(b'type'):
+        dct['type'] = castString(node.getAttribute(b'type'))
     nodes = node.getNodes()
     it = nodes.begin()
     while it != nodes.end():
         subnode = deref(it)
         if castString(subnode.getName())=="Option":
-            if subnode.hasAttribute(six.b('value')):
-                opts[castString(subnode.getAttribute(six.b('key')))] = stringToPythonValue(subnode.getAttribute(six.b('value')))
+            if subnode.hasAttribute(b'value'):
+                opts[castString(subnode.getAttribute(b'key'))] = stringToPythonValue(subnode.getAttribute(b'value'))
             else:
-                opts[castString(subnode.getAttribute(six.b('key')))] = stringToPythonValue(subnode.getContent())
+                opts[castString(subnode.getAttribute(b'key'))] = stringToPythonValue(subnode.getContent())
         else:
             dct[castString(subnode.getName())] = stringToPythonValue(subnode.getContent())
         inc(it)
@@ -251,8 +251,8 @@ cdef CFloat32VolumeData3D* linkVolFromGeometry(CVolumeGeometry3D *pGeometry, dat
     elif isinstance(data, GPULink):
         data_shape = (data.z, data.y, data.x)
     if geom_shape != data_shape:
-        raise ValueError(
-            "The dimensions of the data do not match those specified in the geometry: {} != {}".format(data_shape, geom_shape))
+        raise ValueError("The dimensions of the data {} do not match those "
+                         "specified in the geometry {}".format(data_shape, geom_shape))
 
     if isinstance(data, np.ndarray):
         checkArrayForLink(data)
@@ -263,7 +263,7 @@ cdef CFloat32VolumeData3D* linkVolFromGeometry(CVolumeGeometry3D *pGeometry, dat
             hnd = wrapHandle(<float*>PyLong_AsVoidPtr(data.ptr), data.x, data.y, data.z, data.pitch/4)
             pDataObject3D = new CFloat32VolumeData3DGPU(pGeometry, hnd)
         ELSE:
-            raise NotImplementedError("CUDA support is not enabled in ASTRA")
+            raise AstraError("CUDA support is not enabled in ASTRA")
     else:
         raise TypeError("data should be a numpy.ndarray or a GPULink object")
     return pDataObject3D
@@ -276,8 +276,8 @@ cdef CFloat32ProjectionData3D* linkProjFromGeometry(CProjectionGeometry3D *pGeom
     elif isinstance(data, GPULink):
         data_shape = (data.z, data.y, data.x)
     if geom_shape != data_shape:
-        raise ValueError(
-            "The dimensions of the data do not match those specified in the geometry: {} != {}".format(data_shape, geom_shape))
+        raise ValueError("The dimensions of the data {} do not match those "
+                         "specified in the geometry {}".format(data_shape, geom_shape))
 
     if isinstance(data, np.ndarray):
         checkArrayForLink(data)
@@ -288,7 +288,7 @@ cdef CFloat32ProjectionData3D* linkProjFromGeometry(CProjectionGeometry3D *pGeom
             hnd = wrapHandle(<float*>PyLong_AsVoidPtr(data.ptr), data.x, data.y, data.z, data.pitch/4)
             pDataObject3D = new CFloat32ProjectionData3DGPU(pGeometry, hnd)
         ELSE:
-            raise NotImplementedError("CUDA support is not enabled in ASTRA")
+            raise AstraError("CUDA support is not enabled in ASTRA")
     else:
         raise TypeError("data should be a numpy.ndarray or a GPULink object")
     return pDataObject3D
@@ -297,8 +297,8 @@ cdef CProjectionGeometry3D* createProjectionGeometry3D(geometry) except NULL:
     cdef Config *cfg
     cdef CProjectionGeometry3D * pGeometry
 
-    cfg = dictToConfig(six.b('ProjectionGeometry'), geometry)
-    tpe = wrap_from_bytes(cfg.self.getAttribute(six.b('type')))
+    cfg = dictToConfig(b'ProjectionGeometry', geometry)
+    tpe = wrap_from_bytes(cfg.self.getAttribute(b'type'))
     if (tpe == "parallel3d"):
         pGeometry = <CProjectionGeometry3D*> new CParallelProjectionGeometry3D();
     elif (tpe == "parallel3d_vec"):
@@ -308,12 +308,12 @@ cdef CProjectionGeometry3D* createProjectionGeometry3D(geometry) except NULL:
     elif (tpe == "cone_vec"):
         pGeometry = <CProjectionGeometry3D*> new CConeVecProjectionGeometry3D();
     else:
-        raise ValueError("Invalid geometry type.")
+        raise ValueError("'{}' is not a valid 3D geometry type".format(tpe))
 
     if not pGeometry.initialize(cfg[0]):
         del cfg
         del pGeometry
-        raise RuntimeError('Geometry class not initialized.')
+        raise AstraError('Geometry class could not be initialized', append_log=True)
 
     del cfg
 
@@ -322,12 +322,12 @@ cdef CProjectionGeometry3D* createProjectionGeometry3D(geometry) except NULL:
 cdef CVolumeGeometry3D* createVolumeGeometry3D(geometry) except NULL:
     cdef Config *cfg
     cdef CVolumeGeometry3D * pGeometry
-    cfg = dictToConfig(six.b('VolumeGeometry'), geometry)
+    cfg = dictToConfig(b'VolumeGeometry', geometry)
     pGeometry = new CVolumeGeometry3D()
     if not pGeometry.initialize(cfg[0]):
         del cfg
         del pGeometry
-        raise RuntimeError('Geometry class not initialized.')
+        raise AstraError('Geometry class could not be initialized', append_log=True)
 
     del cfg
 

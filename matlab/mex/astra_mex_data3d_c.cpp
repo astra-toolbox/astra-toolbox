@@ -64,21 +64,18 @@ void astra_mex_data3d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 { 
 	// step1: get datatype
 	if (nrhs < 3) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 
 	const mxArray * const geometry = prhs[2];
 	const mxArray * const data = nrhs > 3 ? prhs[3] : NULL;
 
 	if (!checkStructs(geometry)) {
-		mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.\n");
-		return;
+		mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.");
 	}
 
 	if (data && !checkDataType(data)) {
-		mexErrMsgTxt("Data must be single, double or logical.");
-		return;
+		mexErrMsgTxt("Data type must be single, double or logical.");
 	}
 
 	const string sDataType = mexToString(prhs[1]);
@@ -130,8 +127,7 @@ void astra_mex_data3d_link(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 	// TODO: Allow empty argument to let this function create its own mxArray
 	// step1: get datatype
 	if (nrhs < 4) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 
 	const mxArray * const geometry = prhs[2];
@@ -140,13 +136,11 @@ void astra_mex_data3d_link(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 	const mxArray * const zIndex = nrhs > 5 ? prhs[5] : NULL;
 
 	if (!checkStructs(geometry)) {
-		mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.\n");
-		return;
+		mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.");
 	}
 
 	if (data && !mxIsSingle(data)) {
 		mexErrMsgTxt("Data must be single.");
-		return;
 	}
 
 	string sDataType = mexToString(prhs[1]);
@@ -212,20 +206,17 @@ void astra_mex_data3d_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 { 
 	// step1: input
 	if (nrhs < 3) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 
 	if (!checkDataType(prhs[2])) {
-		mexErrMsgTxt("Data must be single or double.");
-		return;
+		mexErrMsgTxt("Data type must be single or double.");
 	}
 
 	// step2: get data object
 	CFloat32Data3DMemory* pDataObject = NULL;
 	if (!checkID(mxGetScalar(prhs[1]), pDataObject)) {
 		mexErrMsgTxt("Data object not found or not initialized properly.\n");
-		return;
 	}
 
 	copyMexToCFloat32Array(prhs[2], pDataObject->getData(), pDataObject->getSize());
@@ -235,16 +226,14 @@ void astra_mex_data3d_dimensions(int nlhs, mxArray* plhs[], int nrhs, const mxAr
 {
 	// step1: get input
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	int iDid = (int)(mxGetScalar(prhs[1]));
 
 	// step2: get data object
 	CFloat32Data3D* pData;
 	if (!(pData = CData3DManager::getSingleton().get(iDid))) {
-		mexErrMsgTxt("DataObject not valid. \n");
-		return;
+		mexErrMsgTxt("Data object not found.");
 	}
 
 	// step3: output
@@ -270,20 +259,17 @@ void astra_mex_data3d_get_geometry(int nlhs, mxArray* plhs[], int nrhs, const mx
 { 
 	// parse input
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	if (!mxIsDouble(prhs[1])) {
-		mexErrMsgTxt("Identifier should be a scalar value. \n");
-		return;
+		mexErrMsgTxt("Identifier should be a scalar value.");
 	}
 	int iDataID = (int)(mxGetScalar(prhs[1]));
 
 	// fetch data object
 	CFloat32Data3D* pDataObject = astra::CData3DManager::getSingleton().get(iDataID);
 	if (!pDataObject || !pDataObject->isInitialized()) {
-		mexErrMsgTxt("Data object not found or not initialized properly.\n");
-		return;
+		mexErrMsgTxt("Data object not found or not initialized properly.");
 	}
 
 	// create output
@@ -313,22 +299,19 @@ void astra_mex_data3d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 {
 	// parse input
 	if (nrhs < 3) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 
 	// get data object
 	CFloat32Data3DMemory* pDataObject = NULL;
 	if (!checkID(mxGetScalar(prhs[1]), pDataObject)) {
-		mexErrMsgTxt("Data object not found or not initialized properly.\n");
-		return;
+		mexErrMsgTxt("Data object not found or not initialized properly.");
 	}
 
 	const mxArray * const geometry = prhs[2];
 
 	if (!checkStructs(geometry)) {
-		mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.\n");
-		return;
+		mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.");
 	}
 
 	CFloat32ProjectionData3D* pProjData = dynamic_cast<CFloat32ProjectionData3D*>(pDataObject);
@@ -350,15 +333,14 @@ void astra_mex_data3d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 		} else if (type == "cone_vec") {
 			pGeometry = new astra::CConeVecProjectionGeometry3D();
 		} else {
-			mexErrMsgTxt("Invalid geometry type.\n");
-			return;
+			std::string message = "'" + type + "' is not a valid 3D geometry type.";
+			mexErrMsgTxt(message.c_str());
 		}
 
 		if (!pGeometry->initialize(*cfg)) {
-			mexErrMsgTxt("Geometry class not initialized. \n");
 			delete pGeometry;
 			delete cfg;
-			return;
+			mexErrMsgWithAstraLog("Geometry class could not be initialized.");
 		}
 		delete cfg;
 
@@ -367,9 +349,8 @@ void astra_mex_data3d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 		    pGeometry->getProjectionCount() != pProjData->getAngleCount() ||
 		    pGeometry->getDetectorRowCount() != pProjData->getDetectorRowCount())
 		{
-			mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
 			delete pGeometry;
-			return;
+			mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry.");
 		}
 
 		// If ok, change geometry
@@ -385,10 +366,9 @@ void astra_mex_data3d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 		astra::CVolumeGeometry3D* pGeometry = new astra::CVolumeGeometry3D();
 		if (!pGeometry->initialize(*cfg))
 		{
-			mexErrMsgTxt("Geometry class not initialized. \n");
 			delete pGeometry;
 			delete cfg;
-			return;
+			mexErrMsgWithAstraLog("Geometry class could not be initialized.");
 		}
 		delete cfg;
 
@@ -397,9 +377,8 @@ void astra_mex_data3d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 		    pGeometry->getGridRowCount() != pVolData->getRowCount() ||
 		    pGeometry->getGridSliceCount() != pVolData->getSliceCount())
 		{
-			mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
 			delete pGeometry;
-			return;
+			mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry.");
 		}
 
 		// If ok, change geometry
@@ -416,8 +395,7 @@ void astra_mex_data3d_delete(int nlhs, mxArray* plhs[], int nrhs, const mxArray*
 { 
 	// step1: read input
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 
 	for (int i = 1; i < nrhs; i++) {

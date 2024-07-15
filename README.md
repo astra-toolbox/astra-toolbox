@@ -12,42 +12,40 @@ The basic forward and backward projection operations are GPU-accelerated, and di
 
 ## Documentation / samples
 
-See the MATLAB and Python code samples in samples/ and on http://www.astra-toolbox.com/ .
+See the MATLAB and Python code samples in `samples/` directory and on http://www.astra-toolbox.com/.
 
 
 ## Installation instructions
 
-### Windows, binary
+### Windows/Linux, using conda for Python packages
 
-Add the mex and tools subdirectories to your MATLAB path, or copy the Python
-astra module to your Python site-packages directory. We require the Microsoft
-Visual Studio 2015 redistributable package. If this is not already installed on
-your system, it is included as vc_redist.x64.exe in the ASTRA zip file.
+Requirements: [conda](http://conda.pydata.org/) Python environment, with 64 bit Python 3.9-3.12.
 
-### Linux/Windows, using conda for python 
-
-Requirements: [conda](http://conda.pydata.org/) python environment, with 64 bit Python 3.7, 3.8 or 3.9.
-
-There are packages available for the ASTRA Toolbox in the astra-toolbox
-channel for the conda package manager. To use these, run the following
-inside a conda environment.
+Conda packages for ASTRA Toolbox are available from the `astra-toolbox` channel, whereas CUDA-related packages can be installed from `nvidia` channel.
+To install ASTRA into the desired conda environment, run:
 
 ```
-conda install -c astra-toolbox astra-toolbox
+conda install astra-toolbox -c astra-toolbox -c nvidia
 ```
 
 We also provide development packages:
 
 ```
-conda install -c astra-toolbox/label/dev astra-toolbox
+conda install astra-toolbox -c astra-toolbox/label/dev -c nvidia
 ```
 
+### Windows, binary
+
+Add the mex and tools subdirectories to your MATLAB path, or install the Python
+wheel using pip. We require the Microsoft Visual Studio 2017 redistributable
+package. If this is not already installed on your system, it is included as
+vc_redist.x64.exe in the ASTRA zip file.
 
 ### Linux, from source
 
-#### For Matlab
+#### For MATLAB
 
-Requirements: g++, boost, CUDA (8.0 or higher), Matlab (R2012a or higher)
+Requirements: g++, CUDA (10.2 or higher), MATLAB (R2012a or higher)
 
 ```
 cd build/linux
@@ -59,26 +57,26 @@ cd build/linux
 make
 make install
 ```
-Add $HOME/astra/matlab and its subdirectories (tools, mex) to your matlab path.
+Add $HOME/astra/matlab and its subdirectories (tools, mex) to your MATLAB path.
 
-If you want to build the Octave interface instead of the Matlab interface,
-specify --enable-octave instead of --with-matlab=... . The Octave files
+If you want to build the Octave interface instead of the MATLAB interface,
+specify `--enable-octave` instead of `--with-matlab=...`. The Octave files
 will be installed into $HOME/astra/octave . On some Linux distributions
 building the Astra Octave interface will require the Octave development package
 to be installed (e.g., liboctave-dev on Ubuntu).
 
 
-NB: Each matlab version only supports a specific range of g++ versions.
+NB: Each MATLAB version only supports a specific range of g++ versions.
 Despite this, if you have a newer g++ and if you get errors related to missing
 GLIBCXX_3.4.xx symbols, it is often possible to work around this requirement
-by deleting the version of libstdc++ supplied by matlab in
+by deleting the version of libstdc++ supplied by MATLAB in
 MATLAB_PATH/bin/glnx86 or MATLAB_PATH/bin/glnxa64 (at your own risk),
-or setting LD_PRELOAD=/usr/lib64/libstdc++.so.6 (or similar) when starting
-matlab.
+or setting `LD_PRELOAD=/usr/lib64/libstdc++.so.6` (or similar) when starting
+MATLAB.
 
 #### For Python
 
-Requirements: g++, boost, CUDA (8.0 or higher), Python (2.7 or 3.x)
+Requirements: g++, CUDA (10.2 or higher), Python (3.x), Cython, six, scipy
 
 ```
 cd build/linux
@@ -94,7 +92,7 @@ This will install Astra into your current Python environment.
 
 #### As a C++ library
 
-Requirements: g++, boost, CUDA (8.0 or higher)
+Requirements: g++, CUDA (10.2 or higher)
 
 ```
 cd build/linux
@@ -123,29 +121,30 @@ make
 make install
 ```
 
-### Windows, from source using Visual Studio 2015
+### Windows, from source using Visual Studio 2017
 
-Requirements: Visual Studio 2015 (full or community), boost (recent), CUDA 9.0,
-              Matlab (R2012a or higher) and/or WinPython 3.x.
+Requirements: Visual Studio 2017 (full or community), boost (recent),
+              CUDA (10.2 or higher), MATLAB (R2012a or higher)
+              and/or WinPython 3.x.
 
 Using the Visual Studio IDE:
 
-Set the environment variable MATLAB_ROOT to your matlab install location.
+Set the environment variable MATLAB_ROOT to your MATLAB install location.
 Copy boost headers to lib\include\boost, and boost libraries to lib\x64.
 Open astra_vc14.sln in Visual Studio.
 Select the appropriate solution configuration (typically Release_CUDA|x64).
 Build the solution.
 Install by copying AstraCuda64.dll and all .mexw64 files from
   bin\x64\Release_CUDA and the entire matlab/tools directory to a directory
-  to be added to your matlab path.
+  to be added to your MATLAB path.
 
 
 Using .bat scripts in build\msvc:
 
 Edit build_env.bat and set up the correct directories.
 Run build_setup.bat to automatically copy the boost headers and libraries.
-For matlab: Run build_matlab.bat. The .dll and .mexw64 files will be in bin\x64\Release_Cuda.
-For python 3.9: Run build_python39.bat. Astra will be directly installed into site-packages.
+For MATLAB: Run build_matlab.bat. The .dll and .mexw64 files will be in bin\x64\Release_Cuda.
+For Python 3.12: Run build_python312.bat. Astra will be directly installed into site-packages.
 
 ## Testing your installation
 
@@ -157,7 +156,7 @@ import astra
 astra.test()
 ```
 
-To test your ASTRA installation in Matlab, the equivalent command is:
+To test your ASTRA installation in MATLAB, the equivalent command is:
 
 ```
 astra_test
@@ -184,8 +183,8 @@ The ASTRA Toolbox is open source under the GPLv3 license.
 ## Contact
 
 email: astra@astra-toolbox.com
-website: http://www.astra-toolbox.com/
+website: https://www.astra-toolbox.com/
 
-Copyright: 2010-2021, imec Vision Lab, University of Antwerp
-           2014-2021, CWI, Amsterdam
-           http://visielab.uantwerpen.be/ and http://www.cwi.nl/
+Copyright: 2010-2024, imec Vision Lab, University of Antwerp
+           2014-2024, CWI, Amsterdam
+           https://visielab.uantwerpen.be/ and https://www.cwi.nl/

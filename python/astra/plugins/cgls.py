@@ -26,7 +26,6 @@
 
 import astra
 import numpy as np
-import six
 
 class CGLSPlugin(astra.plugin.base):
     """CGLS."""

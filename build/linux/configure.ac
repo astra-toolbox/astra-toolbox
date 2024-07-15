@@ -23,7 +23,7 @@ dnl along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 dnl
 dnl -----------------------------------------------------------------------
 
-AC_INIT(astra, 2.1.2)
+AC_INIT([astra],[2.2.0])
 AC_CONFIG_SRCDIR([Makefile.in])
 LT_INIT([disable-static])
 
@@ -39,7 +39,6 @@ AC_CANONICAL_HOST
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_INSTALL
-AC_PROG_LIBTOOL
 AC_PROG_MAKE_SET
 
 AC_LANG([C++])
@@ -71,18 +70,6 @@ fi
 
 AC_SUBST(HAVEBOOSTUTF)
 AC_SUBST(LIBS_BOOSTUTF)
-
-BOOSTok=yes
-dnl AC_CHECK_HEADER([boost/any.hpp],[],[BOOSTok=no],[])
-dnl AC_CHECK_HEADER([boost/thread.hpp],[],[BOOSTok=no],[])
-dnl AC_CHECK_HEADER([boost/bind.hpp],[],[BOOSTok=no],[])
-dnl AC_CHECK_HEADER([boost/static_assert.hpp],[],[BOOSTok=no],[])
-dnl AC_CHECK_HEADER([boost/throw_exception.hpp],[],[BOOSTok=no],[])
-AC_CHECK_HEADER([boost/shared_ptr.hpp],[],[BOOSTok=no],[])
-
-if test x$BOOSTok = xno; then
-  AC_MSG_ERROR([boost not found])
-fi
 
 # nvcc, cuda
 
@@ -121,14 +108,6 @@ if test x"$HAVECUDA" = xyes; then
   AC_MSG_CHECKING([if nvcc works])
   ASTRA_CHECK_NVCC(HAVECUDA,NVCCFLAGS_EXTRA)
   AC_MSG_RESULT($HAVECUDA)
-fi
-
-if test x"$HAVECUDA" = xyes; then
-  AC_MSG_CHECKING([if boost and CUDA versions are compatible])
-  ASTRA_CHECK_CUDA_BOOST(AC_MSG_RESULT([yes]),[
-    AC_MSG_RESULT([no])
-    AC_MSG_ERROR([Boost and CUDA versions are incompatible. You probably have to upgrade boost.])
-  ])
 fi
 
 AC_ARG_WITH(cuda_compute, [[  --with-cuda-compute=archs  comma separated list of CUDA compute models (optional)]],,)

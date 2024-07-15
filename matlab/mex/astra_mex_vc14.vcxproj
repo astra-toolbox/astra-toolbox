@@ -38,7 +38,7 @@
     <ProjectName>astra_mex</ProjectName>
     <ProjectGuid>{6FDF72C4-A855-4F1C-A401-6500040B5E28}</ProjectGuid>
     <RootNamespace>astraMatlab</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_CUDA|Win32'" Label="Configuration">

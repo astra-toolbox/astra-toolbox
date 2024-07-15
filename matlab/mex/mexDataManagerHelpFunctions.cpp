@@ -201,8 +201,7 @@ allocateDataObject(const std::string & sDataType,
 	{
 		if (!mexIsScalar(unshare))
 		{
-			mexErrMsgTxt("Argument 5 (read-only) must be scalar");
-			return NULL;
+			mexErrMsgTxt("Argument 5 (read-only) must be scalar.");
 		}
 		// unshare the array if we're not linking read-only
 		bUnshare = !(bool)mxGetScalar(unshare);
@@ -213,8 +212,7 @@ allocateDataObject(const std::string & sDataType,
 	{
 		if (!mexIsScalar(zIndex))
 		{
-			mexErrMsgTxt("Argument 6 (Z) must be scalar");
-			return NULL;
+			mexErrMsgTxt("Argument 6 (Z) must be scalar.");
 		}
 		iZ = (mwSignedIndex)mxGetScalar(zIndex);
 	}
@@ -227,10 +225,9 @@ allocateDataObject(const std::string & sDataType,
 		astra::CVolumeGeometry3D* pGeometry = new astra::CVolumeGeometry3D();
 		if (!pGeometry->initialize(*cfg))
 		{
-			mexErrMsgTxt("Geometry class not initialized. \n");
 			delete pGeometry;
 			delete cfg;
-			return NULL;
+			mexErrMsgWithAstraLog("Geometry class could not be initialized.");
 		}
 		delete cfg;
 
@@ -241,9 +238,8 @@ allocateDataObject(const std::string & sDataType,
 					? checkDataSize(data, pGeometry, iZ)
 					: checkDataSize(data, pGeometry)) )
 			{
-				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
 				delete pGeometry;
-				return NULL;
+				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry.");
 			}
 		}
 
@@ -282,15 +278,14 @@ allocateDataObject(const std::string & sDataType,
 		} else if (type == "cone_vec") {
 			pGeometry = new astra::CConeVecProjectionGeometry3D();
 		} else {
-			mexErrMsgTxt("Invalid geometry type.\n");
-			return NULL;
+			std::string message = "'" + type + "' is not a valid 3D geometry type.";
+			mexErrMsgTxt(message.c_str());
 		}
 
 		if (!pGeometry->initialize(*cfg)) {
-			mexErrMsgTxt("Geometry class not initialized. \n");
 			delete pGeometry;
 			delete cfg;
-			return NULL;
+			mexErrMsgWithAstraLog("Geometry class could not be initialized.");
 		}
 		delete cfg;
 
@@ -301,9 +296,8 @@ allocateDataObject(const std::string & sDataType,
 					? checkDataSize(data, pGeometry, iZ)
 					: checkDataSize(data, pGeometry)) )
 			{
-				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
 				delete pGeometry;
-				return NULL;
+				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry.");
 			}
 		}
 
@@ -328,16 +322,14 @@ allocateDataObject(const std::string & sDataType,
 	}
 	else
 	{
-		mexErrMsgTxt("Invalid datatype.  Please specify '-vol' or '-proj3d'. \n");
-		return NULL;
+		mexErrMsgTxt("Invalid datatype. Please specify '-vol' or '-proj3d'.");
 	}
 
 	// Check initialization
 	if (!pDataObject3D->isInitialized())
 	{
-		mexErrMsgTxt("Couldn't initialize data object.\n");
 		delete pDataObject3D;
-		return NULL;
+		mexErrMsgTxt("Couldn't initialize data object.");
 	}
 
 	return pDataObject3D;

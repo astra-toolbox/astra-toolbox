@@ -244,12 +244,12 @@ bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div
 #if 0
 		TPartList splitOutput2;
 		for (TPartList::iterator i_out = splitOutput.begin(); i_out != splitOutput.end(); ++i_out) {
-			boost::shared_ptr<CPart> outputPart = *i_out;
+			std::shared_ptr<CPart> outputPart = *i_out;
 			outputPart.get()->splitX(splitOutput2, UINT_MAX, UINT_MAX, 1);
 		}
 		splitOutput.clear();
 		for (TPartList::iterator i_out = splitOutput2.begin(); i_out != splitOutput2.end(); ++i_out) {
-			boost::shared_ptr<CPart> outputPart = *i_out;
+			std::shared_ptr<CPart> outputPart = *i_out;
 					outputPart.get()->splitY(splitOutput, UINT_MAX, UINT_MAX, 1);
 		}
 		splitOutput2.clear();
@@ -263,7 +263,7 @@ bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div
 			for (TPartList::iterator i_out = splitOutput.begin();
 			     i_out != splitOutput.end(); ++i_out)
 			{
-				boost::shared_ptr<CPart> outputPart = *i_out;
+				std::shared_ptr<CPart> outputPart = *i_out;
 
 				SJob newjob;
 				newjob.pOutput = outputPart;
@@ -288,12 +288,12 @@ bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div
 				delete input;
 				TPartList splitInput2;
 				for (TPartList::iterator i_in = splitInput.begin(); i_in != splitInput.end(); ++i_in) {
-					boost::shared_ptr<CPart> inputPart = *i_in;
+					std::shared_ptr<CPart> inputPart = *i_in;
 					inputPart.get()->splitX(splitInput2, UINT_MAX, maxBlockDim, 1);
 				}
 				splitInput.clear();
 				for (TPartList::iterator i_in = splitInput2.begin(); i_in != splitInput2.end(); ++i_in) {
-					boost::shared_ptr<CPart> inputPart = *i_in;
+					std::shared_ptr<CPart> inputPart = *i_in;
 					inputPart.get()->splitY(splitInput, UINT_MAX, maxBlockDim, 1);
 				}
 				splitInput2.clear();
@@ -849,10 +849,10 @@ void CCompositeGeometryManager::CVolumePart::splitX(CCompositeGeometryManager::T
 			                                   pGeom->getWindowMaxY(),
 			                                   pGeom->getWindowMaxZ());
 
-			out.push_back(boost::shared_ptr<CPart>(sub));
+			out.push_back(std::shared_ptr<CPart>(sub));
 		}
 	} else {
-		out.push_back(boost::shared_ptr<CPart>(clone()));
+		out.push_back(std::shared_ptr<CPart>(clone()));
 	}
 }
 
@@ -897,10 +897,10 @@ void CCompositeGeometryManager::CVolumePart::splitY(CCompositeGeometryManager::T
 			                                   pGeom->getWindowMinY() + shift + size * pGeom->getPixelLengthY(),
 			                                   pGeom->getWindowMaxZ());
 
-			out.push_back(boost::shared_ptr<CPart>(sub));
+			out.push_back(std::shared_ptr<CPart>(sub));
 		}
 	} else {
-		out.push_back(boost::shared_ptr<CPart>(clone()));
+		out.push_back(std::shared_ptr<CPart>(clone()));
 	}
 }
 
@@ -945,10 +945,10 @@ void CCompositeGeometryManager::CVolumePart::splitZ(CCompositeGeometryManager::T
 			                                   pGeom->getWindowMaxY(),
 			                                   pGeom->getWindowMinZ() + shift + size * pGeom->getPixelLengthZ());
 
-			out.push_back(boost::shared_ptr<CPart>(sub));
+			out.push_back(std::shared_ptr<CPart>(sub));
 		}
 	} else {
-		out.push_back(boost::shared_ptr<CPart>(clone()));
+		out.push_back(std::shared_ptr<CPart>(clone()));
 	}
 }
 
@@ -1054,10 +1054,10 @@ void CCompositeGeometryManager::CProjectionPart::splitX(CCompositeGeometryManage
 
 			sub->pGeom = getSubProjectionGeometryU(pGeom, newsubX, size);
 
-			out.push_back(boost::shared_ptr<CPart>(sub));
+			out.push_back(std::shared_ptr<CPart>(sub));
 		}
 	} else {
-		out.push_back(boost::shared_ptr<CPart>(clone()));
+		out.push_back(std::shared_ptr<CPart>(clone()));
 	}
 }
 
@@ -1087,10 +1087,10 @@ void CCompositeGeometryManager::CProjectionPart::splitY(CCompositeGeometryManage
 
 			sub->pGeom = getSubProjectionGeometryAngle(pGeom, th, size);
 
-			out.push_back(boost::shared_ptr<CPart>(sub));
+			out.push_back(std::shared_ptr<CPart>(sub));
 		}
 	} else {
-		out.push_back(boost::shared_ptr<CPart>(clone()));
+		out.push_back(std::shared_ptr<CPart>(clone()));
 	}
 }
 
@@ -1126,10 +1126,10 @@ void CCompositeGeometryManager::CProjectionPart::splitZ(CCompositeGeometryManage
 
 			sub->pGeom = getSubProjectionGeometryV(pGeom, newsubZ, size);
 
-			out.push_back(boost::shared_ptr<CPart>(sub));
+			out.push_back(std::shared_ptr<CPart>(sub));
 		}
 	} else {
-		out.push_back(boost::shared_ptr<CPart>(clone()));
+		out.push_back(std::shared_ptr<CPart>(clone()));
 	}
 
 }
@@ -1164,8 +1164,8 @@ CCompositeGeometryManager::SJob CCompositeGeometryManager::createJobFP(CProjecto
 	ASTRA_DEBUG("Main FP ProjectionPart -> %p", (void*)output);
 
 	SJob FP;
-	FP.pInput = boost::shared_ptr<CPart>(input);
-	FP.pOutput = boost::shared_ptr<CPart>(output);
+	FP.pInput = std::shared_ptr<CPart>(input);
+	FP.pOutput = std::shared_ptr<CPart>(output);
 	FP.pProjector = pProjector;
 	FP.eType = SJob::JOB_FP;
 	FP.eMode = eMode;
@@ -1196,8 +1196,8 @@ CCompositeGeometryManager::SJob CCompositeGeometryManager::createJobBP(CProjecto
 	output->pGeom = pVolData->getGeometry()->clone();
 
 	SJob BP;
-	BP.pInput = boost::shared_ptr<CPart>(input);
-	BP.pOutput = boost::shared_ptr<CPart>(output);
+	BP.pInput = std::shared_ptr<CPart>(input);
+	BP.pOutput = std::shared_ptr<CPart>(output);
 	BP.pProjector = pProjector;
 	BP.eType = SJob::JOB_BP;
 	BP.eMode = eMode;
@@ -1250,7 +1250,7 @@ bool CCompositeGeometryManager::doFP(CProjector3D *pProjector, const std::vector
 	ASTRA_DEBUG("CCompositeGeometryManager::doFP, multi-volume");
 
 	std::vector<CFloat32VolumeData3D *>::const_iterator i;
-	std::vector<boost::shared_ptr<CPart> > inputs;
+	std::vector<std::shared_ptr<CPart> > inputs;
 
 	for (i = volData.begin(); i != volData.end(); ++i) {
 		CVolumePart *input = new CVolumePart();
@@ -1260,11 +1260,11 @@ bool CCompositeGeometryManager::doFP(CProjector3D *pProjector, const std::vector
 		input->subZ = 0;
 		input->pGeom = (*i)->getGeometry()->clone();
 
-		inputs.push_back(boost::shared_ptr<CPart>(input));
+		inputs.push_back(std::shared_ptr<CPart>(input));
 	}
 
 	std::vector<CFloat32ProjectionData3D *>::const_iterator j;
-	std::vector<boost::shared_ptr<CPart> > outputs;
+	std::vector<std::shared_ptr<CPart> > outputs;
 
 	for (j = projData.begin(); j != projData.end(); ++j) {
 		CProjectionPart *output = new CProjectionPart();
@@ -1274,11 +1274,11 @@ bool CCompositeGeometryManager::doFP(CProjector3D *pProjector, const std::vector
 		output->subZ = 0;
 		output->pGeom = (*j)->getGeometry()->clone();
 
-		outputs.push_back(boost::shared_ptr<CPart>(output));
+		outputs.push_back(std::shared_ptr<CPart>(output));
 	}
 
-	std::vector<boost::shared_ptr<CPart> >::iterator i2;
-	std::vector<boost::shared_ptr<CPart> >::iterator j2;
+	std::vector<std::shared_ptr<CPart> >::iterator i2;
+	std::vector<std::shared_ptr<CPart> >::iterator j2;
 	TJobList L;
 
 	for (i2 = outputs.begin(); i2 != outputs.end(); ++i2) {
@@ -1305,7 +1305,7 @@ bool CCompositeGeometryManager::doBP(CProjector3D *pProjector, const std::vector
 
 
 	std::vector<CFloat32VolumeData3D *>::const_iterator i;
-	std::vector<boost::shared_ptr<CPart> > outputs;
+	std::vector<std::shared_ptr<CPart> > outputs;
 
 	for (i = volData.begin(); i != volData.end(); ++i) {
 		CVolumePart *output = new CVolumePart();
@@ -1315,11 +1315,11 @@ bool CCompositeGeometryManager::doBP(CProjector3D *pProjector, const std::vector
 		output->subZ = 0;
 		output->pGeom = (*i)->getGeometry()->clone();
 
-		outputs.push_back(boost::shared_ptr<CPart>(output));
+		outputs.push_back(std::shared_ptr<CPart>(output));
 	}
 
 	std::vector<CFloat32ProjectionData3D *>::const_iterator j;
-	std::vector<boost::shared_ptr<CPart> > inputs;
+	std::vector<std::shared_ptr<CPart> > inputs;
 
 	for (j = projData.begin(); j != projData.end(); ++j) {
 		CProjectionPart *input = new CProjectionPart();
@@ -1329,11 +1329,11 @@ bool CCompositeGeometryManager::doBP(CProjector3D *pProjector, const std::vector
 		input->subZ = 0;
 		input->pGeom = (*j)->getGeometry()->clone();
 
-		inputs.push_back(boost::shared_ptr<CPart>(input));
+		inputs.push_back(std::shared_ptr<CPart>(input));
 	}
 
-	std::vector<boost::shared_ptr<CPart> >::iterator i2;
-	std::vector<boost::shared_ptr<CPart> >::iterator j2;
+	std::vector<std::shared_ptr<CPart> >::iterator i2;
+	std::vector<std::shared_ptr<CPart> >::iterator j2;
 	TJobList L;
 
 	for (i2 = outputs.begin(); i2 != outputs.end(); ++i2) {
@@ -1413,6 +1413,7 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 	CFloat32CustomGPUMemory *dstMem = createGPUMemoryHandler(output->pData);
 
 	bool ok = dstMem->allocateGPUMemory(outx, outy, outz, zero ? astraCUDA3d::INIT_ZERO : astraCUDA3d::INIT_NO);
+	// TODO: cleanup and return error code after any error
 	if (!ok) ASTRA_ERROR("Error allocating GPU memory");
 
 	if (!zero) {

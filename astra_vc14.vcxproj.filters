@@ -150,6 +150,9 @@
     <ClCompile Include="src\Float32VolumeData3DMemory.cpp">
       <Filter>Data Structures\source</Filter>
     </ClCompile>
+    <ClCompile Include="src\SheppLogan.cpp">
+      <Filter>Data Structures\source</Filter>
+    </ClCompile>
     <ClCompile Include="src\SparseMatrix.cpp">
       <Filter>Data Structures\source</Filter>
     </ClCompile>
@@ -417,6 +420,9 @@
       <Filter>Data Structures\headers</Filter>
     </ClInclude>
     <ClInclude Include="include\astra\Float32VolumeData3DMemory.h">
+      <Filter>Data Structures\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\astra\SheppLogan.h">
       <Filter>Data Structures\headers</Filter>
     </ClInclude>
     <ClInclude Include="include\astra\SparseMatrix.h">

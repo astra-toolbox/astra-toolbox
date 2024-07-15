@@ -39,7 +39,7 @@ class astra_wrap(object):
     def __init__(self,proj_geom,vol_geom):
         self.proj_id = astra.create_projector('cuda',proj_geom,vol_geom)
         self.shape = (proj_geom['DetectorCount']*len(proj_geom['ProjectionAngles']),vol_geom['GridColCount']*vol_geom['GridRowCount'])
-        self.dtype = np.float
+        self.dtype = np.float32
     
     def matvec(self,v):
         sid, s = astra.create_sino(np.reshape(v,(vol_geom['GridRowCount'],vol_geom['GridColCount'])),self.proj_id)
@@ -55,8 +55,7 @@ vol_geom = astra.create_vol_geom(256, 256)
 proj_geom = astra.create_proj_geom('parallel', 1.0, 384, np.linspace(0,np.pi,180,False))
 
 # Create a 256x256 phantom image
-import scipy.io
-P = scipy.io.loadmat('phantom.mat')['phantom256']
+phantom_id, P = astra.data2d.shepp_logan(vol_geom)
 
 # Create a sinogram using the GPU.
 proj_id = astra.create_projector('cuda',proj_geom,vol_geom)
@@ -79,6 +78,7 @@ pylab.imshow(Y)
 pylab.show()
 
 astra.data2d.delete(sinogram_id)
+astra.data2d.delete(phantom_id)
 astra.projector.delete(proj_id)
 astra.projector.delete(wrapper.proj_id)
 

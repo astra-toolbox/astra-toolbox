@@ -26,7 +26,8 @@
 # distutils: language = c++
 # distutils: libraries = astra
 
-import six
+from __future__ import print_function
+
 try:
     from six.moves import range
 except ImportError:
@@ -42,6 +43,7 @@ from . cimport PyMatrixManager
 from .PyMatrixManager cimport CMatrixManager
 from .PyIncludes cimport *
 from .utils import wrap_from_bytes
+from .log import AstraError
 
 cdef CMatrixManager * manM = <CMatrixManager * >PyMatrixManager.getSingletonPtr()
 
@@ -62,9 +64,9 @@ cdef int csr_matrix_to_astra(data,CSparseMatrix *mat) except -1:
     else:
         csrD = data.tocsr()
     if not mat.isInitialized():
-        raise Exception("Couldn't initialize data object.")
+        raise AstraError("Provided matrix object was not initialized")
     if csrD.nnz > mat.m_lSize or csrD.shape[0] > mat.m_iHeight:
-        raise Exception("Matrix too large to store in this object.")
+        raise AstraError("Matrix too large to store in this object")
     for i in range(len(csrD.indptr)):
         mat.m_plRowStarts[i] = csrD.indptr[i]
     for i in range(csrD.nnz):
@@ -87,21 +89,21 @@ def create(data):
     pMatrix = new CSparseMatrix(data.shape[0], data.shape[1], data.nnz)
     if not pMatrix.isInitialized():
         del pMatrix
-        raise Exception("Couldn't initialize data object.")
+        raise AstraError("Couldn't initialize data object", append_log=True)
     try:
         csr_matrix_to_astra(data,pMatrix)
     except:
         del pMatrix
-        raise Exception("Failed to create data object.")
+        raise AstraError("Failed to create data object")
 
     return manM.store(pMatrix)
 
 cdef CSparseMatrix * getObject(i) except NULL:
     cdef CSparseMatrix * pDataObject = manM.get(i)
     if pDataObject == NULL:
-        raise Exception("Data object not found")
+        raise AstraError("Data object not found")
     if not pDataObject.isInitialized():
-        raise Exception("Data object not initialized properly.")
+        raise AstraError("Data object not initialized properly")
     return pDataObject
 
 
@@ -118,4 +120,4 @@ def get(i):
     return astra_to_csr_matrix(pDataObject)
 
 def info():
-    six.print_(wrap_from_bytes(manM.info()))
+    print(wrap_from_bytes(manM.info()))

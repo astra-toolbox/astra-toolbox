@@ -32,6 +32,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/DataProjectorPolicies.h"
 
+#include "astra/Logging.h"
+
 namespace astra {
 
 #include "astra/ParallelBeamDistanceDrivenProjector2D.inl"

@@ -405,6 +405,7 @@ float *genFilter(const SFilterConfig &_cfg,
 		default:
 		{
 			ASTRA_ERROR("Cannot serve requested filter");
+			return NULL;
 		}
 	}
 
@@ -524,6 +525,8 @@ SFilterConfig getFilterConfigForAlgorithm(const Config& _cfg, CAlgorithm *_alg)
 			}
 		} catch (const astra::StringUtil::bad_cast &e) {
 			ASTRA_ERROR("%s is not a valid id", nodeName);
+			c.m_eType = FILTER_ERROR;
+			return c;
 		}
 		break;
 	default:
@@ -562,6 +565,8 @@ SFilterConfig getFilterConfigForAlgorithm(const Config& _cfg, CAlgorithm *_alg)
 			}
 		} catch (const astra::StringUtil::bad_cast &e) {
 			ASTRA_ERROR("%s must be numerical", nodeName);
+			c.m_eType = FILTER_ERROR;
+			return c;
 		}
 		break;
 	default:
@@ -592,6 +597,8 @@ SFilterConfig getFilterConfigForAlgorithm(const Config& _cfg, CAlgorithm *_alg)
 			}
 		} catch (const astra::StringUtil::bad_cast &e) {
 			ASTRA_ERROR("%s must be numerical", nodeName);
+			c.m_eType = FILTER_ERROR;
+			return c;
 		}
 		break;
 	}

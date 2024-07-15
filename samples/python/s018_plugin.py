@@ -22,10 +22,10 @@
 # along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #
 # -----------------------------------------------------------------------
+from __future__ import print_function
 
 import astra
 import numpy as np
-import six
 
 # Define the plugin class (has to subclass astra.plugin.base)
 # Note that usually, these will be defined in a separate package/module
@@ -41,7 +41,7 @@ class LandweberPlugin(astra.plugin.base):
     # call the plugin from ASTRA
     astra_name = "LANDWEBER-PLUGIN"
 
-    def initialize(self,cfg, Relaxation = 1):
+    def initialize(self,cfg, Relaxation = 1.0):
         self.W = astra.OpTomo(cfg['ProjectorId'])
         self.vid = cfg['ReconstructionDataId']
         self.sid = cfg['ProjectionDataId']
@@ -68,8 +68,7 @@ if __name__=='__main__':
     proj_geom = astra.create_proj_geom('parallel', 1.0, 384, np.linspace(0,np.pi,180,False))
 
     # As before, create a sinogram from a phantom
-    import scipy.io
-    P = scipy.io.loadmat('phantom.mat')['phantom256']
+    phantom_id, P = astra.data2d.shepp_logan(vol_geom)
     proj_id = astra.create_projector('cuda',proj_geom,vol_geom)
 
     # construct the OpTomo object
@@ -85,10 +84,10 @@ if __name__=='__main__':
     astra.plugin.register(s018_plugin.LandweberPlugin)
 
     # Get a list of registered plugins
-    six.print_(astra.plugin.get_registered())
+    print(astra.plugin.get_registered())
 
     # To get help on a registered plugin, use get_help
-    six.print_(astra.plugin.get_help('LANDWEBER-PLUGIN'))
+    print(astra.plugin.get_help('LANDWEBER-PLUGIN'))
 
     # Create data structures
     sid = astra.data2d.create('-sino', proj_geom, sinogram)
@@ -148,4 +147,4 @@ if __name__=='__main__':
     # Clean up.
     astra.projector.delete(proj_id)
     astra.algorithm.delete([alg_id, alg_id_rel])
-    astra.data2d.delete([vid, sid])
+    astra.data2d.delete([vid, sid, phantom_id])

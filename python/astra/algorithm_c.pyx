@@ -25,8 +25,8 @@
 #
 # distutils: language = c++
 # distutils: libraries = astra
+from __future__ import print_function
 
-import six
 from .PyIncludes cimport *
 
 from . cimport PyAlgorithmManager
@@ -40,6 +40,8 @@ from .PyXMLDocument cimport XMLDocument
 
 from . cimport utils
 from .utils import wrap_from_bytes
+
+from .log import AstraError
 
 cdef CAlgorithmManager * manAlg = <CAlgorithmManager * >PyAlgorithmManager.getSingletonPtr()
 
@@ -56,25 +58,25 @@ cdef extern from *:
 
 
 def create(config):
-    cdef Config * cfg = utils.dictToConfig(six.b('Algorithm'), config)
+    cdef Config * cfg = utils.dictToConfig(b'Algorithm', config)
     cdef CAlgorithm * alg
-    alg = PyAlgorithmFactory.getSingletonPtr().create(cfg.self.getAttribute(six.b('type')))
+    alg = PyAlgorithmFactory.getSingletonPtr().create(cfg.self.getAttribute(b'type'))
     if alg == NULL:
         del cfg
-        raise Exception("Unknown Algorithm.")
+        raise AstraError("Unknown algorithm type")
     if not alg.initialize(cfg[0]):
         del cfg
         del alg
-        raise Exception("Unable to initialize Algorithm.")
+        raise AstraError("Unable to initialize algorithm", append_log=True)
     del cfg
     return manAlg.store(alg)
 
 cdef CAlgorithm * getAlg(i) except NULL:
     cdef CAlgorithm * alg = manAlg.get(i)
     if alg == NULL:
-        raise Exception("Unknown algorithm.")
+        raise AstraError("Unknown algorithm type")
     if not alg.isInitialized():
-        raise Exception("Algorithm not initialized.")
+        raise AstraError("Algorithm not initialized")
     return alg
 
 
@@ -94,12 +96,12 @@ def get_res_norm(i):
     pAlg3D = dynamic_cast_recAlg3D(alg)
     if pAlg2D != NULL:
         if not pAlg2D.getResidualNorm(res):
-            raise Exception("Operation not supported.")
+            raise AstraError("Operation not supported")
     elif pAlg3D != NULL:
         if not pAlg3D.getResidualNorm(res):
-            raise Exception("Operation not supported.")
+            raise AstraError("Operation not supported")
     else:
-        raise Exception("Operation not supported.")
+        raise AstraError("Operation not supported")
     return res
 
 
@@ -117,7 +119,7 @@ def get_plugin_object(algorithm_id):
     alg = getAlg(algorithm_id)
     pluginAlg = dynamic_cast_PluginAlg(alg)
     if not pluginAlg:
-        raise Exception("Not a plugin algorithm")
+        raise AstraError("Not a plugin algorithm")
     return pluginAlg.getInstance()
 
 
@@ -126,4 +128,4 @@ def clear():
 
 
 def info():
-    six.print_(wrap_from_bytes(manAlg.info()))
+    print(wrap_from_bytes(manAlg.info()))

@@ -29,6 +29,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/GeometryUtil2D.h"
 
+#include "astra/Logging.h"
+
 #include <cstring>
 #include <sstream>
 

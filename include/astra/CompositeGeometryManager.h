@@ -35,7 +35,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include <list>
 #include <map>
 #include <vector>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 
 namespace astra {
@@ -66,7 +66,7 @@ public:
 	CCompositeGeometryManager();
 
 	class CPart;
-	typedef std::list<boost::shared_ptr<CPart> > TPartList;
+	typedef std::list<std::shared_ptr<CPart> > TPartList;
 	class CPart {
 	public:
 		CPart() { }
@@ -130,8 +130,8 @@ public:
 
 	struct SJob {
 	public:
-		boost::shared_ptr<CPart> pInput;
-		boost::shared_ptr<CPart> pOutput;
+		std::shared_ptr<CPart> pInput;
+		std::shared_ptr<CPart> pOutput;
 		CProjector3D *pProjector; // For a `global' geometry. It will not match
 		                          // the geometries of the input and output.
 

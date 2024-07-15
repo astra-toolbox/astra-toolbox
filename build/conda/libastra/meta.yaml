@@ -1,0 +1,77 @@
+package:
+  name: libastra
+  version: '2.2.0'
+
+source:
+  git_url: https://github.com/astra-toolbox/astra-toolbox.git
+  git_tag: master
+
+build:
+  number: 0
+  string: cuda_{{ cudatoolkit }}_{{ PKG_BUILDNUM }} # [win or linux]
+  string: nocuda_{{ PKG_BUILDNUM }} # [osx]
+
+test:
+  imports:
+    - astra
+  requires:
+    - astra-toolbox
+
+requirements:
+  build:
+    - {{ compiler('c') }}    # [win or linux]
+    - {{ compiler('cxx') }}  # [linux]
+    - automake # [osx]
+    - autoconf # [osx]
+    - libtool # [osx]
+    # libgcc-ng/libstdcxx-ng 9.3 introduce extra system requirements on glibc
+    # For the older systems (debian8, debian9) we use g++ 5.4 and 7.3, resp.
+    {% if linux and cxx_compiler_version in ['5.4', '7.3'] %}
+    - libstdcxx-ng <9.3 # [linux]
+    - libgcc-ng <9.3 # [linux]
+    - libgomp <9.3 # [linux]
+    {% endif %}
+  host:
+    {% if linux and cxx_compiler_version in ['5.4', '7.3'] %}
+    - libstdcxx-ng <9.3 # [linux]
+    - libgcc-ng <9.3 # [linux]
+    - libgomp <9.3 # [linux]
+    {% endif %}
+    {% if cuda_dep_type == 'modular' %}
+    - cuda-cudart {{ cudacudart_dep }} # [win or linux]
+    # The cudart dll is (mistakenly?) in the *dev* package in win-64 before cuda-12.5
+    - cuda-cudart-dev {{ cudacudart_dep }} # [win]
+    - libcufft {{ libcufft_dep }} # [win or linux]
+    - libcufft-dev {{ libcufft_dep }} # [win]
+    {% else %}
+    # We explicitly specify the cudatoolkit dependency string in
+    # conda_build_config.yaml , forgoing pin_compatible.
+    # This is because the cudatoolkit version numbering for 11.0/11.1/11.2 is
+    # non-chronological on the nvidia conda channel.
+    - cudatoolkit {{ cudatoolkit_dep }} # [win or linux]
+    {% endif %}
+  run:
+    {% if cuda_dep_type == 'modular' %}
+    - cuda-cudart {{ cudacudart_dep }} # [win or linux]
+    - cuda-cudart-dev {{ cudacudart_dep }} # [win]
+    - libcufft {{ libcufft_dep }} # [win or linux]
+    - libcufft-dev {{ libcufft_dep }} # [win]
+    {% else %}
+    - cudatoolkit {{ cudatoolkit_dep }} # [win or linux]
+    {% endif %}
+  run_constrained:
+    - cuda-version {{ cudatoolkit }} # [win or linux]
+    - pytorch-cuda {{ pytorchcuda_dep }} # [win or linux]
+  {% if cuda_dep_type == 'modular' %}
+    - cudatoolkit {{ cudatoolkit_dep }} # [win or linux]
+  {% else %}
+    - cuda-cudart {{ cudacudart_dep }} # [win or linux]
+    - cuda-cudart-dev {{ cudacudart_dep }} # [win]
+    - libcufft {{ libcufft_dep }} # [win or linux]
+    - libcufft-dev {{ libcufft_dep }} # [win]
+  {% endif %}
+
+about:
+  home: https://www.astra-toolbox.com
+  license: GPLv3
+  summary: 'The ASTRA Toolbox is a Python toolbox of high-performance GPU primitives for 2D and 3D tomography.'

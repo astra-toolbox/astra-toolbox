@@ -10,5 +10,5 @@ function proj_geom = astra_geom_superresolution(proj_geom, factor)
 			proj_geom.Vectors(:,5:6) = proj_geom.Vectors(:,5:6) / factor; % DetectorSize			
 			proj_geom.DetectorCount = proj_geom.DetectorCount * factor;
 	else
-		error('Projection geometry not suited for super-resolution (or not implemented).')
+		error(['Projection geometry of type ' proj_geom.type ' is not suited for super-resolution (or not implemented).'])
 	end

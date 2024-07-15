@@ -2,7 +2,6 @@ from __future__ import print_function
 import sys
 import os
 import codecs
-import six
 
 vcppguid = "8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942" # C++ project
 siguid = "2150E333-8FDC-42A3-9474-1A3956D46DE8" # project group 
@@ -27,6 +26,14 @@ CUDA_CC = {
   (11,4): "compute_35,sm_35;compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_86,compute_86",
   (11,5): "compute_35,sm_35;compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_86,compute_86",
   (11,6): "compute_35,sm_35;compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_86,compute_86",
+  (11,7): "compute_35,sm_35;compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_86,compute_86",
+  (11,8): "compute_35,sm_35;compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_86,compute_86",
+  (12,0): "compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_86,compute_86",
+  (12,1): "compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_86,compute_86",
+  (12,2): "compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_86,compute_86",
+  (12,3): "compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_87,sm_87;compute_89,sm_89;compute_90,sm_90;compute_90,compute_90",
+  (12,4): "compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_87,sm_87;compute_89,sm_89;compute_90,sm_90;compute_90,compute_90",
+  (12,5): "compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_87,sm_87;compute_89,sm_89;compute_90,sm_90;compute_90,compute_90",
 }
 
 def create_mex_project(name, uuid14, uuid11, uuid09):
@@ -222,6 +229,7 @@ P_astra["filters"]["Data Structures\\source"] = [
 "src\\Float32VolumeData2D.cpp",
 "src\\Float32VolumeData3D.cpp",
 "src\\Float32VolumeData3DMemory.cpp",
+"src\\SheppLogan.cpp",
 "src\\SparseMatrix.cpp",
 ]
 P_astra["filters"]["Global &amp; Other\\source"] = [
@@ -362,6 +370,7 @@ P_astra["filters"]["Data Structures\\headers"] = [
 "include\\astra\\Float32VolumeData2D.h",
 "include\\astra\\Float32VolumeData3D.h",
 "include\\astra\\Float32VolumeData3DMemory.h",
+"include\\astra\\SheppLogan.h",
 "include\\astra\\SparseMatrix.h",
 ]
 P_astra["filters"]["Global &amp; Other\\headers"] = [
@@ -463,10 +472,7 @@ P_astra["files"].sort()
 
 projects = [ P_astra, F_astra_mex, P0, P1, P2, P3, P4, P5, P6, P7, P8 ]
 
-if six.PY2:
-  bom = "\xef\xbb\xbf"
-else:
-  bom = codecs.BOM_UTF8.decode("utf-8")
+bom = codecs.BOM_UTF8.decode("utf-8")
 
 class Configuration:
   def __init__(self, debug, cuda, x64):
@@ -593,9 +599,9 @@ def write_project11_14_start(P, F, version):
     print('    <RootNamespace>astraMatlab</RootNamespace>', file=F)
   else:
     print('    <RootNamespace>' + P["name"] + '</RootNamespace>', file=F)
-  print('    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>', file=F)
+  print('    <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>', file=F)
   print('  </PropertyGroup>', file=F)
-  print('  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />', file=F)
+  print('  <Import Project="$(VCTargetsPath)\\Microsoft.Cpp.Default.props" />', file=F)
   for c in configs:
     print('''  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='%s'" Label="Configuration">''' % (c.name(), ), file=F)
     print('    <ConfigurationType>DynamicLibrary</ConfigurationType>', file=F)
@@ -613,14 +619,14 @@ def write_project11_14_start(P, F, version):
         print('    <WholeProgramOptimization>true</WholeProgramOptimization>', file=F)
       print('    <CharacterSet>MultiByte</CharacterSet>', file=F)
     print('  </PropertyGroup>', file=F)
-  print('  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />', file=F)
+  print('  <Import Project="$(VCTargetsPath)\\Microsoft.Cpp.props" />', file=F)
   print('  <ImportGroup Label="ExtensionSettings">', file=F)
   if "mex" not in P["name"]:
     print(f'    <Import Project="$(CUDA_PATH_V{CUDA_MAJOR}_{CUDA_MINOR})\\extras\\visual_studio_integration\\MSBuildExtensions\\CUDA {CUDA_MAJOR}.{CUDA_MINOR}.props" />', file=F)
   print('  </ImportGroup>', file=F)
   for c in configs:
     print('''  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='%s'">''' % (c.name(), ), file=F)
-    print('''    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />''', file=F)
+    print('''    <Import Project="$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />''', file=F)
     print('''  </ImportGroup>''', file=F)
   print('  <PropertyGroup Label="UserMacros" />', file=F)
 
@@ -660,7 +666,7 @@ def write_project11_14_end(P, F):
     for f in l:
       print('    <None Include="' + f + '" />', file=F)
     print('  </ItemGroup>', file=F)
-  print('  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />', file=F)
+  print('  <Import Project="$(VCTargetsPath)\\Microsoft.Cpp.targets" />', file=F)
   print('  <ImportGroup Label="ExtensionTargets">', file=F)
   if "mex" not in P["name"]:
     print(f'    <Import Project="$(CUDA_PATH_V{CUDA_MAJOR}_{CUDA_MINOR})\\extras\\visual_studio_integration\\MSBuildExtensions\\CUDA {CUDA_MAJOR}.{CUDA_MINOR}.targets" />', file=F)
@@ -694,7 +700,7 @@ def write_main_project11_14(version):
     else:
       print('      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>', file=F)
     print('      <WarningLevel>Level3</WarningLevel>', file=F)
-    print('      <AdditionalIncludeDirectories>lib\include;include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
+    print('      <AdditionalIncludeDirectories>lib\\include;include\\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
     print('      <OpenMPSupport>true</OpenMPSupport>', file=F)
     if not c.x64: # /arch:SSE2 is implicit on x64
       print('      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>', file=F)
@@ -775,9 +781,9 @@ def write_mex_project11_14(P, version):
     else:
       print('      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>', file=F)
 #    print('      <WarningLevel>Level3</WarningLevel>', file=F)
-    #print('      <AdditionalIncludeDirectories>$(MATLAB_ROOT)\extern\include\;..\..\lib\include;..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
+    #print('      <AdditionalIncludeDirectories>$(MATLAB_ROOT)\\extern\\include\\;..\\..\\lib\\include;..\\..\\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
     # FIXME: This CUDA_PATH shouldn't be necessary
-    print('      <AdditionalIncludeDirectories>$(MATLAB_ROOT)\extern\include\;$(CUDA_PATH)\include;..\..\lib\include;..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
+    print('      <AdditionalIncludeDirectories>$(MATLAB_ROOT)\\extern\\include\\;$(CUDA_PATH)\\include;..\\..\\lib\\include;..\\..\\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
     print('      <OpenMPSupport>true</OpenMPSupport>', file=F)
     if not c.x64: # /arch:SSE2 is implicit on x64
       print('      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>', file=F)
@@ -818,9 +824,9 @@ def write_mex_project11_14(P, version):
       l += '..\\..\\lib\\win32\\;..\\..\\bin\\win32\\'
     l += c.config()
     if c.x64:
-      l += ';$(MATLAB_ROOT)\extern\lib\win64\microsoft'
+      l += ';$(MATLAB_ROOT)\\extern\\lib\\win64\\microsoft'
     else:
-      l += ';$(MATLAB_ROOT)\extern\lib\win32\microsoft'
+      l += ';$(MATLAB_ROOT)\\extern\\lib\\win32\\microsoft'
     l += ';%(AdditionalLibraryDirectories)'
     l += '</AdditionalLibraryDirectories>'
     print(l, file=F)
@@ -965,7 +971,7 @@ def write_main_project09():
   for c in configs:
     print('\t\t<Configuration', file=F)
     print('\t\t\tName="%s"' % (c.name(), ), file=F)
-    print('\t\t\tOutputDirectory="$(SolutionDir)bin\$(PlatformName)\%s"' % (c.config(), ), file=F)
+    print('\t\t\tOutputDirectory="$(SolutionDir)bin\\$(PlatformName)\\%s"' % (c.config(), ), file=F)
     print(r'''			IntermediateDirectory="$(OutDir)/obj"
 			ConfigurationType="2"
 			>''', file=F)
@@ -1100,7 +1106,7 @@ def write_mex_project09(P):
   for c in configs:
     print('\t\t<Configuration', file=F)
     print('\t\t\tName="%s"' % (c.name(), ), file=F)
-    print('\t\t\tOutputDirectory="$(SolutionDir)bin\$(PlatformName)\$(ConfigurationName)"', file=F)
+    print('\t\t\tOutputDirectory="$(SolutionDir)bin\\$(PlatformName)\\$(ConfigurationName)"', file=F)
     print(r'''			IntermediateDirectory="$(OutDir)\obj\$(ProjectName)"
 			ConfigurationType="2"
 			>''', file=F)

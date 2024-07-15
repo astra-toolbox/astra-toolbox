@@ -1,0 +1,28 @@
+cuda_dep_type:
+  - monolithic
+cudatoolkit:
+  - 10.2
+  - 11.0
+libcufft_dep:
+  - ">=10.1,<10.2"
+  - ">=10.2,<10.3"
+cudacudart_dep:
+  - ">=10.2,<10.3"
+  - ">=11.0,<11.1"
+pytorchcuda_dep:
+  - ">=10.2,<10.3"
+  - ">=11.0,<11.1"
+cudatoolkit_dep:
+  - ">=10.2,<10.3"
+  - ">=11.0.3,<11.1"
+
+c_compiler_version:    # [linux or win]
+  - 7.3                # [linux or win]
+cxx_compiler_version:  # [linux or win]
+  - 7.3                # [linux or win]
+zip_keys:
+  - cudatoolkit
+  - libcufft_dep
+  - cudacudart_dep
+  - pytorchcuda_dep
+  - cudatoolkit_dep

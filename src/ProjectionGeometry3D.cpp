@@ -26,6 +26,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "astra/ProjectionGeometry3D.h"
+#include "astra/Logging.h"
 
 using namespace std;
 

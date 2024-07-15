@@ -73,8 +73,7 @@ void astra_mex_direct_fp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 	// TODO: Add an optional way of specifying extra options
 
 	if (nrhs < 3) {
-		mexErrMsgTxt("Not enough arguments. Syntax: astra_mex_direct_c('FP3D', projector_id, data)");
-		return;
+		mexErrMsgTxt("Not enough arguments. Syntax: astra_mex_direct_c('FP3D', projector_id, data);");
 	}
 
 	int iPid = (int)(mxGetScalar(prhs[1]));
@@ -82,18 +81,15 @@ void astra_mex_direct_fp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 	pProjector = astra::CProjector3DManager::getSingleton().get(iPid);
 	if (!pProjector) {
 		mexErrMsgTxt("Projector not found.");
-		return;
 	}
 	if (!pProjector->isInitialized()) {
-		mexErrMsgTxt("Projector not initialized.");
-		return;
+		mexErrMsgTxt("Projector exists but is not initialized.");
 	}
 	bool isCuda = false;
 	if (dynamic_cast<CCudaProjector3D*>(pProjector))
 		isCuda = true;
 	if (!isCuda) {
 		mexErrMsgTxt("Only CUDA projectors are currently supported.");
-		return;
 	}
 
 	astra::CVolumeGeometry3D* pVolGeom = pProjector->getVolumeGeometry();
@@ -101,13 +97,11 @@ void astra_mex_direct_fp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 
 	const mxArray* const data = prhs[2];
 	if (!checkDataType(data)) {
-		mexErrMsgTxt("Data must be single or double.");
-		return;
+		mexErrMsgTxt("Data type must be single or double.");
 	}
 
 	if (!checkDataSize(data, pVolGeom)) {
 		mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry.");
-		return;
 	}
 
 
@@ -155,12 +149,11 @@ void astra_mex_direct_fp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 	pAlg->initialize(pProjector, pOutput, pInput);
 
 	if (!pAlg->isInitialized()) {
-		mexErrMsgTxt("Error initializing algorithm.");
 		// TODO: Delete pOutputMx?
 		delete pAlg;
 		delete pInput;
 		delete pOutput;
-		return;
+		mexErrMsgWithAstraLog("Error initializing algorithm.");
 	}
 
 	pAlg->run();
@@ -189,8 +182,7 @@ void astra_mex_direct_bp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 	// TODO: Add an optional way of specifying extra options
 
 	if (nrhs < 3) {
-		mexErrMsgTxt("Not enough arguments. Syntax: astra_mex_direct_c('BP3D', projector_id, data)");
-		return;
+		mexErrMsgTxt("Not enough arguments. Syntax: astra_mex_direct_c('BP3D', projector_id, data);");
 	}
 
 	int iPid = (int)(mxGetScalar(prhs[1]));
@@ -198,18 +190,15 @@ void astra_mex_direct_bp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 	pProjector = astra::CProjector3DManager::getSingleton().get(iPid);
 	if (!pProjector) {
 		mexErrMsgTxt("Projector not found.");
-		return;
 	}
 	if (!pProjector->isInitialized()) {
-		mexErrMsgTxt("Projector not initialized.");
-		return;
+		mexErrMsgTxt("Projector exists but is not initialized.");
 	}
 	bool isCuda = false;
 	if (dynamic_cast<CCudaProjector3D*>(pProjector))
 		isCuda = true;
 	if (!isCuda) {
 		mexErrMsgTxt("Only CUDA projectors are currently supported.");
-		return;
 	}
 
 	astra::CVolumeGeometry3D* pVolGeom = pProjector->getVolumeGeometry();
@@ -217,13 +206,11 @@ void astra_mex_direct_bp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 
 	const mxArray* const data = prhs[2];
 	if (!checkDataType(data)) {
-		mexErrMsgTxt("Data must be single or double.");
-		return;
+		mexErrMsgTxt("Data type must be single or double.");
 	}
 
 	if (!checkDataSize(data, pProjGeom)) {
 		mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry.");
-		return;
 	}
 
 
@@ -271,12 +258,11 @@ void astra_mex_direct_bp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 	pAlg->initialize(pProjector, pInput, pOutput);
 
 	if (!pAlg->isInitialized()) {
-		mexErrMsgTxt("Error initializing algorithm.");
 		// TODO: Delete pOutputMx?
 		delete pAlg;
 		delete pInput;
 		delete pOutput;
-		return;
+		mexErrMsgWithAstraLog("Error initializing algorithm.");
 	}
 
 	pAlg->run();
@@ -326,7 +312,6 @@ void mexFunction(int nlhs, mxArray* plhs[],
 
 #ifndef ASTRA_CUDA
 	mexErrMsgTxt("Only CUDA projectors are currently supported.");
-	return;
 #else
 
 	// 3D data

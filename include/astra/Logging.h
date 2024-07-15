@@ -34,6 +34,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #define ASTRA_INFO(...) astra::CLogger::info(__FILE__,__LINE__, __VA_ARGS__)
 #define ASTRA_WARN(...) astra::CLogger::warn(__FILE__,__LINE__, __VA_ARGS__)
 #define ASTRA_ERROR(...) astra::CLogger::error(__FILE__,__LINE__, __VA_ARGS__)
+#define ASTRA_CONFIG_CHECK(value, type, msg) if (!(value)) { astra::CLogger::error(__FILE__,__LINE__,"Configuration error in " type ". " msg); return false; }
 
 namespace astra
 {
@@ -53,7 +54,9 @@ class _AstraExport CLogger
   static bool m_bEnabledScreen;
   static bool m_bFileProvided;
   static bool m_bInitialized;
+  static std::string m_sLastErrMsg;
   static void _assureIsInitialized();
+  static void _setLastErrMsg(const char *sfile, int sline, const char *fmt, va_list ap);
   static void _setLevel(int id, log_level m_eLevel);
 
 public:
@@ -151,6 +154,11 @@ public:
    */
   static bool setCallbackScreen(void (*cb)(const char *msg, size_t len));
 
+  /**
+   * Get last error message received by the logger.
+   *
+   */
+  static std::string getLastErrMsg();
 };
 
 }

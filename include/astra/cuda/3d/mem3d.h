@@ -28,9 +28,9 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _CUDA_MEM3D_H
 #define _CUDA_MEM3D_H
 
-#include <boost/shared_ptr.hpp>
-
 #include "astra3d.h"
+
+#include <memory>
 
 namespace astra {
 class CVolumeGeometry3D;
@@ -58,7 +58,7 @@ namespace astraCUDA3d {
 struct SMemHandle3D_internal;
 
 struct MemHandle3D {
-	boost::shared_ptr<SMemHandle3D_internal> d;
+	std::shared_ptr<SMemHandle3D_internal> d;
 	operator bool() const { return (bool)d; }
 };
 

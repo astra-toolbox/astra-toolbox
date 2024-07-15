@@ -24,6 +24,7 @@
 # -----------------------------------------------------------------------
 
 import os
+import sys
 import numpy as np
 
 from distutils.core import setup
@@ -45,7 +46,10 @@ if parse_version(Cython.__version__) < parse_version('0.13'):
 # to the directory passed by --astra_build_config_dir on the command line,
 # or to the source dir otherwise.
 
-parser = argparse.ArgumentParser(allow_abbrev=False, add_help=False)
+if sys.version_info.major > 2:
+    parser = argparse.ArgumentParser(allow_abbrev=False, add_help=False)
+else:
+    parser = argparse.ArgumentParser(add_help=False)
 parser.add_argument('--astra_build_config_dir')
 parser.add_argument('--astra_build_cython_dir')
 args, script_args = parser.parse_known_args()
@@ -82,12 +86,6 @@ if update_cfg:
     with open(cfg_file, 'w') as cfg:
         cfg.write(cfg_string)
 
-pkgdata = {}
-data_files = []
-if os.environ.get('ASTRA_INSTALL_LIBRARY_AS_DATA', ''):
-    data_files=[('astra', [os.environ['ASTRA_INSTALL_LIBRARY_AS_DATA']])]
-    pkgdata['astra'] = [os.path.basename(os.environ['ASTRA_INSTALL_LIBRARY_AS_DATA'])]
-
 cmdclass = {}
 
 # Custom command to (forcefully) override bdist's dist_dir setting used
@@ -108,12 +106,33 @@ class SetDistDirCommand(Command):
     def run(self):
         pass
 
+# Custom command to add files (typically .so/.dll) to the module's directory
+# when installing (or building a wheel)
+class AddExtraLibCommand(Command):
+    user_options = [
+        ('file=', 'f', "extra platlib file(s) to install"),
+    ]
+    def initialize_options(self):
+        self.file = None
+
+    def finalize_options(self):
+        build_ext = self.get_finalized_command('build_ext')
+        self.build_lib = os.path.join(build_ext.build_lib, 'astra')
+
+    def run(self):
+        import shutil
+        for F in self.file.split(';'):
+            print("Installing", F, "to", self.build_lib)
+            shutil.copy2(F, self.build_lib)
+
+    # TODO: Do we need get_outputs()?
+
 
 ext_modules = cythonize(os.path.join('.', 'astra', '*.pyx'),
                         include_path=include_path,
                         build_dir=build_dir,
                         language_level=3)
-cmdclass = {'build_ext': build_ext, 'set_dist_dir': SetDistDirCommand }
+cmdclass = {'build_ext': build_ext, 'set_dist_dir': SetDistDirCommand, 'add_extra_lib': AddExtraLibCommand }
 
 for m in ext_modules:
     if m.name in ('astra.plugin_c', 'astra.algorithm_c'):
@@ -125,7 +144,7 @@ for m in ext_modules:
 
 setup(script_args=script_args,
       name='astra-toolbox',
-      version='2.1.2',
+      version='2.2.0',
       description='Python interface to the ASTRA Toolbox',
       author='D.M. Pelt',
       author_email='D.M.Pelt@cwi.nl',
@@ -141,7 +160,5 @@ setup(script_args=script_args,
       cmdclass=cmdclass,
       # ext_modules = [Extension("astra","astra/astra.pyx")],
       packages=['astra', 'astra.plugins'],
-      data_files=data_files,
-      package_data=pkgdata,
       requires=['numpy', 'scipy', 'six'],
       )

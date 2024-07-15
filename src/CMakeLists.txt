@@ -8,12 +8,10 @@ find_package(Boost 1.70 REQUIRED COMPONENTS thread)
 # Collect source and header files --------------------------------------------
 set(ASTRA_SOURCES
     Algorithm.cpp
-    AsyncAlgorithm.cpp
-    ReconstructionAlgorithm2D.cpp
-    ReconstructionAlgorithm3D.cpp
     ArtAlgorithm.cpp
     AstraObjectFactory.cpp
     AstraObjectManager.cpp
+    AsyncAlgorithm.cpp
     BackProjectionAlgorithm.cpp
     CglsAlgorithm.cpp
     CompositeGeometryManager.cpp
@@ -29,10 +27,10 @@ set(ASTRA_SOURCES
     Features.cpp
     FilteredBackProjectionAlgorithm.cpp
     Filters.cpp
+    Float32Data.cpp
     Float32Data2D.cpp
     Float32Data3D.cpp
     Float32Data3DMemory.cpp
-    Float32Data.cpp
     Float32ProjectionData2D.cpp
     Float32ProjectionData3D.cpp
     Float32ProjectionData3DMemory.cpp
@@ -51,8 +49,8 @@ set(ASTRA_SOURCES
     ParallelBeamLineKernelProjector2D.cpp
     ParallelBeamStripKernelProjector2D.cpp
     ParallelProjectionGeometry2D.cpp
-    ParallelVecProjectionGeometry2D.cpp
     ParallelProjectionGeometry3D.cpp
+    ParallelVecProjectionGeometry2D.cpp
     ParallelVecProjectionGeometry3D.cpp
     PlatformDepSystemCode.cpp
     PluginAlgorithmFactory.cpp
@@ -60,11 +58,14 @@ set(ASTRA_SOURCES
     ProjectionGeometry3D.cpp
     Projector2D.cpp
     Projector3D.cpp
+    ReconstructionAlgorithm2D.cpp
+    ReconstructionAlgorithm3D.cpp
     SartAlgorithm.cpp
+    SheppLogan.cpp
     SirtAlgorithm.cpp
+    SparseMatrix.cpp
     SparseMatrixProjectionGeometry2D.cpp
     SparseMatrixProjector2D.cpp
-    SparseMatrix.cpp
     Utilities.cpp
     VolumeGeometry2D.cpp
     VolumeGeometry3D.cpp

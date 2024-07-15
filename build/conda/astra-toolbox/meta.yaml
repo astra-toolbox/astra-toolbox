@@ -1,6 +1,6 @@
 package:
   name: astra-toolbox
-  version: '2.1.2'
+  version: '2.2.0'
 
 source:
   git_url: https://github.com/astra-toolbox/astra-toolbox.git
@@ -27,12 +27,11 @@ requirements:
   host:
     - python
     - cython >=0.13
-    - boost # [osx or linux]
     - nomkl # [not win]
     - numpy {{ numpy }}
     - scipy
     - six
-    - libastra ==2.1.2
+    - libastra ==2.2.0
   run:
     - python
     - {{ pin_compatible('numpy', min_pin='x.x', max_pin='x') }}
@@ -43,12 +42,12 @@ requirements:
     # chances of API/ABI incompatibility.
     # The 'cuda_*' build string is designed to match our packages but not
     # current conda-forge/libastra packages which use a different format.
-    - libastra ==2.1.2 cuda_* # [win or linux]
-    - libastra ==2.1.2 nocuda_* # [osx]
+    - libastra ==2.2.0 cuda_* # [win or linux]
+    - libastra ==2.2.0 nocuda_* # [osx]
 
 
 about:
-  home: http://www.astra-toolbox.com
+  home: https://www.astra-toolbox.com
   license: GPLv3
   summary: 'The ASTRA Toolbox is a Python toolbox of high-performance GPU primitives for 2D and 3D tomography.'
 
