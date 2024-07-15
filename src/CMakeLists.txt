@@ -87,16 +87,21 @@ add_library(astra SHARED ${ASTRA_SOURCES})
 set_target_properties(
   astra
   PROPERTIES POSITION_INDEPENDENT_CODE ON
-             # DLL_EXPORTS marks functions as for external use (shared library)
-             # on Windows
-             # __SSE2__ enables Streaming SIMD Extensions 2 where available
-             COMPILE_DEFINITIONS "DLL_EXPORTS;__SSE2__"
              COMPILE_FEATURES cxx_std_11
              INCLUDE_DIRECTORIES "${ASTRA_INCLUDES}"
              LINK_LIBRARIES Boost::thread
              VERSION 0.0.0
              SOVERSION 0
              OUTPUT_NAME "${OUTPUT_NAME}")
+
+if(MSVC OR WIN32)
+  # DLL_EXPORTS marks functions as for external use (shared library) on Windows
+  target_compile_definitions(
+    astra
+    PRIVATE
+    "DLL_EXPORTS"
+  )
+endif(MSVC OR WIN32)
 
 if(ASTRA_USE_CUDA)
 
