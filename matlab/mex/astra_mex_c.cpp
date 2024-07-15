@@ -64,6 +64,7 @@ void astra_mex_credits(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[
 	mexPrintf(" * Dr. Willem Jan Palenstijn\n");
 	mexPrintf(" * Dr. Daniel Pelt\n");
 	mexPrintf(" * Dr. Tom Roelandts\n");
+	mexPrintf(" * Dr. Alexander Skorikov\n");
 	mexPrintf(" * Dr. Wim van Aarle\n");
 	mexPrintf(" * Dr. Gert Van Gompel\n");
 	mexPrintf(" * Sander van der Maar, MSc.\n");

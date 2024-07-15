@@ -73,6 +73,7 @@ def credits():
  * Dr. Willem Jan Palenstijn
  * Dr. Daniel Pelt
  * Dr. Tom Roelandts
+ * Dr. Alexander Skorikov
  * Dr. Wim van Aarle
  * Dr. Gert Van Gompel
  * Sander van der Maar, MSc.
