@@ -3,7 +3,7 @@
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
-find_package(Boost 1.70 REQUIRED COMPONENTS thread)
+find_package(Boost 1.70 CONFIG REQUIRED COMPONENTS thread )
 
 # Collect source and header files --------------------------------------------
 set(ASTRA_SOURCES
@@ -156,25 +156,21 @@ if(ASTRA_USE_CUDA)
 
   set(ASTRA_CUDA_INCLUDES ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
-  set_property(
-    TARGET astra
-    APPEND
-    PROPERTY SOURCES ${ASTRA_CUDA_SOURCES})
+  target_sources(
+    astra
+    ${ASTRA_CUDA_SOURCES})
 
-  set_property(
-    TARGET astra
-    APPEND
-    PROPERTY INCLUDE_DIRECTORIES ${ASTRA_CUDA_INCLUDES})
+  target_include_directories(
+    astra
+    ${ASTRA_CUDA_INCLUDES})
 
   # ASTRA_CUDA enables CUDA poritions of code
-  set_property(
-    TARGET astra
-    APPEND
-    PROPERTY COMPILE_DEFINITIONS "ASTRA_CUDA")
+  target_compile_definitions(
+    astra
+    "ASTRA_CUDA")
 
-  set_property(
-    TARGET astra
-    APPEND
-    PROPERTY LINK_LIBRARIES "cufft")
+  target_link_libraries(
+    astra
+    CUDA::cufft CUDA::cudart)
 
 endif()
