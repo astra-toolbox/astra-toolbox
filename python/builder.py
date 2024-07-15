@@ -61,7 +61,7 @@ else:
     build_dir = args.astra_build_cython_dir
 
 if args.astra_cuda_dependencies:
-    extra_install_requires = ['nvidia-cuda-runtime-cu12', 'nvidia-cufft-cu12']
+    extra_install_requires = ['nvidia-cuda-runtime-cu12==12.1.105', 'nvidia-cufft-cu12==11.0.2.54']
 else:
     extra_install_requires = [ ]
 
