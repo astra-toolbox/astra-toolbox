@@ -44,6 +44,7 @@ __pycache__
 /build/linux/src/*
 /build/linux/matlab/*
 /build/linux/python/*
+/build/cmake*
 
 # MSVC build output
 /bin/
