@@ -180,8 +180,8 @@ cdef fillDataObjectScalar(CFloat32Data3DMemory * obj, float s):
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef fillDataObjectArray(CFloat32Data3DMemory * obj, float [:,:,::1] data):
-    cdef float [:,:,::1] cView = <float[:data.shape[0],:data.shape[1],:data.shape[2]]> obj.getData()
+cdef fillDataObjectArray(CFloat32Data3DMemory * obj, const float [:,:,::1] data):
+    cdef const float [:,:,::1] cView = <const float[:data.shape[0],:data.shape[1],:data.shape[2]]> obj.getData()
     cView[:] = data
 
 cdef CFloat32Data3D * getObject(i) except NULL:
