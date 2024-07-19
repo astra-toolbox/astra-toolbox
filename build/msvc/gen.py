@@ -470,10 +470,9 @@ projects = [ P_astra, F_astra_mex, P0, P1, P2, P3, P4, P5, P6, P7, P8 ]
 bom = codecs.BOM_UTF8.decode("utf-8")
 
 class Configuration:
-  def __init__(self, debug, cuda, x64):
+  def __init__(self, debug, cuda):
     self.debug = debug
     self.cuda = cuda
-    self.x64 = x64
   def type(self):
     if self.debug:
       return "Debug"
@@ -485,11 +484,7 @@ class Configuration:
       n += "_CUDA"
     return n
   def platform(self):
-    if self.x64:
-      n = "x64"
-    else:
-      n = "Win32"
-    return n 
+    return "x64"
   def name(self):
     n = self.config()
     n += "|"
@@ -499,17 +494,14 @@ class Configuration:
     n = "Astra"
     if self.cuda:
       n += "Cuda"
-    if self.x64:
-      n += "64"
-    else:
-      n += "32"
+    n += "64"
     if self.debug:
       n += "D"
     return n
       
 
 
-configs = [ Configuration(a,b,c) for a in [ True, False ] for b in [ True, False ] for c in [ False, True ] ]
+configs = [ Configuration(a,b) for a in [ True, False ] for b in [ True, False ] ]
 
 def write_sln():
   main_project = P_astra
@@ -667,8 +659,6 @@ def write_main_project14():
     print('      <WarningLevel>Level3</WarningLevel>', file=F)
     print('      <AdditionalIncludeDirectories>lib\\include;include\\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
     print('      <OpenMPSupport>true</OpenMPSupport>', file=F)
-    if not c.x64: # /arch:SSE2 is implicit on x64
-      print('      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>', file=F)
     if c.debug:
       print('      <Optimization>Disabled</Optimization>', file=F)
     else:
@@ -696,10 +686,7 @@ def write_main_project14():
     if c.cuda:
       print('      <AdditionalDependencies>cudart.lib;cufft.lib;%(AdditionalDependencies)</AdditionalDependencies>', file=F)
     l = '      <AdditionalLibraryDirectories>';
-    if c.x64:
-      l += 'lib\\x64'
-    else:
-      l += 'lib\\win32'
+    l += 'lib\\x64'
     l += ';%(AdditionalLibraryDirectories)'
     if c.cuda:
       l += ';$(CudaToolkitLibDir)'
@@ -708,10 +695,7 @@ def write_main_project14():
     print('    </Link>', file=F)
     if c.cuda:
       print('    <CudaCompile>', file=F)
-      if c.x64:
-        print('      <TargetMachinePlatform>64</TargetMachinePlatform>', file=F)
-      else:
-        print('      <TargetMachinePlatform>32</TargetMachinePlatform>', file=F)
+      print('      <TargetMachinePlatform>64</TargetMachinePlatform>', file=F)
       print('      <GenerateLineInfo>true</GenerateLineInfo>', file=F)
       print(f'      <CodeGeneration>{CUDA_CC[(CUDA_MAJOR,CUDA_MINOR)]}</CodeGeneration>', file=F)
       print('    </CudaCompile>', file=F)
@@ -730,10 +714,7 @@ def write_mex_project14(P):
     print('    <OutDir>$(SolutionDir)bin\\$(Platform)\\$(Configuration)\\</OutDir>', file=F)
     print('    <IntDir>$(OutDir)obj\\$(ProjectName)\\</IntDir>', file=F)
     print('    <TargetName>$(ProjectName)_c</TargetName>', file=F)
-    if c.x64:
-      print('    <TargetExt>.mexw64</TargetExt>', file=F)
-    else:
-      print('    <TargetExt>.mexw32</TargetExt>', file=F)
+    print('    <TargetExt>.mexw64</TargetExt>', file=F)
     print('  </PropertyGroup>', file=F)
   for c in configs:
     print('''  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='%s'">''' % (c.name(), ), file=F)
@@ -747,8 +728,6 @@ def write_mex_project14(P):
     # FIXME: This CUDA_PATH shouldn't be necessary
     print('      <AdditionalIncludeDirectories>$(MATLAB_ROOT)\\extern\\include\\;$(CUDA_PATH)\\include;..\\..\\lib\\include;..\\..\\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
     print('      <OpenMPSupport>true</OpenMPSupport>', file=F)
-    if not c.x64: # /arch:SSE2 is implicit on x64
-      print('      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>', file=F)
     if c.debug:
       print('      <Optimization>Disabled</Optimization>', file=F)
     else:
@@ -774,21 +753,12 @@ def write_mex_project14(P):
 #    if not c.debug:
 #      print('      <EnableCOMDATFolding>true</EnableCOMDATFolding>', file=F)
 #      print('      <OptimizeReferences>true</OptimizeReferences>', file=F)
-    if c.x64:
-      print('      <OutputFile>$(OutDir)$(ProjectName)_c.mexw64</OutputFile>', file=F)
-    else:
-      print('      <OutputFile>$(OutDir)$(ProjectName)_c.mexw32</OutputFile>', file=F)
+    print('      <OutputFile>$(OutDir)$(ProjectName)_c.mexw64</OutputFile>', file=F)
     print('      <AdditionalDependencies>%s.lib;libmex.lib;libmx.lib;libut.lib;%%(AdditionalDependencies)</AdditionalDependencies>' % (c.target(), ), file=F)
     l = '      <AdditionalLibraryDirectories>';
-    if c.x64:
-      l += '..\\..\\lib\\x64\\;..\\..\\bin\\x64\\'
-    else:
-      l += '..\\..\\lib\\win32\\;..\\..\\bin\\win32\\'
+    l += '..\\..\\lib\\x64\\;..\\..\\bin\\x64\\'
     l += c.config()
-    if c.x64:
-      l += ';$(MATLAB_ROOT)\\extern\\lib\\win64\\microsoft'
-    else:
-      l += ';$(MATLAB_ROOT)\\extern\\lib\\win32\\microsoft'
+    l += ';$(MATLAB_ROOT)\\extern\\lib\\win64\\microsoft'
     l += ';%(AdditionalLibraryDirectories)'
     l += '</AdditionalLibraryDirectories>'
     print(l, file=F)
