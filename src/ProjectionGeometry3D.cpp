@@ -245,8 +245,6 @@ bool CProjectionGeometry3D::_initialize(int _iProjectionAngleCount,
 		m_pfProjectionAngles[i] = _pfProjectionAngles[i];
 	}
 
-	m_iDetectorTotCount = m_iProjectionAngleCount * m_iDetectorRowCount * m_iDetectorColCount;
-
 	return true;
 }
 
