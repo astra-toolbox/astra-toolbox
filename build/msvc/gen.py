@@ -36,7 +36,7 @@ CUDA_CC = {
 }
 
 def create_mex_project(name, uuid14):
-    return { "type": vcppguid, "name": name, "file14": "matlab\\mex\\" + name + "_vc14.vcxproj", "uuid14": uuid14, "files": [] }
+    return { "type": vcppguid, "name": name, "file14": name + "_vc14.vcxproj", "uuid14": uuid14, "files": [] }
 
 P_astra = { "type": vcppguid, "name": "astra_vc14", "file14": "astra_vc14.vcxproj", "uuid14": "DABD9D82-609E-4C71-B1CA-A41B07495290" }
 
@@ -511,14 +511,12 @@ def write_sln():
   print("# Visual Studio 14", file=F)
   print("VisualStudioVersion = 14.0.25420.1", file=F)
   print("MinimumVisualStudioVersion = 10.0.40219.1", file=F)
-  uuid = "uuid14"
-  file_ = "file14"
   for p in projects:
-    s = '''Project("{%s}") = "%s", "%s", "{%s}"''' % (p["type"], p["name"], p[file_], p[uuid])
+    s = '''Project("{%s}") = "%s", "projects\\%s", "{%s}"''' % (p["type"], p["name"], p["file14"], p["uuid14"])
     print(s, file=F)
     if "mex" in p["name"]:
       print("\tProjectSection(ProjectDependencies) = postProject", file=F)
-      print("\t\t{%s} = {%s}" % (main_project[uuid], main_project[uuid]), file=F)
+      print("\t\t{%s} = {%s}" % (main_project["uuid14"], main_project["uuid14"]), file=F)
       print("\tEndProjectSection", file=F)
     print("EndProject", file=F)
   print("Global", file=F)
@@ -531,8 +529,8 @@ def write_sln():
     if "entries" in p:
       continue
     for c in configs:
-      print("\t\t{" + p[uuid] + "}." + c.name() + ".ActiveCfg = " + c.name(), file=F)
-      print("\t\t{" + p[uuid] + "}." + c.name() + ".Build.0 = " + c.name(), file=F)
+      print("\t\t{" + p["uuid14"] + "}." + c.name() + ".ActiveCfg = " + c.name(), file=F)
+      print("\t\t{" + p["uuid14"] + "}." + c.name() + ".Build.0 = " + c.name(), file=F)
   print("\tEndGlobalSection", file=F)
   print("\tGlobalSection(SolutionProperties) = preSolution", file=F)
   print("\t\tHideSolutionNode = FALSE", file=F)
@@ -542,7 +540,7 @@ def write_sln():
     if "entries" not in p:
       continue
     for e in p["entries"]:
-      print("\t\t{" + e[uuid] + "} = {" + p[uuid] + "}", file=F)
+      print("\t\t{" + e["uuid14"] + "} = {" + p["uuid14"] + "}", file=F)
   print("\tEndGlobalSection", file=F)
   print("EndGlobal", file=F)
   F.close()
@@ -594,30 +592,33 @@ def write_project14_start(P, F):
   print('  <PropertyGroup Label="UserMacros" />', file=F)
 
 def write_project14_end(P, F):
+  relpath = '..\\..\\..\\'
+  if 'mex' in P["name"]:
+      relpath += 'matlab\\mex\\'
   l = [ f for f in P["files"] if len(f) > 4 and f[-4:] == ".cpp" ]
   if l:
     print('  <ItemGroup>', file=F)
     for f in l:
       if ("cuda" in f) or ("Cuda" in f):
-        print('    <ClCompile Include="' + f + '">', file=F)
+        print('    <ClCompile Include="' + relpath + f + '">', file=F)
         for c in configs:
           if not c.cuda:
             print('''      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='%s'">true</ExcludedFromBuild>''' % (c.name(), ), file=F)
         print('    </ClCompile>', file=F)
       else:
-        print('    <ClCompile Include="' + f + '" />', file=F)
+        print('    <ClCompile Include="' + relpath + f + '" />', file=F)
     print('  </ItemGroup>', file=F)
   l = [ f for f in P["files"] if len(f) > 2 and f[-2:] == ".h" ]
   if l:
     print('  <ItemGroup>', file=F)
     for f in l:
-      print('    <ClInclude Include="' + f + '" />', file=F)
+      print('    <ClInclude Include="' + relpath + f + '" />', file=F)
     print('  </ItemGroup>', file=F)
   l = [ f for f in P["files"] if len(f) > 3 and f[-3:] == ".cu" ]
   if l:
     print('  <ItemGroup>', file=F)
     for f in l:
-      print('    <CudaCompile Include="' + f + '">', file=F)
+      print('    <CudaCompile Include="' + relpath + f + '">', file=F)
       for c in configs:
         if not c.cuda:
           print('''      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='%s'">true</ExcludedFromBuild>''' % (c.name(), ), file=F)
@@ -627,7 +628,7 @@ def write_project14_end(P, F):
   if l:
     print('  <ItemGroup>', file=F)
     for f in l:
-      print('    <None Include="' + f + '" />', file=F)
+      print('    <None Include="' + relpath + f + '" />', file=F)
     print('  </ItemGroup>', file=F)
   print('  <Import Project="$(VCTargetsPath)\\Microsoft.Cpp.targets" />', file=F)
   print('  <ImportGroup Label="ExtensionTargets">', file=F)
@@ -639,12 +640,14 @@ def write_project14_end(P, F):
 
 def write_main_project14():
   P = P_astra;
-  F = open(P["file14"], "w", encoding="utf-8")
+  F = open(os.path.join("projects", P["file14"]), "w", encoding="utf-8")
   write_project14_start(P, F)
   for c in configs:
     print('''  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='%s'">''' % (c.name(), ), file=F)
-    print('    <OutDir>$(SolutionDir)bin\\$(Platform)\\' + c.config() + '\\</OutDir>', file=F)
+    print('    <OutDir>..\\bin\\$(Platform)\\$(Configuration)\\</OutDir>', file=F)
     print('    <IntDir>$(OutDir)obj\\</IntDir>', file=F)
+    print('    <CudaIntDir>$(OutDir)obj\\</CudaIntDir>', file=F)
+    print('    <CudaIntDirFullPath>$(SolutionDir)bin\\$(Platform)\\$(Configuration)\\obj\\</CudaIntDirFullPath>', file=F)
     print('    <TargetExt>.dll</TargetExt>', file=F)
     print('    <TargetName>' + c.target() + '</TargetName>', file=F)
     print('    <GenerateManifest>true</GenerateManifest>', file=F)
@@ -657,7 +660,7 @@ def write_main_project14():
     else:
       print('      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>', file=F)
     print('      <WarningLevel>Level3</WarningLevel>', file=F)
-    print('      <AdditionalIncludeDirectories>lib\\include;include\\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
+    print('      <AdditionalIncludeDirectories>..\\..\\..\\lib\\include;..\\..\\..\\include\\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
     print('      <OpenMPSupport>true</OpenMPSupport>', file=F)
     if c.debug:
       print('      <Optimization>Disabled</Optimization>', file=F)
@@ -682,11 +685,11 @@ def write_main_project14():
     if not c.debug:
       print('      <EnableCOMDATFolding>true</EnableCOMDATFolding>', file=F)
       print('      <OptimizeReferences>true</OptimizeReferences>', file=F)
-    print('      <OutputFile>bin\\' + c.platform() + '\\' + c.config() + '\\' + c.target() + '.dll</OutputFile>', file=F)
+    print('      <OutputFile>..\\bin\\' + c.platform() + '\\' + c.config() + '\\' + c.target() + '.dll</OutputFile>', file=F)
     if c.cuda:
       print('      <AdditionalDependencies>cudart.lib;cufft.lib;%(AdditionalDependencies)</AdditionalDependencies>', file=F)
     l = '      <AdditionalLibraryDirectories>';
-    l += 'lib\\x64'
+    l += '..\\..\\..\\lib\\x64'
     l += ';%(AdditionalLibraryDirectories)'
     if c.cuda:
       l += ';$(CudaToolkitLibDir)'
@@ -704,14 +707,14 @@ def write_main_project14():
   F.close()
 
 def write_mex_project14(P):
-  F = open("matlab/mex/" + P["name"] + "_vc14.vcxproj", "w", encoding="utf-8")
+  F = open(os.path.join("projects", P["name"] + "_vc14.vcxproj"), "w", encoding="utf-8")
   write_project14_start(P, F)
   print('  <PropertyGroup>', file=F)
   print('    <_ProjectFileVersion>11.0.60610.1</_ProjectFileVersion>', file=F)
   print('  </PropertyGroup>', file=F)
   for c in configs:
     print('''  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='%s'">''' % (c.name(), ), file=F)
-    print('    <OutDir>$(SolutionDir)bin\\$(Platform)\\$(Configuration)\\</OutDir>', file=F)
+    print('    <OutDir>..\\bin\\$(Platform)\\$(Configuration)\\</OutDir>', file=F)
     print('    <IntDir>$(OutDir)obj\\$(ProjectName)\\</IntDir>', file=F)
     print('    <TargetName>$(ProjectName)_c</TargetName>', file=F)
     print('    <TargetExt>.mexw64</TargetExt>', file=F)
@@ -726,7 +729,7 @@ def write_mex_project14(P):
 #    print('      <WarningLevel>Level3</WarningLevel>', file=F)
     #print('      <AdditionalIncludeDirectories>$(MATLAB_ROOT)\\extern\\include\\;..\\..\\lib\\include;..\\..\\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
     # FIXME: This CUDA_PATH shouldn't be necessary
-    print('      <AdditionalIncludeDirectories>$(MATLAB_ROOT)\\extern\\include\\;$(CUDA_PATH)\\include;..\\..\\lib\\include;..\\..\\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
+    print('      <AdditionalIncludeDirectories>$(MATLAB_ROOT)\\extern\\include\\;$(CUDA_PATH)\\include;..\\..\\..\\lib\\include;..\\..\\..\\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
     print('      <OpenMPSupport>true</OpenMPSupport>', file=F)
     if c.debug:
       print('      <Optimization>Disabled</Optimization>', file=F)
@@ -756,7 +759,7 @@ def write_mex_project14(P):
     print('      <OutputFile>$(OutDir)$(ProjectName)_c.mexw64</OutputFile>', file=F)
     print('      <AdditionalDependencies>%s.lib;libmex.lib;libmx.lib;libut.lib;%%(AdditionalDependencies)</AdditionalDependencies>' % (c.target(), ), file=F)
     l = '      <AdditionalLibraryDirectories>';
-    l += '..\\..\\lib\\x64\\;..\\..\\bin\\x64\\'
+    l += '..\\..\\..\\lib\\x64\\;..\\bin\\x64\\'
     l += c.config()
     l += ';$(MATLAB_ROOT)\\extern\\lib\\win64\\microsoft'
     l += ';%(AdditionalLibraryDirectories)'
@@ -771,7 +774,7 @@ def write_mex_project14(P):
 
 def write_main_filters14():
   P = P_astra
-  F = open(P["name"] + ".vcxproj.filters", "w", encoding="utf-8")
+  F = open(os.path.join("projects", P["name"] + ".vcxproj.filters"), "w", encoding="utf-8")
   print(bom + '<?xml version="1.0" encoding="utf-8"?>', file=F)
   print('<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">', file=F)
   print('  <ItemGroup>', file=F)
@@ -779,7 +782,7 @@ def write_main_filters14():
     L = P_astra["filters"][Filter][1:]
     l = [ f for f in L if len(f) > 3 and f[-3:] == ".cu" ]
     for f in l:
-      print('    <CudaCompile Include="' + f + '">', file=F)
+      print('    <CudaCompile Include="..\\..\\..\\' + f + '">', file=F)
       print('      <Filter>' + Filter + '</Filter>', file=F)
       print('    </CudaCompile>', file=F)
   print('  </ItemGroup>', file=F)
@@ -788,7 +791,7 @@ def write_main_filters14():
     L = P_astra["filters"][Filter][1:]
     l = [ f for f in L if len(f) > 4 and f[-4:] == ".cpp" ]
     for f in l:
-      print('    <ClCompile Include="' + f + '">', file=F)
+      print('    <ClCompile Include="..\\..\\..\\' + f + '">', file=F)
       print('      <Filter>' + Filter + '</Filter>', file=F)
       print('    </ClCompile>', file=F)
   print('  </ItemGroup>', file=F)
@@ -797,7 +800,7 @@ def write_main_filters14():
     L = P_astra["filters"][Filter][1:]
     l = [ f for f in L if len(f) > 2 and f[-2:] == ".h" ]
     for f in l:
-      print('    <ClInclude Include="' + f + '">', file=F)
+      print('    <ClInclude Include="..\\..\\..\\' + f + '">', file=F)
       print('      <Filter>' + Filter + '</Filter>', file=F)
       print('    </ClInclude>', file=F)
   print('  </ItemGroup>', file=F)
@@ -806,7 +809,7 @@ def write_main_filters14():
     L = P_astra["filters"][Filter][1:]
     l = [ f for f in L if len(f) > 4 and f[-4:] == ".inl" ]
     for f in l:
-      print('    <None Include="' + f + '">', file=F)
+      print('    <None Include="..\\..\\..\\' + f + '">', file=F)
       print('      <Filter>' + Filter + '</Filter>', file=F)
       print('    </None>', file=F)
   print('  </ItemGroup>', file=F)
@@ -845,7 +848,7 @@ except IOError:
   sys.exit(1)
 
 # Change directory to main dir
-os.chdir("../..")
+os.makedirs("projects", exist_ok=True)
 
 write_sln()
 write_main_project14()

@@ -153,11 +153,11 @@ Using the Visual Studio IDE:
 
 Set the environment variable MATLAB_ROOT to your matlab install location.
 Copy boost headers to lib\include\boost, and boost libraries to lib\x64.
-Open astra_vc14.sln in Visual Studio.
+Open build\msvc\astra_vc14.sln in Visual Studio.
 Select the appropriate solution configuration (typically Release_CUDA|x64).
 Build the solution.
 Install by copying AstraCuda64.dll and all .mexw64 files from
-  bin\x64\Release_CUDA and the entire matlab/tools directory to a directory
+  build\msvc\bin\x64\Release_CUDA and the entire matlab/tools directory to a directory
   to be added to your matlab path.
 
 

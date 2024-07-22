@@ -8,7 +8,6 @@ set B_BOOST=C:\local\boost_%B_BV%_0
 cd /D "%B_BOOST%\lib64-msvc-14.1"
 
 mkdir "%R%\lib\x64"
-mkdir "%R%\bin\x64\Release_CUDA"
 
 copy boost_unit_test_framework-vc141-mt-x64-%B_BV%.lib %R%\lib\x64
 copy libboost_chrono-vc141-mt-x64-%B_BV%.lib %R%\lib\x64

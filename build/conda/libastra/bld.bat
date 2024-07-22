@@ -23,8 +23,6 @@ xcopy /i /e /q /y boost "%R%\lib\include\boost"
 cd /D %R%/build/msvc
 python gen.py %cudatoolkit%
 
-cd /D %R%
-
 msbuild astra_vc14.sln /p:Configuration=Release_CUDA /p:Platform=x64 /t:astra_vc14
 
 copy bin\x64\Release_CUDA\AstraCuda64.dll "%LIBRARY_BIN%"

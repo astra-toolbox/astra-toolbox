@@ -9,12 +9,11 @@ set R=%CD%
 echo Removing lib, bin directories
 rd /s /q "%R%\lib\x64"
 rd /s /q "%R%\lib\include\boost"
-rd /s /q "%R%\bin\x64\Release_CUDA"
+rd /s /q "%R%\build\msvc\bin\x64\Release_CUDA"
 
 cd /D "%B_BOOST%\lib64-msvc-14.1"
 
 mkdir "%R%\lib\x64"
-mkdir "%R%\bin\x64\Release_CUDA"
 
 echo Copying boost libraries
 copy boost_unit_test_framework-vc141-mt-x64-%B_BV%.lib %R%\lib\x64

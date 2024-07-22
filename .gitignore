@@ -46,6 +46,5 @@ __pycache__
 /build/linux/python/*
 
 # MSVC build output
-/bin/
-/release/
-/x64/
+/build/msvc/bin/
+/build/msvc/release/

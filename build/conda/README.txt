@@ -8,7 +8,7 @@ Build container images by running the containers/setup*.sh scripts
 Windows:
 
 call C:\tools\miniconda3\condabin\activate.bat
-Change to astra-toolbox\python\conda directory
+Change to astra-toolbox\build\conda directory
 # Build libastra packages, skipping the testing phase
 conda build -m libastra\win64_build_config.yaml -c nvidia --no-test libastra
 # Build and test astra-toolbox packages
