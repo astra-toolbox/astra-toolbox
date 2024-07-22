@@ -49,11 +49,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include <cstring>
 #include <sstream>
 #include <climits>
-
-#ifndef USE_PTHREADS
 #include <mutex>
 #include <thread>
-#endif
 
 
 namespace astra {
@@ -1533,9 +1530,6 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 class WorkQueue {
 public:
 	WorkQueue(CCompositeGeometryManager::TJobSet &_jobs) : m_jobs(_jobs) {
-#ifdef USE_PTHREADS
-		pthread_mutex_init(&m_mutex, 0);
-#endif
 		m_iter = m_jobs.begin();
 	}
 	bool receive(CCompositeGeometryManager::TJobSet::const_iterator &i) {
@@ -1552,32 +1546,17 @@ public:
 
 		return true;	
 	}
-#ifdef USE_PTHREADS
-	void lock() {
-		// TODO: check mutex op return values
-		pthread_mutex_lock(&m_mutex);
-	}
-	void unlock() {
-		// TODO: check mutex op return values
-		pthread_mutex_unlock(&m_mutex);
-	}
-#else
 	void lock() {
 		m_mutex.lock();
 	}
 	void unlock() {
 		m_mutex.unlock();
 	}
-#endif
 
 private:
 	CCompositeGeometryManager::TJobSet &m_jobs;
 	CCompositeGeometryManager::TJobSet::const_iterator m_iter;
-#ifdef USE_PTHREADS
-	pthread_mutex_t m_mutex;
-#else
 	std::mutex m_mutex;
-#endif
 };
 
 struct WorkThreadInfo {
@@ -1585,7 +1564,7 @@ struct WorkThreadInfo {
 	unsigned int m_iGPU;
 };
 
-void runEntries_std(WorkThreadInfo* info)
+void runEntries(WorkThreadInfo* info)
 {
 	ASTRA_DEBUG("Launching thread on GPU %d\n", info->m_iGPU);
 	CCompositeGeometryManager::TJobSet::const_iterator i;
@@ -1597,23 +1576,11 @@ void runEntries_std(WorkThreadInfo* info)
 	ASTRA_DEBUG("Finishing thread on GPU %d\n", info->m_iGPU);
 }
 
-void* runEntries_pthreads(void* data) {
-	WorkThreadInfo* info = (WorkThreadInfo*)data;
-	runEntries_std(info);
-
-	return 0;
-}
-
-
 void runWorkQueue(WorkQueue &queue, const std::vector<int> & iGPUIndices) {
 	int iThreadCount = iGPUIndices.size();
 
 	std::vector<WorkThreadInfo> infos;
-#ifdef USE_PTHREADS
-	std::vector<pthread_t> threads;
-#else
 	std::vector<std::thread*> threads;
-#endif
 	infos.resize(iThreadCount);
 	threads.resize(iThreadCount);
 	ASTRA_DEBUG("Thread count %d", iThreadCount);
@@ -1621,22 +1588,14 @@ void runWorkQueue(WorkQueue &queue, const std::vector<int> & iGPUIndices) {
 	for (int i = 0; i < iThreadCount; ++i) {
 		infos[i].m_queue = &queue;
 		infos[i].m_iGPU = iGPUIndices[i];
-#ifdef USE_PTHREADS
-		pthread_create(&threads[i], 0, runEntries_pthreads, (void*)&infos[i]);
-#else
-		threads[i] = new std::thread(runEntries_std, &infos[i]);
-#endif
+		threads[i] = new std::thread(runEntries, &infos[i]);
 	}
 
 	// Wait for them to finish
 	for (int i = 0; i < iThreadCount; ++i) {
-#ifdef USE_PTHREADS
-		pthread_join(threads[i], 0);
-#else
 		threads[i]->join();
 		delete threads[i];
 		threads[i] = 0;
-#endif
 	}
 }
 
