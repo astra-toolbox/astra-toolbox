@@ -21,7 +21,7 @@ cd %B_BOOST%
 xcopy /i /e /q /y boost "%R%\lib\include\boost"
 
 cd /D %R%/build/msvc
-python gen.py vc14 %cudatoolkit%
+python gen.py %cudatoolkit%
 
 cd /D %R%
 
