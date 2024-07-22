@@ -42,7 +42,7 @@ bool CVolumeGeometry3D::_check()
 	ASTRA_CONFIG_CHECK(m_fWindowMinY < m_fWindowMaxY, "VolumeGeometry3D", "WindowMinY should be lower than WindowMaxY.");
 	ASTRA_CONFIG_CHECK(m_fWindowMinZ < m_fWindowMaxZ, "VolumeGeometry3D", "WindowMinZ should be lower than WindowMaxZ.");
 
-	ASTRA_CONFIG_CHECK(m_iGridTotCount == (m_iGridColCount * m_iGridRowCount * m_iGridSliceCount), "VolumeGeometry3D", "Internal configuration error.");
+	ASTRA_CONFIG_CHECK(m_iGridTotCount == ((size_t)m_iGridColCount * m_iGridRowCount * m_iGridSliceCount), "VolumeGeometry3D", "Internal configuration error.");
 #if 0
 	ASTRA_CONFIG_CHECK(m_fWindowLengthX == (m_fWindowMaxX - m_fWindowMinX), "VolumeGeometry3D", "Internal configuration error.");
 	ASTRA_CONFIG_CHECK(m_fWindowLengthY == (m_fWindowMaxY - m_fWindowMinY), "VolumeGeometry3D", "Internal configuration error.");
@@ -240,7 +240,7 @@ bool CVolumeGeometry3D::initialize(const Config& _cfg)
 	CC.markOptionParsed("WindowMaxZ");
 
 	// calculate some other things
-	m_iGridTotCount = (m_iGridColCount * m_iGridRowCount * m_iGridSliceCount);
+	m_iGridTotCount = ((size_t)m_iGridColCount * m_iGridRowCount * m_iGridSliceCount);
 	m_fWindowLengthX = (m_fWindowMaxX - m_fWindowMinX);
 	m_fWindowLengthY = (m_fWindowMaxY - m_fWindowMinY);
 	m_fWindowLengthZ = (m_fWindowMaxZ - m_fWindowMinZ);
@@ -293,7 +293,7 @@ bool CVolumeGeometry3D::initialize(int _iGridColCount,
 	m_iGridColCount = _iGridColCount;
 	m_iGridRowCount = _iGridRowCount;
 	m_iGridSliceCount = _iGridSliceCount;
-	m_iGridTotCount = (m_iGridColCount * m_iGridRowCount * m_iGridSliceCount);
+	m_iGridTotCount = ((size_t)m_iGridColCount * m_iGridRowCount * m_iGridSliceCount);
 
 	m_fWindowMinX = _fWindowMinX;
 	m_fWindowMinY = _fWindowMinY;
