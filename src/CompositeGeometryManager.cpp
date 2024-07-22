@@ -1594,9 +1594,7 @@ void runEntries_boost(WorkThreadInfo* info)
 	while (info->m_queue->receive(i)) {
 		ASTRA_DEBUG("Running block on GPU %d\n", info->m_iGPU);
 		astraCUDA3d::setGPUIndex(info->m_iGPU);
-		boost::this_thread::interruption_point();
 		doJob(i);
-		boost::this_thread::interruption_point();
 	}
 	ASTRA_DEBUG("Finishing thread on GPU %d\n", info->m_iGPU);
 }
@@ -1614,9 +1612,7 @@ void* runEntries_pthreads(void* data) {
 	while (info->m_queue->receive(i)) {
 		ASTRA_DEBUG("Running block on GPU %d\n", info->m_iGPU);
 		astraCUDA3d::setGPUIndex(info->m_iGPU);
-		pthread_testcancel();
 		doJob(i);
-		pthread_testcancel();
 	}
 	ASTRA_DEBUG("Finishing thread on GPU %d\n", info->m_iGPU);
 
