@@ -51,8 +51,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include <climits>
 
 #ifndef USE_PTHREADS
-#include <boost/thread/mutex.hpp>
-#include <boost/thread.hpp>
+#include <mutex>
+#include <thread>
 #endif
 
 
@@ -1576,7 +1576,7 @@ private:
 #ifdef USE_PTHREADS
 	pthread_mutex_t m_mutex;
 #else
-	boost::mutex m_mutex;
+	std::mutex m_mutex;
 #endif
 };
 
@@ -1585,9 +1585,7 @@ struct WorkThreadInfo {
 	unsigned int m_iGPU;
 };
 
-#ifndef USE_PTHREADS
-
-void runEntries_boost(WorkThreadInfo* info)
+void runEntries_std(WorkThreadInfo* info)
 {
 	ASTRA_DEBUG("Launching thread on GPU %d\n", info->m_iGPU);
 	CCompositeGeometryManager::TJobSet::const_iterator i;
@@ -1599,27 +1597,12 @@ void runEntries_boost(WorkThreadInfo* info)
 	ASTRA_DEBUG("Finishing thread on GPU %d\n", info->m_iGPU);
 }
 
-
-#else
-
 void* runEntries_pthreads(void* data) {
 	WorkThreadInfo* info = (WorkThreadInfo*)data;
-
-	ASTRA_DEBUG("Launching thread on GPU %d\n", info->m_iGPU);
-
-	CCompositeGeometryManager::TJobSet::const_iterator i;
-
-	while (info->m_queue->receive(i)) {
-		ASTRA_DEBUG("Running block on GPU %d\n", info->m_iGPU);
-		astraCUDA3d::setGPUIndex(info->m_iGPU);
-		doJob(i);
-	}
-	ASTRA_DEBUG("Finishing thread on GPU %d\n", info->m_iGPU);
+	runEntries_std(info);
 
 	return 0;
 }
-
-#endif
 
 
 void runWorkQueue(WorkQueue &queue, const std::vector<int> & iGPUIndices) {
@@ -1629,10 +1612,11 @@ void runWorkQueue(WorkQueue &queue, const std::vector<int> & iGPUIndices) {
 #ifdef USE_PTHREADS
 	std::vector<pthread_t> threads;
 #else
-	std::vector<boost::thread*> threads;
+	std::vector<std::thread*> threads;
 #endif
 	infos.resize(iThreadCount);
 	threads.resize(iThreadCount);
+	ASTRA_DEBUG("Thread count %d", iThreadCount);
 
 	for (int i = 0; i < iThreadCount; ++i) {
 		infos[i].m_queue = &queue;
@@ -1640,7 +1624,7 @@ void runWorkQueue(WorkQueue &queue, const std::vector<int> & iGPUIndices) {
 #ifdef USE_PTHREADS
 		pthread_create(&threads[i], 0, runEntries_pthreads, (void*)&infos[i]);
 #else
-		threads[i] = new boost::thread(runEntries_boost, &infos[i]);
+		threads[i] = new std::thread(runEntries_std, &infos[i]);
 #endif
 	}
 
