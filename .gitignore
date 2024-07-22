@@ -8,10 +8,6 @@
 __pycache__
 .vscode/*
 
-# Boost
-/lib/include/boost/
-/lib/x64/
-
 # Cython-generated files
 /python/astra/*.cpp
 /python/astra/config.pxi

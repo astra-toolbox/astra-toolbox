@@ -96,7 +96,7 @@
     <Link>
       <OutputFile>$(OutDir)$(ProjectName)_c.mexw64</OutputFile>
       <AdditionalDependencies>AstraCuda64D.lib;libmex.lib;libmx.lib;libut.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\..\lib\x64\;..\bin\x64\Debug_CUDA;$(MATLAB_ROOT)\extern\lib\win64\microsoft;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\bin\x64\Debug_CUDA;$(MATLAB_ROOT)\extern\lib\win64\microsoft;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>mex.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
@@ -113,7 +113,7 @@
     <Link>
       <OutputFile>$(OutDir)$(ProjectName)_c.mexw64</OutputFile>
       <AdditionalDependencies>Astra64D.lib;libmex.lib;libmx.lib;libut.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\..\lib\x64\;..\bin\x64\Debug;$(MATLAB_ROOT)\extern\lib\win64\microsoft;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\bin\x64\Debug;$(MATLAB_ROOT)\extern\lib\win64\microsoft;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>mex.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
@@ -130,7 +130,7 @@
     <Link>
       <OutputFile>$(OutDir)$(ProjectName)_c.mexw64</OutputFile>
       <AdditionalDependencies>AstraCuda64.lib;libmex.lib;libmx.lib;libut.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\..\lib\x64\;..\bin\x64\Release_CUDA;$(MATLAB_ROOT)\extern\lib\win64\microsoft;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\bin\x64\Release_CUDA;$(MATLAB_ROOT)\extern\lib\win64\microsoft;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>mex.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
@@ -147,7 +147,7 @@
     <Link>
       <OutputFile>$(OutDir)$(ProjectName)_c.mexw64</OutputFile>
       <AdditionalDependencies>Astra64.lib;libmex.lib;libmx.lib;libut.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\..\lib\x64\;..\bin\x64\Release;$(MATLAB_ROOT)\extern\lib\win64\microsoft;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\bin\x64\Release;$(MATLAB_ROOT)\extern\lib\win64\microsoft;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>mex.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
