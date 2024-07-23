@@ -71,7 +71,7 @@ CParallelVecProjectionGeometry3D::~CParallelVecProjectionGeometry3D()
 bool CParallelVecProjectionGeometry3D::initialize(const Config& _cfg)
 {
 	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CProjectionGeometry3D> CC("ParallelVecProjectionGeometry3D", this, _cfg);	
+	ConfigReader<CProjectionGeometry3D> CR("ParallelVecProjectionGeometry3D", this, _cfg);	
 
 	XMLNode node;
 
@@ -86,18 +86,12 @@ bool CParallelVecProjectionGeometry3D::initialize(const Config& _cfg)
 
 bool CParallelVecProjectionGeometry3D::initializeAngles(const Config& _cfg)
 {
-	ConfigStackCheck<CProjectionGeometry3D> CC("ParallelVecProjectionGeometry3D", this, _cfg);
+	ConfigReader<CProjectionGeometry3D> CR("ParallelVecProjectionGeometry3D", this, _cfg);
 
 	// Required: Vectors
-	XMLNode node = _cfg.self.getSingleNode("Vectors");
-	ASTRA_CONFIG_CHECK(node, "ParallelVecProjectionGeometry3D", "No Vectors tag specified.");
 	vector<double> data;
-	try {
-		data = node.getContentNumericalArrayDouble();
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "ParallelVecProjectionGeometry3D", "Vectors must be a numerical matrix.");
-	}
-	CC.markNodeParsed("Vectors");
+	if (!CR.getRequiredNumericalArray("Vectors", data))
+		return false;
 	ASTRA_CONFIG_CHECK(data.size() % 12 == 0, "ParallelVecProjectionGeometry3D", "Vectors doesn't consist of 12-tuples.");
 	m_iProjectionAngleCount = data.size() / 12;
 	m_pProjectionAngles = new SPar3DProjection[m_iProjectionAngleCount];

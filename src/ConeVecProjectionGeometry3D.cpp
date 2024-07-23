@@ -71,7 +71,7 @@ CConeVecProjectionGeometry3D::~CConeVecProjectionGeometry3D()
 bool CConeVecProjectionGeometry3D::initialize(const Config& _cfg)
 {
 	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CProjectionGeometry3D> CC("ConeVecProjectionGeometry3D", this, _cfg);	
+	ConfigReader<CProjectionGeometry3D> CR("ConeVecProjectionGeometry3D", this, _cfg);	
 
 	// initialization of parent class
 	if (!CProjectionGeometry3D::initialize(_cfg))
@@ -84,18 +84,12 @@ bool CConeVecProjectionGeometry3D::initialize(const Config& _cfg)
 
 bool CConeVecProjectionGeometry3D::initializeAngles(const Config& _cfg)
 {
-	ConfigStackCheck<CProjectionGeometry3D> CC("ConeVecProjectionGeometry3D", this, _cfg);
+	ConfigReader<CProjectionGeometry3D> CR("ConeVecProjectionGeometry3D", this, _cfg);
 
 	// Required: Vectors
-	XMLNode node = _cfg.self.getSingleNode("Vectors");
-	ASTRA_CONFIG_CHECK(node, "ConeVecProjectionGeometry3D", "No Vectors tag specified.");
 	vector<double> data;
-	try {
-		data = node.getContentNumericalArrayDouble();
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "ConeVecProjectionGeometry3D", "Vectors must be a numerical matrix.");
-	}
-	CC.markNodeParsed("Vectors");
+	if (!CR.getRequiredNumericalArray("Vectors", data))
+		return false;
 	ASTRA_CONFIG_CHECK(data.size() % 12 == 0, "ConeVecProjectionGeometry3D", "Vectors doesn't consist of 12-tuples.");
 	m_iProjectionAngleCount = data.size() / 12;
 	m_pProjectionAngles = new SConeProjection[m_iProjectionAngleCount];

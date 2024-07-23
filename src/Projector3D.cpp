@@ -90,13 +90,17 @@ bool CProjector3D::_check()
 bool CProjector3D::initialize(const Config& _cfg)
 {
 	assert(_cfg.self);
-	ConfigStackCheck<CProjector3D> CC("Projector3D", this, _cfg);
+	ConfigReader<CProjector3D> CR("Projector3D", this, _cfg);
 
-	XMLNode node;
+	Config subcfg;
+	bool ok = true;
 
-	node = _cfg.self.getSingleNode("ProjectionGeometry");
-	ASTRA_CONFIG_CHECK(node, "Projector3D", "No ProjectionGeometry tag specified.");
-	std::string type = node.getAttribute("type");
+	ok = CR.getRequiredSubConfig("ProjectionGeometry", subcfg);
+	if (!ok)
+		return false;
+
+	std::string type = subcfg.self.getAttribute("type");
+
 	CProjectionGeometry3D* pProjGeometry = 0;
 	if (type == "parallel3d") {
 		pProjGeometry = new CParallelProjectionGeometry3D();
@@ -108,20 +112,21 @@ bool CProjector3D::initialize(const Config& _cfg)
 		pProjGeometry = new CConeVecProjectionGeometry3D();
 	} else {
 		// Invalid geometry type
-		ASTRA_CONFIG_CHECK(false, "Projector3D", "Invalid projection geometry type specified.");
+		ASTRA_CONFIG_CHECK(false, "Projector3D", "Invalid projection geometry type \"%s\" specified.", type.c_str());
 	}
-	pProjGeometry->initialize(Config(node)); // this deletes node
+	pProjGeometry->initialize(subcfg);
+
 	m_pProjectionGeometry = pProjGeometry;
 	ASTRA_CONFIG_CHECK(m_pProjectionGeometry->isInitialized(), "Projector3D", "ProjectionGeometry not initialized.");
-	CC.markNodeParsed("ProjectionGeometry");
 
-	node = _cfg.self.getSingleNode("VolumeGeometry");
-	ASTRA_CONFIG_CHECK(node, "Projector3D", "No VolumeGeometry tag specified.");
+	ok = CR.getRequiredSubConfig("VolumeGeometry", subcfg);
+	if (!ok)
+		return false;
+
 	CVolumeGeometry3D* pVolGeometry = new CVolumeGeometry3D();
-	pVolGeometry->initialize(Config(node)); // this deletes node
+	pVolGeometry->initialize(subcfg);
 	m_pVolumeGeometry = pVolGeometry;
 	ASTRA_CONFIG_CHECK(m_pVolumeGeometry->isInitialized(), "Projector3D", "VolumeGeometry not initialized.");
-	CC.markNodeParsed("VolumeGeometry");
 
 	return true;
 }
