@@ -74,7 +74,7 @@ CParallelProjectionGeometry3D::~CParallelProjectionGeometry3D()
 bool CParallelProjectionGeometry3D::initialize(const Config& _cfg)
 {
 	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CProjectionGeometry3D> CC("ParallelProjectionGeometry3D", this, _cfg);	
+	ConfigReader<CProjectionGeometry3D> CR("ParallelProjectionGeometry3D", this, _cfg);	
 	
 
 	// initialization of parent class

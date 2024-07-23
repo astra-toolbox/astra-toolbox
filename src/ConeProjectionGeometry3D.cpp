@@ -80,31 +80,19 @@ CConeProjectionGeometry3D::~CConeProjectionGeometry3D()
 bool CConeProjectionGeometry3D::initialize(const Config& _cfg)
 {
 	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CProjectionGeometry3D> CC("ConeProjectionGeometry3D", this, _cfg);	
+	ConfigReader<CProjectionGeometry3D> CR("ConeProjectionGeometry3D", this, _cfg);	
 
 	// initialization of parent class
 	if (!CProjectionGeometry3D::initialize(_cfg))
 		return false;
 
-	// Required: DistanceOriginDetector
-	XMLNode node = _cfg.self.getSingleNode("DistanceOriginDetector");
-	ASTRA_CONFIG_CHECK(node, "ConeProjectionGeometry3D", "No DistanceOriginDetector tag specified.");
-	try {
-		m_fOriginDetectorDistance = node.getContentNumerical();
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "ConeProjectionGeometry3D", "DistanceOriginDetector must be numerical.");
-	}
-	CC.markNodeParsed("DistanceOriginDetector");
+	bool ok = true;
 
-	// Required: DetectorOriginSource
-	node = _cfg.self.getSingleNode("DistanceOriginSource");
-	ASTRA_CONFIG_CHECK(node, "ConeProjectionGeometry3D", "No DistanceOriginSource tag specified.");
-	try {
-		m_fOriginSourceDistance = node.getContentNumerical();
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "ConeProjectionGeometry3D", "DistanceOriginSource must be numerical.");
-	}
-	CC.markNodeParsed("DistanceOriginSource");
+	ok &= CR.getRequiredNumerical("DistanceOriginDetector", m_fOriginDetectorDistance);
+	ok &= CR.getRequiredNumerical("DistanceOriginSource", m_fOriginSourceDistance);
+
+	if (!ok)
+		return false;
 
 	// success
 	m_bInitialized = _check();

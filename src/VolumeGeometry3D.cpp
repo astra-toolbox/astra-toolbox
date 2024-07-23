@@ -183,61 +183,30 @@ CVolumeGeometry3D::~CVolumeGeometry3D()
 bool CVolumeGeometry3D::initialize(const Config& _cfg)
 {
 	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CVolumeGeometry3D> CC("VolumeGeometry3D", this, _cfg);
-
+	ConfigReader<CVolumeGeometry3D> CR("VolumeGeometry3D", this, _cfg);
 
 	// uninitialize if the object was initialized before
 	if (m_bInitialized)	{
 		clear();
 	}
 
-	// Required: GridColCount
-	XMLNode node = _cfg.self.getSingleNode("GridColCount");
-	ASTRA_CONFIG_CHECK(node, "VolumeGeometry3D", "No GridColCount tag specified.");
-	try {
-		m_iGridColCount = node.getContentInt();
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "VolumeGeometry3D", "GridColCount must be an integer.");
-	}
-	CC.markNodeParsed("GridColCount");
+	bool ok = true;
 
-	// Required: GridRowCount
-	node = _cfg.self.getSingleNode("GridRowCount");
-	ASTRA_CONFIG_CHECK(node, "VolumeGeometry3D", "No GridRowCount tag specified.");
-	try {
-		m_iGridRowCount = node.getContentInt();
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "VolumeGeometry3D", "GridRowCount must be an integer.");
-	}
-	CC.markNodeParsed("GridRowCount");
+	// Required: number of voxels
+	ok &= CR.getRequiredInt("GridColCount", m_iGridColCount);
+	ok &= CR.getRequiredInt("GridRowCount", m_iGridRowCount);
+	ok &= CR.getRequiredInt("GridSliceCount", m_iGridSliceCount);
 
-	// Required: GridRowCount
-	node = _cfg.self.getSingleNode("GridSliceCount");
-	ASTRA_CONFIG_CHECK(node, "VolumeGeometry3D", "No GridSliceCount tag specified.");
-	try {
-		m_iGridSliceCount = node.getContentInt();
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "VolumeGeometry3D", "GridSliceCount must be an integer.");
-	}
-	CC.markNodeParsed("GridSliceCount");
+	// Optional: window minima and maxima
+	ok &= CR.getOptionNumerical("WindowMinX", m_fWindowMinX, -m_iGridColCount/2.0f);
+	ok &= CR.getOptionNumerical("WindowMaxX", m_fWindowMaxX, m_iGridColCount/2.0f);
+	ok &= CR.getOptionNumerical("WindowMinY", m_fWindowMinY, -m_iGridRowCount/2.0f);
+	ok &= CR.getOptionNumerical("WindowMaxY", m_fWindowMaxY, m_iGridRowCount/2.0f);
+	ok &= CR.getOptionNumerical("WindowMinZ", m_fWindowMinZ, -m_iGridSliceCount/2.0f);
+	ok &= CR.getOptionNumerical("WindowMaxZ", m_fWindowMaxZ, m_iGridSliceCount/2.0f);
 
-	// Optional: Window minima and maxima
-	try {
-		m_fWindowMinX = _cfg.self.getOptionNumerical("WindowMinX", -m_iGridColCount/2.0f);
-		m_fWindowMaxX = _cfg.self.getOptionNumerical("WindowMaxX", m_iGridColCount/2.0f);
-		m_fWindowMinY = _cfg.self.getOptionNumerical("WindowMinY", -m_iGridRowCount/2.0f);
-		m_fWindowMaxY = _cfg.self.getOptionNumerical("WindowMaxY", m_iGridRowCount/2.0f);
-		m_fWindowMinZ = _cfg.self.getOptionNumerical("WindowMinZ", -m_iGridSliceCount/2.0f);
-		m_fWindowMaxZ = _cfg.self.getOptionNumerical("WindowMaxZ", m_iGridSliceCount/2.0f);
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "VolumeGeometry3D", "Window extents must be numerical.");
-	}
-	CC.markOptionParsed("WindowMinX");
-	CC.markOptionParsed("WindowMaxX");
-	CC.markOptionParsed("WindowMinY");
-	CC.markOptionParsed("WindowMaxY");
-	CC.markOptionParsed("WindowMinZ");
-	CC.markOptionParsed("WindowMaxZ");
+	if (!ok)
+		return false;
 
 	// calculate some other things
 	m_iGridTotCount = ((size_t)m_iGridColCount * m_iGridRowCount * m_iGridSliceCount);
