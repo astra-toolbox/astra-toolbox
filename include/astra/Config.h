@@ -40,16 +40,17 @@ namespace astra {
 /**
  * Configuration options for an ASTRA class.
  */
-struct _AstraExport Config {
-
+class _AstraExport Config {
+public:
 	Config();
 	Config(XMLNode _self);
 	~Config();
 
-	void initialize(std::string rootname);
+	void initialize(const std::string &rootname);
 
 	XMLNode self;
 
+private:
 	XMLDocument *_doc;
 };
 
@@ -61,6 +62,7 @@ struct ConfigCheckData {
 };
 
 
+// TODO: Merge this into ConfigReader once there are no more direct users
 template<class T>
 class ConfigStackCheck {
 public:
@@ -77,6 +79,63 @@ private:
 	const Config* cfg;
 	const char* name;
 };
+
+template<class T>
+class ConfigReader {
+public:
+	ConfigReader(const char *_name, T *_obj, const Config &_cfg);
+
+	// Return true if config has a value
+	bool has(const std::string &name);
+
+	// Get and parse values, and return true if successful.
+	// In case of missing values or parse errors, report the error and
+	// return false.
+	bool getRequiredInt(const std::string &name, int &iValue);
+	bool getRequiredNumerical(const std::string &name, float &fValue);
+	bool getRequiredSubConfig(const std::string &name, Config &_cfg);
+	bool getRequiredID(const std::string &name, int &iValue);
+
+	bool getRequiredNumericalArray(const std::string &name, std::vector<double> &values);
+	bool getRequiredIntArray(const std::string &name, std::vector<int> &values);
+	bool getRequiredString(const std::string &name, std::string &sValue);
+
+	// Get a value and parse it as an ID. Returns true if successful,
+	// and false otherwise (returning -1 as iValue). Reports no errors.
+	bool getID(const std::string &name, int &iValue);
+
+	// Get a string value. Returns true if successful, and false otherwise
+	// (return default value). Reports no errors.
+	bool getString(const std::string &name, std::string &sValue, const std::string &sDefaultValue);
+
+	// Return true if config has an option
+	bool hasOption(const std::string &name);
+
+	// Get and parse an option value. Returns true if the option is present
+	// and successfully parsed. Returns true and the default value if the option
+	// is not present. Returns false and the default value if the option
+	// is present but malformed. Reports parsing errors.
+	bool getOptionNumerical(const std::string &name, float &fValue, float fDefaultValue);
+	bool getOptionInt(const std::string &name, int &iValue, int iDefaultValue);
+	bool getOptionUInt(const std::string &name, unsigned int &iValue, unsigned int iDefaultValue);
+	bool getOptionBool(const std::string &name, bool &bValue, bool bDefaultValue);
+	bool getOptionString(const std::string &name, std::string &sValue, std::string sDefaultValue);
+	bool getOptionIntArray(const std::string &name, std::vector<int> &values);
+
+	// Get and parse an option value as ID. Returns true if the option is
+	// present and successfully parsed. Returns false and -1 if the option is
+	// not present or malformed. Reports parsing errors.
+	bool getOptionID(const std::string &name, int &iValue);
+
+	void markNodeParsed(const std::string& name) { stackCheck.markNodeParsed(name); }
+	void markOptionParsed(const std::string& name) { stackCheck.markOptionParsed(name); }
+
+private:
+	ConfigStackCheck<T> stackCheck;
+	const Config* cfg;
+	const char* objName;
+};
+
 
 } // end namespace
 
