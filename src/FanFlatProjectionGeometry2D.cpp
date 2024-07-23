@@ -130,31 +130,19 @@ bool CFanFlatProjectionGeometry2D::initialize(int _iProjectionAngleCount,
 bool CFanFlatProjectionGeometry2D::initialize(const Config& _cfg)
 {
 	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CProjectionGeometry2D> CC("FanFlatProjectionGeometry2D", this, _cfg);		
+	ConfigReader<CProjectionGeometry2D> CR("FanFlatProjectionGeometry2D", this, _cfg);		
 
 	// initialization of parent class
 	if (!CProjectionGeometry2D::initialize(_cfg))
 		return false;
 
-	// Required: DistanceOriginDetector
-	XMLNode node = _cfg.self.getSingleNode("DistanceOriginDetector");
-	ASTRA_CONFIG_CHECK(node, "FanFlatProjectionGeometry2D", "No DistanceOriginDetector tag specified.");
-	try {
-		m_fOriginDetectorDistance = node.getContentNumerical();
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "FanFlatProjectionGeometry2D", "DistanceOriginDetector must be numerical.");
-	}
-	CC.markNodeParsed("DistanceOriginDetector");
+	bool ok = true;
 
-	// Required: DetectorOriginSource
-	node = _cfg.self.getSingleNode("DistanceOriginSource");
-	ASTRA_CONFIG_CHECK(node, "FanFlatProjectionGeometry2D", "No DistanceOriginSource tag specified.");
-	try {
-		m_fOriginSourceDistance = node.getContentNumerical();
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "FanFlatProjectionGeometry2D", "DistanceOriginSource must be numerical.");
-	}
-	CC.markNodeParsed("DistanceOriginSource");
+	ok &= CR.getRequiredNumerical("DistanceOriginDetector", m_fOriginDetectorDistance);
+	ok &= CR.getRequiredNumerical("DistanceOriginSource", m_fOriginSourceDistance);
+
+	if (!ok)
+		return false;
 
 	// success
 	m_bInitialized = _check();
