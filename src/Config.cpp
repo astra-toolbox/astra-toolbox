@@ -66,7 +66,7 @@ Config::~Config()
 }
 
 //-----------------------------------------------------------------------------
-void Config::initialize(std::string rootname)
+void Config::initialize(const std::string &rootname)
 {
 	if (!self) {
 		XMLDocument* doc = XMLDocument::createDocument(rootname);
@@ -173,6 +173,333 @@ void ConfigStackCheck<T>::markOptionParsed(const std::string& nodeName)
 }
 
 
+template<class T>
+ConfigReader<T>::ConfigReader(const char *_name, T *_obj, const Config &_cfg)
+	: stackCheck(_name, _obj, _cfg), cfg(&_cfg), objName(_name)
+{
+
+}
+
+template<class T>
+bool ConfigReader<T>::has(const std::string &name)
+{
+	XMLNode node = cfg->self.getSingleNode(name);
+	return node;
+}
+
+template<class T>
+bool ConfigReader<T>::getRequiredInt(const std::string &name, int &iValue)
+{
+	XMLNode node = cfg->self.getSingleNode(name);
+	if (!node) {
+		astra::CLogger::error(__FILE__, __LINE__, "Configuration error in %s: No %s tag specified.", objName, name.c_str());
+		return false;
+	}
+
+	try {
+		iValue = node.getContentInt();
+	} catch (const StringUtil::bad_cast &e) {
+		astra::CLogger::error(__FILE__, __LINE__, "Configuration error in %s: %s must be an integer.", objName, name.c_str());
+		return false;
+	}
+
+	stackCheck.markNodeParsed(name);
+
+	return true;
+}
+
+template<class T>
+bool ConfigReader<T>::getRequiredNumerical(const std::string &name, float &fValue)
+{
+	XMLNode node = cfg->self.getSingleNode(name);
+	if (!node) {
+		astra::CLogger::error(__FILE__, __LINE__, "Configuration error in %s: No %s tag specified.", objName, name.c_str());
+		return false;
+	}
+
+	try {
+		fValue = node.getContentNumerical();
+	} catch (const StringUtil::bad_cast &e) {
+		astra::CLogger::error(__FILE__, __LINE__, "Configuration error in %s: %s must be numerical.", objName, name.c_str());
+		return false;
+	}
+
+	stackCheck.markNodeParsed(name);
+
+	return true;
+}
+
+template<class T>
+bool ConfigReader<T>::getRequiredID(const std::string &name, int &iValue)
+{
+	iValue = -1;
+	XMLNode node = cfg->self.getSingleNode(name);
+	if (!node) {
+		astra::CLogger::error(__FILE__, __LINE__, "Configuration error in %s: No %s tag specified.", objName, name.c_str());
+		iValue = -1;
+		return false;
+	}
+
+	bool ret = true;
+	try {
+		iValue = node.getContentInt();
+	} catch (const StringUtil::bad_cast &e) {
+		astra::CLogger::error(__FILE__, __LINE__, "Configuration error in %s: Unable to parse %s as an ID.", objName, name.c_str());
+		iValue = -1;
+		ret = false;
+	}
+
+	stackCheck.markNodeParsed(name);
+	return ret;
+
+}
+
+template<class T>
+bool ConfigReader<T>::getRequiredNumericalArray(const std::string &name, std::vector<double> &values)
+{
+	values.clear();
+	XMLNode node = cfg->self.getSingleNode(name);
+	if (!node) {
+		astra::CLogger::error(__FILE__, __LINE__, "Configuration error in %s: No %s tag specified.", objName, name.c_str());
+		return false;
+	}
+
+	try {
+		values = node.getContentNumericalArrayDouble();
+	} catch (const StringUtil::bad_cast &e) {
+		astra::CLogger::error(__FILE__, __LINE__, "Configuration error in %s: %s must be a numerical matrix.", objName, name.c_str());
+		return false;
+	}
+
+	stackCheck.markNodeParsed(name);
+	return true;
+}
+
+template<class T>
+bool ConfigReader<T>::getRequiredIntArray(const std::string &name, std::vector<int> &values)
+{
+	values.clear();
+	XMLNode node = cfg->self.getSingleNode(name);
+	if (!node) {
+		astra::CLogger::error(__FILE__, __LINE__, "Configuration error in %s: No %s tag specified.", objName, name.c_str());
+		return false;
+	}
+
+	std::vector<std::string> data = node.getContentArray();
+	values.resize(data.size());
+	try {
+		for (size_t i = 0; i < data.size(); ++i)
+			values[i] = StringUtil::stringToInt(data[i]);
+	} catch (const StringUtil::bad_cast &e) {
+		astra::CLogger::error(__FILE__, __LINE__, "Configuration error in %s: %s must be an integer array.", objName, name.c_str());
+		return false;
+	}
+
+	stackCheck.markNodeParsed(name);
+	return true;
+}
+
+
+template<class T>
+bool ConfigReader<T>::getRequiredString(const std::string &name, std::string &sValue)
+{
+	XMLNode node = cfg->self.getSingleNode(name);
+	if (!node) {
+		astra::CLogger::error(__FILE__, __LINE__, "Configuration error in %s: No %s tag specified.", objName, name.c_str());
+		return false;
+	} else {
+		sValue = node.getContent();
+		stackCheck.markNodeParsed(name);
+		return true;
+	}
+
+}
+
+template<class T>
+bool ConfigReader<T>::getID(const std::string &name, int &iValue)
+{
+	iValue = -1;
+	XMLNode node = cfg->self.getSingleNode(name);
+	if (!node) {
+		iValue = -1;
+		return false;
+	}
+
+	bool ret = true;
+	try {
+		iValue = node.getContentInt();
+	} catch (const StringUtil::bad_cast &e) {
+		iValue = -1;
+		ret = false;
+	}
+
+	stackCheck.markNodeParsed(name);
+	return ret;
+
+}
+
+template<class T>
+bool ConfigReader<T>::getString(const std::string &name, std::string &sValue, const std::string &sDefaultValue)
+{
+	XMLNode node = cfg->self.getSingleNode(name);
+	if (!node) {
+		sValue = sDefaultValue;
+		return false;
+	} else {
+		sValue = node.getContent();
+		stackCheck.markNodeParsed(name);
+		return true;
+	}
+}
+
+
+
+template<class T>
+bool ConfigReader<T>::getRequiredSubConfig(const std::string &name, Config &_cfg)
+{
+	XMLNode node;
+	node = cfg->self.getSingleNode(name);
+	if (!node) {
+		astra::CLogger::error(__FILE__, __LINE__, "Configuration error in %s: No %s tag specified.", objName, name.c_str());
+		return false;
+	}
+
+	_cfg = Config(node);
+
+	stackCheck.markNodeParsed(name);
+
+	return true;
+}
+
+template<class T>
+bool ConfigReader<T>::hasOption(const std::string &name)
+{
+	return cfg->self.hasOption(name);
+}
+
+
+template<class T>
+bool ConfigReader<T>::getOptionNumerical(const std::string &name, float &fValue, float fDefaultValue)
+{
+	fValue = fDefaultValue;
+	try {
+		fValue = cfg->self.getOptionNumerical(name, fDefaultValue);
+	} catch (const StringUtil::bad_cast &e) {
+		astra::CLogger::error(__FILE__, __LINE__, "Configuration error in %s: option %s must be numerical.", objName, name.c_str());
+		return false;
+	}
+
+	stackCheck.markOptionParsed(name);
+	return true;
+}
+
+template<class T>
+bool ConfigReader<T>::getOptionInt(const std::string &name, int &iValue, int iDefaultValue)
+{
+	iValue = iDefaultValue;
+	try {
+		iValue = cfg->self.getOptionInt(name, iDefaultValue);
+	} catch (const StringUtil::bad_cast &e) {
+		astra::CLogger::error(__FILE__, __LINE__, "Configuration error in %s: option %s must be integer.", objName, name.c_str());
+		return false;
+	}
+
+	stackCheck.markOptionParsed(name);
+	return true;
+}
+
+template<class T>
+bool ConfigReader<T>::getOptionUInt(const std::string &name, unsigned int &iValue, unsigned int iDefaultValue)
+{
+	iValue = iDefaultValue;
+	try {
+		int tmp = cfg->self.getOptionInt(name, iDefaultValue);
+		if (tmp < 0) // HACK
+			throw StringUtil::bad_cast();
+		iValue = tmp;
+	} catch (const StringUtil::bad_cast &e) {
+		astra::CLogger::error(__FILE__, __LINE__, "Configuration error in %s: option %s must be unsigned integer.", objName, name.c_str());
+		return false;
+	}
+
+	stackCheck.markOptionParsed(name);
+	return true;
+}
+
+
+template<class T>
+bool ConfigReader<T>::getOptionBool(const std::string &name, bool &bValue, bool bDefaultValue)
+{
+	bValue = bDefaultValue;
+	try {
+		bValue = cfg->self.getOptionBool(name, bDefaultValue);
+	} catch (const StringUtil::bad_cast &e) {
+		astra::CLogger::error(__FILE__, __LINE__, "Configuration error in %s: option %s must be boolean.", objName, name.c_str());
+		return false;
+	}
+
+	stackCheck.markOptionParsed(name);
+	return true;
+}
+
+template<class T>
+bool ConfigReader<T>::getOptionString(const std::string &name, std::string &sValue, std::string sDefaultValue)
+{
+	sValue = cfg->self.getOption(name, sDefaultValue);
+
+	stackCheck.markOptionParsed(name);
+	return true;
+}
+
+template<class T>
+bool ConfigReader<T>::getOptionIntArray(const std::string &name, std::vector<int> &values)
+{
+	values.clear();
+
+	std::list<XMLNode> nodes = cfg->self.getNodes("Option");
+	for (XMLNode &it : nodes) {
+		if (it.getAttribute("key") == name) {
+			std::vector<std::string> data = it.getContentArray();
+			values.resize(data.size());
+			try {
+				for (size_t i = 0; i < data.size(); ++i)
+					values[i] = StringUtil::stringToInt(data[i]);
+			} catch (const StringUtil::bad_cast &e) {
+				astra::CLogger::error(__FILE__, __LINE__, "Configuration error in %s: option %s must be an integer array.", objName, name.c_str());
+				return false;
+			}
+			stackCheck.markNodeParsed(name);
+			return true;
+		}
+	}
+
+	return true;
+}
+
+
+
+template<class T>
+bool ConfigReader<T>::getOptionID(const std::string &name, int &iValue)
+{
+	iValue = -1;
+
+	if (!cfg->self.hasOption(name))
+		return false;
+
+	bool ret = true;
+	try {
+		iValue = cfg->self.getOptionInt(name, -1);
+	} catch (const StringUtil::bad_cast &e) {
+		ASTRA_WARN("Optional parameter %s is not a valid id", name.c_str());
+		iValue = -1;
+		ret = false;
+	}
+
+	stackCheck.markOptionParsed(name);
+	return ret;
+}
+
+
 template class ConfigStackCheck<CAlgorithm>;
 template class ConfigStackCheck<CProjectionGeometry2D>;
 template class ConfigStackCheck<CProjectionGeometry3D>;
@@ -180,5 +507,15 @@ template class ConfigStackCheck<CVolumeGeometry2D>;
 template class ConfigStackCheck<CVolumeGeometry3D>;
 template class ConfigStackCheck<CProjector2D>;
 template class ConfigStackCheck<CProjector3D>;
+
+
+template class ConfigReader<CAlgorithm>;
+template class ConfigReader<CProjectionGeometry2D>;
+template class ConfigReader<CProjectionGeometry3D>;
+template class ConfigReader<CVolumeGeometry2D>;
+template class ConfigReader<CVolumeGeometry3D>;
+template class ConfigReader<CProjector2D>;
+template class ConfigReader<CProjector3D>;
+
 
 }

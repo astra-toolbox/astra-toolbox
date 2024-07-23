@@ -42,7 +42,7 @@ cdef extern from "astra/Globals.h" namespace "astra":
 cdef extern from "astra/Config.h" namespace "astra":
     cdef cppclass Config:
         Config()
-        void initialize(string rootname)
+        void initialize(string& rootname)
         XMLNode self
 
 cdef extern from "astra/VolumeGeometry2D.h" namespace "astra":
