@@ -70,7 +70,7 @@ bool CCudaSartAlgorithm::initialize(const Config& _cfg)
 	m_bAlgoInit = false;
 
 	if (_cfg.self.hasOption("SinogramMaskId")) {
-		ASTRA_CONFIG_CHECK(false, "SART_CUDA", "Sinogram mask option is not supported.")
+		ASTRA_CONFIG_CHECK(false, "SART_CUDA", "Sinogram mask option is not supported.");
 	}
 
 	// projection order

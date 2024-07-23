@@ -60,10 +60,10 @@ bool CCudaEMAlgorithm::initialize(const Config& _cfg)
 	ConfigStackCheck<CAlgorithm> CC("CudaEMAlgorithm", this, _cfg);
 
 	if (_cfg.self.hasOption("SinogramMaskId")) {
-		ASTRA_CONFIG_CHECK(false, "EM_CUDA", "Sinogram mask option is not supported.")
+		ASTRA_CONFIG_CHECK(false, "EM_CUDA", "Sinogram mask option is not supported.");
 	}
 	if (_cfg.self.hasOption("ReconstructionMaskId")) {
-		ASTRA_CONFIG_CHECK(false, "EM_CUDA", "Reconstruction mask option is not supported.")
+		ASTRA_CONFIG_CHECK(false, "EM_CUDA", "Reconstruction mask option is not supported.");
 	}
 
 	m_bIsInitialized = CCudaReconstructionAlgorithm2D::initialize(_cfg);
