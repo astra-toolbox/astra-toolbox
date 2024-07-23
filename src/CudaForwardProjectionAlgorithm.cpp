@@ -82,54 +82,41 @@ void CCudaForwardProjectionAlgorithm::initializeFromProjector()
 bool CCudaForwardProjectionAlgorithm::initialize(const Config& _cfg)
 {
 	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CAlgorithm> CC("CudaForwardProjectionAlgorithm", this, _cfg);
+	ConfigReader<CAlgorithm> CR("CudaForwardProjectionAlgorithm", this, _cfg);
 
-	// Projector
-	m_pProjector = 0;
-	XMLNode node = _cfg.self.getSingleNode("ProjectorId");
-	if (node) {
-		int id = StringUtil::stringToInt(node.getContent(), -1);
+	bool ok = true;
+	int id = -1;
+
+	m_pProjector = nullptr;
+	if (CR.has("ProjectorId")) {
+		ok &= CR.getRequiredID("ProjectorId", id);
 		m_pProjector = CProjector2DManager::getSingleton().get(id);
+		if (!m_pProjector) {
+			ASTRA_ERROR("ProjectorId is not a valid id");
+			return false;
+		}
 	}
-	CC.markNodeParsed("ProjectorId");
 
-
-	
-	// sinogram data
-	node = _cfg.self.getSingleNode("ProjectionDataId");
-	ASTRA_CONFIG_CHECK(node, "FP_CUDA", "No ProjectionDataId tag specified.");
-	int id = StringUtil::stringToInt(node.getContent(), -1);
+	ok &= CR.getRequiredID("ProjectionDataId", id);
 	m_pSinogram = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
-	CC.markNodeParsed("ProjectionDataId");
 
-	// volume data
-	node = _cfg.self.getSingleNode("VolumeDataId");
-	ASTRA_CONFIG_CHECK(node, "FP_CUDA", "No VolumeDataId tag specified.");
-	id = StringUtil::stringToInt(node.getContent(), -1);
+	ok &= CR.getRequiredID("VolumeDataId", id);
 	m_pVolume = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
-	CC.markNodeParsed("VolumeDataId");
+
+	if (!ok)
+		return false;
 
 	initializeFromProjector();
 
 	// Deprecated options
-	try {
-		m_iDetectorSuperSampling = _cfg.self.getOptionInt("DetectorSuperSampling", m_iDetectorSuperSampling);
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "FP_CUDA", "Supersampling options must be integers.");
-	}
-	CC.markOptionParsed("DetectorSuperSampling");
-	// GPU number
-	try {
-		m_iGPUIndex = _cfg.self.getOptionInt("GPUindex", -1);
-		m_iGPUIndex = _cfg.self.getOptionInt("GPUIndex", m_iGPUIndex);
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "FP_CUDA", "GPUIndex must be an integer.");
-	}
-	CC.markOptionParsed("GPUIndex");
-	if (!_cfg.self.hasOption("GPUIndex"))
-		CC.markOptionParsed("GPUindex");
+	ok &= CR.getOptionInt("DetectorSuperSampling", m_iDetectorSuperSampling, m_iDetectorSuperSampling);
+	if (CR.hasOption("GPUIndex"))
+		ok &= CR.getOptionInt("GPUIndex", m_iGPUIndex, -1);
+	else
+		ok &= CR.getOptionInt("GPUindex", m_iGPUIndex, -1);
 
-
+	if (!ok)
+		return false;
 
 	// return success
 	return check();

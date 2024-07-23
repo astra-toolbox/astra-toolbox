@@ -44,13 +44,10 @@ namespace astra {
 void CSartAlgorithm::_clear()
 {
 	CReconstructionAlgorithm2D::_clear();
-	m_piProjectionOrder = NULL;
-	m_piProjectionOrder = NULL;
+	m_piProjectionOrder.clear();
 	m_pTotalRayLength = NULL;
 	m_pTotalPixelWeight = NULL;
 
-	m_iProjectionCount = 0;
-	m_iCurrentProjection = 0;
 	m_bIsInitialized = false;
 	m_iIterationCount = 0;
 }
@@ -61,8 +58,7 @@ void CSartAlgorithm::clear()
 {
 	CReconstructionAlgorithm2D::clear();
 
-	delete[] m_piProjectionOrder;
-	m_piProjectionOrder = NULL;
+	m_piProjectionOrder.clear();
 
 	delete m_pTotalRayLength;
 	m_pTotalRayLength = NULL;
@@ -73,8 +69,6 @@ void CSartAlgorithm::clear()
 	delete m_pDiffSinogram;
 	m_pDiffSinogram = NULL;
 
-	m_iProjectionCount = 0;
-	m_iCurrentProjection = 0;
 	m_bIsInitialized = false;
 	m_iIterationCount = 0;
 }
@@ -120,7 +114,7 @@ CSartAlgorithm::~CSartAlgorithm()
 bool CSartAlgorithm::initialize(const Config& _cfg)
 {
 	assert(_cfg.self);
-	ConfigStackCheck<CAlgorithm> CC("SartAlgorithm", this, _cfg);
+	ConfigReader<CAlgorithm> CR("SartAlgorithm", this, _cfg);
 	
 	// if already initialized, clear first
 	if (m_bIsInitialized) {
@@ -133,37 +127,37 @@ bool CSartAlgorithm::initialize(const Config& _cfg)
 	}
 
 	// projection order
-	m_iCurrentProjection = 0;
-	m_iProjectionCount = m_pProjector->getProjectionGeometry()->getProjectionAngleCount();
-	string projOrder = _cfg.self.getOption("ProjectionOrder", "sequential");
-	CC.markOptionParsed("ProjectionOrder");
+	int projectionCount = m_pProjector->getProjectionGeometry()->getProjectionAngleCount();
+	std::vector<int> projectionOrder;
+	std::string projOrder;
+	if (!CR.getOptionString("ProjectionOrder", projOrder, "sequential"))
+		return false;
 	if (projOrder == "sequential") {
-		m_piProjectionOrder = new int[m_iProjectionCount];
-		for (int i = 0; i < m_iProjectionCount; i++) {
+		m_piProjectionOrder.resize(projectionCount);
+		for (int i = 0; i < projectionCount; i++) {
 			m_piProjectionOrder[i] = i;
 		}
 	} else if (projOrder == "random") {
-		m_piProjectionOrder = new int[m_iProjectionCount];
-		for (int i = 0; i < m_iProjectionCount; i++) {
+		m_piProjectionOrder.resize(projectionCount);
+		for (int i = 0; i < projectionCount; i++) {
 			m_piProjectionOrder[i] = i;
 		}
-		for (int i = 0; i < m_iProjectionCount-1; i++) {
-			int k = (rand() % (m_iProjectionCount - i));
-			int t = m_piProjectionOrder[i];
-			m_piProjectionOrder[i] = m_piProjectionOrder[i + k];
+		for (int i = 0; i < projectionCount-1; i++) {
+			int k = (rand() % (projectionCount - i));
+			int t = projectionOrder[i];
+			m_piProjectionOrder[i] = projectionOrder[i + k];
 			m_piProjectionOrder[i + k] = t;
 		}
 	} else if (projOrder == "custom") {
-		vector<float32> projOrderList = _cfg.self.getOptionNumericalArray("ProjectionOrderList");
-		m_piProjectionOrder = new int[projOrderList.size()];
-		for (int i = 0; i < m_iProjectionCount; i++) {
-			m_piProjectionOrder[i] = static_cast<int>(projOrderList[i]);
-		}
-		CC.markOptionParsed("ProjectionOrderList");
+		if (!CR.getOptionIntArray("ProjectionOrderList", m_piProjectionOrder))
+			return false;
+	} else {
+		ASTRA_ERROR("Unknown ProjectionOrder");
+		return false;
 	}
 
-	m_fLambda = _cfg.self.getOptionNumerical("Relaxation", 1.0f);
-	CC.markOptionParsed("Relaxation");
+	if (!CR.getOptionNumerical("Relaxation", m_fLambda, 1.0f))
+		return false;
 
 	// create data objects
 	m_pTotalRayLength = new CFloat32ProjectionData2D(m_pProjector->getProjectionGeometry());
@@ -192,10 +186,9 @@ bool CSartAlgorithm::initialize(CProjector2D* _pProjector,
 	m_pReconstruction = _pReconstruction;
 
 	// ray order
-	m_iCurrentProjection = 0;
-	m_iProjectionCount = _pProjector->getProjectionGeometry()->getProjectionAngleCount();
-	m_piProjectionOrder = new int[m_iProjectionCount];
-	for (int i = 0; i < m_iProjectionCount; i++) {
+	int iProjectionCount = _pProjector->getProjectionGeometry()->getProjectionAngleCount();
+	m_piProjectionOrder.resize(iProjectionCount);
+	for (int i = 0; i < iProjectionCount; i++) {
 		m_piProjectionOrder[i] = i;
 	}
 
@@ -223,10 +216,8 @@ bool CSartAlgorithm::initialize(CProjector2D* _pProjector,
 	m_pReconstruction = _pReconstruction;
 
 	// ray order
-	m_iCurrentProjection = 0;
-	m_iProjectionCount = _iProjectionCount;
-	m_piProjectionOrder = new int[m_iProjectionCount];
-	for (int i = 0; i < m_iProjectionCount; i++) {
+	m_piProjectionOrder.resize(_iProjectionCount);
+	for (int i = 0; i < _iProjectionCount; i++) {
 		m_piProjectionOrder[i] = _piProjectionOrder[i];
 	}
 
@@ -247,7 +238,7 @@ bool CSartAlgorithm::_check()
 	ASTRA_CONFIG_CHECK(CReconstructionAlgorithm2D::_check(), "SART", "Error in ReconstructionAlgorithm2D initialization");
 
 	// check projection order all within range
-	for (int i = 0; i < m_iProjectionCount; ++i) {
+	for (unsigned int i = 0; i < m_piProjectionOrder.size(); ++i) {
 		ASTRA_CONFIG_CHECK(0 <= m_piProjectionOrder[i] && m_piProjectionOrder[i] < m_pProjector->getProjectionGeometry()->getProjectionAngleCount(), "SART", "Projection Order out of range.");
 	}
 
@@ -307,11 +298,11 @@ void CSartAlgorithm::run(int _iNrIterations)
 	// iteration loop
 	for (int iIteration = 0; iIteration < _iNrIterations && !shouldAbort(); ++iIteration) {
 
-		int iProjection = m_piProjectionOrder[m_iIterationCount % m_iProjectionCount];
+		int iProjection = m_piProjectionOrder[m_iIterationCount % m_piProjectionOrder.size()];
 	
 		// forward projection and difference calculation
 		m_pTotalPixelWeight->setData(0.0f);
-		if (iIteration < m_iProjectionCount)
+		if ((size_t) iIteration < m_piProjectionOrder.size())
 			pFirstForwardProjector->projectSingleProjection(iProjection);
 		else
 			pForwardProjector->projectSingleProjection(iProjection);

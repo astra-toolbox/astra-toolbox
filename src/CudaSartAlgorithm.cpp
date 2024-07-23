@@ -57,7 +57,7 @@ CCudaSartAlgorithm::~CCudaSartAlgorithm()
 bool CCudaSartAlgorithm::initialize(const Config& _cfg)
 {
 	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CAlgorithm> CC("CudaSartAlgorithm", this, _cfg);
+	ConfigReader<CAlgorithm> CR("CudaSartAlgorithm", this, _cfg);
 
 	m_bIsInitialized = CCudaReconstructionAlgorithm2D::initialize(_cfg);
 
@@ -69,24 +69,24 @@ bool CCudaSartAlgorithm::initialize(const Config& _cfg)
 	m_pAlgo = sart;
 	m_bAlgoInit = false;
 
-	if (_cfg.self.hasOption("SinogramMaskId")) {
+	if (CR.hasOption("SinogramMaskId")) {
 		ASTRA_CONFIG_CHECK(false, "SART_CUDA", "Sinogram mask option is not supported.");
 	}
 
 	// projection order
 	int projectionCount = m_pSinogram->getGeometry()->getProjectionAngleCount();
-	int* projectionOrder = NULL;
-	string projOrder = _cfg.self.getOption("ProjectionOrder", "random");
-	CC.markOptionParsed("ProjectionOrder");
+	std::vector<int> projectionOrder;
+	std::string projOrder;
+	if (!CR.getOptionString("ProjectionOrder", projOrder, "random"))
+		return false;
 	if (projOrder == "sequential") {
-		projectionOrder = new int[projectionCount];
+		projectionOrder.resize(projectionCount);
 		for (int i = 0; i < projectionCount; i++) {
 			projectionOrder[i] = i;
 		}
-		sart->setProjectionOrder(projectionOrder, projectionCount);
-		delete[] projectionOrder;
+		sart->setProjectionOrder(&projectionOrder[0], projectionCount);
 	} else if (projOrder == "random") {
-		projectionOrder = new int[projectionCount];
+		projectionOrder.resize(projectionCount);
 		for (int i = 0; i < projectionCount; i++) {
 			projectionOrder[i] = i;
 		}
@@ -96,21 +96,18 @@ bool CCudaSartAlgorithm::initialize(const Config& _cfg)
 			projectionOrder[i] = projectionOrder[i + k];
 			projectionOrder[i + k] = t;
 		}
-		sart->setProjectionOrder(projectionOrder, projectionCount);
-		delete[] projectionOrder;
+		sart->setProjectionOrder(&projectionOrder[0], projectionCount);
 	} else if (projOrder == "custom") {
-		vector<float32> projOrderList = _cfg.self.getOptionNumericalArray("ProjectionOrderList");
-		projectionOrder = new int[projOrderList.size()];
-		for (unsigned int i = 0; i < projOrderList.size(); i++) {
-			projectionOrder[i] = static_cast<int>(projOrderList[i]);
-		}
-		sart->setProjectionOrder(projectionOrder, projectionCount);
-		delete[] projectionOrder;
-		CC.markOptionParsed("ProjectionOrderList");
+		if (!CR.getOptionIntArray("ProjectionOrderList", projectionOrder))
+			return false;
+		sart->setProjectionOrder(&projectionOrder[0], projectionOrder.size());
+	} else {
+		ASTRA_ERROR("Unknown ProjectionOrder");
+		return false;
 	}
 
-	m_fLambda = _cfg.self.getOptionNumerical("Relaxation", 1.0f);
-	CC.markOptionParsed("Relaxation");
+	if (!CR.getOptionNumerical("Relaxation", m_fLambda, 1.0f))
+		return false;
 
 	return true;
 }

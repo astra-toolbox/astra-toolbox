@@ -90,37 +90,24 @@ void CFilteredBackProjectionAlgorithm::clear()
 bool CFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 {
 	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CAlgorithm> CC("FilteredBackProjectionAlgorithm", this, _cfg);
+	ConfigReader<CAlgorithm> CR("FilteredBackProjectionAlgorithm", this, _cfg);
+
+	bool ok = true;
 	int id = -1;
-	
-	// projector
-	XMLNode node = _cfg.self.getSingleNode("ProjectorId");
-	ASTRA_CONFIG_CHECK(node, "FilteredBackProjection", "No ProjectorId tag specified.");
-	id = StringUtil::stringToInt(node.getContent(), -1);
+
+	ok &= CR.getRequiredID("ProjectorId", id);
 	m_pProjector = CProjector2DManager::getSingleton().get(id);
-	CC.markNodeParsed("ProjectorId");
 
-	// sinogram data
-	node = _cfg.self.getSingleNode("ProjectionDataId");
-	ASTRA_CONFIG_CHECK(node, "FilteredBackProjection", "No ProjectionDataId tag specified.");
-	id = StringUtil::stringToInt(node.getContent(), -1);
+	ok &= CR.getRequiredID("ProjectionDataId", id);
 	m_pSinogram = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
-	CC.markNodeParsed("ProjectionDataId");
 
-	// volume data
-	node = _cfg.self.getSingleNode("ReconstructionDataId");
-	ASTRA_CONFIG_CHECK(node, "FilteredBackProjection", "No ReconstructionDataId tag specified.");
-	id = StringUtil::stringToInt(node.getContent(), -1);
+	ok &= CR.getRequiredID("ReconstructionDataId", id);
 	m_pReconstruction = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
-	CC.markNodeParsed("ReconstructionDataId");
 
-	node = _cfg.self.getSingleNode("ProjectionIndex");
-	if (node) 
-	{
+	if (CR.has("ProjectionIndex")) {
 		ASTRA_ERROR("ProjectionIndex is no longer available. Manually adjust the sinogram instead.");
 		return false;
 	}
-	CC.markNodeParsed("ProjectionIndex");
 
 	m_filterConfig = getFilterConfigForAlgorithm(_cfg, this);
 

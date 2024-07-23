@@ -61,43 +61,34 @@ CCudaDataOperationAlgorithm::~CCudaDataOperationAlgorithm()
 bool CCudaDataOperationAlgorithm::initialize(const Config& _cfg)
 {
 	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CAlgorithm> CC("CCudaDataOperationAlgorithm", this, _cfg);
+	ConfigReader<CAlgorithm> CR("CCudaDataOperationAlgorithm", this, _cfg);
 
 	// operation
-	XMLNode node = _cfg.self.getSingleNode("Operation");
-	ASTRA_CONFIG_CHECK(node, "CCudaDataOperationAlgorithm", "No Operation tag specified.");
-	m_sOperation = node.getContent();
+	if (!CR.getRequiredString("Operation", m_sOperation))
+		return false;
 	m_sOperation.erase(std::remove(m_sOperation.begin(), m_sOperation.end(), ' '), m_sOperation.end());
-	CC.markNodeParsed("Operation");
 
 	// data
-	node = _cfg.self.getSingleNode("DataId");
-	ASTRA_CONFIG_CHECK(node, "CCudaDataOperationAlgorithm", "No DataId tag specified.");
-	vector<string> data = node.getContentArray();
-	for (vector<string>::iterator it = data.begin(); it != data.end(); ++it){
-		int id = StringUtil::stringToInt(*it);
-		m_pData.push_back(dynamic_cast<CFloat32Data2D*>(CData2DManager::getSingleton().get(id)));
+	vector<int> data;
+	if (!CR.getRequiredIntArray("DataId", data))
+		return false;
+	for (vector<int>::iterator it = data.begin(); it != data.end(); ++it){
+		m_pData.push_back(dynamic_cast<CFloat32Data2D*>(CData2DManager::getSingleton().get(*it)));
 	}
-	CC.markNodeParsed("DataId");
 
-	// scalar
-	node = _cfg.self.getSingleNode("Scalar");
-	ASTRA_CONFIG_CHECK(node, "CCudaDataOperationAlgorithm", "No Scalar tag specified.");
-	m_fScalar = node.getContentNumericalArray();
-	CC.markNodeParsed("Scalar");
+	bool ok = true;
 
-	// Option: GPU number
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
-	CC.markOptionParsed("GPUindex");
-	if (!_cfg.self.hasOption("GPUindex"))
-		CC.markOptionParsed("GPUIndex");
+	ok &= CR.getRequiredNumericalArray("Scalar", m_fScalar);
 
-	if (_cfg.self.hasOption("MaskId")) {
-		int id = _cfg.self.getOptionInt("MaskId");
+	if (CR.hasOption("GPUIndex"))
+		ok &= CR.getOptionInt("GPUIndex", m_iGPUIndex, -1);
+	else
+		ok &= CR.getOptionInt("GPUindex", m_iGPUIndex, -1);
+
+	int id = -1;
+	if (CR.getOptionID("MaskId", id)) {
 		m_pMask = dynamic_cast<CFloat32Data2D*>(CData2DManager::getSingleton().get(id));
 	}
-	CC.markOptionParsed("MaskId");
 
 	_check();
 

@@ -60,45 +60,27 @@ CCudaDartSmoothingAlgorithm::~CCudaDartSmoothingAlgorithm()
 bool CCudaDartSmoothingAlgorithm::initialize(const Config& _cfg)
 {
 	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CAlgorithm> CC("CudaDartSmoothingAlgorithm", this, _cfg);
+	ConfigReader<CAlgorithm> CR("CudaDartSmoothingAlgorithm", this, _cfg);
 
-	// reconstruction data
-	XMLNode node = _cfg.self.getSingleNode("InDataId");
-	ASTRA_CONFIG_CHECK(node, "CudaDartSmoothing", "No InDataId tag specified.");
-	int id = StringUtil::stringToInt(node.getContent(), -1);
+	bool ok = true;
+	int id = -1;
+
+	ok &= CR.getRequiredID("InDataId", id);
 	m_pIn = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
-	CC.markNodeParsed("InDataId");
 
-	// reconstruction data
-	node = _cfg.self.getSingleNode("OutDataId");
-	ASTRA_CONFIG_CHECK(node, "CudaDartSmoothing", "No OutDataId tag specified.");
-	id = StringUtil::stringToInt(node.getContent(), -1);
+	ok &= CR.getRequiredID("OutDataId", id);
 	m_pOut = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
-	CC.markNodeParsed("OutDataId");
 
-	// Option: GPU number
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
-	CC.markOptionParsed("GPUindex");
-	if (!_cfg.self.hasOption("GPUindex"))
-		CC.markOptionParsed("GPUIndex");
+	if (CR.hasOption("GPUIndex"))
+		ok &= CR.getOptionInt("GPUIndex", m_iGPUIndex, -1);
+	else
+		ok &= CR.getOptionInt("GPUindex", m_iGPUIndex, -1);
 
-	// Option: Radius
-	try {
-		m_fB = (float)_cfg.self.getOptionNumerical("Intensity", 0.3f);
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "CudaDartSmoothing", "Intensity must be numerical");
-	}
-	CC.markOptionParsed("Intensity");
+	ok &= CR.getOptionNumerical("Intensity", m_fB, 0.3f);
+	ok &= CR.getOptionUInt("Radius", m_iRadius, 1);
 
-	// Option: Radius
-	try {
-		m_iRadius = _cfg.self.getOptionInt("Radius", 1);
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "CudaDartSmoothing", "Radius must be an integer.");
-	}
-	CC.markOptionParsed("Radius");
-
+	if (!ok)
+		return false;
 
 	_check();
 

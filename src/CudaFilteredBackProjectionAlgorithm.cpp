@@ -56,7 +56,7 @@ CCudaFilteredBackProjectionAlgorithm::~CCudaFilteredBackProjectionAlgorithm()
 bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 {
 	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CAlgorithm> CC("CudaFilteredBackProjectionAlgorithm", this, _cfg);
+	ConfigReader<CAlgorithm> CR("CudaFilteredBackProjectionAlgorithm", this, _cfg);
 
 	// if already initialized, clear first
 	if (m_bIsInitialized)
@@ -72,8 +72,10 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 
 	// Fan beam short scan mode
 	if (m_pSinogram && dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pSinogram->getGeometry())) {
-		m_bShortScan = (int)_cfg.self.getOptionBool("ShortScan", false);
-		CC.markOptionParsed("ShortScan");
+		bool ok = true;
+		ok &= CR.getOptionBool("ShortScan", m_bShortScan, false);
+		if (!ok)
+			return false;
 	}
 
 	initializeFromProjector();

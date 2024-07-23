@@ -61,29 +61,23 @@ CCudaRoiSelectAlgorithm::~CCudaRoiSelectAlgorithm()
 bool CCudaRoiSelectAlgorithm::initialize(const Config& _cfg)
 {
 	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CAlgorithm> CC("CudaDartRoiSelectAlgorithm", this, _cfg);
+	ConfigReader<CAlgorithm> CR("CudaDartRoiSelectAlgorithm", this, _cfg);
 
-	// reconstruction data
-	XMLNode node = _cfg.self.getSingleNode("DataId");
-	ASTRA_CONFIG_CHECK(node, "CudaRoiSelect", "No DataId tag specified.");
-	int id = StringUtil::stringToInt(node.getContent(), -1);
+	bool ok = true;
+	int id = -1;
+
+	ok &= CR.getRequiredID("DataId", id);
 	m_pData = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
-	CC.markNodeParsed("DataId");
 
-	// Option: GPU number
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
-	CC.markOptionParsed("GPUindex");
-	if (!_cfg.self.hasOption("GPUindex"))
-		CC.markOptionParsed("GPUIndex");
+	if (CR.hasOption("GPUIndex"))
+		ok &= CR.getOptionInt("GPUIndex", m_iGPUIndex, -1);
+	else
+		ok &= CR.getOptionInt("GPUindex", m_iGPUIndex, -1);
 
-	// Option: Radius
-	try {
-		m_fRadius = _cfg.self.getOptionNumerical("Radius", 0.0f);
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "CudaDartRoiSelect", "Radius must be numerical.");
-	}
-	CC.markOptionParsed("Radius");
+	ok &= CR.getOptionNumerical("Radius", m_fRadius, 0.0f);
+
+	if (!ok)
+		return false;
 
 	_check();
 
