@@ -104,7 +104,7 @@ protected:
 	CFloat32VolumeData2D* m_pTotalPixelWeight;
 	CFloat32ProjectionData2D* m_pDiffSinogram;
 
-	int m_iIterationCount;
+	unsigned int m_iIterationCount;
 
 public:
 	
@@ -195,13 +195,8 @@ public:
 
 protected:
 
-
 	//< Order of the projections.
-	int* m_piProjectionOrder;
-	//< Number of projections specified in m_piProjectionOrder.
-	int m_iProjectionCount;
-	//< Current index in the projection order array.
-	int m_iCurrentProjection;
+	std::vector<int> m_piProjectionOrder;
 
 	//< Relaxation parameter
 	float m_fLambda;
