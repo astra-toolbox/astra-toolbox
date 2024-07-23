@@ -107,52 +107,55 @@ bool CProjector2D::_check()
 bool CProjector2D::initialize(const Config& _cfg)
 {
 	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CProjector2D> CC("Projector2D", this, _cfg);
+	ConfigReader<CProjector2D> CR("Projector2D", this, _cfg);
 
 	// if already initialized, clear first
 	if (m_bIsInitialized) {
 		clear();
 	}
 
-	// required: ProjectionGeometry
-	XMLNode node = _cfg.self.getSingleNode("ProjectionGeometry");
-	ASTRA_CONFIG_CHECK(node, "Projector2D", "No ProjectionGeometry tag specified.");
+	Config subcfg;
+	bool ok = true;
+
+	ok = CR.getRequiredSubConfig("ProjectionGeometry", subcfg);
+	if (!ok)
+		return false;
+
+	std::string type = subcfg.self.getAttribute("type");
 
 	// FIXME: Change how the base class is created. (This is duplicated
 	// in astra_mex_data2d.cpp.)
-	std::string type = node.getAttribute("type");
 	if (type == "sparse_matrix") {
 		m_pProjectionGeometry = new CSparseMatrixProjectionGeometry2D();
-		m_pProjectionGeometry->initialize(Config(node));
+		m_pProjectionGeometry->initialize(subcfg);
 	} else if (type == "fanflat") {
 		CFanFlatProjectionGeometry2D* pFanFlatProjectionGeometry = new CFanFlatProjectionGeometry2D();
-		pFanFlatProjectionGeometry->initialize(Config(node));
+		pFanFlatProjectionGeometry->initialize(subcfg);
 		m_pProjectionGeometry = pFanFlatProjectionGeometry;
 	} else if (type == "fanflat_vec") {
 		CFanFlatVecProjectionGeometry2D* pFanFlatVecProjectionGeometry = new CFanFlatVecProjectionGeometry2D();
-		pFanFlatVecProjectionGeometry->initialize(Config(node));
+		pFanFlatVecProjectionGeometry->initialize(subcfg);
 		m_pProjectionGeometry = pFanFlatVecProjectionGeometry;
 	} else if (type == "parallel_vec") {
 		CParallelVecProjectionGeometry2D* pParallelVecProjectionGeometry = new CParallelVecProjectionGeometry2D();
-		pParallelVecProjectionGeometry->initialize(Config(node));
+		pParallelVecProjectionGeometry->initialize(subcfg);
 		m_pProjectionGeometry = pParallelVecProjectionGeometry;
 	} else {
 		m_pProjectionGeometry = new CParallelProjectionGeometry2D();
-		m_pProjectionGeometry->initialize(Config(node));
+		m_pProjectionGeometry->initialize(subcfg);
 	}
-	// "node" is deleted by the temp Config(node) objects
+
 	ASTRA_CONFIG_CHECK(m_pProjectionGeometry->isInitialized(), "Projector2D", "ProjectionGeometry not initialized.");	
-	CC.markNodeParsed("ProjectionGeometry");
 
 
-	// required: VolumeGeometry
-	node = _cfg.self.getSingleNode("VolumeGeometry");
-	ASTRA_CONFIG_CHECK(node, "Projector2D", "No VolumeGeometry tag specified.");
+	ok = CR.getRequiredSubConfig("VolumeGeometry", subcfg);
+	if (!ok)
+		return false;
+
 	m_pVolumeGeometry = new CVolumeGeometry2D();
-	m_pVolumeGeometry->initialize(Config(node));
+	m_pVolumeGeometry->initialize(subcfg);
 	// "node" is deleted by the temp Config(node) object
 	ASTRA_CONFIG_CHECK(m_pVolumeGeometry->isInitialized(), "Projector2D", "VolumeGeometry not initialized.");
-	CC.markNodeParsed("VolumeGeometry");
 
 	return true;
 }
