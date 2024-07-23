@@ -111,7 +111,7 @@ void CCudaCglsAlgorithm3D::initializeFromProjector()
 bool CCudaCglsAlgorithm3D::initialize(const Config& _cfg)
 {
 	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CAlgorithm> CC("CudaCglsAlgorithm3D", this, _cfg);
+	ConfigReader<CAlgorithm> CR("CudaCglsAlgorithm3D", this, _cfg);
 
 
 	// if already initialized, clear first
@@ -126,17 +126,17 @@ bool CCudaCglsAlgorithm3D::initialize(const Config& _cfg)
 
 	initializeFromProjector();
 
-	// Deprecated options
-	m_iVoxelSuperSampling = (int)_cfg.self.getOptionNumerical("VoxelSuperSampling", m_iVoxelSuperSampling);
-	m_iDetectorSuperSampling = (int)_cfg.self.getOptionNumerical("DetectorSuperSampling", m_iDetectorSuperSampling);
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", m_iGPUIndex);
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
-	CC.markOptionParsed("VoxelSuperSampling");
-	CC.markOptionParsed("DetectorSuperSampling");
-	CC.markOptionParsed("GPUIndex");
-	if (!_cfg.self.hasOption("GPUIndex"))
-		CC.markOptionParsed("GPUindex");
+	bool ok = true;
 
+	// Deprecated options
+	ok &= CR.getOptionInt("VoxelSuperSampling", m_iVoxelSuperSampling, m_iVoxelSuperSampling);
+	ok &= CR.getOptionInt("DetectorSuperSampling", m_iDetectorSuperSampling, m_iDetectorSuperSampling);
+	if (CR.hasOption("GPUIndex"))
+		ok &= CR.getOptionInt("GPUIndex", m_iGPUIndex, m_iGPUIndex);
+	else
+		ok &= CR.getOptionInt("GPUindex", m_iGPUIndex, m_iGPUIndex);
+	if (!ok)
+		return false;
 
 
 	m_pCgls = new AstraCGLS3d();
