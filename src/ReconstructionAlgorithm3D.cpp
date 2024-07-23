@@ -100,105 +100,69 @@ void CReconstructionAlgorithm3D::clear()
 bool CReconstructionAlgorithm3D::initialize(const Config& _cfg)
 {
 	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CAlgorithm> CC("ReconstructionAlgorithm3D", this, _cfg);
-
-	XMLNode node;
+	ConfigReader<CAlgorithm> CR("ReconstructionAlgorithm3D", this, _cfg);
 
 	// projector
-	node = _cfg.self.getSingleNode("ProjectorId");
 	m_pProjector = 0;
 	int id = -1;
-	if (node) {
-		id = StringUtil::stringToInt(node.getContent(), -1);
+	if (CR.has("ProjectorId")) {
+		CR.getID("ProjectorId", id);
 		m_pProjector = CProjector3DManager::getSingleton().get(id);
 		if (!m_pProjector) {
 			ASTRA_WARN("Optional parameter ProjectorId is not a valid id");
 		}
 	}
-	CC.markNodeParsed("ProjectorId");
+
+	bool ok = true;
 
 	// sinogram data
-	node = _cfg.self.getSingleNode("ProjectionDataId");
-	ASTRA_CONFIG_CHECK(node, "Reconstruction3D", "No ProjectionDataId tag specified.");
-	id = StringUtil::stringToInt(node.getContent(), -1);
+	ok &= CR.getRequiredID("ProjectionDataId", id);
 	m_pSinogram = dynamic_cast<CFloat32ProjectionData3D*>(CData3DManager::getSingleton().get(id));
-	CC.markNodeParsed("ProjectionDataId");
 
 	// reconstruction data
-	node = _cfg.self.getSingleNode("ReconstructionDataId");
-	ASTRA_CONFIG_CHECK(node, "Reconstruction3D", "No ReconstructionDataId tag specified.");
-	id = StringUtil::stringToInt(node.getContent(), -1);
-
+	ok &= CR.getRequiredID("ReconstructionDataId", id);
 	m_pReconstruction = dynamic_cast<CFloat32VolumeData3D*>(CData3DManager::getSingleton().get(id));
-	CC.markNodeParsed("ReconstructionDataId");
+
+	if (!ok)
+		return false;
 
 	// fixed mask
-	if (_cfg.self.hasOption("ReconstructionMaskId")) {
+	if (CR.getOptionID("ReconstructionMaskId", id)) {
 		m_bUseReconstructionMask = true;
-		id = StringUtil::stringToInt(_cfg.self.getOption("ReconstructionMaskId"), -1);
 		m_pReconstructionMask = dynamic_cast<CFloat32VolumeData3D*>(CData3DManager::getSingleton().get(id));
 	}
-	CC.markOptionParsed("ReconstructionMaskId");
 
 	// fixed mask
-	if (_cfg.self.hasOption("SinogramMaskId")) {
+	if (CR.getOptionID("SinogramMaskId", id)) {
 		m_bUseSinogramMask = true;
-		id = StringUtil::stringToInt(_cfg.self.getOption("SinogramMaskId"), -1);
 		m_pSinogramMask = dynamic_cast<CFloat32ProjectionData3D*>(CData3DManager::getSingleton().get(id));
 	}
-	CC.markOptionParsed("SinogramMaskId");
 
 	// Constraints - NEW
-	if (_cfg.self.hasOption("MinConstraint")) {
+	if (CR.hasOption("MinConstraint")) {
 		m_bUseMinConstraint = true;
-		try {
-			m_fMinValue = _cfg.self.getOptionNumerical("MinConstraint", 0.0f);
-		} catch (const astra::StringUtil::bad_cast &e) {
-			m_fMinValue = 0.0f;
-			ASTRA_ERROR("MinConstraint must be numerical");
-			return false;
-		}
-		CC.markOptionParsed("MinConstraint");
+		ok &= CR.getOptionNumerical("MinConstraint", m_fMinValue, 0.0f);
 	} else {
 		// Constraint - OLD
-		m_bUseMinConstraint = _cfg.self.getOptionBool("UseMinConstraint", false);
-		CC.markOptionParsed("UseMinConstraint");
+		ok &= CR.getOptionBool("UseMinConstraint", m_bUseMinConstraint, false);
 		if (m_bUseMinConstraint) {
-			try {
-				m_fMinValue = _cfg.self.getOptionNumerical("MinConstraintValue", 0.0f);
-			} catch (const astra::StringUtil::bad_cast &e) {
-				m_fMinValue = 0.0f;
-				ASTRA_ERROR("MinConstraintValue must be numerical");
-				return false;
-			}
-			CC.markOptionParsed("MinConstraintValue");
+			ok &= CR.getOptionNumerical("MinConstraintValue", m_fMinValue, 0.0f);
+			ASTRA_WARN("UseMinConstraint/MinConstraintValue are deprecated. Use \"MinConstraint\" instead.");
 		}
 	}
 	if (_cfg.self.hasOption("MaxConstraint")) {
 		m_bUseMaxConstraint = true;
-		try {
-			m_fMaxValue = _cfg.self.getOptionNumerical("MaxConstraint", 255.0f);
-		} catch (const astra::StringUtil::bad_cast &e) {
-			m_fMinValue = 255.0f;
-			ASTRA_ERROR("MaxConstraint must be numerical");
-			return false;
-		}
-		CC.markOptionParsed("MaxConstraint");
+		ok &= CR.getOptionNumerical("MaxConstraint", m_fMaxValue, 255.0f);
 	} else {
 		// Constraint - OLD
-		m_bUseMaxConstraint = _cfg.self.getOptionBool("UseMaxConstraint", false);
-		CC.markOptionParsed("UseMaxConstraint");
+		ok &= CR.getOptionBool("UseMaxConstraint", m_bUseMaxConstraint, false);
 		if (m_bUseMaxConstraint) {
-			try {
-				m_fMaxValue = _cfg.self.getOptionNumerical("MaxConstraintValue", 255.0f);
-			} catch (const astra::StringUtil::bad_cast &e) {
-				m_fMaxValue = 255.0f;
-				ASTRA_ERROR("MaxConstraintValue must be numerical");
-				return false;
-			}
-			CC.markOptionParsed("MaxConstraintValue");
+			ok &= CR.getOptionNumerical("MaxConstraintValue", m_fMaxValue, 255.0f);
+			ASTRA_WARN("UseMaxConstraint/MaxConstraintValue are deprecated. Use \"MaxConstraint\" instead.");
 		}
 	}
+	if (!ok)
+		return false;
 
 	// return success
 	return _check();
