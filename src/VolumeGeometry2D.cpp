@@ -156,46 +156,27 @@ CVolumeGeometry2D* CVolumeGeometry2D::clone()
 bool CVolumeGeometry2D::initialize(const Config& _cfg)
 {
 	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CVolumeGeometry2D> CC("VolumeGeometry2D", this, _cfg);
+	ConfigReader<CVolumeGeometry2D> CR("VolumeGeometry2D", this, _cfg);
 	
 	// uninitialize if the object was initialized before
 	if (m_bInitialized)	{
 		clear();
 	}
 
-	// Required: GridColCount
-	XMLNode node = _cfg.self.getSingleNode("GridColCount");
-	ASTRA_CONFIG_CHECK(node, "VolumeGeometry2D", "No GridColCount tag specified.");
-	try {
-		m_iGridColCount = node.getContentInt();
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "VolumeGeometry2D", "GridColCount must be an integer.");
-	}
-	CC.markNodeParsed("GridColCount");
+	bool ok = true;
 
-	// Required: GridRowCount
-	node = _cfg.self.getSingleNode("GridRowCount");
-	ASTRA_CONFIG_CHECK(node, "VolumeGeometry2D", "No GridRowCount tag specified.");
-	try {
-		m_iGridRowCount = node.getContentInt();
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "VolumeGeometry2D", "GridRowCount must be an integer.");
-	}
-	CC.markNodeParsed("GridRowCount");
+	// Required: number of voxels
+	ok &= CR.getRequiredInt("GridColCount", m_iGridColCount);
+	ok &= CR.getRequiredInt("GridRowCount", m_iGridRowCount);
 
-	// Optional: Window minima and maxima
-	try {
-		m_fWindowMinX = _cfg.self.getOptionNumerical("WindowMinX", -m_iGridColCount/2.0f);
-		m_fWindowMaxX = _cfg.self.getOptionNumerical("WindowMaxX", m_iGridColCount/2.0f);
-		m_fWindowMinY = _cfg.self.getOptionNumerical("WindowMinY", -m_iGridRowCount/2.0f);
-		m_fWindowMaxY = _cfg.self.getOptionNumerical("WindowMaxY", m_iGridRowCount/2.0f);
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "VolumeGeometry2D", "Window extents must be numerical.");
-	}
-	CC.markOptionParsed("WindowMinX");
-	CC.markOptionParsed("WindowMaxX");
-	CC.markOptionParsed("WindowMinY");
-	CC.markOptionParsed("WindowMaxY");
+	// Optional: window minima and maxima
+	ok &= CR.getOptionNumerical("WindowMinX", m_fWindowMinX, -m_iGridColCount/2.0f);
+	ok &= CR.getOptionNumerical("WindowMaxX", m_fWindowMaxX, m_iGridColCount/2.0f);
+	ok &= CR.getOptionNumerical("WindowMinY", m_fWindowMinY, -m_iGridRowCount/2.0f);
+	ok &= CR.getOptionNumerical("WindowMaxY", m_fWindowMaxY, m_iGridRowCount/2.0f);
+
+	if (!ok)
+		return false;
 
 	_calculateDependents();
 

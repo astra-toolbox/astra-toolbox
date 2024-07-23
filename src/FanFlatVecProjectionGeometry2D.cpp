@@ -114,7 +114,7 @@ bool CFanFlatVecProjectionGeometry2D::initialize(int _iProjectionAngleCount,
 bool CFanFlatVecProjectionGeometry2D::initialize(const Config& _cfg)
 {
 	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CProjectionGeometry2D> CC("FanFlatVecProjectionGeometry2D", this, _cfg);	
+	ConfigReader<CProjectionGeometry2D> CR("FanFlatVecProjectionGeometry2D", this, _cfg);	
 
 	XMLNode node;
 
@@ -130,18 +130,12 @@ bool CFanFlatVecProjectionGeometry2D::initialize(const Config& _cfg)
 
 bool CFanFlatVecProjectionGeometry2D::initializeAngles(const Config& _cfg)
 {
-	ConfigStackCheck<CProjectionGeometry2D> CC("FanFlatVecProjectionGeometry2D", this, _cfg);
+	ConfigReader<CProjectionGeometry2D> CR("FanFlatVecProjectionGeometry2D", this, _cfg);
 
 	// Required: Vectors
-	XMLNode node = _cfg.self.getSingleNode("Vectors");
-	ASTRA_CONFIG_CHECK(node, "FanFlatVecProjectionGeometry2D", "No Vectors tag specified.");
-	vector<float32> data;
-	try {
-		data = node.getContentNumericalArray();
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "FanFlatVecProjectionGeometry2D", "Vectors must be a numerical matrix.");
-	}
-	CC.markNodeParsed("Vectors");
+	vector<double> data;
+	if (!CR.getRequiredNumericalArray("Vectors", data))
+		return false;
 	ASTRA_CONFIG_CHECK(data.size() % 6 == 0, "FanFlatVecProjectionGeometry2D", "Vectors doesn't consist of 6-tuples.");
 	m_iProjectionAngleCount = data.size() / 6;
 	m_pProjectionAngles = new SFanProjection[m_iProjectionAngleCount];
