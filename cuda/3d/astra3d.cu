@@ -387,12 +387,14 @@ bool AstraSIRT3d::enableSuperSampling(unsigned int iVoxelSuperSampling,
 	return true;
 }
 
-void AstraSIRT3d::setRelaxation(float r)
+bool AstraSIRT3d::setRelaxation(float r)
 {
 	if (pData->initialized)
-		return;
+		return false;
 
 	pData->fRelaxation = r;
+
+	return true;
 }
 
 bool AstraSIRT3d::enableVolumeMask()
@@ -450,11 +452,11 @@ bool AstraSIRT3d::init()
 	if (!ok)
 		return false;
 
+	pData->sirt.setRelaxation(pData->fRelaxation);
+
 	ok = pData->sirt.init();
 	if (!ok)
 		return false;
-
-	pData->sirt.setRelaxation(pData->fRelaxation);
 
 	pData->D_volumeData = allocateVolumeData(pData->dims);
 	ok = pData->D_volumeData.ptr;

@@ -67,7 +67,7 @@ public:
 	bool enableSuperSampling(unsigned int iVoxelSuperSampling,
 	                         unsigned int iDetectorSuperSampling);
 
-	void setRelaxation(float r);
+	bool setRelaxation(float r);
 
 	// Enable volume/sinogram masks
 	//

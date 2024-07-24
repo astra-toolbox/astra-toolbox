@@ -128,7 +128,7 @@ bool CCudaSirtAlgorithm3D::initialize(const Config& _cfg)
 		return false;
 	}
 
-	m_fLambda = _cfg.self.getOptionNumerical("Relaxation");
+	m_fLambda = _cfg.self.getOptionNumerical("Relaxation", 1.0f);
 
 	initializeFromProjector();
 
@@ -208,13 +208,13 @@ void CCudaSirtAlgorithm3D::run(int _iNrIterations)
 		if (m_bUseSinogramMask)
 			ok &= m_pSirt->enableSinogramMask();
 
+		ok &= m_pSirt->setRelaxation(m_fLambda);
+
 		ASTRA_ASSERT(ok);
 
 		ok &= m_pSirt->init();
 
 		ASTRA_ASSERT(ok);
-
-		m_pSirt->setRelaxation(m_fLambda);
 
 		m_bAstraSIRTInit = true;
 

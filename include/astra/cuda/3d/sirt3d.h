@@ -43,11 +43,11 @@ public:
 	bool enableVolumeMask();
 	bool enableSinogramMask();
 
+	// Set relaxation factor. This must be called before init.
+	void setRelaxation(float r) { fRelaxation = r; }
+
 	// init should be called after setting all geometry
 	bool init();
-
-	// Set relaxation factor. This may be called after init and before iterate.
-	void setRelaxation(float r) { fRelaxation = r; }
 
 	// setVolumeMask should be called after init and before iterate,
 	// but only if enableVolumeMask was called before init.
