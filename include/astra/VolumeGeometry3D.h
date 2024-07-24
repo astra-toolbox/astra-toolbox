@@ -490,10 +490,10 @@ public:
 
 	CVolumeGeometry2D * createVolumeGeometry2D() const;
 
-
+private:
 	//< For Config unused argument checking
 	ConfigCheckData* configCheckData;
-	friend class ConfigStackCheck<CVolumeGeometry3D>;
+	friend class ConfigReader<CVolumeGeometry3D>;
 };
 
 

@@ -62,28 +62,11 @@ struct ConfigCheckData {
 };
 
 
-// TODO: Merge this into ConfigReader once there are no more direct users
-template<class T>
-class ConfigStackCheck {
-public:
-	ConfigStackCheck(const char *_name, T* _obj, const Config& _cfg);
-	~ConfigStackCheck();
-
-	bool stopParsing(); // returns true if no unused nodes/options
-	void markNodeParsed(const std::string& name);
-	void markOptionParsed(const std::string& name);
-	
-
-private:
-	T* object;
-	const Config* cfg;
-	const char* name;
-};
-
 template<class T>
 class ConfigReader {
 public:
 	ConfigReader(const char *_name, T *_obj, const Config &_cfg);
+	~ConfigReader();
 
 	// Return true if config has a value
 	bool has(const std::string &name);
@@ -134,13 +117,14 @@ public:
 	// not present or malformed. Reports parsing errors.
 	bool getOptionID(const std::string &name, int &iValue);
 
-	void markNodeParsed(const std::string& name) { stackCheck.markNodeParsed(name); }
-	void markOptionParsed(const std::string& name) { stackCheck.markOptionParsed(name); }
-
 private:
-	ConfigStackCheck<T> stackCheck;
+	T* object;
 	const Config* cfg;
 	const char* objName;
+
+	bool stopParsing(); // returns true if no unused nodes/options
+	void markNodeParsed(const std::string& name);
+	void markOptionParsed(const std::string& name);
 };
 
 
