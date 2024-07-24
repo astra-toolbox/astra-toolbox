@@ -137,14 +137,11 @@ void CProjectionGeometry3D::clear()
 // Initialization with a Config object
 bool CProjectionGeometry3D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CProjectionGeometry3D> CR("ProjectionGeometry3D", this, _cfg);
 
 	if (m_bInitialized) {
 		clear();
 	}
-
-	ASTRA_ASSERT(_cfg.self);
 
 	bool ok = true;
 

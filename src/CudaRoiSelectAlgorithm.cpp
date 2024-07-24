@@ -63,7 +63,6 @@ CCudaRoiSelectAlgorithm::~CCudaRoiSelectAlgorithm()
 // Initialize - Config
 bool CCudaRoiSelectAlgorithm::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CAlgorithm> CR("CudaDartRoiSelectAlgorithm", this, _cfg);
 
 	bool ok = true;

@@ -59,7 +59,6 @@ CCudaEMAlgorithm::~CCudaEMAlgorithm()
 // Initialize - Config
 bool CCudaEMAlgorithm::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CAlgorithm> CR("CudaEMAlgorithm", this, _cfg);
 
 	if (CR.hasOption("SinogramMaskId")) {
