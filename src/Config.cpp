@@ -355,7 +355,7 @@ bool ConfigReader<T>::getString(const std::string &name, std::string &sValue, co
 
 
 template<class T>
-bool ConfigReader<T>::getRequiredSubConfig(const std::string &name, Config &_cfg)
+bool ConfigReader<T>::getRequiredSubConfig(const std::string &name, Config &_cfg, std::string &type)
 {
 	XMLNode node;
 	node = cfg->self.getSingleNode(name);
@@ -363,6 +363,8 @@ bool ConfigReader<T>::getRequiredSubConfig(const std::string &name, Config &_cfg
 		astra::CLogger::error(__FILE__, __LINE__, "Configuration error in %s: No %s tag specified.", objName, name.c_str());
 		return false;
 	}
+
+	type = node.getAttribute("type", "");
 
 	_cfg = Config(node);
 
