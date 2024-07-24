@@ -93,13 +93,12 @@ bool CProjector3D::initialize(const Config& _cfg)
 	ConfigReader<CProjector3D> CR("Projector3D", this, _cfg);
 
 	Config subcfg;
+	std::string type;
 	bool ok = true;
 
-	ok = CR.getRequiredSubConfig("ProjectionGeometry", subcfg);
+	ok = CR.getRequiredSubConfig("ProjectionGeometry", subcfg, type);
 	if (!ok)
 		return false;
-
-	std::string type = subcfg.self.getAttribute("type");
 
 	CProjectionGeometry3D* pProjGeometry = 0;
 	if (type == "parallel3d") {
@@ -119,7 +118,7 @@ bool CProjector3D::initialize(const Config& _cfg)
 	m_pProjectionGeometry = pProjGeometry;
 	ASTRA_CONFIG_CHECK(m_pProjectionGeometry->isInitialized(), "Projector3D", "ProjectionGeometry not initialized.");
 
-	ok = CR.getRequiredSubConfig("VolumeGeometry", subcfg);
+	ok = CR.getRequiredSubConfig("VolumeGeometry", subcfg, type);
 	if (!ok)
 		return false;
 

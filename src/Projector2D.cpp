@@ -115,13 +115,12 @@ bool CProjector2D::initialize(const Config& _cfg)
 	}
 
 	Config subcfg;
+	std::string type;
 	bool ok = true;
 
-	ok = CR.getRequiredSubConfig("ProjectionGeometry", subcfg);
+	ok = CR.getRequiredSubConfig("ProjectionGeometry", subcfg, type);
 	if (!ok)
 		return false;
-
-	std::string type = subcfg.self.getAttribute("type");
 
 	// FIXME: Change how the base class is created. (This is duplicated
 	// in astra_mex_data2d.cpp.)
@@ -148,7 +147,7 @@ bool CProjector2D::initialize(const Config& _cfg)
 	ASTRA_CONFIG_CHECK(m_pProjectionGeometry->isInitialized(), "Projector2D", "ProjectionGeometry not initialized.");	
 
 
-	ok = CR.getRequiredSubConfig("VolumeGeometry", subcfg);
+	ok = CR.getRequiredSubConfig("VolumeGeometry", subcfg, type);
 	if (!ok)
 		return false;
 

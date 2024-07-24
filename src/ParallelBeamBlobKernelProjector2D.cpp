@@ -125,8 +125,9 @@ bool CParallelBeamBlobKernelProjector2D::initialize(const Config& _cfg)
 	}
 
 	Config subcfg;
+	std::string _type;
 
-	if (!CR.getRequiredSubConfig("Kernel", subcfg))
+	if (!CR.getRequiredSubConfig("Kernel", subcfg, _type))
 		return false;
 
 	{
