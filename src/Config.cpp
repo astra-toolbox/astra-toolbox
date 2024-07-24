@@ -78,8 +78,8 @@ void Config::initialize(const std::string &rootname)
 
 //-----------------------------------------------------------------------------
 template <class T>
-ConfigStackCheck<T>::ConfigStackCheck(const char *_name, T* _obj, const Config& _cfg)
-	: object(_obj), cfg(&_cfg), name(_name)
+ConfigReader<T>::ConfigReader(const char *_name, T* _obj, const Config& _cfg)
+	: object(_obj), cfg(&_cfg), objName(_name)
 {
 	assert(object);
 	assert(cfg);
@@ -92,7 +92,7 @@ ConfigStackCheck<T>::ConfigStackCheck(const char *_name, T* _obj, const Config& 
 }
 
 template <class T>
-ConfigStackCheck<T>::~ConfigStackCheck()
+ConfigReader<T>::~ConfigReader()
 {
 	assert(object->configCheckData);
 	assert(object->configCheckData->parseDepth > 0);
@@ -114,7 +114,7 @@ ConfigStackCheck<T>::~ConfigStackCheck()
 
 // returns true if no unused nodes/options
 template <class T>
-bool ConfigStackCheck<T>::stopParsing()
+bool ConfigReader<T>::stopParsing()
 {
 	assert(object->configCheckData);
 	assert(object->configCheckData->parseDepth > 0);
@@ -148,7 +148,7 @@ bool ConfigStackCheck<T>::stopParsing()
 
 	if (!errors.empty()) {
 		ostringstream os;
-		os << name << ": unused configuration options: " << errors;
+		os << objName << ": unused configuration options: " << errors;
 		ASTRA_WARN(os.str().c_str());
 		return false;
 	}
@@ -157,7 +157,7 @@ bool ConfigStackCheck<T>::stopParsing()
 }
 
 template <class T>
-void ConfigStackCheck<T>::markNodeParsed(const std::string& nodeName)
+void ConfigReader<T>::markNodeParsed(const std::string& nodeName)
 {
 	assert(object->configCheckData);
 	assert(object->configCheckData->parseDepth > 0);
@@ -165,20 +165,13 @@ void ConfigStackCheck<T>::markNodeParsed(const std::string& nodeName)
 }
 
 template <class T>
-void ConfigStackCheck<T>::markOptionParsed(const std::string& nodeName)
+void ConfigReader<T>::markOptionParsed(const std::string& nodeName)
 {
 	assert(object->configCheckData);
 	assert(object->configCheckData->parseDepth > 0);
 	object->configCheckData->parsedOptions.insert(nodeName);
 }
 
-
-template<class T>
-ConfigReader<T>::ConfigReader(const char *_name, T *_obj, const Config &_cfg)
-	: stackCheck(_name, _obj, _cfg), cfg(&_cfg), objName(_name)
-{
-
-}
 
 template<class T>
 bool ConfigReader<T>::has(const std::string &name)
@@ -203,7 +196,7 @@ bool ConfigReader<T>::getRequiredInt(const std::string &name, int &iValue)
 		return false;
 	}
 
-	stackCheck.markNodeParsed(name);
+	markNodeParsed(name);
 
 	return true;
 }
@@ -224,7 +217,7 @@ bool ConfigReader<T>::getRequiredNumerical(const std::string &name, float &fValu
 		return false;
 	}
 
-	stackCheck.markNodeParsed(name);
+	markNodeParsed(name);
 
 	return true;
 }
@@ -249,7 +242,7 @@ bool ConfigReader<T>::getRequiredID(const std::string &name, int &iValue)
 		ret = false;
 	}
 
-	stackCheck.markNodeParsed(name);
+	markNodeParsed(name);
 	return ret;
 
 }
@@ -271,7 +264,7 @@ bool ConfigReader<T>::getRequiredNumericalArray(const std::string &name, std::ve
 		return false;
 	}
 
-	stackCheck.markNodeParsed(name);
+	markNodeParsed(name);
 	return true;
 }
 
@@ -295,7 +288,7 @@ bool ConfigReader<T>::getRequiredIntArray(const std::string &name, std::vector<i
 		return false;
 	}
 
-	stackCheck.markNodeParsed(name);
+	markNodeParsed(name);
 	return true;
 }
 
@@ -309,7 +302,7 @@ bool ConfigReader<T>::getRequiredString(const std::string &name, std::string &sV
 		return false;
 	} else {
 		sValue = node.getContent();
-		stackCheck.markNodeParsed(name);
+		markNodeParsed(name);
 		return true;
 	}
 
@@ -333,7 +326,7 @@ bool ConfigReader<T>::getID(const std::string &name, int &iValue)
 		ret = false;
 	}
 
-	stackCheck.markNodeParsed(name);
+	markNodeParsed(name);
 	return ret;
 
 }
@@ -347,7 +340,7 @@ bool ConfigReader<T>::getString(const std::string &name, std::string &sValue, co
 		return false;
 	} else {
 		sValue = node.getContent();
-		stackCheck.markNodeParsed(name);
+		markNodeParsed(name);
 		return true;
 	}
 }
@@ -368,7 +361,7 @@ bool ConfigReader<T>::getRequiredSubConfig(const std::string &name, Config &_cfg
 
 	_cfg = Config(node);
 
-	stackCheck.markNodeParsed(name);
+	markNodeParsed(name);
 
 	return true;
 }
@@ -391,7 +384,7 @@ bool ConfigReader<T>::getOptionNumerical(const std::string &name, float &fValue,
 		return false;
 	}
 
-	stackCheck.markOptionParsed(name);
+	markOptionParsed(name);
 	return true;
 }
 
@@ -406,7 +399,7 @@ bool ConfigReader<T>::getOptionInt(const std::string &name, int &iValue, int iDe
 		return false;
 	}
 
-	stackCheck.markOptionParsed(name);
+	markOptionParsed(name);
 	return true;
 }
 
@@ -424,7 +417,7 @@ bool ConfigReader<T>::getOptionUInt(const std::string &name, unsigned int &iValu
 		return false;
 	}
 
-	stackCheck.markOptionParsed(name);
+	markOptionParsed(name);
 	return true;
 }
 
@@ -440,7 +433,7 @@ bool ConfigReader<T>::getOptionBool(const std::string &name, bool &bValue, bool 
 		return false;
 	}
 
-	stackCheck.markOptionParsed(name);
+	markOptionParsed(name);
 	return true;
 }
 
@@ -449,7 +442,7 @@ bool ConfigReader<T>::getOptionString(const std::string &name, std::string &sVal
 {
 	sValue = cfg->self.getOption(name, sDefaultValue);
 
-	stackCheck.markOptionParsed(name);
+	markOptionParsed(name);
 	return true;
 }
 
@@ -470,7 +463,7 @@ bool ConfigReader<T>::getOptionIntArray(const std::string &name, std::vector<int
 				astra::CLogger::error(__FILE__, __LINE__, "Configuration error in %s: option %s must be an integer array.", objName, name.c_str());
 				return false;
 			}
-			stackCheck.markNodeParsed(name);
+			markNodeParsed(name);
 			return true;
 		}
 	}
@@ -497,18 +490,9 @@ bool ConfigReader<T>::getOptionID(const std::string &name, int &iValue)
 		ret = false;
 	}
 
-	stackCheck.markOptionParsed(name);
+	markOptionParsed(name);
 	return ret;
 }
-
-
-template class ConfigStackCheck<CAlgorithm>;
-template class ConfigStackCheck<CProjectionGeometry2D>;
-template class ConfigStackCheck<CProjectionGeometry3D>;
-template class ConfigStackCheck<CVolumeGeometry2D>;
-template class ConfigStackCheck<CVolumeGeometry3D>;
-template class ConfigStackCheck<CProjector2D>;
-template class ConfigStackCheck<CProjector3D>;
 
 
 template class ConfigReader<CAlgorithm>;
