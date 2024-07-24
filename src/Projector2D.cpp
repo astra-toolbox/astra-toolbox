@@ -106,7 +106,6 @@ bool CProjector2D::_check()
 // Initialize, use a Config object
 bool CProjector2D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CProjector2D> CR("Projector2D", this, _cfg);
 
 	// if already initialized, clear first

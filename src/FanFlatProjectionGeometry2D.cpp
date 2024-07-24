@@ -129,7 +129,6 @@ bool CFanFlatProjectionGeometry2D::initialize(int _iProjectionAngleCount,
 // Initialization with a Config object
 bool CFanFlatProjectionGeometry2D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CProjectionGeometry2D> CR("FanFlatProjectionGeometry2D", this, _cfg);		
 
 	// initialization of parent class

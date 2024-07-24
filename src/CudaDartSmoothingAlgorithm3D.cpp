@@ -62,7 +62,6 @@ CCudaDartSmoothingAlgorithm3D::~CCudaDartSmoothingAlgorithm3D()
 // Initialize - Config
 bool CCudaDartSmoothingAlgorithm3D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CAlgorithm> CR("CudaDartSmoothingAlgorithm3D", this, _cfg);
 
 	bool ok = true;

@@ -66,7 +66,6 @@ CCudaDataOperationAlgorithm::~CCudaDataOperationAlgorithm()
 // Initialize - Config
 bool CCudaDataOperationAlgorithm::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CAlgorithm> CR("CCudaDataOperationAlgorithm", this, _cfg);
 
 	// operation
