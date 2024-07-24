@@ -93,12 +93,19 @@ public:
 	// return false.
 	bool getRequiredInt(const std::string &name, int &iValue);
 	bool getRequiredNumerical(const std::string &name, float &fValue);
-	bool getRequiredSubConfig(const std::string &name, Config &_cfg);
 	bool getRequiredID(const std::string &name, int &iValue);
 
 	bool getRequiredNumericalArray(const std::string &name, std::vector<double> &values);
 	bool getRequiredIntArray(const std::string &name, std::vector<int> &values);
 	bool getRequiredString(const std::string &name, std::string &sValue);
+
+	// Get a sub-configuration, and return true if succesful.
+	// In case of missing values or parse errors, report the error and
+	// return false.
+	// For convenience, also directly get the "type" attribute of the subcfg.
+	// If it has no type attribute, return empty string as type. (That is not
+	// considered an error.)
+	bool getRequiredSubConfig(const std::string &name, Config &_cfg, std::string &type);
 
 	// Get a value and parse it as an ID. Returns true if successful,
 	// and false otherwise (returning -1 as iValue). Reports no errors.
