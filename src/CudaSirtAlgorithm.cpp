@@ -64,7 +64,6 @@ CCudaSirtAlgorithm::~CCudaSirtAlgorithm()
 // Initialize - Config
 bool CCudaSirtAlgorithm::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CAlgorithm> CR("CudaSirtAlgorithm", this, _cfg);
 
 	m_bIsInitialized = CCudaReconstructionAlgorithm2D::initialize(_cfg);

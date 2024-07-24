@@ -118,7 +118,6 @@ void CCudaFDKAlgorithm3D::initializeFromProjector()
 // Initialize - Config
 bool CCudaFDKAlgorithm3D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CAlgorithm> CR("CudaFDKAlgorithm3D", this, _cfg);
 
 	// if already initialized, clear first

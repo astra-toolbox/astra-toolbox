@@ -99,7 +99,6 @@ void CReconstructionAlgorithm3D::clear()
 // Initialize - Config
 bool CReconstructionAlgorithm3D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CAlgorithm> CR("ReconstructionAlgorithm3D", this, _cfg);
 
 	// projector
@@ -150,7 +149,7 @@ bool CReconstructionAlgorithm3D::initialize(const Config& _cfg)
 			ASTRA_WARN("UseMinConstraint/MinConstraintValue are deprecated. Use \"MinConstraint\" instead.");
 		}
 	}
-	if (_cfg.self.hasOption("MaxConstraint")) {
+	if (CR.hasOption("MaxConstraint")) {
 		m_bUseMaxConstraint = true;
 		ok &= CR.getOptionNumerical("MaxConstraint", m_fMaxValue, 255.0f);
 	} else {

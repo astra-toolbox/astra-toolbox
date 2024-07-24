@@ -112,7 +112,6 @@ void CCudaSirtAlgorithm3D::initializeFromProjector()
 // Initialize - Config
 bool CCudaSirtAlgorithm3D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CAlgorithm> CR("CudaSirtAlgorithm3D", this, _cfg);
 
 

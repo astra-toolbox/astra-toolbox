@@ -83,6 +83,7 @@ ConfigReader<T>::ConfigReader(const char *_name, T* _obj, const Config& _cfg)
 {
 	assert(object);
 	assert(cfg);
+	assert(cfg->self);
 	if (!object->configCheckData) {
 		object->configCheckData = new ConfigCheckData;
 		object->configCheckData->parseDepth = 0;

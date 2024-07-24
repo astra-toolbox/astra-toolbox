@@ -52,6 +52,8 @@ public:
 
 private:
 	XMLDocument *_doc;
+
+	template<class TT> friend class ConfigReader;
 };
 
 struct ConfigCheckData {

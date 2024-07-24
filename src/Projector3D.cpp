@@ -89,7 +89,6 @@ bool CProjector3D::_check()
 // Initialize, use a Config object
 bool CProjector3D::initialize(const Config& _cfg)
 {
-	assert(_cfg.self);
 	ConfigReader<CProjector3D> CR("Projector3D", this, _cfg);
 
 	Config subcfg;

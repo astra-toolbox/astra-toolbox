@@ -59,7 +59,6 @@ CCudaDartMaskAlgorithm::~CCudaDartMaskAlgorithm()
 // Initialize - Config
 bool CCudaDartMaskAlgorithm::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CAlgorithm> CR("CudaDartMaskAlgorithm", this, _cfg);
 
 	bool ok = true;

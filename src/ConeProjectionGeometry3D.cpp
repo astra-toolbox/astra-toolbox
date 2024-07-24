@@ -79,7 +79,6 @@ CConeProjectionGeometry3D::~CConeProjectionGeometry3D()
 // Initialize - Config
 bool CConeProjectionGeometry3D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CProjectionGeometry3D> CR("ConeProjectionGeometry3D", this, _cfg);	
 
 	// initialization of parent class

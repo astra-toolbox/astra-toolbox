@@ -113,7 +113,6 @@ CSartAlgorithm::~CSartAlgorithm()
 // Initialize - Config
 bool CSartAlgorithm::initialize(const Config& _cfg)
 {
-	assert(_cfg.self);
 	ConfigReader<CAlgorithm> CR("SartAlgorithm", this, _cfg);
 	
 	// if already initialized, clear first

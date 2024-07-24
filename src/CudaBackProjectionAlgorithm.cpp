@@ -54,7 +54,6 @@ CCudaBackProjectionAlgorithm::~CCudaBackProjectionAlgorithm()
 // Initialize - Config
 bool CCudaBackProjectionAlgorithm::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CAlgorithm> CR("CudaBackProjectionAlgorithm", this, _cfg);
 
 	m_bIsInitialized = CCudaReconstructionAlgorithm2D::initialize(_cfg);

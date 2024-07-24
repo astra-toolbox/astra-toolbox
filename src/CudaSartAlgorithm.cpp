@@ -56,7 +56,6 @@ CCudaSartAlgorithm::~CCudaSartAlgorithm()
 // Initialize - Config
 bool CCudaSartAlgorithm::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CAlgorithm> CR("CudaSartAlgorithm", this, _cfg);
 
 	m_bIsInitialized = CCudaReconstructionAlgorithm2D::initialize(_cfg);

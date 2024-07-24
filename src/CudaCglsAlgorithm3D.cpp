@@ -110,7 +110,6 @@ void CCudaCglsAlgorithm3D::initializeFromProjector()
 // Initialize - Config
 bool CCudaCglsAlgorithm3D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CAlgorithm> CR("CudaCglsAlgorithm3D", this, _cfg);
 
 

@@ -109,7 +109,6 @@ bool CProjectionGeometry2D::_check()
 // Initialization with a Config object
 bool CProjectionGeometry2D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CProjectionGeometry2D> CR("ProjectionGeometry2D", this, _cfg);	
 
 	// uninitialize if the object was initialized before

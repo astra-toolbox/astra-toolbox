@@ -88,7 +88,6 @@ void CCudaForwardProjectionAlgorithm3D::initializeFromProjector()
 // Initialize - Config
 bool CCudaForwardProjectionAlgorithm3D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CAlgorithm> CR("CudaForwardProjectionAlgorithm3D", this, _cfg);
 
 	// projector

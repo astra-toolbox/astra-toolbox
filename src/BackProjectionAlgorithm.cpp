@@ -92,7 +92,6 @@ bool CBackProjectionAlgorithm::_check()
 // Initialize - Config
 bool CBackProjectionAlgorithm::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CAlgorithm> CR("BackProjectionAlgorithm", this, _cfg);
 
 	// if already initialized, clear first

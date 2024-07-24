@@ -55,7 +55,6 @@ CCudaFilteredBackProjectionAlgorithm::~CCudaFilteredBackProjectionAlgorithm()
 
 bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CAlgorithm> CR("CudaFilteredBackProjectionAlgorithm", this, _cfg);
 
 	// if already initialized, clear first

@@ -55,7 +55,6 @@ CCudaCglsAlgorithm::~CCudaCglsAlgorithm()
 // Initialize - Config
 bool CCudaCglsAlgorithm::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CAlgorithm> CR("CudaCglsAlgorithm", this, _cfg);
 
 	m_bIsInitialized = CCudaReconstructionAlgorithm2D::initialize(_cfg);

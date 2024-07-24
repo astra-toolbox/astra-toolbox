@@ -94,7 +94,6 @@ bool CCudaProjector3D::_check()
 // Initialize, use a Config object
 bool CCudaProjector3D::initialize(const Config& _cfg)
 {
-	assert(_cfg.self);
 	ConfigReader<CProjector3D> CR("CudaProjector3D", this, _cfg);
 
 	// if already initialized, clear first

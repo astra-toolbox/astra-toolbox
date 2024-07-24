@@ -104,7 +104,6 @@ void CCudaReconstructionAlgorithm2D::initializeFromProjector()
 // Initialize - Config
 bool CCudaReconstructionAlgorithm2D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CAlgorithm> CR("CudaReconstructionAlgorithm2D", this, _cfg);
 
 	m_bIsInitialized = CReconstructionAlgorithm2D::initialize(_cfg);

@@ -89,7 +89,6 @@ void CFilteredBackProjectionAlgorithm::clear()
 // Initialize, use a Config object
 bool CFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CAlgorithm> CR("FilteredBackProjectionAlgorithm", this, _cfg);
 
 	bool ok = true;

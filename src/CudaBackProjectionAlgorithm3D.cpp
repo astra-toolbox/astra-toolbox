@@ -105,7 +105,6 @@ void CCudaBackProjectionAlgorithm3D::initializeFromProjector()
 // Initialize - Config
 bool CCudaBackProjectionAlgorithm3D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CAlgorithm> CR("CudaBackProjectionAlgorithm3D", this, _cfg);
 
 	// if already initialized, clear first

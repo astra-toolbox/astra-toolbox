@@ -102,7 +102,6 @@ bool CArtAlgorithm::_check()
 // Initialize - Config
 bool CArtAlgorithm::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CAlgorithm> CR("ArtAlgorithm", this, _cfg);
 
 	// if already initialized, clear first

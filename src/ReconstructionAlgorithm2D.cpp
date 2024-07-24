@@ -78,7 +78,6 @@ void CReconstructionAlgorithm2D::clear()
 // Initialize - Config
 bool CReconstructionAlgorithm2D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CAlgorithm> CR("ReconstructionAlgorithm2D", this, _cfg);
 
 	bool ok = true;
@@ -99,9 +98,8 @@ bool CReconstructionAlgorithm2D::initialize(const Config& _cfg)
 	ok &= CR.getRequiredID("ReconstructionDataId", id);
 	m_pReconstruction = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 
-	XMLNode node = _cfg.self.getSingleNode("ProjectorId");
 	if (requiresProjector()) {
-		ASTRA_CONFIG_CHECK(node, "Reconstruction2D", "No ProjectorId tag specified.");
+		ASTRA_CONFIG_CHECK(m_pProjector, "Reconstruction2D", "No projector specified.");
 	}
 
 	// fixed mask
@@ -128,7 +126,7 @@ bool CReconstructionAlgorithm2D::initialize(const Config& _cfg)
 			ASTRA_WARN("UseMinConstraint/MinConstraintValue are deprecated. Use \"MinConstraint\" instead.");
 		}
 	}
-	if (_cfg.self.hasOption("MaxConstraint")) {
+	if (CR.hasOption("MaxConstraint")) {
 		m_bUseMaxConstraint = true;
 		ok &= CR.getOptionNumerical("MaxConstraint", m_fMaxValue, 255.0f);
 	} else {

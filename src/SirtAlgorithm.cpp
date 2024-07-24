@@ -115,7 +115,6 @@ bool CSirtAlgorithm::_check()
 // Initialize - Config
 bool CSirtAlgorithm::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CAlgorithm> CR("SirtAlgorithm", this, _cfg);
 
 	// if already initialized, clear first
