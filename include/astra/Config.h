@@ -36,6 +36,12 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 namespace astra {
 
+struct ConfigCheckData {
+	// For checking for unparsed nodes/options
+	std::set<std::string> parsedNodes;
+	std::set<std::string> parsedOptions;
+	unsigned int parseDepth;
+};
 
 /**
  * Configuration options for an ASTRA class.
@@ -44,24 +50,67 @@ class _AstraExport Config {
 public:
 	Config();
 	Config(XMLNode _self);
-	~Config();
+	virtual ~Config();
 
 	void initialize(const std::string &rootname);
 
-	XMLNode self;
-
-private:
-	XMLDocument *_doc;
-
 	template<class TT> friend class ConfigReader;
 	friend class ConfigWriter;
+
+protected:
+	virtual bool has(const std::string &name) const = 0;
+	virtual bool hasOption(const std::string &name) const = 0;
+
+	virtual bool getSubConfig(const std::string &name, Config *&_cfg, std::string &type) const = 0;
+
+	virtual bool getInt(const std::string &name, int &iValue) const = 0;
+	virtual bool getFloat(const std::string &name, float &fValue) const = 0;
+	virtual bool getDoubleArray(const std::string &name, std::vector<double> &values) const = 0;
+	virtual bool getIntArray(const std::string &name, std::vector<int> &values) const = 0;
+	virtual bool getString(const std::string &name, std::string &sValue) const = 0;
+
+	virtual bool getOptionFloat(const std::string &name, float &fValue) const = 0;
+	virtual bool getOptionInt(const std::string &name, int &iValue) const = 0;
+	virtual bool getOptionUInt(const std::string &name, unsigned int &iValue) const = 0;
+	virtual bool getOptionBool(const std::string &name, bool &bValue) const = 0;
+	virtual bool getOptionString(const std::string &name, std::string &sValue) const = 0;
+	virtual bool getOptionIntArray(const std::string &name, std::vector<int> &values) const = 0;
+
+	virtual std::list<std::string> checkUnparsed(const ConfigCheckData &data) const = 0;
 };
 
-struct ConfigCheckData {
-	// For checking for unparsed nodes/options
-	std::set<std::string> parsedNodes;
-	std::set<std::string> parsedOptions;
-	unsigned int parseDepth;
+class _AstraExport XMLConfig : public Config {
+public:
+	XMLConfig(XMLNode _node);
+	XMLConfig(const std::string &rootname);
+
+	virtual ~XMLConfig();
+private:
+	template<class TT> friend class ConfigReader;
+
+	virtual bool has(const std::string &name) const;
+	virtual bool hasOption(const std::string &name) const;
+
+	virtual bool getSubConfig(const std::string &name, Config *&_cfg, std::string &type) const;
+
+	virtual bool getInt(const std::string &name, int &iValue) const;
+	virtual bool getFloat(const std::string &name, float &fValue) const;
+	virtual bool getDoubleArray(const std::string &name, std::vector<double> &values) const;
+	virtual bool getIntArray(const std::string &name, std::vector<int> &values) const;
+	virtual bool getString(const std::string &name, std::string &sValue) const;
+
+	virtual bool getOptionFloat(const std::string &name, float &fValue) const;
+	virtual bool getOptionInt(const std::string &name, int &iValue) const;
+	virtual bool getOptionUInt(const std::string &name, unsigned int &iValue) const;
+	virtual bool getOptionBool(const std::string &name, bool &bValue) const;
+	virtual bool getOptionString(const std::string &name, std::string &sValue) const;
+	virtual bool getOptionIntArray(const std::string &name, std::vector<int> &values) const;
+
+	virtual std::list<std::string> checkUnparsed(const ConfigCheckData &data) const;
+private:
+	friend class ConfigWriter;
+	XMLNode self;
+	XMLDocument *_doc;
 };
 
 
@@ -91,7 +140,7 @@ public:
 	// For convenience, also directly get the "type" attribute of the subcfg.
 	// If it has no type attribute, return empty string as type. (That is not
 	// considered an error.)
-	bool getRequiredSubConfig(const std::string &name, Config &_cfg, std::string &type);
+	bool getRequiredSubConfig(const std::string &name, Config *&_cfg, std::string &type);
 
 	// Get a value and parse it as an ID. Returns true if successful,
 	// and false otherwise (returning -1 as iValue). Reports no errors.
@@ -147,7 +196,7 @@ public:
 	void addOptionNumerical(const std::string &name, double fValue);
 
 private:
-	Config *cfg;
+	XMLConfig *cfg;
 };
 
 

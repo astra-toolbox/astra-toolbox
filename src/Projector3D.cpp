@@ -91,7 +91,7 @@ bool CProjector3D::initialize(const Config& _cfg)
 {
 	ConfigReader<CProjector3D> CR("Projector3D", this, _cfg);
 
-	Config subcfg;
+	Config *subcfg;
 	std::string type;
 	bool ok = true;
 
@@ -109,10 +109,12 @@ bool CProjector3D::initialize(const Config& _cfg)
 	} else if (type == "cone_vec") {
 		pProjGeometry = new CConeVecProjectionGeometry3D();
 	} else {
+		delete subcfg;
 		// Invalid geometry type
 		ASTRA_CONFIG_CHECK(false, "Projector3D", "Invalid projection geometry type \"%s\" specified.", type.c_str());
 	}
-	pProjGeometry->initialize(subcfg);
+	pProjGeometry->initialize(*subcfg);
+	delete subcfg;
 
 	m_pProjectionGeometry = pProjGeometry;
 	ASTRA_CONFIG_CHECK(m_pProjectionGeometry->isInitialized(), "Projector3D", "ProjectionGeometry not initialized.");
@@ -122,8 +124,9 @@ bool CProjector3D::initialize(const Config& _cfg)
 		return false;
 
 	CVolumeGeometry3D* pVolGeometry = new CVolumeGeometry3D();
-	pVolGeometry->initialize(subcfg);
+	pVolGeometry->initialize(*subcfg);
 	m_pVolumeGeometry = pVolGeometry;
+	delete subcfg;
 	ASTRA_CONFIG_CHECK(m_pVolumeGeometry->isInitialized(), "Projector3D", "VolumeGeometry not initialized.");
 
 	return true;

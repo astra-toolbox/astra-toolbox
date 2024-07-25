@@ -121,14 +121,14 @@ bool CParallelBeamBlobKernelProjector2D::initialize(const Config& _cfg)
 		return false;
 	}
 
-	Config subcfg;
+	Config *subcfg;
 	std::string _type;
 
 	if (!CR.getRequiredSubConfig("Kernel", subcfg, _type))
 		return false;
 
 	{
-		ConfigReader<CProjector2D> SCR("ParallelBeamBlobKernelProjector2D::Kernel", this, _cfg);
+		ConfigReader<CProjector2D> SCR("ParallelBeamBlobKernelProjector2D::Kernel", this, *subcfg);
 
 		bool ok = true;
 	
@@ -136,6 +136,8 @@ bool CParallelBeamBlobKernelProjector2D::initialize(const Config& _cfg)
 		ok &= SCR.getRequiredNumerical("SampleRate", m_fBlobSampleRate);
 		ok &= SCR.getRequiredInt("SampleCount", m_iBlobSampleCount);
 		ok &= SCR.getRequiredNumericalArray("KernelValues", m_pfBlobValues);
+
+		delete subcfg;
 
 		if (!ok)
 			return false;

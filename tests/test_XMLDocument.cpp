@@ -158,8 +158,7 @@ BOOST_AUTO_TEST_CASE( testXMLDocument_List )
 
 BOOST_AUTO_TEST_CASE( testXMLDocument_Config )
 {
-	astra::Config* cfg = new astra::Config();
-	cfg->initialize("VolumeGeometry2D");
+	astra::XMLConfig* cfg = new astra::XMLConfig("VolumeGeometry2D");
 
 	cfg->self.addChildNode("GridColCount", 1);
 	cfg->self.addChildNode("GridRowCount", 2);
