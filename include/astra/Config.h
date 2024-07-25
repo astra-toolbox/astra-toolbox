@@ -54,6 +54,7 @@ private:
 	XMLDocument *_doc;
 
 	template<class TT> friend class ConfigReader;
+	friend class ConfigWriter;
 };
 
 struct ConfigCheckData {
@@ -127,6 +128,26 @@ private:
 	bool stopParsing(); // returns true if no unused nodes/options
 	void markNodeParsed(const std::string& name);
 	void markOptionParsed(const std::string& name);
+};
+
+class _AstraExport ConfigWriter {
+public:
+	ConfigWriter(const std::string &name);
+	ConfigWriter(const std::string &name, const std::string &type);
+	~ConfigWriter();
+
+	Config* getConfig();
+
+	void addInt(const std::string &name, int iValue);
+	void addNumerical(const std::string &name, double fValue);
+	void addNumericalArray(const std::string &name, const float *pfValues, int iCount);
+	void addNumericalMatrix(const std::string &name, const double *pfValues, int iHeight, int iWidth);
+	void addID(const std::string &name, int iValue);
+
+	void addOptionNumerical(const std::string &name, double fValue);
+
+private:
+	Config *cfg;
 };
 
 
