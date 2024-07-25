@@ -48,9 +48,8 @@ struct ConfigCheckData {
  */
 class _AstraExport Config {
 public:
-	Config();
-	Config(XMLNode _self);
-	virtual ~Config();
+	Config() { }
+	virtual ~Config() { }
 
 	void initialize(const std::string &rootname);
 
@@ -109,8 +108,10 @@ private:
 	virtual std::list<std::string> checkUnparsed(const ConfigCheckData &data) const;
 private:
 	friend class ConfigWriter;
-	XMLNode self;
 	XMLDocument *_doc;
+public:
+	// TODO: Make this private once python/matlab interfaces can handle that
+	XMLNode self;
 };
 
 

@@ -107,7 +107,7 @@ bool CCudaProjector2D::initialize(const Config& _cfg)
 	if (sProjKernel == "default") {
 		m_projectionKernel = ker2d_default;
 	} else {
-		ASTRA_ERROR("Unknown ProjectionKernel");
+		ASTRA_ERROR("Unknown ProjectionKernel \"%s\"", sProjKernel.c_str());
 		return false;
 	}
 

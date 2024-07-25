@@ -50,13 +50,16 @@ cdef extern from "CFloat32CustomPython.h":
 cdef extern from "Python.h":
     void* PyLong_AsVoidPtr(object)
 
+cdef extern from *:
+    XMLConfig* dynamic_cast_XMLConfig "dynamic_cast<astra::XMLConfig*>" (Config*)
+
+
 
 include "config.pxi"
 
 
-cdef Config * dictToConfig(string rootname, dc) except NULL:
-    cdef Config * cfg = new Config()
-    cfg.initialize(rootname)
+cdef XMLConfig * dictToConfig(string rootname, dc) except NULL:
+    cdef XMLConfig * cfg = new XMLConfig(rootname)
     try:
         readDict(cfg.self, dc)
     except:
@@ -158,7 +161,11 @@ cdef bool readOptions(XMLNode node, dc) except False:
     return True
 
 cdef configToDict(Config *cfg):
-    return XMLNode2dict(cfg.self)
+    cdef XMLConfig* xmlcfg;
+    xmlcfg = dynamic_cast_XMLConfig(cfg);
+    if not xmlcfg:
+        return None
+    return XMLNode2dict(xmlcfg.self)
 
 def castString(input):
     return input.decode('utf-8')
@@ -283,7 +290,7 @@ cdef CFloat32ProjectionData3D* linkProjFromGeometry(CProjectionGeometry3D *pGeom
     return pDataObject3D
 
 cdef CProjectionGeometry3D* createProjectionGeometry3D(geometry) except NULL:
-    cdef Config *cfg
+    cdef XMLConfig *cfg
     cdef CProjectionGeometry3D * pGeometry
 
     cfg = dictToConfig(b'ProjectionGeometry', geometry)

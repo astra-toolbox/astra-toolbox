@@ -96,7 +96,11 @@ CPluginAlgorithm::~CPluginAlgorithm(){
 
 bool CPluginAlgorithm::initialize(const Config& _cfg){
     if(instance==NULL) return false;
-    PyObject *cfgDict = XMLNode2dict(_cfg.self);
+
+    const XMLConfig *xmlcfg = dynamic_cast<const XMLConfig*>(&_cfg);
+    if (xmlcfg==NULL) return false;
+
+    PyObject *cfgDict = XMLNode2dict(xmlcfg->self);
     PyObject *retVal = PyObject_CallMethod(instance, "astra_init", "O",cfgDict);
     Py_DECREF(cfgDict);
     if(retVal==NULL){
