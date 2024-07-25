@@ -495,7 +495,7 @@ bool ConfigReader<T>::getOptionID(const std::string &name, int &iValue)
 	return ret;
 }
 
-
+// TODO: Add base class "Configurable"
 template class ConfigReader<CAlgorithm>;
 template class ConfigReader<CProjectionGeometry2D>;
 template class ConfigReader<CProjectionGeometry3D>;
@@ -503,6 +503,69 @@ template class ConfigReader<CVolumeGeometry2D>;
 template class ConfigReader<CVolumeGeometry3D>;
 template class ConfigReader<CProjector2D>;
 template class ConfigReader<CProjector3D>;
+
+
+
+ConfigWriter::ConfigWriter(const std::string &name)
+{
+	cfg = new Config();
+	cfg->initialize(name);
+}
+
+ConfigWriter::ConfigWriter(const std::string &name, const std::string &type)
+	: ConfigWriter(name)
+{
+	cfg->self.addAttribute("type", type);
+}
+
+
+ConfigWriter::~ConfigWriter()
+{
+	delete cfg;
+}
+
+Config* ConfigWriter::getConfig()
+{
+	Config *ret = cfg;
+	cfg = nullptr;
+
+	return ret;
+}
+
+void ConfigWriter::addInt(const std::string &name, int iValue)
+{
+	cfg->self.addChildNode(name, iValue);
+}
+
+void ConfigWriter::addNumerical(const std::string &name, double fValue)
+{
+	cfg->self.addChildNode(name, fValue);
+}
+
+void ConfigWriter::addNumericalArray(const std::string &name, const float* pfValues, int iCount)
+{
+	XMLNode res = cfg->self.addChildNode(name);
+	res.setContent(pfValues, iCount);
+}
+
+void ConfigWriter::addNumericalMatrix(const std::string &name, const double* pfValues, int iHeight, int iWidth)
+{
+	XMLNode res = cfg->self.addChildNode(name);
+	res.setContent(pfValues, iWidth, iHeight, false);
+}
+
+void ConfigWriter::addID(const std::string &name, int iValue)
+{
+	cfg->self.addChildNode(name, iValue);
+}
+
+void ConfigWriter::addOptionNumerical(const std::string &name, double fValue)
+{
+	cfg->self.addOption(name, fValue);
+}
+
+
+
 
 
 }
