@@ -113,7 +113,7 @@ bool CProjector2D::initialize(const Config& _cfg)
 		clear();
 	}
 
-	Config subcfg;
+	Config *subcfg;
 	std::string type;
 	bool ok = true;
 
@@ -125,23 +125,24 @@ bool CProjector2D::initialize(const Config& _cfg)
 	// in astra_mex_data2d.cpp.)
 	if (type == "sparse_matrix") {
 		m_pProjectionGeometry = new CSparseMatrixProjectionGeometry2D();
-		m_pProjectionGeometry->initialize(subcfg);
+		m_pProjectionGeometry->initialize(*subcfg);
 	} else if (type == "fanflat") {
 		CFanFlatProjectionGeometry2D* pFanFlatProjectionGeometry = new CFanFlatProjectionGeometry2D();
-		pFanFlatProjectionGeometry->initialize(subcfg);
+		pFanFlatProjectionGeometry->initialize(*subcfg);
 		m_pProjectionGeometry = pFanFlatProjectionGeometry;
 	} else if (type == "fanflat_vec") {
 		CFanFlatVecProjectionGeometry2D* pFanFlatVecProjectionGeometry = new CFanFlatVecProjectionGeometry2D();
-		pFanFlatVecProjectionGeometry->initialize(subcfg);
+		pFanFlatVecProjectionGeometry->initialize(*subcfg);
 		m_pProjectionGeometry = pFanFlatVecProjectionGeometry;
 	} else if (type == "parallel_vec") {
 		CParallelVecProjectionGeometry2D* pParallelVecProjectionGeometry = new CParallelVecProjectionGeometry2D();
-		pParallelVecProjectionGeometry->initialize(subcfg);
+		pParallelVecProjectionGeometry->initialize(*subcfg);
 		m_pProjectionGeometry = pParallelVecProjectionGeometry;
 	} else {
 		m_pProjectionGeometry = new CParallelProjectionGeometry2D();
-		m_pProjectionGeometry->initialize(subcfg);
+		m_pProjectionGeometry->initialize(*subcfg);
 	}
+	delete subcfg;
 
 	ASTRA_CONFIG_CHECK(m_pProjectionGeometry->isInitialized(), "Projector2D", "ProjectionGeometry not initialized.");	
 
@@ -151,8 +152,9 @@ bool CProjector2D::initialize(const Config& _cfg)
 		return false;
 
 	m_pVolumeGeometry = new CVolumeGeometry2D();
-	m_pVolumeGeometry->initialize(subcfg);
-	// "node" is deleted by the temp Config(node) object
+	m_pVolumeGeometry->initialize(*subcfg);
+	delete subcfg;
+
 	ASTRA_CONFIG_CHECK(m_pVolumeGeometry->isInitialized(), "Projector2D", "VolumeGeometry not initialized.");
 
 	return true;
