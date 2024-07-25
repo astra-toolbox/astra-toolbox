@@ -56,7 +56,7 @@ IF HAVE_CUDA:
 
 
 def create(config):
-    cdef Config * cfg = utils.dictToConfig(b'Projector2D', config)
+    cdef XMLConfig * cfg = utils.dictToConfig(b'Projector2D', config)
     cdef CProjector2D * proj
     proj = PyProjector2DFactory.getSingletonPtr().create(cfg.self.getAttribute(b'type'))
     if proj == NULL:
