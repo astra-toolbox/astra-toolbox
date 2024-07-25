@@ -58,7 +58,7 @@ cdef extern from *:
 
 
 def create(config):
-    cdef Config * cfg = utils.dictToConfig(b'Algorithm', config)
+    cdef XMLConfig * cfg = utils.dictToConfig(b'Algorithm', config)
     cdef CAlgorithm * alg
     alg = PyAlgorithmFactory.getSingletonPtr().create(cfg.self.getAttribute(b'type'))
     if alg == NULL:
