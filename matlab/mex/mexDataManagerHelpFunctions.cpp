@@ -192,7 +192,7 @@ allocateDataObject(const std::string & sDataType,
 	if (sDataType == "-vol")
 	{
 		// Read geometry
-		astra::Config* cfg = structToConfig("VolumeGeometry3D", geometry);
+		astra::XMLConfig* cfg = structToConfig("VolumeGeometry3D", geometry);
 		astra::CVolumeGeometry3D* pGeometry = new astra::CVolumeGeometry3D();
 		if (!pGeometry->initialize(*cfg))
 		{
@@ -239,7 +239,7 @@ allocateDataObject(const std::string & sDataType,
 	else if (sDataType == "-sino" || sDataType == "-proj3d" || sDataType == "-sinocone")
 	{
 		// Read geometry
-		astra::Config* cfg = structToConfig("ProjectionGeometry3D", geometry);
+		astra::XMLConfig* cfg = structToConfig("ProjectionGeometry3D", geometry);
 		// FIXME: Change how the base class is created. (This is duplicated
 		// in Projector3D.cpp.)
 		std::string type = cfg->self.getAttribute("type");
