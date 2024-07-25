@@ -73,7 +73,6 @@ CParallelProjectionGeometry3D::~CParallelProjectionGeometry3D()
 // Initialize - Config
 bool CParallelProjectionGeometry3D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CProjectionGeometry3D> CR("ParallelProjectionGeometry3D", this, _cfg);	
 	
 
@@ -163,15 +162,15 @@ bool CParallelProjectionGeometry3D::isOfType(const std::string& _sType) const
 // Get the configuration object
 Config* CParallelProjectionGeometry3D::getConfiguration() const 
 {
-	Config* cfg = new Config();
-	cfg->initialize("ProjectionGeometry3D");
-	cfg->self.addAttribute("type", "parallel3d");
-	cfg->self.addChildNode("DetectorRowCount", m_iDetectorRowCount);
-	cfg->self.addChildNode("DetectorColCount", m_iDetectorColCount);
-	cfg->self.addChildNode("DetectorSpacingX", m_fDetectorSpacingX);
-	cfg->self.addChildNode("DetectorSpacingY", m_fDetectorSpacingY);
-	cfg->self.addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
-	return cfg;
+	ConfigWriter CW("ProjectionGeometry3D", "parallel3d");
+
+	CW.addInt("DetectorRowCount", m_iDetectorRowCount);
+	CW.addInt("DetectorColCount", m_iDetectorColCount);
+	CW.addNumerical("DetectorSpacingX", m_fDetectorSpacingX);
+	CW.addNumerical("DetectorSpacingY", m_fDetectorSpacingY);
+	CW.addNumericalArray("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
+
+	return CW.getConfig();
 }
 //----------------------------------------------------------------------------------------
 

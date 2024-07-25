@@ -182,7 +182,6 @@ CVolumeGeometry3D::~CVolumeGeometry3D()
 // Initialization with a Config object
 bool CVolumeGeometry3D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CVolumeGeometry3D> CR("VolumeGeometry3D", this, _cfg);
 
 	// uninitialize if the object was initialized before
@@ -307,7 +306,7 @@ CVolumeGeometry3D* CVolumeGeometry3D::clone() const
 	res->m_fPixelLengthY	= m_fPixelLengthY;
 	res->m_fPixelLengthZ	= m_fPixelLengthZ;
 	res->m_fPixelArea		= m_fPixelArea;
-    res->m_fDivPixelLengthX = m_fDivPixelLengthX;
+	res->m_fDivPixelLengthX = m_fDivPixelLengthX;
 	res->m_fDivPixelLengthY = m_fDivPixelLengthY;
 	res->m_fDivPixelLengthZ = m_fDivPixelLengthZ;
 	res->m_fWindowMinX		= m_fWindowMinX;
@@ -341,7 +340,7 @@ bool CVolumeGeometry3D::isEqual(const CVolumeGeometry3D* _pGeom2) const
 	if (m_fPixelLengthY != _pGeom2->m_fPixelLengthY) return false;
 	if (m_fPixelLengthZ != _pGeom2->m_fPixelLengthZ) return false;
 	if (m_fPixelArea != _pGeom2->m_fPixelArea) return false;
-    if (m_fDivPixelLengthX != _pGeom2->m_fDivPixelLengthX) return false;
+	if (m_fDivPixelLengthX != _pGeom2->m_fDivPixelLengthX) return false;
 	if (m_fDivPixelLengthY != _pGeom2->m_fDivPixelLengthY) return false;
 	if (m_fDivPixelLengthZ != _pGeom2->m_fDivPixelLengthZ) return false;
 	if (m_fWindowMinX != _pGeom2->m_fWindowMinX) return false;
@@ -365,21 +364,19 @@ CVolumeGeometry2D * CVolumeGeometry3D::createVolumeGeometry2D() const
 // Get the configuration object
 Config* CVolumeGeometry3D::getConfiguration() const 
 {
-	Config* cfg = new Config();
-	cfg->initialize("VolumeGeometry3D");
+	ConfigWriter CW("VolumeGeometry3D", "parallel");
 
-	cfg->self.addChildNode("GridColCount", m_iGridColCount);
-	cfg->self.addChildNode("GridRowCount", m_iGridRowCount);
-	cfg->self.addChildNode("GridSliceCount", m_iGridSliceCount);
+	CW.addInt("GridColCount", m_iGridColCount);
+	CW.addInt("GridRowCount", m_iGridRowCount);
+	CW.addInt("GridSliceCount", m_iGridSliceCount);
+	CW.addOptionNumerical("WindowMinX", m_fWindowMinX);
+	CW.addOptionNumerical("WindowMaxX", m_fWindowMaxX);
+	CW.addOptionNumerical("WindowMinY", m_fWindowMinY);
+	CW.addOptionNumerical("WindowMaxY", m_fWindowMaxY);
+	CW.addOptionNumerical("WindowMinZ", m_fWindowMinZ);
+	CW.addOptionNumerical("WindowMaxZ", m_fWindowMaxZ);
 
-	cfg->self.addOption("WindowMinX", m_fWindowMinX);
-	cfg->self.addOption("WindowMaxX", m_fWindowMaxX);
-	cfg->self.addOption("WindowMinY", m_fWindowMinY);
-	cfg->self.addOption("WindowMaxY", m_fWindowMaxY);
-	cfg->self.addOption("WindowMinZ", m_fWindowMinZ);
-	cfg->self.addOption("WindowMaxZ", m_fWindowMaxZ);
-
-	return cfg;
+	return CW.getConfig();
 }
 //----------------------------------------------------------------------------------------
 
