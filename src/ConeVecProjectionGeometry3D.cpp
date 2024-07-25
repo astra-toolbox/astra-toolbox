@@ -70,7 +70,6 @@ CConeVecProjectionGeometry3D::~CConeVecProjectionGeometry3D()
 // Initialize - Config
 bool CConeVecProjectionGeometry3D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CProjectionGeometry3D> CR("ConeVecProjectionGeometry3D", this, _cfg);	
 
 	// initialization of parent class
@@ -108,9 +107,9 @@ bool CConeVecProjectionGeometry3D::initializeAngles(const Config& _cfg)
 
 		// The backend code currently expects the corner of the detector, while
 		// the matlab interface supplies the center
-		p.fDetSX = data[12*i +  3] - 0.5f * m_iDetectorRowCount * p.fDetVX - 0.5f * m_iDetectorColCount * p.fDetUX;
-		p.fDetSY = data[12*i +  4] - 0.5f * m_iDetectorRowCount * p.fDetVY - 0.5f * m_iDetectorColCount * p.fDetUY;
-		p.fDetSZ = data[12*i +  5] - 0.5f * m_iDetectorRowCount * p.fDetVZ - 0.5f * m_iDetectorColCount * p.fDetUZ;
+		p.fDetSX = data[12*i +  3] - 0.5 * m_iDetectorRowCount * p.fDetVX - 0.5 * m_iDetectorColCount * p.fDetUX;
+		p.fDetSY = data[12*i +  4] - 0.5 * m_iDetectorRowCount * p.fDetVY - 0.5 * m_iDetectorColCount * p.fDetUY;
+		p.fDetSZ = data[12*i +  5] - 0.5 * m_iDetectorRowCount * p.fDetVZ - 0.5 * m_iDetectorColCount * p.fDetUZ;
 	}
 
 	return true;
@@ -193,33 +192,33 @@ bool CConeVecProjectionGeometry3D::isOfType(const std::string& _sType) const
 // Get the configuration object
 Config* CConeVecProjectionGeometry3D::getConfiguration() const 
 {
-	Config* cfg = new Config();
-	cfg->initialize("ProjectionGeometry3D");
+	ConfigWriter CW("ProjectionGeometry3D", "cone_vec");
 
-	cfg->self.addAttribute("type", "cone_vec");
-	cfg->self.addChildNode("DetectorRowCount", m_iDetectorRowCount);
-	cfg->self.addChildNode("DetectorColCount", m_iDetectorColCount);
+	CW.addInt("DetectorRowCount", m_iDetectorRowCount);
+	CW.addInt("DetectorColCount", m_iDetectorColCount);
 
-	std::string vectors = "";
+	std::vector<double> vectors;
+	vectors.resize(12 * m_iProjectionAngleCount);
+
 	for (int i = 0; i < m_iProjectionAngleCount; ++i) {
 		SConeProjection& p = m_pProjectionAngles[i];
-		vectors += StringUtil::toString(p.fSrcX) + ",";
-		vectors += StringUtil::toString(p.fSrcY) + ",";
-		vectors += StringUtil::toString(p.fSrcZ) + ",";
-		vectors += StringUtil::toString(p.fDetSX + 0.5f*m_iDetectorRowCount*p.fDetVX + 0.5f*m_iDetectorColCount*p.fDetUX) + ",";
-		vectors += StringUtil::toString(p.fDetSY + 0.5f*m_iDetectorRowCount*p.fDetVY + 0.5f*m_iDetectorColCount*p.fDetUY) + ",";
-		vectors += StringUtil::toString(p.fDetSZ + 0.5f*m_iDetectorRowCount*p.fDetVZ + 0.5f*m_iDetectorColCount*p.fDetUZ) + ",";
-		vectors += StringUtil::toString(p.fDetUX) + ",";
-		vectors += StringUtil::toString(p.fDetUY) + ",";
-		vectors += StringUtil::toString(p.fDetUZ) + ",";
-		vectors += StringUtil::toString(p.fDetVX) + ",";
-		vectors += StringUtil::toString(p.fDetVY) + ",";
-		vectors += StringUtil::toString(p.fDetVZ);
-		if (i < m_iProjectionAngleCount-1) vectors += ';';
-	}
-	cfg->self.addChildNode("Vectors", vectors);
 
-	return cfg;
+		vectors[12*i +  0] = p.fSrcX;
+		vectors[12*i +  1] = p.fSrcY;
+		vectors[12*i +  2] = p.fSrcZ;
+		vectors[12*i +  3] = p.fDetSX + 0.5*m_iDetectorRowCount*p.fDetVX + 0.5*m_iDetectorColCount*p.fDetUX;
+		vectors[12*i +  4] = p.fDetSY + 0.5*m_iDetectorRowCount*p.fDetVY + 0.5*m_iDetectorColCount*p.fDetUY;
+		vectors[12*i +  5] = p.fDetSZ + 0.5*m_iDetectorRowCount*p.fDetVZ + 0.5*m_iDetectorColCount*p.fDetUZ;
+		vectors[12*i +  6] = p.fDetUX;
+		vectors[12*i +  7] = p.fDetUY;
+		vectors[12*i +  8] = p.fDetUZ;
+		vectors[12*i +  9] = p.fDetVX;
+		vectors[12*i + 10] = p.fDetVY;
+		vectors[12*i + 11] = p.fDetVZ;
+	}
+	CW.addNumericalMatrix("Vectors", &vectors[0], m_iProjectionAngleCount, 12);
+
+	return CW.getConfig();
 }
 //----------------------------------------------------------------------------------------
 
@@ -239,8 +238,8 @@ void CConeVecProjectionGeometry3D::projectPoint(double fX, double fY, double fZ,
 
 	// The -0.5f shifts from corner to center of detector pixels
 	double fD = fDX*fX + fDY*fY + fDZ*fZ + fDC;
-	fU = (fUX*fX + fUY*fY + fUZ*fZ + fUC) / fD - 0.5f;
-	fV = (fVX*fX + fVY*fY + fVZ*fZ + fVC) / fD - 0.5f;
+	fU = (fUX*fX + fUY*fY + fUZ*fZ + fUC) / fD - 0.5;
+	fV = (fVX*fX + fVY*fY + fVZ*fZ + fVC) / fD - 0.5;
 }
 
 
