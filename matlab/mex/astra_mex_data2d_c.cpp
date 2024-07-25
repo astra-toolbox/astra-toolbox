@@ -116,7 +116,7 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 			mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.");
 		}
 		
-		Config* cfg = structToConfig("VolumeGeometry", prhs[2]);
+		XMLConfig* cfg = structToConfig("VolumeGeometry", prhs[2]);
 		CVolumeGeometry2D* pGeometry = new CVolumeGeometry2D();
 		if (!pGeometry->initialize(*cfg)) {
 			delete cfg;
@@ -142,7 +142,7 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 			mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.");
 		}
 		
-		Config* cfg = structToConfig("ProjectionGeometry", prhs[2]);
+		XMLConfig* cfg = structToConfig("ProjectionGeometry", prhs[2]);
 		// FIXME: Change how the base class is created. (This is duplicated
 		// in 'change_geometry' and Projector2D.cpp.)
 		std::string type = cfg->self.getAttribute("type");
@@ -419,7 +419,7 @@ void astra_mex_data2d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 		if (!mxIsStruct(prhs[2])) {
 			mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.");
 		}
-		Config* cfg = structToConfig("ProjectionGeometry2D", prhs[2]);
+		XMLConfig* cfg = structToConfig("ProjectionGeometry2D", prhs[2]);
 		// FIXME: Change how the base class is created. (This is duplicated
 		// in 'create' and Projector2D.cpp.)
 		std::string type = cfg->self.getAttribute("type");
@@ -467,7 +467,7 @@ void astra_mex_data2d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 		if (!mxIsStruct(prhs[2])) {
 			mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.");
 		}
-		Config* cfg = structToConfig("VolumeGeometry2D", prhs[2]);
+		XMLConfig* cfg = structToConfig("VolumeGeometry2D", prhs[2]);
 		CVolumeGeometry2D* pGeometry = new CVolumeGeometry2D();
 		if (!pGeometry->initialize(*cfg)) {
 			delete cfg;

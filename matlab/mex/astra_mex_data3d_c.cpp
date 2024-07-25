@@ -312,7 +312,7 @@ void astra_mex_data3d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 		// Projection data
 
 		// Read geometry
-		astra::Config* cfg = structToConfig("ProjectionGeometry3D", geometry);
+		astra::XMLConfig* cfg = structToConfig("ProjectionGeometry3D", geometry);
 		// FIXME: Change how the base class is created. (This is duplicated
 		// in Projector3D.cpp.)
 		std::string type = cfg->self.getAttribute("type");
@@ -355,7 +355,7 @@ void astra_mex_data3d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 		assert(pVolData);
 
 		// Read geometry
-		astra::Config* cfg = structToConfig("VolumeGeometry3D", geometry);
+		astra::XMLConfig* cfg = structToConfig("VolumeGeometry3D", geometry);
 		astra::CVolumeGeometry3D* pGeometry = new astra::CVolumeGeometry3D();
 		if (!pGeometry->initialize(*cfg))
 		{
