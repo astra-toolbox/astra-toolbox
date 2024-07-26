@@ -28,7 +28,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #define CLOG_MAIN
 #include <astra/clog.h>
 
-#include <astra/Logging.h>
+#include "astra/Logging.h"
+#include "astra/Utilities.h"
 
 #include <cstdio>
 
@@ -187,9 +188,7 @@ void CLogger::_assureIsInitialized()
 
 void CLogger::_setLastErrMsg(const char *sfile, int sline, const char *fmt, va_list ap)
 {
-	char buf[1024];
-	vsprintf(buf, fmt, ap);
-	m_sLastErrMsg.assign(buf);
+	m_sLastErrMsg = StringUtil::vformat(fmt, ap);
 }
 
 std::string CLogger::getLastErrMsg()
