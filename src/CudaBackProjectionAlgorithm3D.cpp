@@ -108,8 +108,7 @@ void CCudaBackProjectionAlgorithm3D::initializeFromProjector()
 // Initialize - Config
 bool CCudaBackProjectionAlgorithm3D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CAlgorithm> CC("CudaBackProjectionAlgorithm3D", this, _cfg);	
+	ConfigReader<CAlgorithm> CR("CudaBackProjectionAlgorithm3D", this, _cfg);
 
 	// if already initialized, clear first
 	if (m_bIsInitialized) {
@@ -123,19 +122,19 @@ bool CCudaBackProjectionAlgorithm3D::initialize(const Config& _cfg)
 
 	initializeFromProjector();
 
+	bool ok = true;
+
 	// Deprecated options
-	m_iVoxelSuperSampling = (int)_cfg.self.getOptionNumerical("VoxelSuperSampling", m_iVoxelSuperSampling);
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", m_iGPUIndex);
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
-	CC.markOptionParsed("VoxelSuperSampling");
-	CC.markOptionParsed("GPUIndex");
-	if (!_cfg.self.hasOption("GPUIndex"))
-		CC.markOptionParsed("GPUindex");
+	ok &= CR.getOptionInt("VoxelSuperSampling", m_iVoxelSuperSampling, m_iVoxelSuperSampling);
+	if (CR.hasOption("GPUIndex"))
+		ok &= CR.getOptionInt("GPUIndex", m_iGPUIndex, m_iGPUIndex);
+	else
+		ok &= CR.getOptionInt("GPUindex", m_iGPUIndex, m_iGPUIndex);
 
+	ok &= CR.getOptionBool("SIRTWeighting", m_bSIRTWeighting, false);
 
-
-	m_bSIRTWeighting = _cfg.self.getOptionBool("SIRTWeighting", false);
-	CC.markOptionParsed("SIRTWeighting");
+	if (!ok)
+		return false;
 
 	// success
 	m_bIsInitialized = _check();
@@ -183,12 +182,10 @@ void CCudaBackProjectionAlgorithm3D::run(int _iNrIterations)
 	const CVolumeGeometry3D& volgeom = *pReconMem->getGeometry();
 
 	if (m_bSIRTWeighting) {
-		CFloat32ProjectionData3DMemory* pSinoMemory = dynamic_cast<CFloat32ProjectionData3DMemory*>(m_pSinogram);
-		ASTRA_ASSERT(pSinoMemory);
-		CFloat32VolumeData3DMemory* pReconMemory = dynamic_cast<CFloat32VolumeData3DMemory*>(m_pReconstruction);
-		ASTRA_ASSERT(pReconMemory);
-		astraCudaBP_SIRTWeighted(pReconMemory->getData(),
-		                         pSinoMemory->getDataConst(),
+		ASTRA_ASSERT(m_pSinogram->isFloat32Memory());
+		ASTRA_ASSERT(m_pReconstruction->isFloat32Memory());
+		astraCudaBP_SIRTWeighted(m_pReconstruction->getFloat32Memory(),
+		                         m_pSinogram->getFloat32Memory(),
 		                         &volgeom, projgeom,
 		                         m_iGPUIndex, m_iVoxelSuperSampling);
 	} else {

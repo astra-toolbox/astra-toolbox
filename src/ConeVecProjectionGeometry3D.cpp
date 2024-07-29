@@ -70,8 +70,7 @@ CConeVecProjectionGeometry3D::~CConeVecProjectionGeometry3D()
 // Initialize - Config
 bool CConeVecProjectionGeometry3D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CProjectionGeometry3D> CC("ConeVecProjectionGeometry3D", this, _cfg);	
+	ConfigReader<CProjectionGeometry3D> CR("ConeVecProjectionGeometry3D", this, _cfg);	
 
 	// initialization of parent class
 	if (!CProjectionGeometry3D::initialize(_cfg))
@@ -84,18 +83,12 @@ bool CConeVecProjectionGeometry3D::initialize(const Config& _cfg)
 
 bool CConeVecProjectionGeometry3D::initializeAngles(const Config& _cfg)
 {
-	ConfigStackCheck<CProjectionGeometry3D> CC("ConeVecProjectionGeometry3D", this, _cfg);
+	ConfigReader<CProjectionGeometry3D> CR("ConeVecProjectionGeometry3D", this, _cfg);
 
 	// Required: Vectors
-	XMLNode node = _cfg.self.getSingleNode("Vectors");
-	ASTRA_CONFIG_CHECK(node, "ConeVecProjectionGeometry3D", "No Vectors tag specified.");
 	vector<double> data;
-	try {
-		data = node.getContentNumericalArrayDouble();
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "ConeVecProjectionGeometry3D", "Vectors must be a numerical matrix.");
-	}
-	CC.markNodeParsed("Vectors");
+	if (!CR.getRequiredNumericalArray("Vectors", data))
+		return false;
 	ASTRA_CONFIG_CHECK(data.size() % 12 == 0, "ConeVecProjectionGeometry3D", "Vectors doesn't consist of 12-tuples.");
 	m_iProjectionAngleCount = data.size() / 12;
 	m_pProjectionAngles = new SConeProjection[m_iProjectionAngleCount];
@@ -199,33 +192,33 @@ bool CConeVecProjectionGeometry3D::isOfType(const std::string& _sType) const
 // Get the configuration object
 Config* CConeVecProjectionGeometry3D::getConfiguration() const 
 {
-	Config* cfg = new Config();
-	cfg->initialize("ProjectionGeometry3D");
+	ConfigWriter CW("ProjectionGeometry3D", "cone_vec");
 
-	cfg->self.addAttribute("type", "cone_vec");
-	cfg->self.addChildNode("DetectorRowCount", m_iDetectorRowCount);
-	cfg->self.addChildNode("DetectorColCount", m_iDetectorColCount);
+	CW.addInt("DetectorRowCount", m_iDetectorRowCount);
+	CW.addInt("DetectorColCount", m_iDetectorColCount);
 
-	std::string vectors = "";
+	std::vector<double> vectors;
+	vectors.resize(12 * m_iProjectionAngleCount);
+
 	for (int i = 0; i < m_iProjectionAngleCount; ++i) {
 		SConeProjection& p = m_pProjectionAngles[i];
-		vectors += StringUtil::toString(p.fSrcX) + ",";
-		vectors += StringUtil::toString(p.fSrcY) + ",";
-		vectors += StringUtil::toString(p.fSrcZ) + ",";
-		vectors += StringUtil::toString(p.fDetSX + 0.5f*m_iDetectorRowCount*p.fDetVX + 0.5f*m_iDetectorColCount*p.fDetUX) + ",";
-		vectors += StringUtil::toString(p.fDetSY + 0.5f*m_iDetectorRowCount*p.fDetVY + 0.5f*m_iDetectorColCount*p.fDetUY) + ",";
-		vectors += StringUtil::toString(p.fDetSZ + 0.5f*m_iDetectorRowCount*p.fDetVZ + 0.5f*m_iDetectorColCount*p.fDetUZ) + ",";
-		vectors += StringUtil::toString(p.fDetUX) + ",";
-		vectors += StringUtil::toString(p.fDetUY) + ",";
-		vectors += StringUtil::toString(p.fDetUZ) + ",";
-		vectors += StringUtil::toString(p.fDetVX) + ",";
-		vectors += StringUtil::toString(p.fDetVY) + ",";
-		vectors += StringUtil::toString(p.fDetVZ);
-		if (i < m_iProjectionAngleCount-1) vectors += ';';
-	}
-	cfg->self.addChildNode("Vectors", vectors);
 
-	return cfg;
+		vectors[12*i +  0] = p.fSrcX;
+		vectors[12*i +  1] = p.fSrcY;
+		vectors[12*i +  2] = p.fSrcZ;
+		vectors[12*i +  3] = p.fDetSX + 0.5*m_iDetectorRowCount*p.fDetVX + 0.5*m_iDetectorColCount*p.fDetUX;
+		vectors[12*i +  4] = p.fDetSY + 0.5*m_iDetectorRowCount*p.fDetVY + 0.5*m_iDetectorColCount*p.fDetUY;
+		vectors[12*i +  5] = p.fDetSZ + 0.5*m_iDetectorRowCount*p.fDetVZ + 0.5*m_iDetectorColCount*p.fDetUZ;
+		vectors[12*i +  6] = p.fDetUX;
+		vectors[12*i +  7] = p.fDetUY;
+		vectors[12*i +  8] = p.fDetUZ;
+		vectors[12*i +  9] = p.fDetVX;
+		vectors[12*i + 10] = p.fDetVY;
+		vectors[12*i + 11] = p.fDetVZ;
+	}
+	CW.addNumericalMatrix("Vectors", &vectors[0], m_iProjectionAngleCount, 12);
+
+	return CW.getConfig();
 }
 //----------------------------------------------------------------------------------------
 

@@ -33,6 +33,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/cuda/3d/dims3d.h"
 
 #include "astra/AstraObjectManager.h"
+#include "astra/VolumeGeometry3D.h"
 
 #include "astra/Logging.h"
 
@@ -61,45 +62,27 @@ CCudaDartSmoothingAlgorithm3D::~CCudaDartSmoothingAlgorithm3D()
 // Initialize - Config
 bool CCudaDartSmoothingAlgorithm3D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CAlgorithm> CC("CudaDartSmoothingAlgorithm3D", this, _cfg);
+	ConfigReader<CAlgorithm> CR("CudaDartSmoothingAlgorithm3D", this, _cfg);
 
-	// reconstruction data
-	XMLNode node = _cfg.self.getSingleNode("InDataId");
-	ASTRA_CONFIG_CHECK(node, "CudaDartSmoothing3D", "No InDataId tag specified.");
-	int id = StringUtil::stringToInt(node.getContent(), -1);
-	m_pIn = dynamic_cast<CFloat32VolumeData3DMemory*>(CData3DManager::getSingleton().get(id));
-	CC.markNodeParsed("InDataId");
+	bool ok = true;
+	int id = -1;
 
-	// reconstruction data
-	node = _cfg.self.getSingleNode("OutDataId");
-	ASTRA_CONFIG_CHECK(node, "CudaDartSmoothing3D", "No OutDataId tag specified.");
-	id = StringUtil::stringToInt(node.getContent(), -1);
-	m_pOut = dynamic_cast<CFloat32VolumeData3DMemory*>(CData3DManager::getSingleton().get(id));
-	CC.markNodeParsed("OutDataId");
+	ok &= CR.getRequiredID("InDataId", id);
+	m_pIn = dynamic_cast<CFloat32VolumeData3D*>(CData3DManager::getSingleton().get(id));
 
-	// Option: GPU number
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", -1);
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
-	CC.markOptionParsed("GPUindex");
-	if (!_cfg.self.hasOption("GPUindex"))
-		CC.markOptionParsed("GPUIndex");
+	ok &= CR.getRequiredID("OutDataId", id);
+	m_pOut = dynamic_cast<CFloat32VolumeData3D*>(CData3DManager::getSingleton().get(id));
 
-	// Option: Intensity
-	try {
-		m_fB = (float)_cfg.self.getOptionNumerical("Intensity", 0.3f);
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "CudaDartSmoothing3D", "Intensity must be numerical");
-	}
-	CC.markOptionParsed("Intensity");
+	if (CR.hasOption("GPUIndex"))
+		ok &= CR.getOptionInt("GPUIndex", m_iGPUIndex, -1);
+	else
+		ok &= CR.getOptionInt("GPUindex", m_iGPUIndex, -1);
 
-	// Option: Radius
-	try {
-		m_iRadius = _cfg.self.getOptionInt("Radius", 1);
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "CudaDartSmoothing3D", "Radius must be an integer.");
-	}
-	CC.markOptionParsed("Radius");
+	ok &= CR.getOptionNumerical("Intensity", m_fB, 0.3f);
+	ok &= CR.getOptionUInt("Radius", m_iRadius, 1);
+
+	if (!ok)
+		return false;
 
 	_check();
 
@@ -130,13 +113,16 @@ void CCudaDartSmoothingAlgorithm3D::run(int _iNrIterations)
 	dims.iVolZ = volgeom.getGridSliceCount();
 
 	astraCUDA3d::setGPUIndex(m_iGPUIndex);
-	astraCUDA3d::dartSmoothing(m_pOut->getData(), m_pIn->getDataConst(), m_fB, m_iRadius, dims);
+	astraCUDA3d::dartSmoothing(m_pOut->getFloat32Memory(), m_pIn->getFloat32Memory(), m_fB, m_iRadius, dims);
 }
 
 //----------------------------------------------------------------------------------------
 // Check
 bool CCudaDartSmoothingAlgorithm3D::_check() 
 {
+	ASTRA_CONFIG_CHECK(m_pIn->isFloat32Memory(), "CudaDartSmoothing3D", "Input data object must be float32/memory");
+	ASTRA_CONFIG_CHECK(m_pOut->isFloat32Memory(), "CudaDartSmoothing3D", "Output data object must be float32/memory");
+
 	// geometry of inData must match that of outData
 
 

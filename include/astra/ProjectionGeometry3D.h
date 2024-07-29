@@ -339,7 +339,7 @@ public:
 
 	//< For Config unused argument checking
 	ConfigCheckData* configCheckData;
-	friend class ConfigStackCheck<CProjectionGeometry3D>;
+	friend class ConfigReader<CProjectionGeometry3D>;
 
 protected:
 	virtual bool initializeAngles(const Config& _cfg);

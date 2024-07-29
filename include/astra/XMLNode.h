@@ -263,14 +263,14 @@ public:
 	 * @param _pfList data
 	 * @param _iSize number of elements in the list
 	 */ 
-	void setContent(float32* _pfList, int _iSize);
+	void setContent(const float32* _pfList, int _iSize);
 
 	/** Add a list of numerical data to the node
 	 *
 	 * @param _pfList data
 	 * @param _iSize number of elements in the list
 	 */
-	void setContent(double* _pfList, int _iSize);
+	void setContent(const double* _pfList, int _iSize);
 
 	/** Add a (2D) matrix of numerical data to the node
 	 *
@@ -279,7 +279,7 @@ public:
 	 * @param _iHeight height of the matrix
 	 * @param transposed true is C order, false is Fortran order
 	 */
-	void setContent(float32* _pfMatrix, int _iWidth, int _iHeight, bool transposed);
+	void setContent(const float32* _pfMatrix, int _iWidth, int _iHeight, bool transposed);
 
 	/** Add a (2D) matrix of numerical data to the node
 	 *
@@ -288,7 +288,7 @@ public:
 	 * @param _iHeight height of the matrix
 	 * @param transposed true is C order, false is Fortran order
 	 */
-	void setContent(double* _pfMatrix, int _iWidth, int _iHeight, bool transposed);
+	void setContent(const double* _pfMatrix, int _iWidth, int _iHeight, bool transposed);
 
 	/** Add an attribute to this node: &lt;... _sName="_sValue"&gt;
 	 *

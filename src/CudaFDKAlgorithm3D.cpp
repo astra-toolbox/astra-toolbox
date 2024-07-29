@@ -33,6 +33,9 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/ConeProjectionGeometry3D.h"
 #include "astra/ConeVecProjectionGeometry3D.h"
 #include "astra/CompositeGeometryManager.h"
+#include "astra/VolumeGeometry3D.h"
+
+#include "astra/Float32ProjectionData2D.h"
 
 #include "astra/Logging.h"
 #include "astra/Filters.h"
@@ -118,8 +121,7 @@ void CCudaFDKAlgorithm3D::initializeFromProjector()
 // Initialize - Config
 bool CCudaFDKAlgorithm3D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CAlgorithm> CC("CudaFDKAlgorithm3D", this, _cfg);
+	ConfigReader<CAlgorithm> CR("CudaFDKAlgorithm3D", this, _cfg);
 
 	// if already initialized, clear first
 	if (m_bIsInitialized) {
@@ -134,17 +136,17 @@ bool CCudaFDKAlgorithm3D::initialize(const Config& _cfg)
 	initializeFromProjector();
 
 	// Deprecated options
-	m_iVoxelSuperSampling = (int)_cfg.self.getOptionNumerical("VoxelSuperSampling", m_iVoxelSuperSampling);
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", m_iGPUIndex);
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
-	CC.markOptionParsed("VoxelSuperSampling");
-	CC.markOptionParsed("GPUIndex");
-	if (!_cfg.self.hasOption("GPUIndex"))
-		CC.markOptionParsed("GPUindex");
+	bool ok = true;
+	ok &= CR.getOptionInt("VoxelSuperSampling", m_iVoxelSuperSampling, m_iVoxelSuperSampling);
+	if (CR.hasOption("GPUIndex"))
+		ok &= CR.getOptionInt("GPUIndex", m_iGPUIndex, m_iGPUIndex);
+	else
+		ok &= CR.getOptionInt("GPUindex", m_iGPUIndex, m_iGPUIndex);
+	if (!ok)
+		return false;
 	
 	// filter
-	if (_cfg.self.hasOption("FilterSinogramId")){
-		m_iFilterDataId = (int)_cfg.self.getOptionInt("FilterSinogramId");
+	if (CR.getOptionID("FilterSinogramId", m_iFilterDataId)) {
 		const CFloat32ProjectionData2D * pFilterData = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(m_iFilterDataId));
 		if (!pFilterData){
 			ASTRA_ERROR("Incorrect FilterSinogramId");
@@ -158,16 +160,11 @@ bool CCudaFDKAlgorithm3D::initialize(const Config& _cfg)
 			ASTRA_ERROR("Filter size does not match required size (%i angles, %i detectors)",projgeom->getProjectionCount(),iHalfFFTSize);
 			return false;
 		}
-	}else
-	{
-		m_iFilterDataId = -1;
 	}
-	CC.markOptionParsed("FilterSinogramId");
 
-
-
-	m_bShortScan = _cfg.self.getOptionBool("ShortScan", false);
-	CC.markOptionParsed("ShortScan");
+	ok &= CR.getOptionBool("ShortScan", m_bShortScan, false);
+	if (!ok)
+		return false;
 
 	// success
 	m_bIsInitialized = _check();
