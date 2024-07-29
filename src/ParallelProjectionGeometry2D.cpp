@@ -97,7 +97,6 @@ CParallelProjectionGeometry2D::~CParallelProjectionGeometry2D()
 // Initialize - Config
 bool CParallelProjectionGeometry2D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CProjectionGeometry2D> CR("ParallelProjectionGeometry2D", this, _cfg);	
 
 
@@ -170,13 +169,13 @@ bool CParallelProjectionGeometry2D::isOfType(const std::string& _sType)
 // Get the configuration object
 Config* CParallelProjectionGeometry2D::getConfiguration() const 
 {
-	Config* cfg = new Config();
-	cfg->initialize("ProjectionGeometry2D");
-	cfg->self.addAttribute("type", "parallel");
-	cfg->self.addChildNode("DetectorCount", getDetectorCount());
-	cfg->self.addChildNode("DetectorWidth", getDetectorWidth());
-	cfg->self.addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
-	return cfg;
+	ConfigWriter CW("ProjectionGeometry2D", "parallel");
+
+	CW.addInt("DetectorCount", getDetectorCount());
+	CW.addNumerical("DetectorWidth", getDetectorWidth());
+	CW.addNumericalArray("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
+
+	return CW.getConfig();
 }
 
 //----------------------------------------------------------------------------------------

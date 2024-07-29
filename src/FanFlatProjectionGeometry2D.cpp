@@ -193,15 +193,15 @@ bool CFanFlatProjectionGeometry2D::isOfType(const std::string& _sType)
 // Get the configuration object
 Config* CFanFlatProjectionGeometry2D::getConfiguration() const 
 {
-	Config* cfg = new Config();
-	cfg->initialize("ProjectionGeometry2D");
-	cfg->self.addAttribute("type", "fanflat");
-	cfg->self.addChildNode("DetectorCount", getDetectorCount());
-	cfg->self.addChildNode("DetectorWidth", getDetectorWidth());
-	cfg->self.addChildNode("DistanceOriginSource", getOriginSourceDistance());
-	cfg->self.addChildNode("DistanceOriginDetector", getOriginDetectorDistance());
-	cfg->self.addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
-	return cfg;
+	ConfigWriter CW("ProjectionGeometry2D", "fanflat");
+
+	CW.addInt("DetectorCount", getDetectorCount());
+	CW.addNumerical("DetectorWidth", getDetectorWidth());
+	CW.addNumerical("DistanceOriginSource", getOriginSourceDistance());
+	CW.addNumerical("DistanceOriginDetector", getOriginDetectorDistance());
+	CW.addNumericalArray("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
+
+	return CW.getConfig();
 }
 
 //----------------------------------------------------------------------------------------
