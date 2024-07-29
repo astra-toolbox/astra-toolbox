@@ -33,12 +33,16 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 namespace astra {
 
-
-class _AstraExport CFloat32CustomMemory {
+template<typename T>
+class _AstraExport CCustomMemory {
 public:
-	virtual ~CFloat32CustomMemory()=0;
-	float32* m_fPtr;
+	virtual ~CCustomMemory()=0;
+	T* m_fPtr;
 };
+
+template class CCustomMemory<float32>;
+
+typedef CCustomMemory<float32> CFloat32CustomMemory;
 
 /** 
  * This class represents a 2-dimensional block of 32-bit floating point data.

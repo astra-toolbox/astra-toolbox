@@ -40,12 +40,9 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/AstraObjectManager.h"
 
-#include "astra/Float32ProjectionData2D.h"
-#include "astra/Float32VolumeData2D.h"
 #include "astra/CudaProjector3D.h"
 #include "astra/Projector3D.h"
-#include "astra/Float32ProjectionData3DMemory.h"
-#include "astra/Float32VolumeData3DMemory.h"
+#include "astra/Data3D.h"
 
 #include "astra/CudaForwardProjectionAlgorithm3D.h"
 
@@ -55,10 +52,10 @@ using namespace std;
 using namespace astra;
 
 
-class CFloat32CustomMemory_simple : public astra::CFloat32CustomMemory {
+class CDataMemory_simple : public astra::CDataMemory<float> {
 public:
-	CFloat32CustomMemory_simple(float *ptr) { m_fPtr = ptr; }
-	~CFloat32CustomMemory_simple() { }
+	CDataMemory_simple(float *ptr) { m_pfData = ptr; }
+	~CDataMemory_simple() { }
 };
 
 #ifdef ASTRA_CUDA
@@ -106,20 +103,26 @@ void astra_mex_direct_fp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 
 
 	// Allocate input data
-	astra::CFloat32VolumeData3DMemory* pInput;
+	astra::CFloat32VolumeData3D* pInput;
 	if (mxIsSingle(data)) {
-		astra::CFloat32CustomMemory* m = new CFloat32CustomMemory_simple((float *)mxGetData(data));
-		pInput = new astra::CFloat32VolumeData3DMemory(pVolGeom, m);
+		astra::CDataStorage* m = new CDataMemory_simple((float *)mxGetData(data));
+		pInput = new astra::CFloat32VolumeData3D(pVolGeom, m);
 	} else {
-		pInput = new astra::CFloat32VolumeData3DMemory(pVolGeom);
-		copyMexToCFloat32Array(data, pInput->getData(), pInput->getSize());
+		size_t dataSize = pVolGeom->getGridColCount();
+		dataSize *= pVolGeom->getGridRowCount();
+		dataSize *= pVolGeom->getGridSliceCount();
+
+		CDataStorage* pStorage = new CDataMemory<float>(dataSize);
+		pInput = new astra::CFloat32VolumeData3D(pVolGeom, pStorage);
+
+		copyMexToCFloat32Array(data, pInput->getFloat32Memory(), dataSize);
 	}
 
 
 	// Allocate output data
 	// If the input is single, we also allocate single output.
 	// Otherwise, double.
-	astra::CFloat32ProjectionData3DMemory* pOutput;
+	astra::CFloat32ProjectionData3D* pOutput;
 	mxArray *pOutputMx;
 	if (mxIsSingle(data)) {
 		mwSize dims[3];
@@ -136,10 +139,15 @@ void astra_mex_direct_fp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 		const mwSize elem_size = mxGetElementSize(pOutputMx);
 		mxSetData(pOutputMx, mxMalloc(elem_size * num_elems));
 
-		astra::CFloat32CustomMemory* m = new CFloat32CustomMemory_simple((float *)mxGetData(pOutputMx));
-		pOutput = new astra::CFloat32ProjectionData3DMemory(pProjGeom, m);
+		astra::CDataStorage* m = new CDataMemory_simple((float *)mxGetData(pOutputMx));
+		pOutput = new astra::CFloat32ProjectionData3D(pProjGeom, m);
 	} else {
-		pOutput = new astra::CFloat32ProjectionData3DMemory(pProjGeom);
+		size_t dataSize = pProjGeom->getDetectorColCount();
+		dataSize *= pProjGeom->getProjectionCount();
+		dataSize *= pProjGeom->getDetectorRowCount();
+
+		CDataStorage* pStorage = new CDataMemory<float>(dataSize);
+		pOutput = new astra::CFloat32ProjectionData3D(pProjGeom, pStorage);
 	}
 
 	// Perform FP
@@ -165,7 +173,7 @@ void astra_mex_direct_fp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 
 	} else {
 		pOutputMx = createEquivMexArray<mxDOUBLE_CLASS>(pOutput);
-		copyCFloat32ArrayToMex(pOutput->getData(), pOutputMx);
+		copyCFloat32ArrayToMex(pOutput->getFloat32Memory(), pOutputMx);
 	}
 	plhs[0] = pOutputMx;
 
@@ -215,20 +223,25 @@ void astra_mex_direct_bp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 
 
 	// Allocate input data
-	astra::CFloat32ProjectionData3DMemory* pInput;
+	astra::CFloat32ProjectionData3D* pInput;
 	if (mxIsSingle(data)) {
-		astra::CFloat32CustomMemory* m = new CFloat32CustomMemory_simple((float *)mxGetData(data));
-		pInput = new astra::CFloat32ProjectionData3DMemory(pProjGeom, m);
+		astra::CDataStorage* m = new CDataMemory_simple((float *)mxGetData(data));
+		pInput = new astra::CFloat32ProjectionData3D(pProjGeom, m);
 	} else {
-		pInput = new astra::CFloat32ProjectionData3DMemory(pProjGeom);
-		copyMexToCFloat32Array(data, pInput->getData(), pInput->getSize());
+		size_t dataSize = pProjGeom->getDetectorColCount();
+		dataSize *= pProjGeom->getProjectionCount();
+		dataSize *= pProjGeom->getDetectorRowCount();
+
+		CDataStorage* pStorage = new CDataMemory<float>(dataSize);
+		pInput = new astra::CFloat32ProjectionData3D(pProjGeom, pStorage);
+		copyMexToCFloat32Array(data, pInput->getFloat32Memory(), dataSize);
 	}
 
 
 	// Allocate output data
 	// If the input is single, we also allocate single output.
 	// Otherwise, double.
-	astra::CFloat32VolumeData3DMemory* pOutput;
+	astra::CFloat32VolumeData3D* pOutput;
 	mxArray *pOutputMx;
 	if (mxIsSingle(data)) {
 		mwSize dims[3];
@@ -245,10 +258,15 @@ void astra_mex_direct_bp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 		const mwSize elem_size = mxGetElementSize(pOutputMx);
 		mxSetData(pOutputMx, mxMalloc(elem_size * num_elems));
 
-		astra::CFloat32CustomMemory* m = new CFloat32CustomMemory_simple((float *)mxGetData(pOutputMx));
-		pOutput = new astra::CFloat32VolumeData3DMemory(pVolGeom, m);
+		astra::CDataStorage* m = new CDataMemory_simple((float *)mxGetData(pOutputMx));
+		pOutput = new astra::CFloat32VolumeData3D(pVolGeom, m);
 	} else {
-		pOutput = new astra::CFloat32VolumeData3DMemory(pVolGeom);
+		size_t dataSize = pVolGeom->getGridColCount();
+		dataSize *= pVolGeom->getGridRowCount();
+		dataSize *= pVolGeom->getGridSliceCount();
+
+		CDataStorage* pStorage = new CDataMemory<float>(dataSize);
+		pOutput = new astra::CFloat32VolumeData3D(pVolGeom, pStorage);
 	}
 
 	// Perform BP
@@ -274,7 +292,7 @@ void astra_mex_direct_bp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 
 	} else {
 		pOutputMx = createEquivMexArray<mxDOUBLE_CLASS>(pOutput);
-		copyCFloat32ArrayToMex(pOutput->getData(), pOutputMx);
+		copyCFloat32ArrayToMex(pOutput->getFloat32Memory(), pOutputMx);
 	}
 	plhs[0] = pOutputMx;
 

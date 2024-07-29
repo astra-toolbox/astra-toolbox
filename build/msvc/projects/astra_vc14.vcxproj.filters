@@ -120,34 +120,19 @@
     <ClCompile Include="..\..\..\src\SirtAlgorithm.cpp">
       <Filter>Algorithms\source</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\Data3D.cpp">
+      <Filter>Data Structures\source</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\Float32Data.cpp">
       <Filter>Data Structures\source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\Float32Data2D.cpp">
       <Filter>Data Structures\source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\Float32Data3D.cpp">
-      <Filter>Data Structures\source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\Float32Data3DMemory.cpp">
-      <Filter>Data Structures\source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\Float32ProjectionData2D.cpp">
       <Filter>Data Structures\source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\Float32ProjectionData3D.cpp">
-      <Filter>Data Structures\source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\Float32ProjectionData3DMemory.cpp">
-      <Filter>Data Structures\source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\Float32VolumeData2D.cpp">
-      <Filter>Data Structures\source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\Float32VolumeData3D.cpp">
-      <Filter>Data Structures\source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\Float32VolumeData3DMemory.cpp">
       <Filter>Data Structures\source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\SheppLogan.cpp">
@@ -339,15 +324,6 @@
     <ClCompile Include="..\..\..\src\CudaSirtAlgorithm3D.cpp">
       <Filter>CUDA\astra source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\Float32Data3DGPU.cpp">
-      <Filter>CUDA\astra source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\Float32ProjectionData3DGPU.cpp">
-      <Filter>CUDA\astra source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\Float32VolumeData3DGPU.cpp">
-      <Filter>CUDA\astra source</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\astra\Algorithm.h">
@@ -392,34 +368,19 @@
     <ClInclude Include="..\..\..\include\astra\SirtAlgorithm.h">
       <Filter>Algorithms\headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\astra\Data3D.h">
+      <Filter>Data Structures\headers</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\astra\Float32Data.h">
       <Filter>Data Structures\headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\astra\Float32Data2D.h">
       <Filter>Data Structures\headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\astra\Float32Data3D.h">
-      <Filter>Data Structures\headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\astra\Float32Data3DMemory.h">
-      <Filter>Data Structures\headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\include\astra\Float32ProjectionData2D.h">
       <Filter>Data Structures\headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\astra\Float32ProjectionData3D.h">
-      <Filter>Data Structures\headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\astra\Float32ProjectionData3DMemory.h">
-      <Filter>Data Structures\headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\include\astra\Float32VolumeData2D.h">
-      <Filter>Data Structures\headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\astra\Float32VolumeData3D.h">
-      <Filter>Data Structures\headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\astra\Float32VolumeData3DMemory.h">
       <Filter>Data Structures\headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\astra\SheppLogan.h">
@@ -618,15 +579,6 @@
       <Filter>CUDA\astra headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\astra\CudaSirtAlgorithm3D.h">
-      <Filter>CUDA\astra headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\astra\Float32Data3DGPU.h">
-      <Filter>CUDA\astra headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\astra\Float32ProjectionData3DGPU.h">
-      <Filter>CUDA\astra headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\astra\Float32VolumeData3DGPU.h">
       <Filter>CUDA\astra headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\astra\cuda\2d\algo.h">
