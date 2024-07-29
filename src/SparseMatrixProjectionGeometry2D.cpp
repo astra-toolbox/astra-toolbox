@@ -90,7 +90,6 @@ CSparseMatrixProjectionGeometry2D::~CSparseMatrixProjectionGeometry2D()
 // Initialize - Config
 bool CSparseMatrixProjectionGeometry2D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CProjectionGeometry2D> CR("SparseMatrixProjectionGeometry2D", this, _cfg);	
 
 	// initialization of parent class
@@ -192,14 +191,14 @@ bool CSparseMatrixProjectionGeometry2D::isOfType(const std::string& _sType)
 // Get the configuration object
 Config* CSparseMatrixProjectionGeometry2D::getConfiguration() const 
 {
-	Config* cfg = new Config();
-	cfg->initialize("ProjectionGeometry2D");
-	cfg->self.addAttribute("type", "sparse matrix");
-	cfg->self.addChildNode("DetectorCount", getDetectorCount());
-	cfg->self.addChildNode("DetectorWidth", getDetectorWidth());
-	cfg->self.addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
-	cfg->self.addChildNode("MatrixID", CMatrixManager::getSingleton().getIndex(m_pMatrix));
-	return cfg;
+	ConfigWriter CW("ProjectionGeometry2D", "sparse matrix");
+
+	CW.addInt("DetectorCount", getDetectorCount());
+	CW.addNumerical("DetectorWidth", getDetectorWidth());
+	CW.addNumericalArray("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
+	CW.addID("MatrixID", CMatrixManager::getSingleton().getIndex(m_pMatrix));
+
+	return CW.getConfig();
 }
 
 } // end namespace astra

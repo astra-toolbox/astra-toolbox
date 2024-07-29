@@ -113,7 +113,6 @@ bool CFanFlatVecProjectionGeometry2D::initialize(int _iProjectionAngleCount,
 // Initialization with a Config object
 bool CFanFlatVecProjectionGeometry2D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CProjectionGeometry2D> CR("FanFlatVecProjectionGeometry2D", this, _cfg);	
 
 	XMLNode node;
@@ -149,8 +148,8 @@ bool CFanFlatVecProjectionGeometry2D::initializeAngles(const Config& _cfg)
 
 		// The backend code currently expects the corner of the detector, while
 		// the matlab interface supplies the center
-		p.fDetSX = data[6*i +  2] - 0.5f * m_iDetectorCount * p.fDetUX;
-		p.fDetSY = data[6*i +  3] - 0.5f * m_iDetectorCount * p.fDetUY;
+		p.fDetSX = data[6*i +  2] - 0.5 * m_iDetectorCount * p.fDetUX;
+		p.fDetSY = data[6*i +  3] - 0.5 * m_iDetectorCount * p.fDetUY;
 	}
 
 	return true;
@@ -207,23 +206,25 @@ bool CFanFlatVecProjectionGeometry2D::_check()
 // Get the configuration object
 Config* CFanFlatVecProjectionGeometry2D::getConfiguration() const 
 {
-	Config* cfg = new Config();
-	cfg->initialize("ProjectionGeometry2D");
-	cfg->self.addAttribute("type", "fanflat_vec");
-	cfg->self.addChildNode("DetectorCount", getDetectorCount());
-	std::string vectors = "";
+	ConfigWriter CW("ProjectionGeometry2D", "fanflat_vec");
+
+	CW.addInt("DetectorCount", getDetectorCount());
+
+	std::vector<double> vectors;
+	vectors.resize(6 * m_iProjectionAngleCount);
+
 	for (int i = 0; i < m_iProjectionAngleCount; ++i) {
 		SFanProjection& p = m_pProjectionAngles[i];
-		vectors += StringUtil::toString(p.fSrcX) + ",";
-		vectors += StringUtil::toString(p.fSrcY) + ",";
-		vectors += StringUtil::toString(p.fDetSX + 0.5f * m_iDetectorCount * p.fDetUX) + ",";
-		vectors += StringUtil::toString(p.fDetSY + 0.5f * m_iDetectorCount * p.fDetUY) + ",";
-		vectors += StringUtil::toString(p.fDetUX) + ",";
-		vectors += StringUtil::toString(p.fDetUY);
-		if (i < m_iProjectionAngleCount-1) vectors += ';';
+		vectors[6*i + 0] = p.fSrcX;
+		vectors[6*i + 1] = p.fSrcY;
+		vectors[6*i + 2] = p.fDetSX + 0.5 * m_iDetectorCount * p.fDetUX;
+		vectors[6*i + 3] = p.fDetSY + 0.5 * m_iDetectorCount * p.fDetUY;
+		vectors[6*i + 4] = p.fDetUX;
+		vectors[6*i + 5] = p.fDetUY;
 	}
-	cfg->self.addChildNode("Vectors", vectors);
-	return cfg;
+	CW.addNumericalMatrix("Vectors", &vectors[0], m_iProjectionAngleCount, 6);
+
+	return CW.getConfig();
 }
 //----------------------------------------------------------------------------------------
 

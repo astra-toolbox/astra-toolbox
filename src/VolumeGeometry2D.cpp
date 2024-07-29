@@ -155,7 +155,6 @@ CVolumeGeometry2D* CVolumeGeometry2D::clone()
 // Initialization witha Config object
 bool CVolumeGeometry2D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
 	ConfigReader<CVolumeGeometry2D> CR("VolumeGeometry2D", this, _cfg);
 	
 	// uninitialize if the object was initialized before
@@ -273,18 +272,16 @@ bool CVolumeGeometry2D::isEqual(CVolumeGeometry2D* _pGeom2) const
 // Get the configuration object
 Config* CVolumeGeometry2D::getConfiguration() const 
 {
-	Config* cfg = new Config();
-	cfg->initialize("VolumeGeometry2D");
+	ConfigWriter CW("VolumeGeometry2D");
 
-	cfg->self.addChildNode("GridColCount", m_iGridColCount);
-	cfg->self.addChildNode("GridRowCount", m_iGridRowCount);
+	CW.addInt("GridColCount", m_iGridColCount);
+	CW.addInt("GridRowCount", m_iGridRowCount);
+	CW.addOptionNumerical("WindowMinX", m_fWindowMinX);
+	CW.addOptionNumerical("WindowMaxX", m_fWindowMaxX);
+	CW.addOptionNumerical("WindowMinY", m_fWindowMinY);
+	CW.addOptionNumerical("WindowMaxY", m_fWindowMaxY);
 
-	cfg->self.addOption("WindowMinX", m_fWindowMinX);
-	cfg->self.addOption("WindowMaxX", m_fWindowMaxX);
-	cfg->self.addOption("WindowMinY", m_fWindowMinY);
-	cfg->self.addOption("WindowMaxY", m_fWindowMaxY);
-
-	return cfg;
+	return CW.getConfig();
 }
 //----------------------------------------------------------------------------------------
 
