@@ -56,12 +56,12 @@ class SIRTPlugin(astra.plugin.base):
             self.data_mod = astra.data3d
 
         self.R = self.W * np.ones(v.shape,dtype=np.float32).ravel();
-        self.R[self.R < 0.000001] = np.Inf
+        self.R[self.R < 0.000001] = np.inf
         self.R = 1 / self.R
         self.R = self.R.reshape(s.shape)
 
         self.mrC = self.W.T * np.ones(s.shape,dtype=np.float32).ravel();
-        self.mrC[self.mrC < 0.000001] = np.Inf
+        self.mrC[self.mrC < 0.000001] = np.inf
         self.mrC = -Relaxation / self.mrC
         self.mrC = self.mrC.reshape(v.shape)
         
