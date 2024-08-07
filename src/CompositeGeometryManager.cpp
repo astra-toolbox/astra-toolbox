@@ -49,11 +49,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include <cstring>
 #include <sstream>
 #include <climits>
-
-#ifndef USE_PTHREADS
-#include <boost/thread/mutex.hpp>
-#include <boost/thread.hpp>
-#endif
+#include <mutex>
+#include <thread>
 
 
 namespace astra {
@@ -1533,9 +1530,6 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 class WorkQueue {
 public:
 	WorkQueue(CCompositeGeometryManager::TJobSet &_jobs) : m_jobs(_jobs) {
-#ifdef USE_PTHREADS
-		pthread_mutex_init(&m_mutex, 0);
-#endif
 		m_iter = m_jobs.begin();
 	}
 	bool receive(CCompositeGeometryManager::TJobSet::const_iterator &i) {
@@ -1552,32 +1546,17 @@ public:
 
 		return true;	
 	}
-#ifdef USE_PTHREADS
-	void lock() {
-		// TODO: check mutex op return values
-		pthread_mutex_lock(&m_mutex);
-	}
-	void unlock() {
-		// TODO: check mutex op return values
-		pthread_mutex_unlock(&m_mutex);
-	}
-#else
 	void lock() {
 		m_mutex.lock();
 	}
 	void unlock() {
 		m_mutex.unlock();
 	}
-#endif
 
 private:
 	CCompositeGeometryManager::TJobSet &m_jobs;
 	CCompositeGeometryManager::TJobSet::const_iterator m_iter;
-#ifdef USE_PTHREADS
-	pthread_mutex_t m_mutex;
-#else
-	boost::mutex m_mutex;
-#endif
+	std::mutex m_mutex;
 };
 
 struct WorkThreadInfo {
@@ -1585,78 +1564,38 @@ struct WorkThreadInfo {
 	unsigned int m_iGPU;
 };
 
-#ifndef USE_PTHREADS
-
-void runEntries_boost(WorkThreadInfo* info)
+void runEntries(WorkThreadInfo* info)
 {
 	ASTRA_DEBUG("Launching thread on GPU %d\n", info->m_iGPU);
 	CCompositeGeometryManager::TJobSet::const_iterator i;
 	while (info->m_queue->receive(i)) {
 		ASTRA_DEBUG("Running block on GPU %d\n", info->m_iGPU);
 		astraCUDA3d::setGPUIndex(info->m_iGPU);
-		boost::this_thread::interruption_point();
 		doJob(i);
-		boost::this_thread::interruption_point();
 	}
 	ASTRA_DEBUG("Finishing thread on GPU %d\n", info->m_iGPU);
 }
-
-
-#else
-
-void* runEntries_pthreads(void* data) {
-	WorkThreadInfo* info = (WorkThreadInfo*)data;
-
-	ASTRA_DEBUG("Launching thread on GPU %d\n", info->m_iGPU);
-
-	CCompositeGeometryManager::TJobSet::const_iterator i;
-
-	while (info->m_queue->receive(i)) {
-		ASTRA_DEBUG("Running block on GPU %d\n", info->m_iGPU);
-		astraCUDA3d::setGPUIndex(info->m_iGPU);
-		pthread_testcancel();
-		doJob(i);
-		pthread_testcancel();
-	}
-	ASTRA_DEBUG("Finishing thread on GPU %d\n", info->m_iGPU);
-
-	return 0;
-}
-
-#endif
-
 
 void runWorkQueue(WorkQueue &queue, const std::vector<int> & iGPUIndices) {
 	int iThreadCount = iGPUIndices.size();
 
 	std::vector<WorkThreadInfo> infos;
-#ifdef USE_PTHREADS
-	std::vector<pthread_t> threads;
-#else
-	std::vector<boost::thread*> threads;
-#endif
+	std::vector<std::thread*> threads;
 	infos.resize(iThreadCount);
 	threads.resize(iThreadCount);
+	ASTRA_DEBUG("Thread count %d", iThreadCount);
 
 	for (int i = 0; i < iThreadCount; ++i) {
 		infos[i].m_queue = &queue;
 		infos[i].m_iGPU = iGPUIndices[i];
-#ifdef USE_PTHREADS
-		pthread_create(&threads[i], 0, runEntries_pthreads, (void*)&infos[i]);
-#else
-		threads[i] = new boost::thread(runEntries_boost, &infos[i]);
-#endif
+		threads[i] = new std::thread(runEntries, &infos[i]);
 	}
 
 	// Wait for them to finish
 	for (int i = 0; i < iThreadCount; ++i) {
-#ifdef USE_PTHREADS
-		pthread_join(threads[i], 0);
-#else
 		threads[i]->join();
 		delete threads[i];
 		threads[i] = 0;
-#endif
 	}
 }
 

@@ -36,14 +36,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #ifdef USE_MATLAB_UNDOCUMENTED
 extern "C" { bool utIsInterruptPending(); }
-
-#ifdef USE_PTHREADS
-#define USE_PTHREADS_CTRLC
-#include <pthread.h>
-#else
-#include <boost/thread.hpp>
-#endif
-
 #endif
 
 
