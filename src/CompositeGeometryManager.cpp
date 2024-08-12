@@ -597,226 +597,6 @@ static size_t computeLinearSplit(size_t maxBlock, int div, size_t sliceCount)
 	return blockSize;
 }
 
-template<class V, class P>
-static V* getProjectionVectors(const P* geom);
-
-template<>
-SConeProjection* getProjectionVectors(const CConeProjectionGeometry3D* pProjGeom)
-{
-	return genConeProjections(pProjGeom->getProjectionCount(),
-	                          pProjGeom->getDetectorColCount(),
-	                          pProjGeom->getDetectorRowCount(),
-	                          pProjGeom->getOriginSourceDistance(),
-	                          pProjGeom->getOriginDetectorDistance(),
-	                          pProjGeom->getDetectorSpacingX(),
-	                          pProjGeom->getDetectorSpacingY(),
-	                          pProjGeom->getProjectionAngles());
-}
-
-template<>
-SConeProjection* getProjectionVectors(const CConeVecProjectionGeometry3D* pProjGeom)
-{
-	int nth = pProjGeom->getProjectionCount();
-
-	SConeProjection* pProjs = new SConeProjection[nth];
-	for (int i = 0; i < nth; ++i)
-		pProjs[i] = pProjGeom->getProjectionVectors()[i];
-
-	return pProjs;
-}
-
-template<>
-SPar3DProjection* getProjectionVectors(const CParallelProjectionGeometry3D* pProjGeom)
-{
-	return genPar3DProjections(pProjGeom->getProjectionCount(),
-	                           pProjGeom->getDetectorColCount(),
-	                           pProjGeom->getDetectorRowCount(),
-	                           pProjGeom->getDetectorSpacingX(),
-	                           pProjGeom->getDetectorSpacingY(),
-	                           pProjGeom->getProjectionAngles());
-}
-
-template<>
-SPar3DProjection* getProjectionVectors(const CParallelVecProjectionGeometry3D* pProjGeom)
-{
-	int nth = pProjGeom->getProjectionCount();
-
-	SPar3DProjection* pProjs = new SPar3DProjection[nth];
-	for (int i = 0; i < nth; ++i)
-		pProjs[i] = pProjGeom->getProjectionVectors()[i];
-
-	return pProjs;
-}
-
-
-template<class V>
-static void translateProjectionVectorsU(V* pProjs, int count, double du)
-{
-	for (int i = 0; i < count; ++i) {
-		pProjs[i].fDetSX += du * pProjs[i].fDetUX;
-		pProjs[i].fDetSY += du * pProjs[i].fDetUY;
-		pProjs[i].fDetSZ += du * pProjs[i].fDetUZ;
-	}
-}
-
-template<class V>
-static void translateProjectionVectorsV(V* pProjs, int count, double dv)
-{
-	for (int i = 0; i < count; ++i) {
-		pProjs[i].fDetSX += dv * pProjs[i].fDetVX;
-		pProjs[i].fDetSY += dv * pProjs[i].fDetVY;
-		pProjs[i].fDetSZ += dv * pProjs[i].fDetVZ;
-	}
-}
-
-
-static CProjectionGeometry3D* getSubProjectionGeometryU(const CProjectionGeometry3D* pProjGeom, int u, int size)
-{
-	// First convert to vectors, then translate, then convert into new object
-
-	const CConeProjectionGeometry3D* conegeom = dynamic_cast<const CConeProjectionGeometry3D*>(pProjGeom);
-	const CParallelProjectionGeometry3D* par3dgeom = dynamic_cast<const CParallelProjectionGeometry3D*>(pProjGeom);
-	const CParallelVecProjectionGeometry3D* parvec3dgeom = dynamic_cast<const CParallelVecProjectionGeometry3D*>(pProjGeom);
-	const CConeVecProjectionGeometry3D* conevec3dgeom = dynamic_cast<const CConeVecProjectionGeometry3D*>(pProjGeom);
-
-	if (conegeom || conevec3dgeom) {
-		SConeProjection* pConeProjs;
-		if (conegeom) {
-			pConeProjs = getProjectionVectors<SConeProjection>(conegeom);
-		} else {
-			pConeProjs = getProjectionVectors<SConeProjection>(conevec3dgeom);
-		}
-
-		translateProjectionVectorsU(pConeProjs, pProjGeom->getProjectionCount(), u);
-
-		CProjectionGeometry3D* ret = new CConeVecProjectionGeometry3D(pProjGeom->getProjectionCount(),
-		                                                              pProjGeom->getDetectorRowCount(),
-		                                                              size,
-		                                                              pConeProjs);
-
-
-		delete[] pConeProjs;
-		return ret;
-	} else {
-		assert(par3dgeom || parvec3dgeom);
-		SPar3DProjection* pParProjs;
-		if (par3dgeom) {
-			pParProjs = getProjectionVectors<SPar3DProjection>(par3dgeom);
-		} else {
-			pParProjs = getProjectionVectors<SPar3DProjection>(parvec3dgeom);
-		}
-
-		translateProjectionVectorsU(pParProjs, pProjGeom->getProjectionCount(), u);
-
-		CProjectionGeometry3D* ret = new CParallelVecProjectionGeometry3D(pProjGeom->getProjectionCount(),
-		                                                                  pProjGeom->getDetectorRowCount(),
-		                                                                  size,
-		                                                                  pParProjs);
-
-		delete[] pParProjs;
-		return ret;
-	}
-
-}
-
-
-
-static CProjectionGeometry3D* getSubProjectionGeometryV(const CProjectionGeometry3D* pProjGeom, int v, int size)
-{
-	// First convert to vectors, then translate, then convert into new object
-
-	const CConeProjectionGeometry3D* conegeom = dynamic_cast<const CConeProjectionGeometry3D*>(pProjGeom);
-	const CParallelProjectionGeometry3D* par3dgeom = dynamic_cast<const CParallelProjectionGeometry3D*>(pProjGeom);
-	const CParallelVecProjectionGeometry3D* parvec3dgeom = dynamic_cast<const CParallelVecProjectionGeometry3D*>(pProjGeom);
-	const CConeVecProjectionGeometry3D* conevec3dgeom = dynamic_cast<const CConeVecProjectionGeometry3D*>(pProjGeom);
-
-	if (conegeom || conevec3dgeom) {
-		SConeProjection* pConeProjs;
-		if (conegeom) {
-			pConeProjs = getProjectionVectors<SConeProjection>(conegeom);
-		} else {
-			pConeProjs = getProjectionVectors<SConeProjection>(conevec3dgeom);
-		}
-
-		translateProjectionVectorsV(pConeProjs, pProjGeom->getProjectionCount(), v);
-
-		CProjectionGeometry3D* ret = new CConeVecProjectionGeometry3D(pProjGeom->getProjectionCount(),
-		                                                              size,
-		                                                              pProjGeom->getDetectorColCount(),
-		                                                              pConeProjs);
-
-
-		delete[] pConeProjs;
-		return ret;
-	} else {
-		assert(par3dgeom || parvec3dgeom);
-		SPar3DProjection* pParProjs;
-		if (par3dgeom) {
-			pParProjs = getProjectionVectors<SPar3DProjection>(par3dgeom);
-		} else {
-			pParProjs = getProjectionVectors<SPar3DProjection>(parvec3dgeom);
-		}
-
-		translateProjectionVectorsV(pParProjs, pProjGeom->getProjectionCount(), v);
-
-		CProjectionGeometry3D* ret = new CParallelVecProjectionGeometry3D(pProjGeom->getProjectionCount(),
-		                                                                  size,
-		                                                                  pProjGeom->getDetectorColCount(),
-		                                                                  pParProjs);
-
-		delete[] pParProjs;
-		return ret;
-	}
-
-}
-
-static CProjectionGeometry3D* getSubProjectionGeometryAngle(const CProjectionGeometry3D* pProjGeom, int th, int size)
-{
-	// First convert to vectors, then convert into new object
-
-	const CConeProjectionGeometry3D* conegeom = dynamic_cast<const CConeProjectionGeometry3D*>(pProjGeom);
-	const CParallelProjectionGeometry3D* par3dgeom = dynamic_cast<const CParallelProjectionGeometry3D*>(pProjGeom);
-	const CParallelVecProjectionGeometry3D* parvec3dgeom = dynamic_cast<const CParallelVecProjectionGeometry3D*>(pProjGeom);
-	const CConeVecProjectionGeometry3D* conevec3dgeom = dynamic_cast<const CConeVecProjectionGeometry3D*>(pProjGeom);
-
-	if (conegeom || conevec3dgeom) {
-		SConeProjection* pConeProjs;
-		if (conegeom) {
-			pConeProjs = getProjectionVectors<SConeProjection>(conegeom);
-		} else {
-			pConeProjs = getProjectionVectors<SConeProjection>(conevec3dgeom);
-		}
-
-		CProjectionGeometry3D* ret = new CConeVecProjectionGeometry3D(size,
-		                                                              pProjGeom->getDetectorRowCount(),
-		                                                              pProjGeom->getDetectorColCount(),
-		                                                              pConeProjs + th);
-
-
-		delete[] pConeProjs;
-		return ret;
-	} else {
-		assert(par3dgeom || parvec3dgeom);
-		SPar3DProjection* pParProjs;
-		if (par3dgeom) {
-			pParProjs = getProjectionVectors<SPar3DProjection>(par3dgeom);
-		} else {
-			pParProjs = getProjectionVectors<SPar3DProjection>(parvec3dgeom);
-		}
-
-		CProjectionGeometry3D* ret = new CParallelVecProjectionGeometry3D(size,
-		                                                                  pProjGeom->getDetectorRowCount(),
-		                                                                  pProjGeom->getDetectorColCount(),
-		                                                                  pParProjs + th);
-
-		delete[] pParProjs;
-		return ret;
-	}
-
-}
-
-
-
 // split self into sub-parts:
 // - each no bigger than maxSize
 // - number of sub-parts is divisible by div
@@ -1026,7 +806,7 @@ CCompositeGeometryManager::CPart* CCompositeGeometryManager::CProjectionPart::re
 	if (_vmin == _vmax) {
 		sub->pGeom = 0;
 	} else {
-		sub->pGeom = getSubProjectionGeometryV(pGeom, _vmin, _vmax - _vmin);
+		sub->pGeom = getSubProjectionGeometry_V(pGeom, _vmin, _vmax - _vmin);
 	}
 
 	ASTRA_DEBUG("Reduce projection from %d - %d to %d - %d", this->subZ, this->subZ + pGeom->getDetectorRowCount(), this->subZ + _vmin, this->subZ + _vmax);
@@ -1065,7 +845,7 @@ void CCompositeGeometryManager::CProjectionPart::splitX(CCompositeGeometryManage
 
 			sub->pData = pData;
 
-			sub->pGeom = getSubProjectionGeometryU(pGeom, newsubX, size);
+			sub->pGeom = getSubProjectionGeometry_U(pGeom, newsubX, size);
 
 			out.push_back(std::shared_ptr<CPart>(sub));
 		}
@@ -1098,7 +878,7 @@ void CCompositeGeometryManager::CProjectionPart::splitY(CCompositeGeometryManage
 
 			sub->pData = pData;
 
-			sub->pGeom = getSubProjectionGeometryAngle(pGeom, th, size);
+			sub->pGeom = getSubProjectionGeometry_Angle(pGeom, th, size);
 
 			out.push_back(std::shared_ptr<CPart>(sub));
 		}
@@ -1137,7 +917,7 @@ void CCompositeGeometryManager::CProjectionPart::splitZ(CCompositeGeometryManage
 
 			sub->pData = pData;
 
-			sub->pGeom = getSubProjectionGeometryV(pGeom, newsubZ, size);
+			sub->pGeom = getSubProjectionGeometry_V(pGeom, newsubZ, size);
 
 			out.push_back(std::shared_ptr<CPart>(sub));
 		}
