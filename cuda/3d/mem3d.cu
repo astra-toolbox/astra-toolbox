@@ -212,23 +212,10 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, co
 #endif
 
 
-	SPar3DProjection* pParProjs;
-	SConeProjection* pConeProjs;
+	auto res = convertAstraGeometry(pVolGeom, pProjGeom, params);
 
-	ok = convertAstraGeometry(pVolGeom, pProjGeom,
-	                          pParProjs, pConeProjs,
-	                          params);
-
-	if (pParProjs) {
-#if 0
-		for (int i = 0; i < dims.iProjAngles; ++i) {
-			ASTRA_DEBUG("Vec: %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f\n",
-			    pParProjs[i].fRayX, pParProjs[i].fRayY, pParProjs[i].fRayZ,
-			    pParProjs[i].fDetSX, pParProjs[i].fDetSY, pParProjs[i].fDetSZ,
-			    pParProjs[i].fDetUX, pParProjs[i].fDetUY, pParProjs[i].fDetUZ,
-			    pParProjs[i].fDetVX, pParProjs[i].fDetVY, pParProjs[i].fDetVZ);
-		}
-#endif
+	if (res.isParallel()) {
+		const SPar3DProjection* pParProjs = res.getParallel();
 
 		switch (projKernel) {
 		case astra::ker3d_default:
@@ -240,7 +227,9 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, co
 		default:
 			ok = false;
 		}
-	} else {
+	} else if (res.isCone()) {
+		const SConeProjection* pConeProjs = res.getCone();
+
 		switch (projKernel) {
 		case astra::ker3d_default:
 			ok &= ConeFP(volData.d->ptr, projData.d->ptr, dims, pConeProjs, params);
@@ -248,10 +237,9 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, co
 		default:
 			ok = false;
 		}
+	} else {
+		ok = false;
 	}
-
-	delete[] pParProjs;
-	delete[] pConeProjs;
 
 	return ok;
 }
@@ -270,29 +258,25 @@ bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, co
 	params.iRaysPerVoxelDim = iVoxelSuperSampling;
 #endif
 
-	SPar3DProjection* pParProjs;
-	SConeProjection* pConeProjs;
-
-	ok = convertAstraGeometry(pVolGeom, pProjGeom,
-	                          pParProjs, pConeProjs,
-	                          params);
+	auto res = convertAstraGeometry(pVolGeom, pProjGeom, params);
 
 	params.bFDKWeighting = false;
 
-	if (pParProjs) {
+	if (res.isParallel()) {
+		const SPar3DProjection* pParProjs = res.getParallel();
 		if (projData.d->arr)
 			ok &= Par3DBP_Array(volData.d->ptr, projData.d->arr, dims, pParProjs, params);
 		else
 			ok &= Par3DBP(volData.d->ptr, projData.d->ptr, dims, pParProjs, params);
-	} else {
+	} else if (res.isCone()) {
+		const SConeProjection* pConeProjs = res.getCone();
 		if (projData.d->arr)
 			ok &= ConeBP_Array(volData.d->ptr, projData.d->arr, dims, pConeProjs, params);
 		else
 			ok &= ConeBP(volData.d->ptr, projData.d->ptr, dims, pConeProjs, params);
+	} else {
+		ok = false;
 	}
-
-	delete[] pParProjs;
-	delete[] pConeProjs;
 
 	return ok;
 
@@ -310,23 +294,14 @@ bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, c
 	if (!ok)
 		return false;
 
-	SPar3DProjection* pParProjs;
-	SConeProjection* pConeProjs;
+	astra::Geometry3DParameters res = convertAstraGeometry(pVolGeom, pProjGeom, params);
 
-	ok = convertAstraGeometry(pVolGeom, pProjGeom,
-	                          pParProjs, pConeProjs,
-	                          params);
-
-	if (!ok || !pConeProjs) {
-		delete[] pParProjs;
-		delete[] pConeProjs;
+	if (!res.isCone())
 		return false;
-	}
+
+	const SConeProjection* pConeProjs = res.getCone();
 
 	ok &= FDK(volData.d->ptr, projData.d->ptr, pConeProjs, dims, params, bShortScan, pfFilter);
-
-	delete[] pParProjs;
-	delete[] pConeProjs;
 
 	return ok;
 
