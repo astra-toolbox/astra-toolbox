@@ -79,10 +79,14 @@ public:
    * @param ...
    * Any additional format arguments.
 	 */
-  static void debug(const char *sfile, int sline, const char *fmt, ...);
-  static void info(const char *sfile, int sline, const char *fmt, ...);
-  static void warn(const char *sfile, int sline, const char *fmt, ...);
-  static void error(const char *sfile, int sline, const char *fmt, ...);
+  static void debug(const char *sfile, int sline, const char *fmt, ...)
+	  ATTRIBUTE_FORMAT(printf, 3, 4);
+  static void info(const char *sfile, int sline, const char *fmt, ...)
+	  ATTRIBUTE_FORMAT(printf, 3, 4);
+  static void warn(const char *sfile, int sline, const char *fmt, ...)
+	  ATTRIBUTE_FORMAT(printf, 3, 4);
+  static void error(const char *sfile, int sline, const char *fmt, ...)
+	  ATTRIBUTE_FORMAT(printf, 3, 4);
 
   /**
 	 * Sets the file to log to, with logging level.

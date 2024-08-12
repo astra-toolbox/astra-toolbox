@@ -189,9 +189,13 @@ _AstraExport inline bool cudaEnabled() { return false; }
 #define FORCEINLINE inline
 #endif
 
+#define ATTRIBUTE_FORMAT(A,B,C) __attribute__ ((format (A, B, C)))
+
 #else
 
 #define FORCEINLINE __forceinline
+
+#define ATTRIBUTE_FORMAT(A,B,C)
 
 #endif
 
