@@ -99,7 +99,7 @@ bool CCudaDartMaskAlgorithm::initialize(const Config& _cfg)
 
 //----------------------------------------------------------------------------------------
 // Iterate
-void CCudaDartMaskAlgorithm::run(int _iNrIterations)
+bool CCudaDartMaskAlgorithm::run(int _iNrIterations)
 {
 	// check initialized
 	ASTRA_ASSERT(m_bIsInitialized);
@@ -110,6 +110,8 @@ void CCudaDartMaskAlgorithm::run(int _iNrIterations)
 
 	astraCUDA::setGPUIndex(m_iGPUIndex);
 	astraCUDA::dartMask(m_pMask->getData(), m_pSegmentation->getDataConst(), m_iConn, m_iRadius, m_iThreshold, width, height);
+
+	return true;
 }
 
 //----------------------------------------------------------------------------------------

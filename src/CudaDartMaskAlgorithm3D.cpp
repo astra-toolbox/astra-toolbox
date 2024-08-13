@@ -99,7 +99,7 @@ bool CCudaDartMaskAlgorithm3D::initialize(const Config& _cfg)
 
 //----------------------------------------------------------------------------------------
 // Iterate
-void CCudaDartMaskAlgorithm3D::run(int _iNrIterations)
+bool CCudaDartMaskAlgorithm3D::run(int _iNrIterations)
 {
 	// check initialized
 	ASTRA_ASSERT(m_bIsInitialized);
@@ -112,6 +112,8 @@ void CCudaDartMaskAlgorithm3D::run(int _iNrIterations)
 
 	astraCUDA3d::setGPUIndex(m_iGPUIndex);
 	astraCUDA3d::dartMasking(m_pMask->getFloat32Memory(), m_pSegmentation->getFloat32Memory(), m_iConn, m_iRadius, m_iThreshold, dims);
+
+	return true;
 }
 
 //----------------------------------------------------------------------------------------

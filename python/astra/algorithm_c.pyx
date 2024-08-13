@@ -83,8 +83,11 @@ cdef CAlgorithm * getAlg(i) except NULL:
 def run(i, iterations=0):
     cdef CAlgorithm * alg = getAlg(i)
     cdef int its = iterations
+    cdef bool ret = True
     with nogil:
-        alg.run(its)
+        ret = alg.run(its)
+    if not ret:
+        raise AstraError("Algorithm failed", append_log=True)
 
 
 def get_res_norm(i):

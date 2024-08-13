@@ -167,7 +167,7 @@ bool CFilteredBackProjectionAlgorithm::_check()
 
 //----------------------------------------------------------------------------------------
 // Iterate
-void CFilteredBackProjectionAlgorithm::run(int _iNrIterations)
+bool CFilteredBackProjectionAlgorithm::run(int _iNrIterations)
 {
 	ASTRA_ASSERT(m_bIsInitialized);
 
@@ -189,6 +189,8 @@ void CFilteredBackProjectionAlgorithm::run(int _iNrIterations)
 	(*m_pReconstruction) *= PI/(2*iAngleCount*fPixelArea);
 
 	m_pReconstruction->updateStatistics();
+
+	return true;
 }
 
 

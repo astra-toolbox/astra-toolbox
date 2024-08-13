@@ -165,7 +165,7 @@ bool CCudaBackProjectionAlgorithm3D::initialize(CProjector3D* _pProjector,
 
 //----------------------------------------------------------------------------------------
 // Iterate
-void CCudaBackProjectionAlgorithm3D::run(int _iNrIterations)
+bool CCudaBackProjectionAlgorithm3D::run(int _iNrIterations)
 {
 	// check initialized
 	ASTRA_ASSERT(m_bIsInitialized);
@@ -181,21 +181,14 @@ void CCudaBackProjectionAlgorithm3D::run(int _iNrIterations)
 	if (m_bSIRTWeighting) {
 		ASTRA_ASSERT(m_pSinogram->isFloat32Memory());
 		ASTRA_ASSERT(m_pReconstruction->isFloat32Memory());
-		astraCudaBP_SIRTWeighted(m_pReconstruction->getFloat32Memory(),
-		                         m_pSinogram->getFloat32Memory(),
-		                         &volgeom, projgeom,
-		                         m_iGPUIndex, m_iVoxelSuperSampling);
+		return astraCudaBP_SIRTWeighted(m_pReconstruction->getFloat32Memory(),
+		                                m_pSinogram->getFloat32Memory(),
+		                                &volgeom, projgeom,
+		                                m_iGPUIndex, m_iVoxelSuperSampling);
 	} else {
-
-#if 1
 		CCompositeGeometryManager cgm;
 
-		cgm.doBP(m_pProjector, pReconMem, pSinoMem);
-#else
-		astraCudaBP(pReconMem->getData(), pSinoMem->getDataConst(),
-		            &volgeom, projgeom,
-		            m_iGPUIndex, m_iVoxelSuperSampling);
-#endif
+		return cgm.doBP(m_pProjector, pReconMem, pSinoMem);
 	}
 
 }
