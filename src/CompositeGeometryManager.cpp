@@ -295,7 +295,7 @@ bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div
 				}
 				splitInput2.clear();
 
-				ASTRA_DEBUG("Input split into %d parts", splitInput.size());
+				ASTRA_DEBUG("Input split into %zu parts", splitInput.size());
 
 				for (TPartList::iterator i_in = splitInput.begin();
 				     i_in != splitInput.end(); ++i_in)
@@ -817,7 +817,7 @@ void CCompositeGeometryManager::CVolumePart::splitX(CCompositeGeometryManager::T
 		if ((size_t)rem == blockSize)
 			rem = 0;
 
-		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
+		ASTRA_DEBUG("From %d to %d step %zu", -(rem / 2), sliceCount, blockSize);
 
 		for (int x = -(rem / 2); x < sliceCount; x += blockSize) {
 			int newsubX = x;
@@ -865,7 +865,7 @@ void CCompositeGeometryManager::CVolumePart::splitY(CCompositeGeometryManager::T
 		if ((size_t)rem == blockSize)
 			rem = 0;
 
-		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
+		ASTRA_DEBUG("From %d to %d step %zu", -(rem / 2), sliceCount, blockSize);
 
 		for (int y = -(rem / 2); y < sliceCount; y += blockSize) {
 			int newsubY = y;
@@ -913,7 +913,7 @@ void CCompositeGeometryManager::CVolumePart::splitZ(CCompositeGeometryManager::T
 		if ((size_t)rem == blockSize)
 			rem = 0;
 
-		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
+		ASTRA_DEBUG("From %d to %d step %zu", -(rem / 2), sliceCount, blockSize);
 
 		for (int z = -(rem / 2); z < sliceCount; z += blockSize) {
 			int newsubZ = z;
@@ -1031,7 +1031,7 @@ void CCompositeGeometryManager::CProjectionPart::splitX(CCompositeGeometryManage
 		if ((size_t)rem == blockSize)
 			rem = 0;
 
-		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
+		ASTRA_DEBUG("From %d to %d step %zu", -(rem / 2), sliceCount, blockSize);
 
 		for (int x = -(rem / 2); x < sliceCount; x += blockSize) {
 			int newsubX = x;
@@ -1066,7 +1066,7 @@ void CCompositeGeometryManager::CProjectionPart::splitY(CCompositeGeometryManage
 		size_t m = std::min(maxSize / sliceSize, maxDim);
 		size_t blockSize = computeLinearSplit(m, div, angleCount);
 
-		ASTRA_DEBUG("From %d to %d step %d", 0, angleCount, blockSize);
+		ASTRA_DEBUG("From %d to %d step %zu", 0, angleCount, blockSize);
 
 		for (int th = 0; th < angleCount; th += blockSize) {
 			int endTh = th + blockSize;
@@ -1103,7 +1103,7 @@ void CCompositeGeometryManager::CProjectionPart::splitZ(CCompositeGeometryManage
 		if ((size_t)rem == blockSize)
 			rem = 0;
 
-		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
+		ASTRA_DEBUG("From %d to %d step %zu", -(rem / 2), sliceCount, blockSize);
 
 		for (int z = -(rem / 2); z < sliceCount; z += blockSize) {
 			int newsubZ = z;
@@ -1688,7 +1688,7 @@ void CCompositeGeometryManager::setGlobalGPUParams(const SGPUParams& params)
 		s << " " << params.GPUIndices[i];
 	std::string ss = s.str();
 	ASTRA_DEBUG(ss.c_str());
-	ASTRA_DEBUG("Memory: %llu", params.memory);
+	ASTRA_DEBUG("Memory: %zu", params.memory);
 }
 
 
