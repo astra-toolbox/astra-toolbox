@@ -98,7 +98,7 @@ bool CCudaDartSmoothingAlgorithm::initialize(const Config& _cfg)
 
 //----------------------------------------------------------------------------------------
 // Iterate
-void CCudaDartSmoothingAlgorithm::run(int _iNrIterations)
+bool CCudaDartSmoothingAlgorithm::run(int _iNrIterations)
 {
 	// check initialized
 	ASTRA_ASSERT(m_bIsInitialized);
@@ -110,6 +110,8 @@ void CCudaDartSmoothingAlgorithm::run(int _iNrIterations)
 	astraCUDA::setGPUIndex(m_iGPUIndex);
 	
 	astraCUDA::dartSmoothing(m_pOut->getData(), m_pIn->getDataConst(), m_fB, m_iRadius, width, height);
+
+	return true;
 }
 
 //----------------------------------------------------------------------------------------

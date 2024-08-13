@@ -185,7 +185,7 @@ public:
 	 *
 	 * @param _iNrIterations amount of iterations to perform.
 	 */
-	virtual void run(int _iNrIterations = 1);
+	virtual bool run(int _iNrIterations = 1);
 
 	/** Get a description of the class.
 	 *

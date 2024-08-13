@@ -106,7 +106,7 @@ bool CCudaDataOperationAlgorithm::initialize(const Config& _cfg)
 
 //----------------------------------------------------------------------------------------
 // Iterate
-void CCudaDataOperationAlgorithm::run(int _iNrIterations)
+bool CCudaDataOperationAlgorithm::run(int _iNrIterations)
 {
 	// check initialized
 	ASTRA_ASSERT(m_bIsInitialized);
@@ -149,6 +149,7 @@ void CCudaDataOperationAlgorithm::run(int _iNrIterations)
 		astraCUDA::processVolCopy<astraCUDA::opAdd>(m_pData[0]->getData(), m_pData[1]->getDataConst(), dims);
 	}
 
+	return true;
 }
 
 //----------------------------------------------------------------------------------------

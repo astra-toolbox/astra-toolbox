@@ -163,7 +163,7 @@ bool CCglsAlgorithm::initialize(CProjector2D* _pProjector,
 
 //----------------------------------------------------------------------------------------
 // Iterate
-void CCglsAlgorithm::run(int _iNrIterations)
+bool CCglsAlgorithm::run(int _iNrIterations)
 {
 	// check initialized
 	ASTRA_ASSERT(m_bIsInitialized);
@@ -271,6 +271,7 @@ void CCglsAlgorithm::run(int _iNrIterations)
 		m_iIteration++;
 	}
 
+	return true;
 }
 //----------------------------------------------------------------------------------------
 

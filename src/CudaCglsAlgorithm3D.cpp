@@ -177,7 +177,7 @@ bool CCudaCglsAlgorithm3D::initialize(CProjector3D* _pProjector,
 
 //----------------------------------------------------------------------------------------
 // Iterate
-void CCudaCglsAlgorithm3D::run(int _iNrIterations)
+bool CCudaCglsAlgorithm3D::run(int _iNrIterations)
 {
 	// check initialized
 	ASTRA_ASSERT(m_bIsInitialized);
@@ -250,7 +250,7 @@ void CCudaCglsAlgorithm3D::run(int _iNrIterations)
 	                                 volgeom.getGridColCount());
 	ASTRA_ASSERT(ok);
 
-
+	return ok;
 }
 //----------------------------------------------------------------------------------------
 bool CCudaCglsAlgorithm3D::getResidualNorm(float32& _fNorm)

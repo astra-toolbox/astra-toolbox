@@ -168,7 +168,7 @@ void CCudaForwardProjectionAlgorithm::setGPUIndex(int _iGPUIndex)
 
 //----------------------------------------------------------------------------------------
 // Run
-void CCudaForwardProjectionAlgorithm::run(int)
+bool CCudaForwardProjectionAlgorithm::run(int)
 {
 	// check initialized
 	assert(m_bIsInitialized);
@@ -182,7 +182,7 @@ void CCudaForwardProjectionAlgorithm::run(int)
 	ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
 
 	if (!ok)
-		return;
+		return false;
 
 	astraCUDA::SParProjection* pParProjs = 0;
 	astraCUDA::SFanProjection* pFanProjs = 0;
@@ -190,7 +190,7 @@ void CCudaForwardProjectionAlgorithm::run(int)
 
 	ok = convertAstraGeometry(pVolGeom, pProjGeom, pParProjs, pFanProjs, fOutputScale);
 	if (!ok)
-		return;
+		return false;
 
 	if (pParProjs) {
 		assert(!pFanProjs);
@@ -220,6 +220,7 @@ void CCudaForwardProjectionAlgorithm::run(int)
 
 	ASTRA_ASSERT(ok);
 
+	return ok;
 }
 
 } // namespace astra

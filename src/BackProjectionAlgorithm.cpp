@@ -145,7 +145,7 @@ void CBackProjectionAlgorithm::_init()
 
 //----------------------------------------------------------------------------------------
 // Iterate
-void CBackProjectionAlgorithm::run(int _iNrIterations)
+bool CBackProjectionAlgorithm::run(int _iNrIterations)
 {
 	// check initialized
 	ASTRA_ASSERT(m_bIsInitialized);
@@ -164,6 +164,8 @@ void CBackProjectionAlgorithm::run(int _iNrIterations)
 	pBackProjector->project();
 
 	ASTRA_DELETE(pBackProjector);
+
+	return true;
 }
 //----------------------------------------------------------------------------------------
 

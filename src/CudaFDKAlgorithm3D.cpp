@@ -191,7 +191,7 @@ bool CCudaFDKAlgorithm3D::initialize(CProjector3D* _pProjector,
 
 //----------------------------------------------------------------------------------------
 // Iterate
-void CCudaFDKAlgorithm3D::run(int _iNrIterations)
+bool CCudaFDKAlgorithm3D::run(int _iNrIterations)
 {
 	// check initialized
 	ASTRA_ASSERT(m_bIsInitialized);
@@ -220,10 +220,7 @@ void CCudaFDKAlgorithm3D::run(int _iNrIterations)
 
 	CCompositeGeometryManager cgm;
 
-	cgm.doFDK(m_pProjector, pReconMem, pSinoMem, m_bShortScan, filter);
-
-
-
+	return cgm.doFDK(m_pProjector, pReconMem, pSinoMem, m_bShortScan, filter);
 }
 //----------------------------------------------------------------------------------------
 

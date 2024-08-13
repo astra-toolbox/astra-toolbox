@@ -211,7 +211,7 @@ void CArtAlgorithm::setRayOrder(int* _piProjectionOrder, int* _piDetectorOrder, 
 
 //----------------------------------------------------------------------------------------
 // Iterate
-void CArtAlgorithm::run(int _iNrIterations)
+bool CArtAlgorithm::run(int _iNrIterations)
 {
 	// check initialized
 	assert(m_bIsInitialized);
@@ -276,6 +276,8 @@ void CArtAlgorithm::run(int _iNrIterations)
 
 	// update statistics
 	m_pReconstruction->updateStatistics();
+
+	return true;
 }
 
 

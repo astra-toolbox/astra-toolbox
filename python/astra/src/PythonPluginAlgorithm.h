@@ -47,7 +47,7 @@ public:
     ~CPluginAlgorithm();
 
     bool initialize(const Config& _cfg);
-    void run(int _iNrIterations);
+    bool run(int _iNrIterations);
 
     // Return instance (including INCREF)
     PyObject *getInstance() const;

@@ -219,7 +219,7 @@ void CForwardProjectionAlgorithm::setSinogramMask(CFloat32ProjectionData2D* _pMa
 
 //----------------------------------------------------------------------------------------
 // Iterate
-void CForwardProjectionAlgorithm::run(int _iNrIterations)
+bool CForwardProjectionAlgorithm::run(int _iNrIterations)
 {
 	// check initialized
 	ASTRA_ASSERT(m_bIsInitialized);
@@ -231,7 +231,7 @@ void CForwardProjectionAlgorithm::run(int _iNrIterations)
 //	} else {
 		m_pForwardProjector->project();
 //	}
-
+	return true;
 }
 //----------------------------------------------------------------------------------------
 
