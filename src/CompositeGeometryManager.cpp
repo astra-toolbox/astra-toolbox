@@ -103,7 +103,6 @@ public:
 	virtual bool allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, astraCUDA3d::Mem3DZeroMode zero)=0;
 	virtual bool copyToGPUMemory(const astraCUDA3d::SSubDimensions3D &pos)=0;
 	virtual bool copyFromGPUMemory(const astraCUDA3d::SSubDimensions3D &pos)=0;
-	virtual bool freeGPUMemory()=0;
 	virtual ~CGPUMemory() { }
 };
 
@@ -113,9 +112,7 @@ public:
 	virtual bool allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, astraCUDA3d::Mem3DZeroMode zero);
 	virtual bool copyToGPUMemory(const astraCUDA3d::SSubDimensions3D &pos);
 	virtual bool copyFromGPUMemory(const astraCUDA3d::SSubDimensions3D &pos);
-	virtual bool freeGPUMemory();
-
-protected:
+private:
 	unsigned int x, y, z;
 };
 
@@ -128,6 +125,9 @@ public:
 		else
 			assert(false);
 	}
+	virtual ~CDefaultGPUMemory() {
+		freeGPUMemory();
+	}
 	virtual bool allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, astraCUDA3d::Mem3DZeroMode zero) {
 		hnd = astraCUDA3d::allocateGPUMemory(x, y, z, zero);
 		return (bool)hnd;
@@ -138,12 +138,11 @@ public:
 	virtual bool copyFromGPUMemory(const astraCUDA3d::SSubDimensions3D &pos) {
 		return astraCUDA3d::copyFromGPUMemory(ptr, hnd, pos);
 	}
-	virtual bool freeGPUMemory() {
-		return astraCUDA3d::freeGPUMemory(hnd);
-	}
-
-protected:
+private:
 	float *ptr;
+	void freeGPUMemory() {
+		astraCUDA3d::freeGPUMemory(hnd);
+	}
 };
 
 
@@ -202,9 +201,6 @@ bool CExistingGPUMemory::copyFromGPUMemory(const astraCUDA3d::SSubDimensions3D &
 	assert(pos.subnz == z);
 
 	return true;
-}
-bool CExistingGPUMemory::freeGPUMemory() {
-    return true;
 }
 
 
@@ -1417,15 +1413,26 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 	}
 
 	CGPUMemory *dstMem = createGPUMemoryHandler(output->pData);
+	// Use a unique_ptr to delete dstMem when we return (early)
+	std::unique_ptr<CGPUMemory> dstUniquePtr{dstMem};
 
 	bool ok = dstMem->allocateGPUMemory(outx, outy, outz, zero ? astraCUDA3d::INIT_ZERO : astraCUDA3d::INIT_NO);
 	// TODO: cleanup and return error code after any error
-	if (!ok) ASTRA_ERROR("Error allocating GPU memory");
+	//
+	// TODO: Make the memory handler a stack object and clean up afterwards?
+	//
+	if (!ok) {
+		ASTRA_ERROR("Error allocating GPU memory");
+		return false;
+	}
 
 	if (!zero) {
 		// instead of zeroing output memory, copy from host
 		ok = dstMem->copyToGPUMemory(dstdims);
-		if (!ok) ASTRA_ERROR("Error copying output data to GPU");
+		if (!ok) {
+			ASTRA_ERROR("Error copying output data to GPU");
+			return false;
+		}
 	}
 
 	for (CCompositeGeometryManager::TJobList::const_iterator i = L.begin(); i != L.end(); ++i) {
@@ -1446,16 +1453,23 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 		size_t inx, iny, inz;
 		j.pInput->getDims(inx, iny, inz);
 
-		CGPUMemory *srcMem;
-		srcMem = createGPUMemoryHandler(j.pInput->pData);
+		CGPUMemory *srcMem = createGPUMemoryHandler(j.pInput->pData);
+		// Use a unique_ptr to delete srcMem when we return (early)
+		std::unique_ptr<CGPUMemory> srcUniquePtr{srcMem};
 
 		astraCUDA3d::SSubDimensions3D srcdims = getPartSubDims(j.pInput.get());
 
 		ok = srcMem->allocateGPUMemory(inx, iny, inz, astraCUDA3d::INIT_NO);
-		if (!ok) ASTRA_ERROR("Error allocating GPU memory");
+		if (!ok) {
+			ASTRA_ERROR("Error allocating GPU memory");
+			return false;
+		}
 
 		ok = srcMem->copyToGPUMemory(srcdims);
-		if (!ok) ASTRA_ERROR("Error copying input data to GPU");
+		if (!ok) {
+			ASTRA_ERROR("Error copying input data to GPU");
+			return false;
+		}
 
 		switch (j.eType) {
 		case CCompositeGeometryManager::SJob::JOB_FP:
@@ -1466,7 +1480,10 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 			ASTRA_DEBUG("CCompositeGeometryManager::doJobs: doing FP");
 
 			ok = astraCUDA3d::FP(((CCompositeGeometryManager::CProjectionPart*)j.pOutput.get())->pGeom, dstMem->hnd, ((CCompositeGeometryManager::CVolumePart*)j.pInput.get())->pGeom, srcMem->hnd, detectorSuperSampling, projKernel);
-			if (!ok) ASTRA_ERROR("Error performing sub-FP");
+			if (!ok) {
+				ASTRA_ERROR("Error performing sub-FP");
+				return false;
+			}
 			ASTRA_DEBUG("CCompositeGeometryManager::doJobs: FP done");
 		}
 		break;
@@ -1478,7 +1495,10 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 			ASTRA_DEBUG("CCompositeGeometryManager::doJobs: doing BP");
 
 			ok = astraCUDA3d::BP(((CCompositeGeometryManager::CProjectionPart*)j.pInput.get())->pGeom, srcMem->hnd, ((CCompositeGeometryManager::CVolumePart*)j.pOutput.get())->pGeom, dstMem->hnd, voxelSuperSampling);
-			if (!ok) ASTRA_ERROR("Error performing sub-BP");
+			if (!ok) {
+				ASTRA_ERROR("Error performing sub-BP");
+				return false;
+			}
 			ASTRA_DEBUG("CCompositeGeometryManager::doJobs: BP done");
 		}
 		break;
@@ -1492,36 +1512,37 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 
 			if (j.FDKSettings.bShortScan && srcdims.subny != srcdims.ny) {
 				ASTRA_ERROR("CCompositeGeometryManager::doJobs: shortscan FDK unsupported for this data size currently");
-				ok = false;
+				return false;
 			} else if (srcdims.subx) {
 				ASTRA_ERROR("CCompositeGeometryManager::doJobs: data too large for FDK");
-				ok = false;
+				return false;
 			} else {
 				ASTRA_DEBUG("CCompositeGeometryManager::doJobs: doing FDK");
 
 				ok = astraCUDA3d::FDK(((CCompositeGeometryManager::CProjectionPart*)j.pInput.get())->pGeom, srcMem->hnd, ((CCompositeGeometryManager::CVolumePart*)j.pOutput.get())->pGeom, dstMem->hnd, j.FDKSettings.bShortScan, j.FDKSettings.pfFilter, fOutputScale );
-				if (!ok) ASTRA_ERROR("Error performing sub-FDK");
+				if (!ok) {
+					ASTRA_ERROR("Error performing sub-FDK");
+					return false;
+				}
 				ASTRA_DEBUG("CCompositeGeometryManager::doJobs: FDK done");
 			}
 		}
 		break;
 		default:
-			assert(false);
+			ASTRA_ERROR("Internal error: invalid CGM job type");
+			return false;
 		}
 
-		ok = srcMem->freeGPUMemory();
-		if (!ok) ASTRA_ERROR("Error freeing GPU memory");
-
-		delete srcMem;
+		// srcUniquePtr goes out of scope here, freeing srcMem
 	}
 
 	ok = dstMem->copyFromGPUMemory(dstdims);
-	if (!ok) ASTRA_ERROR("Error copying output data from GPU");
-	
-	ok = dstMem->freeGPUMemory();
-	if (!ok) ASTRA_ERROR("Error freeing GPU memory");
+	if (!ok) {
+	       ASTRA_ERROR("Error copying output data from GPU");
+	       return false;
+	}
 
-	delete dstMem;
+	// dstUniquePtr goes out of scope here, freeing dstMem
 
 	return true;
 }
