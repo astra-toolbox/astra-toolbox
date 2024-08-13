@@ -381,6 +381,14 @@ CCompositeGeometryManager::CVolumePart::CVolumePart(const CVolumePart& other)
 	pGeom = other.pGeom->clone();
 }
 
+CCompositeGeometryManager::CVolumePart::CVolumePart(CFloat32VolumeData3D *pVolData)
+{
+	eType = PART_VOL;
+	pData = pVolData;
+	pGeom = pVolData->getGeometry()->clone();
+}
+
+
 CCompositeGeometryManager::CVolumePart::~CVolumePart()
 {
 	delete pGeom;
@@ -419,6 +427,24 @@ bool CCompositeGeometryManager::CPart::canSplitAndReduce() const
 	return pData->getStorage()->isMemory();
 }
 
+
+static CCompositeGeometryManager::CVolumePart* createSubVolumePart(CCompositeGeometryManager::CVolumePart* base,
+                                                                   unsigned int offset_x,
+                                                                   unsigned int offset_y,
+                                                                   unsigned int offset_z,
+                                                                   CVolumeGeometry3D *pGeom)
+{
+	CCompositeGeometryManager::CVolumePart *sub = new CCompositeGeometryManager::CVolumePart();
+	sub->subX = base->subX + offset_x;
+	sub->subY = base->subY + offset_y;
+	sub->subZ = base->subZ + offset_z;
+
+	sub->pData = base->pData;
+
+	sub->pGeom = pGeom;
+
+	return sub;
+}
 
 
 static bool testVolumeRange(const std::pair<double, double>& fullRange,
@@ -532,25 +558,20 @@ CCompositeGeometryManager::CPart* CCompositeGeometryManager::CVolumePart::reduce
 
 	double pixz = pGeom->getPixelLengthZ();
 
-	CVolumePart *sub = new CVolumePart();
-	sub->subX = this->subX;
-	sub->subY = this->subY;
-	sub->subZ = this->subZ + top_slice;
-	sub->pData = pData;
-
-	if (top_slice == bottom_slice) {
-		sub->pGeom = 0;
-	} else {
-		sub->pGeom = new CVolumeGeometry3D(pGeom->getGridColCount(),
-		                                   pGeom->getGridRowCount(),
-		                                   bottom_slice - top_slice,
-		                                   pGeom->getWindowMinX(),
-		                                   pGeom->getWindowMinY(),
-		                                   pGeom->getWindowMinZ() + top_slice * pixz,
-		                                   pGeom->getWindowMaxX(),
-		                                   pGeom->getWindowMaxY(),
-		                                   pGeom->getWindowMinZ() + bottom_slice * pixz);
+	CVolumeGeometry3D *pSubGeom = 0;
+	if (top_slice != bottom_slice) {
+		pSubGeom = new CVolumeGeometry3D(pGeom->getGridColCount(),
+		                                 pGeom->getGridRowCount(),
+		                                 bottom_slice - top_slice,
+		                                 pGeom->getWindowMinX(),
+		                                 pGeom->getWindowMinY(),
+		                                 pGeom->getWindowMinZ() + top_slice * pixz,
+		                                 pGeom->getWindowMaxX(),
+		                                 pGeom->getWindowMaxY(),
+		                                 pGeom->getWindowMinZ() + bottom_slice * pixz);
 	}
+
+	CVolumePart *sub = createSubVolumePart(this, 0, 0, top_slice, pSubGeom);
 
 	ASTRA_DEBUG("Reduce volume from %d - %d to %d - %d ( %f - %f )", this->subZ, this->subZ +  pGeom->getGridSliceCount(), this->subZ + top_slice, this->subZ + bottom_slice, pGeom->getWindowMinZ() + top_slice * pixz, pGeom->getWindowMinZ() + bottom_slice * pixz);
 
@@ -622,17 +643,8 @@ void CCompositeGeometryManager::CVolumePart::splitX(CCompositeGeometryManager::T
 			if (endX > sliceCount) endX = sliceCount;
 			int size = endX - newsubX;
 
-			CVolumePart *sub = new CVolumePart();
-			sub->subX = this->subX + newsubX;
-			sub->subY = this->subY;
-			sub->subZ = this->subZ;
-
-			ASTRA_DEBUG("VolumePart split %d %d %d -> %p", sub->subX, sub->subY, sub->subZ, (void*)sub);
-
 			double shift = pGeom->getPixelLengthX() * newsubX;
-
-			sub->pData = pData;
-			sub->pGeom = new CVolumeGeometry3D(size,
+			CVolumeGeometry3D *pSubGeom = new CVolumeGeometry3D(size,
 			                                   pGeom->getGridRowCount(),
 			                                   pGeom->getGridSliceCount(),
 			                                   pGeom->getWindowMinX() + shift,
@@ -641,6 +653,8 @@ void CCompositeGeometryManager::CVolumePart::splitX(CCompositeGeometryManager::T
 			                                   pGeom->getWindowMinX() + shift + size * pGeom->getPixelLengthX(),
 			                                   pGeom->getWindowMaxY(),
 			                                   pGeom->getWindowMaxZ());
+			CVolumePart *sub = createSubVolumePart(this, newsubX, 0, 0, pSubGeom);
+			ASTRA_DEBUG("VolumePart split %d %d %d -> %p", sub->subX, sub->subY, sub->subZ, (void*)sub);
 
 			out.push_back(std::shared_ptr<CPart>(sub));
 		}
@@ -670,17 +684,8 @@ void CCompositeGeometryManager::CVolumePart::splitY(CCompositeGeometryManager::T
 			if (endY > sliceCount) endY = sliceCount;
 			int size = endY - newsubY;
 
-			CVolumePart *sub = new CVolumePart();
-			sub->subX = this->subX;
-			sub->subY = this->subY + newsubY;
-			sub->subZ = this->subZ;
-
-			ASTRA_DEBUG("VolumePart split %d %d %d -> %p", sub->subX, sub->subY, sub->subZ, (void*)sub);
-
 			double shift = pGeom->getPixelLengthY() * newsubY;
-
-			sub->pData = pData;
-			sub->pGeom = new CVolumeGeometry3D(pGeom->getGridColCount(),
+			CVolumeGeometry3D *pSubGeom = new CVolumeGeometry3D(pGeom->getGridColCount(),
 			                                   size,
 			                                   pGeom->getGridSliceCount(),
 			                                   pGeom->getWindowMinX(),
@@ -689,6 +694,8 @@ void CCompositeGeometryManager::CVolumePart::splitY(CCompositeGeometryManager::T
 			                                   pGeom->getWindowMaxX(),
 			                                   pGeom->getWindowMinY() + shift + size * pGeom->getPixelLengthY(),
 			                                   pGeom->getWindowMaxZ());
+			CVolumePart *sub = createSubVolumePart(this, 0, newsubY, 0, pSubGeom);
+			ASTRA_DEBUG("VolumePart split %d %d %d -> %p", sub->subX, sub->subY, sub->subZ, (void*)sub);
 
 			out.push_back(std::shared_ptr<CPart>(sub));
 		}
@@ -718,17 +725,9 @@ void CCompositeGeometryManager::CVolumePart::splitZ(CCompositeGeometryManager::T
 			if (endZ > sliceCount) endZ = sliceCount;
 			int size = endZ - newsubZ;
 
-			CVolumePart *sub = new CVolumePart();
-			sub->subX = this->subX;
-			sub->subY = this->subY;
-			sub->subZ = this->subZ + newsubZ;
-
-			ASTRA_DEBUG("VolumePart split %d %d %d -> %p", sub->subX, sub->subY, sub->subZ, (void*)sub);
 
 			double shift = pGeom->getPixelLengthZ() * newsubZ;
-
-			sub->pData = pData;
-			sub->pGeom = new CVolumeGeometry3D(pGeom->getGridColCount(),
+			CVolumeGeometry3D *pSubGeom = new CVolumeGeometry3D(pGeom->getGridColCount(),
 			                                   pGeom->getGridRowCount(),
 			                                   size,
 			                                   pGeom->getWindowMinX(),
@@ -737,6 +736,8 @@ void CCompositeGeometryManager::CVolumePart::splitZ(CCompositeGeometryManager::T
 			                                   pGeom->getWindowMaxX(),
 			                                   pGeom->getWindowMaxY(),
 			                                   pGeom->getWindowMinZ() + shift + size * pGeom->getPixelLengthZ());
+			CVolumePart *sub = createSubVolumePart(this, 0, 0, newsubZ, pSubGeom);
+			ASTRA_DEBUG("VolumePart split %d %d %d -> %p", sub->subX, sub->subY, sub->subZ, (void*)sub);
 
 			out.push_back(std::shared_ptr<CPart>(sub));
 		}
@@ -756,6 +757,13 @@ CCompositeGeometryManager::CProjectionPart::CProjectionPart(const CProjectionPar
 	pGeom = other.pGeom->clone();
 }
 
+CCompositeGeometryManager::CProjectionPart::CProjectionPart(CFloat32ProjectionData3D *pProjData)
+{
+	eType = PART_PROJ;
+	pData = pProjData;
+	pGeom = pProjData->getGeometry()->clone();
+}
+
 CCompositeGeometryManager::CProjectionPart::~CProjectionPart()
 {
 	delete pGeom;
@@ -773,6 +781,23 @@ void CCompositeGeometryManager::CProjectionPart::getDims(size_t &x, size_t &y, s
 	z = pGeom->getDetectorRowCount();
 }
 
+static CCompositeGeometryManager::CProjectionPart* createSubProjectionPart(CCompositeGeometryManager::CProjectionPart* base,
+                                                                           unsigned int offset_u,
+                                                                           unsigned int offset_th,
+                                                                           unsigned int offset_v,
+                                                                           CProjectionGeometry3D *pGeom)
+{
+	CCompositeGeometryManager::CProjectionPart *sub = new CCompositeGeometryManager::CProjectionPart();
+	sub->subX = base->subX + offset_u;
+	sub->subY = base->subY + offset_th;
+	sub->subZ = base->subZ + offset_v;
+
+	sub->pData = base->pData;
+
+	sub->pGeom = pGeom;
+
+	return sub;
+}
 
 
 CCompositeGeometryManager::CPart* CCompositeGeometryManager::CProjectionPart::reduce(const CPart *_other)
@@ -796,18 +821,10 @@ CCompositeGeometryManager::CPart* CCompositeGeometryManager::CProjectionPart::re
 		_vmin = _vmax = 0;
 	}
 
-	CProjectionPart *sub = new CProjectionPart();
-	sub->subX = this->subX;
-	sub->subY = this->subY;
-	sub->subZ = this->subZ + _vmin;
-
-	sub->pData = pData;
-
-	if (_vmin == _vmax) {
-		sub->pGeom = 0;
-	} else {
-		sub->pGeom = getSubProjectionGeometry_V(pGeom, _vmin, _vmax - _vmin);
-	}
+	CProjectionGeometry3D *pSubGeom = 0;
+	if (_vmin != _vmax)
+		pSubGeom = getSubProjectionGeometry_V(pGeom, _vmin, _vmax - _vmin);
+	CProjectionPart *sub = createSubProjectionPart(this, 0, 0, _vmin, pSubGeom);
 
 	ASTRA_DEBUG("Reduce projection from %d - %d to %d - %d", this->subZ, this->subZ + pGeom->getDetectorRowCount(), this->subZ + _vmin, this->subZ + _vmax);
 
@@ -836,16 +853,9 @@ void CCompositeGeometryManager::CProjectionPart::splitX(CCompositeGeometryManage
 			if (endX > sliceCount) endX = sliceCount;
 			int size = endX - newsubX;
 
-			CProjectionPart *sub = new CProjectionPart();
-			sub->subX = this->subX + newsubX;
-			sub->subY = this->subY;
-			sub->subZ = this->subZ;
-
+			CProjectionPart *sub = createSubProjectionPart(this, newsubX, 0, 0,
+			                                               getSubProjectionGeometry_U(pGeom, newsubX, size));
 			ASTRA_DEBUG("ProjectionPart split %d %d %d -> %p", sub->subX, sub->subY, sub->subZ, (void*)sub);
-
-			sub->pData = pData;
-
-			sub->pGeom = getSubProjectionGeometry_U(pGeom, newsubX, size);
 
 			out.push_back(std::shared_ptr<CPart>(sub));
 		}
@@ -869,16 +879,10 @@ void CCompositeGeometryManager::CProjectionPart::splitY(CCompositeGeometryManage
 			if (endTh > angleCount) endTh = angleCount;
 			int size = endTh - th;
 
-			CProjectionPart *sub = new CProjectionPart();
-			sub->subX = this->subX;
-			sub->subY = this->subY + th;
-			sub->subZ = this->subZ;
+			CProjectionPart *sub = createSubProjectionPart(this, 0, th, 0,
+			                                               getSubProjectionGeometry_Angle(pGeom, th, size));
 
 			ASTRA_DEBUG("ProjectionPart split %d %d %d -> %p", sub->subX, sub->subY, sub->subZ, (void*)sub);
-
-			sub->pData = pData;
-
-			sub->pGeom = getSubProjectionGeometry_Angle(pGeom, th, size);
 
 			out.push_back(std::shared_ptr<CPart>(sub));
 		}
@@ -908,16 +912,10 @@ void CCompositeGeometryManager::CProjectionPart::splitZ(CCompositeGeometryManage
 			if (endZ > sliceCount) endZ = sliceCount;
 			int size = endZ - newsubZ;
 
-			CProjectionPart *sub = new CProjectionPart();
-			sub->subX = this->subX;
-			sub->subY = this->subY;
-			sub->subZ = this->subZ + newsubZ;
+			CProjectionPart *sub = createSubProjectionPart(this, 0, 0, newsubZ,
+			                                               getSubProjectionGeometry_V(pGeom, newsubZ, size));
 
 			ASTRA_DEBUG("ProjectionPart split %d %d %d -> %p", sub->subX, sub->subY, sub->subZ, (void*)sub);
-
-			sub->pData = pData;
-
-			sub->pGeom = getSubProjectionGeometry_V(pGeom, newsubZ, size);
 
 			out.push_back(std::shared_ptr<CPart>(sub));
 		}
@@ -940,20 +938,10 @@ CCompositeGeometryManager::SJob CCompositeGeometryManager::createJobFP(CProjecto
 	ASTRA_DEBUG("CCompositeGeometryManager::createJobFP");
 	// Create single job for FP
 
-	CVolumePart *input = new CVolumePart();
-	input->pData = pVolData;
-	input->subX = 0;
-	input->subY = 0;
-	input->subZ = 0;
-	input->pGeom = pVolData->getGeometry()->clone();
+	CVolumePart *input = new CVolumePart{pVolData};
 	ASTRA_DEBUG("Main FP VolumePart -> %p", (void*)input);
 
-	CProjectionPart *output = new CProjectionPart();
-	output->pData = pProjData;
-	output->subX = 0;
-	output->subY = 0;
-	output->subZ = 0;
-	output->pGeom = pProjData->getGeometry()->clone();
+	CProjectionPart *output = new CProjectionPart{pProjData};
 	ASTRA_DEBUG("Main FP ProjectionPart -> %p", (void*)output);
 
 	SJob FP;
@@ -974,19 +962,9 @@ CCompositeGeometryManager::SJob CCompositeGeometryManager::createJobBP(CProjecto
 	ASTRA_DEBUG("CCompositeGeometryManager::createJobBP");
 	// Create single job for BP
 
-	CProjectionPart *input = new CProjectionPart();
-	input->pData = pProjData;
-	input->subX = 0;
-	input->subY = 0;
-	input->subZ = 0;
-	input->pGeom = pProjData->getGeometry()->clone();
+	CProjectionPart *input = new CProjectionPart{pProjData};
 
-	CVolumePart *output = new CVolumePart();
-	output->pData = pVolData;
-	output->subX = 0;
-	output->subY = 0;
-	output->subZ = 0;
-	output->pGeom = pVolData->getGeometry()->clone();
+	CVolumePart *output = new CVolumePart{pVolData};
 
 	SJob BP;
 	BP.pInput = std::shared_ptr<CPart>(input);
@@ -1007,7 +985,7 @@ bool CCompositeGeometryManager::doFP(CProjector3D *pProjector, CFloat32VolumeDat
 	return doJobs(L);
 }
 
-		bool CCompositeGeometryManager::doBP(CProjector3D *pProjector, CFloat32VolumeData3D *pVolData,
+bool CCompositeGeometryManager::doBP(CProjector3D *pProjector, CFloat32VolumeData3D *pVolData,
                                      CFloat32ProjectionData3D *pProjData, SJob::EMode eMode)
 {
 	TJobList L;
@@ -1046,12 +1024,7 @@ bool CCompositeGeometryManager::doFP(CProjector3D *pProjector, const std::vector
 	std::vector<std::shared_ptr<CPart> > inputs;
 
 	for (i = volData.begin(); i != volData.end(); ++i) {
-		CVolumePart *input = new CVolumePart();
-		input->pData = *i;
-		input->subX = 0;
-		input->subY = 0;
-		input->subZ = 0;
-		input->pGeom = (*i)->getGeometry()->clone();
+		CVolumePart *input = new CVolumePart{*i};
 
 		inputs.push_back(std::shared_ptr<CPart>(input));
 	}
@@ -1060,12 +1033,7 @@ bool CCompositeGeometryManager::doFP(CProjector3D *pProjector, const std::vector
 	std::vector<std::shared_ptr<CPart> > outputs;
 
 	for (j = projData.begin(); j != projData.end(); ++j) {
-		CProjectionPart *output = new CProjectionPart();
-		output->pData = *j;
-		output->subX = 0;
-		output->subY = 0;
-		output->subZ = 0;
-		output->pGeom = (*j)->getGeometry()->clone();
+		CProjectionPart *output = new CProjectionPart{*j};
 
 		outputs.push_back(std::shared_ptr<CPart>(output));
 	}
@@ -1096,17 +1064,11 @@ bool CCompositeGeometryManager::doBP(CProjector3D *pProjector, const std::vector
 {
 	ASTRA_DEBUG("CCompositeGeometryManager::doBP, multi-volume");
 
-
 	std::vector<CFloat32VolumeData3D *>::const_iterator i;
 	std::vector<std::shared_ptr<CPart> > outputs;
 
 	for (i = volData.begin(); i != volData.end(); ++i) {
-		CVolumePart *output = new CVolumePart();
-		output->pData = *i;
-		output->subX = 0;
-		output->subY = 0;
-		output->subZ = 0;
-		output->pGeom = (*i)->getGeometry()->clone();
+		CVolumePart *output = new CVolumePart{*i};
 
 		outputs.push_back(std::shared_ptr<CPart>(output));
 	}
@@ -1115,12 +1077,7 @@ bool CCompositeGeometryManager::doBP(CProjector3D *pProjector, const std::vector
 	std::vector<std::shared_ptr<CPart> > inputs;
 
 	for (j = projData.begin(); j != projData.end(); ++j) {
-		CProjectionPart *input = new CProjectionPart();
-		input->pData = *j;
-		input->subX = 0;
-		input->subY = 0;
-		input->subZ = 0;
-		input->pGeom = (*j)->getGeometry()->clone();
+		CProjectionPart *input = new CProjectionPart{*j};
 
 		inputs.push_back(std::shared_ptr<CPart>(input));
 	}

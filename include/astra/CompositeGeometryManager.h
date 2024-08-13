@@ -69,12 +69,12 @@ public:
 	typedef std::list<std::shared_ptr<CPart> > TPartList;
 	class CPart {
 	public:
-		CPart() { }
+		CPart() : eType(PART_INVALID), pData(0), subX(0), subY(0), subZ(0) { }
 		CPart(const CPart& other);
 		virtual ~CPart() { }
 
 		enum {
-			PART_VOL, PART_PROJ
+			PART_INVALID, PART_VOL, PART_PROJ
 		} eType;
 
 		CData3D* pData;
@@ -99,6 +99,8 @@ public:
 	public:
 		CVolumePart() { eType = PART_VOL; }
 		CVolumePart(const CVolumePart& other);
+		CVolumePart(CFloat32VolumeData3D *pVolData);
+
 		virtual ~CVolumePart();
 
 		CVolumeGeometry3D* pGeom;
@@ -115,6 +117,7 @@ public:
 	public:
 		CProjectionPart() { eType = PART_PROJ; }
 		CProjectionPart(const CProjectionPart& other);
+		CProjectionPart(CFloat32ProjectionData3D *pProjData);
 		virtual ~CProjectionPart();
 
 		CProjectionGeometry3D* pGeom;
