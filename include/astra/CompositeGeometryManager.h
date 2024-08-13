@@ -84,9 +84,6 @@ public:
 
 		bool uploadToGPU();
 		bool downloadFromGPU(/*mode?*/);
-		virtual void splitX(TPartList& out, size_t maxSize, size_t maxDim, int div) = 0;
-		virtual void splitY(TPartList& out, size_t maxSize, size_t maxDim, int div) = 0;
-		virtual void splitZ(TPartList& out, size_t maxSize, size_t maxDim, int div) = 0;
 		virtual CPart* reduce(const CPart *other) = 0;
 		virtual void getDims(size_t &x, size_t &y, size_t &z) const = 0;
 		size_t getSize() const;
@@ -105,9 +102,6 @@ public:
 
 		CVolumeGeometry3D* pGeom;
 
-		virtual void splitX(TPartList& out, size_t maxSize, size_t maxDim, int div);
-		virtual void splitY(TPartList& out, size_t maxSize, size_t maxDim, int div);
-		virtual void splitZ(TPartList& out, size_t maxSize, size_t maxDim, int div);
 		virtual CPart* reduce(const CPart *other);
 		virtual void getDims(size_t &x, size_t &y, size_t &z) const;
 
@@ -122,9 +116,6 @@ public:
 
 		CProjectionGeometry3D* pGeom;
 
-		virtual void splitX(TPartList& out, size_t maxSize, size_t maxDim, int div);
-		virtual void splitY(TPartList& out, size_t maxSize, size_t maxDim, int div);
-		virtual void splitZ(TPartList& out, size_t maxSize, size_t maxDim, int div);
 		virtual CPart* reduce(const CPart *other);
 		virtual void getDims(size_t &x, size_t &y, size_t &z) const;
 

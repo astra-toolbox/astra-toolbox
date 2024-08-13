@@ -234,6 +234,16 @@ static astraCUDA3d::SSubDimensions3D getPartSubDims(const CCompositeGeometryMana
 	return d;
 }
 
+static void splitPart(int n,
+                      std::shared_ptr<CCompositeGeometryManager::CPart> && base,
+                      CCompositeGeometryManager::TPartList& out,
+                      size_t maxSize, size_t maxDim, int div);
+static void splitPart(int n,
+                      const CCompositeGeometryManager::CPart* base,
+                      CCompositeGeometryManager::TPartList& out,
+                      size_t maxSize, size_t maxDim, int div);
+
+
 bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div, TJobSet &split)
 {
 	int maxBlockDim = astraCUDA3d::maxBlockDimension();
@@ -253,17 +263,17 @@ bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div
 		//    c. create jobs for new (input,output) subparts
 
 		TPartList splitOutput;
-		pOutput->splitZ(splitOutput, maxSize/3, UINT_MAX, div);
+		splitPart(2, pOutput, splitOutput, maxSize/3, UINT_MAX, div);
 #if 0
 		TPartList splitOutput2;
 		for (TPartList::iterator i_out = splitOutput.begin(); i_out != splitOutput.end(); ++i_out) {
 			std::shared_ptr<CPart> outputPart = *i_out;
-			outputPart.get()->splitX(splitOutput2, UINT_MAX, UINT_MAX, 1);
+			outputPart.get()->split(0, splitOutput2, UINT_MAX, UINT_MAX, 1);
 		}
 		splitOutput.clear();
 		for (TPartList::iterator i_out = splitOutput2.begin(); i_out != splitOutput2.end(); ++i_out) {
 			std::shared_ptr<CPart> outputPart = *i_out;
-					outputPart.get()->splitY(splitOutput, UINT_MAX, UINT_MAX, 1);
+					outputPart.get()->split(1, splitOutput, UINT_MAX, UINT_MAX, 1);
 		}
 		splitOutput2.clear();
 #endif
@@ -295,15 +305,15 @@ bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div
 				size_t remainingSize = ( maxSize - outputPart->getSize() ) / 2;
 
 				TPartList splitInput;
-				input->splitZ(splitInput, remainingSize, maxBlockDim, 1);
+				splitPart(2, input, splitInput, remainingSize, maxBlockDim, 1);
 				delete input;
 				TPartList splitInput2;
 				for (std::shared_ptr<CPart> &inputPart : splitInput)
-					inputPart.get()->splitX(splitInput2, 1024ULL*1024*1024*1024, maxBlockDim, 1);
+					splitPart(0, std::move(inputPart), splitInput2, 1024ULL*1024*1024*1024, maxBlockDim, 1);
 
 				splitInput.clear();
 				for (std::shared_ptr<CPart> &inputPart : splitInput2)
-					inputPart.get()->splitY(splitInput, 1024ULL*1024*1024*1024, maxBlockDim, 1);
+					splitPart(1, std::move(inputPart), splitInput, 1024ULL*1024*1024*1024, maxBlockDim, 1);
 
 				splitInput2.clear();
 
@@ -422,7 +432,7 @@ bool CCompositeGeometryManager::CPart::canSplitAndReduce() const
 }
 
 
-static CCompositeGeometryManager::CVolumePart* createSubVolumePart(CCompositeGeometryManager::CVolumePart* base,
+static CCompositeGeometryManager::CVolumePart* createSubVolumePart(const CCompositeGeometryManager::CVolumePart* base,
                                                                    unsigned int offset_x,
                                                                    unsigned int offset_y,
                                                                    unsigned int offset_z,
@@ -616,129 +626,75 @@ static size_t computeLinearSplit(size_t maxBlock, int div, size_t sliceCount)
 // - each no bigger than maxSize
 // - number of sub-parts is divisible by div
 // - maybe all approximately the same size?
-void CCompositeGeometryManager::CVolumePart::splitX(CCompositeGeometryManager::TPartList& out, size_t maxSize, size_t maxDim, int div)
+
+static void splitVolumePart(int n,
+                            const CCompositeGeometryManager::CPart *base,
+                            CCompositeGeometryManager::TPartList& out,
+                            size_t maxSize, size_t maxDim, int div)
 {
-	if (canSplitAndReduce()) {
-		size_t sliceSize = ((size_t) pGeom->getGridSliceCount()) * pGeom->getGridRowCount();
-		int sliceCount = pGeom->getGridColCount();
-		size_t m = std::min(maxSize / sliceSize, maxDim);
-		size_t blockSize = computeLinearSplit(m, div, sliceCount);
+	assert(base->canSplitAndReduce());
+	assert(n >= 0 && n < 3);
 
-		int rem = blockSize - (sliceCount % blockSize);
-		if ((size_t)rem == blockSize)
-			rem = 0;
+	const CCompositeGeometryManager::CVolumePart *pPart;
+	pPart = dynamic_cast<const CCompositeGeometryManager::CVolumePart*>(base);
+	assert(pPart);
 
-		ASTRA_DEBUG("From %d to %d step %zu", -(rem / 2), sliceCount, blockSize);
+	const CVolumeGeometry3D *pGeom = pPart->pGeom;
 
-		for (int x = -(rem / 2); x < sliceCount; x += blockSize) {
-			int newsubX = x;
-			if (newsubX < 0) newsubX = 0;
-			int endX = x + blockSize;
-			if (endX > sliceCount) endX = sliceCount;
-			int size = endX - newsubX;
+	size_t dims[3];
+	pPart->getDims(dims[0], dims[1], dims[2]);
+	size_t sliceSize = 1;
+	for (int i = 0; i < 3; ++i)
+		if (i != n)
+			sliceSize *= dims[i];
+	int sliceCount = dims[n];
 
-			double shift = pGeom->getPixelLengthX() * newsubX;
-			CVolumeGeometry3D *pSubGeom = new CVolumeGeometry3D(size,
-			                                   pGeom->getGridRowCount(),
-			                                   pGeom->getGridSliceCount(),
-			                                   pGeom->getWindowMinX() + shift,
-			                                   pGeom->getWindowMinY(),
-			                                   pGeom->getWindowMinZ(),
-			                                   pGeom->getWindowMinX() + shift + size * pGeom->getPixelLengthX(),
-			                                   pGeom->getWindowMaxY(),
-			                                   pGeom->getWindowMaxZ());
-			CVolumePart *sub = createSubVolumePart(this, newsubX, 0, 0, pSubGeom);
-			ASTRA_DEBUG("VolumePart split %d %d %d -> %p", sub->subX, sub->subY, sub->subZ, (void*)sub);
+	size_t m = std::min(maxSize / sliceSize, maxDim);
+	size_t blockSize = computeLinearSplit(m, div, sliceCount);
 
-			out.push_back(std::shared_ptr<CPart>(sub));
-		}
-	} else {
-		out.push_back(std::shared_ptr<CPart>(clone()));
+	int rem = blockSize - (sliceCount % blockSize);
+	if ((size_t)rem == blockSize)
+		rem = 0;
+
+	ASTRA_DEBUG("From %d to %d step %zu", -(rem / 2), sliceCount, blockSize);
+
+	for (int x = -(rem / 2); x < sliceCount; x += blockSize) {
+		int newsubX = x;
+		if (newsubX < 0) newsubX = 0;
+		int endX = x + blockSize;
+		if (endX > sliceCount) endX = sliceCount;
+		int size = endX - newsubX;
+
+		int offsets[3] = { 0, 0, 0 };
+		offsets[n] = newsubX;
+		size_t sizes[3] = { dims[0], dims[1], dims[2] };
+		sizes[n] = size;
+
+		double shifts[3] = { 0., 0., 0. };
+		if (n == 0)
+			shifts[0] = pGeom->getPixelLengthX() * newsubX;
+		else if (n == 1)
+			shifts[1] = pGeom->getPixelLengthY() * newsubX;
+		else if (n == 2)
+			shifts[2] = pGeom->getPixelLengthZ() * newsubX;
+
+		CVolumeGeometry3D *pSubGeom = new CVolumeGeometry3D(sizes[0],
+		                                                    sizes[1],
+		                                                    sizes[2],
+		                                                    pGeom->getWindowMinX() + shifts[0],
+		                                                    pGeom->getWindowMinY() + shifts[1],
+		                                                    pGeom->getWindowMinZ() + shifts[2],
+		                                                    pGeom->getWindowMinX() + shifts[0] + sizes[0] * pGeom->getPixelLengthX(),
+		                                                    pGeom->getWindowMinY() + shifts[1] + sizes[1] * pGeom->getPixelLengthY(),
+		                                                    pGeom->getWindowMinZ() + shifts[2] + sizes[2] * pGeom->getPixelLengthZ()
+		                                                   );
+		CCompositeGeometryManager::CVolumePart *sub = createSubVolumePart(pPart, offsets[0], offsets[1], offsets[2], pSubGeom);
+		ASTRA_DEBUG("VolumePart split %d %d %d -> %p", sub->subX, sub->subY, sub->subZ, (void*)sub);
+
+		out.push_back(std::shared_ptr<CCompositeGeometryManager::CPart>(sub));
 	}
 }
 
-void CCompositeGeometryManager::CVolumePart::splitY(CCompositeGeometryManager::TPartList& out, size_t maxSize, size_t maxDim, int div)
-{
-	if (canSplitAndReduce()) {
-		size_t sliceSize = ((size_t) pGeom->getGridColCount()) * pGeom->getGridSliceCount();
-		int sliceCount = pGeom->getGridRowCount();
-		size_t m = std::min(maxSize / sliceSize, maxDim);
-		size_t blockSize = computeLinearSplit(m, div, sliceCount);
-
-		int rem = blockSize - (sliceCount % blockSize);
-		if ((size_t)rem == blockSize)
-			rem = 0;
-
-		ASTRA_DEBUG("From %d to %d step %zu", -(rem / 2), sliceCount, blockSize);
-
-		for (int y = -(rem / 2); y < sliceCount; y += blockSize) {
-			int newsubY = y;
-			if (newsubY < 0) newsubY = 0;
-			int endY = y + blockSize;
-			if (endY > sliceCount) endY = sliceCount;
-			int size = endY - newsubY;
-
-			double shift = pGeom->getPixelLengthY() * newsubY;
-			CVolumeGeometry3D *pSubGeom = new CVolumeGeometry3D(pGeom->getGridColCount(),
-			                                   size,
-			                                   pGeom->getGridSliceCount(),
-			                                   pGeom->getWindowMinX(),
-			                                   pGeom->getWindowMinY() + shift,
-			                                   pGeom->getWindowMinZ(),
-			                                   pGeom->getWindowMaxX(),
-			                                   pGeom->getWindowMinY() + shift + size * pGeom->getPixelLengthY(),
-			                                   pGeom->getWindowMaxZ());
-			CVolumePart *sub = createSubVolumePart(this, 0, newsubY, 0, pSubGeom);
-			ASTRA_DEBUG("VolumePart split %d %d %d -> %p", sub->subX, sub->subY, sub->subZ, (void*)sub);
-
-			out.push_back(std::shared_ptr<CPart>(sub));
-		}
-	} else {
-		out.push_back(std::shared_ptr<CPart>(clone()));
-	}
-}
-
-void CCompositeGeometryManager::CVolumePart::splitZ(CCompositeGeometryManager::TPartList& out, size_t maxSize, size_t maxDim, int div)
-{
-	if (canSplitAndReduce()) {
-		size_t sliceSize = ((size_t) pGeom->getGridColCount()) * pGeom->getGridRowCount();
-		int sliceCount = pGeom->getGridSliceCount();
-		size_t m = std::min(maxSize / sliceSize, maxDim);
-		size_t blockSize = computeLinearSplit(m, div, sliceCount);
-
-		int rem = blockSize - (sliceCount % blockSize);
-		if ((size_t)rem == blockSize)
-			rem = 0;
-
-		ASTRA_DEBUG("From %d to %d step %zu", -(rem / 2), sliceCount, blockSize);
-
-		for (int z = -(rem / 2); z < sliceCount; z += blockSize) {
-			int newsubZ = z;
-			if (newsubZ < 0) newsubZ = 0;
-			int endZ = z + blockSize;
-			if (endZ > sliceCount) endZ = sliceCount;
-			int size = endZ - newsubZ;
-
-
-			double shift = pGeom->getPixelLengthZ() * newsubZ;
-			CVolumeGeometry3D *pSubGeom = new CVolumeGeometry3D(pGeom->getGridColCount(),
-			                                   pGeom->getGridRowCount(),
-			                                   size,
-			                                   pGeom->getWindowMinX(),
-			                                   pGeom->getWindowMinY(),
-			                                   pGeom->getWindowMinZ() + shift,
-			                                   pGeom->getWindowMaxX(),
-			                                   pGeom->getWindowMaxY(),
-			                                   pGeom->getWindowMinZ() + shift + size * pGeom->getPixelLengthZ());
-			CVolumePart *sub = createSubVolumePart(this, 0, 0, newsubZ, pSubGeom);
-			ASTRA_DEBUG("VolumePart split %d %d %d -> %p", sub->subX, sub->subY, sub->subZ, (void*)sub);
-
-			out.push_back(std::shared_ptr<CPart>(sub));
-		}
-	} else {
-		out.push_back(std::shared_ptr<CPart>(clone()));
-	}
-}
 
 CCompositeGeometryManager::CVolumePart* CCompositeGeometryManager::CVolumePart::clone() const
 {
@@ -775,7 +731,7 @@ void CCompositeGeometryManager::CProjectionPart::getDims(size_t &x, size_t &y, s
 	z = pGeom->getDetectorRowCount();
 }
 
-static CCompositeGeometryManager::CProjectionPart* createSubProjectionPart(CCompositeGeometryManager::CProjectionPart* base,
+static CCompositeGeometryManager::CProjectionPart* createSubProjectionPart(const CCompositeGeometryManager::CProjectionPart* base,
                                                                            unsigned int offset_u,
                                                                            unsigned int offset_th,
                                                                            unsigned int offset_v,
@@ -825,103 +781,112 @@ CCompositeGeometryManager::CPart* CCompositeGeometryManager::CProjectionPart::re
 	return sub;
 }
 
-
-void CCompositeGeometryManager::CProjectionPart::splitX(CCompositeGeometryManager::TPartList &out, size_t maxSize, size_t maxDim, int div)
+static void splitProjectionPart(int n,
+                                const CCompositeGeometryManager::CPart *base,
+                                CCompositeGeometryManager::TPartList &out,
+                                size_t maxSize, size_t maxDim, int div)
 {
-	if (canSplitAndReduce()) {
-		size_t sliceSize = ((size_t) pGeom->getDetectorRowCount()) * pGeom->getProjectionCount();
-		int sliceCount = pGeom->getDetectorColCount();
-		size_t m = std::min(maxSize / sliceSize, maxDim);
-		size_t blockSize = computeLinearSplit(m, div, sliceCount);
+	assert(base->canSplitAndReduce());
+	assert(n >= 0 && n < 3);
 
-		int rem = blockSize - (sliceCount % blockSize);
-		if ((size_t)rem == blockSize)
-			rem = 0;
+	const CCompositeGeometryManager::CProjectionPart *pPart;
+	pPart = dynamic_cast<const CCompositeGeometryManager::CProjectionPart*>(base);
+	assert(pPart);
 
-		ASTRA_DEBUG("From %d to %d step %zu", -(rem / 2), sliceCount, blockSize);
+	const CProjectionGeometry3D *pGeom = pPart->pGeom;
 
-		for (int x = -(rem / 2); x < sliceCount; x += blockSize) {
-			int newsubX = x;
-			if (newsubX < 0) newsubX = 0;
-			int endX = x + blockSize;
-			if (endX > sliceCount) endX = sliceCount;
-			int size = endX - newsubX;
+	size_t dims[3];
+	pPart->getDims(dims[0], dims[1], dims[2]);
+	size_t sliceSize = 1;
+	for (int i = 0; i < 3; ++i)
+		if (i != n)
+			sliceSize *= dims[i];
+	int sliceCount = dims[n];
+	size_t m = std::min(maxSize / sliceSize, maxDim);
+	size_t blockSize = computeLinearSplit(m, div, sliceCount);
 
-			CProjectionPart *sub = createSubProjectionPart(this, newsubX, 0, 0,
-			                                               getSubProjectionGeometry_U(pGeom, newsubX, size));
-			ASTRA_DEBUG("ProjectionPart split %d %d %d -> %p", sub->subX, sub->subY, sub->subZ, (void*)sub);
+	int rem = blockSize - (sliceCount % blockSize);
+	if ((size_t)rem == blockSize)
+		rem = 0;
 
-			out.push_back(std::shared_ptr<CPart>(sub));
-		}
-	} else {
-		out.push_back(std::shared_ptr<CPart>(clone()));
+	// When splitting angles, just start at 0
+	if (n == 1)
+		rem = 0;
+
+	ASTRA_DEBUG("From %d to %d step %zu", -(rem / 2), sliceCount, blockSize);
+
+
+	for (int x = -(rem / 2); x < sliceCount; x += blockSize) {
+		int newsubX = x;
+		if (newsubX < 0) newsubX = 0;
+		int endX = x + blockSize;
+		if (endX > sliceCount) endX = sliceCount;
+		int size = endX - newsubX;
+
+		int offsets[3] = { 0, 0, 0 };
+		offsets[n] = newsubX;
+
+		CProjectionGeometry3D *pSubGeom = 0;
+		if (n == 0)
+			pSubGeom = getSubProjectionGeometry_U(pGeom, newsubX, size);
+		else if (n == 1)
+			pSubGeom = getSubProjectionGeometry_Angle(pGeom, newsubX, size);
+		else if (n == 2)
+			pSubGeom = getSubProjectionGeometry_V(pGeom, newsubX, size);
+
+		CCompositeGeometryManager::CProjectionPart *sub;
+		sub = createSubProjectionPart(pPart, offsets[0], offsets[1], offsets[2], pSubGeom);
+		ASTRA_DEBUG("ProjectionPart split %d %d %d -> %p", sub->subX, sub->subY, sub->subZ, (void*)sub);
+		out.push_back(std::shared_ptr<CCompositeGeometryManager::CPart>(sub));
 	}
-}
-
-void CCompositeGeometryManager::CProjectionPart::splitY(CCompositeGeometryManager::TPartList &out, size_t maxSize, size_t maxDim, int div)
-{
-	if (canSplitAndReduce()) {
-		size_t sliceSize = ((size_t) pGeom->getDetectorColCount()) * pGeom->getDetectorRowCount();
-		int angleCount = pGeom->getProjectionCount();
-		size_t m = std::min(maxSize / sliceSize, maxDim);
-		size_t blockSize = computeLinearSplit(m, div, angleCount);
-
-		ASTRA_DEBUG("From %d to %d step %zu", 0, angleCount, blockSize);
-
-		for (int th = 0; th < angleCount; th += blockSize) {
-			int endTh = th + blockSize;
-			if (endTh > angleCount) endTh = angleCount;
-			int size = endTh - th;
-
-			CProjectionPart *sub = createSubProjectionPart(this, 0, th, 0,
-			                                               getSubProjectionGeometry_Angle(pGeom, th, size));
-
-			ASTRA_DEBUG("ProjectionPart split %d %d %d -> %p", sub->subX, sub->subY, sub->subZ, (void*)sub);
-
-			out.push_back(std::shared_ptr<CPart>(sub));
-		}
-	} else {
-		out.push_back(std::shared_ptr<CPart>(clone()));
-	}
-}
-
-void CCompositeGeometryManager::CProjectionPart::splitZ(CCompositeGeometryManager::TPartList &out, size_t maxSize, size_t maxDim, int div)
-{
-	if (canSplitAndReduce()) {
-		size_t sliceSize = ((size_t) pGeom->getDetectorColCount()) * pGeom->getProjectionCount();
-		int sliceCount = pGeom->getDetectorRowCount();
-		size_t m = std::min(maxSize / sliceSize, maxDim);
-		size_t blockSize = computeLinearSplit(m, div, sliceCount);
-
-		int rem = blockSize - (sliceCount % blockSize);
-		if ((size_t)rem == blockSize)
-			rem = 0;
-
-		ASTRA_DEBUG("From %d to %d step %zu", -(rem / 2), sliceCount, blockSize);
-
-		for (int z = -(rem / 2); z < sliceCount; z += blockSize) {
-			int newsubZ = z;
-			if (newsubZ < 0) newsubZ = 0;
-			int endZ = z + blockSize;
-			if (endZ > sliceCount) endZ = sliceCount;
-			int size = endZ - newsubZ;
-
-			CProjectionPart *sub = createSubProjectionPart(this, 0, 0, newsubZ,
-			                                               getSubProjectionGeometry_V(pGeom, newsubZ, size));
-
-			ASTRA_DEBUG("ProjectionPart split %d %d %d -> %p", sub->subX, sub->subY, sub->subZ, (void*)sub);
-
-			out.push_back(std::shared_ptr<CPart>(sub));
-		}
-	} else {
-		out.push_back(std::shared_ptr<CPart>(clone()));
-	}
-
 }
 
 CCompositeGeometryManager::CProjectionPart* CCompositeGeometryManager::CProjectionPart::clone() const
 {
 	return new CProjectionPart(*this);
+}
+
+static void splitPart(int n,
+                      std::shared_ptr<CCompositeGeometryManager::CPart> && base,
+                      CCompositeGeometryManager::TPartList& out,
+                      size_t maxSize, size_t maxDim, int div)
+{
+	if (!base.get()->canSplitAndReduce()) {
+		out.push_back(base);
+		return;
+	}
+
+	if (base.get()->eType == CCompositeGeometryManager::CPart::PART_PROJ)
+		splitProjectionPart(n, base.get(), out, maxSize, maxDim, div);
+	else if (base.get()->eType == CCompositeGeometryManager::CPart::PART_VOL)
+		splitVolumePart(n, base.get(), out, maxSize, maxDim, div);
+	else
+		assert(false);
+}
+
+static void splitPart(int n,
+                      const CCompositeGeometryManager::CPart *base,
+                      CCompositeGeometryManager::TPartList& out,
+                      size_t maxSize, size_t maxDim, int div)
+{
+	if (base->eType == CCompositeGeometryManager::CPart::PART_PROJ) {
+		if (!base->canSplitAndReduce()) {
+			const CCompositeGeometryManager::CProjectionPart *pPart;
+			pPart = dynamic_cast<const CCompositeGeometryManager::CProjectionPart*>(base);
+			assert(pPart);
+			out.push_back(std::shared_ptr<CCompositeGeometryManager::CPart>(pPart->clone()));
+		} else
+			splitProjectionPart(n, base, out, maxSize, maxDim, div);
+	} else if (base->eType == CCompositeGeometryManager::CPart::PART_VOL) {
+		if (!base->canSplitAndReduce()) {
+			const CCompositeGeometryManager::CVolumePart *pPart;
+			pPart = dynamic_cast<const CCompositeGeometryManager::CVolumePart*>(base);
+			assert(pPart);
+			out.push_back(std::shared_ptr<CCompositeGeometryManager::CPart>(pPart->clone()));
+		} else
+			splitVolumePart(n, base, out, maxSize, maxDim, div);
+	} else
+		assert(false);
 }
 
 CCompositeGeometryManager::SJob CCompositeGeometryManager::createJobFP(CProjector3D *pProjector,
