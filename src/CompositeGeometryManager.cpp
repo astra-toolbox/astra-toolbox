@@ -99,24 +99,24 @@ CCompositeGeometryManager::CCompositeGeometryManager()
 
 class _AstraExport CGPUMemory {
 public:
-    astraCUDA3d::MemHandle3D hnd; // Only required to be valid between allocate/free
-    virtual bool allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, astraCUDA3d::Mem3DZeroMode zero)=0;
-    virtual bool copyToGPUMemory(const astraCUDA3d::SSubDimensions3D &pos)=0;
-    virtual bool copyFromGPUMemory(const astraCUDA3d::SSubDimensions3D &pos)=0;
-    virtual bool freeGPUMemory()=0;
-    virtual ~CGPUMemory() { }
+	astraCUDA3d::MemHandle3D hnd; // Only required to be valid between allocate/free
+	virtual bool allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, astraCUDA3d::Mem3DZeroMode zero)=0;
+	virtual bool copyToGPUMemory(const astraCUDA3d::SSubDimensions3D &pos)=0;
+	virtual bool copyFromGPUMemory(const astraCUDA3d::SSubDimensions3D &pos)=0;
+	virtual bool freeGPUMemory()=0;
+	virtual ~CGPUMemory() { }
 };
 
 class CExistingGPUMemory : public astra::CGPUMemory {
 public:
-    CExistingGPUMemory(CData3D *d);
-    virtual bool allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, astraCUDA3d::Mem3DZeroMode zero);
-    virtual bool copyToGPUMemory(const astraCUDA3d::SSubDimensions3D &pos);
-    virtual bool copyFromGPUMemory(const astraCUDA3d::SSubDimensions3D &pos);
-    virtual bool freeGPUMemory();
+	CExistingGPUMemory(CData3D *d);
+	virtual bool allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, astraCUDA3d::Mem3DZeroMode zero);
+	virtual bool copyToGPUMemory(const astraCUDA3d::SSubDimensions3D &pos);
+	virtual bool copyFromGPUMemory(const astraCUDA3d::SSubDimensions3D &pos);
+	virtual bool freeGPUMemory();
 
 protected:
-    unsigned int x, y, z;
+	unsigned int x, y, z;
 };
 
 class CDefaultGPUMemory : public astra::CGPUMemory {
@@ -160,48 +160,48 @@ CExistingGPUMemory::CExistingGPUMemory(CData3D *d)
 }
 
 bool CExistingGPUMemory::allocateGPUMemory(unsigned int x_, unsigned int y_, unsigned int z_, astraCUDA3d::Mem3DZeroMode zero) {
-    assert(x_ == x);
-    assert(y_ == y);
-    assert(z_ == z);
+	assert(x_ == x);
+	assert(y_ == y);
+	assert(z_ == z);
 
-    if (zero == astraCUDA3d::INIT_ZERO)
-        return astraCUDA3d::zeroGPUMemory(hnd, x, y, z);
-    else
-        return true;
+	if (zero == astraCUDA3d::INIT_ZERO)
+		return astraCUDA3d::zeroGPUMemory(hnd, x, y, z);
+	else
+		return true;
 }
 bool CExistingGPUMemory::copyToGPUMemory(const astraCUDA3d::SSubDimensions3D &pos) {
-    assert(pos.nx == x);
-    assert(pos.ny == y);
-    assert(pos.nz == z);
-    assert(pos.pitch == x);
-    assert(pos.subx == 0);
-    assert(pos.suby == 0);
-    assert(pos.subnx == x);
-    assert(pos.subny == y);
+	assert(pos.nx == x);
+	assert(pos.ny == y);
+	assert(pos.nz == z);
+	assert(pos.pitch == x);
+	assert(pos.subx == 0);
+	assert(pos.suby == 0);
+	assert(pos.subnx == x);
+	assert(pos.subny == y);
 
-    // These are less necessary than x/y, but allowing access to
-    // subvolumes needs an interface change
-    assert(pos.subz == 0);
-    assert(pos.subnz == z);
+	// These are less necessary than x/y, but allowing access to
+	// subvolumes needs an interface change
+	assert(pos.subz == 0);
+	assert(pos.subnz == z);
 
-    return true;
+	return true;
 }
 bool CExistingGPUMemory::copyFromGPUMemory(const astraCUDA3d::SSubDimensions3D &pos) {
-    assert(pos.nx == x);
-    assert(pos.ny == y);
-    assert(pos.nz == z);
-    assert(pos.pitch == x);
-    assert(pos.subx == 0);
-    assert(pos.suby == 0);
-    assert(pos.subnx == x);
-    assert(pos.subny == y);
+	assert(pos.nx == x);
+	assert(pos.ny == y);
+	assert(pos.nz == z);
+	assert(pos.pitch == x);
+	assert(pos.subx == 0);
+	assert(pos.suby == 0);
+	assert(pos.subnx == x);
+	assert(pos.subny == y);
 
-    // These are less necessary than x/y, but allowing access to
-    // subvolumes needs an interface change
-    assert(pos.subz == 0);
-    assert(pos.subnz == z);
+	// These are less necessary than x/y, but allowing access to
+	// subvolumes needs an interface change
+	assert(pos.subz == 0);
+	assert(pos.subnz == z);
 
-    return true;
+	return true;
 }
 bool CExistingGPUMemory::freeGPUMemory() {
     return true;
@@ -426,8 +426,8 @@ bool CCompositeGeometryManager::CPart::canSplitAndReduce() const
 
 static bool testVolumeRange(const std::pair<double, double>& fullRange,
                             const CVolumeGeometry3D *pVolGeom,
-							const CProjectionGeometry3D *pProjGeom,
-							int zmin, int zmax)
+                            const CProjectionGeometry3D *pProjGeom,
+                            int zmin, int zmax)
 {
 	double pixz = pVolGeom->getPixelLengthZ();
 
