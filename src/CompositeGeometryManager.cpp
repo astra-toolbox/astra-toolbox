@@ -269,10 +269,8 @@ bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div
 #endif
 
 
-		for (TJobList::const_iterator j = L.begin(); j != L.end(); ++j)
+		for (const SJob &job : L)
 		{
-			const SJob &job = *j;
-
 			for (TPartList::iterator i_out = splitOutput.begin();
 			     i_out != splitOutput.end(); ++i_out)
 			{
@@ -280,10 +278,10 @@ bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div
 
 				SJob newjob;
 				newjob.pOutput = outputPart;
-				newjob.eType = j->eType;
-				newjob.eMode = j->eMode;
-				newjob.pProjector = j->pProjector;
-				newjob.FDKSettings = j->FDKSettings;
+				newjob.eType = job.eType;
+				newjob.eMode = job.eMode;
+				newjob.pProjector = job.pProjector;
+				newjob.FDKSettings = job.FDKSettings;
 
 				CPart* input = job.pInput->reduce(outputPart.get());
 
@@ -300,23 +298,19 @@ bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div
 				input->splitZ(splitInput, remainingSize, maxBlockDim, 1);
 				delete input;
 				TPartList splitInput2;
-				for (TPartList::iterator i_in = splitInput.begin(); i_in != splitInput.end(); ++i_in) {
-					std::shared_ptr<CPart> inputPart = *i_in;
+				for (std::shared_ptr<CPart> &inputPart : splitInput)
 					inputPart.get()->splitX(splitInput2, 1024ULL*1024*1024*1024, maxBlockDim, 1);
-				}
+
 				splitInput.clear();
-				for (TPartList::iterator i_in = splitInput2.begin(); i_in != splitInput2.end(); ++i_in) {
-					std::shared_ptr<CPart> inputPart = *i_in;
+				for (std::shared_ptr<CPart> &inputPart : splitInput2)
 					inputPart.get()->splitY(splitInput, 1024ULL*1024*1024*1024, maxBlockDim, 1);
-				}
+
 				splitInput2.clear();
 
 				ASTRA_DEBUG("Input split into %zu parts", splitInput.size());
 
-				for (TPartList::iterator i_in = splitInput.begin();
-				     i_in != splitInput.end(); ++i_in)
-				{
-					newjob.pInput = *i_in;
+				for (std::shared_ptr<CPart> &i_in : splitInput) {
+					newjob.pInput = i_in;
 
 					split[outputPart.get()].push_back(newjob);
 
@@ -1020,34 +1014,30 @@ bool CCompositeGeometryManager::doFP(CProjector3D *pProjector, const std::vector
 {
 	ASTRA_DEBUG("CCompositeGeometryManager::doFP, multi-volume");
 
-	std::vector<CFloat32VolumeData3D *>::const_iterator i;
 	std::vector<std::shared_ptr<CPart> > inputs;
 
-	for (i = volData.begin(); i != volData.end(); ++i) {
-		CVolumePart *input = new CVolumePart{*i};
+	for (CFloat32VolumeData3D *i : volData) {
+		CVolumePart *input = new CVolumePart{i};
 
 		inputs.push_back(std::shared_ptr<CPart>(input));
 	}
 
-	std::vector<CFloat32ProjectionData3D *>::const_iterator j;
 	std::vector<std::shared_ptr<CPart> > outputs;
 
-	for (j = projData.begin(); j != projData.end(); ++j) {
-		CProjectionPart *output = new CProjectionPart{*j};
+	for (CFloat32ProjectionData3D *j : projData) {
+		CProjectionPart *output = new CProjectionPart{j};
 
 		outputs.push_back(std::shared_ptr<CPart>(output));
 	}
 
-	std::vector<std::shared_ptr<CPart> >::iterator i2;
-	std::vector<std::shared_ptr<CPart> >::iterator j2;
 	TJobList L;
 
-	for (i2 = outputs.begin(); i2 != outputs.end(); ++i2) {
+	for (std::shared_ptr<CPart> &i : outputs) {
 		SJob FP;
 		FP.eMode = eMode;
-		for (j2 = inputs.begin(); j2 != inputs.end(); ++j2) {
-			FP.pInput = *j2;
-			FP.pOutput = *i2;
+		for (std::shared_ptr<CPart> &j : inputs) {
+			FP.pInput = j;
+			FP.pOutput = i;
 			FP.pProjector = pProjector;
 			FP.eType = SJob::JOB_FP;
 			L.push_back(FP);
@@ -1064,34 +1054,30 @@ bool CCompositeGeometryManager::doBP(CProjector3D *pProjector, const std::vector
 {
 	ASTRA_DEBUG("CCompositeGeometryManager::doBP, multi-volume");
 
-	std::vector<CFloat32VolumeData3D *>::const_iterator i;
 	std::vector<std::shared_ptr<CPart> > outputs;
 
-	for (i = volData.begin(); i != volData.end(); ++i) {
-		CVolumePart *output = new CVolumePart{*i};
+	for (CFloat32VolumeData3D *i : volData) {
+		CVolumePart *output = new CVolumePart{i};
 
 		outputs.push_back(std::shared_ptr<CPart>(output));
 	}
 
-	std::vector<CFloat32ProjectionData3D *>::const_iterator j;
 	std::vector<std::shared_ptr<CPart> > inputs;
 
-	for (j = projData.begin(); j != projData.end(); ++j) {
-		CProjectionPart *input = new CProjectionPart{*j};
+	for (CFloat32ProjectionData3D *j : projData) {
+		CProjectionPart *input = new CProjectionPart{j};
 
 		inputs.push_back(std::shared_ptr<CPart>(input));
 	}
 
-	std::vector<std::shared_ptr<CPart> >::iterator i2;
-	std::vector<std::shared_ptr<CPart> >::iterator j2;
 	TJobList L;
 
-	for (i2 = outputs.begin(); i2 != outputs.end(); ++i2) {
+	for (std::shared_ptr<CPart> &i : outputs) {
 		SJob BP;
 		BP.eMode = eMode;
-		for (j2 = inputs.begin(); j2 != inputs.end(); ++j2) {
-			BP.pInput = *j2;
-			BP.pOutput = *i2;
+		for (std::shared_ptr<CPart> &j : inputs) {
+			BP.pInput = j;
+			BP.pOutput = i;
 			BP.pProjector = pProjector;
 			BP.eType = SJob::JOB_BP;
 			L.push_back(BP);
@@ -1386,9 +1372,8 @@ bool CCompositeGeometryManager::doJobs(TJobList &jobs)
 	// Sort job list into job set by output part
 	TJobSet jobset;
 
-	for (TJobList::iterator i = jobs.begin(); i != jobs.end(); ++i) {
-		jobset[i->pOutput.get()].push_back(*i);
-	}
+	for (SJob &i : jobs)
+		jobset[i.pOutput.get()].push_back(i);
 
 	size_t maxSize = m_iMaxSize;
 	if (maxSize == 0) {
