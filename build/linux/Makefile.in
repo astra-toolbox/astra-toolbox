@@ -189,6 +189,7 @@ BASE_OBJECTS=\
 	src/Utilities.lo \
 	src/VolumeGeometry2D.lo \
 	src/VolumeGeometry3D.lo \
+	src/XMLConfig.lo \
 	src/XMLDocument.lo \
 	src/XMLNode.lo
 

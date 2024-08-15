@@ -28,6 +28,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/VolumeGeometry2D.h"
 
 #include "astra/Logging.h"
+#include "astra/XMLConfig.h"
 
 #include <cmath>
 

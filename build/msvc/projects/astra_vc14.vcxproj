@@ -344,6 +344,7 @@
     <ClCompile Include="..\..\..\src\Utilities.cpp" />
     <ClCompile Include="..\..\..\src\VolumeGeometry2D.cpp" />
     <ClCompile Include="..\..\..\src\VolumeGeometry3D.cpp" />
+    <ClCompile Include="..\..\..\src\XMLConfig.cpp" />
     <ClCompile Include="..\..\..\src\XMLDocument.cpp" />
     <ClCompile Include="..\..\..\src\XMLNode.cpp" />
   </ItemGroup>
@@ -430,6 +431,7 @@
     <ClInclude Include="..\..\..\include\astra\Vector3D.h" />
     <ClInclude Include="..\..\..\include\astra\VolumeGeometry2D.h" />
     <ClInclude Include="..\..\..\include\astra\VolumeGeometry3D.h" />
+    <ClInclude Include="..\..\..\include\astra\XMLConfig.h" />
     <ClInclude Include="..\..\..\include\astra\XMLDocument.h" />
     <ClInclude Include="..\..\..\include\astra\XMLNode.h" />
     <ClInclude Include="..\..\..\include\astra\clog.h" />

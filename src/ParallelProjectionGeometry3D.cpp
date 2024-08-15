@@ -27,6 +27,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/ParallelProjectionGeometry3D.h"
 
+#include "astra/XMLConfig.h"
 #include "astra/GeometryUtil3D.h"
 
 #include <cstring>
