@@ -44,6 +44,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/Utilities.h"
 
 #include "astra/Config.h"
+#include "astra/XMLConfig.h"
 #include "astra/XMLDocument.h"
 #include "astra/XMLNode.h"
 

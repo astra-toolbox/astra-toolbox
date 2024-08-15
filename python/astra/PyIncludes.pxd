@@ -42,6 +42,8 @@ cdef extern from "astra/Globals.h" namespace "astra":
 cdef extern from "astra/Config.h" namespace "astra":
     cdef cppclass Config:
         pass
+
+cdef extern from "astra/XMLConfig.h" namespace "astra":
     cdef cppclass XMLConfig(Config):
         XMLConfig(const string& rootname)
         XMLNode self

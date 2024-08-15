@@ -78,42 +78,6 @@ protected:
 	virtual std::list<std::string> checkUnparsed(const ConfigCheckData &data) const = 0;
 };
 
-class _AstraExport XMLConfig : public Config {
-public:
-	XMLConfig(XMLNode _node);
-	XMLConfig(const std::string &rootname);
-
-	virtual ~XMLConfig();
-private:
-	template<class TT> friend class ConfigReader;
-
-	virtual bool has(const std::string &name) const;
-	virtual bool hasOption(const std::string &name) const;
-
-	virtual bool getSubConfig(const std::string &name, Config *&_cfg, std::string &type) const;
-
-	virtual bool getInt(const std::string &name, int &iValue) const;
-	virtual bool getFloat(const std::string &name, float &fValue) const;
-	virtual bool getDoubleArray(const std::string &name, std::vector<double> &values) const;
-	virtual bool getIntArray(const std::string &name, std::vector<int> &values) const;
-	virtual bool getString(const std::string &name, std::string &sValue) const;
-
-	virtual bool getOptionFloat(const std::string &name, float &fValue) const;
-	virtual bool getOptionInt(const std::string &name, int &iValue) const;
-	virtual bool getOptionUInt(const std::string &name, unsigned int &iValue) const;
-	virtual bool getOptionBool(const std::string &name, bool &bValue) const;
-	virtual bool getOptionString(const std::string &name, std::string &sValue) const;
-	virtual bool getOptionIntArray(const std::string &name, std::vector<int> &values) const;
-
-	virtual std::list<std::string> checkUnparsed(const ConfigCheckData &data) const;
-private:
-	friend class ConfigWriter;
-	XMLDocument *_doc;
-public:
-	// TODO: Make this private once python/matlab interfaces can handle that
-	XMLNode self;
-};
-
 
 template<class T>
 class ConfigReader {
@@ -178,26 +142,6 @@ private:
 	bool stopParsing(); // returns true if no unused nodes/options
 	void markNodeParsed(const std::string& name);
 	void markOptionParsed(const std::string& name);
-};
-
-class _AstraExport ConfigWriter {
-public:
-	ConfigWriter(const std::string &name);
-	ConfigWriter(const std::string &name, const std::string &type);
-	~ConfigWriter();
-
-	Config* getConfig();
-
-	void addInt(const std::string &name, int iValue);
-	void addNumerical(const std::string &name, double fValue);
-	void addNumericalArray(const std::string &name, const float *pfValues, int iCount);
-	void addNumericalMatrix(const std::string &name, const double *pfValues, int iHeight, int iWidth);
-	void addID(const std::string &name, int iValue);
-
-	void addOptionNumerical(const std::string &name, double fValue);
-
-private:
-	XMLConfig *cfg;
 };
 
 

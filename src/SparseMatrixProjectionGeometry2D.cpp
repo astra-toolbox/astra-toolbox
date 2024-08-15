@@ -28,6 +28,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/SparseMatrixProjectionGeometry2D.h"
 
 #include "astra/AstraObjectManager.h"
+#include "astra/XMLConfig.h"
 
 #include "astra/Logging.h"
 
