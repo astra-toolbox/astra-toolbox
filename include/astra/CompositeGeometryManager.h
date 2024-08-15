@@ -42,7 +42,7 @@ namespace astra {
 
 class CCompositeVolume;
 class CCompositeProjections;
-class CFloat32Data3D;
+class CData3D;
 class CFloat32ProjectionData3D;
 class CFloat32VolumeData3D;
 class CVolumeGeometry3D;
@@ -77,7 +77,7 @@ public:
 			PART_VOL, PART_PROJ
 		} eType;
 
-		CFloat32Data3D* pData;
+		CData3D* pData;
 		unsigned int subX;
 		unsigned int subY;
 		unsigned int subZ;

@@ -37,10 +37,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/ParallelVecProjectionGeometry3D.h"
 #include "astra/Projector3D.h"
 #include "astra/CudaProjector3D.h"
-#include "astra/Float32ProjectionData3DMemory.h"
-#include "astra/Float32VolumeData3DMemory.h"
-#include "astra/Float32ProjectionData3DGPU.h"
-#include "astra/Float32VolumeData3DGPU.h"
+#include "astra/Data3D.h"
 #include "astra/Logging.h"
 
 #include "astra/cuda/2d/astra.h"
@@ -100,19 +97,19 @@ CCompositeGeometryManager::CCompositeGeometryManager()
 
 
 
-class _AstraExport CFloat32CustomGPUMemory {
+class _AstraExport CGPUMemory {
 public:
     astraCUDA3d::MemHandle3D hnd; // Only required to be valid between allocate/free
     virtual bool allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, astraCUDA3d::Mem3DZeroMode zero)=0;
     virtual bool copyToGPUMemory(const astraCUDA3d::SSubDimensions3D &pos)=0;
     virtual bool copyFromGPUMemory(const astraCUDA3d::SSubDimensions3D &pos)=0;
     virtual bool freeGPUMemory()=0;
-	virtual ~CFloat32CustomGPUMemory() { }
+    virtual ~CGPUMemory() { }
 };
 
-class CFloat32ExistingGPUMemory : public astra::CFloat32CustomGPUMemory {
+class CExistingGPUMemory : public astra::CGPUMemory {
 public:
-    CFloat32ExistingGPUMemory(CFloat32Data3DGPU *d);
+    CExistingGPUMemory(CData3D *d);
     virtual bool allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, astraCUDA3d::Mem3DZeroMode zero);
     virtual bool copyToGPUMemory(const astraCUDA3d::SSubDimensions3D &pos);
     virtual bool copyFromGPUMemory(const astraCUDA3d::SSubDimensions3D &pos);
@@ -122,10 +119,14 @@ protected:
     unsigned int x, y, z;
 };
 
-class CFloat32DefaultGPUMemory : public astra::CFloat32CustomGPUMemory {
+class CDefaultGPUMemory : public astra::CGPUMemory {
 public:
-	CFloat32DefaultGPUMemory(CFloat32Data3DMemory* d) {
-		ptr = d->getData();
+	CDefaultGPUMemory(CData3D* d) : ptr(nullptr) {
+		assert(d->getStorage()->isMemory());
+		if (d->getStorage()->isFloat32())
+			ptr = dynamic_cast<CDataMemory<float32>*>(d->getStorage())->getData();
+		else
+			assert(false);
 	}
 	virtual bool allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, astraCUDA3d::Mem3DZeroMode zero) {
 		hnd = astraCUDA3d::allocateGPUMemory(x, y, z, zero);
@@ -147,15 +148,18 @@ protected:
 
 
 
-CFloat32ExistingGPUMemory::CFloat32ExistingGPUMemory(CFloat32Data3DGPU *d)
+CExistingGPUMemory::CExistingGPUMemory(CData3D *d)
 {
-	hnd = d->getHandle();
+	assert(d->getStorage()->isGPU());
+	CDataGPU *storage = dynamic_cast<CDataGPU*>(d->getStorage());
+
+	hnd = storage->getHandle();
 	x = d->getWidth();
 	y = d->getHeight();
 	z = d->getDepth();
 }
 
-bool CFloat32ExistingGPUMemory::allocateGPUMemory(unsigned int x_, unsigned int y_, unsigned int z_, astraCUDA3d::Mem3DZeroMode zero) {
+bool CExistingGPUMemory::allocateGPUMemory(unsigned int x_, unsigned int y_, unsigned int z_, astraCUDA3d::Mem3DZeroMode zero) {
     assert(x_ == x);
     assert(y_ == y);
     assert(z_ == z);
@@ -165,7 +169,7 @@ bool CFloat32ExistingGPUMemory::allocateGPUMemory(unsigned int x_, unsigned int 
     else
         return true;
 }
-bool CFloat32ExistingGPUMemory::copyToGPUMemory(const astraCUDA3d::SSubDimensions3D &pos) {
+bool CExistingGPUMemory::copyToGPUMemory(const astraCUDA3d::SSubDimensions3D &pos) {
     assert(pos.nx == x);
     assert(pos.ny == y);
     assert(pos.nz == z);
@@ -182,7 +186,7 @@ bool CFloat32ExistingGPUMemory::copyToGPUMemory(const astraCUDA3d::SSubDimension
 
     return true;
 }
-bool CFloat32ExistingGPUMemory::copyFromGPUMemory(const astraCUDA3d::SSubDimensions3D &pos) {
+bool CExistingGPUMemory::copyFromGPUMemory(const astraCUDA3d::SSubDimensions3D &pos) {
     assert(pos.nx == x);
     assert(pos.ny == y);
     assert(pos.nz == z);
@@ -199,24 +203,39 @@ bool CFloat32ExistingGPUMemory::copyFromGPUMemory(const astraCUDA3d::SSubDimensi
 
     return true;
 }
-bool CFloat32ExistingGPUMemory::freeGPUMemory() {
+bool CExistingGPUMemory::freeGPUMemory() {
     return true;
 }
 
 
-CFloat32CustomGPUMemory * createGPUMemoryHandler(CFloat32Data3D *d) {
-	CFloat32Data3DMemory *dMem = dynamic_cast<CFloat32Data3DMemory*>(d);
-	CFloat32Data3DGPU *dGPU = dynamic_cast<CFloat32Data3DGPU*>(d);
-
-	if (dMem)
-		return new CFloat32DefaultGPUMemory(dMem);
+CGPUMemory * createGPUMemoryHandler(CData3D *d) {
+	if (d->getStorage()->isMemory())
+		return new CDefaultGPUMemory(d);
 	else
-		return new CFloat32ExistingGPUMemory(dGPU);
+		return new CExistingGPUMemory(d);
 }
 
 
 
+static astraCUDA3d::SSubDimensions3D getPartSubDims(const CCompositeGeometryManager::CPart *part)
+{
+	size_t subnx, subny, subnz;
+	part->getDims(subnx, subny, subnz);
 
+	astraCUDA3d::SSubDimensions3D d;
+	d.nx = part->pData->getWidth();
+	d.pitch = d.nx;
+	d.ny = part->pData->getHeight();
+	d.nz = part->pData->getDepth();
+	d.subnx = subnx;
+	d.subny = subny;
+	d.subnz = subnz;
+	d.subx = part->subX;
+	d.suby = part->subY;
+	d.subz = part->subZ;
+
+	return d;
+}
 
 bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div, TJobSet &split)
 {
@@ -400,7 +419,7 @@ bool CCompositeGeometryManager::CPart::isFull() const
 
 bool CCompositeGeometryManager::CPart::canSplitAndReduce() const
 {
-	return dynamic_cast<CFloat32Data3DMemory *>(pData) != 0;
+	return pData->getStorage()->isMemory();
 }
 
 
@@ -1225,8 +1244,8 @@ bool CCompositeGeometryManager::doFDK(CProjector3D *pProjector, CFloat32VolumeDa
                                      CFloat32ProjectionData3D *pProjData, bool bShortScan,
                                      const float *pfFilter, SJob::EMode eMode)
 {
-	if (!dynamic_cast<CConeProjectionGeometry3D*>(pProjData->getGeometry()) &&
-	    !dynamic_cast<CConeVecProjectionGeometry3D*>(pProjData->getGeometry())) {
+	if (!dynamic_cast<const CConeProjectionGeometry3D*>(pProjData->getGeometry()) &&
+	    !dynamic_cast<const CConeVecProjectionGeometry3D*>(pProjData->getGeometry())) {
 		ASTRA_ERROR("CCompositeGeometryManager::doFDK: cone/cone_vec geometry required");
 		return false;
 	}
@@ -1366,16 +1385,19 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 	size_t outx, outy, outz;
 	output->getDims(outx, outy, outz);
 
+	astraCUDA3d::SSubDimensions3D dstdims = getPartSubDims(output);
+	ASTRA_DEBUG("dstdims: %d,%d,%d in %d,%d,%d", dstdims.subnx, dstdims.subny, dstdims.subnz, dstdims.nx, dstdims.ny, dstdims.nz);
+
 	if (L.begin()->eType == CCompositeGeometryManager::SJob::JOB_NOP) {
 		// just zero output?
 		if (zero) {
 			// TODO: This function shouldn't have to know about this difference
 			// between Memory/GPU
-			CFloat32Data3DMemory *hostMem = dynamic_cast<CFloat32Data3DMemory *>(output->pData);
-			if (hostMem) {
+			if (output->pData->getStorage()->isMemory()) {
+				assert(output->pData->isFloat32Memory());
 				for (size_t z = 0; z < outz; ++z) {
 					for (size_t y = 0; y < outy; ++y) {
-						float* ptr = hostMem->getData();
+						float* ptr = output->pData->getFloat32Memory();
 						ptr += (z + output->subX) * (size_t)output->pData->getHeight() * (size_t)output->pData->getWidth();
 						ptr += (y + output->subY) * (size_t)output->pData->getWidth();
 						ptr += output->subX;
@@ -1383,7 +1405,8 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 					}
 				}
 			} else {
-				CFloat32Data3DGPU *gpuMem = dynamic_cast<CFloat32Data3DGPU *>(output->pData);
+				assert(output->pData->getStorage()->isGPU());
+				CDataGPU *gpuMem = dynamic_cast<CDataGPU *>(output->pData->getStorage());
 				assert(gpuMem);
 				assert(output->isFull()); // TODO: zero subset?
 
@@ -1393,21 +1416,7 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 		return true;
 	}
 
-
-	astraCUDA3d::SSubDimensions3D dstdims;
-	dstdims.nx = output->pData->getWidth();
-	dstdims.pitch = dstdims.nx;
-	dstdims.ny = output->pData->getHeight();
-	dstdims.nz = output->pData->getDepth();
-	dstdims.subnx = outx;
-	dstdims.subny = outy;
-	dstdims.subnz = outz;
-	ASTRA_DEBUG("dstdims: %d,%d,%d in %d,%d,%d", dstdims.subnx, dstdims.subny, dstdims.subnz, dstdims.nx, dstdims.ny, dstdims.nz);
-	dstdims.subx = output->subX;
-	dstdims.suby = output->subY;
-	dstdims.subz = output->subZ;
-
-	CFloat32CustomGPUMemory *dstMem = createGPUMemoryHandler(output->pData);
+	CGPUMemory *dstMem = createGPUMemoryHandler(output->pData);
 
 	bool ok = dstMem->allocateGPUMemory(outx, outy, outz, zero ? astraCUDA3d::INIT_ZERO : astraCUDA3d::INIT_NO);
 	// TODO: cleanup and return error code after any error
@@ -1437,19 +1446,10 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 		size_t inx, iny, inz;
 		j.pInput->getDims(inx, iny, inz);
 
-		CFloat32CustomGPUMemory *srcMem = createGPUMemoryHandler(j.pInput->pData);
+		CGPUMemory *srcMem;
+		srcMem = createGPUMemoryHandler(j.pInput->pData);
 
-		astraCUDA3d::SSubDimensions3D srcdims;
-		srcdims.nx = j.pInput->pData->getWidth();
-		srcdims.pitch = srcdims.nx;
-		srcdims.ny = j.pInput->pData->getHeight();
-		srcdims.nz = j.pInput->pData->getDepth();
-		srcdims.subnx = inx;
-		srcdims.subny = iny;
-		srcdims.subnz = inz;
-		srcdims.subx = j.pInput->subX;
-		srcdims.suby = j.pInput->subY;
-		srcdims.subz = j.pInput->subZ;
+		astraCUDA3d::SSubDimensions3D srcdims = getPartSubDims(j.pInput.get());
 
 		ok = srcMem->allocateGPUMemory(inx, iny, inz, astraCUDA3d::INIT_NO);
 		if (!ok) ASTRA_ERROR("Error allocating GPU memory");

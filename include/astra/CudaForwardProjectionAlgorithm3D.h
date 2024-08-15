@@ -32,8 +32,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "Algorithm.h"
 
-#include "Float32ProjectionData3DMemory.h"
-#include "Float32VolumeData3DMemory.h"
+#include "Data3D.h"
 
 #ifdef ASTRA_CUDA
 
