@@ -689,8 +689,7 @@ def write_main_project14():
     if c.cuda:
       print('      <AdditionalDependencies>cudart.lib;cufft.lib;%(AdditionalDependencies)</AdditionalDependencies>', file=F)
     l = '      <AdditionalLibraryDirectories>';
-    l += '..\\..\\..\\lib\\x64'
-    l += ';%(AdditionalLibraryDirectories)'
+    l += '%(AdditionalLibraryDirectories)'
     if c.cuda:
       l += ';$(CudaToolkitLibDir)'
     l += '</AdditionalLibraryDirectories>'
@@ -759,7 +758,7 @@ def write_mex_project14(P):
     print('      <OutputFile>$(OutDir)$(ProjectName)_c.mexw64</OutputFile>', file=F)
     print('      <AdditionalDependencies>%s.lib;libmex.lib;libmx.lib;libut.lib;%%(AdditionalDependencies)</AdditionalDependencies>' % (c.target(), ), file=F)
     l = '      <AdditionalLibraryDirectories>';
-    l += '..\\..\\..\\lib\\x64\\;..\\bin\\x64\\'
+    l += '..\\bin\\x64\\'
     l += c.config()
     l += ';$(MATLAB_ROOT)\\extern\\lib\\win64\\microsoft'
     l += ';%(AdditionalLibraryDirectories)'
