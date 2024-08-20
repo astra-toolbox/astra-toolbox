@@ -38,6 +38,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include <cassert>
 #include <iostream>
 #include <list>
+#include <vector>
 
 #include <cuda.h>
 
@@ -176,16 +177,17 @@ bool FDK_PreWeight(cudaPitchedPtr D_projData,
 	// The pre-weighting factor for a ray is the cosine of the angle between
 	// the central line and the ray.
 
+	cudaStream_t stream;
+	if (!checkCuda(cudaStreamCreate(&stream), "FDK_PreWeight stream"))
+		return false;
+
 	dim3 dimBlock(g_detBlockU, g_anglesPerWeightBlock);
 	dim3 dimGrid( ((dims.iProjU+g_detBlockU-1)/g_detBlockU)*((dims.iProjV+g_detBlockV-1)/g_detBlockV),
 	              (dims.iProjAngles+g_anglesPerWeightBlock-1)/g_anglesPerWeightBlock);
 
 	int projPitch = D_projData.pitch/sizeof(float);
 
-	devFDK_preweight<<<dimGrid, dimBlock>>>(D_projData.ptr, projPitch, 0, dims.iProjAngles, fSrcOrigin, fDetOrigin, fZShift, fDetUSize, fDetVSize, dims);
-
-	if (!checkCuda(cudaThreadSynchronize(), "FDK_PreWeight"))
-		return false;
+	devFDK_preweight<<<dimGrid, dimBlock, 0, stream>>>(D_projData.ptr, projPitch, 0, dims.iProjAngles, fSrcOrigin, fDetOrigin, fZShift, fDetUSize, fDetVSize, dims);
 
 	if (bShortScan && dims.iProjAngles > 1) {
 		ASTRA_DEBUG("Doing Parker weighting");
@@ -215,7 +217,7 @@ bool FDK_PreWeight(cudaPitchedPtr D_projData,
 		// We pick the lowest end of the range, and then
 		// move all angles so they fall in [0,2pi)
 
-		float *fRelAngles = new float[dims.iProjAngles];
+		std::vector<float> fRelAngles(dims.iProjAngles);
 		for (unsigned int i = 0; i < dims.iProjAngles; ++i) {
 			float f = angles[i] - fAngleBase;
 			while (f >= 2*M_PI)
@@ -233,11 +235,16 @@ bool FDK_PreWeight(cudaPitchedPtr D_projData,
 		ASTRA_DEBUG("Assuming angles are linearly ordered and equally spaced for Parker weighting. Angular range %f radians", fRange);
 		float fScale = fRange / M_PI;
 
-		cudaError_t e1 = cudaMemcpyToSymbol(gC_angle, fRelAngles,
-		                                    dims.iProjAngles*sizeof(float), 0,
-		                                    cudaMemcpyHostToDevice);
-		assert(!e1);
-		delete[] fRelAngles;
+		bool ok = true;
+		ok &= checkCuda(cudaMemcpyToSymbolAsync(gC_angle, &fRelAngles[0],
+		                                        dims.iProjAngles*sizeof(float), 0,
+		                                        cudaMemcpyHostToDevice, stream),
+		                "FDK_PreWeight transfer");
+		ok &= checkCuda(cudaStreamSynchronize(stream), "FDK_PreWeight");
+		if (!ok) {
+			cudaStreamDestroy(stream);
+			return false;
+		}
 
 		float fCentralFanAngle = fabs(atanf(fDetUSize * (dims.iProjU*0.5f) /
 		                               (fSrcOrigin + fDetOrigin)));
@@ -246,11 +253,14 @@ bool FDK_PreWeight(cudaPitchedPtr D_projData,
 			ASTRA_WARN("Angular range (%f rad) smaller than Parker weighting range (%f rad)", fRange, M_PI + 2*fCentralFanAngle);
 		}
 
-		devFDK_ParkerWeight<<<dimGrid, dimBlock>>>(D_projData.ptr, projPitch, 0, dims.iProjAngles, fSrcOrigin, fDetOrigin, fDetUSize, fCentralFanAngle, fScale, dims);
-
-		if (!checkCuda(cudaThreadSynchronize(), "FDK_PreWeight ParkerWeight"))
-			return false;
+		devFDK_ParkerWeight<<<dimGrid, dimBlock, 0, stream>>>(D_projData.ptr, projPitch, 0, dims.iProjAngles, fSrcOrigin, fDetOrigin, fDetUSize, fCentralFanAngle, fScale, dims);
 	}
+	if (!checkCuda(cudaStreamSynchronize(stream), "FDK_PreWeight")) {
+		cudaStreamDestroy(stream);
+		return false;
+	}
+
+	cudaStreamDestroy(stream);
 
 	return true;
 }
