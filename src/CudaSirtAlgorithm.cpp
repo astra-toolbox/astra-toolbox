@@ -128,9 +128,10 @@ void CCudaSirtAlgorithm::updateSlice(CFloat32ProjectionData2D* _pSinogram,
 
 void CCudaSirtAlgorithm::initCUDAAlgorithm()
 {
-	CCudaReconstructionAlgorithm2D::initCUDAAlgorithm();
-
 	astraCUDA::SIRT* pSirt = dynamic_cast<astraCUDA::SIRT*>(m_pAlgo);
+	pSirt->setRelaxation(m_fLambda);
+
+	CCudaReconstructionAlgorithm2D::initCUDAAlgorithm();
 
 	if (m_pMinMask || m_pMaxMask) {
 		const CVolumeGeometry2D& volgeom = *m_pReconstruction->getGeometry();
@@ -142,7 +143,6 @@ void CCudaSirtAlgorithm::initCUDAAlgorithm()
 		ASTRA_ASSERT(ok);
 	}
 
-	pSirt->setRelaxation(m_fLambda);
 }
 
 

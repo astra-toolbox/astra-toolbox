@@ -49,7 +49,6 @@ LDFLAGS=@SAVED_LDFLAGS@
 LIBS=@SAVED_LIBS@
 
 CXXFLAGS+=-g -O3 -Wall -Wshadow
-LIBS+=-lpthread
 LDFLAGS+=-g
 
 CXXFLAGS+=@CXXFLAGS_OS@
@@ -83,7 +82,7 @@ endif
 ifeq ($(python),yes)
 PYTHON      = @PYTHON@
 PYINCDIR := $(shell $(PYTHON) -c 'from __future__ import print_function; from distutils.sysconfig import get_python_inc; print(get_python_inc())')
-PYLIBDIR := $(shell $(PYTHON) -c 'from distutils.sysconfig import get_config_var; import six; six.print_(get_config_var("LIBDIR"))')
+PYLIBDIR := $(shell $(PYTHON) -c 'from __future__ import print_function; from distutils.sysconfig import get_config_var; print(get_config_var("LIBDIR"))')
 PYLIBVER = `basename $(PYINCDIR)`
 CPPFLAGS += -DASTRA_PYTHON -I$(PYINCDIR)
 PYCPPFLAGS  := $(CPPFLAGS)
@@ -94,6 +93,11 @@ PYLDFLAGS := $(MODLDFLAGS)
 MODLDFLAGS += -L$(PYLIBDIR)
 
 MODPYLIBS=-l$(PYLIBVER)
+
+PYBUILDERFLAGS=--astra_build_config_dir $(abs_top_builddir)/python/config --astra_build_cython_dir $(abs_top_builddir)/python/cython
+PYBUILDER_BUILD_FLAGS=--build-base=$(abs_top_builddir)/python/build
+
+PYTHON_WHEEL_PLATFORM = @PYTHON_WHEEL_PLATFORM@
 endif
 
 # This is below where PYCPPFLAGS copies CPPFLAGS.  The python code is built
@@ -130,7 +134,6 @@ DEPDIR=.deps
 
 BASE_OBJECTS=\
 	src/Algorithm.lo \
-	src/AsyncAlgorithm.lo \
 	src/ReconstructionAlgorithm2D.lo \
 	src/ReconstructionAlgorithm3D.lo \
 	src/ArtAlgorithm.lo \
@@ -142,6 +145,7 @@ BASE_OBJECTS=\
 	src/ConeProjectionGeometry3D.lo \
 	src/ConeVecProjectionGeometry3D.lo \
 	src/Config.lo \
+	src/Data3D.lo \
 	src/DataProjector.lo \
 	src/DataProjectorPolicies.lo \
 	src/FanFlatBeamLineKernelProjector2D.lo \
@@ -151,16 +155,10 @@ BASE_OBJECTS=\
 	src/Features.lo \
 	src/FilteredBackProjectionAlgorithm.lo \
 	src/Filters.lo \
-	src/Float32Data2D.lo \
-	src/Float32Data3D.lo \
-	src/Float32Data3DMemory.lo \
 	src/Float32Data.lo \
+	src/Float32Data2D.lo \
 	src/Float32ProjectionData2D.lo \
-	src/Float32ProjectionData3D.lo \
-	src/Float32ProjectionData3DMemory.lo \
 	src/Float32VolumeData2D.lo \
-	src/Float32VolumeData3D.lo \
-	src/Float32VolumeData3DMemory.lo \
 	src/ForwardProjectionAlgorithm.lo \
 	src/Fourier.lo \
 	src/GeometryUtil2D.lo \
@@ -183,6 +181,7 @@ BASE_OBJECTS=\
 	src/Projector2D.lo \
 	src/Projector3D.lo \
 	src/SartAlgorithm.lo \
+	src/SheppLogan.lo \
 	src/SirtAlgorithm.lo \
 	src/SparseMatrixProjectionGeometry2D.lo \
 	src/SparseMatrixProjector2D.lo \
@@ -214,10 +213,7 @@ CUDA_CXX_OBJECTS=\
 	src/CudaFDKAlgorithm3D.lo \
 	src/CudaSirtAlgorithm3D.lo \
 	src/CudaBackProjectionAlgorithm3D.lo \
-	src/CudaForwardProjectionAlgorithm3D.lo \
-	src/Float32Data3DGPU.lo \
-	src/Float32ProjectionData3DGPU.lo \
-	src/Float32VolumeData3DGPU.lo
+	src/CudaForwardProjectionAlgorithm3D.lo
 
 CUDA_OBJECTS=\
 	cuda/2d/algo.lo \
@@ -333,12 +329,12 @@ endif
 ifeq ($(python),yes)
 py: libastra.la
 	$(MKDIR) python/build
-# TODO: Avoid writing into source dir
-	ln -s $(abs_top_builddir)/.libs/$(SONAME) $(srcdir)/../../python/astra
+	$(MKDIR) python/config
 # Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
-	(cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS='${PYLDFLAGS}' $(PYTHON) builder.py build --build-base=$(abs_top_builddir)/python/build) || (rm $(srcdir)/../../python/astra/$(SONAME); false)
-	rm $(srcdir)/../../python/astra/$(SONAME)
-
+	cd $(srcdir)/../../python; CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS='${PYLDFLAGS}' \
+	$(PYTHON) builder.py $(PYBUILDERFLAGS) \
+	build $(PYBUILDER_BUILD_FLAGS) \
+	$(patsubst %,add_extra_lib --file=%,$(PYPKGDATA))
 endif
 
 
@@ -423,10 +419,7 @@ clean:
 	rm -f $(addsuffix /*.d,$(DEPDIRS))
 	rm -f $(addsuffix /*,$(LIBDIRS))
 	rm -f $(TEST_OBJECTS) test.bin
-	rm -fr python/finalbuild/
-	rm -fr python/build/
-	rm -f $(srcdir)/../../python/astra/*.cpp
-	rm -f $(srcdir)/../../python/astra/*.c
+	rm -fr python/
 
 distclean: clean
 	rm -f $(srcdir)/config.guess $(srcdir)/config.sub $(srcdir)/ltmain.sh libtool $(srcdir)/install-sh
@@ -436,9 +429,9 @@ distclean: clean
 	rm -f $(srcdir)/configure Makefile
 
 install-libraries: libastra.la
-	$(INSTALL_SH) -m 755 -d $(libdir)
-	./libtool --mode=install $(INSTALL_SH) -m 644 libastra.la $(libdir)
-	./libtool --mode=finish $(libdir)
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(libdir)
+	./libtool --mode=install $(INSTALL_SH) -m 644 libastra.la $(DESTDIR)$(libdir)
+	./libtool --mode=finish $(DESTDIR)$(libdir)
 
 
 # ------------------------
@@ -470,16 +463,16 @@ ifeq ($(install_type),module)
 # modules built with rpath=$ORIGIN
 install: install-matlab install-python-site-packages install-octave
 
-PYPKGDATA=$(SONAME)
+PYPKGDATA=$(abs_top_builddir)/.libs/$(SONAME)
 MATLABBASE=@prefix@/matlab
 OCTAVEBASE=@prefix@/octave
 
 install-matlab-so: libastra.la
-	$(INSTALL_SH) -m 755 -d $(MATLABBASE)/mex
-	$(INSTALL_SH) -m 755 $(abs_top_builddir)/.libs/$(SONAME) $(MATLABBASE)/mex
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(MATLABBASE)/mex
+	$(INSTALL_SH) -m 755 $(abs_top_builddir)/.libs/$(SONAME) $(DESTDIR)$(MATLABBASE)/mex
 install-octave-so: libastra.la
-	$(INSTALL_SH) -m 755 -d $(OCTAVEBASE)/mex
-	$(INSTALL_SH) -m 755 $(abs_top_builddir)/.libs/$(SONAME) $(OCTAVEBASE)/mex
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(OCTAVEBASE)/mex
+	$(INSTALL_SH) -m 755 $(abs_top_builddir)/.libs/$(SONAME) $(DESTDIR)$(OCTAVEBASE)/mex
 else
 install-matlab-so:
 install-octave-so:
@@ -489,23 +482,34 @@ endif
 
 ifeq ($(python),yes)
 install-python: py
-	$(MKDIR) python/finalbuild
 	# Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
-	cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" $(PYTHON) builder.py build --build-base=$(abs_top_builddir)/python/build install \
-	--install-base=$(abs_top_builddir)/python/finalbuild --install-headers=$(abs_top_builddir)/python/finalbuild --install-purelib=$(abs_top_builddir)/python/finalbuild \
-	--install-platlib=$(abs_top_builddir)/python/finalbuild --install-scripts=$(abs_top_builddir)/python/finalbuild --install-data=$(abs_top_builddir)/python/finalbuild
-	$(INSTALL_SH) -m 755 -d @prefix@/python
-	$(INSTALL_SH) -m 755 -d @prefix@/python/astra
-	$(INSTALL_SH) -m 755 -d @prefix@/python/astra/plugins
-	$(INSTALL_SH) -m 755 python/finalbuild/astra/*.so @prefix@/python/astra
-	$(INSTALL_SH) -m 644 python/finalbuild/astra/*.py @prefix@/python/astra
-	$(INSTALL_SH) -m 644 python/finalbuild/astra/plugins/*.py @prefix@/python/astra/plugins
-	$(INSTALL_SH) -m 644 python/finalbuild/*.egg-info @prefix@/python/
+	cd $(srcdir)/../../python; CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" \
+	$(PYTHON) builder.py $(PYBUILDERFLAGS) \
+	set_dist_dir --dist-dir=$(abs_top_builddir)/python/dist \
+	build $(PYBUILDER_BUILD_FLAGS) \
+	egg_info --egg-base=$(abs_top_builddir)/python \
+	$(patsubst %,add_extra_lib --file=%,$(PYPKGDATA)) \
+	install $(patsubst %,--root=%,$(DESTDIR)) --install-base=@prefix@/python --install-headers=@prefix@/python --install-purelib=@prefix@/python --install-platlib=@prefix@/python --install-scripts=@prefix@/python --install-data=@prefix@/python --old-and-unmanageable --no-compile
 # TODO: docs
 
 install-python-site-packages: py
 # Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
-	cd $(srcdir)/../../python; ASTRA_INSTALL_LIBRARY_AS_DATA=$(PYPKGDATA) CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" $(PYTHON) builder.py build --build-base=$(abs_top_builddir)/python/build install
+	cd $(srcdir)/../../python; CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" \
+	$(PYTHON) builder.py $(PYBUILDERFLAGS) \
+	set_dist_dir --dist-dir=$(abs_top_builddir)/python/dist \
+	build $(PYBUILDER_BUILD_FLAGS) \
+	egg_info --egg-base=$(abs_top_builddir)/python \
+	$(patsubst %,add_extra_lib --file=%,$(PYPKGDATA)) \
+	install $(patsubst %,--root=% --single-version-externally-managed,$(DESTDIR))
+python-wheel: py
+# Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
+	cd $(srcdir)/../../python; CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" \
+	$(PYTHON) builder.py $(PYBUILDERFLAGS) --astra_cuda_dependencies \
+	set_dist_dir --dist-dir=$(abs_top_builddir)/python/dist \
+	build $(PYBUILDER_BUILD_FLAGS) \
+	egg_info --egg-base=$(abs_top_builddir)/python \
+	$(patsubst %,add_extra_lib --file=%,$(PYPKGDATA)) \
+	bdist_wheel $(patsubst %,--plat-name %,$(PYTHON_WHEEL_PLATFORM))
 else
 install-python-site-packages:
 install-python:
@@ -513,16 +517,16 @@ endif
 
 ifeq ($(matlab),yes)
 install-matlab: $(MATLAB_MEX) install-matlab-so
-	$(INSTALL_SH) -m 755 -d $(MATLABBASE)
-	$(INSTALL_SH) -m 755 -d $(MATLABBASE)/mex
-	$(INSTALL_SH) -m 755 -d $(MATLABBASE)/tools
-	$(INSTALL_SH) -m 755 -d $(MATLABBASE)/algorithms
-	$(INSTALL_SH) -m 755 $(MATLAB_MEX) $(MATLABBASE)/mex
-	$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/tools/*.m $(MATLABBASE)/tools
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(MATLABBASE)
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(MATLABBASE)/mex
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(MATLABBASE)/tools
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(MATLABBASE)/algorithms
+	$(INSTALL_SH) -m 755 $(MATLAB_MEX) $(DESTDIR)$(MATLABBASE)/mex
+	$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/tools/*.m $(DESTDIR)$(MATLABBASE)/tools
 
 	for D in DART DART/tools DART/examples plot_geom plot_geom/private plot_geom/+draw plot_geom/+draw/private plot_geom/+parseargs plot_geom/+stlTools; do \
-		$(INSTALL_SH) -m 755 -d $(MATLABBASE)/algorithms/$$D; \
-		$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/algorithms/$$D/*.m $(MATLABBASE)/algorithms/$$D; \
+		$(INSTALL_SH) -m 755 -d $(DESTDIR)$(MATLABBASE)/algorithms/$$D; \
+		$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/algorithms/$$D/*.m $(DESTDIR)$(MATLABBASE)/algorithms/$$D; \
 	done
 
 # TODO: docs
@@ -533,11 +537,11 @@ endif
 
 ifeq ($(octave),yes)
 install-octave: $(OCTAVE_MEX) install-octave-so
-	$(INSTALL_SH) -m 755 -d $(OCTAVEBASE)
-	$(INSTALL_SH) -m 755 -d $(OCTAVEBASE)/mex
-	$(INSTALL_SH) -m 755 -d $(OCTAVEBASE)/tools
-	$(INSTALL_SH) -m 755 $(OCTAVE_MEX) $(OCTAVEBASE)/mex
-	$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/tools/*.m $(OCTAVEBASE)/tools
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(OCTAVEBASE)
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(OCTAVEBASE)/mex
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(OCTAVEBASE)/tools
+	$(INSTALL_SH) -m 755 $(OCTAVE_MEX) $(DESTDIR)$(OCTAVEBASE)/mex
+	$(INSTALL_SH) -m 644 $(srcdir)/../../matlab/tools/*.m $(DESTDIR)$(OCTAVEBASE)/tools
 # TODO: docs
 else
 install-octave:
@@ -556,20 +560,20 @@ install-headers:
 else
 
 install-headers:
-	$(INSTALL_SH) -m 755 -d $(includedir)
-	$(INSTALL_SH) -m 755 -d $(includedir)/astra
-	$(INSTALL_SH) -m 755 -d $(includedir)/astra/cuda
-	$(INSTALL_SH) -m 755 -d $(includedir)/astra/cuda/2d
-	$(INSTALL_SH) -m 755 -d $(includedir)/astra/cuda/3d
-	$(INSTALL_SH) -m 644 $(srcdir)/../../include/astra/*.h $(includedir)/astra
-	$(INSTALL_SH) -m 644 $(srcdir)/../../include/astra/*.inl $(includedir)/astra
-	$(INSTALL_SH) -m 644 $(srcdir)/../../include/astra/cuda/2d/*.h $(includedir)/astra/cuda/2d
-	$(INSTALL_SH) -m 644 $(srcdir)/../../include/astra/cuda/3d/*.h $(includedir)/astra/cuda/3d
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(includedir)
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(includedir)/astra
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(includedir)/astra/cuda
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(includedir)/astra/cuda/2d
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(includedir)/astra/cuda/3d
+	$(INSTALL_SH) -m 644 $(srcdir)/../../include/astra/*.h $(DESTDIR)$(includedir)/astra
+	$(INSTALL_SH) -m 644 $(srcdir)/../../include/astra/*.inl $(DESTDIR)$(includedir)/astra
+	$(INSTALL_SH) -m 644 $(srcdir)/../../include/astra/cuda/2d/*.h $(DESTDIR)$(includedir)/astra/cuda/2d
+	$(INSTALL_SH) -m 644 $(srcdir)/../../include/astra/cuda/3d/*.h $(DESTDIR)$(includedir)/astra/cuda/3d
 
 install-dev: install-libraries install-headers libastra.pc
-	$(INSTALL_SH) -m 755 -d $(libdir)
-	$(INSTALL_SH) -m 755 -d $(libdir)/pkgconfig/
-	$(INSTALL_SH) -m 644 libastra.pc $(libdir)/pkgconfig/
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(libdir)
+	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(libdir)/pkgconfig/
+	$(INSTALL_SH) -m 644 libastra.pc $(DESTDIR)$(libdir)/pkgconfig/
 endif
 
 
@@ -584,7 +588,7 @@ $(srcdir)/configure: $(srcdir)/configure.ac
 	@echo "configure.ac has been changed. Regenerating configure script"
 	cd $(srcdir) && $(SHELL) ./autogen.sh
 
-.PHONY: all mex test clean distclean install install-libraries py install-python-site-packages install-python install-octave install-matlab-so install-octave-so install-headers install-dev
+.PHONY: all mex test clean distclean install install-libraries py install-python-site-packages install-python install-matlab install-octave install-matlab-so install-octave-so install-headers install-dev python-wheel
 
 # don't remove intermediate files:
 .SECONDARY:

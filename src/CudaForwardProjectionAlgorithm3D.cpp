@@ -118,8 +118,7 @@ bool CCudaForwardProjectionAlgorithm3D::initialize(const Config& _cfg)
 		id = StringUtil::stringToInt(node.getContent(), -1);
 		m_pProjector = CProjector3DManager::getSingleton().get(id);
 		if (!m_pProjector) {
-			// Report this explicitly since projector is optional
-			ASTRA_ERROR("ProjectorId is not a valid id");
+			ASTRA_WARN("Optional parameter ProjectorId is not a valid id");
 		}
 	}
 	CC.markNodeParsed("ProjectorId");
@@ -230,44 +229,6 @@ bool CCudaForwardProjectionAlgorithm3D::check()
 void CCudaForwardProjectionAlgorithm3D::setGPUIndex(int _iGPUIndex)
 {
 	m_iGPUIndex = _iGPUIndex;
-}
-
-//---------------------------------------------------------------------------------------
-// Information - All
-map<string,boost::any> CCudaForwardProjectionAlgorithm3D::getInformation()
-{
-	map<string,boost::any> res;
-	res["ProjectionGeometry"] = getInformation("ProjectionGeometry");
-	res["VolumeGeometry"] = getInformation("VolumeGeometry");
-	res["ProjectionDataId"] = getInformation("ProjectionDataId");
-	res["VolumeDataId"] = getInformation("VolumeDataId");
-	res["GPUindex"] = getInformation("GPUindex");
-	res["GPUindex"] = getInformation("GPUindex");
-	res["DetectorSuperSampling"] = getInformation("DetectorSuperSampling");
-	return mergeMap<string,boost::any>(CAlgorithm::getInformation(), res);
-}
-
-//---------------------------------------------------------------------------------------
-// Information - Specific
-boost::any CCudaForwardProjectionAlgorithm3D::getInformation(std::string _sIdentifier)
-{
-	// TODO: store these so we can return them?
-	if (_sIdentifier == "ProjectionGeometry")	{ return string("not implemented"); }
-	if (_sIdentifier == "VolumeGeometry")	{ return string("not implemented"); }
-	if (_sIdentifier == "GPUindex")	{ return m_iGPUIndex; }
-	if (_sIdentifier == "DetectorSuperSampling")	{ return m_iDetectorSuperSampling; }
-
-	if (_sIdentifier == "ProjectionDataId") {
-		int iIndex = CData3DManager::getSingleton().getIndex(m_pProjections);
-		if (iIndex != 0) return iIndex;
-		return std::string("not in manager");
-	}
-	if (_sIdentifier == "VolumeDataId") {
-		int iIndex = CData3DManager::getSingleton().getIndex(m_pVolume);
-		if (iIndex != 0) return iIndex;
-		return std::string("not in manager");
-	}
-	return CAlgorithm::getInformation(_sIdentifier);
 }
 
 //----------------------------------------------------------------------------------------

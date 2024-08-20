@@ -27,6 +27,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/FanFlatVecProjectionGeometry2D.h"
 
+#include "astra/Logging.h"
+
 #include <cstring>
 #include <sstream>
 
@@ -196,26 +198,6 @@ bool CFanFlatVecProjectionGeometry2D::isEqual(CProjectionGeometry2D* _pGeom2) co
 bool CFanFlatVecProjectionGeometry2D::isOfType(const std::string& _sType)
 {
 	return (_sType == "fanflat_vec");
-}
-
-//----------------------------------------------------------------------------------------
-
-CVector3D CFanFlatVecProjectionGeometry2D::getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex /* = 0 */)
-{
-	CVector3D vOutput(0.0f, 0.0f, 0.0f);
-
-	// not implemented
-	ASTRA_ASSERT(false);
-
-	return vOutput;
-}
-
-//----------------------------------------------------------------------------------------
-
-void CFanFlatVecProjectionGeometry2D::getRayParams(int _iRow, int _iColumn, float32& _fT, float32& _fTheta) const
-{
-	// not implemented
-	ASTRA_ASSERT(false);
 }
 
 //----------------------------------------------------------------------------------------

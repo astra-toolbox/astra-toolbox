@@ -32,11 +32,6 @@ from . import algorithm
 from . import functions
 import numpy as np
 from six.moves import reduce
-try:
-    from six.moves import range
-except ImportError:
-    # six 1.3.0
-    from six.moves import xrange as range
 
 import operator
 import scipy.sparse.linalg

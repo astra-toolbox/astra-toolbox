@@ -167,21 +167,6 @@ bool CCudaBackProjectionAlgorithm3D::initialize(CProjector3D* _pProjector,
 	return m_bIsInitialized;
 }
 
-//---------------------------------------------------------------------------------------
-// Information - All
-map<string,boost::any> CCudaBackProjectionAlgorithm3D::getInformation() 
-{
-	map<string, boost::any> res;
-	return mergeMap<string,boost::any>(CAlgorithm::getInformation(), res);
-};
-
-//---------------------------------------------------------------------------------------
-// Information - Specific
-boost::any CCudaBackProjectionAlgorithm3D::getInformation(std::string _sIdentifier) 
-{
-	return CAlgorithm::getInformation(_sIdentifier);
-};
-
 //----------------------------------------------------------------------------------------
 // Iterate
 void CCudaBackProjectionAlgorithm3D::run(int _iNrIterations)
@@ -198,12 +183,10 @@ void CCudaBackProjectionAlgorithm3D::run(int _iNrIterations)
 	const CVolumeGeometry3D& volgeom = *pReconMem->getGeometry();
 
 	if (m_bSIRTWeighting) {
-		CFloat32ProjectionData3DMemory* pSinoMemory = dynamic_cast<CFloat32ProjectionData3DMemory*>(m_pSinogram);
-		ASTRA_ASSERT(pSinoMemory);
-		CFloat32VolumeData3DMemory* pReconMemory = dynamic_cast<CFloat32VolumeData3DMemory*>(m_pReconstruction);
-		ASTRA_ASSERT(pReconMemory);
-		astraCudaBP_SIRTWeighted(pReconMemory->getData(),
-		                         pSinoMemory->getDataConst(),
+		ASTRA_ASSERT(m_pSinogram->isFloat32Memory());
+		ASTRA_ASSERT(m_pReconstruction->isFloat32Memory());
+		astraCudaBP_SIRTWeighted(m_pReconstruction->getFloat32Memory(),
+		                         m_pSinogram->getFloat32Memory(),
 		                         &volgeom, projgeom,
 		                         m_iGPUIndex, m_iVoxelSuperSampling);
 	} else {

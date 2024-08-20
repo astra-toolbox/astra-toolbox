@@ -33,8 +33,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "Algorithm.h"
 
-#include "Float32ProjectionData3D.h"
-#include "Float32VolumeData3D.h"
+#include "Data3D.h"
 
 
 namespace astra {
@@ -112,19 +111,6 @@ public:
 	 * @param _bEnable enable the use of this mask
 	 */
 	void setSinogramMask(CFloat32ProjectionData3D* _pMask, bool _bEnable = true);
-
-	/** Get all information parameters.
-	 *
-	 * @return map with all boost::any object
-	 */
-	virtual std::map<std::string,boost::any> getInformation();
-
-	/** Get a single piece of information.
-	 *
-	 * @param _sIdentifier identifier string to specify which piece of information you want
-	 * @return boost::any object
-	 */
-	virtual boost::any getInformation(std::string _sIdentifier);
 
 	/** Get projector object
 	 *

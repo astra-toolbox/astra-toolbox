@@ -33,8 +33,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "Algorithm.h"
 
-#include "Float32ProjectionData3DMemory.h"
-#include "Float32VolumeData3DMemory.h"
+#include "Data3D.h"
 #include "ReconstructionAlgorithm3D.h"
 
 #ifdef ASTRA_CUDA
@@ -75,9 +74,9 @@ public:
 	 * @param _pProjectionData	ProjectionData3D object containing the projection data.
 	 * @param _pReconstruction	VolumeData3D object for storing the reconstructed volume.
 	 */
-	CCudaCglsAlgorithm3D(CProjector3D* _pProjector, 
-	                     CFloat32ProjectionData3DMemory* _pProjectionData, 
-	                     CFloat32VolumeData3DMemory* _pReconstruction);
+	CCudaCglsAlgorithm3D(CProjector3D* _pProjector,
+	                     CFloat32ProjectionData3D* _pProjectionData,
+	                     CFloat32VolumeData3D* _pReconstruction);
 	
 	/** Copy constructor.
 	 */
@@ -105,22 +104,9 @@ public:
 	 * @param _pReconstruction	VolumeData3D object for storing the reconstructed volume.
 	 * @return initialization successful?
 	 */
-	bool initialize(CProjector3D* _pProjector, 
-					CFloat32ProjectionData3DMemory* _pSinogram, 
-					CFloat32VolumeData3DMemory* _pReconstruction);
-
-	/** Get all information parameters
-	 *
-	 * @return map with all boost::any object
-	 */
-	virtual std::map<std::string,boost::any> getInformation();
-
-	/** Get a single piece of information represented as a boost::any
-	 *
-	 * @param _sIdentifier identifier string to specify which piece of information you want
-	 * @return boost::any object
-	 */
-	virtual boost::any getInformation(std::string _sIdentifier);
+	bool initialize(CProjector3D* _pProjector,
+					CFloat32ProjectionData3D* _pSinogram,
+					CFloat32VolumeData3D* _pReconstruction);
 
 	/** Perform a number of iterations.
 	 *

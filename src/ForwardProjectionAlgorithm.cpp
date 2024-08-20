@@ -30,6 +30,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/AstraObjectManager.h"
 #include "astra/DataProjectorPolicies.h"
 
+#include "astra/Logging.h"
+
 using namespace std;
 
 namespace astra {
@@ -165,37 +167,6 @@ bool CForwardProjectionAlgorithm::initialize(const Config& _cfg)
 	m_bIsInitialized = _check();
 	return m_bIsInitialized;
 }
-
-//---------------------------------------------------------------------------------------
-// Get Information - all
-map<string,boost::any> CForwardProjectionAlgorithm::getInformation() 
-{
-	map<string, boost::any> result;
-	result["ProjectorId"] = getInformation("ProjectorId");
-	result["ProjectionDataId"] = getInformation("ProjectionDataId");
-	result["VolumeDataId"] = getInformation("VolumeDataId");
-	return mergeMap<string,boost::any>(CAlgorithm::getInformation(), result);
-};
-
-//---------------------------------------------------------------------------------------
-// Get Information - specific
-boost::any CForwardProjectionAlgorithm::getInformation(std::string _sIdentifier) 
-{
-	if (_sIdentifier == "ProjectorId") {
-		int iIndex = CProjector2DManager::getSingleton().getIndex(m_pProjector);
-		if (iIndex != 0) return iIndex;
-		return std::string("not in manager");
-	} else if (_sIdentifier == "ProjectionDataId") {
-		int iIndex = CData2DManager::getSingleton().getIndex(m_pSinogram);
-		if (iIndex != 0) return iIndex;
-		return std::string("not in manager");
-	} else if (_sIdentifier == "VolumeDataId") {
-		int iIndex = CData2DManager::getSingleton().getIndex(m_pVolume);
-		if (iIndex != 0) return iIndex;
-		return std::string("not in manager");
-	}
-	return CAlgorithm::getInformation(_sIdentifier);
-};
 
 //----------------------------------------------------------------------------------------
 // Initialize

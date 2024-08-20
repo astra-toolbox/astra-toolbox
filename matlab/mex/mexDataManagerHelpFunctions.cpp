@@ -33,8 +33,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/ParallelVecProjectionGeometry3D.h"
 #include "astra/ConeProjectionGeometry3D.h"
 #include "astra/ConeVecProjectionGeometry3D.h"
-#include "astra/Float32VolumeData3DMemory.h"
-#include "astra/Float32ProjectionData3DMemory.h"
 
 #ifdef USE_MATLAB_UNDOCUMENTED
 extern "C" {
@@ -47,11 +45,11 @@ bool mxIsSharedArray(const mxArray *pr);
 #endif
 }
 
-class CFloat32CustomMemoryMatlab3D : public astra::CFloat32CustomMemory {
+class CDataStorageMatlab : public astra::CDataMemory<float> {
 public:
 	// offset allows linking the data object to a sub-volume (in the z direction)
 	// offset is measured in floats.
-	CFloat32CustomMemoryMatlab3D(const mxArray* _pArray, bool bUnshare, size_t iOffset)
+	CDataStorageMatlab(const mxArray* _pArray, bool bUnshare, size_t iOffset)
 	{
 		// Convert from slice to offset
 		mwSize dims[3];
@@ -76,10 +74,10 @@ public:
 		m_pLink = mxCreateSharedDataCopy(_pArray);
 		//fprintf(stderr, "SharedDataCopy:\narray: %p\tdata: %p\n", (void*)m_pLink, (void*)mxGetData(m_pLink));
 		mexMakeArrayPersistent(m_pLink);
-		m_fPtr = (float *)mxGetData(_pArray);
-		m_fPtr += iOffset;
+		this->m_pfData = (float *)mxGetData(_pArray);
+		this->m_pfData += iOffset;
 	}
-	virtual ~CFloat32CustomMemoryMatlab3D() {
+	virtual ~CDataStorageMatlab() {
 		// destroy the shared array
 		//fprintf(stderr, "Destroy:\narray: %p\tdata: %p\n", (void*)m_pLink, (void*)mxGetData(m_pLink));
 		mxDestroyArray(m_pLink);
@@ -91,11 +89,10 @@ private:
 
 //-----------------------------------------------------------------------------------------
 bool
-checkID(const astra::int32 & id, astra::CFloat32Data3DMemory *& pDataObj)
+checkID(const astra::int32 & id, astra::CData3D *& pDataObj)
 {
-	pDataObj = dynamic_cast<astra::CFloat32Data3DMemory *>(
-			astra::CData3DManager::getSingleton().get(id) );
-	return (pDataObj && pDataObj->isInitialized());
+	pDataObj = astra::CData3DManager::getSingleton().get(id);
+	return (pDataObj && pDataObj->isFloat32Memory() && pDataObj->isInitialized());
 }
 
 //-----------------------------------------------------------------------------------------
@@ -163,46 +160,19 @@ checkDataSize(const mxArray * const mArray,
 }
 
 //-----------------------------------------------------------------------------------------
-void
-getDataPointers(const std::vector<astra::CFloat32Data3DMemory *> & vecIn,
-		std::vector<astra::float32 *> & vecOut)
-{
-	const size_t tot_size = vecIn.size();
-	vecOut.resize(tot_size);
-	for (size_t count = 0; count < tot_size; count++)
-	{
-		vecOut[count] = vecIn[count]->getData();
-	}
-}
-
-//-----------------------------------------------------------------------------------------
-void
-getDataSizes(const std::vector<astra::CFloat32Data3DMemory *> & vecIn,
-		std::vector<size_t> & vecOut)
-{
-	const size_t tot_size = vecIn.size();
-	vecOut.resize(tot_size);
-	for (size_t count = 0; count < tot_size; count++)
-	{
-		vecOut[count] = vecIn[count]->getSize();
-	}
-}
-
-//-----------------------------------------------------------------------------------------
-astra::CFloat32Data3DMemory *
+astra::CData3D *
 allocateDataObject(const std::string & sDataType,
 		const mxArray * const geometry, const mxArray * const data,
 		const mxArray * const unshare, const mxArray * const zIndex)
 {
-	astra::CFloat32Data3DMemory* pDataObject3D = NULL;
+	astra::CData3D* pDataObject3D = NULL;
 
 	bool bUnshare = true;
 	if (unshare)
 	{
 		if (!mexIsScalar(unshare))
 		{
-			mexErrMsgTxt("Argument 5 (read-only) must be scalar");
-			return NULL;
+			mexErrMsgTxt("Argument 5 (read-only) must be scalar.");
 		}
 		// unshare the array if we're not linking read-only
 		bUnshare = !(bool)mxGetScalar(unshare);
@@ -213,8 +183,7 @@ allocateDataObject(const std::string & sDataType,
 	{
 		if (!mexIsScalar(zIndex))
 		{
-			mexErrMsgTxt("Argument 6 (Z) must be scalar");
-			return NULL;
+			mexErrMsgTxt("Argument 6 (Z) must be scalar.");
 		}
 		iZ = (mwSignedIndex)mxGetScalar(zIndex);
 	}
@@ -227,10 +196,9 @@ allocateDataObject(const std::string & sDataType,
 		astra::CVolumeGeometry3D* pGeometry = new astra::CVolumeGeometry3D();
 		if (!pGeometry->initialize(*cfg))
 		{
-			mexErrMsgTxt("Geometry class not initialized. \n");
 			delete pGeometry;
 			delete cfg;
-			return NULL;
+			mexErrMsgWithAstraLog("Geometry class could not be initialized.");
 		}
 		delete cfg;
 
@@ -241,27 +209,30 @@ allocateDataObject(const std::string & sDataType,
 					? checkDataSize(data, pGeometry, iZ)
 					: checkDataSize(data, pGeometry)) )
 			{
-				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
 				delete pGeometry;
-				return NULL;
+				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry.");
 			}
 		}
 
 		// Initialize data object
+		size_t dataSize = pGeometry->getGridColCount();
+		dataSize *= pGeometry->getGridRowCount();
+		dataSize *= pGeometry->getGridSliceCount();
 #ifdef USE_MATLAB_UNDOCUMENTED
 		if (unshare) {
-			CFloat32CustomMemoryMatlab3D* pHandle =
-					new CFloat32CustomMemoryMatlab3D(data, bUnshare, iZ);
+			astra::CDataStorage* pHandle = new CDataStorageMatlab(data, bUnshare, iZ);
 
 			// Initialize data object
-			pDataObject3D = new astra::CFloat32VolumeData3DMemory(pGeometry, pHandle);
+			pDataObject3D = new astra::CFloat32VolumeData3D(pGeometry, pHandle);
 		}
 		else
 		{
-			pDataObject3D = new astra::CFloat32VolumeData3DMemory(pGeometry);
+			astra::CDataStorage* pStorage = new astra::CDataMemory<float>(dataSize);
+			pDataObject3D = new astra::CFloat32VolumeData3D(pGeometry, pStorage);
 		}
 #else
-		pDataObject3D = new astra::CFloat32VolumeData3DMemory(pGeometry);
+		astra::CDataStorage* pStorage = new astra::CDataMemory<float>(dataSize);
+		pDataObject3D = new astra::CFloat32VolumeData3D(pGeometry, pStorage);
 #endif
 		delete pGeometry;
 	}
@@ -282,15 +253,14 @@ allocateDataObject(const std::string & sDataType,
 		} else if (type == "cone_vec") {
 			pGeometry = new astra::CConeVecProjectionGeometry3D();
 		} else {
-			mexErrMsgTxt("Invalid geometry type.\n");
-			return NULL;
+			std::string message = "'" + type + "' is not a valid 3D geometry type.";
+			mexErrMsgTxt(message.c_str());
 		}
 
 		if (!pGeometry->initialize(*cfg)) {
-			mexErrMsgTxt("Geometry class not initialized. \n");
 			delete pGeometry;
 			delete cfg;
-			return NULL;
+			mexErrMsgWithAstraLog("Geometry class could not be initialized.");
 		}
 		delete cfg;
 
@@ -301,43 +271,44 @@ allocateDataObject(const std::string & sDataType,
 					? checkDataSize(data, pGeometry, iZ)
 					: checkDataSize(data, pGeometry)) )
 			{
-				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
 				delete pGeometry;
-				return NULL;
+				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry.");
 			}
 		}
 
 		// Initialize data object
+		size_t dataSize = pGeometry->getDetectorColCount();
+		dataSize *= pGeometry->getProjectionCount();
+		dataSize *= pGeometry->getDetectorRowCount();
 #ifdef USE_MATLAB_UNDOCUMENTED
 		if (unshare)
 		{
-			CFloat32CustomMemoryMatlab3D* pHandle =
-					new CFloat32CustomMemoryMatlab3D(data, bUnshare, iZ);
+			astra::CDataStorage* pHandle = new CDataStorageMatlab(data, bUnshare, iZ);
 
 			// Initialize data object
-			pDataObject3D = new astra::CFloat32ProjectionData3DMemory(pGeometry, pHandle);
+			pDataObject3D = new astra::CFloat32ProjectionData3D(pGeometry, pHandle);
 		}
 		else
 		{
-			pDataObject3D = new astra::CFloat32ProjectionData3DMemory(pGeometry);
+			astra::CDataStorage* pStorage = new astra::CDataMemory<float>(dataSize);
+			pDataObject3D = new astra::CFloat32ProjectionData3D(pGeometry, pStorage);
 		}
 #else
-		pDataObject3D = new astra::CFloat32ProjectionData3DMemory(pGeometry);
+		astra::CDataStorage* pStorage = new astra::CDataMemory<float>(dataSize);
+		pDataObject3D = new astra::CFloat32ProjectionData3D(pGeometry, pStorage);
 #endif
 		delete pGeometry;
 	}
 	else
 	{
-		mexErrMsgTxt("Invalid datatype.  Please specify '-vol' or '-proj3d'. \n");
-		return NULL;
+		mexErrMsgTxt("Invalid datatype. Please specify '-vol' or '-proj3d'.");
 	}
 
 	// Check initialization
 	if (!pDataObject3D->isInitialized())
 	{
-		mexErrMsgTxt("Couldn't initialize data object.\n");
 		delete pDataObject3D;
-		return NULL;
+		mexErrMsgTxt("Couldn't initialize data object.");
 	}
 
 	return pDataObject3D;

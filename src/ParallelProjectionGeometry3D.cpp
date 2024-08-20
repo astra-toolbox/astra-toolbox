@@ -175,17 +175,6 @@ Config* CParallelProjectionGeometry3D::getConfiguration() const
 }
 //----------------------------------------------------------------------------------------
 
-CVector3D CParallelProjectionGeometry3D::getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex) const
-{
-	float fTheta = m_pfProjectionAngles[_iProjectionIndex];
-
-	float fDirX = cosf(fTheta);
-	float fDirY = sinf(fTheta);
-	float fDirZ = 0.0f;
-
-	return CVector3D(fDirX, fDirY, fDirZ);
-}
-
 void CParallelProjectionGeometry3D::projectPoint(double fX, double fY, double fZ,
                                                  int iAngleIndex,
                                                  double &fU, double &fV) const

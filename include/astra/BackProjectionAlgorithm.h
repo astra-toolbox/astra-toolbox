@@ -118,19 +118,6 @@ public:
 					CFloat32ProjectionData2D* _pSinogram, 
 					CFloat32VolumeData2D* _pReconstruction);
 
-	/** Get all information parameters.
-	 *
-	 * @return Map with all available identifier strings and their values.
-	 */
-	virtual std::map<std::string,boost::any> getInformation();
-
-	/** Get a single piece of information represented as a boost::any
-	 *
-	 * @param _sIdentifier Identifier string to specify which piece of information you want.
-	 * @return One piece of information.
-	 */
-	virtual boost::any getInformation(std::string _sIdentifier);
-
 	/** Perform a number of iterations.
 	 *
 	 * @param _iNrIterations amount of iterations to perform.

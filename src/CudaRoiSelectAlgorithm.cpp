@@ -35,6 +35,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/AstraObjectManager.h"
 
+#include "astra/Logging.h"
+
 using namespace std;
 
 namespace astra {
@@ -129,22 +131,6 @@ bool CCudaRoiSelectAlgorithm::_check()
 	m_bIsInitialized = true;
 	return true;
 }
-
-//---------------------------------------------------------------------------------------
-// Information - All
-map<string,boost::any> CCudaRoiSelectAlgorithm::getInformation()
-{
-	map<string,boost::any> res;
-	return mergeMap<string,boost::any>(CAlgorithm::getInformation(), res);
-}
-
-//---------------------------------------------------------------------------------------
-// Information - Specific
-boost::any CCudaRoiSelectAlgorithm::getInformation(std::string _sIdentifier)
-{
-	return NULL;
-}
-
 
 } // namespace astra
 

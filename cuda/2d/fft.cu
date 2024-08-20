@@ -90,8 +90,8 @@ __global__ static void rescaleInverseFourier_kernel(int _iProjectionCount,
 	_pfInFourierOutput[iProjectionIndex * _iDetectorCount + iDetectorIndex] /= (float)_iDetectorCount;
 }
 
-static void rescaleInverseFourier(int _iProjectionCount, int _iDetectorCount,
-                                  float * _pfInFourierOutput)
+void rescaleInverseFourier(int _iProjectionCount, int _iDetectorCount,
+                           float * _pfInFourierOutput)
 {
 	const int iBlockSize = 256;
 	int iElementCount = _iProjectionCount * _iDetectorCount;
@@ -189,80 +189,70 @@ bool uploadComplexArrayToDevice(int _iProjectionCount, int _iDetectorCount,
 	return checkCuda(cudaMemcpy(_pDevComplexTarget, _pHostComplexSource, memSize, cudaMemcpyHostToDevice), "fft uploadComplexArrayToDevice");
 }
 
-bool runCudaFFT(int _iProjectionCount, const float * _pfDevRealSource,
-                int _iSourcePitch, int _iProjDets,
-                int _iFFTRealDetectorCount, int _iFFTFourierDetectorCount,
-                cufftComplex * _pDevTargetComplex)
+bool runCudaFFT(int _iProjectionCount,
+                const float * D_pfSource, int _iSourcePitch,
+                int _iProjDets, int _iPaddedSize,
+                cufftComplex * D_pcTarget)
 {
-	float * pfDevRealFFTSource = NULL;
-	size_t bufferMemSize = sizeof(float) * _iProjectionCount * _iFFTRealDetectorCount;
+	float * D_pfPaddedSource = NULL;
+	size_t bufferMemSize = sizeof(float) * _iProjectionCount * _iPaddedSize;
 
-	if (!checkCuda(cudaMalloc((void **)&pfDevRealFFTSource, bufferMemSize), "runCudaFFT malloc"))
+	if (!checkCuda(cudaMalloc((void **)&D_pfPaddedSource, bufferMemSize), "runCudaFFT malloc"))
 		return false;
-	if (!checkCuda(cudaMemset(pfDevRealFFTSource, 0, bufferMemSize), "runCudaFFT memset")) {
-		cudaFree(pfDevRealFFTSource);
+	if (!checkCuda(cudaMemset(D_pfPaddedSource, 0, bufferMemSize), "runCudaFFT memset")) {
+		cudaFree(D_pfPaddedSource);
 		return false;
 	}
 
-	for(int iProjectionIndex = 0; iProjectionIndex < _iProjectionCount; iProjectionIndex++)
-	{
-		const float * pfSourceLocation = _pfDevRealSource + iProjectionIndex * _iSourcePitch;
-		float * pfTargetLocation = pfDevRealFFTSource + iProjectionIndex * _iFFTRealDetectorCount;
-
-		if (!checkCuda(cudaMemcpy(pfTargetLocation, pfSourceLocation, sizeof(float) * _iProjDets, cudaMemcpyDeviceToDevice), "runCudaFFT memcpy")) {
-			cudaFree(pfDevRealFFTSource);
-			return false;
-		}
+	// pitched memcpy 2D to handle both source pitch and target padding
+	if (!checkCuda(cudaMemcpy2D(D_pfPaddedSource, _iPaddedSize*sizeof(float), D_pfSource, _iSourcePitch*sizeof(float), _iProjDets*sizeof(float), _iProjectionCount, cudaMemcpyDeviceToDevice), "runCudaFFT memcpy")) {
+		cudaFree(D_pfPaddedSource);
+		return false;
 	}
 
-	bool bResult = invokeCudaFFT(_iProjectionCount, _iFFTRealDetectorCount,
-	                             pfDevRealFFTSource, _pDevTargetComplex);
+	bool bResult = invokeCudaFFT(_iProjectionCount, _iPaddedSize,
+	                             D_pfPaddedSource, D_pcTarget);
 	if(!bResult)
 		return false;
 
-	cudaFree(pfDevRealFFTSource);
+	cudaFree(D_pfPaddedSource);
 
 	return true;
 }
 
-bool runCudaIFFT(int _iProjectionCount, const cufftComplex* _pDevSourceComplex,
-                 float * _pfRealTarget,
-                 int _iTargetPitch, int _iProjDets,
-                 int _iFFTRealDetectorCount, int _iFFTFourierDetectorCount)
+bool runCudaIFFT(int _iProjectionCount, const cufftComplex *D_pcSource,
+                 float * D_pfTarget, int _iTargetPitch,
+                 int _iProjDets, int _iPaddedSize)
 {
-	float * pfDevRealFFTTarget = NULL;
-	size_t bufferMemSize = sizeof(float) * _iProjectionCount * _iFFTRealDetectorCount;
+	float * D_pfPaddedTarget = NULL;
+	size_t bufferMemSize = sizeof(float) * _iProjectionCount * _iPaddedSize;
 
-	if (!checkCuda(cudaMalloc((void **)&pfDevRealFFTTarget, bufferMemSize), "runCudaIFFT malloc"))
+	if (!checkCuda(cudaMalloc((void **)&D_pfPaddedTarget, bufferMemSize), "runCudaIFFT malloc"))
 		return false;
 
-	bool bResult = invokeCudaIFFT(_iProjectionCount, _iFFTRealDetectorCount,
-	                              _pDevSourceComplex, pfDevRealFFTTarget);
+	bool bResult = invokeCudaIFFT(_iProjectionCount, _iPaddedSize,
+	                             D_pcSource, D_pfPaddedTarget);
 	if(!bResult)
 	{
 		return false;
 	}
 
-	rescaleInverseFourier(_iProjectionCount, _iFFTRealDetectorCount,
-	                      pfDevRealFFTTarget);
+	rescaleInverseFourier(_iProjectionCount, _iPaddedSize,
+	                      D_pfPaddedTarget);
 
-	if (!checkCuda(cudaMemset(_pfRealTarget, 0, sizeof(float) * _iProjectionCount * _iTargetPitch), "runCudaIFFT memset")) {
-		cudaFree(pfDevRealFFTTarget);
+	if (!checkCuda(cudaMemset(D_pfTarget, 0, sizeof(float) * _iProjectionCount * _iTargetPitch), "runCudaIFFT memset")) {
+		cudaFree(D_pfPaddedTarget);
 		return false;
 	}
 
-	for(int iProjectionIndex = 0; iProjectionIndex < _iProjectionCount; iProjectionIndex++)
-	{
-		const float * pfSourceLocation = pfDevRealFFTTarget + iProjectionIndex * _iFFTRealDetectorCount;
-		float* pfTargetLocation = _pfRealTarget + iProjectionIndex * _iTargetPitch;
-
-		if (!checkCuda(cudaMemcpy(pfTargetLocation, pfSourceLocation, sizeof(float) * _iProjDets, cudaMemcpyDeviceToDevice), "runCudaIFFT memcpy")) {
-			cudaFree(pfDevRealFFTTarget);
-			return false;
-		}
+	// pitched memcpy 2D to handle both source padding and target pitch
+	if (!checkCuda(cudaMemcpy2D(D_pfTarget, _iTargetPitch*sizeof(float), D_pfPaddedTarget, _iPaddedSize*sizeof(float), _iProjDets*sizeof(float), _iProjectionCount, cudaMemcpyDeviceToDevice), "runCudaIFFT memcpy")) {
+		cudaFree(D_pfPaddedTarget);
+		return false;
 	}
 
-	cudaFree(pfDevRealFFTTarget);
+
+	cudaFree(D_pfPaddedTarget);
 
 	return true;
 }

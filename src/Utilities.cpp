@@ -35,6 +35,39 @@ namespace astra {
 
 namespace StringUtil {
 
+std::string vformat(const char *fmt, va_list ap)
+{
+	const int N = 255;
+	va_list apc;
+	char buf[N+1];
+
+	va_copy(apc, ap);
+	int len = vsnprintf(buf, N, fmt, apc);
+	va_end(apc);
+
+	// If output fits within our static buffer, we're done
+	if (len <= N)
+		return buf;
+
+	// ... otherwise, allocate dynamic buffer
+	char *dynbuf = new char[len + 1];
+	va_copy(apc, ap);
+	vsnprintf(dynbuf, len, fmt, apc);
+	va_end(apc);
+	std::string ret = dynbuf;
+	delete[] dynbuf;
+	return ret;
+}
+
+std::string format(const char *fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+	std::string ret = vformat(fmt, ap);
+	va_end(ap);
+	return ret;
+}
+
 int stringToInt(const std::string& s)
 {
 	int i;

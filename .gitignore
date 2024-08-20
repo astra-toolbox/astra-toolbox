@@ -6,19 +6,21 @@
 .nfs*
 *.o
 __pycache__
+.vscode/*
 
-/python/build/*
-/python/finalbuild/*
-/python/dist/*
-/python/astra/*.pyc
+# Cython-generated files
 /python/astra/*.cpp
-/python/astra/*.c
 /python/astra/config.pxi
 
-/python/conda/linux_release/buildenv*/*.sh
-/python/conda/linux_release/buildenv*/*.run
-/python/conda/linux_release/buildenv*/cuda*
-/python/conda/linux_release/pkgs/*
+# Build files
+/python/dist/*
+/python/astra_toolbox.egg-info/*
+/python/build/
+/python/astra.lib
+
+/build/conda/pkgs/*
+/build/pypi/pkgs/*
+/build/containers/podman/sw/*
 
 /build/linux/.libs/*
 /build/linux/Makefile
@@ -37,3 +39,8 @@ __pycache__
 /build/linux/ltmain.sh
 /build/linux/src/*
 /build/linux/matlab/*
+/build/linux/python/*
+
+# MSVC build output
+/build/msvc/bin/
+/build/msvc/release/

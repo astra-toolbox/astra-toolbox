@@ -30,6 +30,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/AstraObjectManager.h"
 #include "astra/DataProjectorPolicies.h"
 
+#include "astra/Logging.h"
+
 using namespace std;
 
 namespace astra {
@@ -144,21 +146,6 @@ void CBackProjectionAlgorithm::_init()
 {
 
 }
-
-//---------------------------------------------------------------------------------------
-// Information - All
-map<string,boost::any> CBackProjectionAlgorithm::getInformation() 
-{
-	map<string, boost::any> res;
-	return mergeMap<string,boost::any>(CReconstructionAlgorithm2D::getInformation(), res);
-};
-
-//---------------------------------------------------------------------------------------
-// Information - Specific
-boost::any CBackProjectionAlgorithm::getInformation(std::string _sIdentifier) 
-{
-	return CAlgorithm::getInformation(_sIdentifier);
-};
 
 //----------------------------------------------------------------------------------------
 // Iterate

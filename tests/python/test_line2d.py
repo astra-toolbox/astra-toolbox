@@ -47,8 +47,8 @@ def intersect_line_rectangle(src, det, xmin, xmax, ymin, ymax):
             (-(ymin - src[1]), -(det[1] - src[1]) / n ),
             (ymax - src[1], (det[1] - src[1]) / n ) ]
 
-  pre = [ -np.Inf ]
-  post = [ np.Inf ]
+  pre = [ -np.inf ]
+  post = [ np.inf ]
 
   for p, q in check:
     r = p / (1.0 * q)

@@ -29,6 +29,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/AstraObjectManager.h"
 
+#include "astra/Logging.h"
+
 using namespace std;
 
 namespace astra {
@@ -163,21 +165,6 @@ bool CCglsAlgorithm::initialize(CProjector2D* _pProjector,
 	return m_bIsInitialized;
 }
 
-//---------------------------------------------------------------------------------------
-// Information - All
-map<string,boost::any> CCglsAlgorithm::getInformation() 
-{
-	map<string, boost::any> res;
-	return mergeMap<string,boost::any>(CReconstructionAlgorithm2D::getInformation(), res);
-};
-
-//---------------------------------------------------------------------------------------
-// Information - Specific
-boost::any CCglsAlgorithm::getInformation(std::string _sIdentifier) 
-{
-	return CAlgorithm::getInformation(_sIdentifier);
-};
-
 //----------------------------------------------------------------------------------------
 // Iterate
 void CCglsAlgorithm::run(int _iNrIterations)
@@ -209,7 +196,7 @@ void CCglsAlgorithm::run(int _iNrIterations)
 
 
 
-	int i;
+	size_t i;
 
 	if (m_iIteration == 0) {
 		// r = b;

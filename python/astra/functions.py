@@ -30,6 +30,8 @@
 
 """
 
+from copy import deepcopy
+
 from . import creators as ac
 import numpy as np
 try:
@@ -44,6 +46,7 @@ from . import projector
 from . import algorithm
 from . import pythonutils
 
+from .log import AstraError
 
 
 def clear():
@@ -266,10 +269,13 @@ def geom_2vec(proj_geom):
 
         proj_geom_out = ac.create_proj_geom(
         'parallel3d_vec', proj_geom['DetectorRowCount'], proj_geom['DetectorColCount'], vectors)
-
+        
+    elif proj_geom['type'] in ['parallel_vec', 'fanflat_vec', 'parallel3d_vec', 'cone_vec']:
+        return deepcopy(proj_geom)
+    
     else:
-        raise ValueError(
-        'No suitable vector geometry found for type: ' + proj_geom['type'])
+        raise AstraError('No suitable vector geometry found for type: ' + proj_geom['type'])
+    
     return proj_geom_out
 
 
@@ -297,12 +303,14 @@ def geom_postalignment(proj_geom, factor):
         V[:,2:4] = V[:,2:4] + factor * V[:,4:6]
 
     elif proj_geom['type'] == 'parallel3d_vec' or proj_geom['type'] == 'cone_vec':
+        if isinstance(factor, (float, int)):
+            factor = factor, 0
         V = proj_geom['Vectors']
         V[:,3:6] = V[:,3:6] + factor[0] * V[:,6:9]
-        if len(factor) > 1:
+        if len(factor) > 1:  # Accommodate factor = (number,) semantics
             V[:,3:6] = V[:,3:6] + factor[1] * V[:,9:12]
     else:
-        raise RuntimeError('No suitable geometry for postalignment: ' + proj_geom['type'])
+        raise AstraError(proj_geom['type'] + 'geometry is not suitable for postalignment')
 
     return proj_geom
 

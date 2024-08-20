@@ -35,6 +35,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/AstraObjectManager.h"
 
+#include "astra/Logging.h"
+
 using namespace std;
 
 namespace astra {
@@ -140,23 +142,6 @@ bool CCudaDartSmoothingAlgorithm::_check()
 	m_bIsInitialized = true;
 	return true;
 }
-
-//---------------------------------------------------------------------------------------
-// Information - All
-map<string,boost::any> CCudaDartSmoothingAlgorithm::getInformation()
-{
-	map<string,boost::any> res;
-	// TODO: add PDART-specific options
-	return mergeMap<string,boost::any>(CAlgorithm::getInformation(), res);
-}
-
-//---------------------------------------------------------------------------------------
-// Information - Specific
-boost::any CCudaDartSmoothingAlgorithm::getInformation(std::string _sIdentifier)
-{
-	return NULL;
-}
-
 
 } // namespace astra
 

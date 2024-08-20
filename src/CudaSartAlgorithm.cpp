@@ -4,6 +4,8 @@
 
 #include "astra/cuda/2d/sart.h"
 
+#include "astra/Logging.h"
+
 using namespace std;
 using namespace astra;
 
@@ -42,41 +44,45 @@ bool CCudaSartAlgorithm::initialize(const Config& _cfg)
     m_pAlgo = sart;
     m_bAlgoInit = false;
 
-    // projection order
-    int projectionCount = m_pSinogram->getGeometry()->getProjectionAngleCount();
-    int* projectionOrder = NULL;
-    string projOrder = _cfg.self.getOption("ProjectionOrder", "random");
-    CC.markOptionParsed("ProjectionOrder");
-    if (projOrder == "sequential") {
-        projectionOrder = new int[projectionCount];
-        for (int i = 0; i < projectionCount; i++) {
-            projectionOrder[i] = i;
-        }
-        sart->setProjectionOrder(projectionOrder, projectionCount);
-        delete[] projectionOrder;
-    } else if (projOrder == "random") {
-        projectionOrder = new int[projectionCount];
-        for (int i = 0; i < projectionCount; i++) {
-            projectionOrder[i] = i;
-        }
-        for (int i = 0; i < projectionCount-1; i++) {
-            int k = (rand() % (projectionCount - i));
-            int t = projectionOrder[i];
-            projectionOrder[i] = projectionOrder[i + k];
-            projectionOrder[i + k] = t;
-        }
-        sart->setProjectionOrder(projectionOrder, projectionCount);
-        delete[] projectionOrder;
-    } else if (projOrder == "custom") {
-        vector<float32> projOrderList = _cfg.self.getOptionNumericalArray("ProjectionOrderList");
-        projectionOrder = new int[projOrderList.size()];
-        for (unsigned int i = 0; i < projOrderList.size(); i++) {
-            projectionOrder[i] = static_cast<int>(projOrderList[i]);
-        }
-        sart->setProjectionOrder(projectionOrder, projectionCount);
-        delete[] projectionOrder;
-        CC.markOptionParsed("ProjectionOrderList");
-    }
+	if (_cfg.self.hasOption("SinogramMaskId")) {
+		ASTRA_CONFIG_CHECK(false, "SART_CUDA", "Sinogram mask option is not supported.")
+	}
+
+	// projection order
+	int projectionCount = m_pSinogram->getGeometry()->getProjectionAngleCount();
+	int* projectionOrder = NULL;
+	string projOrder = _cfg.self.getOption("ProjectionOrder", "random");
+	CC.markOptionParsed("ProjectionOrder");
+	if (projOrder == "sequential") {
+		projectionOrder = new int[projectionCount];
+		for (int i = 0; i < projectionCount; i++) {
+			projectionOrder[i] = i;
+		}
+		sart->setProjectionOrder(projectionOrder, projectionCount);
+		delete[] projectionOrder;
+	} else if (projOrder == "random") {
+		projectionOrder = new int[projectionCount];
+		for (int i = 0; i < projectionCount; i++) {
+			projectionOrder[i] = i;
+		}
+		for (int i = 0; i < projectionCount-1; i++) {
+			int k = (rand() % (projectionCount - i));
+			int t = projectionOrder[i];
+			projectionOrder[i] = projectionOrder[i + k];
+			projectionOrder[i + k] = t;
+		}
+		sart->setProjectionOrder(projectionOrder, projectionCount);
+		delete[] projectionOrder;
+	} else if (projOrder == "custom") {
+		vector<float32> projOrderList = _cfg.self.getOptionNumericalArray("ProjectionOrderList");
+		projectionOrder = new int[projOrderList.size()];
+		for (unsigned int i = 0; i < projOrderList.size(); i++) {
+			projectionOrder[i] = static_cast<int>(projOrderList[i]);
+		}
+		sart->setProjectionOrder(projectionOrder, projectionCount);
+		delete[] projectionOrder;
+		CC.markOptionParsed("ProjectionOrderList");
+	}
 
     m_fLambda = _cfg.self.getOptionNumerical("Relaxation", 1.0f);
     CC.markOptionParsed("Relaxation");

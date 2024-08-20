@@ -33,6 +33,9 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/cuda/3d/dims3d.h"
 
 #include "astra/AstraObjectManager.h"
+#include "astra/VolumeGeometry3D.h"
+
+#include "astra/Logging.h"
 
 using namespace std;
 
@@ -66,14 +69,14 @@ bool CCudaDartMaskAlgorithm3D::initialize(const Config& _cfg)
 	XMLNode node = _cfg.self.getSingleNode("SegmentationDataId");
 	ASTRA_CONFIG_CHECK(node, "CudaDartMask3D", "No SegmentationDataId tag specified.");
 	int id = StringUtil::stringToInt(node.getContent(), -1);
-	m_pSegmentation = dynamic_cast<CFloat32VolumeData3DMemory*>(CData3DManager::getSingleton().get(id));
+	m_pSegmentation = dynamic_cast<CFloat32VolumeData3D*>(CData3DManager::getSingleton().get(id));
 	CC.markNodeParsed("SegmentationDataId");
 
 	// reconstruction data
 	node = _cfg.self.getSingleNode("MaskDataId");
 	ASTRA_CONFIG_CHECK(node, "CudaDartMask3D", "No MaskDataId tag specified.");
 	id = StringUtil::stringToInt(node.getContent(), -1);
-	m_pMask = dynamic_cast<CFloat32VolumeData3DMemory*>(CData3DManager::getSingleton().get(id));
+	m_pMask = dynamic_cast<CFloat32VolumeData3D*>(CData3DManager::getSingleton().get(id));
 	CC.markNodeParsed("MaskDataId");
 
 	// Option: GPU number
@@ -136,13 +139,15 @@ void CCudaDartMaskAlgorithm3D::run(int _iNrIterations)
 	dims.iVolZ = volgeom.getGridSliceCount();
 
 	astraCUDA3d::setGPUIndex(m_iGPUIndex);
-	astraCUDA3d::dartMasking(m_pMask->getData(), m_pSegmentation->getDataConst(), m_iConn, m_iRadius, m_iThreshold, dims);
+	astraCUDA3d::dartMasking(m_pMask->getFloat32Memory(), m_pSegmentation->getFloat32Memory(), m_iConn, m_iRadius, m_iThreshold, dims);
 }
 
 //----------------------------------------------------------------------------------------
 // Check
 bool CCudaDartMaskAlgorithm3D::_check() 
 {
+	ASTRA_CONFIG_CHECK(m_pMask->isFloat32Memory(), "CudaDartMask3D", "Mask data object must be float32/memory");
+	ASTRA_CONFIG_CHECK(m_pSegmentation->isFloat32Memory(), "CudaDartMask3D", "Segmentation data object must be float32/memory");
 
 	// connectivity: 6 or 26
 	ASTRA_CONFIG_CHECK(m_iConn == 6 || m_iConn == 26, "CudaDartMask3D", "Connectivity must be 6 or 26");
@@ -154,23 +159,6 @@ bool CCudaDartMaskAlgorithm3D::_check()
 	m_bIsInitialized = true;
 	return true;
 }
-
-//---------------------------------------------------------------------------------------
-// Information - All
-map<string,boost::any> CCudaDartMaskAlgorithm3D::getInformation()
-{
-	map<string,boost::any> res;
-	// TODO: add PDART-specific options
-	return mergeMap<string,boost::any>(CAlgorithm::getInformation(), res);
-}
-
-//---------------------------------------------------------------------------------------
-// Information - Specific
-boost::any CCudaDartMaskAlgorithm3D::getInformation(std::string _sIdentifier)
-{
-	return NULL;
-}
-
 
 } // namespace astra
 

@@ -59,8 +59,7 @@ void astra_mex_data2d_delete(int nlhs, mxArray* plhs[], int nrhs, const mxArray*
 { 
 	// step1: read input
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 
 	// step2: delete all specified data objects
@@ -95,15 +94,14 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 { 
 	// step1: get datatype
 	if (nrhs < 3) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 
 	string sDataType = mexToString(prhs[1]);	
 	CFloat32Data2D* pDataObject2D = NULL;
 
 	if (nrhs >= 4 && !(mexIsScalar(prhs[3])|| mxIsDouble(prhs[3]) || mxIsLogical(prhs[3]) || mxIsSingle(prhs[3]) )) {
-		mexErrMsgTxt("Data must be single, double or logical.");
+		mexErrMsgTxt("Data type must be single, double or logical.");
 		return;
 	}
 	if (mxIsSparse(prhs[2])) {
@@ -115,24 +113,22 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 	if (sDataType == "-vol") {
 		// Read geometry
 		if (!mxIsStruct(prhs[2])) {
-			mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.\n");
+			mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.");
 		}
 		
 		Config* cfg = structToConfig("VolumeGeometry", prhs[2]);
 		CVolumeGeometry2D* pGeometry = new CVolumeGeometry2D();
 		if (!pGeometry->initialize(*cfg)) {
-			mexErrMsgTxt("Geometry class not initialized. \n");
 			delete cfg;
 			delete pGeometry;
-			return;
+			mexErrMsgWithAstraLog("Geometry class could not be initialized.");
 		}
 		// If data is specified, check dimensions
 		if (nrhs >= 4 && !mexIsScalar(prhs[3])) {
 			if (pGeometry->getGridColCount() != mxGetN(prhs[3]) || pGeometry->getGridRowCount() != mxGetM(prhs[3])) {
-				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
 				delete cfg;
 				delete pGeometry;
-				return;
+				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry.");
 			}
 		}
 		// Initialize data object
@@ -143,7 +139,7 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 	else if (sDataType == "-sino") {
 		// Read geometry
 		if (!mxIsStruct(prhs[2])) {
-			mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.\n");
+			mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.");
 		}
 		
 		Config* cfg = structToConfig("ProjectionGeometry", prhs[2]);
@@ -161,23 +157,24 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 		} else if (type == "fanflat_vec") {
 			pGeometry = new CFanFlatVecProjectionGeometry2D();	
 		} else if (type == "parallel_vec") {
-			pGeometry = new CParallelVecProjectionGeometry2D();	
+			pGeometry = new CParallelVecProjectionGeometry2D();
+		} else if (type == "parallel") {
+			pGeometry = new CParallelProjectionGeometry2D();
 		} else {
-			pGeometry = new CParallelProjectionGeometry2D();	
+			std::string message = "'" + type + "' is not a valid 2D geometry type.";
+			mexErrMsgTxt(message.c_str());
 		}
 		if (!pGeometry->initialize(*cfg)) {
-			mexErrMsgTxt("Geometry class not initialized. \n");
 			delete pGeometry;
 			delete cfg;
-			return;
+			mexErrMsgWithAstraLog("Geometry class could not be initialized.");
 		}
 		// If data is specified, check dimensions
 		if (nrhs >= 4 && !mexIsScalar(prhs[3])) {
 			if (pGeometry->getDetectorCount() != mxGetN(prhs[3]) || pGeometry->getProjectionAngleCount() != mxGetM(prhs[3])) {
-				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
 				delete pGeometry;
 				delete cfg;
-				return;
+				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry.");
 			}
 		}
 		// Initialize data object
@@ -186,15 +183,13 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 		delete cfg;
 	}
 	else {
-		mexErrMsgTxt("Invalid datatype.  Please specify '-vol' or '-sino'. \n");
-		return;
+		mexErrMsgTxt("Invalid datatype. Please specify '-vol' or '-sino'.");
 	}
 
 	// Check initialization
 	if (!pDataObject2D->isInitialized()) {
-		mexErrMsgTxt("Couldn't initialize data object.\n");
 		delete pDataObject2D;
-		return;
+		mexErrMsgWithAstraLog("Couldn't initialize data object.");
 	}
 
 	// Store data
@@ -218,8 +213,7 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 			const mwSize* dims = mxGetDimensions(prhs[3]);
 			// Check Data dimensions
 			if (pDataObject2D->getWidth() != mxGetN(prhs[3]) || pDataObject2D->getHeight() != mxGetM(prhs[3])) {
-				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
-				return;
+				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry.");
 			}
 
 			// logical data		
@@ -265,7 +259,7 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 	int iIndex = CData2DManager::getSingleton().store(pDataObject2D);
 
 	// step5: return data id
-	if (1 <= nlhs) {
+	if (nlhs >= 1) {
 		plhs[0] = mxCreateDoubleScalar(iIndex);
 	}
 
@@ -282,29 +276,24 @@ void astra_mex_data2d_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 {
 	// step1: input
 	if (nrhs < 3) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	if (!mxIsDouble(prhs[1])) {
-		mexErrMsgTxt("Identifier should be a scalar value. \n");
-		return;
+		mexErrMsgTxt("Identifier should be a scalar value.");
 	}
 	int iDataID = (int)(mxGetScalar(prhs[1]));
 
 	if (!(mexIsScalar(prhs[2]) || mxIsDouble(prhs[2]) || mxIsLogical(prhs[2]) || mxIsSingle(prhs[2]))) {
-		mexErrMsgTxt("Data must be single, double or logical.");
-		return;
+		mexErrMsgTxt("Data type must be single, double or logical.");
 	}
 	if (mxIsSparse(prhs[2])) {
 		mexErrMsgTxt("Data may not be sparse.");
-		return;
 	}
 
 	// step2: get data object
 	CFloat32Data2D* pDataObject = astra::CData2DManager::getSingleton().get(iDataID);
 	if (!pDataObject || !pDataObject->isInitialized()) {
-		mexErrMsgTxt("Data object not found or not initialized properly.\n");
-		return;
+		mexErrMsgTxt("Data object not found or not initialized properly.");
 	}
 	
 	// step3: insert data
@@ -317,8 +306,7 @@ void astra_mex_data2d_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 	} else {
 		// Check Data dimensions
 		if (pDataObject->getWidth() != mxGetN(prhs[2]) || pDataObject->getHeight() != mxGetM(prhs[2])) {
-			mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
-			return;
+			mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry.");
 		}
 		const mwSize* dims = mxGetDimensions(prhs[2]);
 
@@ -372,20 +360,17 @@ void astra_mex_data2d_get_geometry(int nlhs, mxArray* plhs[], int nrhs, const mx
 { 
 	// parse input
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	if (!mxIsDouble(prhs[1])) {
-		mexErrMsgTxt("Identifier should be a scalar value. \n");
-		return;
+		mexErrMsgTxt("Identifier should be a scalar value.");
 	}
 	int iDataID = (int)(mxGetScalar(prhs[1]));
 
 	// fetch data object
 	CFloat32Data2D* pDataObject = astra::CData2DManager::getSingleton().get(iDataID);
 	if (!pDataObject || !pDataObject->isInitialized()) {
-		mexErrMsgTxt("Data object not found or not initialized properly.\n");
-		return;
+		mexErrMsgTxt("Data object not found or not initialized properly.");
 	}
 
 	// create output
@@ -412,20 +397,17 @@ void astra_mex_data2d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 { 
 	// step1: check input
 	if (nrhs < 3) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	if (!mxIsDouble(prhs[1])) {
-		mexErrMsgTxt("Identifier should be a scalar value. \n");
-		return;
+		mexErrMsgTxt("Identifier should be a scalar value.");
 	}
 
 	// step2: get data object
 	int iDataID = (int)(mxGetScalar(prhs[1]));
 	CFloat32Data2D* pDataObject = astra::CData2DManager::getSingleton().get(iDataID);
 	if (!pDataObject || !pDataObject->isInitialized()) {
-		mexErrMsgTxt("Data object not found or not initialized properly.\n");
-		return;
+		mexErrMsgTxt("Data object not found or not initialized properly.");
 	}
 
 	CFloat32ProjectionData2D* pSinogram = dynamic_cast<CFloat32ProjectionData2D*>(pDataObject);
@@ -435,7 +417,7 @@ void astra_mex_data2d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 
 		// Read geometry
 		if (!mxIsStruct(prhs[2])) {
-			mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.\n");
+			mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.");
 		}
 		Config* cfg = structToConfig("ProjectionGeometry2D", prhs[2]);
 		// FIXME: Change how the base class is created. (This is duplicated
@@ -457,17 +439,15 @@ void astra_mex_data2d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 			pGeometry = new CParallelProjectionGeometry2D();	
 		}
 		if (!pGeometry->initialize(*cfg)) {
-			mexErrMsgTxt("Geometry class not initialized. \n");
 			delete pGeometry;
 			delete cfg;
-			return;
+			mexErrMsgWithAstraLog("Geometry could not be initialized.");
 		}
 		// If data is specified, check dimensions
 		if (pGeometry->getDetectorCount() != pSinogram->getDetectorCount() || pGeometry->getProjectionAngleCount() != pSinogram->getAngleCount()) {
-			mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
 			delete pGeometry;
 			delete cfg;
-			return;
+			mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry.");
 		}
 
 		// If ok, change geometry
@@ -485,22 +465,20 @@ void astra_mex_data2d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 
 		// Read geometry
 		if (!mxIsStruct(prhs[2])) {
-			mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.\n");
+			mexErrMsgTxt("Argument 3 is not a valid MATLAB struct.");
 		}
 		Config* cfg = structToConfig("VolumeGeometry2D", prhs[2]);
 		CVolumeGeometry2D* pGeometry = new CVolumeGeometry2D();
 		if (!pGeometry->initialize(*cfg)) {
-			mexErrMsgTxt("Geometry class not initialized. \n");
 			delete cfg;
 			delete pGeometry;
-			return;
+			mexErrMsgWithAstraLog("Geometry class could not be initialized.");
 		}
 		// If data is specified, check dimensions
 		if (pGeometry->getGridColCount() != pVolume->getWidth() || pGeometry->getGridRowCount() != pVolume->getHeight()) {
-			mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry. \n");
 			delete cfg;
 			delete pGeometry;
-			return;
+			mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry.");
 		}
 
 		// If ok, change geometry
@@ -508,10 +486,11 @@ void astra_mex_data2d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 		delete cfg;
 		delete pGeometry;
 
+		return;
 	}
 
-	mexErrMsgTxt("Data object not found or not initialized properly.\n");
-	return;
+	// Neither sinogram nor volume object
+	mexErrMsgTxt("Data object not found or not initialized properly.");
 }
 
 //-----------------------------------------------------------------------------------------
@@ -525,20 +504,17 @@ void astra_mex_data2d_get(int nlhs, mxArray* plhs[], int nrhs, const mxArray* pr
 { 
 	// step1: check input
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	if (!mxIsDouble(prhs[1])) {
-		mexErrMsgTxt("Identifier should be a scalar value. \n");
-		return;
+		mexErrMsgTxt("Identifier should be a scalar value.");
 	}
 
 	// step2: get data object
 	int iDataID = (int)(mxGetScalar(prhs[1]));
 	CFloat32Data2D* pDataObject = astra::CData2DManager::getSingleton().get(iDataID);
 	if (!pDataObject || !pDataObject->isInitialized()) {
-		mexErrMsgTxt("Data object not found or not initialized properly.\n");
-		return;
+		mexErrMsgTxt("Data object not found or not initialized properly.");
 	}
 
 	// create output
@@ -570,20 +546,17 @@ void astra_mex_data2d_get_single(int nlhs, mxArray* plhs[], int nrhs, const mxAr
 { 
 	// step1: check input
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	if (!mxIsDouble(prhs[1])) {
-		mexErrMsgTxt("Identifier should be a scalar value. \n");
-		return;
+		mexErrMsgTxt("Identifier should be a scalar value.");
 	}
 
 	// step2: get data object
 	int iDataID = (int)(mxGetScalar(prhs[1]));
 	CFloat32Data2D* pDataObject = astra::CData2DManager::getSingleton().get(iDataID);
 	if (!pDataObject || !pDataObject->isInitialized()) {
-		mexErrMsgTxt("Data object not found or not initialized properly.\n");
-		return;
+		mexErrMsgTxt("Data object not found or not initialized properly.");
 	}
 
 	// create output

@@ -32,13 +32,13 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/Globals.h"
 #include "astra/AstraObjectManager.h"
-#include "astra/Float32Data3DMemory.h"
+#include "astra/Data3D.h"
 #include "astra/ProjectionGeometry3D.h"
 #include "astra/VolumeGeometry3D.h"
 
 #include "mexCopyDataHelpFunctions.h"
 
-bool checkID(const astra::int32 &, astra::CFloat32Data3DMemory *&);
+bool checkID(const astra::int32 &, astra::CData3D *&);
 
 bool checkDataType(const mxArray * const);
 bool checkStructs(const mxArray * const);
@@ -50,12 +50,7 @@ bool checkDataSize(const mxArray * const, const astra::CProjectionGeometry3D * c
 bool checkDataSize(const mxArray * const, const astra::CVolumeGeometry3D * const,
 		const mwIndex & zOffset);
 
-void getDataPointers(const std::vector<astra::CFloat32Data3DMemory *> &,
-		std::vector<astra::float32 *> &);
-void getDataSizes(const std::vector<astra::CFloat32Data3DMemory *> &,
-		std::vector<size_t> &);
-
-astra::CFloat32Data3DMemory * allocateDataObject(const std::string & sDataType,
+astra::CData3D * allocateDataObject(const std::string & sDataType,
 		const mxArray * const geometry, const mxArray * const data,
 		const mxArray * const unshare = NULL, const mxArray * const zOffset = NULL);
 
@@ -66,21 +61,19 @@ void generic_astra_mex_data3d_get(int nlhs, mxArray* plhs[], int nrhs,
 {
 	// step1: input
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 
 	// step2: get data object/s
-	astra::CFloat32Data3DMemory* pDataObject = NULL;
+	astra::CData3D* pDataObject = NULL;
 	if (!checkID(mxGetScalar(prhs[1]), pDataObject)) {
-		mexErrMsgTxt("Data object not found or not initialized properly.\n");
-		return;
+		mexErrMsgTxt("Data object not found or not initialized properly.");
 	}
 
 	// create output
 	if (1 <= nlhs) {
 		plhs[0] = createEquivMexArray<datatype>(pDataObject);
-		copyCFloat32ArrayToMex(pDataObject->getData(), plhs[0]);
+		copyCFloat32ArrayToMex(pDataObject->getFloat32Memory(), plhs[0]);
 	}
 }
 

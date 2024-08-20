@@ -30,6 +30,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/AstraObjectManager.h"
 #include "astra/DataProjectorPolicies.h"
 
+#include "astra/Logging.h"
+
 using namespace std;
 
 namespace astra {
@@ -254,32 +256,6 @@ bool CSartAlgorithm::_check()
 
 	return true;
 }
-
-//---------------------------------------------------------------------------------------
-// Information - All
-map<string,boost::any> CSartAlgorithm::getInformation() 
-{
-	map<string, boost::any> res;
-	res["ProjectionOrder"] = getInformation("ProjectionOrder");
-	res["Relaxation"] = getInformation("Relaxation");
-	return mergeMap<string,boost::any>(CReconstructionAlgorithm2D::getInformation(), res);
-};
-
-//---------------------------------------------------------------------------------------
-// Information - Specific
-boost::any CSartAlgorithm::getInformation(std::string _sIdentifier) 
-{
-	if (_sIdentifier == "Relaxation")
-		return m_fLambda;
-	if (_sIdentifier == "ProjectionOrder") {
-		vector<float32> res;
-		for (int i = 0; i < m_iProjectionCount; i++) {
-			res.push_back(m_piProjectionOrder[i]);
-		}
-		return res;
-	}
-	return CAlgorithm::getInformation(_sIdentifier);
-};
 
 //----------------------------------------------------------------------------------------
 // Iterate

@@ -37,10 +37,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/ParallelVecProjectionGeometry3D.h"
 #include "astra/Projector3D.h"
 #include "astra/CudaProjector3D.h"
-#include "astra/Float32ProjectionData3DMemory.h"
-#include "astra/Float32VolumeData3DMemory.h"
-#include "astra/Float32ProjectionData3DGPU.h"
-#include "astra/Float32VolumeData3DGPU.h"
+#include "astra/Data3D.h"
 #include "astra/Logging.h"
 
 #include "astra/cuda/2d/astra.h"
@@ -49,11 +46,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include <cstring>
 #include <sstream>
 #include <climits>
-
-#ifndef USE_PTHREADS
-#include <boost/thread/mutex.hpp>
-#include <boost/thread.hpp>
-#endif
+#include <mutex>
+#include <thread>
 
 
 namespace astra {
@@ -103,19 +97,19 @@ CCompositeGeometryManager::CCompositeGeometryManager()
 
 
 
-class _AstraExport CFloat32CustomGPUMemory {
+class _AstraExport CGPUMemory {
 public:
     astraCUDA3d::MemHandle3D hnd; // Only required to be valid between allocate/free
     virtual bool allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, astraCUDA3d::Mem3DZeroMode zero)=0;
     virtual bool copyToGPUMemory(const astraCUDA3d::SSubDimensions3D &pos)=0;
     virtual bool copyFromGPUMemory(const astraCUDA3d::SSubDimensions3D &pos)=0;
     virtual bool freeGPUMemory()=0;
-	virtual ~CFloat32CustomGPUMemory() { }
+    virtual ~CGPUMemory() { }
 };
 
-class CFloat32ExistingGPUMemory : public astra::CFloat32CustomGPUMemory {
+class CExistingGPUMemory : public astra::CGPUMemory {
 public:
-    CFloat32ExistingGPUMemory(CFloat32Data3DGPU *d);
+    CExistingGPUMemory(CData3D *d);
     virtual bool allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, astraCUDA3d::Mem3DZeroMode zero);
     virtual bool copyToGPUMemory(const astraCUDA3d::SSubDimensions3D &pos);
     virtual bool copyFromGPUMemory(const astraCUDA3d::SSubDimensions3D &pos);
@@ -125,10 +119,14 @@ protected:
     unsigned int x, y, z;
 };
 
-class CFloat32DefaultGPUMemory : public astra::CFloat32CustomGPUMemory {
+class CDefaultGPUMemory : public astra::CGPUMemory {
 public:
-	CFloat32DefaultGPUMemory(CFloat32Data3DMemory* d) {
-		ptr = d->getData();
+	CDefaultGPUMemory(CData3D* d) : ptr(nullptr) {
+		assert(d->getStorage()->isMemory());
+		if (d->getStorage()->isFloat32())
+			ptr = dynamic_cast<CDataMemory<float32>*>(d->getStorage())->getData();
+		else
+			assert(false);
 	}
 	virtual bool allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, astraCUDA3d::Mem3DZeroMode zero) {
 		hnd = astraCUDA3d::allocateGPUMemory(x, y, z, zero);
@@ -150,15 +148,18 @@ protected:
 
 
 
-CFloat32ExistingGPUMemory::CFloat32ExistingGPUMemory(CFloat32Data3DGPU *d)
+CExistingGPUMemory::CExistingGPUMemory(CData3D *d)
 {
-	hnd = d->getHandle();
+	assert(d->getStorage()->isGPU());
+	CDataGPU *storage = dynamic_cast<CDataGPU*>(d->getStorage());
+
+	hnd = storage->getHandle();
 	x = d->getWidth();
 	y = d->getHeight();
 	z = d->getDepth();
 }
 
-bool CFloat32ExistingGPUMemory::allocateGPUMemory(unsigned int x_, unsigned int y_, unsigned int z_, astraCUDA3d::Mem3DZeroMode zero) {
+bool CExistingGPUMemory::allocateGPUMemory(unsigned int x_, unsigned int y_, unsigned int z_, astraCUDA3d::Mem3DZeroMode zero) {
     assert(x_ == x);
     assert(y_ == y);
     assert(z_ == z);
@@ -168,7 +169,7 @@ bool CFloat32ExistingGPUMemory::allocateGPUMemory(unsigned int x_, unsigned int 
     else
         return true;
 }
-bool CFloat32ExistingGPUMemory::copyToGPUMemory(const astraCUDA3d::SSubDimensions3D &pos) {
+bool CExistingGPUMemory::copyToGPUMemory(const astraCUDA3d::SSubDimensions3D &pos) {
     assert(pos.nx == x);
     assert(pos.ny == y);
     assert(pos.nz == z);
@@ -185,7 +186,7 @@ bool CFloat32ExistingGPUMemory::copyToGPUMemory(const astraCUDA3d::SSubDimension
 
     return true;
 }
-bool CFloat32ExistingGPUMemory::copyFromGPUMemory(const astraCUDA3d::SSubDimensions3D &pos) {
+bool CExistingGPUMemory::copyFromGPUMemory(const astraCUDA3d::SSubDimensions3D &pos) {
     assert(pos.nx == x);
     assert(pos.ny == y);
     assert(pos.nz == z);
@@ -202,24 +203,39 @@ bool CFloat32ExistingGPUMemory::copyFromGPUMemory(const astraCUDA3d::SSubDimensi
 
     return true;
 }
-bool CFloat32ExistingGPUMemory::freeGPUMemory() {
+bool CExistingGPUMemory::freeGPUMemory() {
     return true;
 }
 
 
-CFloat32CustomGPUMemory * createGPUMemoryHandler(CFloat32Data3D *d) {
-	CFloat32Data3DMemory *dMem = dynamic_cast<CFloat32Data3DMemory*>(d);
-	CFloat32Data3DGPU *dGPU = dynamic_cast<CFloat32Data3DGPU*>(d);
-
-	if (dMem)
-		return new CFloat32DefaultGPUMemory(dMem);
+CGPUMemory * createGPUMemoryHandler(CData3D *d) {
+	if (d->getStorage()->isMemory())
+		return new CDefaultGPUMemory(d);
 	else
-		return new CFloat32ExistingGPUMemory(dGPU);
+		return new CExistingGPUMemory(d);
 }
 
 
 
+static astraCUDA3d::SSubDimensions3D getPartSubDims(const CCompositeGeometryManager::CPart *part)
+{
+	size_t subnx, subny, subnz;
+	part->getDims(subnx, subny, subnz);
 
+	astraCUDA3d::SSubDimensions3D d;
+	d.nx = part->pData->getWidth();
+	d.pitch = d.nx;
+	d.ny = part->pData->getHeight();
+	d.nz = part->pData->getDepth();
+	d.subnx = subnx;
+	d.subny = subny;
+	d.subnz = subnz;
+	d.subx = part->subX;
+	d.suby = part->subY;
+	d.subz = part->subZ;
+
+	return d;
+}
 
 bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div, TJobSet &split)
 {
@@ -244,12 +260,12 @@ bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div
 #if 0
 		TPartList splitOutput2;
 		for (TPartList::iterator i_out = splitOutput.begin(); i_out != splitOutput.end(); ++i_out) {
-			boost::shared_ptr<CPart> outputPart = *i_out;
+			std::shared_ptr<CPart> outputPart = *i_out;
 			outputPart.get()->splitX(splitOutput2, UINT_MAX, UINT_MAX, 1);
 		}
 		splitOutput.clear();
 		for (TPartList::iterator i_out = splitOutput2.begin(); i_out != splitOutput2.end(); ++i_out) {
-			boost::shared_ptr<CPart> outputPart = *i_out;
+			std::shared_ptr<CPart> outputPart = *i_out;
 					outputPart.get()->splitY(splitOutput, UINT_MAX, UINT_MAX, 1);
 		}
 		splitOutput2.clear();
@@ -263,7 +279,7 @@ bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div
 			for (TPartList::iterator i_out = splitOutput.begin();
 			     i_out != splitOutput.end(); ++i_out)
 			{
-				boost::shared_ptr<CPart> outputPart = *i_out;
+				std::shared_ptr<CPart> outputPart = *i_out;
 
 				SJob newjob;
 				newjob.pOutput = outputPart;
@@ -288,17 +304,17 @@ bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div
 				delete input;
 				TPartList splitInput2;
 				for (TPartList::iterator i_in = splitInput.begin(); i_in != splitInput.end(); ++i_in) {
-					boost::shared_ptr<CPart> inputPart = *i_in;
+					std::shared_ptr<CPart> inputPart = *i_in;
 					inputPart.get()->splitX(splitInput2, UINT_MAX, maxBlockDim, 1);
 				}
 				splitInput.clear();
 				for (TPartList::iterator i_in = splitInput2.begin(); i_in != splitInput2.end(); ++i_in) {
-					boost::shared_ptr<CPart> inputPart = *i_in;
+					std::shared_ptr<CPart> inputPart = *i_in;
 					inputPart.get()->splitY(splitInput, UINT_MAX, maxBlockDim, 1);
 				}
 				splitInput2.clear();
 
-				ASTRA_DEBUG("Input split into %d parts", splitInput.size());
+				ASTRA_DEBUG("Input split into %zu parts", splitInput.size());
 
 				for (TPartList::iterator i_in = splitInput.begin();
 				     i_in != splitInput.end(); ++i_in)
@@ -403,7 +419,7 @@ bool CCompositeGeometryManager::CPart::isFull() const
 
 bool CCompositeGeometryManager::CPart::canSplitAndReduce() const
 {
-	return dynamic_cast<CFloat32Data3DMemory *>(pData) != 0;
+	return pData->getStorage()->isMemory();
 }
 
 
@@ -469,7 +485,7 @@ CCompositeGeometryManager::CPart* CCompositeGeometryManager::CVolumePart::reduce
 			bool ok = testVolumeRange(fullRange, pGeom, other->pGeom,
 			                          0, zmid);
 
-			ASTRA_DEBUG("binsearch min: [%d,%d], %d, %s", zmin, zmax, zmid, ok ? "ok" : "removed too much");
+			//ASTRA_DEBUG("binsearch min: [%d,%d], %d, %s", zmin, zmax, zmid, ok ? "ok" : "removed too much");
 
 			if (ok)
 				zmin = zmid;
@@ -493,7 +509,7 @@ CCompositeGeometryManager::CPart* CCompositeGeometryManager::CVolumePart::reduce
 			bool ok = testVolumeRange(fullRange, pGeom, other->pGeom,
 			                          zmid, pGeom->getGridSliceCount());
 
-			ASTRA_DEBUG("binsearch max: [%d,%d], %d, %s", zmin, zmax, zmid, ok ? "ok" : "removed too much");
+			//ASTRA_DEBUG("binsearch max: [%d,%d], %d, %s", zmin, zmax, zmid, ok ? "ok" : "removed too much");
 
 			if (ok)
 				zmax = zmid;
@@ -820,7 +836,7 @@ void CCompositeGeometryManager::CVolumePart::splitX(CCompositeGeometryManager::T
 		if ((size_t)rem == blockSize)
 			rem = 0;
 
-		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
+		ASTRA_DEBUG("From %d to %d step %zu", -(rem / 2), sliceCount, blockSize);
 
 		for (int x = -(rem / 2); x < sliceCount; x += blockSize) {
 			int newsubX = x;
@@ -849,10 +865,10 @@ void CCompositeGeometryManager::CVolumePart::splitX(CCompositeGeometryManager::T
 			                                   pGeom->getWindowMaxY(),
 			                                   pGeom->getWindowMaxZ());
 
-			out.push_back(boost::shared_ptr<CPart>(sub));
+			out.push_back(std::shared_ptr<CPart>(sub));
 		}
 	} else {
-		out.push_back(boost::shared_ptr<CPart>(clone()));
+		out.push_back(std::shared_ptr<CPart>(clone()));
 	}
 }
 
@@ -868,7 +884,7 @@ void CCompositeGeometryManager::CVolumePart::splitY(CCompositeGeometryManager::T
 		if ((size_t)rem == blockSize)
 			rem = 0;
 
-		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
+		ASTRA_DEBUG("From %d to %d step %zu", -(rem / 2), sliceCount, blockSize);
 
 		for (int y = -(rem / 2); y < sliceCount; y += blockSize) {
 			int newsubY = y;
@@ -897,10 +913,10 @@ void CCompositeGeometryManager::CVolumePart::splitY(CCompositeGeometryManager::T
 			                                   pGeom->getWindowMinY() + shift + size * pGeom->getPixelLengthY(),
 			                                   pGeom->getWindowMaxZ());
 
-			out.push_back(boost::shared_ptr<CPart>(sub));
+			out.push_back(std::shared_ptr<CPart>(sub));
 		}
 	} else {
-		out.push_back(boost::shared_ptr<CPart>(clone()));
+		out.push_back(std::shared_ptr<CPart>(clone()));
 	}
 }
 
@@ -916,7 +932,7 @@ void CCompositeGeometryManager::CVolumePart::splitZ(CCompositeGeometryManager::T
 		if ((size_t)rem == blockSize)
 			rem = 0;
 
-		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
+		ASTRA_DEBUG("From %d to %d step %zu", -(rem / 2), sliceCount, blockSize);
 
 		for (int z = -(rem / 2); z < sliceCount; z += blockSize) {
 			int newsubZ = z;
@@ -945,10 +961,10 @@ void CCompositeGeometryManager::CVolumePart::splitZ(CCompositeGeometryManager::T
 			                                   pGeom->getWindowMaxY(),
 			                                   pGeom->getWindowMinZ() + shift + size * pGeom->getPixelLengthZ());
 
-			out.push_back(boost::shared_ptr<CPart>(sub));
+			out.push_back(std::shared_ptr<CPart>(sub));
 		}
 	} else {
-		out.push_back(boost::shared_ptr<CPart>(clone()));
+		out.push_back(std::shared_ptr<CPart>(clone()));
 	}
 }
 
@@ -1034,7 +1050,7 @@ void CCompositeGeometryManager::CProjectionPart::splitX(CCompositeGeometryManage
 		if ((size_t)rem == blockSize)
 			rem = 0;
 
-		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
+		ASTRA_DEBUG("From %d to %d step %zu", -(rem / 2), sliceCount, blockSize);
 
 		for (int x = -(rem / 2); x < sliceCount; x += blockSize) {
 			int newsubX = x;
@@ -1054,10 +1070,10 @@ void CCompositeGeometryManager::CProjectionPart::splitX(CCompositeGeometryManage
 
 			sub->pGeom = getSubProjectionGeometryU(pGeom, newsubX, size);
 
-			out.push_back(boost::shared_ptr<CPart>(sub));
+			out.push_back(std::shared_ptr<CPart>(sub));
 		}
 	} else {
-		out.push_back(boost::shared_ptr<CPart>(clone()));
+		out.push_back(std::shared_ptr<CPart>(clone()));
 	}
 }
 
@@ -1069,7 +1085,7 @@ void CCompositeGeometryManager::CProjectionPart::splitY(CCompositeGeometryManage
 		size_t m = std::min(maxSize / sliceSize, maxDim);
 		size_t blockSize = computeLinearSplit(m, div, angleCount);
 
-		ASTRA_DEBUG("From %d to %d step %d", 0, angleCount, blockSize);
+		ASTRA_DEBUG("From %d to %d step %zu", 0, angleCount, blockSize);
 
 		for (int th = 0; th < angleCount; th += blockSize) {
 			int endTh = th + blockSize;
@@ -1087,10 +1103,10 @@ void CCompositeGeometryManager::CProjectionPart::splitY(CCompositeGeometryManage
 
 			sub->pGeom = getSubProjectionGeometryAngle(pGeom, th, size);
 
-			out.push_back(boost::shared_ptr<CPart>(sub));
+			out.push_back(std::shared_ptr<CPart>(sub));
 		}
 	} else {
-		out.push_back(boost::shared_ptr<CPart>(clone()));
+		out.push_back(std::shared_ptr<CPart>(clone()));
 	}
 }
 
@@ -1106,7 +1122,7 @@ void CCompositeGeometryManager::CProjectionPart::splitZ(CCompositeGeometryManage
 		if ((size_t)rem == blockSize)
 			rem = 0;
 
-		ASTRA_DEBUG("From %d to %d step %d", -(rem / 2), sliceCount, blockSize);
+		ASTRA_DEBUG("From %d to %d step %zu", -(rem / 2), sliceCount, blockSize);
 
 		for (int z = -(rem / 2); z < sliceCount; z += blockSize) {
 			int newsubZ = z;
@@ -1126,10 +1142,10 @@ void CCompositeGeometryManager::CProjectionPart::splitZ(CCompositeGeometryManage
 
 			sub->pGeom = getSubProjectionGeometryV(pGeom, newsubZ, size);
 
-			out.push_back(boost::shared_ptr<CPart>(sub));
+			out.push_back(std::shared_ptr<CPart>(sub));
 		}
 	} else {
-		out.push_back(boost::shared_ptr<CPart>(clone()));
+		out.push_back(std::shared_ptr<CPart>(clone()));
 	}
 
 }
@@ -1164,8 +1180,8 @@ CCompositeGeometryManager::SJob CCompositeGeometryManager::createJobFP(CProjecto
 	ASTRA_DEBUG("Main FP ProjectionPart -> %p", (void*)output);
 
 	SJob FP;
-	FP.pInput = boost::shared_ptr<CPart>(input);
-	FP.pOutput = boost::shared_ptr<CPart>(output);
+	FP.pInput = std::shared_ptr<CPart>(input);
+	FP.pOutput = std::shared_ptr<CPart>(output);
 	FP.pProjector = pProjector;
 	FP.eType = SJob::JOB_FP;
 	FP.eMode = eMode;
@@ -1196,8 +1212,8 @@ CCompositeGeometryManager::SJob CCompositeGeometryManager::createJobBP(CProjecto
 	output->pGeom = pVolData->getGeometry()->clone();
 
 	SJob BP;
-	BP.pInput = boost::shared_ptr<CPart>(input);
-	BP.pOutput = boost::shared_ptr<CPart>(output);
+	BP.pInput = std::shared_ptr<CPart>(input);
+	BP.pOutput = std::shared_ptr<CPart>(output);
 	BP.pProjector = pProjector;
 	BP.eType = SJob::JOB_BP;
 	BP.eMode = eMode;
@@ -1228,8 +1244,8 @@ bool CCompositeGeometryManager::doFDK(CProjector3D *pProjector, CFloat32VolumeDa
                                      CFloat32ProjectionData3D *pProjData, bool bShortScan,
                                      const float *pfFilter, SJob::EMode eMode)
 {
-	if (!dynamic_cast<CConeProjectionGeometry3D*>(pProjData->getGeometry()) &&
-	    !dynamic_cast<CConeVecProjectionGeometry3D*>(pProjData->getGeometry())) {
+	if (!dynamic_cast<const CConeProjectionGeometry3D*>(pProjData->getGeometry()) &&
+	    !dynamic_cast<const CConeVecProjectionGeometry3D*>(pProjData->getGeometry())) {
 		ASTRA_ERROR("CCompositeGeometryManager::doFDK: cone/cone_vec geometry required");
 		return false;
 	}
@@ -1250,7 +1266,7 @@ bool CCompositeGeometryManager::doFP(CProjector3D *pProjector, const std::vector
 	ASTRA_DEBUG("CCompositeGeometryManager::doFP, multi-volume");
 
 	std::vector<CFloat32VolumeData3D *>::const_iterator i;
-	std::vector<boost::shared_ptr<CPart> > inputs;
+	std::vector<std::shared_ptr<CPart> > inputs;
 
 	for (i = volData.begin(); i != volData.end(); ++i) {
 		CVolumePart *input = new CVolumePart();
@@ -1260,11 +1276,11 @@ bool CCompositeGeometryManager::doFP(CProjector3D *pProjector, const std::vector
 		input->subZ = 0;
 		input->pGeom = (*i)->getGeometry()->clone();
 
-		inputs.push_back(boost::shared_ptr<CPart>(input));
+		inputs.push_back(std::shared_ptr<CPart>(input));
 	}
 
 	std::vector<CFloat32ProjectionData3D *>::const_iterator j;
-	std::vector<boost::shared_ptr<CPart> > outputs;
+	std::vector<std::shared_ptr<CPart> > outputs;
 
 	for (j = projData.begin(); j != projData.end(); ++j) {
 		CProjectionPart *output = new CProjectionPart();
@@ -1274,11 +1290,11 @@ bool CCompositeGeometryManager::doFP(CProjector3D *pProjector, const std::vector
 		output->subZ = 0;
 		output->pGeom = (*j)->getGeometry()->clone();
 
-		outputs.push_back(boost::shared_ptr<CPart>(output));
+		outputs.push_back(std::shared_ptr<CPart>(output));
 	}
 
-	std::vector<boost::shared_ptr<CPart> >::iterator i2;
-	std::vector<boost::shared_ptr<CPart> >::iterator j2;
+	std::vector<std::shared_ptr<CPart> >::iterator i2;
+	std::vector<std::shared_ptr<CPart> >::iterator j2;
 	TJobList L;
 
 	for (i2 = outputs.begin(); i2 != outputs.end(); ++i2) {
@@ -1305,7 +1321,7 @@ bool CCompositeGeometryManager::doBP(CProjector3D *pProjector, const std::vector
 
 
 	std::vector<CFloat32VolumeData3D *>::const_iterator i;
-	std::vector<boost::shared_ptr<CPart> > outputs;
+	std::vector<std::shared_ptr<CPart> > outputs;
 
 	for (i = volData.begin(); i != volData.end(); ++i) {
 		CVolumePart *output = new CVolumePart();
@@ -1315,11 +1331,11 @@ bool CCompositeGeometryManager::doBP(CProjector3D *pProjector, const std::vector
 		output->subZ = 0;
 		output->pGeom = (*i)->getGeometry()->clone();
 
-		outputs.push_back(boost::shared_ptr<CPart>(output));
+		outputs.push_back(std::shared_ptr<CPart>(output));
 	}
 
 	std::vector<CFloat32ProjectionData3D *>::const_iterator j;
-	std::vector<boost::shared_ptr<CPart> > inputs;
+	std::vector<std::shared_ptr<CPart> > inputs;
 
 	for (j = projData.begin(); j != projData.end(); ++j) {
 		CProjectionPart *input = new CProjectionPart();
@@ -1329,11 +1345,11 @@ bool CCompositeGeometryManager::doBP(CProjector3D *pProjector, const std::vector
 		input->subZ = 0;
 		input->pGeom = (*j)->getGeometry()->clone();
 
-		inputs.push_back(boost::shared_ptr<CPart>(input));
+		inputs.push_back(std::shared_ptr<CPart>(input));
 	}
 
-	std::vector<boost::shared_ptr<CPart> >::iterator i2;
-	std::vector<boost::shared_ptr<CPart> >::iterator j2;
+	std::vector<std::shared_ptr<CPart> >::iterator i2;
+	std::vector<std::shared_ptr<CPart> >::iterator j2;
 	TJobList L;
 
 	for (i2 = outputs.begin(); i2 != outputs.end(); ++i2) {
@@ -1369,16 +1385,19 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 	size_t outx, outy, outz;
 	output->getDims(outx, outy, outz);
 
+	astraCUDA3d::SSubDimensions3D dstdims = getPartSubDims(output);
+	ASTRA_DEBUG("dstdims: %d,%d,%d in %d,%d,%d", dstdims.subnx, dstdims.subny, dstdims.subnz, dstdims.nx, dstdims.ny, dstdims.nz);
+
 	if (L.begin()->eType == CCompositeGeometryManager::SJob::JOB_NOP) {
 		// just zero output?
 		if (zero) {
 			// TODO: This function shouldn't have to know about this difference
 			// between Memory/GPU
-			CFloat32Data3DMemory *hostMem = dynamic_cast<CFloat32Data3DMemory *>(output->pData);
-			if (hostMem) {
+			if (output->pData->getStorage()->isMemory()) {
+				assert(output->pData->isFloat32Memory());
 				for (size_t z = 0; z < outz; ++z) {
 					for (size_t y = 0; y < outy; ++y) {
-						float* ptr = hostMem->getData();
+						float* ptr = output->pData->getFloat32Memory();
 						ptr += (z + output->subX) * (size_t)output->pData->getHeight() * (size_t)output->pData->getWidth();
 						ptr += (y + output->subY) * (size_t)output->pData->getWidth();
 						ptr += output->subX;
@@ -1386,7 +1405,8 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 					}
 				}
 			} else {
-				CFloat32Data3DGPU *gpuMem = dynamic_cast<CFloat32Data3DGPU *>(output->pData);
+				assert(output->pData->getStorage()->isGPU());
+				CDataGPU *gpuMem = dynamic_cast<CDataGPU *>(output->pData->getStorage());
 				assert(gpuMem);
 				assert(output->isFull()); // TODO: zero subset?
 
@@ -1396,23 +1416,10 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 		return true;
 	}
 
-
-	astraCUDA3d::SSubDimensions3D dstdims;
-	dstdims.nx = output->pData->getWidth();
-	dstdims.pitch = dstdims.nx;
-	dstdims.ny = output->pData->getHeight();
-	dstdims.nz = output->pData->getDepth();
-	dstdims.subnx = outx;
-	dstdims.subny = outy;
-	dstdims.subnz = outz;
-	ASTRA_DEBUG("dstdims: %d,%d,%d in %d,%d,%d", dstdims.subnx, dstdims.subny, dstdims.subnz, dstdims.nx, dstdims.ny, dstdims.nz);
-	dstdims.subx = output->subX;
-	dstdims.suby = output->subY;
-	dstdims.subz = output->subZ;
-
-	CFloat32CustomGPUMemory *dstMem = createGPUMemoryHandler(output->pData);
+	CGPUMemory *dstMem = createGPUMemoryHandler(output->pData);
 
 	bool ok = dstMem->allocateGPUMemory(outx, outy, outz, zero ? astraCUDA3d::INIT_ZERO : astraCUDA3d::INIT_NO);
+	// TODO: cleanup and return error code after any error
 	if (!ok) ASTRA_ERROR("Error allocating GPU memory");
 
 	if (!zero) {
@@ -1439,19 +1446,10 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 		size_t inx, iny, inz;
 		j.pInput->getDims(inx, iny, inz);
 
-		CFloat32CustomGPUMemory *srcMem = createGPUMemoryHandler(j.pInput->pData);
+		CGPUMemory *srcMem;
+		srcMem = createGPUMemoryHandler(j.pInput->pData);
 
-		astraCUDA3d::SSubDimensions3D srcdims;
-		srcdims.nx = j.pInput->pData->getWidth();
-		srcdims.pitch = srcdims.nx;
-		srcdims.ny = j.pInput->pData->getHeight();
-		srcdims.nz = j.pInput->pData->getDepth();
-		srcdims.subnx = inx;
-		srcdims.subny = iny;
-		srcdims.subnz = inz;
-		srcdims.subx = j.pInput->subX;
-		srcdims.suby = j.pInput->subY;
-		srcdims.subz = j.pInput->subZ;
+		astraCUDA3d::SSubDimensions3D srcdims = getPartSubDims(j.pInput.get());
 
 		ok = srcMem->allocateGPUMemory(inx, iny, inz, astraCUDA3d::INIT_NO);
 		if (!ok) ASTRA_ERROR("Error allocating GPU memory");
@@ -1489,13 +1487,19 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 			assert(dynamic_cast<CCompositeGeometryManager::CVolumePart*>(j.pOutput.get()));
 			assert(dynamic_cast<CCompositeGeometryManager::CProjectionPart*>(j.pInput.get()));
 
-			if (srcdims.subx || srcdims.suby) {
+			float fOutputScale = srcdims.subny;
+			fOutputScale /= srcdims.ny;
+
+			if (j.FDKSettings.bShortScan && srcdims.subny != srcdims.ny) {
+				ASTRA_ERROR("CCompositeGeometryManager::doJobs: shortscan FDK unsupported for this data size currently");
+				ok = false;
+			} else if (srcdims.subx) {
 				ASTRA_ERROR("CCompositeGeometryManager::doJobs: data too large for FDK");
 				ok = false;
 			} else {
 				ASTRA_DEBUG("CCompositeGeometryManager::doJobs: doing FDK");
 
-				ok = astraCUDA3d::FDK(((CCompositeGeometryManager::CProjectionPart*)j.pInput.get())->pGeom, srcMem->hnd, ((CCompositeGeometryManager::CVolumePart*)j.pOutput.get())->pGeom, dstMem->hnd, j.FDKSettings.bShortScan, j.FDKSettings.pfFilter);
+				ok = astraCUDA3d::FDK(((CCompositeGeometryManager::CProjectionPart*)j.pInput.get())->pGeom, srcMem->hnd, ((CCompositeGeometryManager::CVolumePart*)j.pOutput.get())->pGeom, dstMem->hnd, j.FDKSettings.bShortScan, j.FDKSettings.pfFilter, fOutputScale );
 				if (!ok) ASTRA_ERROR("Error performing sub-FDK");
 				ASTRA_DEBUG("CCompositeGeometryManager::doJobs: FDK done");
 			}
@@ -1526,9 +1530,6 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 class WorkQueue {
 public:
 	WorkQueue(CCompositeGeometryManager::TJobSet &_jobs) : m_jobs(_jobs) {
-#ifdef USE_PTHREADS
-		pthread_mutex_init(&m_mutex, 0);
-#endif
 		m_iter = m_jobs.begin();
 	}
 	bool receive(CCompositeGeometryManager::TJobSet::const_iterator &i) {
@@ -1545,32 +1546,17 @@ public:
 
 		return true;	
 	}
-#ifdef USE_PTHREADS
-	void lock() {
-		// TODO: check mutex op return values
-		pthread_mutex_lock(&m_mutex);
-	}
-	void unlock() {
-		// TODO: check mutex op return values
-		pthread_mutex_unlock(&m_mutex);
-	}
-#else
 	void lock() {
 		m_mutex.lock();
 	}
 	void unlock() {
 		m_mutex.unlock();
 	}
-#endif
 
 private:
 	CCompositeGeometryManager::TJobSet &m_jobs;
 	CCompositeGeometryManager::TJobSet::const_iterator m_iter;
-#ifdef USE_PTHREADS
-	pthread_mutex_t m_mutex;
-#else
-	boost::mutex m_mutex;
-#endif
+	std::mutex m_mutex;
 };
 
 struct WorkThreadInfo {
@@ -1578,78 +1564,38 @@ struct WorkThreadInfo {
 	unsigned int m_iGPU;
 };
 
-#ifndef USE_PTHREADS
-
-void runEntries_boost(WorkThreadInfo* info)
+void runEntries(WorkThreadInfo* info)
 {
 	ASTRA_DEBUG("Launching thread on GPU %d\n", info->m_iGPU);
 	CCompositeGeometryManager::TJobSet::const_iterator i;
 	while (info->m_queue->receive(i)) {
 		ASTRA_DEBUG("Running block on GPU %d\n", info->m_iGPU);
 		astraCUDA3d::setGPUIndex(info->m_iGPU);
-		boost::this_thread::interruption_point();
 		doJob(i);
-		boost::this_thread::interruption_point();
 	}
 	ASTRA_DEBUG("Finishing thread on GPU %d\n", info->m_iGPU);
 }
-
-
-#else
-
-void* runEntries_pthreads(void* data) {
-	WorkThreadInfo* info = (WorkThreadInfo*)data;
-
-	ASTRA_DEBUG("Launching thread on GPU %d\n", info->m_iGPU);
-
-	CCompositeGeometryManager::TJobSet::const_iterator i;
-
-	while (info->m_queue->receive(i)) {
-		ASTRA_DEBUG("Running block on GPU %d\n", info->m_iGPU);
-		astraCUDA3d::setGPUIndex(info->m_iGPU);
-		pthread_testcancel();
-		doJob(i);
-		pthread_testcancel();
-	}
-	ASTRA_DEBUG("Finishing thread on GPU %d\n", info->m_iGPU);
-
-	return 0;
-}
-
-#endif
-
 
 void runWorkQueue(WorkQueue &queue, const std::vector<int> & iGPUIndices) {
 	int iThreadCount = iGPUIndices.size();
 
 	std::vector<WorkThreadInfo> infos;
-#ifdef USE_PTHREADS
-	std::vector<pthread_t> threads;
-#else
-	std::vector<boost::thread*> threads;
-#endif
+	std::vector<std::thread*> threads;
 	infos.resize(iThreadCount);
 	threads.resize(iThreadCount);
+	ASTRA_DEBUG("Thread count %d", iThreadCount);
 
 	for (int i = 0; i < iThreadCount; ++i) {
 		infos[i].m_queue = &queue;
 		infos[i].m_iGPU = iGPUIndices[i];
-#ifdef USE_PTHREADS
-		pthread_create(&threads[i], 0, runEntries_pthreads, (void*)&infos[i]);
-#else
-		threads[i] = new boost::thread(runEntries_boost, &infos[i]);
-#endif
+		threads[i] = new std::thread(runEntries, &infos[i]);
 	}
 
 	// Wait for them to finish
 	for (int i = 0; i < iThreadCount; ++i) {
-#ifdef USE_PTHREADS
-		pthread_join(threads[i], 0);
-#else
 		threads[i]->join();
 		delete threads[i];
 		threads[i] = 0;
-#endif
 	}
 }
 
@@ -1742,7 +1688,7 @@ void CCompositeGeometryManager::setGlobalGPUParams(const SGPUParams& params)
 		s << " " << params.GPUIndices[i];
 	std::string ss = s.str();
 	ASTRA_DEBUG(ss.c_str());
-	ASTRA_DEBUG("Memory: %llu", params.memory);
+	ASTRA_DEBUG("Memory: %zu", params.memory);
 }
 
 

@@ -27,6 +27,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/ParallelVecProjectionGeometry2D.h"
 
+#include "astra/Logging.h"
+
 #include <cstring>
 #include <sstream>
 
@@ -180,26 +182,6 @@ bool CParallelVecProjectionGeometry2D::isEqual(CProjectionGeometry2D* _pGeom2) c
 bool CParallelVecProjectionGeometry2D::isOfType(const std::string& _sType)
 {
 	return (_sType == "parallel_vec");
-}
-
-//----------------------------------------------------------------------------------------
-
-CVector3D CParallelVecProjectionGeometry2D::getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex /* = 0 */)
-{
-	CVector3D vOutput(0.0f, 0.0f, 0.0f);
-
-	// not implemented
-	ASTRA_ASSERT(false);
-
-	return vOutput;
-}
-
-//----------------------------------------------------------------------------------------
-
-void CParallelVecProjectionGeometry2D::getRayParams(int _iRow, int _iColumn, float32& _fT, float32& _fTheta) const
-{
-	// not implemented
-	ASTRA_ASSERT(false);
 }
 
 //----------------------------------------------------------------------------------------

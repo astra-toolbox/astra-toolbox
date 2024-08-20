@@ -71,7 +71,7 @@ protected:
 	int m_iGridColCount;		///< number of columns in the volume grid.
 	int m_iGridRowCount;		///< number of rows in the volume grid.
 	int m_iGridSliceCount;		///< number of slices in the volume grid.
-	int m_iGridTotCount;		///< total number of pixels in the volume grid (= m_iGridColCount * m_iGridRowCount * m_iGridSliceCount).
+	size_t m_iGridTotCount;		///< total number of pixels in the volume grid (= m_iGridColCount * m_iGridRowCount * m_iGridSliceCount).
 
 	/** Width of the volume window, in unit lengths.
 	 *
@@ -273,7 +273,7 @@ public:
 	 *
 	 * @return Total number of pixels.
 	 */
-	int getGridTotCount() const;
+	size_t getGridTotCount() const;
 
 	/** Get the horizontal length of the volume window, in unit lengths.
 	 *
@@ -366,7 +366,7 @@ public:
 	 * @param _iPixelSlice Slice index of the pixel, in the interval [0..getGridSliceCount()-1].
 	 * @return Computed index of the pixel, in the interval [0..getGridTotCount()-1].
 	 */
-	int pixelRowColSliceToIndex(int _iPixelRow, int _iPixelCol, int _iPixelSlice) const;
+	size_t pixelRowColSliceToIndex(int _iPixelRow, int _iPixelCol, int _iPixelSlice) const;
 
 	/** Convert a pixel index (from the interval [0..getGridTotCount()-1] to row, column and slice index.
 	 *
@@ -375,7 +375,7 @@ public:
 	 * @param _iPixelCol Computed column index of the pixel, in the interval [0..getGridColCount()-1].
 	 * @param _iPixelSlice Computed slice index of the pixel, in the interval [0..getGridSliceCount()-1].
 	 */
-	void pixelIndexToRowColSlice(int _iPixelIndex, int &_iPixelRow, int &_iPixelCol, int &_iPixelSlice) const;
+	void pixelIndexToRowColSlice(size_t _iPixelIndex, int &_iPixelRow, int &_iPixelCol, int &_iPixelSlice) const;
 
 	/** Convert a pixel column index to the X-coordinate of its center.
 	 *
@@ -530,7 +530,7 @@ inline int CVolumeGeometry3D::getGridSliceCount() const
 
 //----------------------------------------------------------------------------------------
 // Get the total number of pixels in the volume window.
-inline int CVolumeGeometry3D::getGridTotCount() const
+inline size_t CVolumeGeometry3D::getGridTotCount() const
 {
 	ASTRA_ASSERT(m_bInitialized);
 	return m_iGridTotCount;
@@ -650,7 +650,7 @@ inline float32 CVolumeGeometry3D::getWindowMaxZ() const
 
 //----------------------------------------------------------------------------------------
 // Convert row, column and slice index of a pixel to a single index in the interval [0..getGridCountTot()-1].
-inline int CVolumeGeometry3D::pixelRowColSliceToIndex(int _iPixelRow, int _iPixelCol, int _iPixelSlice) const
+inline size_t CVolumeGeometry3D::pixelRowColSliceToIndex(int _iPixelRow, int _iPixelCol, int _iPixelSlice) const
 {
 	ASTRA_ASSERT(m_bInitialized);
 	ASTRA_ASSERT(_iPixelCol >= 0);
@@ -660,20 +660,19 @@ inline int CVolumeGeometry3D::pixelRowColSliceToIndex(int _iPixelRow, int _iPixe
 	ASTRA_ASSERT(_iPixelSlice >= 0);
 	ASTRA_ASSERT(_iPixelSlice < m_iGridSliceCount);
 
-	return (m_iGridColCount*m_iGridRowCount*_iPixelSlice + _iPixelRow * m_iGridColCount + _iPixelCol);
+	return ((size_t)m_iGridColCount*m_iGridRowCount*_iPixelSlice + (size_t)_iPixelRow * m_iGridColCount + _iPixelCol);
 }
 
 //----------------------------------------------------------------------------------------
 // Convert a pixel index (from the interval [0..getGridCountTot()-1] to a row, column and slice index.
-inline void CVolumeGeometry3D::pixelIndexToRowColSlice(int _iPixelIndex, int &_iPixelRow, int &_iPixelCol, int &_iPixelSlice) const
+inline void CVolumeGeometry3D::pixelIndexToRowColSlice(size_t _iPixelIndex, int &_iPixelRow, int &_iPixelCol, int &_iPixelSlice) const
 {
 	ASTRA_ASSERT(m_bInitialized);
-	ASTRA_ASSERT(_iPixelIndex >= 0);
 	ASTRA_ASSERT(_iPixelIndex < m_iGridTotCount);
 
-	_iPixelSlice = _iPixelIndex / (m_iGridRowCount*m_iGridColCount);
-	_iPixelRow = (_iPixelIndex-_iPixelSlice*m_iGridRowCount*m_iGridColCount) / m_iGridColCount;
-	_iPixelCol = (_iPixelIndex-_iPixelSlice*m_iGridRowCount*m_iGridColCount) % m_iGridColCount;
+	_iPixelSlice = _iPixelIndex / ((size_t)m_iGridRowCount*m_iGridColCount);
+	_iPixelRow = (_iPixelIndex-(size_t)_iPixelSlice*m_iGridRowCount*m_iGridColCount) / m_iGridColCount;
+	_iPixelCol = (_iPixelIndex-(size_t)_iPixelSlice*m_iGridRowCount*m_iGridColCount) % m_iGridColCount;
 }
 
 //----------------------------------------------------------------------------------------
@@ -754,7 +753,7 @@ inline float32 CVolumeGeometry3D::pixelSliceToCenterZ(int _iPixelSlice) const
 }
 
 //----------------------------------------------------------------------------------------
-// Convert a pixel row index to the minimum Y-coordinate of points in that row
+// Convert a pixel slice index to the minimum Z-coordinate of points in that slice
 inline float32 CVolumeGeometry3D::pixelSliceToMinZ(int _iPixelSlice) const
 {
 	ASTRA_ASSERT(m_bInitialized);
@@ -765,7 +764,7 @@ inline float32 CVolumeGeometry3D::pixelSliceToMinZ(int _iPixelSlice) const
 }
 
 //----------------------------------------------------------------------------------------
-// Convert a pixel row index to the maximum Y-coordinate of points in that row
+// Convert a pixel slice index to the maximum Z-coordinate of points in that slice
 inline float32 CVolumeGeometry3D::pixelSliceToMaxZ(int _iPixelSlice) const
 {
 	ASTRA_ASSERT(m_bInitialized);

@@ -34,9 +34,8 @@ proj_geom = astra.create_proj_geom('parallel', 1.0, 384, np.linspace(0,np.pi,180
 proj_id = astra.create_projector('strip', proj_geom, vol_geom)
 
 # Create a sinogram from a phantom
-import scipy.io
-P = scipy.io.loadmat('phantom.mat')['phantom256']
-sinogram_id, sinogram = astra.create_sino(P, proj_id)
+phantom_id, P = astra.data2d.shepp_logan(vol_geom)
+sinogram_id, sinogram = astra.create_sino(phantom_id, proj_id)
 
 import pylab
 pylab.gray()
@@ -77,4 +76,5 @@ pylab.show()
 astra.algorithm.delete(alg_id)
 astra.data2d.delete(rec_id)
 astra.data2d.delete(sinogram_id)
+astra.data2d.delete(phantom_id)
 astra.projector.delete(proj_id)

@@ -29,6 +29,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/AstraObjectManager.h"
 
+#include "astra/Logging.h"
 
 using namespace std;
 
@@ -198,17 +199,6 @@ Config* CSparseMatrixProjectionGeometry2D::getConfiguration() const
 	cfg->self.addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
 	cfg->self.addChildNode("MatrixID", CMatrixManager::getSingleton().getIndex(m_pMatrix));
 	return cfg;
-}
-
-//----------------------------------------------------------------------------------------
-CVector3D CSparseMatrixProjectionGeometry2D::getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex)
-{
-	CVector3D vOutput(0.0f, 0.0f, 0.0f);
-
-	// not implemented, yet
-	ASTRA_ASSERT(false);
-
-	return vOutput;
 }
 
 } // end namespace astra

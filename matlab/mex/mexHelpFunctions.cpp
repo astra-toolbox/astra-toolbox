@@ -31,11 +31,21 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "mexHelpFunctions.h"
 #include "astra/Utilities.h"
+#include "astra/Logging.h"
 
 using namespace std;
 using namespace astra;
 
 
+void mexErrMsgWithAstraLog(string message)
+{
+    string last_err_msg = CLogger::getLastErrMsg();
+	if (!last_err_msg.empty()) {
+		message.append(" ");
+		message.append(last_err_msg);
+	}
+	mexErrMsgTxt(message.c_str());
+}
 //-----------------------------------------------------------------------------------------
 // get string from matlab 
 string mexToString(const mxArray* pInput)
@@ -124,36 +134,6 @@ mxArray* vector2DToMxArray(std::vector<std::vector<astra::float32> > mInput)
 	return res;
 }
 
-//-----------------------------------------------------------------------------------------
-// turn a boost::any object to an mxArray
-mxArray* anyToMxArray(boost::any _any) 
-{
-	if (_any.type() == typeid(std::string)) {
-		std::string str = boost::any_cast<std::string>(_any);
-		return mxCreateString(str.c_str());     
-	}
-	if (_any.type() == typeid(int)) {
-		return mxCreateDoubleScalar(boost::any_cast<int>(_any));
-	}
-	if (_any.type() == typeid(float32)) {
-		return mxCreateDoubleScalar(boost::any_cast<float32>(_any));
-	}
-	if (_any.type() == typeid(std::vector<astra::float32>)) {
-		return vectorToMxArray(boost::any_cast<std::vector<float32> >(_any));
-	}
-	if (_any.type() == typeid(std::vector<std::vector<astra::float32> >)) {
-		return vector2DToMxArray(boost::any_cast<std::vector<std::vector<float32> > >(_any));
-	}
-	return NULL;
-}
-
-
-
-
-
-
-
-
 
 //-----------------------------------------------------------------------------------------
 // turn a MATLAB struct into a Config object
@@ -161,7 +141,6 @@ Config* structToConfig(string rootname, const mxArray* pStruct)
 {
 	if (!mxIsStruct(pStruct)) {
 		mexErrMsgTxt("Input must be a struct.");
-		return NULL;
 	}
 
 	// create the document
@@ -173,7 +152,6 @@ Config* structToConfig(string rootname, const mxArray* pStruct)
 	if (!ret) {
 		delete cfg;
 		mexErrMsgTxt("Error parsing struct.");
-		return NULL;		
 	}
 	return cfg;
 }
@@ -209,7 +187,6 @@ bool structToXMLNode(XMLNode node, const mxArray* pStruct)
 		else if (mxIsNumeric(pField) && mxGetM(pField)*mxGetN(pField) > 1) {
 			if (!mxIsDouble(pField)) {
 				mexErrMsgTxt("Numeric input must be double.");
-				return false;
 			}
 			XMLNode listbase = node.addChildNode(sFieldName);
 			double* pdValues = mxGetPr(pField);
@@ -245,8 +222,7 @@ bool optionsToXMLNode(XMLNode node, const mxArray* pOptionStruct)
 		const mxArray* pField = mxGetFieldByNumber(pOptionStruct, 0, i);
 
 		if (node.hasOption(sFieldName)) {
-			mexErrMsgTxt("Duplicate option");
-			return false;
+			mexErrMsgTxt("Duplicate option.");
 		}
 	
 		// string or scalar
@@ -258,7 +234,6 @@ bool optionsToXMLNode(XMLNode node, const mxArray* pOptionStruct)
 		else if (mxIsNumeric(pField) && mxGetM(pField)*mxGetN(pField) > 1) {
 			if (!mxIsDouble(pField)) {
 				mexErrMsgTxt("Numeric input must be double.");
-				return false;
 			}
 
 			XMLNode listbase = node.addChildNode("Option");
@@ -266,8 +241,7 @@ bool optionsToXMLNode(XMLNode node, const mxArray* pOptionStruct)
 			double* pdValues = mxGetPr(pField);
 			listbase.setContent(pdValues, mxGetN(pField), mxGetM(pField), true);
 		} else {
-			mexErrMsgTxt("Unsupported option type");
-			return false;
+			mexErrMsgTxt("Unsupported option type.");
 		}
 	}
 	return true;
@@ -281,7 +255,6 @@ std::map<std::string, mxArray*> parseStruct(const mxArray* pInput)
 	// check type
 	if (!mxIsStruct(pInput)) {
       mexErrMsgTxt("Input must be a struct.");
-	  return res;
 	}
 
 	// get field names

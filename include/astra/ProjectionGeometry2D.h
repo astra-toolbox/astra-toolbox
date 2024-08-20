@@ -224,32 +224,12 @@ public:
 	 */
 	virtual void indexToAngleDetectorIndex(int _iIndex, int& _iAngleIndex, int& _iDetectorIndex) const;
 
-	/** Get the value for t and theta, based upon the row and column index.
-	 *
-	 * @param _iRow		row index 
-	 * @param _iColumn	column index
-	 * @param _fT		output: value of t
-	 * @param _fTheta	output: value of theta, always lies within the [0,pi[ interval.
-	 */
-	virtual void getRayParams(int _iRow, int _iColumn, float32& _fT, float32& _fTheta) const;
-	
 	/** Returns true if the type of geometry defined in this class is the one specified in _sType.
 	 *
 	 * @param _sType geometry type to compare to.
 	 * @return true if the type of geometry defined in this class is the one specified in _sType. 
 	 */
 	 virtual bool isOfType(const std::string& _sType) = 0;
-
-	/**
-	 * Returns a vector describing the direction of a ray belonging to a certain detector
-	 *
-	 * @param _iProjectionIndex index of projection
-	 * @param _iProjectionIndex index of detector
-	 *
-	 * @return a unit vector describing the direction
-	 */
-	 virtual CVector3D getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex) = 0;
-
 
 	//< For Config unused argument checking
 	ConfigCheckData* configCheckData;
@@ -321,18 +301,6 @@ inline float32 CProjectionGeometry2D::getProjectionAngleDegrees(int _iProjection
 	ASTRA_ASSERT(_iProjectionIndex < m_iProjectionAngleCount);
 
 	return (m_pfProjectionAngles[_iProjectionIndex] * 180.0f / PI32);
-}
-
-// Get T and Theta
-inline void CProjectionGeometry2D::getRayParams(int _iRow, int _iColumn, float32& _fT, float32& _fTheta) const
-{
-	ASTRA_ASSERT(m_bInitialized);
-	_fT = indexToDetectorOffset(_iColumn);
-	_fTheta = getProjectionAngle(_iRow);
-	if (PI <= _fTheta) {
-		_fTheta -= PI;
-		_fT = -_fT;
-	}
 }
 
 // detector offset -> detector index

@@ -71,7 +71,7 @@ def checkArrayForLink(data):
     """
 
     if not isinstance(data, np.ndarray):
-        raise ValueError("Numpy array should be numpy.ndarray")
+        raise ValueError("Data should be numpy.ndarray")
     if data.dtype != np.float32:
         raise ValueError("Numpy array should be float32")
     if not (data.flags['C_CONTIGUOUS'] and data.flags['ALIGNED']):

@@ -5,7 +5,6 @@ call "%~dp0build_env.bat"
 call "%B_VC%\vcvars64.bat"
 
 cd /D %~dp0
-cd ..\..
 
 set MATLAB_ROOT=%B_MATLAB_ROOT%
 

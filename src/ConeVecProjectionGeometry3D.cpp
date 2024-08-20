@@ -27,6 +27,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/ConeVecProjectionGeometry3D.h"
 #include "astra/Utilities.h"
+#include "astra/Logging.h"
 
 #include <cstring>
 
@@ -227,15 +228,6 @@ Config* CConeVecProjectionGeometry3D::getConfiguration() const
 	return cfg;
 }
 //----------------------------------------------------------------------------------------
-
-CVector3D CConeVecProjectionGeometry3D::getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex) const
-{
-	const SConeProjection& p = m_pProjectionAngles[_iProjectionIndex];
-	int u = _iDetectorIndex % m_iDetectorColCount;
-	int v = _iDetectorIndex / m_iDetectorColCount;
-
-	return CVector3D(p.fDetSX + (u+0.5)*p.fDetUX + (v+0.5)*p.fDetVX - p.fSrcX, p.fDetSY + (u+0.5)*p.fDetUY + (v+0.5)*p.fDetVY - p.fSrcY, p.fDetSZ + (u+0.5)*p.fDetUZ + (v+0.5)*p.fDetVZ - p.fSrcZ);
-}
 
 void CConeVecProjectionGeometry3D::projectPoint(double fX, double fY, double fZ,
                                                  int iAngleIndex,

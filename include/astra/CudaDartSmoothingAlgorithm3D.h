@@ -31,7 +31,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "Globals.h"
 #include "Config.h"
 #include "Algorithm.h"
-#include "Float32VolumeData3DMemory.h"
+#include "Data3D.h"
 
 
 #ifdef ASTRA_CUDA
@@ -68,19 +68,6 @@ public:
 	 */
 	//bool initialize(CFloat32VolumeData2D* _pSegmentation, int _iConn);
 
-	/** Get all information parameters
-	 *
-	 * @return map with all boost::any object
-	 */
-	virtual std::map<std::string,boost::any> getInformation();
-
-	/** Get a single piece of information represented as a boost::any
-	 *
-	 * @param _sIdentifier identifier string to specify which piece of information you want
-	 * @return boost::any object
-	 */
-	virtual boost::any getInformation(std::string _sIdentifier);
-
 	/** Get a description of the class.
 	 *
 	 * @return description string
@@ -106,8 +93,8 @@ protected:
 	unsigned int m_iRadius;
 	int m_iGPUIndex;
 
-	CFloat32VolumeData3DMemory* m_pIn;
-	CFloat32VolumeData3DMemory* m_pOut;
+	CFloat32VolumeData3D* m_pIn;
+	CFloat32VolumeData3D* m_pOut;
 
 };
 

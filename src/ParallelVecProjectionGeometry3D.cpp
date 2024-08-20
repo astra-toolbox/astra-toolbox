@@ -27,6 +27,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/ParallelVecProjectionGeometry3D.h"
 #include "astra/Utilities.h"
+#include "astra/Logging.h"
 
 #include <cstring>
 
@@ -229,13 +230,6 @@ Config* CParallelVecProjectionGeometry3D::getConfiguration() const
 	return cfg;
 }
 //----------------------------------------------------------------------------------------
-
-CVector3D CParallelVecProjectionGeometry3D::getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex) const
-{
-	const SPar3DProjection& p = m_pProjectionAngles[_iProjectionIndex];
-
-	return CVector3D(p.fRayX, p.fRayY, p.fRayZ);
-}
 
 void CParallelVecProjectionGeometry3D::projectPoint(double fX, double fY, double fZ,
                                                     int iAngleIndex,

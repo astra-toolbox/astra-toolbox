@@ -33,6 +33,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/SparseMatrixProjectionGeometry2D.h"
 #include "astra/SparseMatrix.h"
 
+#include "astra/Logging.h"
 
 namespace astra
 {

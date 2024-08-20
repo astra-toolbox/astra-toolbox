@@ -26,6 +26,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "astra/ProjectionGeometry3D.h"
+#include "astra/Logging.h"
 
 using namespace std;
 
@@ -243,8 +244,6 @@ bool CProjectionGeometry3D::_initialize(int _iProjectionAngleCount,
 	for (int i = 0; i < m_iProjectionAngleCount; i++) {
 		m_pfProjectionAngles[i] = _pfProjectionAngles[i];
 	}
-
-	m_iDetectorTotCount = m_iProjectionAngleCount * m_iDetectorRowCount * m_iDetectorColCount;
 
 	return true;
 }

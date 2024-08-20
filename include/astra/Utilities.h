@@ -31,6 +31,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 #include <map>
+#include <cstdarg>
 
 #include "Globals.h"
 
@@ -45,6 +46,11 @@ class bad_cast : public std::exception {
 public:
 	bad_cast() { }
 };
+
+//< Format a string, returning it as a std::string
+std::string vformat(const char *fmt, va_list ap);
+//< Format a string, returning it as a std::string
+std::string format(const char *fmt, ...) ATTRIBUTE_FORMAT(printf, 1, 2);
 
 
 //< Parse string as int.

@@ -36,14 +36,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #ifdef USE_MATLAB_UNDOCUMENTED
 extern "C" { bool utIsInterruptPending(); }
-
-#ifdef USE_PTHREADS
-#define USE_PTHREADS_CTRLC
-#include <pthread.h>
-#else
-#include <boost/thread.hpp>
-#endif
-
 #endif
 
 
@@ -67,12 +59,11 @@ using namespace astra;
 void astra_mex_algorithm_create(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 { 
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 
 	if (!mxIsStruct(prhs[1])) {
-		mexErrMsgTxt("Argument 1 not a valid MATLAB struct. \n");
+		mexErrMsgTxt("Argument 1 not a valid MATLAB struct.");
 	}
 
 	// turn MATLAB struct to an XML-based Config object
@@ -81,16 +72,14 @@ void astra_mex_algorithm_create(int nlhs, mxArray* plhs[], int nrhs, const mxArr
 	CAlgorithm* pAlg = CAlgorithmFactory::getSingleton().create(cfg->self.getAttribute("type"));
 	if (!pAlg) {
 		delete cfg;
-		mexErrMsgTxt("Unknown Algorithm. \n");
-		return;
+		mexErrMsgTxt("Unknown algorithm type.");
 	}
 
 	// create algorithm
 	if (!pAlg->initialize(*cfg)) {
 		delete cfg;
 		delete pAlg;
-		mexErrMsgTxt("Unable to initialize Algorithm. \n");
-		return;
+		mexErrMsgWithAstraLog("Unable to initialize algorithm.");
 	}
 	delete cfg;
 
@@ -121,8 +110,7 @@ void astra_mex_algorithm_run(int nlhs, mxArray* plhs[], int nrhs, const mxArray*
 { 
 	// step1: get input
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	int iAid = (int)(mxGetScalar(prhs[1]));
 	int iIterations = 0;
@@ -133,12 +121,10 @@ void astra_mex_algorithm_run(int nlhs, mxArray* plhs[], int nrhs, const mxArray*
 	// step2: get algorithm object
 	CAlgorithm* pAlg = CAlgorithmManager::getSingleton().get(iAid);
 	if (!pAlg) {
-		mexErrMsgTxt("Invalid algorithm ID.\n");
-		return;
+		mexErrMsgTxt("Invalid algorithm ID.");
 	}
 	if (!pAlg->isInitialized()) {
-		mexErrMsgTxt("Algorithm not initialized. \n");
-		return;
+		mexErrMsgTxt("Algorithm ID exists but is not initialized.");
 	}
 
 	// step3: perform actions
@@ -159,20 +145,17 @@ void astra_mex_algorithm_get_res_norm(int nlhs, mxArray* plhs[], int nrhs, const
 { 
 	// step1: get input
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 	int iAid = (int)(mxGetScalar(prhs[1]));
 
 	// step2: get algorithm object
 	CAlgorithm* pAlg = CAlgorithmManager::getSingleton().get(iAid);
 	if (!pAlg) {
-		mexErrMsgTxt("Invalid algorithm ID.\n");
-		return;
+		mexErrMsgTxt("Invalid algorithm ID.");
 	}
 	if (!pAlg->isInitialized()) {
-		mexErrMsgTxt("Algorithm not initialized. \n");
-		return;
+		mexErrMsgTxt("Algorithm ID exists but is not initialized.");
 	}
 
 	CReconstructionAlgorithm2D* pAlg2D = dynamic_cast<CReconstructionAlgorithm2D*>(pAlg);
@@ -188,8 +171,7 @@ void astra_mex_algorithm_get_res_norm(int nlhs, mxArray* plhs[], int nrhs, const
 		ok = false;
 
 	if (!ok) {
-		mexErrMsgTxt("Operation not supported.\n");
-		return;
+		mexErrMsgTxt("Operation not supported.");
 	}
 
 	plhs[0] = mxCreateDoubleScalar(res);
@@ -205,8 +187,7 @@ void astra_mex_algorithm_delete(int nlhs, mxArray* plhs[], int nrhs, const mxArr
 {
 	// step1: get algorithm ID
 	if (nrhs < 2) {
-		mexErrMsgTxt("Not enough arguments.  See the help document for a detailed argument list. \n");
-		return;
+		mexErrMsgTxt("Not enough arguments. See the help document for a detailed argument list.");
 	}
 
 	for (int i = 1; i < nrhs; i++) {

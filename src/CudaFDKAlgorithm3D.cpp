@@ -33,6 +33,9 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/ConeProjectionGeometry3D.h"
 #include "astra/ConeVecProjectionGeometry3D.h"
 #include "astra/CompositeGeometryManager.h"
+#include "astra/VolumeGeometry3D.h"
+
+#include "astra/Float32ProjectionData2D.h"
 
 #include "astra/Logging.h"
 #include "astra/Filters.h"
@@ -194,21 +197,6 @@ bool CCudaFDKAlgorithm3D::initialize(CProjector3D* _pProjector,
 	m_bIsInitialized = _check();
 	return m_bIsInitialized;
 }
-
-//---------------------------------------------------------------------------------------
-// Information - All
-map<string,boost::any> CCudaFDKAlgorithm3D::getInformation() 
-{
-	map<string, boost::any> res;
-	return mergeMap<string,boost::any>(CAlgorithm::getInformation(), res);
-};
-
-//---------------------------------------------------------------------------------------
-// Information - Specific
-boost::any CCudaFDKAlgorithm3D::getInformation(std::string _sIdentifier) 
-{
-	return CAlgorithm::getInformation(_sIdentifier);
-};
 
 //----------------------------------------------------------------------------------------
 // Iterate

@@ -133,26 +133,6 @@ public:
 	 */
 	virtual Config* getConfiguration() const;
 
-
-	/** Get the value for t and theta, based upon the row and column index.
-	 *
-	 * @param _iRow		row index 
-	 * @param _iColumn	column index
-	 * @param _fT		output: value of t
-	 * @param _fTheta	output: value of theta, always lies within the [0,pi[ interval.
-	 */
-	virtual void getRayParams(int _iRow, int _iColumn, float32& _fT, float32& _fTheta) const;
-
-	/**
-	 * Returns a vector describing the direction of a ray belonging to a certain detector
-	 *
-	 * @param _iProjectionIndex index of projection
-	 * @param _iProjectionIndex index of detector
-	 *
-	 * @return a unit vector describing the direction
-	 */
-	virtual CVector3D getProjectionDirection(int _iProjectionIndex, int _iDetectorIndex);
-
 	const SParProjection* getProjectionVectors() const { return m_pProjectionAngles; }
 
 protected:

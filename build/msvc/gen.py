@@ -1,8 +1,6 @@
-from __future__ import print_function
 import sys
 import os
 import codecs
-import six
 
 vcppguid = "8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942" # C++ project
 siguid = "2150E333-8FDC-42A3-9474-1A3956D46DE8" # project group 
@@ -27,32 +25,36 @@ CUDA_CC = {
   (11,4): "compute_35,sm_35;compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_86,compute_86",
   (11,5): "compute_35,sm_35;compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_86,compute_86",
   (11,6): "compute_35,sm_35;compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_86,compute_86",
+  (11,7): "compute_35,sm_35;compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_86,compute_86",
+  (11,8): "compute_35,sm_35;compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_86,compute_86",
+  (12,0): "compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_86,compute_86",
+  (12,1): "compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_86,compute_86",
+  (12,2): "compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_86,compute_86",
+  (12,3): "compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_87,sm_87;compute_89,sm_89;compute_90,sm_90;compute_90,compute_90",
+  (12,4): "compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_87,sm_87;compute_89,sm_89;compute_90,sm_90;compute_90,compute_90",
+  (12,5): "compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_87,sm_87;compute_89,sm_89;compute_90,sm_90;compute_90,compute_90",
 }
 
-def create_mex_project(name, uuid14, uuid11, uuid09):
-    return { "type": vcppguid, "name": name, "file14": "matlab\\mex\\" + name + "_vc14.vcxproj", "file11": "matlab\\mex\\" + name + "_vc11.vcxproj", "file09": "matlab\\mex\\" + name + "_vc09.vcproj", "uuid14": uuid14, "uuid11": uuid11, "uuid09": uuid09, "files": [] }
+def create_mex_project(name, uuid14):
+    return { "type": vcppguid, "name": name, "file14": name + "_vc14.vcxproj", "uuid14": uuid14, "files": [] }
 
-P_astra = { "type": vcppguid, "name": "astra_vc11", "file14": "astra_vc14.vcxproj", "file11": "astra_vc11.vcxproj", "file09": "astra_vc09.vcproj", "uuid14": "DABD9D82-609E-4C71-B1CA-A41B07495290", "uuid11": "BE9F1326-527C-4284-AE2C-D1E25D539CEA", "uuid09": "12926444-6723-46A8-B388-12E65E0577FA" }
+P_astra = { "type": vcppguid, "name": "astra_vc14", "file14": "astra_vc14.vcxproj", "uuid14": "DABD9D82-609E-4C71-B1CA-A41B07495290" }
 
-P0 = create_mex_project("astra_mex", "6FDF72C4-A855-4F1C-A401-6500040B5E28", "3FDA35E0-0D54-4663-A3E6-5ABA96F32221", "3FDA35E0-0D54-4663-A3E6-5ABA96F32221")
+P0 = create_mex_project("astra_mex", "6FDF72C4-A855-4F1C-A401-6500040B5E28")
 
-P1 = create_mex_project("astra_mex_algorithm", "CE5EF874-830C-4C10-8651-CCA2A34ED9E4", "056BF7A9-294D-487C-8CC3-BE629077CA94", "056BF7A9-294D-487C-8CC3-BE629077CA94")
-P2 = create_mex_project("astra_mex_data2d", "D2CDCDB3-7AD9-4853-8D87-BDB1DAD9C9C1", "E4092269-B19C-46F7-A84E-4F146CC70E44", "E4092269-B19C-46F7-A84E-4F146CC70E44")
-P3 = create_mex_project("astra_mex_data3d", "2A7084C6-62ED-4235-85F4-094C17689DEB", "0BEC029B-0929-4BF9-BD8B-9C9806A52065", "0BEC029B-0929-4BF9-BD8B-9C9806A52065")
-P4 = create_mex_project("astra_mex_matrix", "6BFA8857-37EB-4E43-A97C-B860E21599F5", "9D041710-2119-4230-BCF2-5FBE753FDE49", "9D041710-2119-4230-BCF2-5FBE753FDE49")
-P5 = create_mex_project("astra_mex_projector", "85ECCF1D-C5F6-4E0E-A4F9-0DE7C0B916B2", "4DD6056F-8EEE-4C9A-B2A9-923F01A32E97", "4DD6056F-8EEE-4C9A-B2A9-923F01A32E97")
-P6 = create_mex_project("astra_mex_projector3d", "CA85BDA0-9BDD-495E-B200-BFE863EB6318", "F94CCD79-AA11-42DF-AC8A-6C9D2238A883", "F94CCD79-AA11-42DF-AC8A-6C9D2238A883")
-P7 = create_mex_project("astra_mex_log", "88539382-66DB-4BBC-A48E-8B6B3CA6064F", "03B833F5-4FD6-4FBE-AAF4-E3305CD56D2E", "CA2840B3-DA68-41B5-AC57-F5DFD20ED8F8")
-P8 = create_mex_project("astra_mex_direct", "47460476-912B-4313-8B10-BDF1D60A84C4", "0F68F4E2-BE1B-4A9A-B101-AECF4C069CC7", "85FE09A6-FA49-4314-A2B1-59D77C7442A8")
+P1 = create_mex_project("astra_mex_algorithm", "CE5EF874-830C-4C10-8651-CCA2A34ED9E4")
+P2 = create_mex_project("astra_mex_data2d", "D2CDCDB3-7AD9-4853-8D87-BDB1DAD9C9C1")
+P3 = create_mex_project("astra_mex_data3d", "2A7084C6-62ED-4235-85F4-094C17689DEB")
+P4 = create_mex_project("astra_mex_matrix", "6BFA8857-37EB-4E43-A97C-B860E21599F5")
+P5 = create_mex_project("astra_mex_projector", "85ECCF1D-C5F6-4E0E-A4F9-0DE7C0B916B2")
+P6 = create_mex_project("astra_mex_projector3d", "CA85BDA0-9BDD-495E-B200-BFE863EB6318")
+P7 = create_mex_project("astra_mex_log", "88539382-66DB-4BBC-A48E-8B6B3CA6064F")
+P8 = create_mex_project("astra_mex_direct", "47460476-912B-4313-8B10-BDF1D60A84C4")
 
 F_astra_mex = { "type": siguid,
                 "name": "astra_mex",
                 "file14": "astra_mex",
-                "file11": "astra_mex",
-                "file09": "astra_mex",
                 "uuid14": "2076FB73-ECFE-4B1B-9A8C-E351C500FAAB",
-                "uuid11": "5E99A109-374E-4102-BE9B-99BA1FA8AA30",
-                "uuid09": "33EF0AC5-B475-40BF-BAE5-67075B204D10",
                 "entries": [ P0, P1, P2, P3, P4, P5, P6, P7, P8 ] }
 
 
@@ -200,7 +202,6 @@ P_astra["filters"]["Algorithms\\source"] = [
 "9df653ab-26c3-4bec-92a2-3dda22fda761",
 "src\\Algorithm.cpp",
 "src\\ArtAlgorithm.cpp",
-"src\\AsyncAlgorithm.cpp",
 "src\\BackProjectionAlgorithm.cpp",
 "src\\CglsAlgorithm.cpp",
 "src\\FilteredBackProjectionAlgorithm.cpp",
@@ -213,16 +214,12 @@ P_astra["filters"]["Algorithms\\source"] = [
 ]
 P_astra["filters"]["Data Structures\\source"] = [
 "95346487-8185-487b-a794-3e7fb5fcbd4c",
+"src\\Data3D.cpp",
 "src\\Float32Data.cpp",
 "src\\Float32Data2D.cpp",
-"src\\Float32Data3D.cpp",
-"src\\Float32Data3DMemory.cpp",
 "src\\Float32ProjectionData2D.cpp",
-"src\\Float32ProjectionData3D.cpp",
-"src\\Float32ProjectionData3DMemory.cpp",
 "src\\Float32VolumeData2D.cpp",
-"src\\Float32VolumeData3D.cpp",
-"src\\Float32VolumeData3DMemory.cpp",
+"src\\SheppLogan.cpp",
 "src\\SparseMatrix.cpp",
 ]
 P_astra["filters"]["Global &amp; Other\\source"] = [
@@ -297,9 +294,6 @@ P_astra["filters"]["CUDA\\astra source"] = [
 "src\\CudaSartAlgorithm.cpp",
 "src\\CudaSirtAlgorithm.cpp",
 "src\\CudaSirtAlgorithm3D.cpp",
-"src\\Float32Data3DGPU.cpp",
-"src\\Float32ProjectionData3DGPU.cpp",
-"src\\Float32VolumeData3DGPU.cpp",
 ]
 P_astra["filters"]["CUDA\\cuda headers"] = [
 "4e17872e-db7d-41bc-9760-fad1c253b583",
@@ -339,7 +333,6 @@ P_astra["filters"]["Algorithms\\headers"] = [
 "include\\astra\\Algorithm.h",
 "include\\astra\\AlgorithmTypelist.h",
 "include\\astra\\ArtAlgorithm.h",
-"include\\astra\\AsyncAlgorithm.h",
 "include\\astra\\BackProjectionAlgorithm.h",
 "include\\astra\\CglsAlgorithm.h",
 "include\\astra\\CudaBackProjectionAlgorithm.h",
@@ -354,16 +347,12 @@ P_astra["filters"]["Algorithms\\headers"] = [
 ]
 P_astra["filters"]["Data Structures\\headers"] = [
 "444c44b0-6454-483a-be26-7cb9c8ab0b98",
+"include\\astra\\Data3D.h",
 "include\\astra\\Float32Data.h",
 "include\\astra\\Float32Data2D.h",
-"include\\astra\\Float32Data3D.h",
-"include\\astra\\Float32Data3DMemory.h",
 "include\\astra\\Float32ProjectionData2D.h",
-"include\\astra\\Float32ProjectionData3D.h",
-"include\\astra\\Float32ProjectionData3DMemory.h",
 "include\\astra\\Float32VolumeData2D.h",
-"include\\astra\\Float32VolumeData3D.h",
-"include\\astra\\Float32VolumeData3DMemory.h",
+"include\\astra\\SheppLogan.h",
 "include\\astra\\SparseMatrix.h",
 ]
 P_astra["filters"]["Global &amp; Other\\headers"] = [
@@ -441,9 +430,6 @@ P_astra["filters"]["CUDA\\astra headers"] = [
 "include\\astra\\CudaSartAlgorithm.h",
 "include\\astra\\CudaSirtAlgorithm.h",
 "include\\astra\\CudaSirtAlgorithm3D.h",
-"include\\astra\\Float32Data3DGPU.h",
-"include\\astra\\Float32ProjectionData3DGPU.h",
-"include\\astra\\Float32VolumeData3DGPU.h",
 ]
 P_astra["filters"]["Projectors\\inline"] = [
 "0daffd63-ba49-4a5f-8d7a-5322e0e74f22",
@@ -465,16 +451,12 @@ P_astra["files"].sort()
 
 projects = [ P_astra, F_astra_mex, P0, P1, P2, P3, P4, P5, P6, P7, P8 ]
 
-if six.PY2:
-  bom = "\xef\xbb\xbf"
-else:
-  bom = codecs.BOM_UTF8.decode("utf-8")
+bom = codecs.BOM_UTF8.decode("utf-8")
 
 class Configuration:
-  def __init__(self, debug, cuda, x64):
+  def __init__(self, debug, cuda):
     self.debug = debug
     self.cuda = cuda
-    self.x64 = x64
   def type(self):
     if self.debug:
       return "Debug"
@@ -486,11 +468,7 @@ class Configuration:
       n += "_CUDA"
     return n
   def platform(self):
-    if self.x64:
-      n = "x64"
-    else:
-      n = "Win32"
-    return n 
+    return "x64"
   def name(self):
     n = self.config()
     n += "|"
@@ -500,52 +478,29 @@ class Configuration:
     n = "Astra"
     if self.cuda:
       n += "Cuda"
-    if self.x64:
-      n += "64"
-    else:
-      n += "32"
+    n += "64"
     if self.debug:
       n += "D"
     return n
       
 
 
-configs = [ Configuration(a,b,c) for a in [ True, False ] for b in [ True, False ] for c in [ False, True ] ]
+configs = [ Configuration(a,b) for a in [ True, False ] for b in [ True, False ] ]
 
-def write_sln(version):
+def write_sln():
   main_project = P_astra
-  if version == 9:
-    F = open("astra_vc09.sln", "w", encoding="utf-8")
-  elif version == 11:
-    F = open("astra_vc11.sln", "w", encoding="utf-8")
-  elif version == 14:
-    F = open("astra_vc14.sln", "w", encoding="utf-8")
-  else:
-    assert(False)
+  F = open("astra_vc14.sln", "w", encoding="utf-8")
   print(bom, file=F)
-  if version == 9:
-    print("Microsoft Visual Studio Solution File, Format Version 10.00", file=F)
-    print("# Visual Studio 2008", file=F)
-    uuid = "uuid09"
-    file_ = "file09"
-  elif version == 11:
-    print("Microsoft Visual Studio Solution File, Format Version 12.00", file=F)
-    print("# Visual Studio 2012", file=F)
-    uuid = "uuid11"
-    file_ = "file11"
-  elif version == 14:
-    print("Microsoft Visual Studio Solution File, Format Version 12.00", file=F)
-    print("# Visual Studio 14", file=F)
-    print("VisualStudioVersion = 14.0.25420.1", file=F)
-    print("MinimumVisualStudioVersion = 10.0.40219.1", file=F)
-    uuid = "uuid14"
-    file_ = "file14"
+  print("Microsoft Visual Studio Solution File, Format Version 12.00", file=F)
+  print("# Visual Studio 14", file=F)
+  print("VisualStudioVersion = 14.0.25420.1", file=F)
+  print("MinimumVisualStudioVersion = 10.0.40219.1", file=F)
   for p in projects:
-    s = '''Project("{%s}") = "%s", "%s", "{%s}"''' % (p["type"], p["name"], p[file_], p[uuid])
+    s = '''Project("{%s}") = "%s", "projects\\%s", "{%s}"''' % (p["type"], p["name"], p["file14"], p["uuid14"])
     print(s, file=F)
     if "mex" in p["name"]:
       print("\tProjectSection(ProjectDependencies) = postProject", file=F)
-      print("\t\t{%s} = {%s}" % (main_project[uuid], main_project[uuid]), file=F)
+      print("\t\t{%s} = {%s}" % (main_project["uuid14"], main_project["uuid14"]), file=F)
       print("\tEndProjectSection", file=F)
     print("EndProject", file=F)
   print("Global", file=F)
@@ -558,8 +513,8 @@ def write_sln(version):
     if "entries" in p:
       continue
     for c in configs:
-      print("\t\t{" + p[uuid] + "}." + c.name() + ".ActiveCfg = " + c.name(), file=F)
-      print("\t\t{" + p[uuid] + "}." + c.name() + ".Build.0 = " + c.name(), file=F)
+      print("\t\t{" + p["uuid14"] + "}." + c.name() + ".ActiveCfg = " + c.name(), file=F)
+      print("\t\t{" + p["uuid14"] + "}." + c.name() + ".Build.0 = " + c.name(), file=F)
   print("\tEndGlobalSection", file=F)
   print("\tGlobalSection(SolutionProperties) = preSolution", file=F)
   print("\t\tHideSolutionNode = FALSE", file=F)
@@ -569,12 +524,12 @@ def write_sln(version):
     if "entries" not in p:
       continue
     for e in p["entries"]:
-      print("\t\t{" + e[uuid] + "} = {" + p[uuid] + "}", file=F)
+      print("\t\t{" + e["uuid14"] + "} = {" + p["uuid14"] + "}", file=F)
   print("\tEndGlobalSection", file=F)
   print("EndGlobal", file=F)
   F.close()
 
-def write_project11_14_start(P, F, version):
+def write_project14_start(P, F):
   print(bom + '<?xml version="1.0" encoding="utf-8"?>', file=F)
   print('<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">', file=F)
   print('  <ItemGroup Label="ProjectConfigurations">', file=F)
@@ -587,17 +542,14 @@ def write_project11_14_start(P, F, version):
   print('  <PropertyGroup Label="Globals">', file=F)
   if 'mex' in P["name"]:
     print('    <ProjectName>' + P["name"] + '</ProjectName>', file=F)
-  if version == 11:
-    print('    <ProjectGuid>{' + P["uuid11"] + '}</ProjectGuid>', file=F)
-  else:
-    print('    <ProjectGuid>{' + P["uuid14"] + '}</ProjectGuid>', file=F)
+  print('    <ProjectGuid>{' + P["uuid14"] + '}</ProjectGuid>', file=F)
   if 'mex' in P["name"]:
     print('    <RootNamespace>astraMatlab</RootNamespace>', file=F)
   else:
     print('    <RootNamespace>' + P["name"] + '</RootNamespace>', file=F)
-  print('    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>', file=F)
+  print('    <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>', file=F)
   print('  </PropertyGroup>', file=F)
-  print('  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />', file=F)
+  print('  <Import Project="$(VCTargetsPath)\\Microsoft.Cpp.Default.props" />', file=F)
   for c in configs:
     print('''  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='%s'" Label="Configuration">''' % (c.name(), ), file=F)
     print('    <ConfigurationType>DynamicLibrary</ConfigurationType>', file=F)
@@ -606,51 +558,51 @@ def write_project11_14_start(P, F, version):
         print('    <UseDebugLibraries>true</UseDebugLibraries>', file=F)
       else:
         print('    <UseDebugLibraries>false</UseDebugLibraries>', file=F)
-    if version == 11:
-      print('    <PlatformToolset>v110</PlatformToolset>', file=F)
-    else:
-      print('    <PlatformToolset>v141</PlatformToolset>', file=F)
+    print('    <PlatformToolset>v141</PlatformToolset>', file=F)
     if 'mex' not in P["name"]:
       if not c.debug:
         print('    <WholeProgramOptimization>true</WholeProgramOptimization>', file=F)
       print('    <CharacterSet>MultiByte</CharacterSet>', file=F)
     print('  </PropertyGroup>', file=F)
-  print('  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />', file=F)
+  print('  <Import Project="$(VCTargetsPath)\\Microsoft.Cpp.props" />', file=F)
   print('  <ImportGroup Label="ExtensionSettings">', file=F)
   if "mex" not in P["name"]:
     print(f'    <Import Project="$(CUDA_PATH_V{CUDA_MAJOR}_{CUDA_MINOR})\\extras\\visual_studio_integration\\MSBuildExtensions\\CUDA {CUDA_MAJOR}.{CUDA_MINOR}.props" />', file=F)
   print('  </ImportGroup>', file=F)
   for c in configs:
     print('''  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='%s'">''' % (c.name(), ), file=F)
-    print('''    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />''', file=F)
+    print('''    <Import Project="$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />''', file=F)
     print('''  </ImportGroup>''', file=F)
   print('  <PropertyGroup Label="UserMacros" />', file=F)
 
-def write_project11_14_end(P, F):
+def write_project14_end(P, F):
+  relpath = '..\\..\\..\\'
+  if 'mex' in P["name"]:
+      relpath += 'matlab\\mex\\'
   l = [ f for f in P["files"] if len(f) > 4 and f[-4:] == ".cpp" ]
   if l:
     print('  <ItemGroup>', file=F)
     for f in l:
       if ("cuda" in f) or ("Cuda" in f):
-        print('    <ClCompile Include="' + f + '">', file=F)
+        print('    <ClCompile Include="' + relpath + f + '">', file=F)
         for c in configs:
           if not c.cuda:
             print('''      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='%s'">true</ExcludedFromBuild>''' % (c.name(), ), file=F)
         print('    </ClCompile>', file=F)
       else:
-        print('    <ClCompile Include="' + f + '" />', file=F)
+        print('    <ClCompile Include="' + relpath + f + '" />', file=F)
     print('  </ItemGroup>', file=F)
   l = [ f for f in P["files"] if len(f) > 2 and f[-2:] == ".h" ]
   if l:
     print('  <ItemGroup>', file=F)
     for f in l:
-      print('    <ClInclude Include="' + f + '" />', file=F)
+      print('    <ClInclude Include="' + relpath + f + '" />', file=F)
     print('  </ItemGroup>', file=F)
   l = [ f for f in P["files"] if len(f) > 3 and f[-3:] == ".cu" ]
   if l:
     print('  <ItemGroup>', file=F)
     for f in l:
-      print('    <CudaCompile Include="' + f + '">', file=F)
+      print('    <CudaCompile Include="' + relpath + f + '">', file=F)
       for c in configs:
         if not c.cuda:
           print('''      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='%s'">true</ExcludedFromBuild>''' % (c.name(), ), file=F)
@@ -660,9 +612,9 @@ def write_project11_14_end(P, F):
   if l:
     print('  <ItemGroup>', file=F)
     for f in l:
-      print('    <None Include="' + f + '" />', file=F)
+      print('    <None Include="' + relpath + f + '" />', file=F)
     print('  </ItemGroup>', file=F)
-  print('  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />', file=F)
+  print('  <Import Project="$(VCTargetsPath)\\Microsoft.Cpp.targets" />', file=F)
   print('  <ImportGroup Label="ExtensionTargets">', file=F)
   if "mex" not in P["name"]:
     print(f'    <Import Project="$(CUDA_PATH_V{CUDA_MAJOR}_{CUDA_MINOR})\\extras\\visual_studio_integration\\MSBuildExtensions\\CUDA {CUDA_MAJOR}.{CUDA_MINOR}.targets" />', file=F)
@@ -670,20 +622,16 @@ def write_project11_14_end(P, F):
   print('</Project>', end="", file=F)
 
 
-def write_main_project11_14(version):
+def write_main_project14():
   P = P_astra;
-  if version == 11:
-    F = open(P["file11"], "w", encoding="utf-8")
-  else:
-    F = open(P["file14"], "w", encoding="utf-8")
-  write_project11_14_start(P, F, version)
+  F = open(os.path.join("projects", P["file14"]), "w", encoding="utf-8")
+  write_project14_start(P, F)
   for c in configs:
     print('''  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='%s'">''' % (c.name(), ), file=F)
-    if c.cuda and version == 11:
-      print('    <IncludePath>$(CUDA_INC_PATH);$(IncludePath)</IncludePath>', file=F)
-      print('    <LibraryPath>$(CUDA_LIB_PATH);$(LibraryPath)</LibraryPath>', file=F)
-    print('    <OutDir>$(SolutionDir)bin\\$(Platform)\\' + c.config() + '\\</OutDir>', file=F)
+    print('    <OutDir>..\\bin\\$(Platform)\\$(Configuration)\\</OutDir>', file=F)
     print('    <IntDir>$(OutDir)obj\\</IntDir>', file=F)
+    print('    <CudaIntDir>$(OutDir)obj\\</CudaIntDir>', file=F)
+    print('    <CudaIntDirFullPath>$(SolutionDir)bin\\$(Platform)\\$(Configuration)\\obj\\</CudaIntDirFullPath>', file=F)
     print('    <TargetExt>.dll</TargetExt>', file=F)
     print('    <TargetName>' + c.target() + '</TargetName>', file=F)
     print('    <GenerateManifest>true</GenerateManifest>', file=F)
@@ -696,10 +644,8 @@ def write_main_project11_14(version):
     else:
       print('      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>', file=F)
     print('      <WarningLevel>Level3</WarningLevel>', file=F)
-    print('      <AdditionalIncludeDirectories>lib\include;include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
+    print('      <AdditionalIncludeDirectories>..\\..\\..\\lib\\include;..\\..\\..\\include\\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
     print('      <OpenMPSupport>true</OpenMPSupport>', file=F)
-    if not c.x64: # /arch:SSE2 is implicit on x64
-      print('      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>', file=F)
     if c.debug:
       print('      <Optimization>Disabled</Optimization>', file=F)
     else:
@@ -723,15 +669,11 @@ def write_main_project11_14(version):
     if not c.debug:
       print('      <EnableCOMDATFolding>true</EnableCOMDATFolding>', file=F)
       print('      <OptimizeReferences>true</OptimizeReferences>', file=F)
-    print('      <OutputFile>bin\\' + c.platform() + '\\' + c.config() + '\\' + c.target() + '.dll</OutputFile>', file=F)
+    print('      <OutputFile>..\\bin\\' + c.platform() + '\\' + c.config() + '\\' + c.target() + '.dll</OutputFile>', file=F)
     if c.cuda:
       print('      <AdditionalDependencies>cudart.lib;cufft.lib;%(AdditionalDependencies)</AdditionalDependencies>', file=F)
     l = '      <AdditionalLibraryDirectories>';
-    if c.x64:
-      l += 'lib\\x64'
-    else:
-      l += 'lib\\win32'
-    l += ';%(AdditionalLibraryDirectories)'
+    l += '%(AdditionalLibraryDirectories)'
     if c.cuda:
       l += ';$(CudaToolkitLibDir)'
     l += '</AdditionalLibraryDirectories>'
@@ -739,35 +681,26 @@ def write_main_project11_14(version):
     print('    </Link>', file=F)
     if c.cuda:
       print('    <CudaCompile>', file=F)
-      if c.x64:
-        print('      <TargetMachinePlatform>64</TargetMachinePlatform>', file=F)
-      else:
-        print('      <TargetMachinePlatform>32</TargetMachinePlatform>', file=F)
+      print('      <TargetMachinePlatform>64</TargetMachinePlatform>', file=F)
       print('      <GenerateLineInfo>true</GenerateLineInfo>', file=F)
       print(f'      <CodeGeneration>{CUDA_CC[(CUDA_MAJOR,CUDA_MINOR)]}</CodeGeneration>', file=F)
       print('    </CudaCompile>', file=F)
     print('  </ItemDefinitionGroup>', file=F)
-  write_project11_14_end(P, F)
+  write_project14_end(P, F)
   F.close()
 
-def write_mex_project11_14(P, version):
-  if version == 11:
-    F = open("matlab/mex/" + P["name"] + "_vc11.vcxproj", "w", encoding="utf-8")
-  else:
-    F = open("matlab/mex/" + P["name"] + "_vc14.vcxproj", "w", encoding="utf-8")
-  write_project11_14_start(P, F, version)
+def write_mex_project14(P):
+  F = open(os.path.join("projects", P["name"] + "_vc14.vcxproj"), "w", encoding="utf-8")
+  write_project14_start(P, F)
   print('  <PropertyGroup>', file=F)
   print('    <_ProjectFileVersion>11.0.60610.1</_ProjectFileVersion>', file=F)
   print('  </PropertyGroup>', file=F)
   for c in configs:
     print('''  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='%s'">''' % (c.name(), ), file=F)
-    print('    <OutDir>$(SolutionDir)bin\\$(Platform)\\$(Configuration)\\</OutDir>', file=F)
+    print('    <OutDir>..\\bin\\$(Platform)\\$(Configuration)\\</OutDir>', file=F)
     print('    <IntDir>$(OutDir)obj\\$(ProjectName)\\</IntDir>', file=F)
     print('    <TargetName>$(ProjectName)_c</TargetName>', file=F)
-    if c.x64:
-      print('    <TargetExt>.mexw64</TargetExt>', file=F)
-    else:
-      print('    <TargetExt>.mexw32</TargetExt>', file=F)
+    print('    <TargetExt>.mexw64</TargetExt>', file=F)
     print('  </PropertyGroup>', file=F)
   for c in configs:
     print('''  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='%s'">''' % (c.name(), ), file=F)
@@ -777,12 +710,10 @@ def write_mex_project11_14(P, version):
     else:
       print('      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>', file=F)
 #    print('      <WarningLevel>Level3</WarningLevel>', file=F)
-    #print('      <AdditionalIncludeDirectories>$(MATLAB_ROOT)\extern\include\;..\..\lib\include;..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
+    #print('      <AdditionalIncludeDirectories>$(MATLAB_ROOT)\\extern\\include\\;..\\..\\lib\\include;..\\..\\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
     # FIXME: This CUDA_PATH shouldn't be necessary
-    print('      <AdditionalIncludeDirectories>$(MATLAB_ROOT)\extern\include\;$(CUDA_PATH)\include;..\..\lib\include;..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
+    print('      <AdditionalIncludeDirectories>$(MATLAB_ROOT)\\extern\\include\\;$(CUDA_PATH)\\include;..\\..\\..\\lib\\include;..\\..\\..\\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
     print('      <OpenMPSupport>true</OpenMPSupport>', file=F)
-    if not c.x64: # /arch:SSE2 is implicit on x64
-      print('      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>', file=F)
     if c.debug:
       print('      <Optimization>Disabled</Optimization>', file=F)
     else:
@@ -808,21 +739,12 @@ def write_mex_project11_14(P, version):
 #    if not c.debug:
 #      print('      <EnableCOMDATFolding>true</EnableCOMDATFolding>', file=F)
 #      print('      <OptimizeReferences>true</OptimizeReferences>', file=F)
-    if c.x64:
-      print('      <OutputFile>$(OutDir)$(ProjectName)_c.mexw64</OutputFile>', file=F)
-    else:
-      print('      <OutputFile>$(OutDir)$(ProjectName)_c.mexw32</OutputFile>', file=F)
+    print('      <OutputFile>$(OutDir)$(ProjectName)_c.mexw64</OutputFile>', file=F)
     print('      <AdditionalDependencies>%s.lib;libmex.lib;libmx.lib;libut.lib;%%(AdditionalDependencies)</AdditionalDependencies>' % (c.target(), ), file=F)
     l = '      <AdditionalLibraryDirectories>';
-    if c.x64:
-      l += '..\\..\\lib\\x64\\;..\\..\\bin\\x64\\'
-    else:
-      l += '..\\..\\lib\\win32\\;..\\..\\bin\\win32\\'
+    l += '..\\bin\\x64\\'
     l += c.config()
-    if c.x64:
-      l += ';$(MATLAB_ROOT)\extern\lib\win64\microsoft'
-    else:
-      l += ';$(MATLAB_ROOT)\extern\lib\win32\microsoft'
+    l += ';$(MATLAB_ROOT)\\extern\\lib\\win64\\microsoft'
     l += ';%(AdditionalLibraryDirectories)'
     l += '</AdditionalLibraryDirectories>'
     print(l, file=F)
@@ -830,12 +752,12 @@ def write_mex_project11_14(P, version):
     print('      <GenerateDebugInformation>true</GenerateDebugInformation>', file=F)
     print('    </Link>', file=F)
     print('  </ItemDefinitionGroup>', file=F)
-  write_project11_14_end(P, F)
+  write_project14_end(P, F)
   F.close()
 
-def write_main_filters11_14():
+def write_main_filters14():
   P = P_astra
-  F = open(P["name"] + ".vcxproj.filters", "w", encoding="utf-8")
+  F = open(os.path.join("projects", P["name"] + ".vcxproj.filters"), "w", encoding="utf-8")
   print(bom + '<?xml version="1.0" encoding="utf-8"?>', file=F)
   print('<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">', file=F)
   print('  <ItemGroup>', file=F)
@@ -843,7 +765,7 @@ def write_main_filters11_14():
     L = P_astra["filters"][Filter][1:]
     l = [ f for f in L if len(f) > 3 and f[-3:] == ".cu" ]
     for f in l:
-      print('    <CudaCompile Include="' + f + '">', file=F)
+      print('    <CudaCompile Include="..\\..\\..\\' + f + '">', file=F)
       print('      <Filter>' + Filter + '</Filter>', file=F)
       print('    </CudaCompile>', file=F)
   print('  </ItemGroup>', file=F)
@@ -852,7 +774,7 @@ def write_main_filters11_14():
     L = P_astra["filters"][Filter][1:]
     l = [ f for f in L if len(f) > 4 and f[-4:] == ".cpp" ]
     for f in l:
-      print('    <ClCompile Include="' + f + '">', file=F)
+      print('    <ClCompile Include="..\\..\\..\\' + f + '">', file=F)
       print('      <Filter>' + Filter + '</Filter>', file=F)
       print('    </ClCompile>', file=F)
   print('  </ItemGroup>', file=F)
@@ -861,7 +783,7 @@ def write_main_filters11_14():
     L = P_astra["filters"][Filter][1:]
     l = [ f for f in L if len(f) > 2 and f[-2:] == ".h" ]
     for f in l:
-      print('    <ClInclude Include="' + f + '">', file=F)
+      print('    <ClInclude Include="..\\..\\..\\' + f + '">', file=F)
       print('      <Filter>' + Filter + '</Filter>', file=F)
       print('    </ClInclude>', file=F)
   print('  </ItemGroup>', file=F)
@@ -870,7 +792,7 @@ def write_main_filters11_14():
     L = P_astra["filters"][Filter][1:]
     l = [ f for f in L if len(f) > 4 and f[-4:] == ".inl" ]
     for f in l:
-      print('    <None Include="' + f + '">', file=F)
+      print('    <None Include="..\\..\\..\\' + f + '">', file=F)
       print('      <Filter>' + Filter + '</Filter>', file=F)
       print('    </None>', file=F)
   print('  </ItemGroup>', file=F)
@@ -882,286 +804,6 @@ def write_main_filters11_14():
   print('  </ItemGroup>', file=F)
   print('</Project>', end="", file=F)
   F.close()
-
-def write_project09_start(P, F):
-  print('<?xml version="1.0" encoding="Windows-1252"?>', file=F)
-  print('<VisualStudioProject', file=F)
-  print('\tProjectType="Visual C++"', file=F)
-  print('\tVersion="9.00"', file=F)
-  if "mex" in P["name"]:
-    print('\tName="%s"' % (P["name"], ), file=F)
-  print('\tProjectGUID="{%s}"' % (P["uuid09"],), file=F)
-  if "mex" in P["name"]:
-    print('\tRootNamespace="astraMatlab"', file=F)
-  else:
-    print('\tRootNamespace="astra"', file=F)
-  print('\tTargetFrameworkVersion="131072"', file=F)
-  print('\t>', file=F)
-  print(r'''	<Platforms>
-		<Platform
-			Name="Win32"
-		/>
-		<Platform
-			Name="x64"
-		/>
-	</Platforms>''', file=F)
-
-def write_project09_unused_tools(F):
-    print(r'''			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>''', file=F)
-
-
-def write_main_project09():
-  P = P_astra;
-  F = open(P["file09"], "w", encoding="utf-8")
-  write_project09_start(P, F)
-  print(r'''	<ToolFiles>
-		<DefaultToolFile
-			FileName="NvCudaRuntimeApi.v5.5.rules"
-		/>
-	</ToolFiles>''', file=F)
-  print('\t<Configurations>', file=F)
-  for c in configs:
-    print('\t\t<Configuration', file=F)
-    print('\t\t\tName="%s"' % (c.name(), ), file=F)
-    print('\t\t\tOutputDirectory="$(SolutionDir)bin\$(PlatformName)\%s"' % (c.config(), ), file=F)
-    print(r'''			IntermediateDirectory="$(OutDir)/obj"
-			ConfigurationType="2"
-			>''', file=F)
-    write_project09_unused_tools(F)
-    print('\t\t\t<Tool', file=F)
-    print('\t\t\t\tName="VCCLCompilerTool"', file=F)
-    if c.cuda:
-      print('\t\t\t\tAdditionalIncludeDirectories="&quot;$(CUDA_INC_PATH)&quot;;lib\\include;include"', file=F)
-      print('\t\t\t\tPreprocessorDefinitions="ASTRA_CUDA;DLL_EXPORTS;__SSE2__"', file=F)
-    else:
-      print('\t\t\t\tAdditionalIncludeDirectories="lib\\include;include"', file=F)
-      print('\t\t\t\tPreprocessorDefinitions="DLL_EXPORTS;__SSE2__"', file=F)
-    if c.debug:
-      print(r'''				Optimization="0"
-				InlineFunctionExpansion="0"
-				FavorSizeOrSpeed="0"
-				EnableFiberSafeOptimizations="false"
-				WholeProgramOptimization="false"
-				RuntimeLibrary="3"''', file=F)
-    else:
-      print(r'''				Optimization="3"
-				InlineFunctionExpansion="2"
-				FavorSizeOrSpeed="1"
-				RuntimeLibrary="2"''', file=F)
-    if not c.x64: # /arch:SSE2 is implicit on x64
-      print('\t\t\t\tEnableEnhancedInstructionSet="2"', file=F) # SSE2
-    print('\t\t\t\tOpenMP="true"', file=F)
-    print('\t\t\t\tAdditionalOptions="/MP"', file=F) # build with multiple processes
-    print('\t\t\t/>', file=F)
-    print('\t\t\t<Tool', file=F)
-    print('\t\t\t\tName="VCLinkerTool"', file=F)
-    if c.cuda:
-      print('\t\t\t\tAdditionalDependencies="cudart.lib cufft.lib"', file=F)
-    print('\t\t\t\tOutputFile="bin\\%s\\%s.dll"' % (c.platform(), c.target()), file=F)
-    if c.cuda:
-      print('\t\t\t\tAdditionalLibraryDirectories="&quot;.\\lib\\%s&quot;;&quot;$(CUDA_LIB_PATH)&quot;"' % (c.platform(), ), file=F)
-    else:
-      print('\t\t\t\tAdditionalLibraryDirectories="&quot;.\\lib\\%s&quot;"' % (c.platform(), ), file=F)
-    print('\t\t\t\tGenerateManifest="true"', file=F)
-    print('\t\t\t\tModuleDefinitionFile=""', file=F)
-    if c.debug:
-      print('\t\t\t\tGenerateDebugInformation="true"', file=F)
-    if c.x64:
-      print('\t\t\t\tTargetMachine="17"', file=F) # x64
-    else:
-      print('\t\t\t\tTargetMachine="1"', file=F) # x86
-    print('\t\t\t/>', file=F)
-    print('\t\t\t<Tool', file=F)
-    print('\t\t\t\tName="Cudart Build Rule"', file=F)
-    print('\t\t\t\tArch1="20"', file=F)
-    print('\t\t\t\tArch2="30"', file=F)
-    print('\t\t\t\tArch3="35"', file=F)
-    if c.x64:
-      print('\t\t\t\tTargetMachinePlatform="1"', file=F) # x64
-    else:
-      print('\t\t\t\tTargetMachinePlatform="0"', file=F) # x86
-    if c.debug:
-      print('\t\t\t\tRuntime="3"', file=F) # MDD
-    else:
-      print('\t\t\t\tRuntime="2"', file=F) # MD
-    print('\t\t\t\tExtraCppOptions="-Iinclude -Ilib/include"', file=F)
-    if c.cuda:
-      print('\t\t\t\tDefines="ASTRA_CUDA;DLL_EXPORTS"', file=F)
-    else: # This 'else' doesn't make much sense
-      print('\t\t\t\tDefines="DLL_EXPORTS"', file=F)
-    # TODO!!!
-    print('\t\t\t/>', file=F)
-    print('\t\t</Configuration>', file=F)
-  print('\t</Configurations>', file=F)
-  print('\t<References>', file=F)
-  print('\t</References>', file=F)
-  print('\t<Files>', file=F)
-  print(r'''		<Filter
-			Name="Resource Files"
-			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
-			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
-			>
-			<File
-				RelativePath=".\src\astra.def"
-				>
-			</File>
-		</Filter>''', file=F)
-  curgroup = None
-  for Filter in P["filter_names"]:
-    if "\\" not in Filter:
-      continue
-    # TODO
-    [ group, subgroup ] = Filter.split("\\")
-    if group != curgroup:
-      if curgroup != None:
-        print('\t\t</Filter>', file=F)
-      print('\t\t<Filter', file=F)
-      print('\t\t\tName="%s"' % (group, ), file=F)
-      print('\t\t\t>', file=F)
-      curgroup = group
-    print('\t\t\t<Filter', file=F)
-    print('\t\t\t\tName="%s"' % (subgroup, ), file=F)
-    print('\t\t\t\t>', file=F)
-    for f in P["filters"][Filter][1:]:
-      print('\t\t\t\t<File', file=F)
-      print('\t\t\t\t\tRelativePath=".\\%s"' % (f, ), file=F)
-      print('\t\t\t\t\t>', file=F)
-      if (("Cuda" in f) or ("cuda" in f)) and not (f[-2:] == ".h"):
-        for c in configs:
-          if not c.cuda:
-            print('\t\t\t\t\t<FileConfiguration', file=F)
-            print('\t\t\t\t\t\tName="%s"' % (c.name(), ), file=F)
-            print('\t\t\t\t\t\tExcludedFromBuild="true"', file=F)
-            print('\t\t\t\t\t\t>', file=F)
-            print('\t\t\t\t\t\t<Tool', file=F)
-            if len(f) > 3 and f[-3:] == ".cu":
-              print('\t\t\t\t\t\t\tName="Cudart Build Rule"', file=F)
-            else:
-              print('\t\t\t\t\t\t\tName="VCCLCompilerTool"', file=F)
-            print('\t\t\t\t\t\t/>', file=F)
-            print('\t\t\t\t\t</FileConfiguration>', file=F)
-      print('\t\t\t\t</File>', file=F)
-    print('\t\t\t</Filter>', file=F)
-  print('\t\t</Filter>', file=F)
-  print('\t</Files>', file=F)
-  print('\t<Globals>', file=F)
-  print('\t</Globals>', file=F)
-  print('</VisualStudioProject>', file=F)
-  F.close()
-
-def write_mex_project09(P):
-  F = open("matlab/mex/" + P["name"] + "_vc09.vcproj", "w", encoding="utf-8")
-  write_project09_start(P, F)
-  print('\t<ToolFiles>', file=F)
-  print('\t</ToolFiles>', file=F)
-  print('\t<Configurations>', file=F)
-  for c in configs:
-    print('\t\t<Configuration', file=F)
-    print('\t\t\tName="%s"' % (c.name(), ), file=F)
-    print('\t\t\tOutputDirectory="$(SolutionDir)bin\$(PlatformName)\$(ConfigurationName)"', file=F)
-    print(r'''			IntermediateDirectory="$(OutDir)\obj\$(ProjectName)"
-			ConfigurationType="2"
-			>''', file=F)
-    write_project09_unused_tools(F)
-    print('\t\t\t<Tool', file=F)
-    print('\t\t\t\tName="VCCLCompilerTool"', file=F)
-    if c.cuda:
-      print('\t\t\t\tAdditionalIncludeDirectories="$(MATLAB_ROOT)\\extern\\include\\;&quot;$(CUDA_INC_PATH)&quot;;..\\..\\lib\\include;..\\..\\include"', file=F)
-      print('\t\t\t\tPreprocessorDefinitions="ASTRA_CUDA;__SSE2__"', file=F)
-    else:
-      print('\t\t\t\tAdditionalIncludeDirectories="$(MATLAB_ROOT)\\extern\\include\\;..\\..\\lib\\include;..\\..\\include"', file=F)
-      print('\t\t\t\tPreprocessorDefinitions="__SSE2__"', file=F)
-    if c.debug:
-      print(r'''				Optimization="0"
-				RuntimeLibrary="3"''', file=F)
-    else:
-      print(r'''				Optimization="2"
-				RuntimeLibrary="2"''', file=F)
-    if not c.x64: # /arch:SSE2 is implicit on x64
-      print('\t\t\t\tEnableEnhancedInstructionSet="2"', file=F) # SSE2
-    print('\t\t\t\tOpenMP="true"', file=F)
-    print('\t\t\t\tAdditionalOptions="/MP"', file=F) # build with multiple processes
-    print('\t\t\t/>', file=F)
-    print('\t\t\t<Tool', file=F)
-    print('\t\t\t\tName="VCLinkerTool"', file=F)
-    print('\t\t\t\tAdditionalDependencies="%s.lib libmex.lib libmx.lib libut.lib"' % (c.target(), ), file=F)
-    if c.x64:
-      print('\t\t\t\tOutputFile="$(OutDir)\\$(ProjectName)_c.mexw64"', file=F)
-    else:
-      print('\t\t\t\tOutputFile="$(OutDir)\\$(ProjectName)_c.mexw32"', file=F)
-    if c.x64:
-      print('\t\t\t\tAdditionalLibraryDirectories="..\\..\\bin\\x64;$(MATLAB_ROOT)\\extern\\lib\\win64\\microsoft;..\\..\\lib\\x64"', file=F)
-    else:
-      print('\t\t\t\tAdditionalLibraryDirectories="..\\..\\bin\\win32;$(MATLAB_ROOT)\\extern\\lib\\win32\\microsoft;..\\..\\lib\\win32"', file=F)
-    print('\t\t\t\tModuleDefinitionFile="mex.def"', file=F)
-    if c.debug:
-      print('\t\t\t\tGenerateDebugInformation="true"', file=F)
-    else:
-      print('\t\t\t\tGenerateDebugInformation="false"', file=F)
-    if c.x64:
-      print('\t\t\t\tTargetMachine="17"', file=F) # x64
-    else:
-      print('\t\t\t\tTargetMachine="1"', file=F) # x86
-    print('\t\t\t/>', file=F)
-    print('\t\t</Configuration>', file=F)
-  print('\t</Configurations>', file=F)
-  print('\t<References>', file=F)
-  print('\t</References>', file=F)
-  print('\t<Files>', file=F)
-  for f in P["files"]:
-    print('\t\t<File', file=F)
-    print('\t\t\tRelativePath=".\\%s"' % (f, ), file=F)
-    print('\t\t\t>', file=F)
-    print('\t\t</File>', file=F)
-  print('\t</Files>', file=F)
-  print('\t<Globals>', file=F)
-  print('\t</Globals>', file=F)
-  print('</VisualStudioProject>', file=F)
-
 
 
 def parse_cuda_version(ver):
@@ -1176,11 +818,11 @@ def check_cuda_version(ver):
     pass
   return False
 
-if (len(sys.argv) != 3) or (sys.argv[1] not in ["vc09", "vc11", "vc14", "all"]) or not check_cuda_version(sys.argv[2]):
-  print("Usage: python gen.py [vc09|vc11|vc14|all] [9.0|9.2|10.0|10.1|10.2...]", file=sys.stderr)
+if (len(sys.argv) != 2) or not check_cuda_version(sys.argv[1]):
+  print("Usage: python gen.py [10.2|11.0|...]", file=sys.stderr)
   sys.exit(1)
 
-CUDA_MAJOR, CUDA_MINOR = parse_cuda_version(sys.argv[2])
+CUDA_MAJOR, CUDA_MINOR = parse_cuda_version(sys.argv[1])
 
 try:
   open("../../src/AstraObjectManager.cpp", "r")
@@ -1189,52 +831,17 @@ except IOError:
   sys.exit(1)
 
 # Change directory to main dir
-os.chdir("../..")
+os.makedirs("projects", exist_ok=True)
 
-if sys.argv[1] in ["vc14", "all"]:
-  # HACK
-  P_astra["name"] = "astra_vc14"
-  write_sln(14)
-  write_main_project11_14(14)
-  write_main_filters11_14()
-  write_mex_project11_14(P0, 14)
-  write_mex_project11_14(P1, 14)
-  write_mex_project11_14(P2, 14)
-  write_mex_project11_14(P3, 14)
-  write_mex_project11_14(P4, 14)
-  write_mex_project11_14(P5, 14)
-  write_mex_project11_14(P6, 14)
-  write_mex_project11_14(P7, 14)
-  write_mex_project11_14(P8, 14)
-
-if sys.argv[1] in ["vc11", "all"]:
-  # HACK
-  P_astra["name"] = "astra_vc11"
-  write_sln(11)
-  write_main_project11_14(11)
-  write_main_filters11_14()
-  write_mex_project11_14(P0, 11)
-  write_mex_project11_14(P1, 11)
-  write_mex_project11_14(P2, 11)
-  write_mex_project11_14(P3, 11)
-  write_mex_project11_14(P4, 11)
-  write_mex_project11_14(P5, 11)
-  write_mex_project11_14(P6, 11)
-  write_mex_project11_14(P7, 11)
-  write_mex_project11_14(P8, 11)
-
-if sys.argv[1] in ["vc09", "all"]:
-  # HACK
-  P_astra["name"] = "astra"
-
-  write_sln(9)
-  write_main_project09()
-  write_mex_project09(P0)
-  write_mex_project09(P1)
-  write_mex_project09(P2)
-  write_mex_project09(P3)
-  write_mex_project09(P4)
-  write_mex_project09(P5)
-  write_mex_project09(P6)
-  write_mex_project09(P7)
-  write_mex_project09(P8)
+write_sln()
+write_main_project14()
+write_main_filters14()
+write_mex_project14(P0)
+write_mex_project14(P1)
+write_mex_project14(P2)
+write_mex_project14(P3)
+write_mex_project14(P4)
+write_mex_project14(P5)
+write_mex_project14(P6)
+write_mex_project14(P7)
+write_mex_project14(P8)

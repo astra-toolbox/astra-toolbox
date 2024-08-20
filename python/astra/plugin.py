@@ -29,13 +29,18 @@ from . import data2d
 from . import data2d_c
 from . import data3d
 from . import projector
+from .log import AstraError
 import inspect
 import traceback
 
 class base(object):
 
     def astra_init(self, cfg):
-        args, varargs, varkw, defaults = inspect.getargspec(self.initialize)
+        try:
+            args, varargs, varkw, defaults = inspect.getargspec(self.initialize)
+        except AttributeError:
+            fullargspec = inspect.getfullargspec(self.initialize)
+            args, defaults = fullargspec.args, fullargspec.defaults
         if not defaults is None:
             nopt = len(defaults)
         else:
@@ -59,7 +64,7 @@ class base(object):
         if not reqKeys.issubset(cfgKeys):
             for key in reqKeys.difference(cfgKeys):
                 log.error("Required option '" + key + "' for plugin '" + self.__class__.__name__ + "' not specified")
-            raise ValueError("Missing required options")
+            raise AstraError("Missing required options")
 
         if not cfgKeys.issubset(reqKeys | optKeys):
             log.warn(self.__class__.__name__ + ": unused configuration option: " + str(list(cfgKeys.difference(reqKeys | optKeys))))
@@ -77,9 +82,9 @@ class ReconstructionAlgorithm2D(base):
         self.vg = projector.volume_geometry(self.pid)
         self.pg = projector.projection_geometry(self.pid)
         if not data2d_c.check_compatible(cfg['ProjectionDataId'], self.pid):
-            raise ValueError("Projection data and projector not compatible")
+            raise AstraError("Projection data and projector not compatible")
         if not data2d_c.check_compatible(cfg['ReconstructionDataId'], self.pid):
-            raise ValueError("Reconstruction data and projector not compatible")
+            raise AstraError("Reconstruction data and projector not compatible")
         super(ReconstructionAlgorithm2D,self).astra_init(cfg)
 
 class ReconstructionAlgorithm3D(base):

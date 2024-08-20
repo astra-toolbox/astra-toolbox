@@ -28,7 +28,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #define CLOG_MAIN
 #include <astra/clog.h>
 
-#include <astra/Logging.h>
+#include "astra/Logging.h"
+#include "astra/Utilities.h"
 
 #include <cstdio>
 
@@ -71,15 +72,15 @@ void CLogger::debug(const char *sfile, int sline, const char *fmt, ...)
 	_assureIsInitialized();
 	va_list ap, apf;
 	if(m_bEnabledScreen){
-        va_start(ap, fmt);
-        clog_debug(sfile,sline,0,fmt,ap);
-        va_end(ap);
-    }
+		va_start(ap, fmt);
+		clog_debug(sfile,sline,0,fmt,ap);
+		va_end(ap);
+	}
 	if(m_bEnabledFile && m_bFileProvided){
-        va_start(apf, fmt);
-        clog_debug(sfile,sline,1,fmt,apf);
-        va_end(apf);
-    }
+		va_start(apf, fmt);
+		clog_debug(sfile,sline,1,fmt,apf);
+		va_end(apf);
+	}
 }
 
 void CLogger::info(const char *sfile, int sline, const char *fmt, ...)
@@ -87,15 +88,15 @@ void CLogger::info(const char *sfile, int sline, const char *fmt, ...)
 	_assureIsInitialized();
 	va_list ap, apf;
 	if(m_bEnabledScreen){
-        va_start(ap, fmt);
-        clog_info(sfile,sline,0,fmt,ap);
-        va_end(ap);
-    }
+		va_start(ap, fmt);
+		clog_info(sfile,sline,0,fmt,ap);
+		va_end(ap);
+	}
 	if(m_bEnabledFile && m_bFileProvided){
-        va_start(apf, fmt);
-        clog_info(sfile,sline,1,fmt,apf);
-        va_end(apf);
-    }
+		va_start(apf, fmt);
+		clog_info(sfile,sline,1,fmt,apf);
+		va_end(apf);
+	}
 }
 
 void CLogger::warn(const char *sfile, int sline, const char *fmt, ...)
@@ -103,31 +104,34 @@ void CLogger::warn(const char *sfile, int sline, const char *fmt, ...)
 	_assureIsInitialized();
 	va_list ap, apf;
 	if(m_bEnabledScreen){
-        va_start(ap, fmt);
-        clog_warn(sfile,sline,0,fmt,ap);
-        va_end(ap);
-    }
+		va_start(ap, fmt);
+		clog_warn(sfile,sline,0,fmt,ap);
+		va_end(ap);
+	}
 	if(m_bEnabledFile && m_bFileProvided){
-        va_start(apf, fmt);
-        clog_warn(sfile,sline,1,fmt,apf);
-        va_end(apf);
-    }
+		va_start(apf, fmt);
+		clog_warn(sfile,sline,1,fmt,apf);
+		va_end(apf);
+	}
 }
 
 void CLogger::error(const char *sfile, int sline, const char *fmt, ...)
 {
 	_assureIsInitialized();
-	va_list ap, apf;
+	va_list ap, apf, apl;
 	if(m_bEnabledScreen){
-        va_start(ap, fmt);
-        clog_error(sfile,sline,0,fmt,ap);
-        va_end(ap);
-    }
+		va_start(ap, fmt);
+		clog_error(sfile,sline,0,fmt,ap);
+		va_end(ap);
+	}
 	if(m_bEnabledFile && m_bFileProvided){
-        va_start(apf, fmt);
-        clog_error(sfile,sline,1,fmt,apf);
-        va_end(apf);
-    }
+		va_start(apf, fmt);
+		clog_error(sfile,sline,1,fmt,apf);
+		va_end(apf);
+	}
+	va_start(apl, fmt);
+	_setLastErrMsg(sfile,sline,fmt,apl);
+	va_end(apl);
 }
 
 void CLogger::_setLevel(int id, log_level m_eLevel)
@@ -182,6 +186,18 @@ void CLogger::_assureIsInitialized()
 	}
 }
 
+void CLogger::_setLastErrMsg(const char *sfile, int sline, const char *fmt, va_list ap)
+{
+	m_sLastErrMsg = StringUtil::vformat(fmt, ap);
+}
+
+std::string CLogger::getLastErrMsg()
+{
+	std::string err_msg = m_sLastErrMsg;
+	m_sLastErrMsg.clear();
+	return err_msg;
+}
+
 void CLogger::setFormatFile(const char *fmt)
 {
 	if(m_bFileProvided){
@@ -209,3 +225,4 @@ bool CLogger::m_bEnabledScreen = true;
 bool CLogger::m_bEnabledFile = true;
 bool CLogger::m_bFileProvided = false;
 bool CLogger::m_bInitialized = false;
+std::string CLogger::m_sLastErrMsg;
