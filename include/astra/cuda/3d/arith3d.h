@@ -45,19 +45,6 @@ struct opSet;
 struct opClampMin;
 struct opClampMax;
 
-enum VolType {
-  SINO = 0,
-  VOL = 1
-};
-
-
-template<typename op, VolType t> void processVol(CUdeviceptr* out, unsigned int pitch, unsigned int width, unsigned int height);
-template<typename op, VolType t> void processVol(CUdeviceptr* out, float fParam, unsigned int pitch, unsigned int width, unsigned int height);
-template<typename op, VolType t> void processVol(CUdeviceptr* out, const CUdeviceptr* in, unsigned int pitch, unsigned int width, unsigned int height);
-template<typename op, VolType t> void processVol(CUdeviceptr* out, const CUdeviceptr* in, float fParam, unsigned int pitch, unsigned int width, unsigned int height);
-template<typename op, VolType t> void processVol(CUdeviceptr* out, const CUdeviceptr* in1, const CUdeviceptr* in2, float fParam, unsigned int pitch, unsigned int width, unsigned int height);
-template<typename op, VolType t> void processVol(CUdeviceptr* out, const CUdeviceptr* in1, const CUdeviceptr* in2, unsigned int pitch, unsigned int width, unsigned int height);
-
 template<typename op> void processVol3D(cudaPitchedPtr& out, const SDimensions3D& dims);
 template<typename op> void processVol3D(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims);
 template<typename op> void processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims);

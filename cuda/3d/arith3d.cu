@@ -216,106 +216,6 @@ __global__ void devDDFtoD(float* pfOut, const float* pfIn1, const float* pfIn2, 
 
 
 template<typename op>
-void processVol(CUdeviceptr* out, unsigned int pitch, unsigned int width, unsigned int height)
-{
-	dim3 blockSize(16,16);
-	dim3 gridSize((width+15)/16, (height+511)/512);
-
-	float *pfOut = (float*)out;
-
-	devtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pitch, width, height);
-
-	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
-}
-
-template<typename op>
-void processVol(CUdeviceptr* out, float fParam, unsigned int pitch, unsigned int width, unsigned int height)
-{
-	dim3 blockSize(16,16);
-	dim3 gridSize((width+15)/16, (height+15)/16);
-
-	float *pfOut = (float*)out;
-
-	devFtoD<op, 32><<<gridSize, blockSize>>>(pfOut, fParam, pitch, width, height);
-
-	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
-}
-
-template<typename op>
-void processVol(CUdeviceptr* out, const CUdeviceptr* in, unsigned int pitch, unsigned int width, unsigned int height)
-{
-	dim3 blockSize(16,16);
-	dim3 gridSize((width+15)/16, (height+15)/16);
-
-	float *pfOut = (float*)out;
-	const float *pfIn = (const float*)in;
-
-	devDtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn, pitch, width, height);
-
-	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
-}
-
-template<typename op>
-void processVol(CUdeviceptr* out, const CUdeviceptr* in, float fParam, unsigned int pitch, unsigned int width, unsigned int height)
-{
-	dim3 blockSize(16,16);
-	dim3 gridSize((width+15)/16, (height+15)/16);
-
-	float *pfOut = (float*)out;
-	const float *pfIn = (const float*)in;
-
-	devDFtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn, fParam, pitch, width, height);
-
-	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
-}
-
-template<typename op>
-void processVol(CUdeviceptr* out, const CUdeviceptr* in1, const CUdeviceptr* in2, float fParam, unsigned int pitch, unsigned int width, unsigned int height)
-{
-	dim3 blockSize(16,16);
-	dim3 gridSize((width+15)/16, (height+15)/16);
-
-	float *pfOut = (float*)out;
-	const float *pfIn1 = (const float*)in1;
-	const float *pfIn2 = (const float*)in2;
-
-	devDDFtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn1, pfIn2, fParam, pitch, width, height);
-
-	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
-}
-
-template<typename op>
-void processVol(CUdeviceptr* out, const CUdeviceptr* in1, const CUdeviceptr* in2, unsigned int pitch, unsigned int width, unsigned int height)
-{
-	dim3 blockSize(16,16);
-	dim3 gridSize((width+15)/16, (height+15)/16);
-
-	float *pfOut = (float*)out;
-	const float *pfIn1 = (const float*)in1;
-	const float *pfIn2 = (const float*)in2;
-
-	devDDtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn1, pfIn2, pitch, width, height);
-
-	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-template<typename op>
 void processVol3D(cudaPitchedPtr& out, const SDimensions3D& dims)
 {
 	dim3 blockSize(16,16);
@@ -561,33 +461,27 @@ void processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPit
 
 
 #define INST_DFtoD(name) \
-  template void processVol<name>(CUdeviceptr* out, const CUdeviceptr* in, float fParam, unsigned int pitch, unsigned int width, unsigned int height); \
   template void processVol3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims); \
   template void processSino3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims);
 
 #define INST_DtoD(name) \
-  template void processVol<name>(CUdeviceptr* out, const CUdeviceptr* in, unsigned int pitch, unsigned int width, unsigned int height); \
   template void processVol3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims); \
   template void processSino3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims);
 
 #define INST_DDtoD(name) \
-  template void processVol<name>(CUdeviceptr* out, const CUdeviceptr* in1, const CUdeviceptr* in2, unsigned int pitch, unsigned int width, unsigned int height); \
   template void processVol3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims); \
   template void processSino3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims);
 
 #define INST_DDFtoD(name) \
-  template void processVol<name>(CUdeviceptr* out, const CUdeviceptr* in1, const CUdeviceptr* in2, float fParam, unsigned int pitch, unsigned int width, unsigned int height); \
   template void processVol3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims); \
   template void processSino3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims);
 
 
 #define INST_toD(name) \
-  template void processVol<name>(CUdeviceptr* out, unsigned int pitch, unsigned int width, unsigned int height); \
   template void processVol3D<name>(cudaPitchedPtr& out, const SDimensions3D& dims); \
   template void processSino3D<name>(cudaPitchedPtr& out, const SDimensions3D& dims);
 
 #define INST_FtoD(name) \
-  template void processVol<name>(CUdeviceptr* out, float fParam, unsigned int pitch, unsigned int width, unsigned int height); \
   template void processVol3D<name>(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims); \
   template void processSino3D<name>(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims);
 
