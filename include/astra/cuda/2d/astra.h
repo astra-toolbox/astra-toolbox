@@ -122,5 +122,36 @@ _AstraExport bool setGPUIndex(int index);
 
 _AstraExport size_t availableGPUMemory();
 
+
+struct opAddScaled;
+struct opScaleAndAdd;
+struct opAddMulScaled;
+struct opAddMul;
+struct opAdd;
+struct opAdd2;
+struct opMul;
+struct opDiv;
+struct opMul2;
+struct opDividedBy;
+struct opInvert;
+struct opSet;
+struct opClampMin;
+struct opClampMax;
+struct opClampMinMask;
+struct opClampMaxMask;
+struct opSegmentAndMask;
+struct opSetMaskedValues;
+
+struct opMulMask;
+
+
+template<typename op> bool processVolCopy(float* out, const SDimensions& dims);
+template<typename op> bool processVolCopy(float* out, float param, const SDimensions& dims);
+template<typename op> bool processVolCopy(float* out1, float* out2, float param1, float param2, const SDimensions& dims);
+template<typename op> bool processVolCopy(float* out, const float* in, const SDimensions& dims);
+template<typename op> bool processVolCopy(float* out, const float* in, float param, const SDimensions& dims);
+template<typename op> bool processVolCopy(float* out, const float* in1, const float* in2, const SDimensions& dims);
+template<typename op> bool processVolCopy(float* out, const float* in1, const float* in2, float param, const SDimensions& dims);
+
 }
 #endif
