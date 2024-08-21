@@ -156,24 +156,19 @@ __global__ void devBP_SART(float* D_volData, unsigned int volPitch, cudaTextureO
 	D_volData[Y*volPitch+X] += fVal * fOutputScale;
 }
 
+using TransferConstantsBuffer = TransferConstantsBuffer_t<float, float, float, float>;
 
-bool BP_internal(float* D_volumeData, unsigned int volumePitch,
-        float* D_projData, unsigned int projPitch,
-        const SDimensions& dims, const SParProjection* angles,
-        float fOutputScale)
+static bool transferConstants(const SParProjection *angles, unsigned int nth,
+                              TransferConstantsBuffer& buf, cudaStream_t stream)
 {
-	assert(dims.iProjAngles <= g_MaxAngles);
+	float* angle_scaled_sin = &(std::get<0>(buf.d))[0];
+	float* angle_scaled_cos = &(std::get<1>(buf.d))[0];
+	float* angle_offset = &(std::get<2>(buf.d))[0];
+	float* angle_scale = &(std::get<3>(buf.d))[0];
 
-	cudaTextureObject_t D_texObj;
-	if (!createTextureObjectPitch2D(D_projData, D_texObj, projPitch, dims.iProjDets, dims.iProjAngles))
-		return false;
+	bool ok = checkCuda(cudaStreamWaitEvent(stream, buf.event, 0), "transferConstants wait");
 
-	float* angle_scaled_sin = new float[dims.iProjAngles];
-	float* angle_scaled_cos = new float[dims.iProjAngles];
-	float* angle_offset = new float[dims.iProjAngles];
-	float* angle_scale = new float[dims.iProjAngles];
-
-	for (unsigned int i = 0; i < dims.iProjAngles; ++i) {
+	for (unsigned int i = 0; i < nth; ++i) {
 		double d = angles[i].fDetUX * angles[i].fRayY - angles[i].fDetUY * angles[i].fRayX;
 		angle_scaled_cos[i] = angles[i].fRayY / d;
 		angle_scaled_sin[i] = -angles[i].fRayX / d;
@@ -183,27 +178,31 @@ bool BP_internal(float* D_volumeData, unsigned int volumePitch,
 	//fprintf(stderr, "outputscale in BP_internal: %f, %f\n", fOutputScale, angle_scale[0]);
 	//fprintf(stderr, "ray in BP_internal: %f,%f (length %f)\n", angles[0].fRayX, angles[0].fRayY, sqrt(angles[0].fRayX * angles[0].fRayX + angles[0].fRayY * angles[0].fRayY));
 
-	cudaError_t e1 = cudaMemcpyToSymbol(gC_angle_scaled_sin, angle_scaled_sin, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice);
-	cudaError_t e2 = cudaMemcpyToSymbol(gC_angle_scaled_cos, angle_scaled_cos, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice);
-	cudaError_t e3 = cudaMemcpyToSymbol(gC_angle_offset, angle_offset, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice);
-	cudaError_t e4 = cudaMemcpyToSymbol(gC_angle_scale, angle_scale, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice);
-	assert(e1 == cudaSuccess);
-	assert(e2 == cudaSuccess);
-	assert(e3 == cudaSuccess);
-	assert(e4 == cudaSuccess);
+	ok &= checkCuda(cudaMemcpyToSymbolAsync(gC_angle_scaled_sin, angle_scaled_sin, nth*sizeof(float), 0, cudaMemcpyHostToDevice, stream), "transferConstants transfer 1");
+	ok &= checkCuda(cudaMemcpyToSymbolAsync(gC_angle_scaled_cos, angle_scaled_cos, nth*sizeof(float), 0, cudaMemcpyHostToDevice, stream), "transferConstants transfer 2");
+	ok &= checkCuda(cudaMemcpyToSymbolAsync(gC_angle_offset, angle_offset, nth*sizeof(float), 0, cudaMemcpyHostToDevice, stream), "transferConstants transfer 3");
+	ok &= checkCuda(cudaMemcpyToSymbolAsync(gC_angle_scale, angle_scale, nth*sizeof(float), 0, cudaMemcpyHostToDevice, stream), "transferConstants transfer 4");
+
+	ok &= checkCuda(cudaEventRecord(buf.event, stream), "transferConstants event");
+
+	return ok;
+}
 
 
-	delete[] angle_scaled_sin;
-	delete[] angle_scaled_cos;
-	delete[] angle_offset;
-	delete[] angle_scale;
+bool BP_internal(float* D_volumeData, unsigned int volumePitch,
+        float* D_projData, unsigned int projPitch,
+        const SDimensions& dims, const SParProjection* angles,
+        float fOutputScale, cudaStream_t stream)
+{
+	assert(dims.iProjAngles <= g_MaxAngles);
+
+	cudaTextureObject_t D_texObj;
+	if (!createTextureObjectPitch2D(D_projData, D_texObj, projPitch, dims.iProjDets, dims.iProjAngles))
+		return false;
 
 	dim3 dimBlock(g_blockSlices, g_blockSliceSize);
 	dim3 dimGrid((dims.iVolWidth+g_blockSlices-1)/g_blockSlices,
 	             (dims.iVolHeight+g_blockSliceSize-1)/g_blockSliceSize);
-
-	cudaStream_t stream;
-	cudaStreamCreate(&stream);
 
 	for (unsigned int i = 0; i < dims.iProjAngles; i += g_anglesPerBlock) {
 
@@ -215,8 +214,6 @@ bool BP_internal(float* D_volumeData, unsigned int volumePitch,
 
 	bool ok = checkCuda(cudaStreamSynchronize(stream), "par_bp");
 
-	cudaStreamDestroy(stream);
-
 	cudaDestroyTextureObject(D_texObj);
 
 	return ok;
@@ -226,6 +223,14 @@ bool BP(float* D_volumeData, unsigned int volumePitch,
         float* D_projData, unsigned int projPitch,
         const SDimensions& dims, const SParProjection* angles, float fOutputScale)
 {
+	TransferConstantsBuffer tcbuf(g_MaxAngles);
+
+	cudaStream_t stream;
+	if (!checkCuda(cudaStreamCreate(&stream), "BP stream"))
+		return false;
+
+	bool ok = true;
+
 	for (unsigned int iAngle = 0; iAngle < dims.iProjAngles; iAngle += g_MaxAngles) {
 		SDimensions subdims = dims;
 		unsigned int iEndAngle = iAngle + g_MaxAngles;
@@ -233,14 +238,20 @@ bool BP(float* D_volumeData, unsigned int volumePitch,
 			iEndAngle = dims.iProjAngles;
 		subdims.iProjAngles = iEndAngle - iAngle;
 
-		bool ret;
-		ret = BP_internal(D_volumeData, volumePitch,
+		ok &= transferConstants(angles + iAngle, subdims.iProjAngles, tcbuf, stream);
+		if (!ok)
+			break;
+
+		ok &= BP_internal(D_volumeData, volumePitch,
 		                  D_projData + iAngle * projPitch, projPitch,
-		                  subdims, angles + iAngle, fOutputScale);
-		if (!ret)
-			return false;
+		                  subdims, angles + iAngle, fOutputScale, stream);
+		if (!ok)
+			break;
 	}
-	return true;
+
+	ok &= checkCuda(cudaStreamSynchronize(stream), "par_bp");
+	cudaStreamDestroy(stream);
+	return ok;
 }
 
 
@@ -267,10 +278,17 @@ bool BP_SART(float* D_volumeData, unsigned int volumePitch,
 	dim3 dimGrid((dims.iVolWidth+g_blockSlices-1)/g_blockSlices,
 	             (dims.iVolHeight+g_blockSliceSize-1)/g_blockSliceSize);
 
-	devBP_SART<<<dimGrid, dimBlock>>>(D_volumeData, volumePitch, D_texObj, angle_offset, angle_scaled_sin, angle_scaled_cos, dims, fOutputScale);
+	cudaStream_t stream;
+	if (!checkCuda(cudaStreamCreate(&stream), "BP_SART stream")) {
+		cudaDestroyTextureObject(D_texObj);
+		return false;
+	}
 
-	bool ok = checkCuda(cudaThreadSynchronize(), "BP_SART");
+	devBP_SART<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, D_texObj, angle_offset, angle_scaled_sin, angle_scaled_cos, dims, fOutputScale);
 
+	bool ok = checkCuda(cudaStreamSynchronize(stream), "BP_SART");
+
+	cudaStreamDestroy(stream);
 	cudaDestroyTextureObject(D_texObj);
 
 	return ok;

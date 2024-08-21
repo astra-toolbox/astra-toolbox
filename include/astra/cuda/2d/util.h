@@ -31,6 +31,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include <cuda.h>
 #include <string>
 #include <optional>
+#include <vector>
+#include <tuple>
 
 #include "astra/Globals.h"
 
@@ -119,6 +121,33 @@ private:
 	bool ownsStream;
 	cudaStream_t stream;
 };
+
+// A utility class storing a tuple of vectors (of arbitrary types) of a given
+// size, to be used as a buffer.
+// The cudaEvent_t can be used to synchronize access to the buffer.
+template<typename... T>
+class TransferConstantsBuffer_t
+{
+public:
+        TransferConstantsBuffer_t(size_t count)
+	// Slightly hackish way to construct each vector in the tuple with the count argument.
+	// To be able to use the '...' expansion on count, T needs to appear in the expression,
+	// so we use a comma operator with void(sizeof(T)) which has no effect.
+	: d{ (void(sizeof(T)), count)... }
+	{
+                checkCuda(cudaEventCreateWithFlags(&event, cudaEventDisableTiming),
+		          "TransferConstantsBuffer event create");
+        }
+        ~TransferConstantsBuffer_t() {
+                cudaEventDestroy(event);
+        }
+
+        std::tuple<std::vector<T>...> d;
+
+        cudaEvent_t event;
+
+};
+
 
 }
 

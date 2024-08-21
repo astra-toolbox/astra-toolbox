@@ -31,7 +31,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include <cstdio>
 #include <cassert>
 #include <iostream>
-#include <list>
 
 namespace astraCUDA {
 
@@ -191,23 +190,17 @@ __global__ void FanFPvertical(float* D_projData, unsigned int projPitch, cudaTex
 	projData[angle*projPitch+detector] += fVal;
 }
 
-bool FanFP_internal(float* D_volumeData, unsigned int volumePitch,
-           float* D_projData, unsigned int projPitch,
-           const SDimensions& dims, const SFanProjection* angles,
-           float outputScale)
+using TransferConstantsBuffer = TransferConstantsBuffer_t<float>;
+
+static bool transferConstants(const SFanProjection *projs, unsigned int nth,
+                              TransferConstantsBuffer& buf, cudaStream_t stream)
 {
-	assert(dims.iProjAngles <= g_MaxAngles);
-
-	cudaArray* D_dataArray;
-	cudaTextureObject_t D_texObj;
-
-	if (!createArrayAndTextureObject2D(D_volumeData, D_dataArray, D_texObj, volumePitch, dims.iVolWidth, dims.iVolHeight))
-		return false;
-
 	// transfer angles to constant memory
-	float* tmp = new float[dims.iProjAngles];
+	float* tmp = &(std::get<0>(buf.d))[0];
 
-#define TRANSFER_TO_CONSTANT(name) do { for (unsigned int i = 0; i < dims.iProjAngles; ++i) tmp[i] = angles[i].f##name ; cudaMemcpyToSymbol(gC_##name, tmp, dims.iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice); } while (0)
+	bool ok = checkCuda(cudaStreamWaitEvent(stream, buf.event, 0), "transferConstants wait");
+
+#define TRANSFER_TO_CONSTANT(name) do { for (unsigned int i = 0; i < nth; ++i) tmp[i] = projs[i].f##name ; ok &= checkCuda(cudaMemcpyToSymbolAsync(gC_##name, tmp, nth*sizeof(float), 0, cudaMemcpyHostToDevice, stream), "transferConstants transfer"); } while (0)
 
 	TRANSFER_TO_CONSTANT(SrcX);
 	TRANSFER_TO_CONSTANT(SrcY);
@@ -218,12 +211,26 @@ bool FanFP_internal(float* D_volumeData, unsigned int volumePitch,
 
 #undef TRANSFER_TO_CONSTANT
 
-	delete[] tmp;
+	ok &= checkCuda(cudaEventRecord(buf.event, stream), "transferConstants event");
+
+	return ok;
+}
+
+bool FanFP_internal(float* D_volumeData, unsigned int volumePitch,
+           float* D_projData, unsigned int projPitch,
+           const SDimensions& dims, const SFanProjection* angles,
+           float outputScale, cudaStream_t stream)
+{
+	assert(dims.iProjAngles <= g_MaxAngles);
+
+	cudaArray* D_dataArray;
+	cudaTextureObject_t D_texObj;
+
+	if (!createArrayAndTextureObject2D(D_volumeData, D_dataArray, D_texObj, volumePitch, dims.iVolWidth, dims.iVolHeight))
+		return false;
 
 	dim3 dimBlock(g_detBlockSize, g_anglesPerBlock); // region size, angles
 	const unsigned int g_blockSliceSize = g_detBlockSize;
-
-	std::list<cudaStream_t> streams;
 
 
 	unsigned int blockStart = 0;
@@ -231,28 +238,18 @@ bool FanFP_internal(float* D_volumeData, unsigned int volumePitch,
 
 	dim3 dimGrid((blockEnd-blockStart+g_anglesPerBlock-1)/g_anglesPerBlock,
 	             (dims.iProjDets+g_blockSliceSize-1)/g_blockSliceSize); // angle blocks, regions
-	cudaStream_t stream1;
-	cudaStreamCreate(&stream1);
-	streams.push_back(stream1);
-	for (unsigned int i = 0; i < dims.iVolWidth; i += g_blockSlices)
-		FanFPhorizontal<<<dimGrid, dimBlock, 0, stream1>>>(D_projData, projPitch, D_texObj, i, blockStart, blockEnd, dims, outputScale);
 
-	cudaStream_t stream2;
-	cudaStreamCreate(&stream2);
-	streams.push_back(stream2);
+	for (unsigned int i = 0; i < dims.iVolWidth; i += g_blockSlices)
+		FanFPhorizontal<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, D_texObj, i, blockStart, blockEnd, dims, outputScale);
+
 	for (unsigned int i = 0; i < dims.iVolHeight; i += g_blockSlices)
-		FanFPvertical<<<dimGrid, dimBlock, 0, stream2>>>(D_projData, projPitch, D_texObj, i, blockStart, blockEnd, dims, outputScale);
+		FanFPvertical<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, D_texObj, i, blockStart, blockEnd, dims, outputScale);
 
 	bool ok = true;
 
-	ok &= checkCuda(cudaStreamSynchronize(stream1), "fan_fp hor");
-	cudaStreamDestroy(stream1);
-
-	ok &= checkCuda(cudaStreamSynchronize(stream2), "fan_fp ver");
-	cudaStreamDestroy(stream2);
+	ok &= checkCuda(cudaStreamSynchronize(stream), "fan_fp");
 
 	cudaFreeArray(D_dataArray);
-
 	cudaDestroyTextureObject(D_texObj);
 
 	return ok;
@@ -263,6 +260,14 @@ bool FanFP(float* D_volumeData, unsigned int volumePitch,
            const SDimensions& dims, const SFanProjection* angles,
            float outputScale)
 {
+	TransferConstantsBuffer tcbuf(g_MaxAngles);
+
+	cudaStream_t stream;
+	if (!checkCuda(cudaStreamCreate(&stream), "FanFP"))
+		return false;
+
+	bool ok = true;
+
 	for (unsigned int iAngle = 0; iAngle < dims.iProjAngles; iAngle += g_MaxAngles) {
 		SDimensions subdims = dims;
 		unsigned int iEndAngle = iAngle + g_MaxAngles;
@@ -270,15 +275,20 @@ bool FanFP(float* D_volumeData, unsigned int volumePitch,
 			iEndAngle = dims.iProjAngles;
 		subdims.iProjAngles = iEndAngle - iAngle;
 
-		bool ret;
-		ret = FanFP_internal(D_volumeData, volumePitch,
+		ok &= transferConstants(angles + iAngle, subdims.iProjAngles, tcbuf, stream);
+		if (!ok)
+			break;
+
+		ok &= FanFP_internal(D_volumeData, volumePitch,
 		                         D_projData + iAngle * projPitch, projPitch,
 		                         subdims, angles + iAngle,
-		                         outputScale);
-		if (!ret)
-			return false;
+		                         outputScale, stream);
+		if (!ok)
+			break;
 	}
-	return true;
+	ok &= checkCuda(cudaStreamSynchronize(stream), "fan_fp");
+	cudaStreamDestroy(stream);
+	return ok;
 }
 
 }
