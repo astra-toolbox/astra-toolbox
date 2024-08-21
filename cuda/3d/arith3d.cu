@@ -28,6 +28,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/cuda/3d/util3d.h"
 #include "astra/cuda/3d/arith3d.h"
 
+#include "astra/cuda/2d/util.h"
+
 #include <cassert>
 
 namespace astraCUDA3d {
@@ -216,111 +218,135 @@ __global__ void devDDFtoD(float* pfOut, const float* pfIn1, const float* pfIn2, 
 
 
 template<typename op>
-void processVol3D(cudaPitchedPtr& out, const SDimensions3D& dims)
+bool processVol3D(cudaPitchedPtr& out, const SDimensions3D& dims, std::optional<cudaStream_t> _stream)
 {
+	StreamHelper stream(_stream);
+	if (!stream)
+		return false;
+
 	dim3 blockSize(16,16);
 	dim3 gridSize((dims.iVolX+15)/16, (dims.iVolY+511)/512);
 	float *pfOut = (float*)out.ptr;
 	unsigned int step = out.pitch/sizeof(float) * dims.iVolY;
 
 	for (unsigned int i = 0; i < dims.iVolZ; ++i) {
-		devtoD<op, 32><<<gridSize, blockSize>>>(pfOut, out.pitch/sizeof(float), dims.iVolX, dims.iVolY);
+		devtoD<op, 32><<<gridSize, blockSize, 0, stream()>>>(pfOut, out.pitch/sizeof(float), dims.iVolX, dims.iVolY);
 		pfOut += step;
 	}
 
-	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
+	return stream.syncIfSync(__FUNCTION__);
 }
 
 template<typename op>
-void processVol3D(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims)
+bool processVol3D(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims, std::optional<cudaStream_t> _stream)
 {
+	StreamHelper stream(_stream);
+	if (!stream)
+		return false;
+
 	dim3 blockSize(16,16);
 	dim3 gridSize((dims.iVolX+15)/16, (dims.iVolY+511)/512);
 	float *pfOut = (float*)out.ptr;
 	unsigned int step = out.pitch/sizeof(float) * dims.iVolY;
 
 	for (unsigned int i = 0; i < dims.iVolZ; ++i) {
-		devFtoD<op, 32><<<gridSize, blockSize>>>(pfOut, fParam, out.pitch/sizeof(float), dims.iVolX, dims.iVolY);
+		devFtoD<op, 32><<<gridSize, blockSize, 0, stream()>>>(pfOut, fParam, out.pitch/sizeof(float), dims.iVolX, dims.iVolY);
 		pfOut += step;
 	}
 
-	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
+	return stream.syncIfSync(__FUNCTION__);
 }
 
 template<typename op>
-void processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims)
+bool processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims, std::optional<cudaStream_t> _stream)
 {
+	StreamHelper stream(_stream);
+	if (!stream)
+		return false;
+
 	dim3 blockSize(16,16);
 	dim3 gridSize((dims.iVolX+15)/16, (dims.iVolY+511)/512);
 	float *pfOut = (float*)out.ptr;
-	float *pfIn = (float*)in.ptr;
+	const float *pfIn = (const float*)in.ptr;
 	unsigned int step = out.pitch/sizeof(float) * dims.iVolY;
 
 	for (unsigned int i = 0; i < dims.iVolZ; ++i) {
-		devDtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn, out.pitch/sizeof(float), dims.iVolX, dims.iVolY);
-		pfOut += step;
-		pfIn += step;
-	}
-
-	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
-}
-
-template<typename op>
-void processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims)
-{
-	dim3 blockSize(16,16);
-	dim3 gridSize((dims.iVolX+15)/16, (dims.iVolY+511)/512);
-	float *pfOut = (float*)out.ptr;
-	float *pfIn = (float*)in.ptr;
-	unsigned int step = out.pitch/sizeof(float) * dims.iVolY;
-
-	for (unsigned int i = 0; i < dims.iVolZ; ++i) {
-		devDFtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn, fParam, out.pitch/sizeof(float), dims.iVolX, dims.iVolY);
+		devDtoD<op, 32><<<gridSize, blockSize, 0, stream()>>>(pfOut, pfIn, out.pitch/sizeof(float), dims.iVolX, dims.iVolY);
 		pfOut += step;
 		pfIn += step;
 	}
 
-	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
+	return stream.syncIfSync(__FUNCTION__);
 }
 
 template<typename op>
-void processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims)
+bool processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims, std::optional<cudaStream_t> _stream)
 {
+	StreamHelper stream(_stream);
+	if (!stream)
+		return false;
+
 	dim3 blockSize(16,16);
 	dim3 gridSize((dims.iVolX+15)/16, (dims.iVolY+511)/512);
 	float *pfOut = (float*)out.ptr;
-	float *pfIn1 = (float*)in1.ptr;
-	float *pfIn2 = (float*)in2.ptr;
+	const float *pfIn = (const float*)in.ptr;
 	unsigned int step = out.pitch/sizeof(float) * dims.iVolY;
 
 	for (unsigned int i = 0; i < dims.iVolZ; ++i) {
-		devDDFtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn1, pfIn2, fParam, out.pitch/sizeof(float), dims.iVolX, dims.iVolY);
+		devDFtoD<op, 32><<<gridSize, blockSize, 0, stream()>>>(pfOut, pfIn, fParam, out.pitch/sizeof(float), dims.iVolX, dims.iVolY);
+		pfOut += step;
+		pfIn += step;
+	}
+
+	return stream.syncIfSync(__FUNCTION__);
+}
+
+template<typename op>
+bool processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims, std::optional<cudaStream_t> _stream)
+{
+	StreamHelper stream(_stream);
+	if (!stream)
+		return false;
+
+	dim3 blockSize(16,16);
+	dim3 gridSize((dims.iVolX+15)/16, (dims.iVolY+511)/512);
+	float *pfOut = (float*)out.ptr;
+	const float *pfIn1 = (const float*)in1.ptr;
+	const float *pfIn2 = (const float*)in2.ptr;
+	unsigned int step = out.pitch/sizeof(float) * dims.iVolY;
+
+	for (unsigned int i = 0; i < dims.iVolZ; ++i) {
+		devDDFtoD<op, 32><<<gridSize, blockSize, 0, stream()>>>(pfOut, pfIn1, pfIn2, fParam, out.pitch/sizeof(float), dims.iVolX, dims.iVolY);
 		pfOut += step;
 		pfIn1 += step;
 		pfIn2 += step;
 	}
 
-	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
+	return stream.syncIfSync(__FUNCTION__);
 }
 
 template<typename op>
-void processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims)
+bool processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims, std::optional<cudaStream_t> _stream)
 {
+	StreamHelper stream(_stream);
+	if (!stream)
+		return false;
+
 	dim3 blockSize(16,16);
 	dim3 gridSize((dims.iVolX+15)/16, (dims.iVolY+511)/512);
 	float *pfOut = (float*)out.ptr;
-	float *pfIn1 = (float*)in1.ptr;
-	float *pfIn2 = (float*)in2.ptr;
+	const float *pfIn1 = (const float*)in1.ptr;
+	const float *pfIn2 = (const float*)in2.ptr;
 	unsigned int step = out.pitch/sizeof(float) * dims.iVolY;
 
 	for (unsigned int i = 0; i < dims.iVolZ; ++i) {
-		devDDtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn1, pfIn2, out.pitch/sizeof(float), dims.iVolX, dims.iVolY);
+		devDDtoD<op, 32><<<gridSize, blockSize, 0, stream()>>>(pfOut, pfIn1, pfIn2, out.pitch/sizeof(float), dims.iVolX, dims.iVolY);
 		pfOut += step;
 		pfIn1 += step;
 		pfIn2 += step;
 	}
 
-	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
+	return stream.syncIfSync(__FUNCTION__);
 }
 
 
@@ -336,111 +362,135 @@ void processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitc
 
 
 template<typename op>
-void processSino3D(cudaPitchedPtr& out, const SDimensions3D& dims)
+bool processSino3D(cudaPitchedPtr& out, const SDimensions3D& dims, std::optional<cudaStream_t> _stream)
 {
+	StreamHelper stream(_stream);
+	if (!stream)
+		return false;
+
 	dim3 blockSize(16,16);
 	dim3 gridSize((dims.iProjU+15)/16, (dims.iProjAngles+511)/512);
 	float *pfOut = (float*)out.ptr;
 	unsigned int step = out.pitch/sizeof(float) * dims.iProjAngles;
 
 	for (unsigned int i = 0; i < dims.iProjV; ++i) {
-		devtoD<op, 32><<<gridSize, blockSize>>>(pfOut, out.pitch/sizeof(float), dims.iProjU, dims.iProjAngles);
+		devtoD<op, 32><<<gridSize, blockSize, 0, stream()>>>(pfOut, out.pitch/sizeof(float), dims.iProjU, dims.iProjAngles);
 		pfOut += step;
 	}
 
-	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
+	return stream.syncIfSync(__FUNCTION__);
 }
 
 template<typename op>
-void processSino3D(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims)
+bool processSino3D(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims, std::optional<cudaStream_t> _stream)
 {
+	StreamHelper stream(_stream);
+	if (!stream)
+		return false;
+
 	dim3 blockSize(16,16);
 	dim3 gridSize((dims.iProjU+15)/16, (dims.iProjAngles+511)/512);
 	float *pfOut = (float*)out.ptr;
 	unsigned int step = out.pitch/sizeof(float) * dims.iProjAngles;
 
 	for (unsigned int i = 0; i < dims.iProjV; ++i) {
-		devFtoD<op, 32><<<gridSize, blockSize>>>(pfOut, fParam, out.pitch/sizeof(float), dims.iProjU, dims.iProjAngles);
+		devFtoD<op, 32><<<gridSize, blockSize, 0, stream()>>>(pfOut, fParam, out.pitch/sizeof(float), dims.iProjU, dims.iProjAngles);
 		pfOut += step;
 	}
 
-	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
+	return stream.syncIfSync(__FUNCTION__);
 }
 
 template<typename op>
-void processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims)
+bool processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims, std::optional<cudaStream_t> _stream)
 {
+	StreamHelper stream(_stream);
+	if (!stream)
+		return false;
+
 	dim3 blockSize(16,16);
 	dim3 gridSize((dims.iProjU+15)/16, (dims.iProjAngles+511)/512);
 	float *pfOut = (float*)out.ptr;
-	float *pfIn = (float*)in.ptr;
+	const float *pfIn = (const float*)in.ptr;
 	unsigned int step = out.pitch/sizeof(float) * dims.iProjAngles;
 
 	for (unsigned int i = 0; i < dims.iProjV; ++i) {
-		devDtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn, out.pitch/sizeof(float), dims.iProjU, dims.iProjAngles);
+		devDtoD<op, 32><<<gridSize, blockSize, 0, stream()>>>(pfOut, pfIn, out.pitch/sizeof(float), dims.iProjU, dims.iProjAngles);
 		pfOut += step;
 		pfIn += step;
 	}
 
-	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
+	return stream.syncIfSync(__FUNCTION__);
 }
 
 template<typename op>
-void processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims)
+bool processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims, std::optional<cudaStream_t> _stream)
 {
+	StreamHelper stream(_stream);
+	if (!stream)
+		return false;
+
 	dim3 blockSize(16,16);
 	dim3 gridSize((dims.iProjU+15)/16, (dims.iProjAngles+511)/512);
 	float *pfOut = (float*)out.ptr;
-	float *pfIn = (float*)in.ptr;
+	const float *pfIn = (const float*)in.ptr;
 	unsigned int step = out.pitch/sizeof(float) * dims.iProjAngles;
 
 	for (unsigned int i = 0; i < dims.iProjV; ++i) {
-		devDFtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn, fParam, out.pitch/sizeof(float), dims.iProjU, dims.iProjAngles);
+		devDFtoD<op, 32><<<gridSize, blockSize, 0, stream()>>>(pfOut, pfIn, fParam, out.pitch/sizeof(float), dims.iProjU, dims.iProjAngles);
 		pfOut += step;
 		pfIn += step;
 	}
 
-	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
+	return stream.syncIfSync(__FUNCTION__);
 }
 
 template<typename op>
-void processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims)
+bool processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims, std::optional<cudaStream_t> _stream)
 {
+	StreamHelper stream(_stream);
+	if (!stream)
+		return false;
+
 	dim3 blockSize(16,16);
 	dim3 gridSize((dims.iProjU+15)/16, (dims.iProjAngles+511)/512);
 	float *pfOut = (float*)out.ptr;
-	float *pfIn1 = (float*)in1.ptr;
-	float *pfIn2 = (float*)in2.ptr;
+	const float *pfIn1 = (const float*)in1.ptr;
+	const float *pfIn2 = (const float*)in2.ptr;
 	unsigned int step = out.pitch/sizeof(float) * dims.iProjAngles;
 
 	for (unsigned int i = 0; i < dims.iProjV; ++i) {
-		devDDFtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn1, pfIn2, fParam, out.pitch/sizeof(float), dims.iProjU, dims.iProjAngles);
+		devDDFtoD<op, 32><<<gridSize, blockSize, 0, stream()>>>(pfOut, pfIn1, pfIn2, fParam, out.pitch/sizeof(float), dims.iProjU, dims.iProjAngles);
 		pfOut += step;
 		pfIn1 += step;
 		pfIn2 += step;
 	}
 
-	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
+	return stream.syncIfSync(__FUNCTION__);
 }
 
 template<typename op>
-void processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims)
+bool processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims, std::optional<cudaStream_t> _stream)
 {
+	StreamHelper stream(_stream);
+	if (!stream)
+		return false;
+
 	dim3 blockSize(16,16);
 	dim3 gridSize((dims.iProjU+15)/16, (dims.iProjAngles+511)/512);
 	float *pfOut = (float*)out.ptr;
-	float *pfIn1 = (float*)in1.ptr;
-	float *pfIn2 = (float*)in2.ptr;
+	const float *pfIn1 = (const float*)in1.ptr;
+	const float *pfIn2 = (const float*)in2.ptr;
 	unsigned int step = out.pitch/sizeof(float) * dims.iProjAngles;
 
 	for (unsigned int i = 0; i < dims.iProjV; ++i) {
-		devDDtoD<op, 32><<<gridSize, blockSize>>>(pfOut, pfIn1, pfIn2, out.pitch/sizeof(float), dims.iProjU, dims.iProjAngles);
+		devDDtoD<op, 32><<<gridSize, blockSize, 0, stream()>>>(pfOut, pfIn1, pfIn2, out.pitch/sizeof(float), dims.iProjU, dims.iProjAngles);
 		pfOut += step;
 		pfIn1 += step;
 		pfIn2 += step;
 	}
 
-	checkCuda(cudaThreadSynchronize(), __FUNCTION__);
+	return stream.syncIfSync(__FUNCTION__);
 }
 
 
@@ -461,29 +511,29 @@ void processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPit
 
 
 #define INST_DFtoD(name) \
-  template void processVol3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims); \
-  template void processSino3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims);
+  template bool processVol3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims, std::optional<cudaStream_t> _stream); \
+  template bool processSino3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims, std::optional<cudaStream_t> _stream);
 
 #define INST_DtoD(name) \
-  template void processVol3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims); \
-  template void processSino3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims);
+  template bool processVol3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims, std::optional<cudaStream_t> _stream); \
+  template bool processSino3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims, std::optional<cudaStream_t> _stream);
 
 #define INST_DDtoD(name) \
-  template void processVol3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims); \
-  template void processSino3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims);
+  template bool processVol3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims, std::optional<cudaStream_t> _stream); \
+  template bool processSino3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims, std::optional<cudaStream_t> _stream);
 
 #define INST_DDFtoD(name) \
-  template void processVol3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims); \
-  template void processSino3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims);
+  template bool processVol3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims, std::optional<cudaStream_t> _stream); \
+  template bool processSino3D<name>(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims, std::optional<cudaStream_t> _stream);
 
 
 #define INST_toD(name) \
-  template void processVol3D<name>(cudaPitchedPtr& out, const SDimensions3D& dims); \
-  template void processSino3D<name>(cudaPitchedPtr& out, const SDimensions3D& dims);
+  template bool processVol3D<name>(cudaPitchedPtr& out, const SDimensions3D& dims, std::optional<cudaStream_t> _stream); \
+  template bool processSino3D<name>(cudaPitchedPtr& out, const SDimensions3D& dims, std::optional<cudaStream_t> _stream);
 
 #define INST_FtoD(name) \
-  template void processVol3D<name>(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims); \
-  template void processSino3D<name>(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims);
+  template bool processVol3D<name>(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims, std::optional<cudaStream_t> _stream); \
+  template bool processSino3D<name>(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims, std::optional<cudaStream_t> _stream);
 
 
 

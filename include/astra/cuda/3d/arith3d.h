@@ -29,6 +29,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #define _CUDA_ARITH3D_H
 
 #include <cuda.h>
+#include <optional>
 
 namespace astraCUDA3d {
 
@@ -45,19 +46,19 @@ struct opSet;
 struct opClampMin;
 struct opClampMax;
 
-template<typename op> void processVol3D(cudaPitchedPtr& out, const SDimensions3D& dims);
-template<typename op> void processVol3D(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims);
-template<typename op> void processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims);
-template<typename op> void processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims);
-template<typename op> void processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims);
-template<typename op> void processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims);
+template<typename op> bool processVol3D(cudaPitchedPtr& out, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
+template<typename op> bool processVol3D(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
+template<typename op> bool processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
+template<typename op> bool processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
+template<typename op> bool processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
+template<typename op> bool processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
 
-template<typename op> void processSino3D(cudaPitchedPtr& out, const SDimensions3D& dims);
-template<typename op> void processSino3D(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims);
-template<typename op> void processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims);
-template<typename op> void processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims);
-template<typename op> void processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims);
-template<typename op> void processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims);
+template<typename op> bool processSino3D(cudaPitchedPtr& out, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
+template<typename op> bool processSino3D(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
+template<typename op> bool processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
+template<typename op> bool processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
+template<typename op> bool processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
+template<typename op> bool processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
 
 
 
