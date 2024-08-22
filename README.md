@@ -45,7 +45,7 @@ vc_redist.x64.exe in the ASTRA zip file.
 
 #### For MATLAB
 
-Requirements: g++, CUDA (10.2 or higher), MATLAB (R2012a or higher)
+Requirements: g++ (7 or higher), CUDA (11.0 or higher), MATLAB (R2012a or higher)
 
 ```
 cd build/linux
@@ -76,7 +76,7 @@ MATLAB.
 
 #### For Python
 
-Requirements: g++, CUDA (10.2 or higher), Python (3.x), Cython, six, scipy
+Requirements: g++ (7 or higher), CUDA (11.0 or higher), Python (3.x), Cython, six, scipy
 
 ```
 cd build/linux
@@ -92,7 +92,7 @@ This will install Astra into your current Python environment.
 
 #### As a C++ library
 
-Requirements: g++, CUDA (10.2 or higher)
+Requirements: g++ (7 or higher), CUDA (11.0 or higher)
 
 ```
 cd build/linux
@@ -124,7 +124,7 @@ make install
 ### Windows, from source using Visual Studio 2017
 
 Requirements: Visual Studio 2017 (full or community), boost (recent),
-              CUDA (10.2 or higher), MATLAB (R2012a or higher)
+              CUDA (11.0 or higher), MATLAB (R2012a or higher)
               and/or WinPython 3.x.
 
 Using the Visual Studio IDE:
