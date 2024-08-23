@@ -30,10 +30,15 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include <cufft.h>
 #include <cuda.h>
+#include <optional>
 
 #include "astra/Filters.h"
 
 namespace astraCUDA {
+
+// Functions taking an std::optional<cudaStream_t> will be
+// synchronous when not passed a stream. If they do get a stream,
+// the cuda parts might be partially or fully asynchronous.
 
 bool allocateComplexOnDevice(int _iProjectionCount,
                              int _iDetectorCount,
@@ -43,20 +48,24 @@ bool freeComplexOnDevice(cufftComplex * _pDevComplex);
 
 bool uploadComplexArrayToDevice(int _iProjectionCount, int _iDetectorCount,
                                 cufftComplex * _pHostComplexSource,
-                                cufftComplex * _pDevComplexTarget);
+                                cufftComplex * _pDevComplexTarget,
+                                std::optional<cudaStream_t> _stream = {});
 
 bool runCudaFFT(int _iProjectionCount, const float * D_pfSource,
                 int _iSourcePitch, int _iProjDets,
                 int _iPaddedSize,
-                cufftComplex * D_pcTarget);
+                cufftComplex * D_pcTarget,
+                std::optional<cudaStream_t> _stream = {});
 
 bool runCudaIFFT(int _iProjectionCount, const cufftComplex* D_pcSource,
                  float * D_pfTarget,
                  int _iTargetPitch, int _iProjDets,
-                 int _iPaddedSize);
+                 int _iPaddedSize,
+                 std::optional<cudaStream_t> _stream = {});
 
-void applyFilter(int _iProjectionCount, int _iFreqBinCount,
-                 cufftComplex * _pSinogram, cufftComplex * _pFilter);
+bool applyFilter(int _iProjectionCount, int _iFreqBinCount,
+                 cufftComplex * _pSinogram, cufftComplex * _pFilter,
+                 std::optional<cudaStream_t> _stream = {});
 
 void genCuFFTFilter(const astra::SFilterConfig &_cfg, int _iProjectionCount,
                    cufftComplex * _pFilter, int _iFFTRealDetectorCount,
@@ -65,8 +74,9 @@ void genCuFFTFilter(const astra::SFilterConfig &_cfg, int _iProjectionCount,
 void genIdenFilter(int _iProjectionCount, cufftComplex * _pFilter,
                    int _iFFTRealDetectorCount, int _iFFTFourierDetectorCount);
 
-void rescaleInverseFourier(int _iProjectionCount, int _iDetectorCount,
-                           float * _pfInFourierOutput);
+bool rescaleInverseFourier(int _iProjectionCount, int _iDetectorCount,
+                           float * _pfInFourierOutput,
+                           std::optional<cudaStream_t> _stream = {});
 
 }
 

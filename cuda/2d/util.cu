@@ -91,9 +91,16 @@ bool allocateVolume(float*& ptr, unsigned int width, unsigned int height, unsign
 	return true;
 }
 
-bool zeroVolume(float* data, unsigned int pitch, unsigned int width, unsigned int height)
+bool zeroVolume(float* data, unsigned int pitch, unsigned int width, unsigned int height, std::optional<cudaStream_t> _stream)
 {
-	return checkCuda(cudaMemset2D(data, sizeof(float)*pitch, 0, sizeof(float)*width, height), "zeroVolume");
+	StreamHelper stream(_stream);
+	if (!stream)
+		return false;
+
+	if (!checkCuda(cudaMemset2DAsync(data, sizeof(float)*pitch, 0, sizeof(float)*width, height, stream()), "zeroVolume"))
+		return false;
+
+	return stream.syncIfSync("zeroVolume sync");
 }
 
 bool allocateVolumeData(float*& D_ptr, unsigned int& pitch, const SDimensions& dims)
@@ -106,28 +113,46 @@ bool allocateProjectionData(float*& D_ptr, unsigned int& pitch, const SDimension
 	return allocateVolume(D_ptr, dims.iProjDets, dims.iProjAngles, pitch);
 }
 
-bool zeroVolumeData(float* D_ptr, unsigned int pitch, const SDimensions& dims)
+bool zeroVolumeData(float* D_ptr, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream)
 {
-	return zeroVolume(D_ptr, pitch, dims.iVolWidth, dims.iVolHeight);
+	return zeroVolume(D_ptr, pitch, dims.iVolWidth, dims.iVolHeight, _stream);
 }
 
-bool zeroProjectionData(float* D_ptr, unsigned int pitch, const SDimensions& dims)
+bool zeroProjectionData(float* D_ptr, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream)
 {
-	return zeroVolume(D_ptr, pitch, dims.iProjDets, dims.iProjAngles);
+	return zeroVolume(D_ptr, pitch, dims.iProjDets, dims.iProjAngles, _stream);
 }
 
-void duplicateVolumeData(float* D_dst, float* D_src, unsigned int pitch, const SDimensions& dims)
+bool duplicateVolumeData(float* D_dst, float* D_src, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream)
 {
-	cudaMemcpy2D(D_dst, sizeof(float)*pitch, D_src, sizeof(float)*pitch, sizeof(float)*dims.iVolWidth, dims.iVolHeight, cudaMemcpyDeviceToDevice);
+	StreamHelper stream(_stream);
+	if (!stream)
+		return false;
+
+	if (!checkCuda(cudaMemcpy2DAsync(D_dst, sizeof(float)*pitch, D_src, sizeof(float)*pitch, sizeof(float)*dims.iVolWidth, dims.iVolHeight, cudaMemcpyDeviceToDevice, stream()), "duplicateVolumeData"))
+		return false;
+
+	return stream.syncIfSync("duplicateVolumeData sync");
 }
 
-void duplicateProjectionData(float* D_dst, float* D_src, unsigned int pitch, const SDimensions& dims)
+bool duplicateProjectionData(float* D_dst, float* D_src, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream)
 {
-	cudaMemcpy2D(D_dst, sizeof(float)*pitch, D_src, sizeof(float)*pitch, sizeof(float)*dims.iProjDets, dims.iProjAngles, cudaMemcpyDeviceToDevice);
+	StreamHelper stream(_stream);
+	if (!stream)
+		return false;
+
+	if (!checkCuda(cudaMemcpy2DAsync(D_dst, sizeof(float)*pitch, D_src, sizeof(float)*pitch, sizeof(float)*dims.iProjDets, dims.iProjAngles, cudaMemcpyDeviceToDevice, stream()), "duplicateProjectionData"))
+		return false;
+
+	return stream.syncIfSync("duplicateVolumeData sync");
 }
 
-bool createArrayAndTextureObject2D(float* data, cudaArray*& dataArray, cudaTextureObject_t& texObj, unsigned int pitch, unsigned int width, unsigned int height)
+bool createArrayAndTextureObject2D(float* data, cudaArray*& dataArray, cudaTextureObject_t& texObj, unsigned int pitch, unsigned int width, unsigned int height, std::optional<cudaStream_t> _stream)
 {
+	StreamHelper stream(_stream);
+	if (!stream)
+		return false;
+
 	// TODO: For very small sizes (roughly <=512x128) with few angles (<=180)
 	// not using an array is more efficient.
 
@@ -137,10 +162,6 @@ bool createArrayAndTextureObject2D(float* data, cudaArray*& dataArray, cudaTextu
 	dataArray = 0;
 	if (!checkCuda(cudaMallocArray(&dataArray, &channelDesc, width, height), "createTextureObject2D malloc"))
 		return false;
-	if (!checkCuda(cudaMemcpy2DToArray(dataArray, 0, 0, data, pitch*sizeof(float), width*sizeof(float), height, cudaMemcpyDeviceToDevice), "createTextureObject2D memcpy")) {
-		cudaFreeArray(dataArray);
-		return false;
-	}
 
 	cudaResourceDesc resDesc;
 	memset(&resDesc, 0, sizeof(resDesc));
@@ -162,10 +183,17 @@ bool createArrayAndTextureObject2D(float* data, cudaArray*& dataArray, cudaTextu
 		return false;
 	}
 
+	bool ok = checkCuda(cudaMemcpy2DToArrayAsync(dataArray, 0, 0, data, pitch*sizeof(float), width*sizeof(float), height, cudaMemcpyDeviceToDevice, stream()), "createTextureObject2D memcpy");
+	ok &= stream.syncIfSync("createArrayAndTextureObject2D sync");
+	if (!ok) {
+		cudaFreeArray(dataArray);
+		return false;
+	}
+
 	return true;
 }
 
-bool createTextureObjectPitch2D(float* data, cudaTextureObject_t& texObj, unsigned int pitch, unsigned int width, unsigned int height, cudaTextureAddressMode mode)
+bool createTextureObjectPitch2D(float* D_data, cudaTextureObject_t& texObj, unsigned int pitch, unsigned int width, unsigned int height, cudaTextureAddressMode mode)
 {
 	cudaChannelFormatDesc channelDesc =
 	    cudaCreateChannelDesc(32, 0, 0, 0, cudaChannelFormatKindFloat);
@@ -173,7 +201,7 @@ bool createTextureObjectPitch2D(float* data, cudaTextureObject_t& texObj, unsign
 	cudaResourceDesc resDesc;
 	memset(&resDesc, 0, sizeof(resDesc));
 	resDesc.resType = cudaResourceTypePitch2D;
-	resDesc.res.pitch2D.devPtr = (void*)data;
+	resDesc.res.pitch2D.devPtr = (void*)D_data;
 	resDesc.res.pitch2D.desc = channelDesc;
 	resDesc.res.pitch2D.width = width;
 	resDesc.res.pitch2D.height = height;
@@ -269,8 +297,13 @@ __global__ void reduce2D(float *g_idata, float *g_odata,
 }
 
 float dotProduct2D(float* D_data, unsigned int pitch,
-                   unsigned int width, unsigned int height)
+                   unsigned int width, unsigned int height,
+                   std::optional<cudaStream_t> _stream)
 {
+	StreamHelper stream(_stream);
+	if (!stream)
+		return false;
+
 	unsigned int bx = (width + 15) / 16;
 	unsigned int by = (height + 127) / 128;
 	unsigned int shared_mem2 = sizeof(float) * 16 * 16;
@@ -284,25 +317,24 @@ float dotProduct2D(float* D_data, unsigned int pitch,
 
 	// Step 1: reduce 2D from image to a single vector, taking sum of squares
 
-	reduce2D<<< dimGrid2, dimBlock2, shared_mem2>>>(D_data, D_buf, pitch, width, height);
-	checkCuda(cudaThreadSynchronize(), "dotProduct2D reduce2D");
+	reduce2D<<< dimGrid2, dimBlock2, shared_mem2, stream()>>>(D_data, D_buf, pitch, width, height);
 
 	// Step 2: reduce 1D: add up elements in vector
 	if (bx * by > 512)
-		reduce1D<512><<< 1, 512, sizeof(float)*512>>>(D_buf, D_res, bx*by);
+		reduce1D<512><<< 1, 512, sizeof(float)*512, stream()>>>(D_buf, D_res, bx*by);
 	else if (bx * by > 128)
-		reduce1D<128><<< 1, 128, sizeof(float)*128>>>(D_buf, D_res, bx*by);
+		reduce1D<128><<< 1, 128, sizeof(float)*128, stream()>>>(D_buf, D_res, bx*by);
 	else if (bx * by > 32)
-		reduce1D<32><<< 1, 32, sizeof(float)*32*2>>>(D_buf, D_res, bx*by);
+		reduce1D<32><<< 1, 32, sizeof(float)*32*2, stream()>>>(D_buf, D_res, bx*by);
 	else if (bx * by > 8)
-		reduce1D<8><<< 1, 8, sizeof(float)*8*2>>>(D_buf, D_res, bx*by);
+		reduce1D<8><<< 1, 8, sizeof(float)*8*2, stream()>>>(D_buf, D_res, bx*by);
 	else
-		reduce1D<1><<< 1, 1, sizeof(float)*1*2>>>(D_buf, D_res, bx*by);
+		reduce1D<1><<< 1, 1, sizeof(float)*1*2, stream()>>>(D_buf, D_res, bx*by);
 
 	float x;
-	cudaMemcpy(&x, D_res, 4, cudaMemcpyDeviceToHost);
+	cudaMemcpyAsync(&x, D_res, 4, cudaMemcpyDeviceToHost, stream());
 
-	checkCuda(cudaThreadSynchronize(), "dotProduct2D");
+	stream.sync("dotProduct2D");
 
 	cudaFree(D_buf);
 

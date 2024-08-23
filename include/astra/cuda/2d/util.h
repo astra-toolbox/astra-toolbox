@@ -29,8 +29,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #define _CUDA_UTIL_H
 
 #include <cuda.h>
-#include <driver_types.h>
 #include <string>
+#include <optional>
 
 #include "astra/Globals.h"
 
@@ -56,24 +56,69 @@ bool copySinogramToDevice(const float* in_data, unsigned int in_pitch,
 		float* outD_data, unsigned int out_pitch);
 
 bool allocateVolume(float*& D_ptr, unsigned int width, unsigned int height, unsigned int& pitch);
-bool zeroVolume(float* D_data, unsigned int pitch, unsigned int width, unsigned int height);
+bool zeroVolume(float* D_data, unsigned int pitch, unsigned int width, unsigned int height, std::optional<cudaStream_t> _stream = {});
 
 bool allocateVolumeData(float*& D_ptr, unsigned int& pitch, const SDimensions& dims);
 bool allocateProjectionData(float*& D_ptr, unsigned int& pitch, const SDimensions& dims);
-bool zeroVolumeData(float* D_ptr, unsigned int pitch, const SDimensions& dims);
-bool zeroProjectionData(float* D_ptr, unsigned int pitch, const SDimensions& dims);
+bool zeroVolumeData(float* D_ptr, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
+bool zeroProjectionData(float* D_ptr, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
 
-void duplicateVolumeData(float* D_dst, float* D_src, unsigned int pitch, const SDimensions& dims);
-void duplicateProjectionData(float* D_dst, float* D_src, unsigned int pitch, const SDimensions& dims);
+bool duplicateVolumeData(float* D_dst, float* D_src, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
+bool duplicateProjectionData(float* D_dst, float* D_src, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
 
-bool createArrayAndTextureObject2D(float* data, cudaArray*& dataArray, cudaTextureObject_t& texObj, unsigned int pitch, unsigned int width, unsigned int height);
-bool createTextureObjectPitch2D(float* data, cudaTextureObject_t& texObj, unsigned int pitch, unsigned int width, unsigned int height, cudaTextureAddressMode mode = cudaAddressModeBorder);
+bool createArrayAndTextureObject2D(float* data, cudaArray*& dataArray, cudaTextureObject_t& texObj, unsigned int pitch, unsigned int width, unsigned int height, std::optional<cudaStream_t> _stream = {});
+bool createTextureObjectPitch2D(float* D_data, cudaTextureObject_t& texObj, unsigned int pitch, unsigned int width, unsigned int height, cudaTextureAddressMode mode = cudaAddressModeBorder);
 
 
 bool checkCuda(cudaError_t err, const char *msg);
 
 float dotProduct2D(float* D_data, unsigned int pitch,
-                   unsigned int width, unsigned int height);
+                   unsigned int width, unsigned int height,
+                   std::optional<cudaStream_t> _stream = {});
+
+
+// Helper class for functions taking a std::optional<cudaStream_t> argument.
+// If a stream isn't passed to us, create a new stream and destroy that in our destructor.
+class StreamHelper {
+public:
+	StreamHelper(std::optional<cudaStream_t> _stream) {
+		if (_stream) {
+			ok = true;
+			ownsStream = false;
+			stream = _stream.value();
+		} else {
+			ok = true;
+			ownsStream = true;
+			stream = 0;
+			ok &= checkCuda(cudaStreamCreate(&stream), "StreamHelper create");
+		}
+	}
+	~StreamHelper() {
+		if (ownsStream)
+			cudaStreamDestroy(stream);
+	}
+
+	cudaStream_t operator()() const { return stream; }
+
+	operator bool() const { return ok; }
+
+
+	// Sync on stream if not using an existing stream
+	bool syncIfSync(const char *msg) {
+		if (ownsStream)
+			return sync(msg);
+		else
+			return ok;
+	}
+	bool sync(const char *msg) {
+		ok &= checkCuda(cudaStreamSynchronize(stream), msg);
+		return ok;
+	}
+private:
+	bool ok;
+	bool ownsStream;
+	cudaStream_t stream;
+};
 
 }
 
