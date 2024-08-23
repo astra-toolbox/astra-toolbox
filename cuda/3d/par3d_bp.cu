@@ -30,8 +30,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstdio>
 #include <cassert>
-#include <iostream>
-#include <list>
 
 #include <cuda.h>
 
@@ -199,10 +197,16 @@ __global__ void dev_par3D_BP_SS(void* D_volData, unsigned int volPitch, cudaText
 
 }
 
-bool transferConstants(const SPar3DProjection* angles, unsigned int iProjAngles, const SProjectorParams3D& params)
+using TransferConstantsBuffer = TransferConstantsBuffer_t<DevPar3DParams, float>;
+
+bool transferConstants(const SPar3DProjection* angles, unsigned int iProjAngles, const SProjectorParams3D& params, TransferConstantsBuffer& buf, cudaStream_t stream)
 {
-	DevPar3DParams *p = new DevPar3DParams[iProjAngles];
-	float *s = new float[iProjAngles];
+	DevPar3DParams *p = &(std::get<0>(buf.d))[0];
+	float *s = &(std::get<1>(buf.d))[0];
+
+	// We use an event to assure that the previous transferConstants has completed before
+	// re-using the buffer. (Even if it is very unlikely that it hasn't.)
+	bool ok = checkCuda(cudaStreamWaitEvent(stream, buf.event, 0), "transferConstants wait");
 
 	for (unsigned int i = 0; i < iProjAngles; ++i) {
 		Vec3 u(angles[i].fDetUX, angles[i].fDetUY, angles[i].fDetUZ);
@@ -223,13 +227,12 @@ bool transferConstants(const SPar3DProjection* angles, unsigned int iProjAngles,
 		s[i] = 1.0 / scaled_cross3(u,v,Vec3(params.fVolScaleX,params.fVolScaleY,params.fVolScaleZ)).norm();
 	}
 
-	cudaMemcpyToSymbol(gC_C, p, iProjAngles*sizeof(DevPar3DParams), 0, cudaMemcpyHostToDevice);
-	cudaMemcpyToSymbol(gC_scale, s, iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice);
+	ok &= checkCuda(cudaMemcpyToSymbolAsync(gC_C, p, iProjAngles*sizeof(DevPar3DParams), 0, cudaMemcpyHostToDevice, stream), "transferConstants transfer C");
+	ok &= checkCuda(cudaMemcpyToSymbolAsync(gC_scale, s, iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice, stream), "transferConstants transfer scale");
 
-	delete[] p;
-	delete[] s;
+	ok &= checkCuda(cudaEventRecord(buf.event, stream), "transferConstants event");
 
-	return true;
+	return ok;
 }
 
 bool Par3DBP_Array(cudaPitchedPtr D_volumeData,
@@ -237,9 +240,17 @@ bool Par3DBP_Array(cudaPitchedPtr D_volumeData,
                    const SDimensions3D& dims, const SPar3DProjection* angles,
                    const SProjectorParams3D& params)
 {
+	TransferConstantsBuffer tcbuf(g_MaxAngles);
+
 	cudaTextureObject_t D_texObj;
 	if (!createTextureObject3D(D_projArray, D_texObj))
 		return false;
+
+	cudaStream_t stream;
+	if (!checkCuda(cudaStreamCreate(&stream), "Par3DBP_Array stream")) {
+		cudaDestroyTextureObject(D_texObj);
+		return false;
+	}
 
 	float fOutputScale = params.fOutputScale * params.fVolScaleX * params.fVolScaleY * params.fVolScaleZ;
 
@@ -250,7 +261,7 @@ bool Par3DBP_Array(cudaPitchedPtr D_volumeData,
 		if (th + angleCount > dims.iProjAngles)
 			angleCount = dims.iProjAngles - th;
 
-		ok = transferConstants(angles, angleCount, params);
+		ok = transferConstants(angles, angleCount, params, tcbuf, stream);
 		if (!ok)
 			break;
 
@@ -265,16 +276,17 @@ bool Par3DBP_Array(cudaPitchedPtr D_volumeData,
 			// printf("Calling BP: %d, %dx%d, %dx%d to %p\n", i, dimBlock.x, dimBlock.y, dimGrid.x, dimGrid.y, (void*)D_volumeData.ptr); 
 			if (params.iRaysPerVoxelDim == 1) {
 				if (dims.iVolZ == 1) {
-					dev_par3D_BP<1><<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), D_texObj, i, th, dims, fOutputScale);
+					dev_par3D_BP<1><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), D_texObj, i, th, dims, fOutputScale);
 				} else {
-					dev_par3D_BP<g_volBlockZ><<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), D_texObj, i, th, dims, fOutputScale);
+					dev_par3D_BP<g_volBlockZ><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), D_texObj, i, th, dims, fOutputScale);
 				}
 			} else
-				dev_par3D_BP_SS<<<dimGrid, dimBlock>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), D_texObj, i, th, dims, params.iRaysPerVoxelDim, fOutputScale);
+				dev_par3D_BP_SS<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), D_texObj, i, th, dims, params.iRaysPerVoxelDim, fOutputScale);
 		}
 
-		// TODO: Consider not synchronizing here, if possible.
-		ok = checkCuda(cudaThreadSynchronize(), "cone_bp");
+		// After kernels are done, signal we're ready to transfer new constants
+		ok = checkCuda(cudaEventRecord(tcbuf.event, stream), "Par3DBP event");
+
 		if (!ok)
 			break;
 
@@ -283,9 +295,12 @@ bool Par3DBP_Array(cudaPitchedPtr D_volumeData,
 
 	}
 
-	cudaDestroyTextureObject(D_texObj);
+	ok = checkCuda(cudaStreamSynchronize(stream), "Par3DBP sync");
 
-	return true;
+	cudaDestroyTextureObject(D_texObj);
+	cudaStreamDestroy(stream);
+
+	return ok;
 }
 
 bool Par3DBP(cudaPitchedPtr D_volumeData,

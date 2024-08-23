@@ -29,6 +29,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #define _CUDA_UTIL3D_H
 
 #include <cuda.h>
+#include <optional>
+
 #include "dims3d.h"
 
 #ifndef M_PI
@@ -39,6 +41,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 namespace astraCUDA3d {
 
 using astraCUDA::checkCuda;
+using astraCUDA::TransferConstantsBuffer_t;
+using astraCUDA::StreamHelper;
 
 cudaPitchedPtr allocateVolumeData(const SDimensions3D& dims);
 cudaPitchedPtr allocateProjectionData(const SDimensions3D& dims);
@@ -52,9 +56,9 @@ bool duplicateVolumeData(cudaPitchedPtr& D_dest, const cudaPitchedPtr& D_src, co
 bool duplicateProjectionData(cudaPitchedPtr& D_dest, const cudaPitchedPtr& D_src, const SDimensions3D& dims); 
 
 
-bool transferProjectionsToArray(cudaPitchedPtr D_projData, cudaArray* array, const SDimensions3D& dims);
+bool transferProjectionsToArray(cudaPitchedPtr D_projData, cudaArray* array, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
 bool transferHostProjectionsToArray(const float *projData, cudaArray* array, const SDimensions3D& dims);
-bool transferVolumeToArray(cudaPitchedPtr D_volumeData, cudaArray* array, const SDimensions3D& dims);
+bool transferVolumeToArray(cudaPitchedPtr D_volumeData, cudaArray* array, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
 bool zeroProjectionArray(cudaArray* array, const SDimensions3D& dims);
 bool zeroVolumeArray(cudaArray* array, const SDimensions3D& dims);
 cudaArray* allocateProjectionArray(const SDimensions3D& dims);
@@ -114,7 +118,6 @@ static Vec3 scaled_cross3(const Vec3 &a, const Vec3 &b, const Vec3 &sc) {
 	ret.z *= sc.x * sc.y;
 	return ret;
 }
-
 
 }
 
