@@ -102,8 +102,8 @@ public:
 	 * @param _pReconstructionGeometry	Information class about the geometry of the reconstruction volume. Will be HARDCOPIED.
 	 * @return initialization successful?
 	 */
-	virtual bool initialize(CFanFlatProjectionGeometry2D* _pProjectionGeometry, 
-		                    CVolumeGeometry2D* _pReconstructionGeometry);
+	bool initialize(CFanFlatProjectionGeometry2D* _pProjectionGeometry,
+	                CVolumeGeometry2D* _pReconstructionGeometry);
 
 	/** Clear this class.
 	 */
