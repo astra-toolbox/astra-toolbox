@@ -138,7 +138,7 @@ bool copyToGPUMemory(const float *src, MemHandle3D dst, const SSubDimensions3D &
 	s.pitch = pos.pitch * sizeof(float);
 	s.xsize = pos.nx * sizeof(float);
 	s.ysize = pos.ny;
-	ASTRA_DEBUG("Pitch %d, xsize %d, ysize %d", s.pitch, s.xsize, s.ysize);
+	ASTRA_DEBUG("Pitch %zu, xsize %zu, ysize %zu", s.pitch, s.xsize, s.ysize);
 
 	cudaMemcpy3DParms p;
 	p.srcArray = 0;
@@ -167,7 +167,7 @@ bool copyFromGPUMemory(float *dst, MemHandle3D src, const SSubDimensions3D &pos)
 	d.pitch = pos.pitch * sizeof(float);
 	d.xsize = pos.nx * sizeof(float);
 	d.ysize = pos.ny;
-	ASTRA_DEBUG("Pitch %d, xsize %d, ysize %d", d.pitch, d.xsize, d.ysize);
+	ASTRA_DEBUG("Pitch %zu, xsize %zu, ysize %zu", d.pitch, d.xsize, d.ysize);
 
 	cudaMemcpy3DParms p;
 	p.srcPos = make_cudaPos(0, 0, 0);
@@ -383,7 +383,7 @@ bool copyIntoArray(MemHandle3D handle, MemHandle3D subdata, const SSubDimensions
 
 	ASTRA_DEBUG("Copying %d x %d x %d into GPU array", pos.subnx, pos.subny, pos.subnz);
 	ASTRA_DEBUG("Offset %d,%d,%d", pos.subx, pos.suby, pos.subz);
-	ASTRA_DEBUG("Pitch %d, xsize %d, ysize %d", subdata.d->ptr.pitch, subdata.d->ptr.xsize, subdata.d->ptr.ysize);
+	ASTRA_DEBUG("Pitch %zu, xsize %zu, ysize %zu", subdata.d->ptr.pitch, subdata.d->ptr.xsize, subdata.d->ptr.ysize);
 
 	cudaMemcpy3DParms p;
 	p.srcArray = 0;
