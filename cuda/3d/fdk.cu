@@ -159,9 +159,7 @@ __global__ void devFDK_ParkerWeight(void* D_projData, unsigned int projPitch, un
 
 	for (int detectorV = startDetectorV; detectorV < endDetectorV; ++detectorV)
 	{
-
 		projData[(detectorV*dims.iProjAngles+angle)*projPitch+detectorU] *= fWeight;
-
 	}
 }
 
@@ -172,7 +170,7 @@ bool FDK_PreWeight(cudaPitchedPtr D_projData,
                 float fSrcOrigin, float fDetOrigin,
                 float fZShift,
                 float fDetUSize, float fDetVSize,
-				bool bShortScan,
+                bool bShortScan,
                 const SDimensions3D& dims, const float* angles)
 {
 	// The pre-weighting factor for a ray is the cosine of the angle between
@@ -306,7 +304,7 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 	}
 
 	int projPitch = D_projData.pitch/sizeof(float);
-	
+
 
 	// We process one sinogram at a time.
 	float* D_sinoData = (float*)D_projData.ptr;
@@ -390,7 +388,7 @@ bool FDK(cudaPitchedPtr D_volumeData,
          cudaPitchedPtr D_projData,
          const SConeProjection* angles,
          const SDimensions3D& dims, SProjectorParams3D params, bool bShortScan,
-	     const float* pfFilter)
+         const float* pfFilter)
 {
 	bool ok;
 
