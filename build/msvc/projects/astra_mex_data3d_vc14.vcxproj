@@ -91,6 +91,7 @@
       <OpenMPSupport>true</OpenMPSupport>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>ASTRA_CUDA;__SSE2__;MATLAB_MEXCMD_RELEASE=700;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
@@ -108,6 +109,7 @@
       <OpenMPSupport>true</OpenMPSupport>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>__SSE2__;MATLAB_MEXCMD_RELEASE=700;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
@@ -125,6 +127,7 @@
       <OpenMPSupport>true</OpenMPSupport>
       <Optimization>MaxSpeed</Optimization>
       <PreprocessorDefinitions>ASTRA_CUDA;__SSE2__;MATLAB_MEXCMD_RELEASE=700;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
@@ -142,6 +145,7 @@
       <OpenMPSupport>true</OpenMPSupport>
       <Optimization>MaxSpeed</Optimization>
       <PreprocessorDefinitions>__SSE2__;MATLAB_MEXCMD_RELEASE=700;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>

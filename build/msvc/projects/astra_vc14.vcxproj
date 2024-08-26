@@ -113,6 +113,7 @@
       <PreprocessorDefinitions>ASTRA_CUDA;__SSE2__;DLL_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <SDLCheck>true</SDLCheck>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -124,6 +125,8 @@
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <GenerateLineInfo>true</GenerateLineInfo>
       <CodeGeneration>compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_87,sm_87;compute_89,sm_89;compute_90,sm_90;compute_90,compute_90</CodeGeneration>
+      <AdditionalOptions>-std=c++17</AdditionalOptions>
+      <AdditionalCompilerOptions>/std:c++17</AdditionalCompilerOptions>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -136,6 +139,7 @@
       <PreprocessorDefinitions>__SSE2__;DLL_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <SDLCheck>true</SDLCheck>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -157,6 +161,7 @@
       <PreprocessorDefinitions>ASTRA_CUDA;__SSE2__;DLL_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <SDLCheck>true</SDLCheck>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -170,6 +175,8 @@
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <GenerateLineInfo>true</GenerateLineInfo>
       <CodeGeneration>compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_87,sm_87;compute_89,sm_89;compute_90,sm_90;compute_90,compute_90</CodeGeneration>
+      <AdditionalOptions>-std=c++17</AdditionalOptions>
+      <AdditionalCompilerOptions>/std:c++17</AdditionalCompilerOptions>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -186,6 +193,7 @@
       <PreprocessorDefinitions>__SSE2__;DLL_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <SDLCheck>true</SDLCheck>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>

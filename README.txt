@@ -69,7 +69,8 @@ Linux, from source:
 
 For Matlab:
 
-Requirements: g++, boost, CUDA (10.2 or higher), Matlab (R2012a or higher)
+Requirements: g++ (7 or higher), boost, CUDA (11.0 or higher),
+              Matlab (R2012a or higher)
 
 cd build/linux
 ./autogen.sh   # when building a git version
@@ -100,7 +101,7 @@ matlab.
 
 For Python:
 
-Requirements: g++, boost, CUDA (10.2 or higher), Python (3.x)
+Requirements: g++ (7 or higher), boost, CUDA (11.0 or higher), Python (3.x)
 
 cd build/linux
 ./autogen.sh   # when building a git version
@@ -115,7 +116,7 @@ This will install Astra into your current Python environment.
 
 As a C++ library:
 
-Requirements: g++, CUDA (10.2 or higher)
+Requirements: g++ (7 or higher), CUDA (11.0 or higher)
 
 cd build/linux
 ./autogen.sh   # when building a git version
@@ -146,7 +147,7 @@ Windows, from source using Visual Studio 2017:
 -----------------------------------------------
 
 Requirements: Visual Studio 2017 (full or community), boost (recent),
-              CUDA (10.2 or higher), Matlab (R2012a or higher)
+              CUDA (11.0 or higher), Matlab (R2012a or higher)
               and/or WinPython 3.x.
 
 Using the Visual Studio IDE:
