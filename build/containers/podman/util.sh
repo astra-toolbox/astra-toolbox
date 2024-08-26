@@ -2,7 +2,7 @@
 
 set -e
 
-MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-py310_23.3.1-0-Linux-x86_64.sh
+MINICONDA=https://repo.anaconda.com/miniconda/Miniconda3-py312_24.7.1-0-Linux-x86_64.sh
 CUDA102=https://developer.download.nvidia.com/compute/cuda/10.2/Prod/local_installers/cuda_10.2.89_440.33.01_linux.run
 CUDA110=https://developer.download.nvidia.com/compute/cuda/11.0.3/local_installers/cuda_11.0.3_450.51.06_linux.run
 CUDA111=https://developer.download.nvidia.com/compute/cuda/11.1.1/local_installers/cuda_11.1.1_455.32.00_linux.run
@@ -56,6 +56,7 @@ setup_conda() {
   buildah run --volume `pwd`/sw:/sw:ro,z $ctr bash /sw/$(basename $MINICONDA) -b
   buildah config --env PATH=/root/miniconda3/bin:$(buildah run $ctr printenv PATH) $ctr
   buildah run $ctr conda install -y conda-build conda-verify
+  buildah run $ctr conda config --set solver libmamba
 }
 
 setup_cuda() {
