@@ -54,27 +54,35 @@ def create_vol_geom(*varargin):
 
 This method can be called in a number of ways:
 
-``create_vol_geom(N)``:
+``create_vol_geom(n_rows_and_cols)``:
     :returns: A 2D volume geometry of size :math:`N \\times N`.
 
-``create_vol_geom((Y, X))``:
-    :returns: A 2D volume geometry of size :math:`Y \\times X`.
+``create_vol_geom((n_rows, n_cols))``:
+    :returns: A 2D volume geometry of size :math:`n_rows \\times n_cols`.
 
-``create_vol_geom(Y, X)``:
-    :returns: A 2D volume geometry of size :math:`Y \\times X`.
+``create_vol_geom(n_rows, n_cols)``:
+    :returns: A 2D volume geometry of size :math:`n_rows \\times n_cols`.
 
-``create_vol_geom(Y, X, minx, maxx, miny, maxy)``:
-    :returns: A 2D volume geometry of size :math:`Y \\times X`, windowed as :math:`minx \\leq x \\leq maxx` and :math:`miny \\leq y \\leq maxy`.
+``create_vol_geom(n_rows, n_cols, minx, maxx, miny, maxy)``:
+    :returns: A 2D volume geometry of size :math:`n_rows \\times n_cols`,
+    windowed as :math:`minx \\leq x \\leq maxx` and :math:`miny \\leq y \\leq
+    maxy`. Note that rows are oriented along the Y axis, and columns along the
+    X axis.
 
-``create_vol_geom((Y, X, Z))``:
-    :returns: A 3D volume geometry of size :math:`Y \\times X \\times Z`.
+``create_vol_geom((n_rows, n_cols, n_slices))``:
+    :returns: A 3D volume geometry of size :math:`n_rows \\times n_cols \\times
+    n_slices`.
 
-``create_vol_geom(Y, X, Z)``:
-    :returns: A 3D volume geometry of size :math:`Y \\times X \\times Z`.
+``create_vol_geom(n_rows, n_cols, n_slices)``:
+    :returns: A 3D volume geometry of size :math:`n_rows \\times n_cols \\times
+    n_slices`.
 
-``create_vol_geom(Y, X, Z, minx, maxx, miny, maxy, minz, maxz)``:
-    :returns: A 3D volume geometry of size :math:`Y \\times X \\times Z`, windowed as :math:`minx \\leq x \\leq maxx` and :math:`miny \\leq y \\leq maxy` and :math:`minz \\leq z \\leq maxz` .
-
+``create_vol_geom(n_rows, n_cols, n_slices, minx, maxx, miny, maxy, minz, maxz)``:
+    :returns: A 3D volume geometry of size :math:`n_rows \\times n_cols \\times
+    n_slices`, windowed as :math:`minx \\leq x \\leq maxx`,
+    :math:`miny \\leq y \\leq maxy`, and :math:`minz \\leq z \\leq maxz`. Note
+    that rows are oriented along the Y axis, columns along the X axis, and
+    slices along the Z axis.
 
 """
     vol_geom = {'option': {}}
