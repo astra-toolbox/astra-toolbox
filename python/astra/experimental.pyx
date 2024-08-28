@@ -38,15 +38,15 @@ IF HAVE_CUDA==True:
     from .PyIncludes cimport *
     from libcpp.vector cimport vector
 
-    cdef extern from "astra/CompositeGeometryManager.h" namespace "astra::CCompositeGeometryManager::SJob":
-        cdef enum EMode:
+    cdef extern from "astra/CompositeGeometryManager.h" namespace "astra::CCompositeGeometryManager":
+        cdef enum EJobMode:
             MODE_ADD = 0
             MODE_SET = 1
     cdef extern from "astra/CompositeGeometryManager.h" namespace "astra":
         cdef cppclass CCompositeGeometryManager:
-            bool doFP(CProjector3D *, vector[CFloat32VolumeData3D *], vector[CFloat32ProjectionData3D *], EMode) nogil
-            bool doBP(CProjector3D *, vector[CFloat32VolumeData3D *], vector[CFloat32ProjectionData3D *], EMode) nogil
-            bool doFDK(CProjector3D *, CFloat32VolumeData3D *, CFloat32ProjectionData3D *, bool, const float*, EMode) nogil
+            bool doFP(CProjector3D *, vector[CFloat32VolumeData3D *], vector[CFloat32ProjectionData3D *], EJobMode) nogil
+            bool doBP(CProjector3D *, vector[CFloat32VolumeData3D *], vector[CFloat32ProjectionData3D *], EJobMode) nogil
+            bool doFDK(CProjector3D *, CFloat32VolumeData3D *, CFloat32ProjectionData3D *, bool, const float*, EJobMode) nogil
 
     cdef extern from *:
         CFloat32VolumeData3D * dynamic_cast_vol_mem "dynamic_cast<astra::CFloat32VolumeData3D*>" (CData3D * )
@@ -65,7 +65,7 @@ IF HAVE_CUDA==True:
     def do_composite(projector_id, vol_ids, proj_ids, mode, t):
         if mode != MODE_ADD and mode != MODE_SET:
             raise AstraError("Internal error: wrong composite mode")
-        cdef EMode eMode = mode;
+        cdef EJobMode eMode = mode;
         cdef vector[CFloat32VolumeData3D *] vol
         cdef CFloat32VolumeData3D * pVolObject
         cdef CFloat32ProjectionData3D * pProjObject
@@ -137,7 +137,7 @@ IF HAVE_CUDA==True:
     def direct_FPBP3D(projector_id, vol, proj, mode, t):
         if mode != MODE_ADD and mode != MODE_SET:
             raise AstraError("Internal error: wrong composite mode")
-        cdef EMode eMode = mode
+        cdef EJobMode eMode = mode
         cdef CProjector3D * projector = manProj.get(projector_id)
         if projector == NULL:
             raise AstraError("Projector not found")

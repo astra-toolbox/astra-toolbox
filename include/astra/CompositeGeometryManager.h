@@ -66,7 +66,7 @@ public:
 	CCompositeGeometryManager();
 
 	class CPart;
-	typedef std::list<std::shared_ptr<CPart> > TPartList;
+	typedef std::list<std::unique_ptr<CPart> > TPartList;
 	class CPart {
 	public:
 		CPart() : eType(PART_INVALID), pData(0), subX(0), subY(0), subZ(0) { }
@@ -84,7 +84,6 @@ public:
 
 		bool uploadToGPU();
 		bool downloadFromGPU(/*mode?*/);
-		virtual CPart* reduce(const CPart *other) = 0;
 		virtual void getDims(size_t &x, size_t &y, size_t &z) const = 0;
 		size_t getSize() const;
 
@@ -102,7 +101,6 @@ public:
 
 		CVolumeGeometry3D* pGeom;
 
-		virtual CPart* reduce(const CPart *other);
 		virtual void getDims(size_t &x, size_t &y, size_t &z) const;
 
 		CVolumePart* clone() const;
@@ -116,56 +114,77 @@ public:
 
 		CProjectionGeometry3D* pGeom;
 
-		virtual CPart* reduce(const CPart *other);
 		virtual void getDims(size_t &x, size_t &y, size_t &z) const;
 
 		CProjectionPart* clone() const;
 	};
 
+	enum EJobType {
+		JOB_FP, JOB_BP, JOB_FDK, JOB_NOP
+	};
+	enum EJobMode {
+		MODE_ADD = 0,
+		MODE_SET = 1
+	};
+
 	struct SJob {
 	public:
-		std::shared_ptr<CPart> pInput;
-		std::shared_ptr<CPart> pOutput;
+		SJob(std::unique_ptr<CPart> &&_pInput, std::unique_ptr<CPart> &&_pOutput)
+			: pInput(std::move(_pInput)), pOutput(std::move(_pOutput)), pProjector(0), FDKSettings{} { }
+		std::unique_ptr<CPart> pInput;
+		std::unique_ptr<CPart> pOutput;
 		CProjector3D *pProjector; // For a `global' geometry. It will not match
 		                          // the geometries of the input and output.
 
 		SFDKSettings FDKSettings;
 
-		enum {
-			JOB_FP, JOB_BP, JOB_FDK, JOB_NOP
-		} eType;
-		enum EMode {
-			MODE_ADD = 0, MODE_SET = 1
-		} eMode;
+		EJobType eType;
+		EJobMode eMode;
+	};
 
+	// job structure that is lacking the output part pointer
+	struct SJobInternal {
+	public:
+		SJobInternal(std::unique_ptr<CPart> &&_pInput)
+			: pInput(std::move(_pInput)), pProjector(0), FDKSettings{} { }
+		std::unique_ptr<CPart> pInput;
+		CProjector3D *pProjector;
+		SFDKSettings FDKSettings;
+		EJobType eType;
+		EJobMode eMode;
 	};
 
 	typedef std::list<SJob> TJobList;
-	// output part -> list of jobs for that output
-	typedef std::map<CPart*, TJobList > TJobSet;
+	typedef std::list<SJobInternal> TJobListInternal;
+	// pairs of (output part, list of jobs for that output)
+	typedef std::list<std::pair<std::unique_ptr<CPart>, TJobListInternal>> TJobSetInternal;
 
+	// Perform a list of jobs. The outputs are assumed to be disjoint.
 	bool doJobs(TJobList &jobs);
+
+	// Perform a list of jobs. The outputs are assumed to be disjoint.
+	bool doJobs(TJobSetInternal &jobs);
 
 	SJob createJobFP(CProjector3D *pProjector,
                      CFloat32VolumeData3D *pVolData,
                      CFloat32ProjectionData3D *pProjData,
-	                 SJob::EMode eMode);
+	             EJobMode eMode);
 	SJob createJobBP(CProjector3D *pProjector,
                      CFloat32VolumeData3D *pVolData,
                      CFloat32ProjectionData3D *pProjData,
-	                 SJob::EMode eMode);
+	             EJobMode eMode);
 
 	// Convenience functions for creating and running a single FP or BP job
 	bool doFP(CProjector3D *pProjector, CFloat32VolumeData3D *pVolData,
-	          CFloat32ProjectionData3D *pProjData, SJob::EMode eMode = SJob::MODE_SET);
+	          CFloat32ProjectionData3D *pProjData, EJobMode eMode = MODE_SET);
 	bool doBP(CProjector3D *pProjector, CFloat32VolumeData3D *pVolData,
-	          CFloat32ProjectionData3D *pProjData, SJob::EMode eMode = SJob::MODE_SET);
+	          CFloat32ProjectionData3D *pProjData, EJobMode eMode = MODE_SET);
 	bool doFDK(CProjector3D *pProjector, CFloat32VolumeData3D *pVolData,
 	          CFloat32ProjectionData3D *pProjData, bool bShortScan,
-	          const float *pfFilter = 0, SJob::EMode eMode = SJob::MODE_SET);
+	          const float *pfFilter = 0, EJobMode eMode = MODE_SET);
 
-	bool doFP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3D *>& volData, const std::vector<CFloat32ProjectionData3D *>& projData, SJob::EMode eMode = SJob::MODE_SET);
-	bool doBP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3D *>& volData, const std::vector<CFloat32ProjectionData3D *>& projData, SJob::EMode eMode = SJob::MODE_SET);
+	bool doFP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3D *>& volData, const std::vector<CFloat32ProjectionData3D *>& projData, EJobMode eMode = MODE_SET);
+	bool doBP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3D *>& volData, const std::vector<CFloat32ProjectionData3D *>& projData, EJobMode eMode = MODE_SET);
 
 	void setGPUIndices(const std::vector<int>& GPUIndices);
 
@@ -173,7 +192,7 @@ public:
 
 protected:
 
-	bool splitJobs(TJobSet &jobs, size_t maxSize, int div, TJobSet &split);
+	bool splitJobs(TJobSetInternal &jobs, size_t maxSize, int div, TJobSetInternal &split);
 
 	std::vector<int> m_GPUIndices;
 	size_t m_iMaxSize;
