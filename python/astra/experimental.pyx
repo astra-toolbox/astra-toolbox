@@ -45,9 +45,9 @@ IF HAVE_CUDA==True:
             MODE_SET = 1
     cdef extern from "astra/CompositeGeometryManager.h" namespace "astra":
         cdef cppclass CCompositeGeometryManager:
-            bool doFP(CProjector3D *, vector[CFloat32VolumeData3D *], vector[CFloat32ProjectionData3D *], EMode)
-            bool doBP(CProjector3D *, vector[CFloat32VolumeData3D *], vector[CFloat32ProjectionData3D *], EMode)
-            bool doFDK(CProjector3D *, CFloat32VolumeData3D *, CFloat32ProjectionData3D *, bool, const float*, EMode)
+            bool doFP(CProjector3D *, vector[CFloat32VolumeData3D *], vector[CFloat32ProjectionData3D *], EMode) nogil
+            bool doBP(CProjector3D *, vector[CFloat32VolumeData3D *], vector[CFloat32ProjectionData3D *], EMode) nogil
+            bool doFDK(CProjector3D *, CFloat32VolumeData3D *, CFloat32ProjectionData3D *, bool, const float*, EMode) nogil
 
     cdef extern from *:
         CFloat32VolumeData3D * dynamic_cast_vol_mem "dynamic_cast<astra::CFloat32VolumeData3D*>" (CData3D * )
@@ -66,6 +66,7 @@ IF HAVE_CUDA==True:
     def do_composite(projector_id, vol_ids, proj_ids, mode, t):
         if mode != MODE_ADD and mode != MODE_SET:
             raise AstraError("Internal error: wrong composite mode")
+        cdef EMode eMode = mode;
         cdef vector[CFloat32VolumeData3D *] vol
         cdef CFloat32VolumeData3D * pVolObject
         cdef CFloat32ProjectionData3D * pProjObject
@@ -86,11 +87,16 @@ IF HAVE_CUDA==True:
             proj.push_back(pProjObject)
         cdef CCompositeGeometryManager m
         cdef CProjector3D * projector = manProj.get(projector_id) # may be NULL
+        cdef bool ret = True
         if t == "FP":
-            if not m.doFP(projector, vol, proj, mode):
+            with nogil:
+                ret = m.doFP(projector, vol, proj, eMode)
+            if not ret:
                 raise AstraError("Failed to perform FP", append_log=True)
         elif t == "BP":
-            if not m.doBP(projector, vol, proj, mode):
+            with nogil:
+                ret = m.doBP(projector, vol, proj, eMode)
+            if not ret:
                 raise AstraError("Failed to perform BP", append_log=True)
         else:
             raise AstraError("Internal error: wrong composite op type")
@@ -120,7 +126,10 @@ IF HAVE_CUDA==True:
             raise AstraError("Data object not initialized properly")
         cdef CCompositeGeometryManager m
         cdef CProjector3D * projector = manProj.get(projector_id) # may be NULL
-        if not m.doFDK(projector, pVolObject, pProjObject, False, NULL, MODE_ADD):
+        cdef bool ret = True
+        with nogil:
+            ret = m.doFDK(projector, pVolObject, pProjObject, False, NULL, MODE_ADD)
+        if not ret:
             raise AstraError("Failed to perform FDK", append_log=True)
 
     from . cimport utils
@@ -129,6 +138,7 @@ IF HAVE_CUDA==True:
     def direct_FPBP3D(projector_id, vol, proj, mode, t):
         if mode != MODE_ADD and mode != MODE_SET:
             raise AstraError("Internal error: wrong composite mode")
+        cdef EMode eMode = mode
         cdef CProjector3D * projector = manProj.get(projector_id)
         if projector == NULL:
             raise AstraError("Projector not found")
@@ -143,12 +153,17 @@ IF HAVE_CUDA==True:
         del pGeometry
         del ppGeometry
         cdef CCompositeGeometryManager m
+        cdef bool ret = True
         try:
             if t == "FP":
-                if not m.doFP(projector, vols, projs, mode):
+                with nogil:
+                    ret = m.doFP(projector, vols, projs, eMode)
+                if not ret:
                     AstraError("Failed to perform FP", append_log=True)
             elif t == "BP":
-                if not m.doBP(projector, vols, projs, mode):
+                with nogil:
+                    ret = m.doBP(projector, vols, projs, eMode)
+                if not ret:
                     AstraError("Failed to perform BP", append_log=True)
             else:
                 AstraError("Internal error: wrong op type")
