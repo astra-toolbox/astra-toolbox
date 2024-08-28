@@ -1566,14 +1566,14 @@ struct WorkThreadInfo {
 
 void runEntries(WorkThreadInfo* info)
 {
-	ASTRA_DEBUG("Launching thread on GPU %d\n", info->m_iGPU);
+	ASTRA_DEBUG("Launching thread on GPU %d", info->m_iGPU);
 	CCompositeGeometryManager::TJobSet::const_iterator i;
 	while (info->m_queue->receive(i)) {
-		ASTRA_DEBUG("Running block on GPU %d\n", info->m_iGPU);
+		ASTRA_DEBUG("Running block on GPU %d", info->m_iGPU);
 		astraCUDA3d::setGPUIndex(info->m_iGPU);
 		doJob(i);
 	}
-	ASTRA_DEBUG("Finishing thread on GPU %d\n", info->m_iGPU);
+	ASTRA_DEBUG("Finishing thread on GPU %d", info->m_iGPU);
 }
 
 void runWorkQueue(WorkQueue &queue, const std::vector<int> & iGPUIndices) {
