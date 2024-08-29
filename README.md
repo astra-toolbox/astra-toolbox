@@ -12,26 +12,27 @@ The basic forward and backward projection operations are GPU-accelerated, and di
 
 ## Documentation / samples
 
-See the MATLAB and Python code samples in `samples/` directory and on http://www.astra-toolbox.com/.
+See the MATLAB and Python code samples in the `samples/` directory and on https://www.astra-toolbox.com/.
 
 
 ## Installation instructions
 
 ### Windows/Linux, using conda for Python packages
 
-Requirements: [conda](http://conda.pydata.org/) Python environment, with 64 bit Python 3.9-3.12.
+Requirements: [conda](https://conda.io/) Python environment, with 64 bit Python 3.9-3.12.
 
-Conda packages for ASTRA Toolbox are available from the `astra-toolbox` channel, whereas CUDA-related packages can be installed from `nvidia` channel.
-To install ASTRA into the desired conda environment, run:
-
-```
-conda install astra-toolbox -c astra-toolbox -c nvidia
-```
-
-We also provide development packages:
+We provide packages for the ASTRA Toolbox in the `astra-toolbox` channel for the
+conda package manager. We depend on CUDA packages available from the `nvidia`
+channel. To install ASTRA into the current conda environement, run:
 
 ```
-conda install astra-toolbox -c astra-toolbox/label/dev -c nvidia
+conda install -c astra-toolbox -c nvidia astra-toolbox
+```
+
+We also provide development packages between releases occasionally:
+
+```
+conda install -c astra-toolbox/label/dev -c nvidia astra-toolbox
 ```
 
 ### Windows, binary
@@ -166,14 +167,14 @@ astra_test
 
 If you use the ASTRA Toolbox for your research, we would appreciate it if you would refer to the following papers:
 
-W. van Aarle, W. J. Palenstijn, J. Cant, E. Janssens, F. Bleichrodt, A. Dabravolski, J. De Beenhouwer, K. J. Batenburg, and J. Sijbers, “Fast and Flexible X-ray Tomography Using the ASTRA Toolbox”, Optics Express, 24(22), 25129-25147, (2016), http://dx.doi.org/10.1364/OE.24.025129
+W. van Aarle, W. J. Palenstijn, J. Cant, E. Janssens, F. Bleichrodt, A. Dabravolski, J. De Beenhouwer, K. J. Batenburg, and J. Sijbers, “Fast and Flexible X-ray Tomography Using the ASTRA Toolbox”, Optics Express, 24(22), 25129-25147, (2016), https://dx.doi.org/10.1364/OE.24.025129
 
-W. van Aarle, W. J. Palenstijn, J. De Beenhouwer, T. Altantzis, S. Bals, K. J. Batenburg, and J. Sijbers, “The ASTRA Toolbox: A platform for advanced algorithm development in electron tomography”, Ultramicroscopy, 157, 35–47, (2015), http://dx.doi.org/10.1016/j.ultramic.2015.05.002
+W. van Aarle, W. J. Palenstijn, J. De Beenhouwer, T. Altantzis, S. Bals, K. J. Batenburg, and J. Sijbers, “The ASTRA Toolbox: A platform for advanced algorithm development in electron tomography”, Ultramicroscopy, 157, 35–47, (2015), https://dx.doi.org/10.1016/j.ultramic.2015.05.002
 
 
 Additionally, if you use parallel beam GPU code, we would appreciate it if you would refer to the following paper:
 
-W. J. Palenstijn, K J. Batenburg, and J. Sijbers, "Performance improvements for iterative electron tomography reconstruction using graphics processing units (GPUs)", Journal of Structural Biology, vol. 176, issue 2, pp. 250-253, 2011, http://dx.doi.org/10.1016/j.jsb.2011.07.017
+W. J. Palenstijn, K J. Batenburg, and J. Sijbers, "Performance improvements for iterative electron tomography reconstruction using graphics processing units (GPUs)", Journal of Structural Biology, vol. 176, issue 2, pp. 250-253, 2011, https://dx.doi.org/10.1016/j.jsb.2011.07.017
 
 
 ## License

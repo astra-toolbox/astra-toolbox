@@ -28,8 +28,8 @@ directly callable from MATLAB and Python to enable building new algorithms.
 Documentation / samples:
 -------------------------
 
-See the MATLAB and Python code samples in samples/ and on
-http://www.astra-toolbox.com/ .
+See the MATLAB and Python code samples in the samples/ directory and on
+https://www.astra-toolbox.com/ .
 
 
 
@@ -37,6 +37,21 @@ http://www.astra-toolbox.com/ .
 
 Installation instructions:
 ---------------------------
+
+Linux/Windows, using conda for python
+-------------------------------------
+
+Requirements: `conda <https://conda.io/>`_ python environment, with 64 bit Python 3.9-3.12.
+
+We provide packages for the ASTRA Toolbox in the astra-toolbox channel for the
+conda package manager. We depend on CUDA packages available from the nvidia
+channel. To install ASTRA into the current conda environement, run:
+
+conda install -c astra-toolbox -c nvidia astra-toolbox
+
+We also provide development packages between releases occasionally:
+
+conda install -c astra-toolbox/label/dev -c nvidia astra-toolbox
 
 
 Windows, binary:
@@ -47,20 +62,6 @@ wheel using pip. We require the Microsoft Visual Studio 2017 redistributable
 package. If this is not already installed on your system, it is included as
 vc_redist.x64.exe in the ASTRA zip file.
 
-
-
-Linux/Windows, using conda for python
--------------------------------------
-
-Requirements: `conda <http://conda.pydata.org/>`_ python environment, with 64 bit Python 3.9-3.12.
-
-There are packages available for the ASTRA Toolbox in the astra-toolbox
-channel for the conda package manager. To use these, run the following
-inside a conda environment.
-
-conda install -c astra-toolbox astra-toolbox
-
-conda install -c astra-toolbox/label/dev astra-toolbox
 
 
 
@@ -199,5 +200,5 @@ Additionally, if you use parallel beam GPU code, we would appreciate it if you w
 W. J. Palenstijn, K J. Batenburg, and J. Sijbers, "Performance improvements
 for iterative electron tomography reconstruction using graphics processing
 units (GPUs)", Journal of Structural Biology, vol. 176, issue 2, pp. 250-253,
-2011, http://dx.doi.org/10.1016/j.jsb.2011.07.017
+2011, https://dx.doi.org/10.1016/j.jsb.2011.07.017
 
