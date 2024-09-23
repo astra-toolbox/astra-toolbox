@@ -28,12 +28,12 @@ requirements:
     - python
     - cython >=0.13
     - nomkl # [not win]
-    - numpy {{ numpy }}
+    - numpy {{ numpy_host }}
     - scipy
     - libastra ==2.2.0
   run:
     - python
-    - {{ pin_compatible('numpy', min_pin='x.x', max_pin='x') }}
+    - numpy {{ numpy_run }}
     - scipy
     # We make this libastra requirement as strict as possible because we
     # want to enforce matching astra-toolbox and libastra packages to limit

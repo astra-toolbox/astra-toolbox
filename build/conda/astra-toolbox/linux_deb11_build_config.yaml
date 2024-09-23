@@ -1,12 +1,16 @@
 python:
   - 3.10
   - 3.11
-numpy:
-  - 1.21
-  - 1.23
+numpy_host:
+  - ">=2,<3"
+  - ">=2,<3"
+numpy_run:
+  - ">=1.21,<3"
+  - ">=1.23,<3"
 zip_keys:
   - python
-  - numpy
+  - numpy_host
+  - numpy_run
 
 c_compiler_version:
   - 9.3
