@@ -114,17 +114,14 @@ T* CAstraObjectFactory<T, TypeList>::findPlugin(std::string _sType)
 }
 
 //----------------------------------------------------------------------------------------
-// Create 
+// Create
 template <typename T, typename TypeList>
-T* CAstraObjectFactory<T, TypeList>::create(std::string _sType) 
+T* CAstraObjectFactory<T, TypeList>::create(std::string _sType)
 {
-	typelist::functor_find<T> finder = typelist::functor_find<T>();
-	finder.tofind = _sType;
-	typelist::CreateObject<TypeList>::find(finder);
-	if (finder.res == NULL) {
-		finder.res = findPlugin(_sType);
-	}
-	return finder.res;
+	T* res = createObject<T>(_sType, TypeList{} );
+	if (!res)
+		res = findPlugin(_sType);
+	return res;
 }
 
 

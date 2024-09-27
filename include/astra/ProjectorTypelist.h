@@ -45,34 +45,19 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 namespace astra{
 
+typedef TypeList<
 #ifdef ASTRA_CUDA
-
-	typedef TYPELIST_9(
-				CFanFlatBeamLineKernelProjector2D,
-				CFanFlatBeamStripKernelProjector2D,
-				CParallelBeamDistanceDrivenProjector2D,
-				CParallelBeamLinearKernelProjector2D,
-				CParallelBeamLineKernelProjector2D,
-				CParallelBeamBlobKernelProjector2D,
-				CParallelBeamStripKernelProjector2D, 
-				CSparseMatrixProjector2D,
-				CCudaProjector2D)
-		Projector2DTypeList;
-
-#else
-
-	typedef TYPELIST_8(
-				CFanFlatBeamLineKernelProjector2D,
-				CFanFlatBeamStripKernelProjector2D,
-				CParallelBeamDistanceDrivenProjector2D,
-				CParallelBeamLinearKernelProjector2D,
-				CParallelBeamLineKernelProjector2D,
-				CParallelBeamBlobKernelProjector2D,
-				CParallelBeamStripKernelProjector2D, 
-				CSparseMatrixProjector2D)
-		Projector2DTypeList;
-
+				CCudaProjector2D,
 #endif
+				CFanFlatBeamLineKernelProjector2D,
+				CFanFlatBeamStripKernelProjector2D,
+				CParallelBeamDistanceDrivenProjector2D,
+				CParallelBeamLinearKernelProjector2D,
+				CParallelBeamLineKernelProjector2D,
+				CParallelBeamBlobKernelProjector2D,
+				CParallelBeamStripKernelProjector2D,
+				CSparseMatrixProjector2D
+	> Projector2DTypeList;
 
 }
 
@@ -84,13 +69,11 @@ namespace astra {
 
 #ifdef ASTRA_CUDA
 
-	typedef TYPELIST_1(
-				CCudaProjector3D
-			)
-			Projector3DTypeList;
+typedef TypeList<CCudaProjector3D> Projector3DTypeList;
+
 #else
 
-	typedef TYPELIST_0 Projector3DTypeList;
+typedef TypeList<> Projector3DTypeList;
 
 #endif
 

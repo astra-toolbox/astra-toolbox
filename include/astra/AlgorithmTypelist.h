@@ -59,17 +59,9 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 namespace astra {
 
+typedef TypeList<
 #ifdef ASTRA_CUDA
-
-typedef TYPELIST_25(
-			CArtAlgorithm,
-			CSartAlgorithm,
-			CSirtAlgorithm,
-			CCglsAlgorithm,
-			CBackProjectionAlgorithm,
-			CForwardProjectionAlgorithm,
 			CCudaSartAlgorithm,
-			CFilteredBackProjectionAlgorithm,
 			CCudaBackProjectionAlgorithm,
 			CCudaDartMaskAlgorithm,
 			CCudaDartMaskAlgorithm3D,
@@ -86,13 +78,8 @@ typedef TYPELIST_25(
 			CCudaFDKAlgorithm3D,
 			CCudaSirtAlgorithm3D,
 			CCudaForwardProjectionAlgorithm3D,
-			CCudaBackProjectionAlgorithm3D
-			)
-	AlgorithmTypeList;
-
-#else
-
-typedef TYPELIST_7(
+			CCudaBackProjectionAlgorithm3D,
+#endif
 			CArtAlgorithm,
 			CSartAlgorithm,
 			CSirtAlgorithm,
@@ -100,9 +87,7 @@ typedef TYPELIST_7(
 			CBackProjectionAlgorithm,
 			CForwardProjectionAlgorithm,
 			CFilteredBackProjectionAlgorithm
-			) AlgorithmTypeList;
-
-#endif
+	> AlgorithmTypeList;
 
 }
 

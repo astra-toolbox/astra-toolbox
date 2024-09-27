@@ -154,32 +154,26 @@ void CDataProjector<Projector,Policy>::projectSingleRay(int _iProjection, int _i
 
 //-----------------------------------------------------------------------------------------
 // Create a new datainterface from the projector TypeList
-namespace typelist {
-	template <class TList> 
-	struct CreateDataProjector { 
-		template <class U, typename Policy>
-		 static void find (U& functor, CProjector2D* _pProjector, const Policy& _pPolicy) {
-			 if (functor(TList::Head::type)) {
-				functor.res = new CDataProjector<typename TList::Head, Policy>(static_cast<typename TList::Head*>(_pProjector), _pPolicy);
-			 }
-			 CreateDataProjector<typename TList::Tail>::find(functor, _pProjector, _pPolicy); 
-		 }
-	}; 
-	template <> 
-	struct CreateDataProjector<NullType> {
-		template <class U, typename Policy> 
-		static void find(U& functor, CProjector2D* _pProjector, const Policy& _pPolicy) {}
-	}; 
-
-	struct functor_find_datainterface {
-		functor_find_datainterface() { res = NULL; }
-		bool operator() (std::string name) { 
-			return strcmp(tofind.c_str(), name.c_str()) == 0;
-		} 
-		std::string tofind;
-		CDataProjectorInterface* res;
-	};
+template<typename Policy, class T, class... Ts>
+CDataProjectorInterface *createDataProjector_internal(const std::string &name, CProjector2D* _pProjector, const Policy& _policy)
+{
+	if (name == T::type)
+		return new CDataProjector<T, Policy>(static_cast<T*>(_pProjector), _policy);
+	if constexpr (sizeof...(Ts) > 0)
+		return createDataProjector_internal<Policy, Ts...>(name, _pProjector, _policy);
+	else
+		return nullptr;
 }
+
+template<typename Policy, class... Ts>
+CDataProjectorInterface *createDataProjector(const std::string &name, CProjector2D* _pProjector, const Policy& _policy, TypeList<Ts...>)
+{
+	if constexpr (sizeof...(Ts) > 0)
+		return createDataProjector_internal<Policy, Ts...>(name, _pProjector, _policy);
+	else
+		return nullptr;
+}
+
 //-----------------------------------------------------------------------------------------
 
 /**
@@ -188,10 +182,7 @@ namespace typelist {
 template <typename Policy>
 static CDataProjectorInterface* dispatchDataProjector(CProjector2D* _pProjector, const Policy& _policy)
 {
-	typelist::functor_find_datainterface finder = typelist::functor_find_datainterface();
-	finder.tofind = _pProjector->getType();
-	typelist::CreateDataProjector<Projector2DTypeList>::find(finder, _pProjector, _policy);
-	return finder.res;
+	return createDataProjector(_pProjector->getType(), _pProjector, _policy, Projector2DTypeList{});
 }
 
 
