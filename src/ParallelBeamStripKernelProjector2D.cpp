@@ -39,9 +39,6 @@ using namespace astra;
 
 #include "astra/ParallelBeamStripKernelProjector2D.inl"
 
-// type of the projector, needed to register with CProjectorFactory
-std::string CParallelBeamStripKernelProjector2D::type = "strip";
-
 //----------------------------------------------------------------------------------------
 // default constructor
 CParallelBeamStripKernelProjector2D::CParallelBeamStripKernelProjector2D()

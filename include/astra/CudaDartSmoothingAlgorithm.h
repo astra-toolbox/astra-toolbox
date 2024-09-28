@@ -48,7 +48,7 @@ namespace astra {
 public:
 	
 	// type of the algorithm, needed to register with CAlgorithmFactory
-	static std::string type;
+	static inline const char* const type = "DARTSMOOTHING_CUDA";
 	
 	/** Default constructor, containing no code.
 	 */

@@ -38,10 +38,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 namespace astra
 {
 
-// type of the projector, needed to register with CProjectorFactory
-std::string CCudaProjector3D::type = "cuda3d";
-
-
 //----------------------------------------------------------------------------------------
 // Default constructor
 CCudaProjector3D::CCudaProjector3D()

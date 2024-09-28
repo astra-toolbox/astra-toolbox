@@ -38,9 +38,6 @@ using namespace astra;
 
 #include "astra/SparseMatrixProjector2D.inl"
 
-// type of the projector, needed to register with CProjectorFactory
-std::string CSparseMatrixProjector2D::type = "sparse_matrix";
-
 //----------------------------------------------------------------------------------------
 // default constructor
 CSparseMatrixProjector2D::CSparseMatrixProjector2D()

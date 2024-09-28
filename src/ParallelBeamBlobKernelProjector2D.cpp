@@ -39,9 +39,6 @@ using namespace astra;
 
 #include "astra/ParallelBeamBlobKernelProjector2D.inl"
 
-// type of the projector, needed to register with CProjectorFactory
-std::string CParallelBeamBlobKernelProjector2D::type = "blob";
-
 //----------------------------------------------------------------------------------------
 // default constructor
 CParallelBeamBlobKernelProjector2D::CParallelBeamBlobKernelProjector2D()

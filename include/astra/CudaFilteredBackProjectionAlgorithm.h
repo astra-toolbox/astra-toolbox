@@ -43,7 +43,7 @@ namespace astra
 class _AstraExport CCudaFilteredBackProjectionAlgorithm : public CCudaReconstructionAlgorithm2D
 {
 public:
-	static std::string type;
+	static inline const char* const type = "FBP_CUDA";
 
 private:
 	SFilterConfig m_filterConfig;

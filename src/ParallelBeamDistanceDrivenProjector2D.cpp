@@ -38,9 +38,6 @@ namespace astra {
 
 #include "astra/ParallelBeamDistanceDrivenProjector2D.inl"
 
-// type of the projector, needed to register with CProjectorFactory
-std::string CParallelBeamDistanceDrivenProjector2D::type = "distance_driven";
-
 //----------------------------------------------------------------------------------------
 // default constructor
 CParallelBeamDistanceDrivenProjector2D::CParallelBeamDistanceDrivenProjector2D()

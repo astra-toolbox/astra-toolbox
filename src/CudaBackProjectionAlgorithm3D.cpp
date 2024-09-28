@@ -44,9 +44,6 @@ using namespace std;
 
 namespace astra {
 
-// type of the algorithm, needed to register with CAlgorithmFactory
-std::string CCudaBackProjectionAlgorithm3D::type = "BP3D_CUDA";
-
 //----------------------------------------------------------------------------------------
 // Constructor
 CCudaBackProjectionAlgorithm3D::CCudaBackProjectionAlgorithm3D() 

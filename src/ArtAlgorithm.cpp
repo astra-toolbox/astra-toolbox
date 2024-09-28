@@ -35,9 +35,6 @@ using namespace std;
 
 namespace astra {
 
-// type of the algorithm, needed to register with CAlgorithmFactory
-std::string CArtAlgorithm::type = "ART";
-
 //----------------------------------------------------------------------------------------
 // Constructor
 CArtAlgorithm::CArtAlgorithm() 

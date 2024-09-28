@@ -77,7 +77,7 @@ class _AstraExport CCudaSirtAlgorithm : public CCudaReconstructionAlgorithm2D
 public:
 	
 	// type of the algorithm, needed to register with CAlgorithmFactory
-	static std::string type;
+	static inline const char* const type = "SIRT_CUDA";
 	
 	/** Default constructor, containing no code.
 	 */

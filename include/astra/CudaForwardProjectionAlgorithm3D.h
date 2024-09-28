@@ -45,7 +45,7 @@ class _AstraExport CCudaForwardProjectionAlgorithm3D : public CAlgorithm
 public:
 
 	// type of the algorithm, needed to register with CAlgorithmFactory
-	static std::string type;
+	static inline const char* const type = "FP3D_CUDA";
 	
 	/** Default constructor, containing no code.
 	 */

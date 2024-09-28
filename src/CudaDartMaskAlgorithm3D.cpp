@@ -41,9 +41,6 @@ using namespace std;
 
 namespace astra {
 
-// type of the algorithm, needed to register with CAlgorithmFactory
-std::string CCudaDartMaskAlgorithm3D::type = "DARTMASK3D_CUDA";
-
 //----------------------------------------------------------------------------------------
 // Constructor
 CCudaDartMaskAlgorithm3D::CCudaDartMaskAlgorithm3D() 

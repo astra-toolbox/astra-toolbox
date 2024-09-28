@@ -62,7 +62,7 @@ protected:
 public:
 	
 	// type of the algorithm, needed to register with CAlgorithmFactory
-	static std::string type;
+	static inline const char* const type = "CGLS3D_CUDA";
 	
 	/** Default constructor, does not initialize the object.
 	 */

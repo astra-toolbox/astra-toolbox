@@ -45,9 +45,6 @@ using namespace astraCUDA3d;
 
 namespace astra {
 
-// type of the algorithm, needed to register with CAlgorithmFactory
-std::string CCudaFDKAlgorithm3D::type = "FDK_CUDA";
-
 //----------------------------------------------------------------------------------------
 // Constructor
 CCudaFDKAlgorithm3D::CCudaFDKAlgorithm3D() 

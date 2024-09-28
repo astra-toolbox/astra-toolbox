@@ -44,9 +44,6 @@ using namespace std;
 
 namespace astra {
 
-// type of the algorithm, needed to register with CAlgorithmFactory
-std::string CCudaDataOperationAlgorithm::type = "DataOperation_CUDA";
-
 //----------------------------------------------------------------------------------------
 // Constructor
 CCudaDataOperationAlgorithm::CCudaDataOperationAlgorithm() 

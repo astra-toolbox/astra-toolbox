@@ -100,7 +100,7 @@ protected:
 public:
 	
 	// type of the algorithm, needed to register with CAlgorithmFactory
-	static std::string type;
+	inline static const char* const type = "ART";
 	
 	/** Default constructor, containing no code.
 	 */

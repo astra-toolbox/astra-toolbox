@@ -41,9 +41,6 @@ using namespace std;
 
 namespace astra {
 
-// type of the algorithm, needed to register with CAlgorithmFactory
-std::string CCudaDartSmoothingAlgorithm::type = "DARTSMOOTHING_CUDA";
-
 //----------------------------------------------------------------------------------------
 // Constructor
 CCudaDartSmoothingAlgorithm::CCudaDartSmoothingAlgorithm() 

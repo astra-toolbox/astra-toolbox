@@ -43,9 +43,6 @@ using namespace std;
 
 namespace astra {
 
-// type of the algorithm, needed to register with CAlgorithmFactory
-std::string CCudaCglsAlgorithm3D::type = "CGLS3D_CUDA";
-
 //----------------------------------------------------------------------------------------
 // Constructor
 CCudaCglsAlgorithm3D::CCudaCglsAlgorithm3D() 

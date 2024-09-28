@@ -41,8 +41,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 using namespace std;
 using namespace astra;
 
-string CCudaFilteredBackProjectionAlgorithm::type = "FBP_CUDA";
-
 CCudaFilteredBackProjectionAlgorithm::CCudaFilteredBackProjectionAlgorithm()
 {
 	m_bIsInitialized = false;

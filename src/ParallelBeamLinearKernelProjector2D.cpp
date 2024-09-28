@@ -39,9 +39,6 @@ using namespace astra;
 
 #include "astra/ParallelBeamLinearKernelProjector2D.inl"
 
-// type of the projector, needed to register with CProjectorFactory
-std::string CParallelBeamLinearKernelProjector2D::type = "linear";
-
 //----------------------------------------------------------------------------------------
 // default constructor
 CParallelBeamLinearKernelProjector2D::CParallelBeamLinearKernelProjector2D()

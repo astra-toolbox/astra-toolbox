@@ -70,7 +70,7 @@ protected:
 public:
 
 	// type of the projector, needed to register with CProjectorFactory
-	static std::string type;
+	static inline const char* const type = "sparse_matrix";
 
 	/** Default constructor.
 	 */

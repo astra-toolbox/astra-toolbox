@@ -39,9 +39,6 @@ using namespace astra;
 
 #include "astra/FanFlatBeamStripKernelProjector2D.inl"
 
-// type of the projector, needed to register with CProjectorFactory
-std::string CFanFlatBeamStripKernelProjector2D::type = "strip_fanflat";
-
 //----------------------------------------------------------------------------------------
 // default constructor
 CFanFlatBeamStripKernelProjector2D::CFanFlatBeamStripKernelProjector2D()

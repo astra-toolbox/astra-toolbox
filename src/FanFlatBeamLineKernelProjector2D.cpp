@@ -40,10 +40,6 @@ using namespace astra;
 
 #include "astra/FanFlatBeamLineKernelProjector2D.inl"
 
-// type of the projector, needed to register with CProjectorFactory
-std::string CFanFlatBeamLineKernelProjector2D::type = "line_fanflat";
-
-
 //----------------------------------------------------------------------------------------
 // default constructor
 CFanFlatBeamLineKernelProjector2D::CFanFlatBeamLineKernelProjector2D()

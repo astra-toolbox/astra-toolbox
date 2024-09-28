@@ -38,9 +38,6 @@ namespace astra {
 
 #include "astra/Projector2DImpl.inl"
 
-// type of the algorithm, needed to register with CAlgorithmFactory
-std::string CSirtAlgorithm::type = "SIRT";
-
 //----------------------------------------------------------------------------------------
 // Constructor
 CSirtAlgorithm::CSirtAlgorithm() 

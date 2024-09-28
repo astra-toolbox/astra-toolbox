@@ -37,9 +37,6 @@ using namespace std;
 
 namespace astra {
 
-// type of the algorithm, needed to register with CAlgorithmFactory
-std::string CCudaEMAlgorithm::type = "EM_CUDA";
-
 //----------------------------------------------------------------------------------------
 // Constructor
 CCudaEMAlgorithm::CCudaEMAlgorithm() 
