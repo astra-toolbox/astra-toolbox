@@ -31,9 +31,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/cuda/2d/astra.h"
 
-#include <driver_types.h>
-#include <cuda_runtime_api.h>
-
 #include "astra/AstraObjectManager.h"
 #include "astra/ParallelProjectionGeometry2D.h"
 #include "astra/FanFlatProjectionGeometry2D.h"
