@@ -95,24 +95,24 @@ MemHandle3D createProjectionArrayHandle(const float *ptr, unsigned int x, unsign
 
 MemHandle3D allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Mem3DZeroMode zero);
 
-bool copyToGPUMemory(const float *src, MemHandle3D dst, const SSubDimensions3D &pos);
+bool copyToGPUMemory(const float *src, MemHandle3D &dst, const SSubDimensions3D &pos);
 
-bool copyFromGPUMemory(float *dst, MemHandle3D src, const SSubDimensions3D &pos);
+bool copyFromGPUMemory(float *dst, MemHandle3D &src, const SSubDimensions3D &pos);
 
-bool freeGPUMemory(MemHandle3D handle);
+bool freeGPUMemory(MemHandle3D &handle);
 
-bool zeroGPUMemory(MemHandle3D handle, unsigned int x, unsigned int y, unsigned int z);
+bool zeroGPUMemory(MemHandle3D &handle, unsigned int x, unsigned int y, unsigned int z);
 
 bool setGPUIndex(int index);
 
-bool copyIntoArray(MemHandle3D handle, MemHandle3D subdata, const SSubDimensions3D &pos);
+bool copyIntoArray(MemHandle3D &handle, MemHandle3D &subdata, const SSubDimensions3D &pos);
 
 
-bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, int iDetectorSuperSampling, astra::Cuda3DProjectionKernel projKernel);
+bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D &volData, int iDetectorSuperSampling, astra::Cuda3DProjectionKernel projKernel);
 
-bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, int iVoxelSuperSampling);
+bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D &volData, int iVoxelSuperSampling);
 
-bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, bool bShortScan, const float *pfFilter = 0, float fOutputScale = 1.0f);
+bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D &volData, bool bShortScan, const float *pfFilter = 0, float fOutputScale = 1.0f);
 
 }
 

@@ -106,14 +106,14 @@ MemHandle3D allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Me
 	return ret;
 }
 
-bool zeroGPUMemory(MemHandle3D handle, unsigned int x, unsigned int y, unsigned int z)
+bool zeroGPUMemory(MemHandle3D &handle, unsigned int x, unsigned int y, unsigned int z)
 {
 	SMemHandle3D_internal& hnd = *handle.d.get();
 	assert(!hnd.arr);
 	return checkCuda(cudaMemset3D(hnd.ptr, 0, make_cudaExtent(sizeof(float)*x, y, z)), "zeroGPUMemory");
 }
 
-bool freeGPUMemory(MemHandle3D handle)
+bool freeGPUMemory(MemHandle3D &handle)
 {
 	size_t free = astraCUDA::availableGPUMemory();
 	bool ok;
@@ -128,7 +128,7 @@ bool freeGPUMemory(MemHandle3D handle)
 	return ok;
 }
 
-bool copyToGPUMemory(const float *src, MemHandle3D dst, const SSubDimensions3D &pos)
+bool copyToGPUMemory(const float *src, MemHandle3D &dst, const SSubDimensions3D &pos)
 {
 	ASTRA_DEBUG("Copying %d x %d x %d to GPU", pos.subnx, pos.subny, pos.subnz);
 	ASTRA_DEBUG("Offset %d,%d,%d", pos.subx, pos.suby, pos.subz);
@@ -157,7 +157,7 @@ bool copyToGPUMemory(const float *src, MemHandle3D dst, const SSubDimensions3D &
 }
 
 
-bool copyFromGPUMemory(float *dst, MemHandle3D src, const SSubDimensions3D &pos)
+bool copyFromGPUMemory(float *dst, MemHandle3D &src, const SSubDimensions3D &pos)
 {
 	ASTRA_DEBUG("Copying %d x %d x %d from GPU", pos.subnx, pos.subny, pos.subnz);
 	ASTRA_DEBUG("Offset %d,%d,%d", pos.subx, pos.suby, pos.subz);
@@ -192,7 +192,7 @@ bool copyFromGPUMemory(float *dst, MemHandle3D src, const SSubDimensions3D &pos)
 }
 
 
-bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, int iDetectorSuperSampling, astra::Cuda3DProjectionKernel projKernel)
+bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D &volData, int iDetectorSuperSampling, astra::Cuda3DProjectionKernel projKernel)
 {
 	assert(!projData.d->arr);
 	assert(!volData.d->arr);
@@ -256,7 +256,7 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, con
 	return ok;
 }
 
-bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, int iVoxelSuperSampling)
+bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D &volData, int iVoxelSuperSampling)
 {
 	assert(!volData.d->arr);
 	SDimensions3D dims;
@@ -298,7 +298,7 @@ bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, con
 
 }
 
-bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D volData, bool bShortScan, const float *pfFilter, float fOutputScale)
+bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D &volData, bool bShortScan, const float *pfFilter, float fOutputScale)
 {
 	assert(!projData.d->arr);
 	assert(!volData.d->arr);
@@ -374,7 +374,7 @@ MemHandle3D createProjectionArrayHandle(const float *ptr, unsigned int x, unsign
 	return hnd;
 }
 
-bool copyIntoArray(MemHandle3D handle, MemHandle3D subdata, const SSubDimensions3D &pos)
+bool copyIntoArray(MemHandle3D &handle, MemHandle3D &subdata, const SSubDimensions3D &pos)
 {
 	assert(handle.d->arr);
 	assert(!handle.d->ptr.ptr);
