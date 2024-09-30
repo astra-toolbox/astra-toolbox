@@ -36,8 +36,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstdio>
 #include <cassert>
-#include <iostream>
-#include <list>
+#include <vector>
 
 #include <cuda.h>
 
@@ -176,16 +175,17 @@ bool FDK_PreWeight(cudaPitchedPtr D_projData,
 	// The pre-weighting factor for a ray is the cosine of the angle between
 	// the central line and the ray.
 
+	cudaStream_t stream;
+	if (!checkCuda(cudaStreamCreate(&stream), "FDK_PreWeight stream"))
+		return false;
+
 	dim3 dimBlock(g_detBlockU, g_anglesPerWeightBlock);
 	dim3 dimGrid( ((dims.iProjU+g_detBlockU-1)/g_detBlockU)*((dims.iProjV+g_detBlockV-1)/g_detBlockV),
 	              (dims.iProjAngles+g_anglesPerWeightBlock-1)/g_anglesPerWeightBlock);
 
 	int projPitch = D_projData.pitch/sizeof(float);
 
-	devFDK_preweight<<<dimGrid, dimBlock>>>(D_projData.ptr, projPitch, 0, dims.iProjAngles, fSrcOrigin, fDetOrigin, fZShift, fDetUSize, fDetVSize, dims);
-
-	if (!checkCuda(cudaThreadSynchronize(), "FDK_PreWeight"))
-		return false;
+	devFDK_preweight<<<dimGrid, dimBlock, 0, stream>>>(D_projData.ptr, projPitch, 0, dims.iProjAngles, fSrcOrigin, fDetOrigin, fZShift, fDetUSize, fDetVSize, dims);
 
 	if (bShortScan && dims.iProjAngles > 1) {
 		ASTRA_DEBUG("Doing Parker weighting");
@@ -215,7 +215,7 @@ bool FDK_PreWeight(cudaPitchedPtr D_projData,
 		// We pick the lowest end of the range, and then
 		// move all angles so they fall in [0,2pi)
 
-		float *fRelAngles = new float[dims.iProjAngles];
+		std::vector<float> fRelAngles(dims.iProjAngles);
 		for (unsigned int i = 0; i < dims.iProjAngles; ++i) {
 			float f = angles[i] - fAngleBase;
 			while (f >= 2*M_PI)
@@ -233,11 +233,16 @@ bool FDK_PreWeight(cudaPitchedPtr D_projData,
 		ASTRA_DEBUG("Assuming angles are linearly ordered and equally spaced for Parker weighting. Angular range %f radians", fRange);
 		float fScale = fRange / M_PI;
 
-		cudaError_t e1 = cudaMemcpyToSymbol(gC_angle, fRelAngles,
-		                                    dims.iProjAngles*sizeof(float), 0,
-		                                    cudaMemcpyHostToDevice);
-		assert(!e1);
-		delete[] fRelAngles;
+		bool ok = true;
+		ok &= checkCuda(cudaMemcpyToSymbolAsync(gC_angle, &fRelAngles[0],
+		                                        dims.iProjAngles*sizeof(float), 0,
+		                                        cudaMemcpyHostToDevice, stream),
+		                "FDK_PreWeight transfer");
+		ok &= checkCuda(cudaStreamSynchronize(stream), "FDK_PreWeight");
+		if (!ok) {
+			cudaStreamDestroy(stream);
+			return false;
+		}
 
 		float fCentralFanAngle = fabs(atanf(fDetUSize * (dims.iProjU*0.5f) /
 		                               (fSrcOrigin + fDetOrigin)));
@@ -246,11 +251,14 @@ bool FDK_PreWeight(cudaPitchedPtr D_projData,
 			ASTRA_WARN("Angular range (%f rad) smaller than Parker weighting range (%f rad)", fRange, M_PI + 2*fCentralFanAngle);
 		}
 
-		devFDK_ParkerWeight<<<dimGrid, dimBlock>>>(D_projData.ptr, projPitch, 0, dims.iProjAngles, fSrcOrigin, fDetOrigin, fDetUSize, fCentralFanAngle, fScale, dims);
-
-		if (!checkCuda(cudaThreadSynchronize(), "FDK_PreWeight ParkerWeight"))
-			return false;
+		devFDK_ParkerWeight<<<dimGrid, dimBlock, 0, stream>>>(D_projData.ptr, projPitch, 0, dims.iProjAngles, fSrcOrigin, fDetOrigin, fDetUSize, fCentralFanAngle, fScale, dims);
 	}
+	if (!checkCuda(cudaStreamSynchronize(stream), "FDK_PreWeight")) {
+		cudaStreamDestroy(stream);
+		return false;
+	}
+
+	cudaStreamDestroy(stream);
 
 	return true;
 }
@@ -266,14 +274,13 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 	int iPaddedDetCount = calcNextPowerOfTwo(2 * dims.iProjU);
 	int iHalfFFTSize = astra::calcFFTFourierSize(iPaddedDetCount);
 
-
-	cufftComplex *pHostFilter = new cufftComplex[dims.iProjAngles * iHalfFFTSize];
-	memset(pHostFilter, 0, sizeof(cufftComplex) * dims.iProjAngles * iHalfFFTSize);
+	// TODO: We could free this vector earlier, once the async memcpy is done
+	std::vector<cufftComplex> pHostFilter(dims.iProjAngles * iHalfFFTSize);
 
 	if (pfFilter == 0){
 		astra::SFilterConfig filter;
 		filter.m_eType = astra::FILTER_RAMLAK;
-		astraCUDA::genCuFFTFilter(filter, dims.iProjAngles, pHostFilter, iPaddedDetCount, iHalfFFTSize);
+		astraCUDA::genCuFFTFilter(filter, dims.iProjAngles, &pHostFilter[0], iPaddedDetCount, iHalfFFTSize);
 	} else {
 		for (int i = 0; i < dims.iProjAngles * iHalfFFTSize; i++) {
 			pHostFilter[i].x = pfFilter[i];
@@ -281,25 +288,48 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 		}
 	}
 
+	cudaStream_t stream;
+	if (!checkCuda(cudaStreamCreate(&stream), "FDK_Filter stream"))
+		return false;
+
 	cufftComplex * D_filter;
 
-	astraCUDA::allocateComplexOnDevice(dims.iProjAngles, iHalfFFTSize, &D_filter);
-	astraCUDA::uploadComplexArrayToDevice(dims.iProjAngles, iHalfFFTSize, pHostFilter, D_filter);
+	if (!astraCUDA::allocateComplexOnDevice(dims.iProjAngles, iHalfFFTSize, &D_filter)) {
+		cudaStreamDestroy(stream);
+		return false;
+	}
 
-	delete [] pHostFilter;
-
+	if (!astraCUDA::uploadComplexArrayToDevice(dims.iProjAngles, iHalfFFTSize, &pHostFilter[0], D_filter, stream)) {
+		astraCUDA::freeComplexOnDevice(D_filter);
+		cudaStreamDestroy(stream);
+		return false;
+	}
 
 	cufftHandle planF;
 	cufftHandle planI;
 
 	if (!checkCufft(cufftPlan1d(&planF, iPaddedDetCount, CUFFT_R2C, dims.iProjAngles), "FDK filter FFT plan")) {
+		cudaStreamDestroy(stream);
+		astraCUDA::freeComplexOnDevice(D_filter);
+		return false;
+	}
+	if (!checkCufft(cufftSetStream(planF, stream), "FDK filter FFT plan stream")) {
+		cudaStreamDestroy(stream);
 		astraCUDA::freeComplexOnDevice(D_filter);
 		return false;
 	}
 
 	if (!checkCufft(cufftPlan1d(&planI, iPaddedDetCount, CUFFT_C2R, dims.iProjAngles), "FDK filter IFFT plan")) {
+		cudaStreamDestroy(stream);
 		astraCUDA::freeComplexOnDevice(D_filter);
 		cufftDestroy(planF);
+		return false;
+	}
+	if (!checkCufft(cufftSetStream(planI, stream), "FDK filter IFFT plan stream")) {
+		cudaStreamDestroy(stream);
+		astraCUDA::freeComplexOnDevice(D_filter);
+		cufftDestroy(planF);
+		cufftDestroy(planI);
 		return false;
 	}
 
@@ -310,13 +340,19 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 	float* D_sinoData = (float*)D_projData.ptr;
 
 	cufftComplex * D_pcSinoFFT = NULL;
-	astraCUDA::allocateComplexOnDevice(dims.iProjAngles, iHalfFFTSize, &D_pcSinoFFT);
 
-	bool ok = true;
+	if (!astraCUDA::allocateComplexOnDevice(dims.iProjAngles, iHalfFFTSize, &D_pcSinoFFT)) {
+		cudaStreamDestroy(stream);
+		astraCUDA::freeComplexOnDevice(D_filter);
+		cufftDestroy(planF);
+		cufftDestroy(planI);
+		return false;
+	}
 
 	float * D_pfPadded = NULL;
 	size_t bufferMemSize = sizeof(float) * dims.iProjAngles * iPaddedDetCount;
 	if (!checkCuda(cudaMalloc((void **)&D_pfPadded, bufferMemSize), "FDK filter malloc")) {
+		cudaStreamDestroy(stream);
 		astraCUDA::freeComplexOnDevice(D_pcSinoFFT);
 		astraCUDA::freeComplexOnDevice(D_filter);
 		cufftDestroy(planF);
@@ -324,26 +360,29 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 		return false;
 	}
 
+	bool ok = true;
 
 	for (int v = 0; v < dims.iProjV; ++v) {
-		if (!checkCuda(cudaMemset(D_pfPadded, 0, bufferMemSize), "FDK filter memset")) {
+		if (!checkCuda(cudaMemsetAsync(D_pfPadded, 0, bufferMemSize, stream), "FDK filter memset")) {
 			ok = false;
 			break;
 		}
 
 		// pitched memcpy 2D to handle both source pitch and target padding
-		if (!checkCuda(cudaMemcpy2D(D_pfPadded, iPaddedDetCount*sizeof(float), D_sinoData, projPitch*sizeof(float), dims.iProjU*sizeof(float), dims.iProjAngles, cudaMemcpyDeviceToDevice), "FDK filter memcpy")) {
+		if (!checkCuda(cudaMemcpy2DAsync(D_pfPadded, iPaddedDetCount*sizeof(float), D_sinoData, projPitch*sizeof(float), dims.iProjU*sizeof(float), dims.iProjAngles, cudaMemcpyDeviceToDevice, stream), "FDK filter memcpy")) {
 			ok = false;
 			break;
 		}
-
 
 		if (!checkCufft(cufftExecR2C(planF, (cufftReal *)D_pfPadded, D_pcSinoFFT), "FDK filter forward exec")) {
 			ok = false;
 			break;
 		}
 
-		astraCUDA::applyFilter(dims.iProjAngles, iHalfFFTSize, D_pcSinoFFT, D_filter);
+		if (!astraCUDA::applyFilter(dims.iProjAngles, iHalfFFTSize, D_pcSinoFFT, D_filter, stream)) {
+			ok = false;
+			break;
+		}
 
 		// Getting rid of the const qualifier is due to cufft API issue?
 		if (!checkCufft(cufftExecC2R(planI, (cufftComplex *)D_pcSinoFFT,
@@ -353,15 +392,18 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 			break;
 		}
 
-		astraCUDA::rescaleInverseFourier(dims.iProjAngles, iPaddedDetCount, D_pfPadded);
+		if (!astraCUDA::rescaleInverseFourier(dims.iProjAngles, iPaddedDetCount, D_pfPadded, stream)) {
+			ok = false;
+			break;
+		}
 
-		if (!checkCuda(cudaMemset(D_sinoData, 0, sizeof(float) * dims.iProjAngles * projPitch), "FDK filter memset")) {
+		if (!checkCuda(cudaMemsetAsync(D_sinoData, 0, sizeof(float) * dims.iProjAngles * projPitch, stream), "FDK filter memset")) {
 			ok = false;
 			break;
 		}
 
 		// pitched memcpy 2D to handle both source padding and target pitch
-		if (!checkCuda(cudaMemcpy2D(D_sinoData, projPitch*sizeof(float), D_pfPadded, iPaddedDetCount*sizeof(float), dims.iProjU*sizeof(float), dims.iProjAngles, cudaMemcpyDeviceToDevice), "FDK filter memcpy")) {
+		if (!checkCuda(cudaMemcpy2DAsync(D_sinoData, projPitch*sizeof(float), D_pfPadded, iPaddedDetCount*sizeof(float), dims.iProjU*sizeof(float), dims.iProjAngles, cudaMemcpyDeviceToDevice, stream), "FDK filter memcpy")) {
 			ok = false;
 			break;
 		}
@@ -369,9 +411,7 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 		D_sinoData += (dims.iProjAngles * projPitch);
 	}
 
-	if (!checkCuda(cudaDeviceSynchronize(), "FDK filter sync")) {
-		ok = false;
-	}
+	ok &= checkCuda(cudaStreamSynchronize(stream), "FDK filter sync");
 
 	cufftDestroy(planF);
 	cufftDestroy(planI);
@@ -379,6 +419,8 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 	cudaFree(D_pfPadded);
 	astraCUDA::freeComplexOnDevice(D_pcSinoFFT);
 	astraCUDA::freeComplexOnDevice(D_filter);
+
+	cudaStreamDestroy(stream);
 
 	return ok;
 }

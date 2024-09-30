@@ -31,7 +31,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include <cstdio>
 #include <cassert>
 #include <iostream>
-#include <list>
 #include <cmath>
 
 namespace astraCUDA {
@@ -205,23 +204,27 @@ __global__ void FPvertical_simple(float* D_projData, unsigned int projPitch, cud
 // x = (t - 0.5*nDets + 0.5 - fOffset) * fSize * cos(fAngle)
 // y = - (t - 0.5*nDets + 0.5 - fOffset) * fSize * sin(fAngle)
 
+using TransferConstantsBuffer = TransferConstantsBuffer_t<float, float, float>;
 
-static void convertAndUploadAngles(const SParProjection *projs, unsigned int nth, unsigned int ndets)
+static bool transferConstants(const SParProjection *projs, unsigned int nth, unsigned int ndets,
+                              TransferConstantsBuffer& buf, cudaStream_t stream)
 {
-	float *angles = new float[nth];
-	float *offsets = new float[nth];
-	float *detsizes = new float[nth];
+	float *angles = &(std::get<0>(buf.d))[0];
+	float *offsets = &(std::get<1>(buf.d))[0];
+	float *detsizes = &(std::get<2>(buf.d))[0];
+
+	bool ok = checkCuda(cudaStreamWaitEvent(stream, buf.event, 0), "transferConstants wait");
 
 	for (int i = 0; i < nth; ++i)
 		getParParameters(projs[i], ndets, angles[i], detsizes[i], offsets[i]);
 
-	cudaMemcpyToSymbol(gC_angle, angles, nth*sizeof(float), 0, cudaMemcpyHostToDevice); 
-	cudaMemcpyToSymbol(gC_angle_offset, offsets, nth*sizeof(float), 0, cudaMemcpyHostToDevice);
-	cudaMemcpyToSymbol(gC_angle_detsize, detsizes, nth*sizeof(float), 0, cudaMemcpyHostToDevice); 
-	
-	delete [] angles;
-	delete [] offsets;
-	delete [] detsizes;
+	ok &= checkCuda(cudaMemcpyToSymbolAsync(gC_angle, angles, nth*sizeof(float), 0, cudaMemcpyHostToDevice, stream), "transferConstants angles");
+	ok &= checkCuda(cudaMemcpyToSymbolAsync(gC_angle_offset, offsets, nth*sizeof(float), 0, cudaMemcpyHostToDevice, stream), "transferConstants offsets");
+	ok &= checkCuda(cudaMemcpyToSymbolAsync(gC_angle_detsize, detsizes, nth*sizeof(float), 0, cudaMemcpyHostToDevice, stream), "transferConstants detsizes");
+
+	ok &= checkCuda(cudaEventRecord(buf.event, stream), "transferConstants event");
+
+	return ok;
 }
 
 
@@ -229,7 +232,7 @@ static void convertAndUploadAngles(const SParProjection *projs, unsigned int nth
 bool FP_simple_internal(float* D_volumeData, unsigned int volumePitch,
                float* D_projData, unsigned int projPitch,
                const SDimensions& dims, const SParProjection* angles,
-               float outputScale)
+               float outputScale, cudaStream_t stream)
 {
 	assert(dims.iProjAngles <= g_MaxAngles);
 
@@ -238,16 +241,13 @@ bool FP_simple_internal(float* D_volumeData, unsigned int volumePitch,
 	cudaArray* D_dataArray;
 	cudaTextureObject_t D_texObj;
 
-	if (!createArrayAndTextureObject2D(D_volumeData, D_dataArray, D_texObj, volumePitch, dims.iVolWidth, dims.iVolHeight))
+
+	if (!createArrayAndTextureObject2D(D_volumeData, D_dataArray, D_texObj, volumePitch, dims.iVolWidth, dims.iVolHeight, stream))
 		return false;
 
 
-	convertAndUploadAngles(angles, dims.iProjAngles, dims.iProjDets);
-
 
 	dim3 dimBlock(g_detBlockSize, g_anglesPerBlock); // detector block size, angles
-
-	std::list<cudaStream_t> streams;
 
 
 	// Run over all angles, grouping them into groups of the same
@@ -275,11 +275,6 @@ bool FP_simple_internal(float* D_volumeData, unsigned int volumePitch,
 				dim3 dimGrid((blockEnd-blockStart+g_anglesPerBlock-1)/g_anglesPerBlock,
 				             (dims.iProjDets+g_detBlockSize-1)/g_detBlockSize); // angle blocks, detector blocks
 
-				// TODO: consider limiting number of handle (chaotic) geoms
-				//       with many alternating directions
-				cudaStream_t stream;
-				cudaStreamCreate(&stream);
-				streams.push_back(stream);
 				//printf("angle block: %d to %d, %d\n", blockStart, blockEnd, blockVertical);
 				if (!blockVertical)
 					for (unsigned int i = 0; i < dims.iVolWidth; i += g_blockSlices)
@@ -293,12 +288,7 @@ bool FP_simple_internal(float* D_volumeData, unsigned int volumePitch,
 		}
 	}
 
-	bool ok = true;
-
-	for (std::list<cudaStream_t>::iterator iter = streams.begin(); iter != streams.end(); ++iter) {
-		ok &= checkCuda(cudaStreamSynchronize(*iter), "par_fp");
-		cudaStreamDestroy(*iter);
-	}
+	bool ok = checkCuda(cudaStreamSynchronize(stream), "par_fp");
 
 	cudaFreeArray(D_dataArray);
 
@@ -312,6 +302,14 @@ bool FP_simple(float* D_volumeData, unsigned int volumePitch,
                const SDimensions& dims, const SParProjection* angles,
                float outputScale)
 {
+	TransferConstantsBuffer tcbuf(g_MaxAngles);
+
+	cudaStream_t stream;
+	if (!checkCuda(cudaStreamCreate(&stream), "FP stream"))
+		return false;
+
+	bool ok = true;
+
 	for (unsigned int iAngle = 0; iAngle < dims.iProjAngles; iAngle += g_MaxAngles) {
 		SDimensions subdims = dims;
 		unsigned int iEndAngle = iAngle + g_MaxAngles;
@@ -319,15 +317,21 @@ bool FP_simple(float* D_volumeData, unsigned int volumePitch,
 			iEndAngle = dims.iProjAngles;
 		subdims.iProjAngles = iEndAngle - iAngle;
 
-		bool ret;
-		ret = FP_simple_internal(D_volumeData, volumePitch,
+		ok &= transferConstants(angles + iAngle, subdims.iProjAngles, dims.iProjDets, tcbuf, stream);
+		if (!ok)
+			break;
+
+
+		ok &= FP_simple_internal(D_volumeData, volumePitch,
 		                         D_projData + iAngle * projPitch, projPitch,
 		                         subdims, angles + iAngle,
-		                         outputScale);
-		if (!ret)
-			return false;
+		                         outputScale, stream);
+		if (!ok)
+			break;
 	}
-	return true;
+	ok &= checkCuda(cudaStreamSynchronize(stream), "par_fp");
+	cudaStreamDestroy(stream);
+	return ok;
 }
 
 bool FP(float* D_volumeData, unsigned int volumePitch,

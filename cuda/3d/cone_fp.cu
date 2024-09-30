@@ -30,8 +30,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstdio>
 #include <cassert>
-#include <iostream>
-#include <list>
 
 #include <cuda.h>
 
@@ -113,13 +111,18 @@ struct SCALE_NONCUBE {
 	__device__ float scale(float a1, float a2) const { return sqrt(a1*a1*fScale1+a2*a2*fScale2+1.0f) * fOutputScale; }
 };
 
+using TransferConstantsBuffer = TransferConstantsBuffer_t<float>;
 
-bool transferConstants(const SConeProjection* angles, unsigned int iProjAngles)
+bool transferConstants(const SConeProjection* angles, unsigned int iProjAngles,
+                       TransferConstantsBuffer& buf, cudaStream_t stream)
 {
-	// transfer angles to constant memory
-	float* tmp = new float[iProjAngles];
+	float* tmp = &(std::get<0>(buf.d))[0];
 
-#define TRANSFER_TO_CONSTANT(name) do { for (unsigned int i = 0; i < iProjAngles; ++i) tmp[i] = angles[i].f##name ; cudaMemcpyToSymbol(gC_##name, tmp, iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice); } while (0)
+	// We use an event to assure that the previous transferConstants has completed before
+	// re-using the buffer. (Even if it is very unlikely that it hasn't.)
+	bool ok = checkCuda(cudaStreamWaitEvent(stream, buf.event, 0), "transferConstants wait");
+
+#define TRANSFER_TO_CONSTANT(name) do { for (unsigned int i = 0; i < iProjAngles; ++i) tmp[i] = angles[i].f##name ; ok &= checkCuda(cudaMemcpyToSymbolAsync(gC_##name, tmp, iProjAngles*sizeof(float), 0, cudaMemcpyHostToDevice, stream), "transferConstants transfer"); } while (0)
 
 	TRANSFER_TO_CONSTANT(SrcX);
 	TRANSFER_TO_CONSTANT(SrcY);
@@ -136,9 +139,9 @@ bool transferConstants(const SConeProjection* angles, unsigned int iProjAngles)
 
 #undef TRANSFER_TO_CONSTANT
 
-	delete[] tmp;
+	ok &= checkCuda(cudaEventRecord(buf.event, stream), "transferConstants event");
 
-	return true;
+	return ok;
 }
 
 
@@ -324,12 +327,8 @@ bool ConeFP_Array_internal(cudaPitchedPtr D_projData,
                   cudaTextureObject_t D_texObj,
                   const SDimensions3D& dims,
                   unsigned int angleCount, const SConeProjection* angles,
-                  const SProjectorParams3D& params)
+                  const SProjectorParams3D& params, cudaStream_t stream)
 {
-	if (!transferConstants(angles, angleCount))
-		return false;
-
-	std::list<cudaStream_t> streams;
 	dim3 dimBlock(g_detBlockU, g_anglesPerBlock); // region size, angles
 
 	// Run over all angles, grouping them into groups of the same
@@ -398,12 +397,6 @@ bool ConeFP_Array_internal(cudaPitchedPtr D_projData,
 				             ((dims.iProjU+g_detBlockU-1)/g_detBlockU)*((dims.iProjV+g_detBlockV-1)/g_detBlockV),
 (blockEnd-blockStart+g_anglesPerBlock-1)/g_anglesPerBlock);
 
-				// TODO: consider limiting number of handle (chaotic) geoms
-				//       with many alternating directions
-				cudaStream_t stream;
-				cudaStreamCreate(&stream);
-				streams.push_back(stream);
-
 				// printf("angle block: %d to %d, %d (%dx%d, %dx%d)\n", blockStart, blockEnd, blockDirection, dimGrid.x, dimGrid.y, dimBlock.x, dimBlock.y);
 
 				if (blockDirection == 0) {
@@ -442,16 +435,9 @@ bool ConeFP_Array_internal(cudaPitchedPtr D_projData,
 		}
 	}
 
-	bool ok = true;
-
-	for (std::list<cudaStream_t>::iterator iter = streams.begin(); iter != streams.end(); ++iter) {
-		ok &= checkCuda(cudaStreamSynchronize(*iter), "cone_fp");
-		cudaStreamDestroy(*iter);
-	}
-
 	// printf("%f\n", toc(t));
 
-	return ok;
+	return true;
 }
 
 
@@ -460,37 +446,61 @@ bool ConeFP(cudaPitchedPtr D_volumeData,
             const SDimensions3D& dims, const SConeProjection* angles,
             const SProjectorParams3D& params)
 {
+	TransferConstantsBuffer tcbuf(g_MaxAngles);
+
+	cudaStream_t stream;
+	if (!checkCuda(cudaStreamCreate(&stream), "ConeFP stream"))
+		return false;
+
 	// transfer volume to array
 	cudaArray* cuArray = allocateVolumeArray(dims);
-	transferVolumeToArray(D_volumeData, cuArray, dims);
+	if (!cuArray) {
+		cudaStreamDestroy(stream);
+		return false;
+	}
 
 	cudaTextureObject_t D_texObj;
 	if (!createTextureObject3D(cuArray, D_texObj)) {
+		cudaStreamDestroy(stream);
 		cudaFreeArray(cuArray);
 		return false;
 	}
 
-	bool ret;
+	if (!transferVolumeToArray(D_volumeData, cuArray, dims, stream)) {
+		cudaDestroyTextureObject(D_texObj);
+		cudaStreamDestroy(stream);
+		cudaFreeArray(cuArray);
+		return false;
+	}
+
+	bool ok = true;
 
 	for (unsigned int iAngle = 0; iAngle < dims.iProjAngles; iAngle += g_MaxAngles) {
 		unsigned int iEndAngle = iAngle + g_MaxAngles;
 		if (iEndAngle >= dims.iProjAngles)
 			iEndAngle = dims.iProjAngles;
 
+		ok = transferConstants(angles + iAngle, iEndAngle - iAngle, tcbuf, stream);
+		if (!ok)
+			break;
+
 		cudaPitchedPtr D_subprojData = D_projData;
 		D_subprojData.ptr = (char*)D_projData.ptr + iAngle * D_projData.pitch;
 
-		ret = ConeFP_Array_internal(D_subprojData, D_texObj,
+		ok = ConeFP_Array_internal(D_subprojData, D_texObj,
 		                            dims, iEndAngle - iAngle, angles + iAngle,
-		                            params);
-		if (!ret)
+		                            params, stream);
+		if (!ok)
 			break;
 	}
 
+	ok &= checkCuda(cudaStreamSynchronize(stream), "ConeFP sync");
+
 	cudaDestroyTextureObject(D_texObj);
 	cudaFreeArray(cuArray);
+	cudaStreamDestroy(stream);
 
-	return ret;
+	return ok;
 }
 
 

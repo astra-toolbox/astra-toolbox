@@ -218,10 +218,14 @@ double det2(const Vec2 &a, const Vec2 &b) {
 	return a.x * b.y - a.y * b.x;
 }
 
+using TransferConstantsBuffer = TransferConstantsBuffer_t<DevFanParams>;
 
-bool transferConstants(const SFanProjection* angles, unsigned int iProjAngles, bool FBP)
+bool transferConstants(const SFanProjection* angles, unsigned int iProjAngles, bool FBP,
+                       TransferConstantsBuffer& buf, cudaStream_t stream)
 {
-	DevFanParams *p = new DevFanParams[iProjAngles];
+	DevFanParams *p = &(std::get<0>(buf.d))[0];
+
+	bool ok = checkCuda(cudaStreamWaitEvent(stream, buf.event, 0), "transferConstants wait");
 
 	// We need three values in the kernel:
 	// projected coordinates of pixels on the detector:
@@ -265,19 +269,18 @@ bool transferConstants(const SFanProjection* angles, unsigned int iProjAngles, b
 		p[i].fDenY = -fScale * u.x;
 	}
 
-	// TODO: Check for errors
-	cudaMemcpyToSymbol(gC_C, p, iProjAngles*sizeof(DevFanParams), 0, cudaMemcpyHostToDevice);
+	ok &= checkCuda(cudaMemcpyToSymbolAsync(gC_C, p, iProjAngles*sizeof(DevFanParams), 0, cudaMemcpyHostToDevice, stream), "transferConstants transfer");
 
-	delete [] p;
+	ok &= checkCuda(cudaEventRecord(buf.event, stream), "transferConstants event");
 
-	return true;
+	return ok;
 }
 
 
 bool FanBP_internal(float* D_volumeData, unsigned int volumePitch,
            float* D_projData, unsigned int projPitch,
            const SDimensions& dims, const SFanProjection* angles,
-           float fOutputScale)
+           float fOutputScale, cudaStream_t stream)
 {
 	assert(dims.iProjAngles <= g_MaxAngles);
 
@@ -285,18 +288,9 @@ bool FanBP_internal(float* D_volumeData, unsigned int volumePitch,
 	if (!createTextureObjectPitch2D(D_projData, D_texObj, projPitch, dims.iProjDets, dims.iProjAngles))
 		return false;
 
-	bool ok = transferConstants(angles, dims.iProjAngles, false);
-	if (!ok) {
-		cudaDestroyTextureObject(D_texObj);
-		return false;
-	}
-
 	dim3 dimBlock(g_blockSlices, g_blockSliceSize);
 	dim3 dimGrid((dims.iVolWidth+g_blockSlices-1)/g_blockSlices,
 	             (dims.iVolHeight+g_blockSliceSize-1)/g_blockSliceSize);
-
-	cudaStream_t stream;
-	cudaStreamCreate(&stream);
 
 	for (unsigned int i = 0; i < dims.iProjAngles; i += g_anglesPerBlock) {
 		if (dims.iRaysPerPixelDim > 1)
@@ -305,9 +299,7 @@ bool FanBP_internal(float* D_volumeData, unsigned int volumePitch,
 			devFanBP<false><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, D_texObj, i, dims, fOutputScale);
 	}
 
-	ok = checkCuda(cudaStreamSynchronize(stream), "FanBP");
-
-	cudaStreamDestroy(stream);
+	bool ok = checkCuda(cudaStreamSynchronize(stream), "FanBP");
 
 	cudaDestroyTextureObject(D_texObj);
 
@@ -317,7 +309,7 @@ bool FanBP_internal(float* D_volumeData, unsigned int volumePitch,
 bool FanBP_FBPWeighted_internal(float* D_volumeData, unsigned int volumePitch,
            float* D_projData, unsigned int projPitch,
            const SDimensions& dims, const SFanProjection* angles,
-           float fOutputScale)
+           float fOutputScale, cudaStream_t stream)
 {
 	assert(dims.iProjAngles <= g_MaxAngles);
 
@@ -325,26 +317,15 @@ bool FanBP_FBPWeighted_internal(float* D_volumeData, unsigned int volumePitch,
 	if (!createTextureObjectPitch2D(D_projData, D_texObj, projPitch, dims.iProjDets, dims.iProjAngles))
 		return false;
 
-	bool ok = transferConstants(angles, dims.iProjAngles, true);
-	if (!ok) {
-		cudaDestroyTextureObject(D_texObj);
-		return false;
-	}
-
 	dim3 dimBlock(g_blockSlices, g_blockSliceSize);
 	dim3 dimGrid((dims.iVolWidth+g_blockSlices-1)/g_blockSlices,
 	             (dims.iVolHeight+g_blockSliceSize-1)/g_blockSliceSize);
-
-	cudaStream_t stream;
-	cudaStreamCreate(&stream);
 
 	for (unsigned int i = 0; i < dims.iProjAngles; i += g_anglesPerBlock) {
 		devFanBP<true><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, D_texObj, i, dims, fOutputScale);
 	}
 
-	ok = checkCuda(cudaStreamSynchronize(stream), "FanBP_FBPWeighted");
-
-	cudaStreamDestroy(stream);
+	bool ok = checkCuda(cudaStreamSynchronize(stream), "FanBP_FBPWeighted");
 
 	cudaDestroyTextureObject(D_texObj);
 
@@ -358,13 +339,22 @@ bool FanBP_SART(float* D_volumeData, unsigned int volumePitch,
                 const SDimensions& dims, const SFanProjection* angles,
                 float fOutputScale)
 {
-	// only one angle
-	cudaTextureObject_t D_texObj;
-	if (!createTextureObjectPitch2D(D_projData, D_texObj, projPitch, dims.iProjDets, 1, cudaAddressModeClamp))
+	TransferConstantsBuffer tcbuf(1);
+
+	cudaStream_t stream;
+	if (!checkCuda(cudaStreamCreate(&stream), "FanBP_SART stream"))
 		return false;
 
-	bool ok = transferConstants(angles + angle, 1, false);
+	// only one angle
+	cudaTextureObject_t D_texObj;
+	if (!createTextureObjectPitch2D(D_projData, D_texObj, projPitch, dims.iProjDets, 1, cudaAddressModeClamp)) {
+		cudaStreamDestroy(stream);
+		return false;
+	}
+
+	bool ok = transferConstants(angles + angle, 1, false, tcbuf, stream);
 	if (!ok) {
+		cudaStreamDestroy(stream);
 		cudaDestroyTextureObject(D_texObj);
 		return false;
 	}
@@ -373,10 +363,11 @@ bool FanBP_SART(float* D_volumeData, unsigned int volumePitch,
 	dim3 dimGrid((dims.iVolWidth+g_blockSlices-1)/g_blockSlices,
 	             (dims.iVolHeight+g_blockSliceSize-1)/g_blockSliceSize);
 
-	devFanBP_SART<<<dimGrid, dimBlock>>>(D_volumeData, volumePitch, D_texObj, dims, fOutputScale);
+	devFanBP_SART<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, D_texObj, dims, fOutputScale);
 
-	ok = checkCuda(cudaThreadSynchronize(), "FanBP_SART");
+	ok = checkCuda(cudaStreamSynchronize(stream), "FanBP_SART");
 
+	cudaStreamDestroy(stream);
 	cudaDestroyTextureObject(D_texObj);
 
 	return ok;
@@ -387,6 +378,14 @@ bool FanBP(float* D_volumeData, unsigned int volumePitch,
            const SDimensions& dims, const SFanProjection* angles,
            float fOutputScale)
 {
+	TransferConstantsBuffer tcbuf(g_MaxAngles);
+
+	cudaStream_t stream;
+	if (!checkCuda(cudaStreamCreate(&stream), "FanBP stream"))
+		return false;
+
+	bool ok = true;
+
 	for (unsigned int iAngle = 0; iAngle < dims.iProjAngles; iAngle += g_MaxAngles) {
 		SDimensions subdims = dims;
 		unsigned int iEndAngle = iAngle + g_MaxAngles;
@@ -394,14 +393,20 @@ bool FanBP(float* D_volumeData, unsigned int volumePitch,
 			iEndAngle = dims.iProjAngles;
 		subdims.iProjAngles = iEndAngle - iAngle;
 
-		bool ret;
-		ret = FanBP_internal(D_volumeData, volumePitch,
+		ok &= transferConstants(angles, dims.iProjAngles, false, tcbuf, stream);
+		if (!ok)
+			break;
+
+		ok &= FanBP_internal(D_volumeData, volumePitch,
 		                  D_projData + iAngle * projPitch, projPitch,
-		                  subdims, angles + iAngle, fOutputScale);
-		if (!ret)
-			return false;
+		                  subdims, angles + iAngle, fOutputScale, stream);
+		if (!ok)
+			break;
 	}
-	return true;
+
+	ok &= checkCuda(cudaStreamSynchronize(stream), "fan_bp");
+	cudaStreamDestroy(stream);
+	return ok;
 }
 
 bool FanBP_FBPWeighted(float* D_volumeData, unsigned int volumePitch,
@@ -409,6 +414,14 @@ bool FanBP_FBPWeighted(float* D_volumeData, unsigned int volumePitch,
            const SDimensions& dims, const SFanProjection* angles,
            float fOutputScale)
 {
+	TransferConstantsBuffer tcbuf(g_MaxAngles);
+
+	cudaStream_t stream;
+	if (!checkCuda(cudaStreamCreate(&stream), "FanBP_FBPWeighted stream"))
+		return false;
+
+	bool ok = true;
+
 	for (unsigned int iAngle = 0; iAngle < dims.iProjAngles; iAngle += g_MaxAngles) {
 		SDimensions subdims = dims;
 		unsigned int iEndAngle = iAngle + g_MaxAngles;
@@ -416,15 +429,20 @@ bool FanBP_FBPWeighted(float* D_volumeData, unsigned int volumePitch,
 			iEndAngle = dims.iProjAngles;
 		subdims.iProjAngles = iEndAngle - iAngle;
 
-		bool ret;
-		ret = FanBP_FBPWeighted_internal(D_volumeData, volumePitch,
-		                  D_projData + iAngle * projPitch, projPitch,
-		                  subdims, angles + iAngle, fOutputScale);
+		ok = transferConstants(angles, dims.iProjAngles, true, tcbuf, stream);
+		if (!ok)
+			break;
 
-		if (!ret)
-			return false;
+		ok = FanBP_FBPWeighted_internal(D_volumeData, volumePitch,
+		                  D_projData + iAngle * projPitch, projPitch,
+		                  subdims, angles + iAngle, fOutputScale, stream);
+		if (!ok)
+			break;
 	}
-	return true;
+
+	ok &= checkCuda(cudaStreamSynchronize(stream), "fan_bp_fbpweighted");
+	cudaStreamDestroy(stream);
+	return ok;
 }
 
 

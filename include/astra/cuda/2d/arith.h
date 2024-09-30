@@ -28,6 +28,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _CUDA_ARITH_H
 #define _CUDA_ARITH_H
 
+#include <optional>
+
 #include <cuda.h>
 
 namespace astraCUDA {
@@ -55,29 +57,21 @@ struct opSetMaskedValues;
 struct opMulMask;
 
 
-template<typename op> void processVolCopy(float* out, const SDimensions& dims);
-template<typename op> void processVolCopy(float* out, float param, const SDimensions& dims);
-template<typename op> void processVolCopy(float* out1, float* out2, float param1, float param2, const SDimensions& dims);
-template<typename op> void processVolCopy(float* out, const float* in, const SDimensions& dims);
-template<typename op> void processVolCopy(float* out, const float* in, float param, const SDimensions& dims);
-template<typename op> void processVolCopy(float* out, const float* in1, const float* in2, const SDimensions& dims);
-template<typename op> void processVolCopy(float* out, const float* in1, const float* in2, float param, const SDimensions& dims);
+template<typename op> bool processVol(float* out, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
+template<typename op> bool processVol(float* out, float fParam, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
+template<typename op> bool processVol(float* out1, float* out2, float fParam1, float fParam2, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
+template<typename op> bool processVol(float* out, const float* in, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
+template<typename op> bool processVol(float* out, const float* in, float fParam, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
+template<typename op> bool processVol(float* out, const float* in1, const float* in2, float fParam, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
+template<typename op> bool processVol(float* out, const float* in1, const float* in2, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
 
-template<typename op> void processVol(float* out, unsigned int pitch, const SDimensions& dims);
-template<typename op> void processVol(float* out, float fParam, unsigned int pitch, const SDimensions& dims);
-template<typename op> void processVol(float* out1, float* out2, float fParam1, float fParam2, unsigned int pitch, const SDimensions& dims);
-template<typename op> void processVol(float* out, const float* in, unsigned int pitch, const SDimensions& dims);
-template<typename op> void processVol(float* out, const float* in, float fParam, unsigned int pitch, const SDimensions& dims);
-template<typename op> void processVol(float* out, const float* in1, const float* in2, float fParam, unsigned int pitch, const SDimensions& dims);
-template<typename op> void processVol(float* out, const float* in1, const float* in2, unsigned int pitch, const SDimensions& dims);
-
-template<typename op> void processSino(float* out, unsigned int pitch, const SDimensions& dims);
-template<typename op> void processSino(float* out, float fParam, unsigned int pitch, const SDimensions& dims);
-template<typename op> void processSino(float* out1, float* out2, float fParam1, float fParam2, unsigned int pitch, const SDimensions& dims);
-template<typename op> void processSino(float* out, const float* in, unsigned int pitch, const SDimensions& dims);
-template<typename op> void processSino(float* out, const float* in, float fParam, unsigned int pitch, const SDimensions& dims);
-template<typename op> void processSino(float* out, const float* in1, const float* in2, float fParam, unsigned int pitch, const SDimensions& dims);
-template<typename op> void processSino(float* out, const float* in1, const float* in2, unsigned int pitch, const SDimensions& dims);
+template<typename op> bool processSino(float* out, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
+template<typename op> bool processSino(float* out, float fParam, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
+template<typename op> bool processSino(float* out1, float* out2, float fParam1, float fParam2, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
+template<typename op> bool processSino(float* out, const float* in, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
+template<typename op> bool processSino(float* out, const float* in, float fParam, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
+template<typename op> bool processSino(float* out, const float* in1, const float* in2, float fParam, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
+template<typename op> bool processSino(float* out, const float* in1, const float* in2, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
 
 
 }

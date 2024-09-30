@@ -31,9 +31,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/Logging.h"
 #include "astra/Fourier.h"
 
-#include <iostream>
-#include <fstream>
-
 #include <cufft.h>
 #include <cuda.h>
 
@@ -90,41 +87,57 @@ __global__ static void rescaleInverseFourier_kernel(int _iProjectionCount,
 	_pfInFourierOutput[iProjectionIndex * _iDetectorCount + iDetectorIndex] /= (float)_iDetectorCount;
 }
 
-void rescaleInverseFourier(int _iProjectionCount, int _iDetectorCount,
-                           float * _pfInFourierOutput)
+bool rescaleInverseFourier(int _iProjectionCount, int _iDetectorCount,
+                           float * _pfInFourierOutput,
+                           std::optional<cudaStream_t> _stream)
 {
+	StreamHelper stream(_stream);
+	if (!stream)
+		return false;
+
 	const int iBlockSize = 256;
 	int iElementCount = _iProjectionCount * _iDetectorCount;
 	int iBlockCount = (iElementCount + iBlockSize - 1) / iBlockSize;
 
-	rescaleInverseFourier_kernel<<< iBlockCount, iBlockSize >>>(_iProjectionCount,
+	rescaleInverseFourier_kernel<<< iBlockCount, iBlockSize, 0, stream() >>>(_iProjectionCount,
 	                                                            _iDetectorCount,
 	                                                            _pfInFourierOutput);
 
-	checkCuda(cudaThreadSynchronize(), "rescaleInverseFourier");
+	return stream.syncIfSync("rescaleInverseFourier");
 }
 
-void applyFilter(int _iProjectionCount, int _iFreqBinCount,
-                 cufftComplex * _pSinogram, cufftComplex * _pFilter)
+bool applyFilter(int _iProjectionCount, int _iFreqBinCount,
+                 cufftComplex * _pSinogram, cufftComplex * _pFilter,
+                 std::optional<cudaStream_t> _stream)
 {
+	StreamHelper stream(_stream);
+	if (!stream)
+		return false;
+
 	const int iBlockSize = 256;
 	int iElementCount = _iProjectionCount * _iFreqBinCount;
 	int iBlockCount = (iElementCount + iBlockSize - 1) / iBlockSize;
 
-	applyFilter_kernel<<< iBlockCount, iBlockSize >>>(_iProjectionCount,
+	applyFilter_kernel<<< iBlockCount, iBlockSize, 0, stream() >>>(_iProjectionCount,
 	                                                  _iFreqBinCount,
 	                                                  _pSinogram, _pFilter);
 
-	checkCuda(cudaThreadSynchronize(), "applyFilter");
+	return stream.syncIfSync("applyFilter");
 }
 
 static bool invokeCudaFFT(int _iProjectionCount, int _iDetectorCount,
                           const float * _pfDevSource,
-                          cufftComplex * _pDevTargetComplex)
+                          cufftComplex * _pDevTargetComplex,
+                          cudaStream_t stream)
 {
 	cufftHandle plan;
 
 	if (!checkCufft(cufftPlan1d(&plan, _iDetectorCount, CUFFT_R2C, _iProjectionCount), "invokeCudaFFT plan")) {
+		return false;
+	}
+
+	if (!checkCufft(cufftSetStream(plan, stream), "invokeCudaFFT plan stream")) {
+		cufftDestroy(plan);
 		return false;
 	}
 
@@ -133,7 +146,7 @@ static bool invokeCudaFFT(int _iProjectionCount, int _iDetectorCount,
 		return false;
 	}
 
-	if (!checkCuda(cudaDeviceSynchronize(), "invokeCudaFFT sync")) {
+	if (!checkCuda(cudaStreamSynchronize(stream), "invokeCudaFFT sync")) {
 		cufftDestroy(plan);
 		return false;
 	}
@@ -144,11 +157,17 @@ static bool invokeCudaFFT(int _iProjectionCount, int _iDetectorCount,
 
 static bool invokeCudaIFFT(int _iProjectionCount, int _iDetectorCount,
                            const cufftComplex * _pDevSourceComplex,
-                           float * _pfDevTarget)
+                           float * _pfDevTarget,
+                           cudaStream_t stream)
 {
 	cufftHandle plan;
 
 	if (!checkCufft(cufftPlan1d(&plan, _iDetectorCount, CUFFT_C2R, _iProjectionCount), "invokeCudaIFFT plan")) {
+		return false;
+	}
+
+	if (!checkCufft(cufftSetStream(plan, stream), "invokeCudaIFFT plan stream")) {
+		cufftDestroy(plan);
 		return false;
 	}
 
@@ -160,7 +179,7 @@ static bool invokeCudaIFFT(int _iProjectionCount, int _iDetectorCount,
 		return false;
 	}
 
-	if (!checkCuda(cudaDeviceSynchronize(), "invokeCudaIFFT sync")) {
+	if (!checkCuda(cudaStreamSynchronize(stream), "invokeCudaIFFT sync")) {
 		cufftDestroy(plan);
 		return false;
 	}
@@ -183,77 +202,104 @@ bool freeComplexOnDevice(cufftComplex * _pDevComplex)
 
 bool uploadComplexArrayToDevice(int _iProjectionCount, int _iDetectorCount,
                                 cufftComplex * _pHostComplexSource,
-                                cufftComplex * _pDevComplexTarget)
+                                cufftComplex * _pDevComplexTarget,
+                                std::optional<cudaStream_t> _stream)
 {
+	StreamHelper stream(_stream);
+	if (!stream)
+		return false;
+
 	size_t memSize = sizeof(cufftComplex) * _iProjectionCount * _iDetectorCount;
-	return checkCuda(cudaMemcpy(_pDevComplexTarget, _pHostComplexSource, memSize, cudaMemcpyHostToDevice), "fft uploadComplexArrayToDevice");
+	bool ok = checkCuda(cudaMemcpyAsync(_pDevComplexTarget, _pHostComplexSource, memSize, cudaMemcpyHostToDevice, stream()), "fft uploadComplexArrayToDevice");
+
+	ok &= stream.syncIfSync("fft uploadComplexArrayToDevice");
+	return ok;
 }
 
 bool runCudaFFT(int _iProjectionCount,
                 const float * D_pfSource, int _iSourcePitch,
                 int _iProjDets, int _iPaddedSize,
-                cufftComplex * D_pcTarget)
+                cufftComplex * D_pcTarget,
+                std::optional<cudaStream_t> _stream)
 {
+	StreamHelper stream(_stream);
+	if (!stream)
+		return false;
+
 	float * D_pfPaddedSource = NULL;
 	size_t bufferMemSize = sizeof(float) * _iProjectionCount * _iPaddedSize;
 
-	if (!checkCuda(cudaMalloc((void **)&D_pfPaddedSource, bufferMemSize), "runCudaFFT malloc"))
+	if (!checkCuda(cudaMalloc((void **)&D_pfPaddedSource, bufferMemSize), "runCudaFFT malloc")) {
 		return false;
-	if (!checkCuda(cudaMemset(D_pfPaddedSource, 0, bufferMemSize), "runCudaFFT memset")) {
+	}
+	if (!checkCuda(cudaMemsetAsync(D_pfPaddedSource, 0, bufferMemSize, stream()), "runCudaFFT memset")) {
 		cudaFree(D_pfPaddedSource);
 		return false;
 	}
 
 	// pitched memcpy 2D to handle both source pitch and target padding
-	if (!checkCuda(cudaMemcpy2D(D_pfPaddedSource, _iPaddedSize*sizeof(float), D_pfSource, _iSourcePitch*sizeof(float), _iProjDets*sizeof(float), _iProjectionCount, cudaMemcpyDeviceToDevice), "runCudaFFT memcpy")) {
+	if (!checkCuda(cudaMemcpy2DAsync(D_pfPaddedSource, _iPaddedSize*sizeof(float), D_pfSource, _iSourcePitch*sizeof(float), _iProjDets*sizeof(float), _iProjectionCount, cudaMemcpyDeviceToDevice, stream()), "runCudaFFT memcpy")) {
 		cudaFree(D_pfPaddedSource);
 		return false;
 	}
 
-	bool bResult = invokeCudaFFT(_iProjectionCount, _iPaddedSize,
-	                             D_pfPaddedSource, D_pcTarget);
-	if(!bResult)
+	if (!invokeCudaFFT(_iProjectionCount, _iPaddedSize, D_pfPaddedSource, D_pcTarget, stream())) {
+		cudaFree(D_pfPaddedSource);
 		return false;
+	}
+
+	if (!stream.sync("runCudaFFT sync")) {
+		cudaFree(D_pfPaddedSource);
+		return false;
+	}
 
 	cudaFree(D_pfPaddedSource);
-
 	return true;
 }
 
 bool runCudaIFFT(int _iProjectionCount, const cufftComplex *D_pcSource,
                  float * D_pfTarget, int _iTargetPitch,
-                 int _iProjDets, int _iPaddedSize)
+                 int _iProjDets, int _iPaddedSize,
+                 std::optional<cudaStream_t> _stream)
 {
+	StreamHelper stream(_stream);
+	if (!stream)
+		return false;
+
 	float * D_pfPaddedTarget = NULL;
 	size_t bufferMemSize = sizeof(float) * _iProjectionCount * _iPaddedSize;
 
-	if (!checkCuda(cudaMalloc((void **)&D_pfPaddedTarget, bufferMemSize), "runCudaIFFT malloc"))
+	if (!checkCuda(cudaMalloc((void **)&D_pfPaddedTarget, bufferMemSize), "runCudaIFFT malloc")) {
 		return false;
+	}
 
-	bool bResult = invokeCudaIFFT(_iProjectionCount, _iPaddedSize,
-	                             D_pcSource, D_pfPaddedTarget);
-	if(!bResult)
+	if (!invokeCudaIFFT(_iProjectionCount, _iPaddedSize,
+	                    D_pcSource, D_pfPaddedTarget, stream()))
 	{
+		cudaFree(D_pfPaddedTarget);
 		return false;
 	}
 
 	rescaleInverseFourier(_iProjectionCount, _iPaddedSize,
-	                      D_pfPaddedTarget);
+	                      D_pfPaddedTarget, stream());
 
-	if (!checkCuda(cudaMemset(D_pfTarget, 0, sizeof(float) * _iProjectionCount * _iTargetPitch), "runCudaIFFT memset")) {
+	if (!checkCuda(cudaMemsetAsync(D_pfTarget, 0, sizeof(float) * _iProjectionCount * _iTargetPitch, stream()), "runCudaIFFT memset")) {
 		cudaFree(D_pfPaddedTarget);
 		return false;
 	}
 
 	// pitched memcpy 2D to handle both source padding and target pitch
-	if (!checkCuda(cudaMemcpy2D(D_pfTarget, _iTargetPitch*sizeof(float), D_pfPaddedTarget, _iPaddedSize*sizeof(float), _iProjDets*sizeof(float), _iProjectionCount, cudaMemcpyDeviceToDevice), "runCudaIFFT memcpy")) {
+	if (!checkCuda(cudaMemcpy2DAsync(D_pfTarget, _iTargetPitch*sizeof(float), D_pfPaddedTarget, _iPaddedSize*sizeof(float), _iProjDets*sizeof(float), _iProjectionCount, cudaMemcpyDeviceToDevice, stream()), "runCudaIFFT memcpy")) {
 		cudaFree(D_pfPaddedTarget);
 		return false;
 	}
 
+	if (!stream.sync("runCudaIFFT sync")) {
+		cudaFree(D_pfPaddedTarget);
+		return false;
+	}
 
 	cudaFree(D_pfPaddedTarget);
-
 	return true;
 }
 

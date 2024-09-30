@@ -300,8 +300,12 @@ cudaArray* allocateProjectionArray(const SDimensions3D& dims)
 	return cuArray;
 }
 
-bool transferVolumeToArray(cudaPitchedPtr D_volumeData, cudaArray* array, const SDimensions3D& dims)
+bool transferVolumeToArray(cudaPitchedPtr D_volumeData, cudaArray* array, const SDimensions3D& dims, std::optional<cudaStream_t> _stream)
 {
+	StreamHelper stream(_stream);
+	if (!stream)
+		return false;
+
 	cudaExtent extentA;
 	extentA.width = dims.iVolX;
 	extentA.height = dims.iVolY;
@@ -321,11 +325,17 @@ bool transferVolumeToArray(cudaPitchedPtr D_volumeData, cudaArray* array, const 
 	p.extent = extentA;
 	p.kind = cudaMemcpyDeviceToDevice;
 
-	return checkCuda(cudaMemcpy3D(&p), "transferVolumeToArray 3D");
+	bool ok = checkCuda(cudaMemcpy3DAsync(&p, stream()), "transferVolumeToArray 3D");
+	ok &= stream.syncIfSync("transferVolumeToArray 3D sync");
+	return ok;
 }
 
-bool transferProjectionsToArray(cudaPitchedPtr D_projData, cudaArray* array, const SDimensions3D& dims)
+bool transferProjectionsToArray(cudaPitchedPtr D_projData, cudaArray* array, const SDimensions3D& dims, std::optional<cudaStream_t> _stream)
 {
+	StreamHelper stream(_stream);
+	if (!stream)
+		return false;
+
 	cudaExtent extentA;
 	extentA.width = dims.iProjU;
 	extentA.height = dims.iProjAngles;
@@ -345,7 +355,9 @@ bool transferProjectionsToArray(cudaPitchedPtr D_projData, cudaArray* array, con
 	p.extent = extentA;
 	p.kind = cudaMemcpyDeviceToDevice;
 
-	return checkCuda(cudaMemcpy3D(&p), "transferProjectionsToArray 3D");
+	bool ok = checkCuda(cudaMemcpy3DAsync(&p, stream()), "transferProjectionsToArray 3D");
+	ok &= stream.syncIfSync("transferProjectionsToArray 3D sync");
+	return ok;
 }
 
 bool transferHostProjectionsToArray(const float *projData, cudaArray* array, const SDimensions3D& dims)
