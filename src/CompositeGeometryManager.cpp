@@ -266,17 +266,23 @@ bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize,
 		//    c. create jobs for new (input,output) subparts
 
 		TPartList splitOutput;
-		splitPart(2, std::move(pOutput), splitOutput, maxSize/3, UINT_MAX, div);
+		// We now split projection data over the angle axis by default,
+		// and volume data over the z axis.
+		int axisOutput = 2;
+		if (pOutput->eType == CPart::PART_PROJ)
+			axisOutput = 1;
+
+		splitPart(axisOutput, std::move(pOutput), splitOutput, maxSize/3, UINT_MAX, div);
 #if 0
+		// There are currently no reasons to split the output over other axes
+
 		TPartList splitOutput2;
-		for (TPartList::iterator i_out = splitOutput.begin(); i_out != splitOutput.end(); ++i_out) {
-			std::shared_ptr<CPart> outputPart = *i_out;
-			outputPart.get()->split(0, splitOutput2, UINT_MAX, UINT_MAX, 1);
+		for (std::unique_ptr<CPart> &i_out : splitOutput) {
+			splitPart(axisOutputSecond, std::move(i_out), splitOutput2, UINT_MAX, UINT_MAX, 1);
 		}
 		splitOutput.clear();
-		for (TPartList::iterator i_out = splitOutput2.begin(); i_out != splitOutput2.end(); ++i_out) {
-			std::shared_ptr<CPart> outputPart = *i_out;
-					outputPart.get()->split(1, splitOutput, UINT_MAX, UINT_MAX, 1);
+		for (std::unique_ptr<CPart> &i_out : splitOutput2) {
+			splitPart(axisOutputThird, std::move(i_out), splitOutput, UINT_MAX, UINT_MAX, 1);
 		}
 		splitOutput2.clear();
 #endif
@@ -305,15 +311,23 @@ bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize,
 
 				size_t remainingSize = ( maxSize - outputPart->getSize() ) / 2;
 
+				int axisInputFirst = 2;
+				int axisInputSecond = 0;
+				int axisInputThird = 1;
+				if (input->eType == CPart::PART_PROJ) {
+					axisInputFirst = 1;
+					axisInputSecond = 2;
+					axisInputThird = 0;
+				}
 				TPartList splitInput;
-				splitPart(2, std::move(input), splitInput, remainingSize, maxBlockDim, 1);
+				splitPart(axisInputFirst, std::move(input), splitInput, remainingSize, maxBlockDim, 1);
 				TPartList splitInput2;
 				for (std::unique_ptr<CPart> &inputPart : splitInput)
-					splitPart(0, std::move(inputPart), splitInput2, 1024ULL*1024*1024*1024, maxBlockDim, 1);
+					splitPart(axisInputSecond, std::move(inputPart), splitInput2, 1024ULL*1024*1024*1024, maxBlockDim, 1);
 
 				splitInput.clear();
 				for (std::unique_ptr<CPart> &inputPart : splitInput2)
-					splitPart(1, std::move(inputPart), splitInput, 1024ULL*1024*1024*1024, maxBlockDim, 1);
+					splitPart(axisInputThird, std::move(inputPart), splitInput, 1024ULL*1024*1024*1024, maxBlockDim, 1);
 
 				splitInput2.clear();
 
