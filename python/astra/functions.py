@@ -280,8 +280,8 @@ def geom_2vec(proj_geom):
 
 
 def geom_postalignment(proj_geom, factor):
-    """Apply a postalignment to a vector-based projection geometry.
-    Can be used to model the rotation axis offset.
+    """Apply a postalignment to a projection geometry. Can be used to model the
+    rotation axis offset.
 
     For 2D geometries, the argument factor is a single float specifying the
     distance to shift the detector (measured in detector pixels).
