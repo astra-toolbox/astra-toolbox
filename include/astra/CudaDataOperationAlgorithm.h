@@ -98,7 +98,7 @@ protected:
 	CFloat32Data2D* m_pMask;
 
 	std::vector<CFloat32Data2D*> m_pData;
-	std::vector<float> m_fScalar;
+	std::vector<double> m_fScalar;
 
 	std::string m_sOperation;
 

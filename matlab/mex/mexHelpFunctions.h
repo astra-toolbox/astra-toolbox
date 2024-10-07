@@ -44,6 +44,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/Utilities.h"
 
 #include "astra/Config.h"
+#include "astra/XMLConfig.h"
 #include "astra/XMLDocument.h"
 #include "astra/XMLNode.h"
 
@@ -57,7 +58,7 @@ void get3DMatrixDims(const mxArray* x, mwSize *dims);
 mxArray* vectorToMxArray(std::vector<astra::float32> mInput);
 
 // turn a MATLAB struct into a Config object
-astra::Config* structToConfig(std::string rootname, const mxArray* pStruct);
+astra::XMLConfig* structToConfig(std::string rootname, const mxArray* pStruct);
 bool structToXMLNode(astra::XMLNode node, const mxArray* pStruct);
 bool optionsToXMLNode(astra::XMLNode node, const mxArray* pOptionStruct);
 std::map<std::string, mxArray*> parseStruct(const mxArray* pInput);

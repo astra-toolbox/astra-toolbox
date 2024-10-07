@@ -28,11 +28,13 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _INC_ASTRA_FILTERS_H
 #define _INC_ASTRA_FILTERS_H
 
+#include "Globals.h"
+
 #include <string>
 
 namespace astra {
 
-struct Config;
+class Config;
 class CAlgorithm;
 class CProjectionGeometry2D;
 

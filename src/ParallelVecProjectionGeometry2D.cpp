@@ -27,6 +27,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/ParallelVecProjectionGeometry2D.h"
 
+#include "astra/XMLConfig.h"
 #include "astra/Logging.h"
 
 #include <cstring>
@@ -98,8 +99,7 @@ bool CParallelVecProjectionGeometry2D::initialize(int _iProjectionAngleCount,
 // Initialization with a Config object
 bool CParallelVecProjectionGeometry2D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CProjectionGeometry2D> CC("ParallelVecProjectionGeometry2D", this, _cfg);	
+	ConfigReader<CProjectionGeometry2D> CR("ParallelVecProjectionGeometry2D", this, _cfg);	
 
 	// initialization of parent class
 	if (!CProjectionGeometry2D::initialize(_cfg))
@@ -113,19 +113,12 @@ bool CParallelVecProjectionGeometry2D::initialize(const Config& _cfg)
 
 bool CParallelVecProjectionGeometry2D::initializeAngles(const Config& _cfg)
 {
-	ConfigStackCheck<CProjectionGeometry2D> CC("ParallelVecProjectionGeometry2D", this, _cfg);
+	ConfigReader<CProjectionGeometry2D> CR("ParallelVecProjectionGeometry2D", this, _cfg);
 
 	// Required: Vectors
-	XMLNode node = _cfg.self.getSingleNode("Vectors");
-	ASTRA_CONFIG_CHECK(node, "ParallelVecProjectionGeometry2D", "No Vectors tag specified.");
-	vector<float32> data;
-	try {
-		data = node.getContentNumericalArray();
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "ParallelVecProjectionGeometry2D", "Vectors must be a numerical matrix.");
-	}
-
-	CC.markNodeParsed("Vectors");
+	vector<double> data;
+	if (!CR.getRequiredNumericalArray("Vectors", data))
+		return false;
 	ASTRA_CONFIG_CHECK(data.size() % 6 == 0, "ParallelVecProjectionGeometry2D", "Vectors doesn't consist of 6-tuples.");
 	m_iProjectionAngleCount = data.size() / 6;
 	m_pProjectionAngles = new SParProjection[m_iProjectionAngleCount];
@@ -139,8 +132,8 @@ bool CParallelVecProjectionGeometry2D::initializeAngles(const Config& _cfg)
 
 		// The backend code currently expects the corner of the detector, while
 		// the matlab interface supplies the center
-		p.fDetSX = data[6*i +  2] - 0.5f * m_iDetectorCount * p.fDetUX;
-		p.fDetSY = data[6*i +  3] - 0.5f * m_iDetectorCount * p.fDetUY;
+		p.fDetSX = data[6*i +  2] - 0.5 * m_iDetectorCount * p.fDetUX;
+		p.fDetSY = data[6*i +  3] - 0.5 * m_iDetectorCount * p.fDetUY;
 	}
 
 	return true;
@@ -197,23 +190,25 @@ bool CParallelVecProjectionGeometry2D::_check()
 // Get the configuration object
 Config* CParallelVecProjectionGeometry2D::getConfiguration() const 
 {
-	Config* cfg = new Config();
-	cfg->initialize("ProjectionGeometry2D");
-	cfg->self.addAttribute("type", "parallel_vec");
-	cfg->self.addChildNode("DetectorCount", getDetectorCount());
-	std::string vectors = "";
+	ConfigWriter CW("ProjectionGeometry2D", "parallel_vec");
+
+	CW.addInt("DetectorCount", getDetectorCount());
+
+	std::vector<double> vectors;
+	vectors.resize(6 * m_iProjectionAngleCount);
+
 	for (int i = 0; i < m_iProjectionAngleCount; ++i) {
 		SParProjection& p = m_pProjectionAngles[i];
-		vectors += StringUtil::toString(p.fRayX) + ",";
-		vectors += StringUtil::toString(p.fRayY) + ",";
-		vectors += StringUtil::toString(p.fDetSX + 0.5f * m_iDetectorCount * p.fDetUX) + ",";
-		vectors += StringUtil::toString(p.fDetSY + 0.5f * m_iDetectorCount * p.fDetUY) + ",";
-		vectors += StringUtil::toString(p.fDetUX) + ",";
-		vectors += StringUtil::toString(p.fDetUY);
-		if (i < m_iProjectionAngleCount-1) vectors += ';';
+		vectors[6*i + 0] = p.fRayX;
+		vectors[6*i + 1] = p.fRayY;
+		vectors[6*i + 2] = p.fDetSX + 0.5 * m_iDetectorCount * p.fDetUX;
+		vectors[6*i + 3] = p.fDetSY + 0.5 * m_iDetectorCount * p.fDetUY;
+		vectors[6*i + 4] = p.fDetUX;
+		vectors[6*i + 5] = p.fDetUY;
 	}
-	cfg->self.addChildNode("Vectors", vectors);
-	return cfg;
+	CW.addNumericalMatrix("Vectors", &vectors[0], m_iProjectionAngleCount, 6);
+
+	return CW.getConfig();
 }
 //----------------------------------------------------------------------------------------
 

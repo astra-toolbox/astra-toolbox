@@ -28,7 +28,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/FanFlatProjectionGeometry2D.h"
 
 #include "astra/GeometryUtil2D.h"
-
+#include "astra/XMLConfig.h"
 #include "astra/Logging.h"
 
 #include <cstring>
@@ -129,32 +129,19 @@ bool CFanFlatProjectionGeometry2D::initialize(int _iProjectionAngleCount,
 // Initialization with a Config object
 bool CFanFlatProjectionGeometry2D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CProjectionGeometry2D> CC("FanFlatProjectionGeometry2D", this, _cfg);		
+	ConfigReader<CProjectionGeometry2D> CR("FanFlatProjectionGeometry2D", this, _cfg);		
 
 	// initialization of parent class
 	if (!CProjectionGeometry2D::initialize(_cfg))
 		return false;
 
-	// Required: DistanceOriginDetector
-	XMLNode node = _cfg.self.getSingleNode("DistanceOriginDetector");
-	ASTRA_CONFIG_CHECK(node, "FanFlatProjectionGeometry2D", "No DistanceOriginDetector tag specified.");
-	try {
-		m_fOriginDetectorDistance = node.getContentNumerical();
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "FanFlatProjectionGeometry2D", "DistanceOriginDetector must be numerical.");
-	}
-	CC.markNodeParsed("DistanceOriginDetector");
+	bool ok = true;
 
-	// Required: DetectorOriginSource
-	node = _cfg.self.getSingleNode("DistanceOriginSource");
-	ASTRA_CONFIG_CHECK(node, "FanFlatProjectionGeometry2D", "No DistanceOriginSource tag specified.");
-	try {
-		m_fOriginSourceDistance = node.getContentNumerical();
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "FanFlatProjectionGeometry2D", "DistanceOriginSource must be numerical.");
-	}
-	CC.markNodeParsed("DistanceOriginSource");
+	ok &= CR.getRequiredNumerical("DistanceOriginDetector", m_fOriginDetectorDistance);
+	ok &= CR.getRequiredNumerical("DistanceOriginSource", m_fOriginSourceDistance);
+
+	if (!ok)
+		return false;
 
 	// success
 	m_bInitialized = _check();
@@ -206,15 +193,15 @@ bool CFanFlatProjectionGeometry2D::isOfType(const std::string& _sType)
 // Get the configuration object
 Config* CFanFlatProjectionGeometry2D::getConfiguration() const 
 {
-	Config* cfg = new Config();
-	cfg->initialize("ProjectionGeometry2D");
-	cfg->self.addAttribute("type", "fanflat");
-	cfg->self.addChildNode("DetectorCount", getDetectorCount());
-	cfg->self.addChildNode("DetectorWidth", getDetectorWidth());
-	cfg->self.addChildNode("DistanceOriginSource", getOriginSourceDistance());
-	cfg->self.addChildNode("DistanceOriginDetector", getOriginDetectorDistance());
-	cfg->self.addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
-	return cfg;
+	ConfigWriter CW("ProjectionGeometry2D", "fanflat");
+
+	CW.addInt("DetectorCount", getDetectorCount());
+	CW.addNumerical("DetectorWidth", getDetectorWidth());
+	CW.addNumerical("DistanceOriginSource", getOriginSourceDistance());
+	CW.addNumerical("DistanceOriginDetector", getOriginDetectorDistance());
+	CW.addNumericalArray("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
+
+	return CW.getConfig();
 }
 
 //----------------------------------------------------------------------------------------

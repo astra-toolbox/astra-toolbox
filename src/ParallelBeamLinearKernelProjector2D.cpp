@@ -100,8 +100,6 @@ bool CParallelBeamLinearKernelProjector2D::_check()
 // Initialize, use a Config object
 bool CParallelBeamLinearKernelProjector2D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
-
 	// if already initialized, clear first
 	if (m_bIsInitialized) {
 		clear();

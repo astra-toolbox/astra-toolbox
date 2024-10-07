@@ -28,6 +28,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/ConeProjectionGeometry3D.h"
 
 #include "astra/Logging.h"
+#include "astra/XMLConfig.h"
 #include "astra/GeometryUtil3D.h"
 
 #include <cstring>
@@ -79,32 +80,19 @@ CConeProjectionGeometry3D::~CConeProjectionGeometry3D()
 // Initialize - Config
 bool CConeProjectionGeometry3D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CProjectionGeometry3D> CC("ConeProjectionGeometry3D", this, _cfg);	
+	ConfigReader<CProjectionGeometry3D> CR("ConeProjectionGeometry3D", this, _cfg);	
 
 	// initialization of parent class
 	if (!CProjectionGeometry3D::initialize(_cfg))
 		return false;
 
-	// Required: DistanceOriginDetector
-	XMLNode node = _cfg.self.getSingleNode("DistanceOriginDetector");
-	ASTRA_CONFIG_CHECK(node, "ConeProjectionGeometry3D", "No DistanceOriginDetector tag specified.");
-	try {
-		m_fOriginDetectorDistance = node.getContentNumerical();
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "ConeProjectionGeometry3D", "DistanceOriginDetector must be numerical.");
-	}
-	CC.markNodeParsed("DistanceOriginDetector");
+	bool ok = true;
 
-	// Required: DetectorOriginSource
-	node = _cfg.self.getSingleNode("DistanceOriginSource");
-	ASTRA_CONFIG_CHECK(node, "ConeProjectionGeometry3D", "No DistanceOriginSource tag specified.");
-	try {
-		m_fOriginSourceDistance = node.getContentNumerical();
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "ConeProjectionGeometry3D", "DistanceOriginSource must be numerical.");
-	}
-	CC.markNodeParsed("DistanceOriginSource");
+	ok &= CR.getRequiredNumerical("DistanceOriginDetector", m_fOriginDetectorDistance);
+	ok &= CR.getRequiredNumerical("DistanceOriginSource", m_fOriginSourceDistance);
+
+	if (!ok)
+		return false;
 
 	// success
 	m_bInitialized = _check();
@@ -197,17 +185,17 @@ bool CConeProjectionGeometry3D::isOfType(const std::string& _sType) const
 // Get the configuration object
 Config* CConeProjectionGeometry3D::getConfiguration() const 
 {
-	Config* cfg = new Config();
-	cfg->initialize("ProjectionGeometry3D");
-	cfg->self.addAttribute("type", "cone");
-	cfg->self.addChildNode("DetectorSpacingX", m_fDetectorSpacingX);
-	cfg->self.addChildNode("DetectorSpacingY", m_fDetectorSpacingY);
-	cfg->self.addChildNode("DetectorRowCount", m_iDetectorRowCount);
-	cfg->self.addChildNode("DetectorColCount", m_iDetectorColCount);
-	cfg->self.addChildNode("DistanceOriginDetector", m_fOriginDetectorDistance);
-	cfg->self.addChildNode("DistanceOriginSource", m_fOriginSourceDistance);
-	cfg->self.addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
-	return cfg;
+	ConfigWriter CW("ProjectionGeometry3D", "cone");
+
+	CW.addInt("DetectorRowCount", m_iDetectorRowCount);
+	CW.addInt("DetectorColCount", m_iDetectorColCount);
+	CW.addNumerical("DetectorSpacingX", m_fDetectorSpacingX);
+	CW.addNumerical("DetectorSpacingY", m_fDetectorSpacingY);
+	CW.addNumerical("DistanceOriginDetector", m_fOriginDetectorDistance);
+	CW.addNumerical("DistanceOriginSource", m_fOriginSourceDistance);
+	CW.addNumericalArray("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
+
+	return CW.getConfig();
 }
 
 //----------------------------------------------------------------------------------------

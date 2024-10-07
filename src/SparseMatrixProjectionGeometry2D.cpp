@@ -28,6 +28,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/SparseMatrixProjectionGeometry2D.h"
 
 #include "astra/AstraObjectManager.h"
+#include "astra/XMLConfig.h"
 
 #include "astra/Logging.h"
 
@@ -90,19 +91,19 @@ CSparseMatrixProjectionGeometry2D::~CSparseMatrixProjectionGeometry2D()
 // Initialize - Config
 bool CSparseMatrixProjectionGeometry2D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CProjectionGeometry2D> CC("SparseMatrixProjectionGeometry2D", this, _cfg);	
+	ConfigReader<CProjectionGeometry2D> CR("SparseMatrixProjectionGeometry2D", this, _cfg);	
 
 	// initialization of parent class
 	if (!CProjectionGeometry2D::initialize(_cfg))
 		return false;
 
+	int id = -1;
+
 	// get matrix
-	XMLNode node = _cfg.self.getSingleNode("MatrixID");
-	ASTRA_CONFIG_CHECK(node, "SparseMatrixProjectionGeometry2D", "No MatrixID tag specified.");
-	int id = StringUtil::stringToInt(node.getContent(), -1);
+	if (!CR.getRequiredID("MatrixID", id))
+		return false;
+	
 	m_pMatrix = CMatrixManager::getSingleton().get(id);
-	CC.markNodeParsed("MatrixID");
 
 	// success
 	m_bInitialized = _check();
@@ -191,14 +192,14 @@ bool CSparseMatrixProjectionGeometry2D::isOfType(const std::string& _sType)
 // Get the configuration object
 Config* CSparseMatrixProjectionGeometry2D::getConfiguration() const 
 {
-	Config* cfg = new Config();
-	cfg->initialize("ProjectionGeometry2D");
-	cfg->self.addAttribute("type", "sparse matrix");
-	cfg->self.addChildNode("DetectorCount", getDetectorCount());
-	cfg->self.addChildNode("DetectorWidth", getDetectorWidth());
-	cfg->self.addChildNode("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
-	cfg->self.addChildNode("MatrixID", CMatrixManager::getSingleton().getIndex(m_pMatrix));
-	return cfg;
+	ConfigWriter CW("ProjectionGeometry2D", "sparse matrix");
+
+	CW.addInt("DetectorCount", getDetectorCount());
+	CW.addNumerical("DetectorWidth", getDetectorWidth());
+	CW.addNumericalArray("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
+	CW.addID("MatrixID", CMatrixManager::getSingleton().getIndex(m_pMatrix));
+
+	return CW.getConfig();
 }
 
 } // end namespace astra
