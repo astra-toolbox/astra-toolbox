@@ -31,7 +31,7 @@ from . import creators
 from . import algorithm
 from . import functions
 import numpy as np
-from six.moves import reduce
+from functools import reduce
 
 import operator
 import scipy.sparse.linalg
