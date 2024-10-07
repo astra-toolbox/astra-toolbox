@@ -26,7 +26,6 @@
 # distutils: language = c++
 # distutils: libraries = astra
 
-import six
 import inspect
 
 from libcpp.string cimport string
@@ -34,7 +33,7 @@ from libcpp cimport bool
 
 cdef CPythonPluginAlgorithmFactory *fact = getSingletonPtr()
 
-from . import utils
+from .utils import wrap_from_bytes, wrap_to_bytes
 
 cdef extern from "src/PythonPluginAlgorithm.h" namespace "astra":
     cdef cppclass CPythonPluginAlgorithmFactory:
@@ -57,18 +56,18 @@ def register(className, name=None):
         if name==None:
             fact.registerPluginClass(className)
         else:
-            fact.registerPluginClass(six.b(name), className)
+            fact.registerPluginClass(wrap_to_bytes(name), className)
     else:
         if name==None:
-            fact.registerPlugin(six.b(className))
+            fact.registerPlugin(wrap_to_bytes(className))
         else:
-            fact.registerPlugin(six.b(name), six.b(className))
+            fact.registerPlugin(wrap_to_bytes(name), wrap_to_bytes(className))
 
 def get_registered():
     return fact.getRegistered()
 
 def get_help(name):
-    return utils.wrap_from_bytes(fact.getHelp(six.b(name)))
+    return wrap_from_bytes(fact.getHelp(wrap_to_bytes(name)))
 
 # Register python plugin factory with astra
 registerFactory(fact)

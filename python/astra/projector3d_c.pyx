@@ -27,7 +27,6 @@
 # distutils: libraries = astra
 from __future__ import print_function
 
-import six
 from .PyIncludes cimport *
 
 from . cimport utils
