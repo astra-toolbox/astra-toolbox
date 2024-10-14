@@ -231,9 +231,10 @@ public:
 	 */
 	 virtual bool isOfType(const std::string& _sType) = 0;
 
+private:
 	//< For Config unused argument checking
 	ConfigCheckData* configCheckData;
-	friend class ConfigStackCheck<CProjectionGeometry2D>;
+	friend class ConfigReader<CProjectionGeometry2D>;
 
 protected:
 	virtual bool initializeAngles(const Config& _cfg);

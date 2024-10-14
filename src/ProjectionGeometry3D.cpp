@@ -137,84 +137,51 @@ void CProjectionGeometry3D::clear()
 // Initialization with a Config object
 bool CProjectionGeometry3D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CProjectionGeometry3D> CC("ProjectionGeometry3D", this, _cfg);
+	ConfigReader<CProjectionGeometry3D> CR("ProjectionGeometry3D", this, _cfg);
 
 	if (m_bInitialized) {
 		clear();
 	}
 
-	ASTRA_ASSERT(_cfg.self);
-	
+	bool ok = true;
 
-	// Required: DetectorRowCount
-	XMLNode node = _cfg.self.getSingleNode("DetectorRowCount");
-	ASTRA_CONFIG_CHECK(node, "ProjectionGeometry3D", "No DetectorRowCount tag specified.");
-	try {
-		m_iDetectorRowCount = node.getContentInt();
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "ProjectionGeometry3D", "DetectorRowCount must be an integer.");
-	}
-	CC.markNodeParsed("DetectorRowCount");
+	// Required: number of voxels
+	ok &= CR.getRequiredInt("DetectorColCount", m_iDetectorColCount);
+	ok &= CR.getRequiredInt("DetectorRowCount", m_iDetectorRowCount);
 
-	// Required: DetectorCount
-	node = _cfg.self.getSingleNode("DetectorColCount");
-	ASTRA_CONFIG_CHECK(node, "ProjectionGeometry3D", "No DetectorColCount tag specified.");
-	try {
-		m_iDetectorColCount = node.getContentInt();
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "ProjectionGeometry3D", "DetectorColCount must be an integer.");
-	}
-	m_iDetectorTotCount = m_iDetectorRowCount * m_iDetectorColCount;
-	CC.markNodeParsed("DetectorColCount");
+	ok &= initializeAngles(_cfg);
 
-
-	if (!initializeAngles(_cfg))
+	if (!ok)
 		return false;
+
+	m_iDetectorTotCount = m_iDetectorRowCount * m_iDetectorColCount;
 
 	return true;
 }
 
 bool CProjectionGeometry3D::initializeAngles(const Config& _cfg)
 {
-	ConfigStackCheck<CProjectionGeometry3D> CC("ProjectionGeometry3D", this, _cfg);
+	ConfigReader<CProjectionGeometry3D> CR("ProjectionGeometry3D", this, _cfg);
 
-	// Required: DetectorWidth
-	XMLNode node = _cfg.self.getSingleNode("DetectorSpacingX");
-	ASTRA_CONFIG_CHECK(node, "ProjectionGeometry3D", "No DetectorSpacingX tag specified.");
-	try {
-		m_fDetectorSpacingX = node.getContentNumerical();
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "ProjectionGeometry3D", "DetectorSpacingX must be numerical.");
-	}
-	CC.markNodeParsed("DetectorSpacingX");
+	bool ok = true;
 
-	// Required: DetectorHeight
-	node = _cfg.self.getSingleNode("DetectorSpacingY");
-	ASTRA_CONFIG_CHECK(node, "ProjectionGeometry3D", "No DetectorSpacingY tag specified.");
-	try {
-		m_fDetectorSpacingY = node.getContentNumerical();
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "ProjectionGeometry3D", "DetectorSpacingY must be numerical.");
-	}
-	CC.markNodeParsed("DetectorSpacingY");
+	// Required: Detector pixel dimensions
+	ok &= CR.getRequiredNumerical("DetectorSpacingX", m_fDetectorSpacingX);
+	ok &= CR.getRequiredNumerical("DetectorSpacingY", m_fDetectorSpacingY);
+
+	if (!ok)
+		return false;
 
 	// Required: ProjectionAngles
-	node = _cfg.self.getSingleNode("ProjectionAngles");
-	ASTRA_CONFIG_CHECK(node, "ProjectionGeometry3D", "No ProjectionAngles tag specified.");
-	vector<float32> angles;
-	try {
-		angles = node.getContentNumericalArray();
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "ProjectionGeometry3D", "ProjectionAngles must be a numerical vector.");
-	}
+	vector<double> angles;
+	if (!CR.getRequiredNumericalArray("ProjectionAngles", angles))
+		return false;
 	m_iProjectionAngleCount = angles.size();
 	ASTRA_CONFIG_CHECK(m_iProjectionAngleCount > 0, "ProjectionGeometry3D", "Not enough ProjectionAngles specified.");
 	m_pfProjectionAngles = new float32[m_iProjectionAngleCount];
 	for (int i = 0; i < m_iProjectionAngleCount; i++) {
-		m_pfProjectionAngles[i] = angles[i];
+		m_pfProjectionAngles[i] = (float)angles[i];
 	}
-	CC.markNodeParsed("ProjectionAngles");
 
 
 	return true;

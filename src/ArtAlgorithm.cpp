@@ -41,10 +41,7 @@ CArtAlgorithm::CArtAlgorithm()
  : CReconstructionAlgorithm2D()
 {
 	m_fLambda = 1.0f;
-	m_iRayCount = 0;
 	m_iCurrentRay = 0;
-	m_piProjectionOrder = NULL;
-	m_piDetectorOrder = NULL;
 	m_bIsInitialized = false;
 }
 
@@ -52,10 +49,7 @@ CArtAlgorithm::CArtAlgorithm()
 // Destructor
 CArtAlgorithm::~CArtAlgorithm() 
 {
-	if (m_piProjectionOrder != NULL)
-		delete[] m_piProjectionOrder;
-	if (m_piDetectorOrder != NULL)
-		delete[] m_piDetectorOrder;
+
 }
 
 //---------------------------------------------------------------------------------------
@@ -63,9 +57,8 @@ CArtAlgorithm::~CArtAlgorithm()
 void CArtAlgorithm::_clear()
 {
 	CReconstructionAlgorithm2D::_clear();
-	m_piDetectorOrder = NULL;
-	m_piProjectionOrder = NULL;
-	m_iRayCount = 0;
+	m_piDetectorOrder.clear();
+	m_piProjectionOrder.clear();
 	m_iCurrentRay = 0;
 	m_bIsInitialized = false;
 }
@@ -75,16 +68,9 @@ void CArtAlgorithm::_clear()
 void CArtAlgorithm::clear()
 {
 	CReconstructionAlgorithm2D::clear();
-	if (m_piDetectorOrder) {
-		delete[] m_piDetectorOrder;
-		m_piDetectorOrder = NULL;
-	}
-	if (m_piProjectionOrder) {
-		delete[] m_piProjectionOrder;
-		m_piProjectionOrder = NULL;
-	}
+	m_piDetectorOrder.clear();
+	m_piProjectionOrder.clear();
 	m_fLambda = 1.0f;
-	m_iRayCount = 0;
 	m_iCurrentRay = 0;
 	m_bIsInitialized = false;
 }
@@ -96,8 +82,10 @@ bool CArtAlgorithm::_check()
 	// check base class
 	ASTRA_CONFIG_CHECK(CReconstructionAlgorithm2D::_check(), "ART", "Error in ReconstructionAlgorithm2D initialization");
 
+	ASTRA_CONFIG_CHECK(m_piProjectionOrder.size() == m_piDetectorOrder.size(), "ART", "Different sizes of ray order lists.");
+
 	// check ray order list
-	for (int i = 0; i < m_iRayCount; i++) {
+	for (unsigned int i = 0; i < m_piProjectionOrder.size(); i++) {
 		if (m_piProjectionOrder[i] < 0 || m_piProjectionOrder[i] > m_pSinogram->getAngleCount()-1) {
 			ASTRA_CONFIG_CHECK(false, "ART", "Invalid value in ray order list.");
 		}
@@ -114,8 +102,7 @@ bool CArtAlgorithm::_check()
 // Initialize - Config
 bool CArtAlgorithm::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CAlgorithm> CC("ArtAlgorithm", this, _cfg);
+	ConfigReader<CAlgorithm> CR("ArtAlgorithm", this, _cfg);
 
 	// if already initialized, clear first
 	if (m_bIsInitialized) {
@@ -128,38 +115,42 @@ bool CArtAlgorithm::initialize(const Config& _cfg)
 	}
 
 	// ray order
-	string projOrder = _cfg.self.getOption("RayOrder", "sequential");
-	CC.markOptionParsed("RayOrder");
+	std::string projOrder;
+	if (!CR.getOptionString("RayOrder", projOrder, "sequential"))
+		return false;
 	m_iCurrentRay = 0;
-	m_iRayCount = m_pProjector->getProjectionGeometry()->getProjectionAngleCount() * 
+	int iRayCount = m_pProjector->getProjectionGeometry()->getProjectionAngleCount() *
 		m_pProjector->getProjectionGeometry()->getDetectorCount();
 	if (projOrder == "sequential") {
-		m_piProjectionOrder = new int[m_iRayCount];
-		m_piDetectorOrder = new int[m_iRayCount];
-		for (int i = 0; i < m_iRayCount; i++) {
-			m_piProjectionOrder[i] = (int)floor((float)i / m_pProjector->getProjectionGeometry()->getDetectorCount());
+		m_piProjectionOrder.resize(iRayCount);
+		m_piDetectorOrder.resize(iRayCount);
+		for (int i = 0; i < iRayCount; i++) {
+			m_piProjectionOrder[i] = i / m_pProjector->getProjectionGeometry()->getDetectorCount();
 			m_piDetectorOrder[i] = i % m_pProjector->getProjectionGeometry()->getDetectorCount();
 		}
 	} else if (projOrder == "custom") {
-		vector<float32> rayOrderList = _cfg.self.getOptionNumericalArray("RayOrderList");
-		m_iRayCount = rayOrderList.size() / 2;
-		m_piProjectionOrder = new int[m_iRayCount];
-		m_piDetectorOrder = new int[m_iRayCount];
-		for (int i = 0; i < m_iRayCount; i++) {
-			m_piProjectionOrder[i] = static_cast<int>(rayOrderList[2*i]);
-			m_piDetectorOrder[i] = static_cast<int>(rayOrderList[2*i+1]);
+		std::vector<int> rayOrderList;
+		if (!CR.getOptionIntArray("RayOrderList", rayOrderList))
+			return false;
+		iRayCount = rayOrderList.size() / 2;
+		m_piProjectionOrder.resize(iRayCount);
+		m_piDetectorOrder.resize(iRayCount);
+		for (int i = 0; i < iRayCount; i++) {
+			m_piProjectionOrder[i] = rayOrderList[2*i];
+			m_piDetectorOrder[i] = rayOrderList[2*i+1];
 		}
-		CC.markOptionParsed("RayOrderList");
 	} else {
+		ASTRA_ERROR("Unknown RayOrder");
 		return false;
 	}
 
+	bool ok = true;
+
 	// "Lambda" is replaced by the more descriptive "Relaxation"
-	m_fLambda = _cfg.self.getOptionNumerical("Lambda", 1.0f);
-	m_fLambda = _cfg.self.getOptionNumerical("Relaxation", m_fLambda);
-	if (!_cfg.self.hasOption("Relaxation"))
-		CC.markOptionParsed("Lambda");
-	CC.markOptionParsed("Relaxation");
+	if (CR.hasOption("Relaxation"))
+		ok &= CR.getOptionNumerical("Relaxation", m_fLambda, 1.0f);
+	else
+		ok &= CR.getOptionNumerical("Lambda", m_fLambda, 1.0f);
 
 	// success
 	m_bIsInitialized = _check();
@@ -184,12 +175,12 @@ bool CArtAlgorithm::initialize(CProjector2D* _pProjector,
 
 	// ray order
 	m_iCurrentRay = 0;
-	m_iRayCount = _pProjector->getProjectionGeometry()->getDetectorCount() * 
+	int iRayCount = _pProjector->getProjectionGeometry()->getDetectorCount() *
 		_pProjector->getProjectionGeometry()->getProjectionAngleCount();
-	m_piProjectionOrder = new int[m_iRayCount];
-	m_piDetectorOrder = new int[m_iRayCount];
-	for (int i = 0; i < m_iRayCount; i++) {
-		m_piProjectionOrder[i] = (int)floor((float)i / _pProjector->getProjectionGeometry()->getDetectorCount());
+	m_piProjectionOrder.resize(iRayCount);
+	m_piDetectorOrder.resize(iRayCount);
+	for (int i = 0; i < iRayCount; i++) {
+		m_piProjectionOrder[i] = i / _pProjector->getProjectionGeometry()->getDetectorCount();
 		m_piDetectorOrder[i] = i % _pProjector->getProjectionGeometry()->getDetectorCount();
 	}
 
@@ -209,20 +200,10 @@ void CArtAlgorithm::setLambda(float32 _fLambda)
 // Set the order in which the rays will be selected
 void CArtAlgorithm::setRayOrder(int* _piProjectionOrder, int* _piDetectorOrder, int _iRayCount)
 {
-	if (m_piDetectorOrder) {
-		delete[] m_piDetectorOrder;
-		m_piDetectorOrder = NULL;
-	}
-	if (m_piProjectionOrder) {
-		delete[] m_piProjectionOrder;
-		m_piProjectionOrder = NULL;
-	}
-
 	m_iCurrentRay = 0;
-	m_iRayCount = _iRayCount;
-	m_piProjectionOrder = new int[m_iRayCount];
-	m_piDetectorOrder = new int[m_iRayCount];
-	for (int i = 0; i < m_iRayCount; i++) {
+	m_piProjectionOrder.resize(_iRayCount);
+	m_piDetectorOrder.resize(_iRayCount);
+	for (int i = 0; i < _iRayCount; i++) {
 		m_piProjectionOrder[i] = _piProjectionOrder[i];
 		m_piDetectorOrder[i] = _piDetectorOrder[i];
 	}
@@ -251,7 +232,7 @@ void CArtAlgorithm::run(int _iNrIterations)
 		// step0: compute single weight rays
 		iProjection = m_piProjectionOrder[m_iCurrentRay];
 		iDetector = m_piDetectorOrder[m_iCurrentRay];
-		m_iCurrentRay = (m_iCurrentRay + 1) % m_iRayCount;
+		m_iCurrentRay = (m_iCurrentRay + 1) % m_piProjectionOrder.size();
 
 		if (m_bUseSinogramMask && m_pSinogramMask->getData2D()[iProjection][iDetector] == 0) continue;	
 

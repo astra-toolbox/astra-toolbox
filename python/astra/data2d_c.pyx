@@ -79,7 +79,7 @@ def delete(ids):
 
 
 def create(datatype, geometry, data=None, link=False):
-    cdef Config *cfg
+    cdef XMLConfig *cfg
     cdef CVolumeGeometry2D * pGeometry
     cdef CProjectionGeometry2D * ppGeometry
     cdef CFloat32Data2D * pDataObject2D
@@ -217,7 +217,7 @@ def check_compatible(i, proj_id):
         raise AstraError("Not a known data object type")
 
 def change_geometry(i, geom):
-    cdef Config *cfg
+    cdef XMLConfig *cfg
     cdef CVolumeGeometry2D * pGeometry
     cdef CProjectionGeometry2D * ppGeometry
     cdef CFloat32Data2D * pDataObject = getObject(i)

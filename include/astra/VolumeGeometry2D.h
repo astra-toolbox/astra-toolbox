@@ -378,10 +378,10 @@ public:
      */
 	float coordYToRowF(float32 _fCoordY) const;
 
-
+private:
 	//< For Config unused argument checking
 	ConfigCheckData* configCheckData;
-	friend class ConfigStackCheck<CVolumeGeometry2D>;
+	friend class ConfigReader<CVolumeGeometry2D>;
 };
 
 
