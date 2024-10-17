@@ -245,6 +245,7 @@ cdef extern from "astra/ProjectionGeometry3D.h" namespace "astra":
         int getDetectorColCount()
         int getDetectorRowCount()
         void getProjectedBBox(double, double, double, double, double, double, double&, double&, double&, double&)
+        void projectPoint(double, double, double, int, double&, double&)
 
 cdef extern from "astra/Data3D.h" namespace "astra":
     cdef cppclass CDataStorage:
