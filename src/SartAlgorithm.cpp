@@ -128,7 +128,6 @@ bool CSartAlgorithm::initialize(const Config& _cfg)
 
 	// projection order
 	int projectionCount = m_pProjector->getProjectionGeometry()->getProjectionAngleCount();
-	std::vector<int> projectionOrder;
 	std::string projOrder;
 	if (!CR.getOptionString("ProjectionOrder", projOrder, "sequential"))
 		return false;
@@ -144,8 +143,8 @@ bool CSartAlgorithm::initialize(const Config& _cfg)
 		}
 		for (int i = 0; i < projectionCount-1; i++) {
 			int k = (rand() % (projectionCount - i));
-			int t = projectionOrder[i];
-			m_piProjectionOrder[i] = projectionOrder[i + k];
+			int t = m_piProjectionOrder[i];
+			m_piProjectionOrder[i] = m_piProjectionOrder[i + k];
 			m_piProjectionOrder[i + k] = t;
 		}
 	} else if (projOrder == "custom") {
