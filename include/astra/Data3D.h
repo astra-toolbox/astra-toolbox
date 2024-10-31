@@ -158,6 +158,7 @@ class _AstraExport CDataGPU : public CDataStorage {
 protected:
 	/** Handle for the memory block */
 	astraCUDA3d::MemHandle3D m_hnd;
+	CDataGPU() { }
 
 public:
 
