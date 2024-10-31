@@ -66,18 +66,6 @@ def create(datatype,geometry,data=None, link=False):
     cdef CProjectionGeometry3D * ppGeometry
     cdef CData3D * pDataObject3D
 
-    if link:
-        geom_shape = geom_size(geometry)
-        if isinstance(data, np.ndarray):
-            data_shape = data.shape
-        elif isinstance(data, GPULink):
-            data_shape = ( data.z, data.y, data.x )
-        else:
-            raise TypeError("data should be a numpy.ndarray or a GPULink object")
-        if geom_shape != data_shape:
-            raise ValueError("The dimensions of the data {} do not match those "
-                             "specified in the geometry {}".format(data_shape, geom_shape))
-
     if datatype == '-vol':
         pGeometry = createVolumeGeometry3D(geometry)
         if link:
