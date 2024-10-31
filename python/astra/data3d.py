@@ -43,7 +43,8 @@ def create(datatype,geometry,data=None):
     return d.create(datatype,geometry,data)
 
 def link(datatype, geometry, data):
-    """Link a 3D numpy array with the toolbox.
+    """Link a 3D array with ASTRA from another library supporting dlpack,
+    such as numpy or pytorch.
         
     :param datatype: Data object type, '-vol' or '-sino'.
     :type datatype: :class:`string`
@@ -54,10 +55,6 @@ def link(datatype, geometry, data):
     :returns: :class:`int` -- the ID of the constructed object.
     
     """
-    if not isinstance(data,np.ndarray) and not isinstance(data,GPULink):
-        raise TypeError("Input should be a numpy.ndarray or GPULink object")
-    if isinstance(data, np.ndarray):
-        checkArrayForLink(data)
     return d.create(datatype,geometry,data,True)
 
 
