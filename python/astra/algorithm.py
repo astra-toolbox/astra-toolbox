@@ -58,7 +58,7 @@ def get_res_norm(i):
     return a.get_res_norm(i)
     
 def delete(ids):
-    """Delete a matrix object.
+    """Delete an algorithm object.
     
     :param ids: ID or list of ID's to delete.
     :type ids: :class:`int` or :class:`list`
@@ -78,9 +78,9 @@ def get_plugin_object(i):
 
 
 def clear():
-    """Clear all matrix objects."""
+    """Clear all algorithm objects."""
     return a.clear()
 
 def info():
-    """Print info on matrix objects in memory."""
+    """Print info on algorithm objects in memory."""
     return a.info()
