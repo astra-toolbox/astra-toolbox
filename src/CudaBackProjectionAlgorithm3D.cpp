@@ -175,15 +175,15 @@ bool CCudaBackProjectionAlgorithm3D::run(int _iNrIterations)
 	CFloat32VolumeData3D* pReconMem = dynamic_cast<CFloat32VolumeData3D*>(m_pReconstruction);
 	ASTRA_ASSERT(pReconMem);
 
-	const CProjectionGeometry3D* projgeom = pSinoMem->getGeometry();
-	const CVolumeGeometry3D& volgeom = *pReconMem->getGeometry();
+	const CProjectionGeometry3D& projgeom = pSinoMem->getGeometry();
+	const CVolumeGeometry3D& volgeom = pReconMem->getGeometry();
 
 	if (m_bSIRTWeighting) {
 		ASTRA_ASSERT(m_pSinogram->isFloat32Memory());
 		ASTRA_ASSERT(m_pReconstruction->isFloat32Memory());
 		return astraCudaBP_SIRTWeighted(m_pReconstruction->getFloat32Memory(),
 		                                m_pSinogram->getFloat32Memory(),
-		                                &volgeom, projgeom,
+		                                &volgeom, &projgeom,
 		                                m_iGPUIndex, m_iVoxelSuperSampling);
 	} else {
 		CCompositeGeometryManager cgm;

@@ -223,16 +223,16 @@ allocateDataObject(const std::string & sDataType,
 			astra::CDataStorage* pHandle = new CDataStorageMatlab(data, bUnshare, iZ);
 
 			// Initialize data object
-			pDataObject3D = new astra::CFloat32VolumeData3D(pGeometry, pHandle);
+			pDataObject3D = new astra::CFloat32VolumeData3D(*pGeometry, pHandle);
 		}
 		else
 		{
 			astra::CDataStorage* pStorage = new astra::CDataMemory<float>(dataSize);
-			pDataObject3D = new astra::CFloat32VolumeData3D(pGeometry, pStorage);
+			pDataObject3D = new astra::CFloat32VolumeData3D(*pGeometry, pStorage);
 		}
 #else
 		astra::CDataStorage* pStorage = new astra::CDataMemory<float>(dataSize);
-		pDataObject3D = new astra::CFloat32VolumeData3D(pGeometry, pStorage);
+		pDataObject3D = new astra::CFloat32VolumeData3D(*pGeometry, pStorage);
 #endif
 		delete pGeometry;
 	}
@@ -286,16 +286,16 @@ allocateDataObject(const std::string & sDataType,
 			astra::CDataStorage* pHandle = new CDataStorageMatlab(data, bUnshare, iZ);
 
 			// Initialize data object
-			pDataObject3D = new astra::CFloat32ProjectionData3D(pGeometry, pHandle);
+			pDataObject3D = new astra::CFloat32ProjectionData3D(*pGeometry, pHandle);
 		}
 		else
 		{
 			astra::CDataStorage* pStorage = new astra::CDataMemory<float>(dataSize);
-			pDataObject3D = new astra::CFloat32ProjectionData3D(pGeometry, pStorage);
+			pDataObject3D = new astra::CFloat32ProjectionData3D(*pGeometry, pStorage);
 		}
 #else
 		astra::CDataStorage* pStorage = new astra::CDataMemory<float>(dataSize);
-		pDataObject3D = new astra::CFloat32ProjectionData3D(pGeometry, pStorage);
+		pDataObject3D = new astra::CFloat32ProjectionData3D(*pGeometry, pStorage);
 #endif
 		delete pGeometry;
 	}

@@ -269,12 +269,12 @@ void astra_mex_data3d_get_geometry(int nlhs, mxArray* plhs[], int nrhs, const mx
 	if (1 <= nlhs) {
 		if (pDataObject->getType() == CData3D::PROJECTION) {
 			CFloat32ProjectionData3D* pDataObject2 = dynamic_cast<CFloat32ProjectionData3D*>(pDataObject);
-			plhs[0] = configToStruct(pDataObject2->getGeometry()->getConfiguration());
+			plhs[0] = configToStruct(pDataObject2->getGeometry().getConfiguration());
 			
 		}
 		else if (pDataObject->getType() == CData3D::VOLUME) {
 			CFloat32VolumeData3D* pDataObject2 = dynamic_cast<CFloat32VolumeData3D*>(pDataObject);
-			plhs[0] = configToStruct(pDataObject2->getGeometry()->getConfiguration());
+			plhs[0] = configToStruct(pDataObject2->getGeometry().getConfiguration());
 		}
 	}
 
@@ -347,7 +347,7 @@ void astra_mex_data3d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 		}
 
 		// If ok, change geometry
-		pProjData->changeGeometry(pGeometry);
+		pProjData->changeGeometry(*pGeometry);
 		delete pGeometry;
 	} else {
 		// Volume data
@@ -375,7 +375,7 @@ void astra_mex_data3d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 		}
 
 		// If ok, change geometry
-		pVolData->changeGeometry(pGeometry);
+		pVolData->changeGeometry(*pGeometry);
 		delete pGeometry;
 	}
 }

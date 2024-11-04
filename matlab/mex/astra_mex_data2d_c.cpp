@@ -132,7 +132,7 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 			}
 		}
 		// Initialize data object
-		pDataObject2D = new CFloat32VolumeData2D(pGeometry);		
+		pDataObject2D = new CFloat32VolumeData2D(*pGeometry);
 		delete pGeometry;
 		delete cfg;
 	}
@@ -178,7 +178,7 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 			}
 		}
 		// Initialize data object
-		pDataObject2D = new CFloat32ProjectionData2D(pGeometry);
+		pDataObject2D = new CFloat32ProjectionData2D(*pGeometry);
 		delete pGeometry;
 		delete cfg;
 	}
@@ -377,11 +377,11 @@ void astra_mex_data2d_get_geometry(int nlhs, mxArray* plhs[], int nrhs, const mx
 	if (1 <= nlhs) {
 		if (pDataObject->getType() == CFloat32Data2D::PROJECTION) {
 			CFloat32ProjectionData2D* pDataObject2 = dynamic_cast<CFloat32ProjectionData2D*>(pDataObject);
-			plhs[0] = configToStruct(pDataObject2->getGeometry()->getConfiguration());
+			plhs[0] = configToStruct(pDataObject2->getGeometry().getConfiguration());
 		}
 		else if (pDataObject->getType() == CFloat32Data2D::VOLUME) {
 			CFloat32VolumeData2D* pDataObject2 = dynamic_cast<CFloat32VolumeData2D*>(pDataObject);
-			plhs[0] = configToStruct(pDataObject2->getGeometry()->getConfiguration());
+			plhs[0] = configToStruct(pDataObject2->getGeometry().getConfiguration());
 		}
 	}
 }
@@ -451,7 +451,7 @@ void astra_mex_data2d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 		}
 
 		// If ok, change geometry
-		pSinogram->changeGeometry(pGeometry);
+		pSinogram->changeGeometry(*pGeometry);
 		delete pGeometry;
 		delete cfg;
 
@@ -482,7 +482,7 @@ void astra_mex_data2d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 		}
 
 		// If ok, change geometry
-		pVolume->changeGeometry(pGeometry);
+		pVolume->changeGeometry(*pGeometry);
 		delete cfg;
 		delete pGeometry;
 

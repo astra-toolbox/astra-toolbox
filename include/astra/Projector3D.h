@@ -94,13 +94,13 @@ public:
 	 *
 	 * @return Projection Geometry class.
 	 */
-	CProjectionGeometry3D* getProjectionGeometry();
+	const CProjectionGeometry3D& getProjectionGeometry();
 
 	/** Fetch the Volume Geometry of this projector.
 	 *
 	 * @return Volume Geometry class.
 	 */
-	CVolumeGeometry3D* getVolumeGeometry();
+	const CVolumeGeometry3D& getVolumeGeometry();
 
 	/** Compute the pixel weights for a single ray, from the source to a detector pixel. 
 	 *
@@ -174,8 +174,8 @@ private:
 
 // inline functions
 inline bool CProjector3D::isInitialized() const { return m_bIsInitialized; }
-inline CProjectionGeometry3D* CProjector3D::getProjectionGeometry() { return m_pProjectionGeometry; }
-inline CVolumeGeometry3D* CProjector3D::getVolumeGeometry() { return m_pVolumeGeometry; }
+inline const CProjectionGeometry3D& CProjector3D::getProjectionGeometry() { return *m_pProjectionGeometry; }
+inline const CVolumeGeometry3D& CProjector3D::getVolumeGeometry() { return *m_pVolumeGeometry; }
 
 
 

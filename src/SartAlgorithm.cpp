@@ -126,7 +126,7 @@ bool CSartAlgorithm::initialize(const Config& _cfg)
 	}
 
 	// projection order
-	int projectionCount = m_pProjector->getProjectionGeometry()->getProjectionAngleCount();
+	int projectionCount = m_pProjector->getProjectionGeometry().getProjectionAngleCount();
 	std::string projOrder;
 	if (!CR.getOptionString("ProjectionOrder", projOrder, "sequential"))
 		return false;
@@ -184,7 +184,7 @@ bool CSartAlgorithm::initialize(CProjector2D* _pProjector,
 	m_pReconstruction = _pReconstruction;
 
 	// ray order
-	int iProjectionCount = _pProjector->getProjectionGeometry()->getProjectionAngleCount();
+	int iProjectionCount = _pProjector->getProjectionGeometry().getProjectionAngleCount();
 	m_piProjectionOrder.resize(iProjectionCount);
 	for (int i = 0; i < iProjectionCount; i++) {
 		m_piProjectionOrder[i] = i;
@@ -237,7 +237,7 @@ bool CSartAlgorithm::_check()
 
 	// check projection order all within range
 	for (unsigned int i = 0; i < m_piProjectionOrder.size(); ++i) {
-		ASTRA_CONFIG_CHECK(0 <= m_piProjectionOrder[i] && m_piProjectionOrder[i] < m_pProjector->getProjectionGeometry()->getProjectionAngleCount(), "SART", "Projection Order out of range.");
+		ASTRA_CONFIG_CHECK(0 <= m_piProjectionOrder[i] && m_piProjectionOrder[i] < m_pProjector->getProjectionGeometry().getProjectionAngleCount(), "SART", "Projection Order out of range.");
 	}
 
 	return true;

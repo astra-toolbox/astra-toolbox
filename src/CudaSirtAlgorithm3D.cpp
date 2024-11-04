@@ -186,8 +186,8 @@ bool CCudaSirtAlgorithm3D::run(int _iNrIterations)
 	// check initialized
 	ASTRA_ASSERT(m_bIsInitialized);
 
-	const CProjectionGeometry3D* projgeom = m_pSinogram->getGeometry();
-	const CVolumeGeometry3D& volgeom = *m_pReconstruction->getGeometry();
+	const CProjectionGeometry3D &projgeom = m_pSinogram->getGeometry();
+	const CVolumeGeometry3D &volgeom = m_pReconstruction->getGeometry();
 
 	bool ok = true;
 
@@ -195,7 +195,7 @@ bool CCudaSirtAlgorithm3D::run(int _iNrIterations)
 
 		ok &= m_pSirt->setGPUIndex(m_iGPUIndex);
 
-		ok &= m_pSirt->setGeometry(&volgeom, projgeom);
+		ok &= m_pSirt->setGeometry(&volgeom, &projgeom);
 
 		ok &= m_pSirt->enableSuperSampling(m_iVoxelSuperSampling, m_iDetectorSuperSampling);
 
@@ -218,7 +218,7 @@ bool CCudaSirtAlgorithm3D::run(int _iNrIterations)
 
 	ASTRA_ASSERT(m_pSinogram->isFloat32Memory());
 
-	ok = m_pSirt->setSinogram(m_pSinogram->getFloat32Memory(), m_pSinogram->getGeometry()->getDetectorColCount());
+	ok = m_pSirt->setSinogram(m_pSinogram->getFloat32Memory(), m_pSinogram->getGeometry().getDetectorColCount());
 
 	ASTRA_ASSERT(ok);
 
@@ -228,7 +228,7 @@ bool CCudaSirtAlgorithm3D::run(int _iNrIterations)
 	}
 	if (m_bUseSinogramMask) {
 		ASTRA_ASSERT(m_pSinogramMask->isFloat32Memory());
-		ok &= m_pSirt->setSinogramMask(m_pSinogramMask->getFloat32Memory(), m_pSinogramMask->getGeometry()->getDetectorColCount());
+		ok &= m_pSirt->setSinogramMask(m_pSinogramMask->getFloat32Memory(), m_pSinogramMask->getGeometry().getDetectorColCount());
 	}
 
 	ASTRA_ASSERT(m_pReconstruction->isFloat32Memory());

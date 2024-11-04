@@ -182,8 +182,8 @@ bool CCudaCglsAlgorithm3D::run(int _iNrIterations)
 	// check initialized
 	ASTRA_ASSERT(m_bIsInitialized);
 
-	const CProjectionGeometry3D* projgeom = m_pSinogram->getGeometry();
-	const CVolumeGeometry3D& volgeom = *m_pReconstruction->getGeometry();
+	const CProjectionGeometry3D& projgeom = m_pSinogram->getGeometry();
+	const CVolumeGeometry3D& volgeom = m_pReconstruction->getGeometry();
 
 	bool ok = true;
 
@@ -191,7 +191,7 @@ bool CCudaCglsAlgorithm3D::run(int _iNrIterations)
 
 		ok &= m_pCgls->setGPUIndex(m_iGPUIndex);
 
-		ok &= m_pCgls->setGeometry(&volgeom, projgeom);
+		ok &= m_pCgls->setGeometry(&volgeom, &projgeom);
 
 		ok &= m_pCgls->enableSuperSampling(m_iVoxelSuperSampling, m_iDetectorSuperSampling);
 
@@ -214,7 +214,7 @@ bool CCudaCglsAlgorithm3D::run(int _iNrIterations)
 
 	ASTRA_ASSERT(m_pSinogram->isFloat32Memory());
 
-	ok = m_pCgls->setSinogram(m_pSinogram->getFloat32Memory(), m_pSinogram->getGeometry()->getDetectorColCount());
+	ok = m_pCgls->setSinogram(m_pSinogram->getFloat32Memory(), m_pSinogram->getGeometry().getDetectorColCount());
 
 	ASTRA_ASSERT(ok);
 

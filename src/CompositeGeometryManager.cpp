@@ -390,7 +390,7 @@ CCompositeGeometryManager::CVolumePart::CVolumePart(CFloat32VolumeData3D *pVolDa
 {
 	eType = PART_VOL;
 	pData = pVolData;
-	pGeom = pVolData->getGeometry()->clone();
+	pGeom = pVolData->getGeometry().clone();
 }
 
 
@@ -714,7 +714,7 @@ CCompositeGeometryManager::CProjectionPart::CProjectionPart(CFloat32ProjectionDa
 {
 	eType = PART_PROJ;
 	pData = pProjData;
-	pGeom = pProjData->getGeometry()->clone();
+	pGeom = pProjData->getGeometry().clone();
 }
 
 CCompositeGeometryManager::CProjectionPart::~CProjectionPart()
@@ -946,8 +946,8 @@ bool CCompositeGeometryManager::doFDK(CProjector3D *pProjector, CFloat32VolumeDa
                                      CFloat32ProjectionData3D *pProjData, bool bShortScan,
                                      const float *pfFilter, EJobMode eMode)
 {
-	if (!dynamic_cast<const CConeProjectionGeometry3D*>(pProjData->getGeometry()) &&
-	    !dynamic_cast<const CConeVecProjectionGeometry3D*>(pProjData->getGeometry())) {
+	if (!dynamic_cast<const CConeProjectionGeometry3D*>(&pProjData->getGeometry()) &&
+	    !dynamic_cast<const CConeVecProjectionGeometry3D*>(&pProjData->getGeometry())) {
 		ASTRA_ERROR("CCompositeGeometryManager::doFDK: cone/cone_vec geometry required");
 		return false;
 	}
