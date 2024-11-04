@@ -150,8 +150,6 @@ IF HAVE_CUDA==True:
         cdef vector[CFloat32ProjectionData3D *] projs
         vols.push_back(pVol)
         projs.push_back(pProj)
-        del pGeometry
-        del ppGeometry
         cdef CCompositeGeometryManager m
         cdef bool ret = True
         try:
