@@ -231,7 +231,7 @@ cdef XMLNode2dict(XMLNode node):
     if len(opts)>0: dct['options'] = opts
     return dct
 
-cdef CFloat32VolumeData3D* linkVolFromGeometry(CVolumeGeometry3D *pGeometry, data) except NULL:
+cdef CFloat32VolumeData3D* linkVolFromGeometry(const CVolumeGeometry3D &pGeometry, data) except NULL:
     cdef CFloat32VolumeData3D * pDataObject3D = NULL
     cdef CDataStorage * pStorage
     geom_shape = (pGeometry.getGridSliceCount(), pGeometry.getGridRowCount(), pGeometry.getGridColCount())
@@ -260,7 +260,7 @@ cdef CFloat32VolumeData3D* linkVolFromGeometry(CVolumeGeometry3D *pGeometry, dat
     pDataObject3D = new CFloat32VolumeData3D(pGeometry, pStorage)
     return pDataObject3D
 
-cdef CFloat32ProjectionData3D* linkProjFromGeometry(CProjectionGeometry3D *pGeometry, data) except NULL:
+cdef CFloat32ProjectionData3D* linkProjFromGeometry(const CProjectionGeometry3D &pGeometry, data) except NULL:
     cdef CFloat32ProjectionData3D * pDataObject3D = NULL
     cdef CDataStorage * pStorage
     geom_shape = (pGeometry.getDetectorRowCount(), pGeometry.getProjectionCount(), pGeometry.getDetectorColCount())
@@ -289,7 +289,7 @@ cdef CFloat32ProjectionData3D* linkProjFromGeometry(CProjectionGeometry3D *pGeom
     pDataObject3D = new CFloat32ProjectionData3D(pGeometry, pStorage)
     return pDataObject3D
 
-cdef CProjectionGeometry3D* createProjectionGeometry3D(geometry) except NULL:
+cdef unique_ptr[CProjectionGeometry3D] createProjectionGeometry3D(geometry) except *:
     cdef XMLConfig *cfg
     cdef CProjectionGeometry3D * pGeometry
 
@@ -313,10 +313,10 @@ cdef CProjectionGeometry3D* createProjectionGeometry3D(geometry) except NULL:
 
     del cfg
 
-    return pGeometry
+    return unique_ptr[CProjectionGeometry3D](pGeometry)
 
-cdef CVolumeGeometry3D* createVolumeGeometry3D(geometry) except NULL:
-    cdef Config *cfg
+cdef unique_ptr[CVolumeGeometry3D] createVolumeGeometry3D(geometry) except *:
+    cdef XMLConfig *cfg
     cdef CVolumeGeometry3D * pGeometry
     cfg = dictToConfig(b'VolumeGeometry', geometry)
     pGeometry = new CVolumeGeometry3D()
@@ -327,4 +327,4 @@ cdef CVolumeGeometry3D* createVolumeGeometry3D(geometry) except NULL:
 
     del cfg
 
-    return pGeometry
+    return unique_ptr[CVolumeGeometry3D](pGeometry)

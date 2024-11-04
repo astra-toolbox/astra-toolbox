@@ -141,10 +141,8 @@ IF HAVE_CUDA==True:
         cdef CProjector3D * projector = manProj.get(projector_id)
         if projector == NULL:
             raise AstraError("Projector not found")
-        cdef CVolumeGeometry3D *pGeometry = projector.getVolumeGeometry()
-        cdef CProjectionGeometry3D *ppGeometry = projector.getProjectionGeometry()
-        cdef CFloat32VolumeData3D * pVol = linkVolFromGeometry(pGeometry, vol)
-        cdef CFloat32ProjectionData3D * pProj = linkProjFromGeometry(ppGeometry, proj)
+        cdef CFloat32VolumeData3D * pVol = linkVolFromGeometry(projector.getVolumeGeometry(), vol)
+        cdef CFloat32ProjectionData3D * pProj = linkProjFromGeometry(projector.getProjectionGeometry(), proj)
         cdef vector[CFloat32VolumeData3D *] vols
         cdef vector[CFloat32ProjectionData3D *] projs
         vols.push_back(pVol)
@@ -193,18 +191,17 @@ IF HAVE_CUDA==True:
         direct_FPBP3D(projector_id, vol, proj, MODE_SET, "BP")
 
     def getProjectedBBox(geometry, minx, maxx, miny, maxy, minz, maxz):
-        cdef CProjectionGeometry3D * ppGeometry
+        cdef unique_ptr[CProjectionGeometry3D] ppGeometry
         cdef double minu=0., maxu=0., minv=0., maxv=0.
         ppGeometry = createProjectionGeometry3D(geometry)
-        ppGeometry.getProjectedBBox(minx, maxx, miny, maxy, minz, maxz, minu, maxu, minv, maxv)
-        del ppGeometry
+        ppGeometry.get().getProjectedBBox(minx, maxx, miny, maxy, minz, maxz, minu, maxu, minv, maxv)
         return (minv, maxv)
 
     def projectPoint(geometry, x, y, z, angle):
-        cdef CProjectionGeometry3D * ppGeometry
+        cdef unique_ptr[CProjectionGeometry3D] ppGeometry
         cdef double u=0., v=0.
         ppGeometry = createProjectionGeometry3D(geometry)
-        ppGeometry.projectPoint(x, y, z, angle, u, v)
+        ppGeometry.get().projectPoint(x, y, z, angle, u, v)
         return (u, v)
 
 

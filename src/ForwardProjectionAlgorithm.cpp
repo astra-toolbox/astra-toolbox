@@ -101,8 +101,8 @@ bool CForwardProjectionAlgorithm::_check()
 	ASTRA_CONFIG_CHECK(m_pVolume->isInitialized(), "ForwardProjection", "Volume Data Object Not Initialized.");
 
 	// check compatibility between projector and data classes
-	ASTRA_CONFIG_CHECK(m_pSinogram->getGeometry()->isEqual(m_pProjector->getProjectionGeometry()), "ForwardProjection", "Projection Data not compatible with the specified Projector.");
-	ASTRA_CONFIG_CHECK(m_pVolume->getGeometry()->isEqual(m_pProjector->getVolumeGeometry()), "ForwardProjection", "Volume Data not compatible with the specified Projector.");
+	ASTRA_CONFIG_CHECK(m_pSinogram->getGeometry().isEqual(m_pProjector->getProjectionGeometry()), "ForwardProjection", "Projection Data not compatible with the specified Projector.");
+	ASTRA_CONFIG_CHECK(m_pVolume->getGeometry().isEqual(m_pProjector->getVolumeGeometry()), "ForwardProjection", "Volume Data not compatible with the specified Projector.");
 
 	ASTRA_CONFIG_CHECK(m_pForwardProjector, "ForwardProjection", "Invalid FP Policy");
 

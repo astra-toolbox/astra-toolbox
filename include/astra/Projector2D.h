@@ -70,7 +70,7 @@ protected:
 	 * @param _pProjectionGeometry		Information class about the geometry of the projection. Will be HARDCOPIED.
 	 * @param _pVolumeGeometry	Information class about the geometry of the reconstruction volume. Will be HARDCOPIED.
 	 */
-	CProjector2D(CProjectionGeometry2D* _pProjectionGeometry, CVolumeGeometry2D* _pVolumeGeometry);
+	CProjector2D(const CProjectionGeometry2D &_pProjectionGeometry, const CVolumeGeometry2D &_pVolumeGeometry);
 
 	/** Initial clearing. Only to be used by constructors.
 	 */
@@ -105,13 +105,13 @@ public:
 	 *
 	 * @return Projection Geometry class.
 	 */
-	CProjectionGeometry2D* getProjectionGeometry();
+	const CProjectionGeometry2D& getProjectionGeometry();
 
 	/** Fetch the Volume Geometry of this projector.
 	 *
 	 * @return Volume Geometry class.
 	 */
-	CVolumeGeometry2D* getVolumeGeometry();
+	const CVolumeGeometry2D& getVolumeGeometry();
 
 	/** Compute the pixel weights for a single ray, from the source to a detector pixel. 
 	 *
@@ -183,8 +183,8 @@ private:
 
 // inline functions
 inline bool CProjector2D::isInitialized() const { return m_bIsInitialized; }
-inline CProjectionGeometry2D* CProjector2D::getProjectionGeometry() { return m_pProjectionGeometry; }
-inline CVolumeGeometry2D* CProjector2D::getVolumeGeometry() { return m_pVolumeGeometry; }
+inline const CProjectionGeometry2D& CProjector2D::getProjectionGeometry() { return *m_pProjectionGeometry; }
+inline const CVolumeGeometry2D& CProjector2D::getVolumeGeometry() { return *m_pVolumeGeometry; }
 
 
 

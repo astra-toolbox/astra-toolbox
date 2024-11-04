@@ -123,7 +123,7 @@ void CCudaSirtAlgorithm::initCUDAAlgorithm()
 	CCudaReconstructionAlgorithm2D::initCUDAAlgorithm();
 
 	if (m_pMinMask || m_pMaxMask) {
-		const CVolumeGeometry2D& volgeom = *m_pReconstruction->getGeometry();
+		const CVolumeGeometry2D& volgeom = m_pReconstruction->getGeometry();
 		const float *pfMinMaskData = 0;
 		const float *pfMaxMaskData = 0;
 		if (m_pMinMask) pfMinMaskData = m_pMinMask->getDataConst();

@@ -68,7 +68,7 @@ public:
 	 *
 	 * @param _pGeometry Projection Geometry object.  This object will be HARDCOPIED into this class.
 	 */
-	CFloat32ProjectionData2D(CProjectionGeometry2D* _pGeometry);
+	CFloat32ProjectionData2D(const CProjectionGeometry2D &_pGeometry);
 
 	/**
 	 * Constructor. Create an instance of the CFloat32ProjectionData2D class with initialization of the data.
@@ -81,7 +81,7 @@ public:
 	 * @param _pGeometry Projection Geometry object.  This object will be HARDCOPIED into this class.
 	 * @param _pfData pointer to a one-dimensional float32 data block
 	 */
-	CFloat32ProjectionData2D(CProjectionGeometry2D* _pGeometry, float32* _pfData);
+	CFloat32ProjectionData2D(const CProjectionGeometry2D &_pGeometry, float32* _pfData);
 
 	/**
 	 * Constructor. Create an instance of the CFloat32ProjectionData2D class with initialization of the data.
@@ -94,7 +94,7 @@ public:
 	 * @param _pGeometry Projection Geometry object.  This object will be HARDCOPIED into this class.
 	 * @param _fScalar scalar value to be put at each index.
 	 */
-	CFloat32ProjectionData2D(CProjectionGeometry2D* _pGeometry, float32 _fScalar);
+	CFloat32ProjectionData2D(const CProjectionGeometry2D &_pGeometry, float32 _fScalar);
 
 	/**
 	 * Copy constructor
@@ -112,7 +112,7 @@ public:
 	 * @param _pCustomMemory custom memory handle
 	 *
 	 */
-	CFloat32ProjectionData2D(CProjectionGeometry2D* _pGeometry, CFloat32CustomMemory* _pCustomMemory);
+	CFloat32ProjectionData2D(const CProjectionGeometry2D &_pGeometry, CFloat32CustomMemory* _pCustomMemory);
 
 	/**
 	 * Assignment operator
@@ -135,7 +135,7 @@ public:
 	 * @param _pGeometry Projection Geometry of the data. This object will be HARDCOPIED into this class.
 	 * @return Initialization of the base class successfull.
 	 */
-	bool initialize(CProjectionGeometry2D* _pGeometry);
+	bool initialize(const CProjectionGeometry2D &_pGeometry);
 
 	/** Initialization. Initializes an instance of the CFloat32Data2D class with initialization of the data block. 
 	 *
@@ -147,7 +147,7 @@ public:
 	 * @param _pGeometry Projection Geometry of the data. This object will be HARDCOPIED into this class.
 	 * @param _pfData pointer to a one-dimensional float32 data block
 	 */
-	bool initialize(CProjectionGeometry2D* _pGeometry, const float32* _pfData);
+	bool initialize(const CProjectionGeometry2D &_pGeometry, const float32* _pfData);
 
 	/** Initialization. Initializes an instance of the CFloat32Data2D class with initialization of the data block. 
 	 *
@@ -159,7 +159,7 @@ public:
 	 * @param _pGeometry Projection Geometry of the data. This object will be HARDCOPIED into this class.
 	 * @param _fScalar scalar value to be put at each index.
 	 */
-	bool initialize(CProjectionGeometry2D* _pGeometry, float32 _fScalar);
+	bool initialize(const CProjectionGeometry2D &_pGeometry, float32 _fScalar);
 	
 	/** Initialization. Initializes an instance of the CFloat32ProjectionData2D class with pre-allocated memory.
 	 *
@@ -171,7 +171,7 @@ public:
 	 * @param _pCustomMemory custom memory handle
 	 *
 	 */
-	bool initialize(CProjectionGeometry2D* _pGeometry, CFloat32CustomMemory* _pCustomMemory);
+	bool initialize(const CProjectionGeometry2D &_pGeometry, CFloat32CustomMemory* _pCustomMemory);
 
 	/** Get the number of detectors.
 	 *
@@ -217,12 +217,12 @@ public:
 	 *
 	 * @return pointer to projection geometry.
 	 */
-	virtual CProjectionGeometry2D* getGeometry() const;
+	virtual const CProjectionGeometry2D &getGeometry() const;
 
 	/** Change the projection geometry.
  	 *  Note that this can't change the dimensions of the data.
 	 */
-	virtual void changeGeometry(CProjectionGeometry2D* pGeometry);
+	virtual void changeGeometry(const CProjectionGeometry2D &pGeometry);
 
 protected:
 
@@ -252,10 +252,10 @@ inline int CFloat32ProjectionData2D::getAngleCount() const
 
 //----------------------------------------------------------------------------------------
 // Get the projection geometry.
-inline CProjectionGeometry2D* CFloat32ProjectionData2D::getGeometry() const
+inline const CProjectionGeometry2D& CFloat32ProjectionData2D::getGeometry() const
 {
 	ASTRA_ASSERT(m_bInitialized);
-	return m_pGeometry;
+	return *m_pGeometry;
 }
 
 //----------------------------------------------------------------------------------------

@@ -110,7 +110,7 @@ bool CFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 
 	m_filterConfig = getFilterConfigForAlgorithm(_cfg, this);
 
-	const CParallelProjectionGeometry2D* parprojgeom = dynamic_cast<CParallelProjectionGeometry2D*>(m_pSinogram->getGeometry());
+	const CParallelProjectionGeometry2D* parprojgeom = dynamic_cast<const CParallelProjectionGeometry2D*>(&m_pSinogram->getGeometry());
 	if (!parprojgeom) {
 		ASTRA_ERROR("FBP currently only supports parallel projection geometries.");
 		return false;
@@ -158,7 +158,7 @@ bool CFilteredBackProjectionAlgorithm::_check()
 		ASTRA_CONFIG_CHECK(m_filterConfig.m_pfCustomFilter, "FBP", "Invalid filter pointer.");
 	}
 
-	ASTRA_CONFIG_CHECK(checkCustomFilterSize(m_filterConfig, *m_pSinogram->getGeometry()), "FBP", "Filter size mismatch");
+	ASTRA_CONFIG_CHECK(checkCustomFilterSize(m_filterConfig, m_pSinogram->getGeometry()), "FBP", "Filter size mismatch");
 
 	// success
 	return true;
@@ -181,8 +181,8 @@ bool CFilteredBackProjectionAlgorithm::run(int _iNrIterations)
 	            DefaultBPPolicy(m_pReconstruction, &filteredSinogram));
 
 	// Scale data
-	const CVolumeGeometry2D& volGeom = *m_pProjector->getVolumeGeometry();
-	const CProjectionGeometry2D& projGeom = *m_pProjector->getProjectionGeometry();
+	const CVolumeGeometry2D& volGeom = m_pProjector->getVolumeGeometry();
+	const CProjectionGeometry2D& projGeom = m_pProjector->getProjectionGeometry();
 
 	int iAngleCount = projGeom.getProjectionAngleCount();
 	float fPixelArea = volGeom.getPixelArea();
@@ -205,8 +205,8 @@ void CFilteredBackProjectionAlgorithm::performFiltering(CFloat32ProjectionData2D
 	if (m_filterConfig.m_eType == FILTER_NONE)
 		return;
 
-	int iAngleCount = m_pProjector->getProjectionGeometry()->getProjectionAngleCount();
-	int iDetectorCount = m_pProjector->getProjectionGeometry()->getDetectorCount();
+	int iAngleCount = m_pProjector->getProjectionGeometry().getProjectionAngleCount();
+	int iDetectorCount = m_pProjector->getProjectionGeometry().getDetectorCount();
 
 
 	int zpDetector = calcNextPowerOfTwo(2 * m_pSinogram->getDetectorCount());

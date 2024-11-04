@@ -48,10 +48,10 @@ CProjector2D::CProjector2D() : configCheckData(0)
 
 //----------------------------------------------------------------------------------------
 // constructor
-CProjector2D::CProjector2D(CProjectionGeometry2D* _pProjectionGeometry, CVolumeGeometry2D* _pVolumeGeometry) : configCheckData(0)
+CProjector2D::CProjector2D(const CProjectionGeometry2D &_pProjectionGeometry, const CVolumeGeometry2D &_pVolumeGeometry) : configCheckData(0)
 {
-	m_pProjectionGeometry = _pProjectionGeometry->clone();
-	m_pVolumeGeometry = _pVolumeGeometry->clone();
+	m_pProjectionGeometry = _pProjectionGeometry.clone();
+	m_pVolumeGeometry = _pVolumeGeometry.clone();
 	m_bIsInitialized = true;
 }
 

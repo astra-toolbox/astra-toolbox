@@ -141,19 +141,17 @@ bool CParallelVecProjectionGeometry2D::initializeAngles(const Config& _cfg)
 
 //----------------------------------------------------------------------------------------
 // Clone
-CProjectionGeometry2D* CParallelVecProjectionGeometry2D::clone()
+CProjectionGeometry2D* CParallelVecProjectionGeometry2D::clone() const
 {
 	return new CParallelVecProjectionGeometry2D(*this);
 }
 
 //----------------------------------------------------------------------------------------
 // is equal
-bool CParallelVecProjectionGeometry2D::isEqual(CProjectionGeometry2D* _pGeom2) const
+bool CParallelVecProjectionGeometry2D::isEqual(const CProjectionGeometry2D &_pGeom2) const
 {
-	if (_pGeom2 == NULL) return false;
-
 	// try to cast argument to CParallelVecProjectionGeometry2D
-	CParallelVecProjectionGeometry2D* pGeom2 = dynamic_cast<CParallelVecProjectionGeometry2D*>(_pGeom2);
+	const CParallelVecProjectionGeometry2D* pGeom2 = dynamic_cast<const CParallelVecProjectionGeometry2D*>(&_pGeom2);
 	if (pGeom2 == NULL) return false;
 
 	// both objects must be initialized

@@ -119,14 +119,14 @@ bool CArtAlgorithm::initialize(const Config& _cfg)
 	if (!CR.getOptionString("RayOrder", projOrder, "sequential"))
 		return false;
 	m_iCurrentRay = 0;
-	int iRayCount = m_pProjector->getProjectionGeometry()->getProjectionAngleCount() *
-		m_pProjector->getProjectionGeometry()->getDetectorCount();
+	int iRayCount = m_pProjector->getProjectionGeometry().getProjectionAngleCount() *
+		m_pProjector->getProjectionGeometry().getDetectorCount();
 	if (projOrder == "sequential") {
 		m_piProjectionOrder.resize(iRayCount);
 		m_piDetectorOrder.resize(iRayCount);
 		for (int i = 0; i < iRayCount; i++) {
-			m_piProjectionOrder[i] = i / m_pProjector->getProjectionGeometry()->getDetectorCount();
-			m_piDetectorOrder[i] = i % m_pProjector->getProjectionGeometry()->getDetectorCount();
+			m_piProjectionOrder[i] = i / m_pProjector->getProjectionGeometry().getDetectorCount();
+			m_piDetectorOrder[i] = i % m_pProjector->getProjectionGeometry().getDetectorCount();
 		}
 	} else if (projOrder == "custom") {
 		std::vector<int> rayOrderList;
@@ -175,13 +175,13 @@ bool CArtAlgorithm::initialize(CProjector2D* _pProjector,
 
 	// ray order
 	m_iCurrentRay = 0;
-	int iRayCount = _pProjector->getProjectionGeometry()->getDetectorCount() *
-		_pProjector->getProjectionGeometry()->getProjectionAngleCount();
+	int iRayCount = _pProjector->getProjectionGeometry().getDetectorCount() *
+		_pProjector->getProjectionGeometry().getProjectionAngleCount();
 	m_piProjectionOrder.resize(iRayCount);
 	m_piDetectorOrder.resize(iRayCount);
 	for (int i = 0; i < iRayCount; i++) {
-		m_piProjectionOrder[i] = i / _pProjector->getProjectionGeometry()->getDetectorCount();
-		m_piDetectorOrder[i] = i % _pProjector->getProjectionGeometry()->getDetectorCount();
+		m_piProjectionOrder[i] = i / _pProjector->getProjectionGeometry().getDetectorCount();
+		m_piDetectorOrder[i] = i % _pProjector->getProjectionGeometry().getDetectorCount();
 	}
 
 	// success

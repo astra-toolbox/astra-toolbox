@@ -104,7 +104,7 @@ bool CCudaDartMaskAlgorithm3D::run(int _iNrIterations)
 	// check initialized
 	ASTRA_ASSERT(m_bIsInitialized);
 
-	const CVolumeGeometry3D& volgeom = *m_pSegmentation->getGeometry();
+	const CVolumeGeometry3D& volgeom = m_pSegmentation->getGeometry();
 	astraCUDA3d::SDimensions3D dims;
 	dims.iVolX = volgeom.getGridColCount();
 	dims.iVolY = volgeom.getGridRowCount();

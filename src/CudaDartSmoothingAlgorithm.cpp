@@ -103,7 +103,7 @@ bool CCudaDartSmoothingAlgorithm::run(int _iNrIterations)
 	// check initialized
 	ASTRA_ASSERT(m_bIsInitialized);
 
-	const CVolumeGeometry2D& volgeom = *m_pIn->getGeometry();
+	const CVolumeGeometry2D& volgeom = m_pIn->getGeometry();
 	unsigned int width = volgeom.getGridColCount();
 	unsigned int height = volgeom.getGridRowCount();
 

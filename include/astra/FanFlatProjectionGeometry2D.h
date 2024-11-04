@@ -131,7 +131,7 @@ public:
 
 	/** Create a hard copy. 
 	*/
-	virtual CProjectionGeometry2D* clone();
+	virtual CProjectionGeometry2D* clone() const override;
 
 	/** Returns true if the type of geometry defined in this class is the one specified in _sType.
 	 *
@@ -150,7 +150,7 @@ public:
 	 *
 	 * @return true if this geometry instance is the same as the one specified.
 	 */
-	virtual bool isEqual(CProjectionGeometry2D*) const;
+	virtual bool isEqual(const CProjectionGeometry2D &) const override;
 
 	/** Returns the distance from the origin of the coordinate system to the source.
      *

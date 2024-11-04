@@ -189,8 +189,8 @@ bool CCudaReconstructionAlgorithm2D::setupGeometry()
 	ok = m_pAlgo->setGPUIndex(m_iGPUIndex);
 	if (!ok) return false;
 
-	const CVolumeGeometry2D& volgeom = *m_pReconstruction->getGeometry();
-	const CProjectionGeometry2D& projgeom = *m_pSinogram->getGeometry();
+	const CVolumeGeometry2D& volgeom = m_pReconstruction->getGeometry();
+	const CProjectionGeometry2D& projgeom = m_pSinogram->getGeometry();
 
 	ok = m_pAlgo->setGeometry(&volgeom, &projgeom);
 	if (!ok) return false;
@@ -234,17 +234,17 @@ bool CCudaReconstructionAlgorithm2D::run(int _iNrIterations)
 	ASTRA_ASSERT(m_bIsInitialized);
 
 	bool ok = true;
-	const CVolumeGeometry2D& volgeom = *m_pReconstruction->getGeometry();
+	const CVolumeGeometry2D& volgeom = m_pReconstruction->getGeometry();
 
 	if (!m_bAlgoInit) {
 		initCUDAAlgorithm();
 		m_bAlgoInit = true;
 	}
 
-	ok = m_pAlgo->copyDataToGPU(m_pSinogram->getDataConst(), m_pSinogram->getGeometry()->getDetectorCount(),
+	ok = m_pAlgo->copyDataToGPU(m_pSinogram->getDataConst(), m_pSinogram->getGeometry().getDetectorCount(),
 	                            m_pReconstruction->getDataConst(), volgeom.getGridColCount(),
 	                            m_bUseReconstructionMask ? m_pReconstructionMask->getDataConst() : 0, volgeom.getGridColCount(),
-	                            m_bUseSinogramMask ? m_pSinogramMask->getDataConst() : 0, m_pSinogram->getGeometry()->getDetectorCount());
+	                            m_bUseSinogramMask ? m_pSinogramMask->getDataConst() : 0, m_pSinogram->getGeometry().getDetectorCount());
 
 	ASTRA_ASSERT(ok);
 

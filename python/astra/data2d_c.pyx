@@ -100,9 +100,9 @@ def create(datatype, geometry, data=None, link=False):
             raise AstraError('Geometry class could not be initialized', append_log=True)
         if link:
             pCustom = <CFloat32CustomMemory*> new CFloat32CustomPython(data)
-            pDataObject2D = <CFloat32Data2D * > new CFloat32VolumeData2D(pGeometry, pCustom)
+            pDataObject2D = <CFloat32Data2D * > new CFloat32VolumeData2D(cython.operator.dereference(pGeometry), pCustom)
         else:
-            pDataObject2D = <CFloat32Data2D * > new CFloat32VolumeData2D(pGeometry)
+            pDataObject2D = <CFloat32Data2D * > new CFloat32VolumeData2D(cython.operator.dereference(pGeometry))
         del cfg
         del pGeometry
     elif datatype == '-sino':
@@ -126,9 +126,9 @@ def create(datatype, geometry, data=None, link=False):
             raise AstraError('Geometry class could not be initialized', append_log=True)
         if link:
             pCustom = <CFloat32CustomMemory*> new CFloat32CustomPython(data)
-            pDataObject2D = <CFloat32Data2D * > new CFloat32ProjectionData2D(ppGeometry, pCustom)
+            pDataObject2D = <CFloat32Data2D * > new CFloat32ProjectionData2D(cython.operator.dereference(ppGeometry), pCustom)
         else:
-            pDataObject2D = <CFloat32Data2D * > new CFloat32ProjectionData2D(ppGeometry)
+            pDataObject2D = <CFloat32Data2D * > new CFloat32ProjectionData2D(cython.operator.dereference(ppGeometry))
         del ppGeometry
         del cfg
     else:
@@ -248,7 +248,7 @@ def change_geometry(i, geom):
             del cfg
             raise ValueError("The dimensions of the data {} do not match those "
                              "specified in the geometry {}".format(obj_shape, geom_shape))
-        pDataObject2.changeGeometry(ppGeometry)
+        pDataObject2.changeGeometry(cython.operator.dereference(ppGeometry))
         del ppGeometry
         del cfg
     elif pDataObject.getType() == TWOVOLUME:
@@ -266,7 +266,7 @@ def change_geometry(i, geom):
             del pGeometry
             raise ValueError("The dimensions of the data {} do not match those "
                              "specified in the geometry {}".format(obj_shape, geom_shape))
-        pDataObject3.changeGeometry(pGeometry)
+        pDataObject3.changeGeometry(cython.operator.dereference(pGeometry))
         del cfg
         del pGeometry
     else:

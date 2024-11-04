@@ -100,7 +100,7 @@ bool CCudaRoiSelectAlgorithm::run(int _iNrIterations)
 	// check initialized
 	ASTRA_ASSERT(m_bIsInitialized);
 
-	const CVolumeGeometry2D& volgeom = *m_pData->getGeometry();
+	const CVolumeGeometry2D& volgeom = m_pData->getGeometry();
 	unsigned int width = volgeom.getGridColCount();
 	unsigned int height = volgeom.getGridRowCount();
 
