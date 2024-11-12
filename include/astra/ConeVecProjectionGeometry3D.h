@@ -63,7 +63,7 @@ class _AstraExport CConeVecProjectionGeometry3D : public CProjectionGeometry3D
 {
 protected:
 
-	SConeProjection *m_pProjectionAngles;
+	std::vector<SConeProjection> m_ProjectionAngles;
 
 public:
 
@@ -82,10 +82,10 @@ public:
 	 *  @param _iDetectorColCount Number of columns detectors.
 	 *  @param _pfProjectionAngles Pointer to an array of projection angles. The angles will be copied from this array.
 	 */
-	CConeVecProjectionGeometry3D(int _iProjectionAngleCount, 
-	                             int _iDetectorRowCount, 
+	CConeVecProjectionGeometry3D(int _iProjectionAngleCount,
+	                             int _iDetectorRowCount,
 	                             int _iDetectorColCount,
-	                             const SConeProjection* _pProjectionAngles);
+	                             std::vector<SConeProjection> &&_pProjectionAngles);
 
 	/** Copy constructor. 
 	 */
@@ -110,10 +110,10 @@ public:
 	 *  @param _iDetectorColCount Number of columns detectors.
 	 *  @param _pProjectionAngles Pointer to an array of projection angles. The angles will be copied from this array.
 	 */
-	bool initialize(int _iProjectionAngleCount, 
-					int _iDetectorRowCount, 
-					int _iDetectorColCount,
-	                const SConeProjection* _pProjectionAngles);
+	bool initialize(int _iProjectionAngleCount,
+	                int _iDetectorRowCount,
+	                int _iDetectorColCount,
+	                std::vector<SConeProjection> &&_pProjectionAngles);
 
 	virtual bool _check();
 
@@ -140,7 +140,7 @@ public:
 	 */
 	 virtual bool isOfType(const std::string& _sType) const;
 
-	const SConeProjection* getProjectionVectors() const { return m_pProjectionAngles; }
+	const SConeProjection* getProjectionVectors() const { return &m_ProjectionAngles[0]; }
 
 	virtual void projectPoint(double fX, double fY, double fZ,
 	                          int iAngleIndex,
