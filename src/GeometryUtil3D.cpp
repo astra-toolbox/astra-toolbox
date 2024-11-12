@@ -243,7 +243,7 @@ CProjectionGeometry3D* getSubProjectionGeometry_U(const CProjectionGeometry3D* p
 		CProjectionGeometry3D* ret = new CParallelVecProjectionGeometry3D(pProjGeom->getProjectionCount(),
 		                                                                  pProjGeom->getDetectorRowCount(),
 		                                                                  size,
-		                                                                  &parProjs[0]);
+		                                                                  std::move(parProjs));
 
 		return ret;
 	} else {
@@ -293,7 +293,7 @@ CProjectionGeometry3D* getSubProjectionGeometry_V(const CProjectionGeometry3D* p
 		CProjectionGeometry3D* ret = new CParallelVecProjectionGeometry3D(pProjGeom->getProjectionCount(),
 		                                                                  size,
 		                                                                  pProjGeom->getDetectorColCount(),
-		                                                                  &parProjs[0]);
+		                                                                  std::move(parProjs));
 
 		return ret;
 	} else {
@@ -340,7 +340,8 @@ CProjectionGeometry3D* getSubProjectionGeometry_Angle(const CProjectionGeometry3
 		CProjectionGeometry3D* ret = new CParallelVecProjectionGeometry3D(size,
 		                                                                  pProjGeom->getDetectorRowCount(),
 		                                                                  pProjGeom->getDetectorColCount(),
-		                                                                  &parProjs[th]);
+		                                                                  std::vector<SPar3DProjection>(parProjs.begin() + th,
+		                                                                                                 parProjs.begin() + th+size));
 
 		return ret;
 	}

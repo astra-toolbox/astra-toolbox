@@ -62,7 +62,7 @@ class _AstraExport CParallelVecProjectionGeometry3D : public CProjectionGeometry
 {
 protected:
 
-	SPar3DProjection *m_pProjectionAngles;
+	std::vector<SPar3DProjection> m_ProjectionAngles;
 
 public:
 
@@ -81,10 +81,10 @@ public:
 	 *  @param _iDetectorColCount Number of columns detectors.
 	 *  @param _pProjectionAngles Pointer to an array of projection angles. The angles will be copied from this array.
 	 */
-	CParallelVecProjectionGeometry3D(int _iProjectionAngleCount, 
-	                                 int _iDetectorRowCount, 
+	CParallelVecProjectionGeometry3D(int _iProjectionAngleCount,
+	                                 int _iDetectorRowCount,
 	                                 int _iDetectorColCount,
-	                                 const SPar3DProjection* _pProjectionAngles);
+	                                 std::vector<SPar3DProjection> &&_pProjectionAngles);
 
 	/** Copy constructor. 
 	 */
@@ -109,10 +109,10 @@ public:
 	 *  @param _iDetectorColCount Number of columns detectors.
 	 *  @param _pProjectionAngles Pointer to an array of projection angles. The angles will be copied from this array.
 	 */
-	bool initialize(int _iProjectionAngleCount, 
-					int _iDetectorRowCount, 
-					int _iDetectorColCount,
-					const SPar3DProjection* _pProjectionAngles);
+	bool initialize(int _iProjectionAngleCount,
+	                int _iDetectorRowCount,
+	                int _iDetectorColCount,
+	                std::vector<SPar3DProjection> &&_pProjectionAngles);
 
 
 	virtual bool _check();
@@ -140,7 +140,7 @@ public:
 	 */
 	 virtual bool isOfType(const std::string& _sType) const;
 
-	const SPar3DProjection* getProjectionVectors() const { return m_pProjectionAngles; }
+	const SPar3DProjection* getProjectionVectors() const { return &m_ProjectionAngles[0]; }
 
 	virtual void projectPoint(double fX, double fY, double fZ,
 	                          int iAngleIndex,
