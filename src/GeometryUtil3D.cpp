@@ -226,7 +226,7 @@ CProjectionGeometry3D* getSubProjectionGeometry_U(const CProjectionGeometry3D* p
 		CProjectionGeometry3D* ret = new CConeVecProjectionGeometry3D(pProjGeom->getProjectionCount(),
 		                                                              pProjGeom->getDetectorRowCount(),
 		                                                              size,
-		                                                              &coneProjs[0]);
+		                                                              std::move(coneProjs));
 
 
 		return ret;
@@ -276,7 +276,7 @@ CProjectionGeometry3D* getSubProjectionGeometry_V(const CProjectionGeometry3D* p
 		CProjectionGeometry3D* ret = new CConeVecProjectionGeometry3D(pProjGeom->getProjectionCount(),
 		                                                              size,
 		                                                              pProjGeom->getDetectorColCount(),
-		                                                              &coneProjs[0]);
+		                                                              std::move(coneProjs));
 
 
 		return ret;
@@ -323,7 +323,8 @@ CProjectionGeometry3D* getSubProjectionGeometry_Angle(const CProjectionGeometry3
 		CProjectionGeometry3D* ret = new CConeVecProjectionGeometry3D(size,
 		                                                              pProjGeom->getDetectorRowCount(),
 		                                                              pProjGeom->getDetectorColCount(),
-		                                                              &coneProjs[th]);
+									      std::vector<SConeProjection>(coneProjs.begin() + th,
+										                           coneProjs.begin() + th+size));
 
 
 		return ret;
