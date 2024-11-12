@@ -45,10 +45,6 @@ from .PyIncludes cimport *
 from .pythonutils import GPULink, checkArrayForLink
 from .log import AstraError
 
-cdef extern from "CFloat32CustomPython.h":
-    cdef cppclass CDataStoragePython[T](CDataMemory[T]):
-        CDataStoragePython(np.ndarray arrIn)
-
 cdef extern from "Python.h":
     void* PyLong_AsVoidPtr(object)
 
