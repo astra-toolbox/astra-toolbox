@@ -97,7 +97,7 @@ public:
 							  int _iDetectorColCount,
 							  float32 _fDetectorWidth,
 							  float32 _fDetectorHeight,
-							  const float32* _pfProjectionAngles,
+							  std::vector<float32> &&_pfProjectionAngles,
 							  float32 _fOriginSourceDistance,
 							  float32 _fOriginDetectorDistance);
 
@@ -132,7 +132,7 @@ public:
 					int _iDetectorColCount,
 					float32 _fDetectorWidth,
 					float32 _fDetectorHeight,
-					const float32* _pfProjectionAngles,
+					std::vector<float32> &&_pfProjectionAngles,
 					float32 _fOriginSourceDistance,
 					float32 _fOriginDetectorDistance);
 
