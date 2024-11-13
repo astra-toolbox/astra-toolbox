@@ -54,7 +54,7 @@ CConeProjectionGeometry3D::CConeProjectionGeometry3D(int _iProjectionAngleCount,
 															 int _iDetectorColCount, 
 															 float32 _fDetectorWidth, 
 															 float32 _fDetectorHeight, 
-															 const float32* _pfProjectionAngles,
+															 std::vector<float32> &&_pfProjectionAngles,
 															 float32 _fOriginSourceDistance, 
 															 float32 _fOriginDetectorDistance) :
 	CProjectionGeometry3D() 
@@ -64,7 +64,7 @@ CConeProjectionGeometry3D::CConeProjectionGeometry3D(int _iProjectionAngleCount,
 			   _iDetectorColCount, 
 			   _fDetectorWidth, 
 			   _fDetectorHeight, 
-			   _pfProjectionAngles,
+			   std::move(_pfProjectionAngles),
 			   _fOriginSourceDistance,
 			   _fOriginDetectorDistance);
 }
@@ -106,7 +106,7 @@ bool CConeProjectionGeometry3D::initialize(int _iProjectionAngleCount,
 											   int _iDetectorColCount, 
 											   float32 _fDetectorWidth, 
 											   float32 _fDetectorHeight, 
-											   const float32* _pfProjectionAngles,
+											   std::vector<float32> &&_pfProjectionAngles,
 											   float32 _fOriginSourceDistance, 
 											   float32 _fOriginDetectorDistance)
 {
@@ -115,7 +115,7 @@ bool CConeProjectionGeometry3D::initialize(int _iProjectionAngleCount,
 			    _iDetectorColCount, 
 			    _fDetectorWidth, 
 			    _fDetectorHeight, 
-			    _pfProjectionAngles);
+			    std::move(_pfProjectionAngles));
 
 	m_fOriginSourceDistance = _fOriginSourceDistance;
 	m_fOriginDetectorDistance = _fOriginDetectorDistance;
@@ -137,8 +137,7 @@ CProjectionGeometry3D* CConeProjectionGeometry3D::clone() const
 	res->m_iDetectorTotCount		= m_iDetectorTotCount;
 	res->m_fDetectorSpacingX		= m_fDetectorSpacingX;
 	res->m_fDetectorSpacingY		= m_fDetectorSpacingY;
-	res->m_pfProjectionAngles		= new float32[m_iProjectionAngleCount];
-	memcpy(res->m_pfProjectionAngles, m_pfProjectionAngles, sizeof(float32)*m_iProjectionAngleCount);
+	res->m_pfProjectionAngles		= m_pfProjectionAngles;
 	res->m_fOriginSourceDistance	= m_fOriginSourceDistance;
 	res->m_fOriginDetectorDistance	= m_fOriginDetectorDistance;
 	return res;
@@ -193,7 +192,7 @@ Config* CConeProjectionGeometry3D::getConfiguration() const
 	CW.addNumerical("DetectorSpacingY", m_fDetectorSpacingY);
 	CW.addNumerical("DistanceOriginDetector", m_fOriginDetectorDistance);
 	CW.addNumerical("DistanceOriginSource", m_fOriginSourceDistance);
-	CW.addNumericalArray("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
+	CW.addNumericalArray("ProjectionAngles", &m_pfProjectionAngles[0], m_iProjectionAngleCount);
 
 	return CW.getConfig();
 }
