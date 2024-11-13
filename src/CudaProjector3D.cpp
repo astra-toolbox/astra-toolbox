@@ -56,8 +56,8 @@ CCudaProjector3D::~CCudaProjector3D()
 // Clear for constructors
 void CCudaProjector3D::_clear()
 {
-	m_pProjectionGeometry = NULL;
-	m_pVolumeGeometry = NULL;
+	m_pProjectionGeometry.reset();
+	m_pVolumeGeometry.reset();
 	m_bIsInitialized = false;
 
 	m_projectionKernel = ker3d_default;
@@ -70,8 +70,6 @@ void CCudaProjector3D::_clear()
 // Clear
 void CCudaProjector3D::clear()
 {
-	ASTRA_DELETE(m_pProjectionGeometry);
-	ASTRA_DELETE(m_pVolumeGeometry);
 	m_bIsInitialized = false;
 }
 

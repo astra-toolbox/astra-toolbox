@@ -177,7 +177,9 @@ BASE_OBJECTS=\
 	src/PlatformDepSystemCode.lo \
 	src/PluginAlgorithmFactory.lo \
 	src/ProjectionGeometry2D.lo \
+	src/ProjectionGeometry2DFactory.lo \
 	src/ProjectionGeometry3D.lo \
+	src/ProjectionGeometry3DFactory.lo \
 	src/Projector2D.lo \
 	src/Projector3D.lo \
 	src/SartAlgorithm.lo \

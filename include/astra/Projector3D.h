@@ -28,8 +28,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef INC_ASTRA_PROJECTOR3D
 #define INC_ASTRA_PROJECTOR3D
 
-#include <cmath>
-#include <vector>
+#include <memory>
 
 #include "Globals.h"
 #include "Config.h"
@@ -54,8 +53,8 @@ class _AstraExport CProjector3D
 
 protected:
 
-	CProjectionGeometry3D* m_pProjectionGeometry; ///< Used projection geometry
-	CVolumeGeometry3D* m_pVolumeGeometry; ///< Used volume geometry
+	std::unique_ptr<CProjectionGeometry3D> m_pProjectionGeometry; ///< Used projection geometry
+	std::unique_ptr<CVolumeGeometry3D> m_pVolumeGeometry; ///< Used volume geometry
 	bool m_bIsInitialized; ///< Has this class been initialized?
 
 	/** Check variable values.
