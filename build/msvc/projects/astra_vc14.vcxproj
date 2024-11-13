@@ -330,7 +330,9 @@
     <ClCompile Include="..\..\..\src\PlatformDepSystemCode.cpp" />
     <ClCompile Include="..\..\..\src\PluginAlgorithmFactory.cpp" />
     <ClCompile Include="..\..\..\src\ProjectionGeometry2D.cpp" />
+    <ClCompile Include="..\..\..\src\ProjectionGeometry2DFactory.cpp" />
     <ClCompile Include="..\..\..\src\ProjectionGeometry3D.cpp" />
+    <ClCompile Include="..\..\..\src\ProjectionGeometry3DFactory.cpp" />
     <ClCompile Include="..\..\..\src\Projector2D.cpp" />
     <ClCompile Include="..\..\..\src\Projector3D.cpp" />
     <ClCompile Include="..\..\..\src\ReconstructionAlgorithm2D.cpp" />
@@ -413,7 +415,9 @@
     <ClInclude Include="..\..\..\include\astra\PlatformDepSystemCode.h" />
     <ClInclude Include="..\..\..\include\astra\PluginAlgorithmFactory.h" />
     <ClInclude Include="..\..\..\include\astra\ProjectionGeometry2D.h" />
+    <ClInclude Include="..\..\..\include\astra\ProjectionGeometry2DFactory.h" />
     <ClInclude Include="..\..\..\include\astra\ProjectionGeometry3D.h" />
+    <ClInclude Include="..\..\..\include\astra\ProjectionGeometry3DFactory.h" />
     <ClInclude Include="..\..\..\include\astra\Projector2D.h" />
     <ClInclude Include="..\..\..\include\astra\Projector3D.h" />
     <ClInclude Include="..\..\..\include\astra\ProjectorTypelist.h" />

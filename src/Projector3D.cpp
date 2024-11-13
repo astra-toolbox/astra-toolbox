@@ -28,10 +28,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/Projector3D.h"
 
 #include "astra/VolumeGeometry3D.h"
-#include "astra/ParallelProjectionGeometry3D.h"
-#include "astra/ParallelVecProjectionGeometry3D.h"
-#include "astra/ConeProjectionGeometry3D.h"
-#include "astra/ConeVecProjectionGeometry3D.h"
+#include "astra/ProjectionGeometry3D.h"
+#include "astra/ProjectionGeometry3DFactory.h"
 
 #include "astra/Logging.h"
 
@@ -56,8 +54,8 @@ CProjector3D::~CProjector3D()
 // Clear for constructors
 void CProjector3D::_clear()
 {
-	m_pProjectionGeometry = NULL;
-	m_pVolumeGeometry = NULL;
+	m_pProjectionGeometry.reset();
+	m_pVolumeGeometry .reset();
 	m_bIsInitialized = false;
 }
 
@@ -65,8 +63,6 @@ void CProjector3D::_clear()
 // Clear
 void CProjector3D::clear()
 {
-	ASTRA_DELETE(m_pProjectionGeometry);
-	ASTRA_DELETE(m_pVolumeGeometry);
 	m_bIsInitialized = false;
 }
 
@@ -99,16 +95,9 @@ bool CProjector3D::initialize(const Config& _cfg)
 	if (!ok)
 		return false;
 
-	CProjectionGeometry3D* pProjGeometry = 0;
-	if (type == "parallel3d") {
-		pProjGeometry = new CParallelProjectionGeometry3D();
-	} else if (type == "parallel3d_vec") {
-		pProjGeometry = new CParallelVecProjectionGeometry3D();
-	} else if (type == "cone") {
-		pProjGeometry = new CConeProjectionGeometry3D();
-	} else if (type == "cone_vec") {
-		pProjGeometry = new CConeVecProjectionGeometry3D();
-	} else {
+	std::unique_ptr<CProjectionGeometry3D> pProjGeometry = constructProjectionGeometry3D(type);
+
+	if (!pProjGeometry) {
 		delete subcfg;
 		// Invalid geometry type
 		ASTRA_CONFIG_CHECK(false, "Projector3D", "Invalid projection geometry type \"%s\" specified.", type.c_str());
@@ -116,16 +105,15 @@ bool CProjector3D::initialize(const Config& _cfg)
 	pProjGeometry->initialize(*subcfg);
 	delete subcfg;
 
-	m_pProjectionGeometry = pProjGeometry;
+	m_pProjectionGeometry = std::move(pProjGeometry);
 	ASTRA_CONFIG_CHECK(m_pProjectionGeometry->isInitialized(), "Projector3D", "ProjectionGeometry not initialized.");
 
 	ok = CR.getRequiredSubConfig("VolumeGeometry", subcfg, type);
 	if (!ok)
 		return false;
 
-	CVolumeGeometry3D* pVolGeometry = new CVolumeGeometry3D();
-	pVolGeometry->initialize(*subcfg);
-	m_pVolumeGeometry = pVolGeometry;
+	m_pVolumeGeometry = std::make_unique<CVolumeGeometry3D>();
+	m_pVolumeGeometry->initialize(*subcfg);
 	delete subcfg;
 	ASTRA_CONFIG_CHECK(m_pVolumeGeometry->isInitialized(), "Projector3D", "VolumeGeometry not initialized.");
 

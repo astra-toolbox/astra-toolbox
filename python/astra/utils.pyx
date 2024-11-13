@@ -33,6 +33,7 @@ import builtins
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libcpp.list cimport list
+from libcpp.utility cimport move
 from cython.operator cimport dereference as deref, preincrement as inc
 
 from . cimport PyXMLDocument
@@ -291,29 +292,21 @@ cdef CFloat32ProjectionData3D* linkProjFromGeometry(const CProjectionGeometry3D 
 
 cdef unique_ptr[CProjectionGeometry3D] createProjectionGeometry3D(geometry) except *:
     cdef XMLConfig *cfg
-    cdef CProjectionGeometry3D * pGeometry
+    cdef unique_ptr[CProjectionGeometry3D] pGeometry
 
     cfg = dictToConfig(b'ProjectionGeometry', geometry)
-    tpe = wrap_from_bytes(cfg.self.getAttribute(b'type'))
-    if (tpe == "parallel3d"):
-        pGeometry = <CProjectionGeometry3D*> new CParallelProjectionGeometry3D();
-    elif (tpe == "parallel3d_vec"):
-        pGeometry = <CProjectionGeometry3D*> new CParallelVecProjectionGeometry3D();
-    elif (tpe == "cone"):
-        pGeometry = <CProjectionGeometry3D*> new CConeProjectionGeometry3D();
-    elif (tpe == "cone_vec"):
-        pGeometry = <CProjectionGeometry3D*> new CConeVecProjectionGeometry3D();
-    else:
+    tpe = cfg.self.getAttribute(b'type')
+    pGeometry = constructProjectionGeometry3D(tpe)
+    if not pGeometry:
         raise ValueError("'{}' is not a valid 3D geometry type".format(tpe))
 
-    if not pGeometry.initialize(cfg[0]):
+    if not pGeometry.get().initialize(cfg[0]):
         del cfg
-        del pGeometry
         raise AstraError('Geometry class could not be initialized', append_log=True)
 
     del cfg
 
-    return unique_ptr[CProjectionGeometry3D](pGeometry)
+    return move(pGeometry)
 
 cdef unique_ptr[CVolumeGeometry3D] createVolumeGeometry3D(geometry) except *:
     cdef XMLConfig *cfg
