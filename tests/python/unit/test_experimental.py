@@ -45,7 +45,7 @@ def proj_geom(request):
                                       SOURCE_ORIGIN, ORIGIN_DET)
         return astra.geom_2vec(geom)
     elif request.param == 'short_scan':
-        cone_angle = np.atan(0.5 * DET_COL_COUNT * DET_SPACING_X / (SOURCE_ORIGIN + ORIGIN_DET))
+        cone_angle = np.arctan2(0.5 * DET_COL_COUNT * DET_SPACING_X, SOURCE_ORIGIN + ORIGIN_DET)
         angles = np.linspace(0, np.pi + 2 * cone_angle, 180)
         return astra.create_proj_geom('cone', DET_SPACING_X, DET_SPACING_Y,
                                       DET_ROW_COUNT, DET_COL_COUNT, angles,

@@ -41,7 +41,7 @@ def proj_geom(request):
         yield astra.create_proj_geom('sparse_matrix', DET_SPACING, DET_COUNT, ANGLES, matrix_id)
         astra.matrix.delete(matrix_id)
     elif geometry_type == 'short_scan':
-        cone_angle = np.atan(0.5 * DET_COUNT * DET_SPACING / (SOURCE_ORIGIN + ORIGIN_DET))
+        cone_angle = np.arctan2(0.5 * DET_COUNT * DET_SPACING, SOURCE_ORIGIN + ORIGIN_DET)
         angles = np.linspace(0, np.pi + 2 * cone_angle, 180)
         yield astra.create_proj_geom('fanflat', DET_SPACING, DET_COUNT, angles,
                                       SOURCE_ORIGIN, ORIGIN_DET)
