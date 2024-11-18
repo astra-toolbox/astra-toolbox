@@ -3,6 +3,7 @@ import unittest
 import astra
 import math
 import pylab
+import pytest
 
 DISPLAY=False
 
@@ -76,7 +77,7 @@ def ProjectionGeometries(type,shortscan):
        pg = astra.create_proj_geom('parallel3d_vec', 128, 128, Vectors)
        yield pg
 
-
+@pytest.mark.slow
 class TestRecScale(unittest.TestCase):
   def single_test(self, geom_type, proj_type, alg, iters, vss, dss):
     if alg == 'FBP' and 'fanflat' in geom_type:

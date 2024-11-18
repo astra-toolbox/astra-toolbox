@@ -3,6 +3,7 @@ import unittest
 import astra
 import math
 import pylab
+import pytest
 
 # Display sinograms with mismatch on test failure
 DISPLAY=False
@@ -383,6 +384,7 @@ def display_mismatch_triple(data, sinogram, a, b, c):
   pylab.imshow(c-sinogram)
   pylab.show()
 
+@pytest.mark.slow
 class Test2DKernel(unittest.TestCase):
   def single_test(self, type, proj_type):
       shape = np.random.randint(*range2d, size=2)

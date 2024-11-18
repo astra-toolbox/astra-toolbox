@@ -1,6 +1,8 @@
 import astra
 import numpy as np
+import pytest
 
+@pytest.mark.slow
 def test_multigpu_consistency():
 
     def print_diff(a, b):
