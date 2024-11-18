@@ -30,13 +30,11 @@ requirements:
     - nomkl # [not win]
     - numpy {{ numpy }}
     - scipy
-    - six
     - libastra ==2.2.0
   run:
     - python
     - {{ pin_compatible('numpy', min_pin='x.x', max_pin='x') }}
     - scipy
-    - six
     # We make this libastra requirement as strict as possible because we
     # want to enforce matching astra-toolbox and libastra packages to limit
     # chances of API/ABI incompatibility.

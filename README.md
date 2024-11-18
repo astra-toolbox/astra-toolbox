@@ -77,7 +77,7 @@ MATLAB.
 
 #### For Python
 
-Requirements: g++ (7 or higher), CUDA (11.0 or higher), Python (3.x), Cython, six, scipy
+Requirements: g++ (7 or higher), CUDA (11.0 or higher), Python (3.x), Cython, scipy
 
 ```
 cd build/linux

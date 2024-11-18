@@ -26,7 +26,6 @@
 # distutils: language = c++
 # distutils: libraries = astra
 
-import six
 from libcpp.string cimport string
 
 cdef extern from "astra/Logging.h" namespace "astra":
@@ -54,20 +53,24 @@ cdef extern from "astra/Logging.h" namespace "astra::CLogger":
     string getLastErrMsg()
 
 def log_debug(sfile, sline, message):
-    cstr = list(map(six.b,(sfile,message)))
-    debug(cstr[0],sline,"%s",<char*>cstr[1])
+    sfile = sfile.encode('ascii')
+    message = message.encode('ascii')
+    debug(sfile,sline,"%s",<char*>message)
 
 def log_info(sfile, sline, message):
-    cstr = list(map(six.b,(sfile,message)))
-    info(cstr[0],sline,"%s",<char*>cstr[1])
+    sfile = sfile.encode('ascii')
+    message = message.encode('ascii')
+    info(sfile,sline,"%s",<char*>message)
 
 def log_warn(sfile, sline, message):
-    cstr = list(map(six.b,(sfile,message)))
-    warn(cstr[0],sline,"%s",<char*>cstr[1])
+    sfile = sfile.encode('ascii')
+    message = message.encode('ascii')
+    warn(sfile,sline,"%s",<char*>message)
 
 def log_error(sfile, sline, message):
-    cstr = list(map(six.b,(sfile,message)))
-    error(cstr[0],sline,"%s",<char*>cstr[1])
+    sfile = sfile.encode('ascii')
+    message = message.encode('ascii')
+    error(sfile,sline,"%s",<char*>message)
 
 def log_enable():
     enable()
@@ -88,12 +91,12 @@ def log_disableFile():
     disableFile()
 
 def log_setFormatFile(fmt):
-    cstr = six.b(fmt)
-    setFormatFile(cstr)
+    fmt = fmt.encode('ascii')
+    setFormatFile(fmt)
 
 def log_setFormatScreen(fmt):
-    cstr = six.b(fmt)
-    setFormatScreen(cstr)
+    fmt = fmt.encode('ascii')
+    setFormatScreen(fmt)
 
 enumList = [LOG_DEBUG,LOG_INFO,LOG_WARN,LOG_ERROR]
 
@@ -101,8 +104,8 @@ def log_setOutputScreen(fd, level):
     setOutputScreen(fd, enumList[level])
 
 def log_setOutputFile(filename, level):
-    cstr = six.b(filename)
-    setOutputFile(cstr, enumList[level])
+    filename = filename.encode('ascii')
+    setOutputFile(filename, enumList[level])
 
 def log_getLastErrMsg():
     return getLastErrMsg().decode('UTF-8')

@@ -53,7 +53,6 @@ CPythonPluginAlgorithmFactory::CPythonPluginAlgorithmFactory(){
     }
     pluginDict = PyDict_New();
     inspect = PyImport_ImportModule("inspect");
-    six = PyImport_ImportModule("six");
 }
 
 CPythonPluginAlgorithmFactory::~CPythonPluginAlgorithmFactory(){
@@ -61,7 +60,6 @@ CPythonPluginAlgorithmFactory::~CPythonPluginAlgorithmFactory(){
         Py_DECREF(pluginDict);
     }
     if(inspect!=NULL) Py_DECREF(inspect);
-    if(six!=NULL) Py_DECREF(six);
 }
 
 PyObject * getClassFromString(std::string str){
@@ -111,7 +109,7 @@ bool CPythonPluginAlgorithmFactory::registerPluginClass(PyObject * className){
         logPythonError();
         return false;
     }
-    PyObject *retb = PyObject_CallMethod(six,"b","O",astra_name);
+    PyObject *retb = PyUnicode_AsASCIIString(astra_name);
     if(retb!=NULL){
         PyDict_SetItemString(pluginDict,PyBytes_AsString(retb),className);
         Py_DECREF(retb);
@@ -153,9 +151,9 @@ std::map<std::string, std::string> CPythonPluginAlgorithmFactory::getRegisteredM
         if(keystr!=NULL){
             PyObject *valstr = PyObject_Str(value);
             if(valstr!=NULL){
-                PyObject * keyb = PyObject_CallMethod(six,"b","O",keystr);
+                PyObject * keyb = PyUnicode_AsASCIIString(keystr);
                 if(keyb!=NULL){
-                    PyObject * valb = PyObject_CallMethod(six,"b","O",valstr);
+                    PyObject * valb = PyUnicode_AsASCIIString(valstr);
                     if(valb!=NULL){
                         ret[PyBytes_AsString(keyb)] = PyBytes_AsString(valb);
                         Py_DECREF(valb);
@@ -187,11 +185,11 @@ std::string CPythonPluginAlgorithmFactory::getHelp(const std::string &name){
         pyclass = className;
     }
     if(pyclass==NULL) return "";
-    if(inspect!=NULL && six!=NULL){
+    if(inspect!=NULL){
         PyObject *retVal = PyObject_CallMethod(inspect,"getdoc","O",pyclass);
         if(retVal!=NULL){
             if(retVal!=Py_None){
-                PyObject *retb = PyObject_CallMethod(six,"b","O",retVal);
+                PyObject *retb = PyUnicode_AsASCIIString(retVal);
                 if(retb!=NULL){
                     ret = std::string(PyBytes_AsString(retb));
                     Py_DECREF(retb);

@@ -56,24 +56,20 @@ void logPythonError(){
                 exc = PyObject_CallMethod(traceback,"format_exception","OOO",ptype, pvalue, ptraceback);
             }
             if(exc!=NULL){
-                PyObject *six = PyImport_ImportModule("six");
-                if(six!=NULL){
-                    PyObject *iter = PyObject_GetIter(exc);
-                    if(iter!=NULL){
-                        PyObject *line;
-                        std::string errStr = "";
-                        while((line = PyIter_Next(iter))){
-                            PyObject *retb = PyObject_CallMethod(six,"b","O",line);
-                            if(retb!=NULL){
-                                errStr += std::string(PyBytes_AsString(retb));
-                                Py_DECREF(retb);
-                            }
-                            Py_DECREF(line);
+                PyObject *iter = PyObject_GetIter(exc);
+                if(iter!=NULL){
+                    PyObject *line;
+                    std::string errStr = "";
+                    while((line = PyIter_Next(iter))){
+                        PyObject *retb = PyUnicode_AsASCIIString(line);
+                        if(retb!=NULL){
+                            errStr += std::string(PyBytes_AsString(retb));
+                            Py_DECREF(retb);
                         }
-                        ASTRA_ERROR("%s",errStr.c_str());
-                        Py_DECREF(iter);
+                        Py_DECREF(line);
                     }
-                    Py_DECREF(six);
+                    ASTRA_ERROR("%s",errStr.c_str());
+                    Py_DECREF(iter);
                 }
                 Py_DECREF(exc);
             }
@@ -130,15 +126,9 @@ PyObject *CPluginAlgorithm::getInstance() const {
 	return instance;
 }
 
-#if PY_MAJOR_VERSION >= 3
 PyObject * pyStringFromString(std::string str){
     return PyUnicode_FromString(str.c_str());
 }
-#else
-PyObject * pyStringFromString(std::string str){
-    return PyBytes_FromString(str.c_str());
-}
-#endif
 
 PyObject* stringToPythonValue(std::string str){
     if(str.find(";")!=std::string::npos){

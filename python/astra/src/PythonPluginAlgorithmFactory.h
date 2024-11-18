@@ -59,7 +59,7 @@ public:
 
 private:
     PyObject * pluginDict;
-    PyObject *inspect, *six;
+    PyObject *inspect;
 };
 
 }

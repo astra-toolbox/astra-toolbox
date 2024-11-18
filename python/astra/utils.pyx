@@ -29,16 +29,11 @@
 import sys
 cimport numpy as np
 import numpy as np
-import six
-if six.PY3:
-    import builtins
-else:
-    import __builtin__ as builtins
+import builtins
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libcpp.list cimport list
 from cython.operator cimport dereference as deref, preincrement as inc
-from cpython.version cimport PY_MAJOR_VERSION
 
 from . cimport PyXMLDocument
 from .PyXMLDocument cimport XMLDocument
@@ -70,7 +65,7 @@ cdef Config * dictToConfig(string rootname, dc) except NULL:
     return cfg
 
 def convert_item(item):
-    if isinstance(item, six.string_types):
+    if isinstance(item, str):
         return item.encode('ascii')
 
     if type(item) is not dict:
@@ -83,19 +78,13 @@ def convert_item(item):
 
 
 def wrap_to_bytes(value):
-    if isinstance(value, six.binary_type):
+    if isinstance(value, bytes):
         return value
-    s = str(value)
-    if PY_MAJOR_VERSION == 3:
-        s = s.encode('ascii')
-    return s
+    return str(value).encode('ascii')
 
 
 def wrap_from_bytes(value):
-    s = value
-    if PY_MAJOR_VERSION == 3:
-        s = s.decode('ascii')
-    return s
+    return value.decode('ascii')
 
 
 cdef bool readDict(XMLNode root, _dc) except False:
@@ -171,16 +160,8 @@ cdef bool readOptions(XMLNode node, dc) except False:
 cdef configToDict(Config *cfg):
     return XMLNode2dict(cfg.self)
 
-def castString3(input):
+def castString(input):
     return input.decode('utf-8')
-
-def castString2(input):
-    return input
-
-if six.PY3:
-    castString = castString3
-else:
-    castString = castString2
 
 def stringToPythonValue(inputIn):
     input = castString(inputIn)
