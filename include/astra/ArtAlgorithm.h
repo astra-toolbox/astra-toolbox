@@ -163,11 +163,9 @@ protected:
 	float32 m_fLambda;
 	
 	//< Order of the rays, the projections.
-	int* m_piProjectionOrder;
+	std::vector<int> m_piProjectionOrder;
 	//< Order of the rays, the detectors.
-	int* m_piDetectorOrder;
-	//< Number of rays specified in the ray order arrays.
-	int m_iRayCount;
+	std::vector<int> m_piDetectorOrder;
 	//< Current index in the ray order arrays.
 	int m_iCurrentRay;
 	

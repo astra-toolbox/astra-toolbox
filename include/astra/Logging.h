@@ -34,7 +34,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #define ASTRA_INFO(...) astra::CLogger::info(__FILE__,__LINE__, __VA_ARGS__)
 #define ASTRA_WARN(...) astra::CLogger::warn(__FILE__,__LINE__, __VA_ARGS__)
 #define ASTRA_ERROR(...) astra::CLogger::error(__FILE__,__LINE__, __VA_ARGS__)
-#define ASTRA_CONFIG_CHECK(value, type, msg) if (!(value)) { astra::CLogger::error(__FILE__,__LINE__,"Configuration error in " type ". " msg); return false; }
+#define ASTRA_CONFIG_CHECK(value, type, msg, ...) do { if (!(value)) { astra::CLogger::error(__FILE__,__LINE__,"Configuration error in " type ". " msg, ##__VA_ARGS__); return false; } } while(false)
 
 namespace astra
 {

@@ -89,79 +89,24 @@ void CFilteredBackProjectionAlgorithm::clear()
 // Initialize, use a Config object
 bool CFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CAlgorithm> CC("FilteredBackProjectionAlgorithm", this, _cfg);
+	ConfigReader<CAlgorithm> CR("FilteredBackProjectionAlgorithm", this, _cfg);
+
+	bool ok = true;
 	int id = -1;
-	
-	// projector
-	XMLNode node = _cfg.self.getSingleNode("ProjectorId");
-	ASTRA_CONFIG_CHECK(node, "FilteredBackProjection", "No ProjectorId tag specified.");
-	id = StringUtil::stringToInt(node.getContent(), -1);
+
+	ok &= CR.getRequiredID("ProjectorId", id);
 	m_pProjector = CProjector2DManager::getSingleton().get(id);
-	CC.markNodeParsed("ProjectorId");
 
-	// sinogram data
-	node = _cfg.self.getSingleNode("ProjectionDataId");
-	ASTRA_CONFIG_CHECK(node, "FilteredBackProjection", "No ProjectionDataId tag specified.");
-	id = StringUtil::stringToInt(node.getContent(), -1);
+	ok &= CR.getRequiredID("ProjectionDataId", id);
 	m_pSinogram = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
-	CC.markNodeParsed("ProjectionDataId");
 
-	// volume data
-	node = _cfg.self.getSingleNode("ReconstructionDataId");
-	ASTRA_CONFIG_CHECK(node, "FilteredBackProjection", "No ReconstructionDataId tag specified.");
-	id = StringUtil::stringToInt(node.getContent(), -1);
+	ok &= CR.getRequiredID("ReconstructionDataId", id);
 	m_pReconstruction = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
-	CC.markNodeParsed("ReconstructionDataId");
 
-	node = _cfg.self.getSingleNode("ProjectionIndex");
-	if (node) 
-	{
-		vector<float32> projectionIndex;
-		try {
-			projectionIndex = node.getContentNumericalArray();
-		} catch (const StringUtil::bad_cast &e) {
-			ASTRA_CONFIG_CHECK(false, "FilteredBackProjection", "ProjectionIndex must be a numerical vector.");
-		}
-
-		int angleCount = projectionIndex.size();
-		int detectorCount = m_pProjector->getProjectionGeometry()->getDetectorCount();
-
-		// TODO: There is no need to allocate this. Better just
-		// create the CFloat32ProjectionData2D object directly, and use its
-		// memory.
-		float32 * sinogramData2D = new float32[angleCount* detectorCount];
-
-		float32 * projectionAngles = new float32[angleCount];
-		float32 detectorWidth = m_pProjector->getProjectionGeometry()->getDetectorWidth();
-
-		for (int i = 0; i < angleCount; i ++) {
-			if (projectionIndex[i] > m_pProjector->getProjectionGeometry()->getProjectionAngleCount() -1 )
-			{
-				delete[] sinogramData2D;
-				delete[] projectionAngles;
-				ASTRA_ERROR("Invalid Projection Index");
-				return false;
-			} else {
-				int orgIndex = (int)projectionIndex[i];
-
-				for (int iDetector=0; iDetector < detectorCount; iDetector++) 
-				{
-					sinogramData2D[i*detectorCount+ iDetector] = m_pSinogram->getData2D()[orgIndex][iDetector];
-				}
-				projectionAngles[i] = m_pProjector->getProjectionGeometry()->getProjectionAngle((int)projectionIndex[i] );
-
-			}
-		}
-
-		CParallelProjectionGeometry2D * pg = new CParallelProjectionGeometry2D(angleCount, detectorCount,detectorWidth,projectionAngles);
-		m_pProjector = new CParallelBeamLineKernelProjector2D(pg,m_pReconstruction->getGeometry());
-		m_pSinogram = new CFloat32ProjectionData2D(pg, sinogramData2D);
-
-		delete[] sinogramData2D;
-		delete[] projectionAngles;
+	if (CR.has("ProjectionIndex")) {
+		ASTRA_ERROR("ProjectionIndex is no longer available. Manually adjust the sinogram instead.");
+		return false;
 	}
-	CC.markNodeParsed("ProjectionIndex");
 
 	m_filterConfig = getFilterConfigForAlgorithm(_cfg, this);
 

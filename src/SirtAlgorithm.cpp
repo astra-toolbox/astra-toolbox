@@ -115,8 +115,7 @@ bool CSirtAlgorithm::_check()
 // Initialize - Config
 bool CSirtAlgorithm::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CAlgorithm> CC("SirtAlgorithm", this, _cfg);
+	ConfigReader<CAlgorithm> CR("SirtAlgorithm", this, _cfg);
 
 	// if already initialized, clear first
 	if (m_bIsInitialized) {
@@ -128,8 +127,12 @@ bool CSirtAlgorithm::initialize(const Config& _cfg)
 		return false;
 	}
 
-	m_fLambda = _cfg.self.getOptionNumerical("Relaxation", 1.0f);
-	CC.markOptionParsed("Relaxation");
+	bool ok = true;
+
+	ok &= CR.getOptionNumerical("Relaxation", m_fLambda, 1.0f);
+
+	if (!ok)
+		return false;
 
 	// init data objects and data projectors
 	_init();

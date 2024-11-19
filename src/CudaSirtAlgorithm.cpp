@@ -64,8 +64,7 @@ CCudaSirtAlgorithm::~CCudaSirtAlgorithm()
 // Initialize - Config
 bool CCudaSirtAlgorithm::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CAlgorithm> CC("CudaSirtAlgorithm", this, _cfg);
+	ConfigReader<CAlgorithm> CR("CudaSirtAlgorithm", this, _cfg);
 
 	m_bIsInitialized = CCudaReconstructionAlgorithm2D::initialize(_cfg);
 
@@ -73,19 +72,20 @@ bool CCudaSirtAlgorithm::initialize(const Config& _cfg)
 		return false;
 
 	// min/max masks
-	if (_cfg.self.hasOption("MinMaskId")) {
-		int id = _cfg.self.getOptionInt("MinMaskId");
+	int id = -1;
+	if (CR.getOptionID("MinMaskId", id)) {
 		m_pMinMask = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 	}
-	CC.markOptionParsed("MinMaskId");
-	if (_cfg.self.hasOption("MaxMaskId")) {
-		int id = _cfg.self.getOptionInt("MaxMaskId");
+	if (CR.getOptionID("MaxMaskId", id)) {
 		m_pMaxMask = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 	}
-	CC.markOptionParsed("MaxMaskId");
 
-	m_fLambda = _cfg.self.getOptionNumerical("Relaxation", 1.0f);
-	CC.markOptionParsed("Relaxation");
+	bool ok = true;
+
+	ok &= CR.getOptionNumerical("Relaxation", m_fLambda, 1.0f);
+
+	if (!ok)
+		return false;
 
 	m_pAlgo = new astraCUDA::SIRT();
 	m_bAlgoInit = false;

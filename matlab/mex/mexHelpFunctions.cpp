@@ -137,15 +137,14 @@ mxArray* vector2DToMxArray(std::vector<std::vector<astra::float32> > mInput)
 
 //-----------------------------------------------------------------------------------------
 // turn a MATLAB struct into a Config object
-Config* structToConfig(string rootname, const mxArray* pStruct)
+XMLConfig* structToConfig(string rootname, const mxArray* pStruct)
 {
 	if (!mxIsStruct(pStruct)) {
 		mexErrMsgTxt("Input must be a struct.");
 	}
 
 	// create the document
-	Config* cfg = new Config();
-	cfg->initialize(rootname);
+	XMLConfig* cfg = new XMLConfig(rootname);
 
 	// read the struct
 	bool ret = structToXMLNode(cfg->self, pStruct);
@@ -283,7 +282,10 @@ std::map<std::string, mxArray*> parseStruct(const mxArray* pInput)
 // turn a Config object into a MATLAB struct
 mxArray* configToStruct(astra::Config* cfg)
 {
-	return XMLNodeToStruct(cfg->self);
+	astra::XMLConfig *xmlcfg = dynamic_cast<astra::XMLConfig*>(cfg);
+	if (!xmlcfg)
+		return 0;
+	return XMLNodeToStruct(xmlcfg->self);
 }
 
 //-----------------------------------------------------------------------------------------

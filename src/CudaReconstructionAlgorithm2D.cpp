@@ -104,8 +104,7 @@ void CCudaReconstructionAlgorithm2D::initializeFromProjector()
 // Initialize - Config
 bool CCudaReconstructionAlgorithm2D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CAlgorithm> CC("CudaReconstructionAlgorithm2D", this, _cfg);
+	ConfigReader<CAlgorithm> CR("CudaReconstructionAlgorithm2D", this, _cfg);
 
 	m_bIsInitialized = CReconstructionAlgorithm2D::initialize(_cfg);
 
@@ -114,26 +113,19 @@ bool CCudaReconstructionAlgorithm2D::initialize(const Config& _cfg)
 
 	initializeFromProjector();
 
-	// Deprecated options
-	try {
-		m_iDetectorSuperSampling = _cfg.self.getOptionInt("DetectorSuperSampling", m_iDetectorSuperSampling);
-		m_iPixelSuperSampling = _cfg.self.getOptionInt("PixelSuperSampling", m_iPixelSuperSampling);
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "CudaReconstructionAlgorithm2D", "Supersampling options must be integers.");
-	}
-	CC.markOptionParsed("DetectorSuperSampling");
-	CC.markOptionParsed("PixelSuperSampling");
+	bool ok = true;
 
-	// GPU number
-	try {
-		m_iGPUIndex = _cfg.self.getOptionInt("GPUindex", -1);
-		m_iGPUIndex = _cfg.self.getOptionInt("GPUIndex", m_iGPUIndex);
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "CudaReconstructionAlgorithm2D", "GPUIndex must be an integer.");
-	}
-	CC.markOptionParsed("GPUIndex");
-	if (!_cfg.self.hasOption("GPUIndex"))
-		CC.markOptionParsed("GPUindex");
+	// Deprecated options
+	ok &= CR.getOptionInt("PixelSuperSampling", m_iPixelSuperSampling, m_iPixelSuperSampling);
+	ok &= CR.getOptionInt("DetectorSuperSampling", m_iDetectorSuperSampling, m_iDetectorSuperSampling);
+
+	if (CR.hasOption("GPUIndex"))
+		ok &= CR.getOptionInt("GPUIndex", m_iGPUIndex, -1);
+	else
+		ok &= CR.getOptionInt("GPUindex", m_iGPUIndex, -1);
+
+	if (!ok)
+		return false;
 
 	return _check();
 }

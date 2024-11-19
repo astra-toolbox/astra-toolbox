@@ -107,8 +107,7 @@ bool CCglsAlgorithm::_check()
 // Initialize - Config
 bool CCglsAlgorithm::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CAlgorithm> CC("CglsAlgorithm", this, _cfg);
+	ConfigReader<CAlgorithm> CR("CglsAlgorithm", this, _cfg);
 
 	// if already initialized, clear first
 	if (m_bIsInitialized) {

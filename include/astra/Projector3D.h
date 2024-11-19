@@ -168,7 +168,7 @@ public:
 private:
 	//< For Config unused argument checking
 	ConfigCheckData* configCheckData;
-	friend class ConfigStackCheck<CProjector3D>;
+	friend class ConfigReader<CProjector3D>;
 
 };
 

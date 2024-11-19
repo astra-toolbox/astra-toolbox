@@ -26,6 +26,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "astra/VolumeGeometry3D.h"
+#include "astra/XMLConfig.h"
 #include "astra/Logging.h"
 
 namespace astra
@@ -182,62 +183,30 @@ CVolumeGeometry3D::~CVolumeGeometry3D()
 // Initialization with a Config object
 bool CVolumeGeometry3D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CVolumeGeometry3D> CC("VolumeGeometry3D", this, _cfg);
-
+	ConfigReader<CVolumeGeometry3D> CR("VolumeGeometry3D", this, _cfg);
 
 	// uninitialize if the object was initialized before
 	if (m_bInitialized)	{
 		clear();
 	}
 
-	// Required: GridColCount
-	XMLNode node = _cfg.self.getSingleNode("GridColCount");
-	ASTRA_CONFIG_CHECK(node, "VolumeGeometry3D", "No GridColCount tag specified.");
-	try {
-		m_iGridColCount = node.getContentInt();
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "VolumeGeometry3D", "GridColCount must be an integer.");
-	}
-	CC.markNodeParsed("GridColCount");
+	bool ok = true;
 
-	// Required: GridRowCount
-	node = _cfg.self.getSingleNode("GridRowCount");
-	ASTRA_CONFIG_CHECK(node, "VolumeGeometry3D", "No GridRowCount tag specified.");
-	try {
-		m_iGridRowCount = node.getContentInt();
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "VolumeGeometry3D", "GridRowCount must be an integer.");
-	}
-	CC.markNodeParsed("GridRowCount");
+	// Required: number of voxels
+	ok &= CR.getRequiredInt("GridColCount", m_iGridColCount);
+	ok &= CR.getRequiredInt("GridRowCount", m_iGridRowCount);
+	ok &= CR.getRequiredInt("GridSliceCount", m_iGridSliceCount);
 
-	// Required: GridRowCount
-	node = _cfg.self.getSingleNode("GridSliceCount");
-	ASTRA_CONFIG_CHECK(node, "VolumeGeometry3D", "No GridSliceCount tag specified.");
-	try {
-		m_iGridSliceCount = node.getContentInt();
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "VolumeGeometry3D", "GridSliceCount must be an integer.");
-	}
-	CC.markNodeParsed("GridSliceCount");
+	// Optional: window minima and maxima
+	ok &= CR.getOptionNumerical("WindowMinX", m_fWindowMinX, -m_iGridColCount/2.0f);
+	ok &= CR.getOptionNumerical("WindowMaxX", m_fWindowMaxX, m_iGridColCount/2.0f);
+	ok &= CR.getOptionNumerical("WindowMinY", m_fWindowMinY, -m_iGridRowCount/2.0f);
+	ok &= CR.getOptionNumerical("WindowMaxY", m_fWindowMaxY, m_iGridRowCount/2.0f);
+	ok &= CR.getOptionNumerical("WindowMinZ", m_fWindowMinZ, -m_iGridSliceCount/2.0f);
+	ok &= CR.getOptionNumerical("WindowMaxZ", m_fWindowMaxZ, m_iGridSliceCount/2.0f);
 
-	// Optional: Window minima and maxima
-	try {
-		m_fWindowMinX = _cfg.self.getOptionNumerical("WindowMinX", -m_iGridColCount/2.0f);
-		m_fWindowMaxX = _cfg.self.getOptionNumerical("WindowMaxX", m_iGridColCount/2.0f);
-		m_fWindowMinY = _cfg.self.getOptionNumerical("WindowMinY", -m_iGridRowCount/2.0f);
-		m_fWindowMaxY = _cfg.self.getOptionNumerical("WindowMaxY", m_iGridRowCount/2.0f);
-		m_fWindowMinZ = _cfg.self.getOptionNumerical("WindowMinZ", -m_iGridSliceCount/2.0f);
-		m_fWindowMaxZ = _cfg.self.getOptionNumerical("WindowMaxZ", m_iGridSliceCount/2.0f);
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "VolumeGeometry3D", "Window extents must be numerical.");
-	}
-	CC.markOptionParsed("WindowMinX");
-	CC.markOptionParsed("WindowMaxX");
-	CC.markOptionParsed("WindowMinY");
-	CC.markOptionParsed("WindowMaxY");
-	CC.markOptionParsed("WindowMinZ");
-	CC.markOptionParsed("WindowMaxZ");
+	if (!ok)
+		return false;
 
 	// calculate some other things
 	m_iGridTotCount = ((size_t)m_iGridColCount * m_iGridRowCount * m_iGridSliceCount);
@@ -338,7 +307,7 @@ CVolumeGeometry3D* CVolumeGeometry3D::clone() const
 	res->m_fPixelLengthY	= m_fPixelLengthY;
 	res->m_fPixelLengthZ	= m_fPixelLengthZ;
 	res->m_fPixelArea		= m_fPixelArea;
-    res->m_fDivPixelLengthX = m_fDivPixelLengthX;
+	res->m_fDivPixelLengthX = m_fDivPixelLengthX;
 	res->m_fDivPixelLengthY = m_fDivPixelLengthY;
 	res->m_fDivPixelLengthZ = m_fDivPixelLengthZ;
 	res->m_fWindowMinX		= m_fWindowMinX;
@@ -372,7 +341,7 @@ bool CVolumeGeometry3D::isEqual(const CVolumeGeometry3D* _pGeom2) const
 	if (m_fPixelLengthY != _pGeom2->m_fPixelLengthY) return false;
 	if (m_fPixelLengthZ != _pGeom2->m_fPixelLengthZ) return false;
 	if (m_fPixelArea != _pGeom2->m_fPixelArea) return false;
-    if (m_fDivPixelLengthX != _pGeom2->m_fDivPixelLengthX) return false;
+	if (m_fDivPixelLengthX != _pGeom2->m_fDivPixelLengthX) return false;
 	if (m_fDivPixelLengthY != _pGeom2->m_fDivPixelLengthY) return false;
 	if (m_fDivPixelLengthZ != _pGeom2->m_fDivPixelLengthZ) return false;
 	if (m_fWindowMinX != _pGeom2->m_fWindowMinX) return false;
@@ -396,21 +365,19 @@ CVolumeGeometry2D * CVolumeGeometry3D::createVolumeGeometry2D() const
 // Get the configuration object
 Config* CVolumeGeometry3D::getConfiguration() const 
 {
-	Config* cfg = new Config();
-	cfg->initialize("VolumeGeometry3D");
+	ConfigWriter CW("VolumeGeometry3D", "parallel");
 
-	cfg->self.addChildNode("GridColCount", m_iGridColCount);
-	cfg->self.addChildNode("GridRowCount", m_iGridRowCount);
-	cfg->self.addChildNode("GridSliceCount", m_iGridSliceCount);
+	CW.addInt("GridColCount", m_iGridColCount);
+	CW.addInt("GridRowCount", m_iGridRowCount);
+	CW.addInt("GridSliceCount", m_iGridSliceCount);
+	CW.addOptionNumerical("WindowMinX", m_fWindowMinX);
+	CW.addOptionNumerical("WindowMaxX", m_fWindowMaxX);
+	CW.addOptionNumerical("WindowMinY", m_fWindowMinY);
+	CW.addOptionNumerical("WindowMaxY", m_fWindowMaxY);
+	CW.addOptionNumerical("WindowMinZ", m_fWindowMinZ);
+	CW.addOptionNumerical("WindowMaxZ", m_fWindowMaxZ);
 
-	cfg->self.addOption("WindowMinX", m_fWindowMinX);
-	cfg->self.addOption("WindowMaxX", m_fWindowMaxX);
-	cfg->self.addOption("WindowMinY", m_fWindowMinY);
-	cfg->self.addOption("WindowMaxY", m_fWindowMaxY);
-	cfg->self.addOption("WindowMinZ", m_fWindowMinZ);
-	cfg->self.addOption("WindowMaxZ", m_fWindowMaxZ);
-
-	return cfg;
+	return CW.getConfig();
 }
 //----------------------------------------------------------------------------------------
 

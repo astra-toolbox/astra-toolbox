@@ -114,45 +114,40 @@ bool CForwardProjectionAlgorithm::_check()
 // Initialize, use a Config object
 bool CForwardProjectionAlgorithm::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
+	ConfigReader<CAlgorithm> CR("ForwardProjectionAlgorithm", this, _cfg);
 
 	// if already initialized, clear first
 	if (m_bIsInitialized) {
 		clear();
 	}
 
-	// projector
-	XMLNode node = _cfg.self.getSingleNode("ProjectorId");
-	ASTRA_CONFIG_CHECK(node, "ForwardProjection", "No ProjectorId tag specified.");
-	int id;
-	id = StringUtil::stringToInt(node.getContent(), -1);
-	m_pProjector = CProjector2DManager::getSingleton().get(id);
+	bool ok = true;
+	int id = -1;
 
-	// sinogram data
-	node = _cfg.self.getSingleNode("ProjectionDataId");
-	ASTRA_CONFIG_CHECK(node, "ForwardProjection", "No ProjectionDataId tag specified.");
-	id = StringUtil::stringToInt(node.getContent(), -1);
+	ok &= CR.getRequiredID("ProjectorId", id);
+	m_pProjector = CProjector2DManager::getSingleton().get(id);
+	if (!m_pProjector) {
+		ASTRA_ERROR("ProjectorId is not a valid id");
+		return false;
+	}
+
+	ok &= CR.getRequiredID("ProjectionDataId", id);
 	m_pSinogram = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
 
-	// volume data
-	node = _cfg.self.getSingleNode("VolumeDataId");
-	ASTRA_CONFIG_CHECK(node, "ForwardProjection", "No VolumeDataId tag specified.");
-	id = StringUtil::stringToInt(node.getContent(), -1);
+	ok &= CR.getRequiredID("VolumeDataId", id);
 	m_pVolume = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
+
 	
-	// volume mask
-	if (_cfg.self.hasOption("VolumeMaskId")) {
+	if (CR.getOptionID("VolumeMaskId", id)) {
 		m_bUseVolumeMask = true;
-		id = StringUtil::stringToInt(_cfg.self.getOption("VolumeMaskId"), -1);
 		m_pVolumeMask = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 	}
 
-	// sino mask
-	if (_cfg.self.hasOption("SinogramMaskId")) {
+	if (CR.getOptionID("SinogramMaskId", id)) {
 		m_bUseSinogramMask = true;
-		id = StringUtil::stringToInt(_cfg.self.getOption("SinogramMaskId"), -1);
 		m_pSinogramMask = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
 	}
+
 
 	// ray or voxel-driven projector?
 	//m_bUseVoxelProjector = _cfg.self->getOptionBool("VoxelDriven", false);

@@ -235,6 +235,7 @@ P_astra["filters"]["Global &amp; Other\\source"] = [
 "src\\Logging.cpp",
 "src\\PlatformDepSystemCode.cpp",
 "src\\Utilities.cpp",
+"src\\XMLConfig.cpp",
 "src\\XMLDocument.cpp",
 "src\\XMLNode.cpp",
 ]
@@ -372,6 +373,7 @@ P_astra["filters"]["Global &amp; Other\\headers"] = [
 "include\\astra\\TypeList.h",
 "include\\astra\\Utilities.h",
 "include\\astra\\Vector3D.h",
+"include\\astra\\XMLConfig.h",
 "include\\astra\\XMLDocument.h",
 "include\\astra\\XMLNode.h",
 ]

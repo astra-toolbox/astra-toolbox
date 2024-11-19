@@ -88,57 +88,42 @@ void CCudaForwardProjectionAlgorithm3D::initializeFromProjector()
 // Initialize - Config
 bool CCudaForwardProjectionAlgorithm3D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CAlgorithm> CC("CudaForwardProjectionAlgorithm3D", this, _cfg);	
+	ConfigReader<CAlgorithm> CR("CudaForwardProjectionAlgorithm3D", this, _cfg);
 
-	XMLNode node;
-	int id;
-
-	// sinogram data
-	node = _cfg.self.getSingleNode("ProjectionDataId");
-	ASTRA_CONFIG_CHECK(node, "CudaForwardProjection3D", "No ProjectionDataId tag specified.");
-	id = StringUtil::stringToInt(node.getContent(), -1);
-	m_pProjections = dynamic_cast<CFloat32ProjectionData3D*>(CData3DManager::getSingleton().get(id));
-	CC.markNodeParsed("ProjectionDataId");
-
-	// reconstruction data
-	node = _cfg.self.getSingleNode("VolumeDataId");
-	ASTRA_CONFIG_CHECK(node, "CudaForwardProjection3D", "No VolumeDataId tag specified.");
-	id = StringUtil::stringToInt(node.getContent(), -1);
-	m_pVolume = dynamic_cast<CFloat32VolumeData3D*>(CData3DManager::getSingleton().get(id));
-	CC.markNodeParsed("VolumeDataId");
-
-	// optional: projector
-	node = _cfg.self.getSingleNode("ProjectorId");
+	// projector
 	m_pProjector = 0;
-	if (node) {
-		id = StringUtil::stringToInt(node.getContent(), -1);
+	int id = -1;
+	if (CR.has("ProjectorId")) {
+		CR.getID("ProjectorId", id);
 		m_pProjector = CProjector3DManager::getSingleton().get(id);
 		if (!m_pProjector) {
 			ASTRA_WARN("Optional parameter ProjectorId is not a valid id");
 		}
 	}
-	CC.markNodeParsed("ProjectorId");
+
+	bool ok = true;
+
+	// sinogram data
+	ok &= CR.getRequiredID("ProjectionDataId", id);
+	m_pProjections = dynamic_cast<CFloat32ProjectionData3D*>(CData3DManager::getSingleton().get(id));
+
+	// reconstruction data
+	ok &= CR.getRequiredID("VolumeDataId", id);
+	m_pVolume = dynamic_cast<CFloat32VolumeData3D*>(CData3DManager::getSingleton().get(id));
+
+	if (!ok)
+		return false;
 
 	initializeFromProjector();
 
 	// Deprecated options
-	try {
-		m_iDetectorSuperSampling = _cfg.self.getOptionInt("DetectorSuperSampling", m_iDetectorSuperSampling);
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "CudaForwardProjection3D", "Supersampling options must be integers.");
-	}
-	CC.markOptionParsed("DetectorSuperSampling");
-	// GPU number
-	try {
-		m_iGPUIndex = _cfg.self.getOptionInt("GPUindex", -1);
-		m_iGPUIndex = _cfg.self.getOptionInt("GPUIndex", m_iGPUIndex);
-	} catch (const StringUtil::bad_cast &e) {
-		ASTRA_CONFIG_CHECK(false, "CudaForwardProjection3D", "GPUIndex must be an integer.");
-	}
-	CC.markOptionParsed("GPUIndex");
-	if (!_cfg.self.hasOption("GPUIndex"))
-		CC.markOptionParsed("GPUindex");
+	ok &= CR.getOptionInt("DetectorSuperSampling", m_iDetectorSuperSampling, m_iDetectorSuperSampling);
+	if (CR.hasOption("GPUIndex"))
+		ok &= CR.getOptionInt("GPUIndex", m_iGPUIndex, -1);
+	else
+		ok &= CR.getOptionInt("GPUindex", m_iGPUIndex, -1);
+	if (!ok)
+		return false;
 
 	// success
 	m_bIsInitialized = check();

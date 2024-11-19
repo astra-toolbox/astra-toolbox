@@ -378,7 +378,7 @@ void XMLNode::setContent(float32 _fValue)
 // Set content - LIST
 
 template<typename T>
-static std::string setContentList_internal(T* pfList, int _iSize) {
+static std::string setContentList_internal(const T* pfList, int _iSize) {
 	std::string str;
 	for (int i = 0; i < _iSize; i++) {
 		str += StringUtil::toString(pfList[i]) + ",";
@@ -386,12 +386,12 @@ static std::string setContentList_internal(T* pfList, int _iSize) {
 	return str;
 }
 
-void XMLNode::setContent(float32* pfList, int _iSize)
+void XMLNode::setContent(const float32* pfList, int _iSize)
 {
 	setContent(setContentList_internal<float32>(pfList, _iSize));
 }
 
-void XMLNode::setContent(double* pfList, int _iSize)
+void XMLNode::setContent(const double* pfList, int _iSize)
 {
 	setContent(setContentList_internal<double>(pfList, _iSize));
 }
@@ -400,7 +400,7 @@ void XMLNode::setContent(double* pfList, int _iSize)
 // Set content - MATRIX
 
 template<typename T>
-static std::string setContentMatrix_internal(T* _pfMatrix, int _iWidth, int _iHeight, bool transposed)
+static std::string setContentMatrix_internal(const T* _pfMatrix, int _iWidth, int _iHeight, bool transposed)
 {
 	int s1,s2;
 
@@ -428,12 +428,12 @@ static std::string setContentMatrix_internal(T* _pfMatrix, int _iWidth, int _iHe
 	return s.str();
 }
 
-void XMLNode::setContent(float32* _pfMatrix, int _iWidth, int _iHeight, bool transposed)
+void XMLNode::setContent(const float32* _pfMatrix, int _iWidth, int _iHeight, bool transposed)
 {
 	setContent(setContentMatrix_internal<float32>(_pfMatrix, _iWidth, _iHeight, transposed));
 }
 
-void XMLNode::setContent(double* _pfMatrix, int _iWidth, int _iHeight, bool transposed)
+void XMLNode::setContent(const double* _pfMatrix, int _iWidth, int _iHeight, bool transposed)
 {
 	setContent(setContentMatrix_internal<double>(_pfMatrix, _iWidth, _iHeight, transposed));
 }

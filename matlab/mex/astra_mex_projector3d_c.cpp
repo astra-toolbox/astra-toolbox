@@ -64,7 +64,7 @@ void astra_mex_projector3d_create(int nlhs, mxArray* plhs[], int nrhs, const mxA
 	}
 
 	// turn MATLAB struct to an XML-based Config object
-	Config* cfg = structToConfig("Projector3D", prhs[1]);
+	XMLConfig* cfg = structToConfig("Projector3D", prhs[1]);
 
 	// create algorithm
 	CProjector3D* pProj = CProjector3DFactory::getSingleton().create(cfg->self.getAttribute("type"));

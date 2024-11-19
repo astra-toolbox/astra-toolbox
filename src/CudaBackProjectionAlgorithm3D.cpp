@@ -105,8 +105,7 @@ void CCudaBackProjectionAlgorithm3D::initializeFromProjector()
 // Initialize - Config
 bool CCudaBackProjectionAlgorithm3D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
-	ConfigStackCheck<CAlgorithm> CC("CudaBackProjectionAlgorithm3D", this, _cfg);	
+	ConfigReader<CAlgorithm> CR("CudaBackProjectionAlgorithm3D", this, _cfg);
 
 	// if already initialized, clear first
 	if (m_bIsInitialized) {
@@ -120,19 +119,19 @@ bool CCudaBackProjectionAlgorithm3D::initialize(const Config& _cfg)
 
 	initializeFromProjector();
 
+	bool ok = true;
+
 	// Deprecated options
-	m_iVoxelSuperSampling = (int)_cfg.self.getOptionNumerical("VoxelSuperSampling", m_iVoxelSuperSampling);
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUindex", m_iGPUIndex);
-	m_iGPUIndex = (int)_cfg.self.getOptionNumerical("GPUIndex", m_iGPUIndex);
-	CC.markOptionParsed("VoxelSuperSampling");
-	CC.markOptionParsed("GPUIndex");
-	if (!_cfg.self.hasOption("GPUIndex"))
-		CC.markOptionParsed("GPUindex");
+	ok &= CR.getOptionInt("VoxelSuperSampling", m_iVoxelSuperSampling, m_iVoxelSuperSampling);
+	if (CR.hasOption("GPUIndex"))
+		ok &= CR.getOptionInt("GPUIndex", m_iGPUIndex, m_iGPUIndex);
+	else
+		ok &= CR.getOptionInt("GPUindex", m_iGPUIndex, m_iGPUIndex);
 
+	ok &= CR.getOptionBool("SIRTWeighting", m_bSIRTWeighting, false);
 
-
-	m_bSIRTWeighting = _cfg.self.getOptionBool("SIRTWeighting", false);
-	CC.markOptionParsed("SIRTWeighting");
+	if (!ok)
+		return false;
 
 	// success
 	m_bIsInitialized = _check();

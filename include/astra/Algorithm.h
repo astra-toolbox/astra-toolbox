@@ -96,7 +96,7 @@ private:
 
 	//< For Config unused argument checking
 	ConfigCheckData* configCheckData;
-	friend class ConfigStackCheck<CAlgorithm>;
+	friend class ConfigReader<CAlgorithm>;
 
 };
 

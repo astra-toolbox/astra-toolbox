@@ -104,8 +104,6 @@ bool CSparseMatrixProjector2D::_check()
 // Initialize, use a Config object
 bool CSparseMatrixProjector2D::initialize(const Config& _cfg)
 {
-	ASTRA_ASSERT(_cfg.self);
-
 	// if already initialized, clear first
 	if (m_bIsInitialized) {
 		clear();
