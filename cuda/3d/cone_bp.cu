@@ -372,7 +372,13 @@ bool ConeBP(cudaPitchedPtr D_volumeData,
 	// transfer projections to array
 
 	cudaArray* cuArray = allocateProjectionArray(dims);
-	transferProjectionsToArray(D_projData, cuArray, dims);
+	if (!cuArray)
+		return false;
+	
+	if (!transferProjectionsToArray(D_projData, cuArray, dims)) {
+		cudaFreeArray(cuArray);
+		return false;
+	}
 
 	bool ret = ConeBP_Array(D_volumeData, cuArray, dims, angles, params);
 
