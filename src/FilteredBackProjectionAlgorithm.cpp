@@ -29,7 +29,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include <iostream>
 #include <iomanip>
-#include <math.h>
+#include <cmath>
 
 #include "astra/AstraObjectManager.h"
 #include "astra/ParallelBeamLineKernelProjector2D.h"
