@@ -56,8 +56,8 @@ def geom_size(geom, dim=None):
     elif geom['type'] == 'fanflat_vec' or geom['type'] == 'parallel_vec':
         s = (geom['Vectors'].shape[0], geom['DetectorCount'])
     elif geom['type'] == 'parallel3d_vec' or geom['type'] == 'cone_vec':
-        s = (geom['DetectorRowCount'], geom[
-             'Vectors'].shape[0], geom['DetectorColCount'])
+        s = (geom['DetectorRowCount'], np.atleast_2d(geom[
+             'Vectors']).shape[0], geom['DetectorColCount'])
 
     if dim != None:
         s = s[dim]
