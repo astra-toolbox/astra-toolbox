@@ -150,19 +150,17 @@ bool CFanFlatProjectionGeometry2D::initialize(const Config& _cfg)
 
 //----------------------------------------------------------------------------------------
 // Clone
-CProjectionGeometry2D* CFanFlatProjectionGeometry2D::clone()
+CProjectionGeometry2D* CFanFlatProjectionGeometry2D::clone() const
 {
 	return new CFanFlatProjectionGeometry2D(*this);
 }
 
 //----------------------------------------------------------------------------------------
 // is equal
-bool CFanFlatProjectionGeometry2D::isEqual(CProjectionGeometry2D* _pGeom2) const
+bool CFanFlatProjectionGeometry2D::isEqual(const CProjectionGeometry2D &_pGeom2) const
 {
-	if (_pGeom2 == NULL) return false;
-
 	// try to cast argument to CFanFlatProjectionGeometry2D
-	CFanFlatProjectionGeometry2D* pGeom2 = dynamic_cast<CFanFlatProjectionGeometry2D*>(_pGeom2);
+	const CFanFlatProjectionGeometry2D* pGeom2 = dynamic_cast<const CFanFlatProjectionGeometry2D*>(&_pGeom2);
 	if (pGeom2 == NULL) return false;
 
 	// both objects must be initialized

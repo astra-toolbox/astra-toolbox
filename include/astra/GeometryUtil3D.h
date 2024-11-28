@@ -28,7 +28,11 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _INC_ASTRA_GEOMETRYUTIL3D
 #define _INC_ASTRA_GEOMETRYUTIL3D
 
+#include <vector>
+
 namespace astra {
+
+class CProjectionGeometry3D;
 
 struct SConeProjection {
 	// the source
@@ -118,7 +122,7 @@ void computeBP_UV_Coeffs(const SConeProjection& proj,
                          double &fDX, double &fDY, double &fDZ, double &fDC);
 
 
-SConeProjection* genConeProjections(unsigned int iProjAngles,
+std::vector<SConeProjection> genConeProjections(unsigned int iProjAngles,
                                     unsigned int iProjU,
                                     unsigned int iProjV,
                                     double fOriginSourceDistance,
@@ -127,12 +131,16 @@ SConeProjection* genConeProjections(unsigned int iProjAngles,
                                     double fDetVSize,
                                     const float *pfAngles);
 
-SPar3DProjection* genPar3DProjections(unsigned int iProjAngles,
+std::vector<SPar3DProjection> genPar3DProjections(unsigned int iProjAngles,
                                       unsigned int iProjU,
                                       unsigned int iProjV,
                                       double fDetUSize,
                                       double fDetVSize,
                                       const float *pfAngles);
+
+CProjectionGeometry3D* getSubProjectionGeometry_U(const CProjectionGeometry3D* pProjGeom, int u, int size);
+CProjectionGeometry3D* getSubProjectionGeometry_V(const CProjectionGeometry3D* pProjGeom, int v, int size);
+CProjectionGeometry3D* getSubProjectionGeometry_Angle(const CProjectionGeometry3D* pProjGeom, int th, int size);
 
 
 

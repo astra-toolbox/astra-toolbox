@@ -216,7 +216,13 @@
     <ClCompile Include="..\..\..\src\ProjectionGeometry2D.cpp">
       <Filter>Geometries\source</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\ProjectionGeometry2DFactory.cpp">
+      <Filter>Geometries\source</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\ProjectionGeometry3D.cpp">
+      <Filter>Geometries\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ProjectionGeometry3DFactory.cpp">
       <Filter>Geometries\source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\SparseMatrixProjectionGeometry2D.cpp">
@@ -479,7 +485,13 @@
     <ClInclude Include="..\..\..\include\astra\ProjectionGeometry2D.h">
       <Filter>Geometries\headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\astra\ProjectionGeometry2DFactory.h">
+      <Filter>Geometries\headers</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\astra\ProjectionGeometry3D.h">
+      <Filter>Geometries\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\astra\ProjectionGeometry3DFactory.h">
       <Filter>Geometries\headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\astra\SparseMatrixProjectionGeometry2D.h">

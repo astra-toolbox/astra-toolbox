@@ -73,7 +73,7 @@ bool CCudaSartAlgorithm::initialize(const Config& _cfg)
 	}
 
 	// projection order
-	int projectionCount = m_pSinogram->getGeometry()->getProjectionAngleCount();
+	int projectionCount = m_pSinogram->getGeometry().getProjectionAngleCount();
 	std::vector<int> projectionOrder;
 	std::string projOrder;
 	if (!CR.getOptionString("ProjectionOrder", projOrder, "random"))

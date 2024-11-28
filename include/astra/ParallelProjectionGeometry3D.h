@@ -83,7 +83,7 @@ public:
 								  int _iDetectorColCount,
 								  float32 _fDetectorWidth, 
 								  float32 _fDetectorHeight, 
-								  const float32* _pfProjectionAngles);
+								  std::vector<float32> &&_pfProjectionAngles);
 
 	/** Copy constructor. 
 	 */
@@ -116,7 +116,7 @@ public:
 					int _iDetectorColCount,
 					float32 _fDetectorWidth, 
 					float32 _fDetectorHeight, 
-					const float32* _pfProjectionAngles);
+					std::vector<float32> &&_pfProjectionAngles);
 
 	/** Create a hard copy. 
 	*/

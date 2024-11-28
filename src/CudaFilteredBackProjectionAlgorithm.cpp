@@ -70,7 +70,7 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 	m_filterConfig = getFilterConfigForAlgorithm(_cfg, this);
 
 	// Fan beam short scan mode
-	if (m_pSinogram && dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pSinogram->getGeometry())) {
+	if (m_pSinogram && dynamic_cast<const CFanFlatProjectionGeometry2D*>(&m_pSinogram->getGeometry())) {
 		bool ok = true;
 		ok &= CR.getOptionBool("ShortScan", m_bShortScan, false);
 		if (!ok)
@@ -153,7 +153,7 @@ void CCudaFilteredBackProjectionAlgorithm::initCUDAAlgorithm()
 		ASTRA_ERROR("CCudaFilteredBackProjectionAlgorithm: Failed to set short-scan mode");
 	}
 
-	const CVolumeGeometry2D& volGeom = *m_pReconstruction->getGeometry();
+	const CVolumeGeometry2D& volGeom = m_pReconstruction->getGeometry();
 	float fPixelArea = volGeom.getPixelArea();
 	ok &= pFBP->setReconstructionScale(1.0f/fPixelArea);
 	if (!ok) {
@@ -184,7 +184,7 @@ bool CCudaFilteredBackProjectionAlgorithm::check()
 	// check pixel supersampling
 	ASTRA_CONFIG_CHECK(m_iPixelSuperSampling >= 0, "FBP_CUDA", "PixelSuperSampling must be a non-negative integer.");
 
-	ASTRA_CONFIG_CHECK(checkCustomFilterSize(m_filterConfig, *m_pSinogram->getGeometry()), "FBP_CUDA", "Filter size mismatch");
+	ASTRA_CONFIG_CHECK(checkCustomFilterSize(m_filterConfig, m_pSinogram->getGeometry()), "FBP_CUDA", "Filter size mismatch");
 
 
 	// success

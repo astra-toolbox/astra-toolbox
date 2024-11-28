@@ -42,7 +42,7 @@ bool CProjectionGeometry3D::_check()
 	ASTRA_CONFIG_CHECK(m_fDetectorSpacingX > 0.0f, "ProjectionGeometry3D", "m_fDetectorSpacingX should be positive.");
 	ASTRA_CONFIG_CHECK(m_fDetectorSpacingY > 0.0f, "ProjectionGeometry3D", "m_fDetectorSpacingY should be positive.");
 	ASTRA_CONFIG_CHECK(m_iProjectionAngleCount > 0, "ProjectionGeometry3D", "ProjectionAngleCount should be positive.");
-	ASTRA_CONFIG_CHECK(m_pfProjectionAngles != NULL, "ProjectionGeometry3D", "ProjectionAngles not initialized");
+	ASTRA_CONFIG_CHECK(m_pfProjectionAngles.size() == m_iProjectionAngleCount, "ProjectionGeometry3D", "Number of angles does not match");
 
 /*
 	// autofix: angles in [0,2pi[
@@ -70,7 +70,7 @@ CProjectionGeometry3D::CProjectionGeometry3D(int _iAngleCount,
 											 int _iDetectorColCount, 
 											 float32 _fDetectorSpacingX, 
 											 float32 _fDetectorSpacingY, 
-											 const float32 *_pfProjectionAngles) : configCheckData(0)
+											 std::vector<float32> &&_pfProjectionAngles) : configCheckData(0)
 {
 	_clear();
 	_initialize(_iAngleCount, 
@@ -78,7 +78,7 @@ CProjectionGeometry3D::CProjectionGeometry3D(int _iAngleCount,
 			    _iDetectorColCount, 
 			    _fDetectorSpacingX, 
 			    _fDetectorSpacingY, 
-			    _pfProjectionAngles);
+			    std::move(_pfProjectionAngles));
 }
 
 //----------------------------------------------------------------------------------------
@@ -91,7 +91,7 @@ CProjectionGeometry3D::CProjectionGeometry3D(const CProjectionGeometry3D& _projG
 				_projGeom.m_iDetectorColCount, 
 				_projGeom.m_fDetectorSpacingX, 
 				_projGeom.m_fDetectorSpacingY, 
-				_projGeom.m_pfProjectionAngles);
+				std::vector<float32>(_projGeom.m_pfProjectionAngles));
 }
 
 //----------------------------------------------------------------------------------------
@@ -113,7 +113,7 @@ void CProjectionGeometry3D::_clear()
 	m_iDetectorColCount = 0;
 	m_fDetectorSpacingX = 0.0f;
 	m_fDetectorSpacingY = 0.0f;
-	m_pfProjectionAngles = NULL;
+	m_pfProjectionAngles.clear();
 	m_bInitialized = false;
 }
 
@@ -126,10 +126,7 @@ void CProjectionGeometry3D::clear()
 	m_iDetectorColCount = 0;
 	m_fDetectorSpacingX = 0.0f;
 	m_fDetectorSpacingY = 0.0f;
-	if (m_pfProjectionAngles != NULL) {
-		delete [] m_pfProjectionAngles;
-	}
-	m_pfProjectionAngles = NULL;
+	m_pfProjectionAngles.clear();
 	m_bInitialized = false;
 }
 
@@ -171,14 +168,13 @@ bool CProjectionGeometry3D::initializeAngles(const Config& _cfg)
 
 	if (!ok)
 		return false;
-
 	// Required: ProjectionAngles
 	vector<double> angles;
 	if (!CR.getRequiredNumericalArray("ProjectionAngles", angles))
 		return false;
 	m_iProjectionAngleCount = angles.size();
 	ASTRA_CONFIG_CHECK(m_iProjectionAngleCount > 0, "ProjectionGeometry3D", "Not enough ProjectionAngles specified.");
-	m_pfProjectionAngles = new float32[m_iProjectionAngleCount];
+	m_pfProjectionAngles.resize(m_iProjectionAngleCount);
 	for (int i = 0; i < m_iProjectionAngleCount; i++) {
 		m_pfProjectionAngles[i] = (float)angles[i];
 	}
@@ -194,7 +190,7 @@ bool CProjectionGeometry3D::_initialize(int _iProjectionAngleCount,
 										int _iDetectorColCount, 
 										float32 _fDetectorSpacingX, 
 										float32 _fDetectorSpacingY, 
-										const float32 *_pfProjectionAngles)
+										std::vector<float32> &&_pfProjectionAngles)
 {
 	if (m_bInitialized) {
 		clear();
@@ -207,10 +203,7 @@ bool CProjectionGeometry3D::_initialize(int _iProjectionAngleCount,
 	m_iDetectorTotCount = _iDetectorRowCount * _iDetectorColCount;
 	m_fDetectorSpacingX = _fDetectorSpacingX;
 	m_fDetectorSpacingY = _fDetectorSpacingY;
-	m_pfProjectionAngles = new float32[m_iProjectionAngleCount];
-	for (int i = 0; i < m_iProjectionAngleCount; i++) {
-		m_pfProjectionAngles[i] = _pfProjectionAngles[i];
-	}
+	m_pfProjectionAngles = std::move(_pfProjectionAngles);
 
 	return true;
 }

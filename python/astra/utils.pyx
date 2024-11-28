@@ -33,6 +33,7 @@ import builtins
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libcpp.list cimport list
+from libcpp.utility cimport move
 from cython.operator cimport dereference as deref, preincrement as inc
 
 from . cimport PyXMLDocument
@@ -231,7 +232,7 @@ cdef XMLNode2dict(XMLNode node):
     if len(opts)>0: dct['options'] = opts
     return dct
 
-cdef CFloat32VolumeData3D* linkVolFromGeometry(CVolumeGeometry3D *pGeometry, data) except NULL:
+cdef CFloat32VolumeData3D* linkVolFromGeometry(const CVolumeGeometry3D &pGeometry, data) except NULL:
     cdef CFloat32VolumeData3D * pDataObject3D = NULL
     cdef CDataStorage * pStorage
     geom_shape = (pGeometry.getGridSliceCount(), pGeometry.getGridRowCount(), pGeometry.getGridColCount())
@@ -260,7 +261,7 @@ cdef CFloat32VolumeData3D* linkVolFromGeometry(CVolumeGeometry3D *pGeometry, dat
     pDataObject3D = new CFloat32VolumeData3D(pGeometry, pStorage)
     return pDataObject3D
 
-cdef CFloat32ProjectionData3D* linkProjFromGeometry(CProjectionGeometry3D *pGeometry, data) except NULL:
+cdef CFloat32ProjectionData3D* linkProjFromGeometry(const CProjectionGeometry3D &pGeometry, data) except NULL:
     cdef CFloat32ProjectionData3D * pDataObject3D = NULL
     cdef CDataStorage * pStorage
     geom_shape = (pGeometry.getDetectorRowCount(), pGeometry.getProjectionCount(), pGeometry.getDetectorColCount())
@@ -289,34 +290,26 @@ cdef CFloat32ProjectionData3D* linkProjFromGeometry(CProjectionGeometry3D *pGeom
     pDataObject3D = new CFloat32ProjectionData3D(pGeometry, pStorage)
     return pDataObject3D
 
-cdef CProjectionGeometry3D* createProjectionGeometry3D(geometry) except NULL:
+cdef unique_ptr[CProjectionGeometry3D] createProjectionGeometry3D(geometry) except *:
     cdef XMLConfig *cfg
-    cdef CProjectionGeometry3D * pGeometry
+    cdef unique_ptr[CProjectionGeometry3D] pGeometry
 
     cfg = dictToConfig(b'ProjectionGeometry', geometry)
-    tpe = wrap_from_bytes(cfg.self.getAttribute(b'type'))
-    if (tpe == "parallel3d"):
-        pGeometry = <CProjectionGeometry3D*> new CParallelProjectionGeometry3D();
-    elif (tpe == "parallel3d_vec"):
-        pGeometry = <CProjectionGeometry3D*> new CParallelVecProjectionGeometry3D();
-    elif (tpe == "cone"):
-        pGeometry = <CProjectionGeometry3D*> new CConeProjectionGeometry3D();
-    elif (tpe == "cone_vec"):
-        pGeometry = <CProjectionGeometry3D*> new CConeVecProjectionGeometry3D();
-    else:
+    tpe = cfg.self.getAttribute(b'type')
+    pGeometry = constructProjectionGeometry3D(tpe)
+    if not pGeometry:
         raise ValueError("'{}' is not a valid 3D geometry type".format(tpe))
 
-    if not pGeometry.initialize(cfg[0]):
+    if not pGeometry.get().initialize(cfg[0]):
         del cfg
-        del pGeometry
         raise AstraError('Geometry class could not be initialized', append_log=True)
 
     del cfg
 
-    return pGeometry
+    return move(pGeometry)
 
-cdef CVolumeGeometry3D* createVolumeGeometry3D(geometry) except NULL:
-    cdef Config *cfg
+cdef unique_ptr[CVolumeGeometry3D] createVolumeGeometry3D(geometry) except *:
+    cdef XMLConfig *cfg
     cdef CVolumeGeometry3D * pGeometry
     cfg = dictToConfig(b'VolumeGeometry', geometry)
     pGeometry = new CVolumeGeometry3D()
@@ -327,4 +320,4 @@ cdef CVolumeGeometry3D* createVolumeGeometry3D(geometry) except NULL:
 
     del cfg
 
-    return pGeometry
+    return unique_ptr[CVolumeGeometry3D](pGeometry)

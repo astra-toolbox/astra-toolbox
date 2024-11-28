@@ -43,29 +43,28 @@ namespace astra
 CConeVecProjectionGeometry3D::CConeVecProjectionGeometry3D() :
 	CProjectionGeometry3D() 
 {
-	m_pProjectionAngles = 0;
+
 }
 
 //----------------------------------------------------------------------------------------
 // Constructor.
-CConeVecProjectionGeometry3D::CConeVecProjectionGeometry3D(int _iProjectionAngleCount, 
-                                                                   int _iDetectorRowCount, 
-                                                                   int _iDetectorColCount, 
-                                                                   const SConeProjection* _pProjectionAngles
-															 ) :
-	CProjectionGeometry3D() 
+CConeVecProjectionGeometry3D::CConeVecProjectionGeometry3D(int _iProjectionAngleCount,
+                                                           int _iDetectorRowCount,
+                                                           int _iDetectorColCount,
+                                                           std::vector<SConeProjection> &&_pProjectionAngles)
+: CProjectionGeometry3D()
 {
-	initialize(_iProjectionAngleCount, 
-	           _iDetectorRowCount, 
-	           _iDetectorColCount, 
-	           _pProjectionAngles);
+	initialize(_iProjectionAngleCount,
+	           _iDetectorRowCount,
+	           _iDetectorColCount,
+	           std::move(_pProjectionAngles));
 }
 
 //----------------------------------------------------------------------------------------
 // Destructor.
 CConeVecProjectionGeometry3D::~CConeVecProjectionGeometry3D()
 {
-	delete[] m_pProjectionAngles;
+
 }
 
 //---------------------------------------------------------------------------------------
@@ -93,10 +92,10 @@ bool CConeVecProjectionGeometry3D::initializeAngles(const Config& _cfg)
 		return false;
 	ASTRA_CONFIG_CHECK(data.size() % 12 == 0, "ConeVecProjectionGeometry3D", "Vectors doesn't consist of 12-tuples.");
 	m_iProjectionAngleCount = data.size() / 12;
-	m_pProjectionAngles = new SConeProjection[m_iProjectionAngleCount];
+	m_ProjectionAngles.resize(m_iProjectionAngleCount);
 
 	for (int i = 0; i < m_iProjectionAngleCount; ++i) {
-		SConeProjection& p = m_pProjectionAngles[i];
+		SConeProjection& p = m_ProjectionAngles[i];
 		p.fSrcX  = data[12*i +  0];
 		p.fSrcY  = data[12*i +  1];
 		p.fSrcZ  = data[12*i +  2];
@@ -122,14 +121,12 @@ bool CConeVecProjectionGeometry3D::initializeAngles(const Config& _cfg)
 bool CConeVecProjectionGeometry3D::initialize(int _iProjectionAngleCount, 
                                                   int _iDetectorRowCount, 
                                                   int _iDetectorColCount, 
-                                                  const SConeProjection* _pProjectionAngles)
+                                                  std::vector<SConeProjection> &&_pProjectionAngles)
 {
 	m_iProjectionAngleCount = _iProjectionAngleCount;
 	m_iDetectorRowCount = _iDetectorRowCount;
 	m_iDetectorColCount = _iDetectorColCount;
-	m_pProjectionAngles = new SConeProjection[m_iProjectionAngleCount];
-	for (int i = 0; i < m_iProjectionAngleCount; ++i)
-		m_pProjectionAngles[i] = _pProjectionAngles[i];
+	m_ProjectionAngles = std::move(_pProjectionAngles);
 
 	// TODO: check?
 
@@ -150,8 +147,7 @@ CProjectionGeometry3D* CConeVecProjectionGeometry3D::clone() const
 	res->m_iDetectorTotCount		= m_iDetectorTotCount;
 	res->m_fDetectorSpacingX		= m_fDetectorSpacingX;
 	res->m_fDetectorSpacingY		= m_fDetectorSpacingY;
-	res->m_pProjectionAngles		= new SConeProjection[m_iProjectionAngleCount];
-	memcpy(res->m_pProjectionAngles, m_pProjectionAngles, sizeof(m_pProjectionAngles[0])*m_iProjectionAngleCount);
+	res->m_ProjectionAngles		= m_ProjectionAngles;
 	return res;
 }
 
@@ -177,7 +173,7 @@ bool CConeVecProjectionGeometry3D::isEqual(const CProjectionGeometry3D * _pGeom2
 	//if (m_fDetectorSpacingY != pGeom2->m_fDetectorSpacingY) return false;
 	
 	for (int i = 0; i < m_iProjectionAngleCount; ++i) {
-		if (memcmp(&m_pProjectionAngles[i], &pGeom2->m_pProjectionAngles[i], sizeof(m_pProjectionAngles[i])) != 0) return false;
+		if (memcmp(&m_ProjectionAngles[i], &pGeom2->m_ProjectionAngles[i], sizeof(m_ProjectionAngles[i])) != 0) return false;
 	}
 
 	return true;
@@ -203,7 +199,7 @@ Config* CConeVecProjectionGeometry3D::getConfiguration() const
 	vectors.resize(12 * m_iProjectionAngleCount);
 
 	for (int i = 0; i < m_iProjectionAngleCount; ++i) {
-		SConeProjection& p = m_pProjectionAngles[i];
+		const SConeProjection& p = m_ProjectionAngles[i];
 
 		vectors[12*i +  0] = p.fSrcX;
 		vectors[12*i +  1] = p.fSrcY;
@@ -235,7 +231,7 @@ void CConeVecProjectionGeometry3D::projectPoint(double fX, double fY, double fZ,
 	double fVX, fVY, fVZ, fVC;
 	double fDX, fDY, fDZ, fDC;
 
-	computeBP_UV_Coeffs(m_pProjectionAngles[iAngleIndex],
+	computeBP_UV_Coeffs(m_ProjectionAngles[iAngleIndex],
 	                    fUX, fUY, fUZ, fUC, fVX, fVY, fVZ, fVC, fDX, fDY, fDZ, fDC);
 
 	// The -0.5f shifts from corner to center of detector pixels
@@ -249,6 +245,8 @@ void CConeVecProjectionGeometry3D::projectPoint(double fX, double fY, double fZ,
 
 bool CConeVecProjectionGeometry3D::_check()
 {
+	ASTRA_CONFIG_CHECK(m_ProjectionAngles.size() == m_iProjectionAngleCount, "ConeVecProjectionGeometry3D", "Number of vectors does not match number of angles");
+
 	// TODO
 	return true;
 }

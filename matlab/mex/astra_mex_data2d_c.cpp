@@ -41,10 +41,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/Float32ProjectionData2D.h"
 #include "astra/Float32VolumeData2D.h"
-#include "astra/SparseMatrixProjectionGeometry2D.h"
-#include "astra/FanFlatProjectionGeometry2D.h"
-#include "astra/FanFlatVecProjectionGeometry2D.h"
-#include "astra/ParallelVecProjectionGeometry2D.h"
+#include "astra/ProjectionGeometry2DFactory.h"
 
 using namespace std;
 using namespace astra;
@@ -132,7 +129,7 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 			}
 		}
 		// Initialize data object
-		pDataObject2D = new CFloat32VolumeData2D(pGeometry);		
+		pDataObject2D = new CFloat32VolumeData2D(*pGeometry);
 		delete pGeometry;
 		delete cfg;
 	}
@@ -146,40 +143,24 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 		// FIXME: Change how the base class is created. (This is duplicated
 		// in 'change_geometry' and Projector2D.cpp.)
 		std::string type = cfg->self.getAttribute("type");
-		CProjectionGeometry2D* pGeometry;
-		if (type == "sparse_matrix") {
-			pGeometry = new CSparseMatrixProjectionGeometry2D();
-		} else if (type == "fanflat") {
-			//CFanFlatProjectionGeometry2D* pFanFlatProjectionGeometry = new CFanFlatProjectionGeometry2D();
-			//pFanFlatProjectionGeometry->initialize(Config(node));
-			//m_pProjectionGeometry = pFanFlatProjectionGeometry;
-			pGeometry = new CFanFlatProjectionGeometry2D();	
-		} else if (type == "fanflat_vec") {
-			pGeometry = new CFanFlatVecProjectionGeometry2D();	
-		} else if (type == "parallel_vec") {
-			pGeometry = new CParallelVecProjectionGeometry2D();
-		} else if (type == "parallel") {
-			pGeometry = new CParallelProjectionGeometry2D();
-		} else {
+		std::unique_ptr<CProjectionGeometry2D> pGeometry = constructProjectionGeometry2D(type);
+		if (!pGeometry) {
 			std::string message = "'" + type + "' is not a valid 2D geometry type.";
 			mexErrMsgTxt(message.c_str());
 		}
 		if (!pGeometry->initialize(*cfg)) {
-			delete pGeometry;
 			delete cfg;
 			mexErrMsgWithAstraLog("Geometry class could not be initialized.");
 		}
 		// If data is specified, check dimensions
 		if (nrhs >= 4 && !mexIsScalar(prhs[3])) {
 			if (pGeometry->getDetectorCount() != mxGetN(prhs[3]) || pGeometry->getProjectionAngleCount() != mxGetM(prhs[3])) {
-				delete pGeometry;
 				delete cfg;
 				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry.");
 			}
 		}
 		// Initialize data object
-		pDataObject2D = new CFloat32ProjectionData2D(pGeometry);
-		delete pGeometry;
+		pDataObject2D = new CFloat32ProjectionData2D(*pGeometry);
 		delete cfg;
 	}
 	else {
@@ -377,11 +358,11 @@ void astra_mex_data2d_get_geometry(int nlhs, mxArray* plhs[], int nrhs, const mx
 	if (1 <= nlhs) {
 		if (pDataObject->getType() == CFloat32Data2D::PROJECTION) {
 			CFloat32ProjectionData2D* pDataObject2 = dynamic_cast<CFloat32ProjectionData2D*>(pDataObject);
-			plhs[0] = configToStruct(pDataObject2->getGeometry()->getConfiguration());
+			plhs[0] = configToStruct(pDataObject2->getGeometry().getConfiguration());
 		}
 		else if (pDataObject->getType() == CFloat32Data2D::VOLUME) {
 			CFloat32VolumeData2D* pDataObject2 = dynamic_cast<CFloat32VolumeData2D*>(pDataObject);
-			plhs[0] = configToStruct(pDataObject2->getGeometry()->getConfiguration());
+			plhs[0] = configToStruct(pDataObject2->getGeometry().getConfiguration());
 		}
 	}
 }
@@ -423,36 +404,24 @@ void astra_mex_data2d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 		// FIXME: Change how the base class is created. (This is duplicated
 		// in 'create' and Projector2D.cpp.)
 		std::string type = cfg->self.getAttribute("type");
-		CProjectionGeometry2D* pGeometry;
-		if (type == "sparse_matrix") {
-			pGeometry = new CSparseMatrixProjectionGeometry2D();
-		} else if (type == "fanflat") {
-			//CFanFlatProjectionGeometry2D* pFanFlatProjectionGeometry = new CFanFlatProjectionGeometry2D();
-			//pFanFlatProjectionGeometry->initialize(Config(node));
-			//m_pProjectionGeometry = pFanFlatProjectionGeometry;
-			pGeometry = new CFanFlatProjectionGeometry2D();	
-		} else if (type == "fanflat_vec") {
-			pGeometry = new CFanFlatVecProjectionGeometry2D();	
-		} else if (type == "parallel_vec") {
-			pGeometry = new CParallelVecProjectionGeometry2D();	
-		} else {
-			pGeometry = new CParallelProjectionGeometry2D();	
+		std::unique_ptr<CProjectionGeometry2D> pGeometry = constructProjectionGeometry2D(type);
+		if (!pGeometry) {
+			delete cfg;
+			std::string message = "'" + type + "' is not a valid 2D geometry type.";
+			mexErrMsgTxt(message.c_str());
 		}
 		if (!pGeometry->initialize(*cfg)) {
-			delete pGeometry;
 			delete cfg;
 			mexErrMsgWithAstraLog("Geometry could not be initialized.");
 		}
 		// If data is specified, check dimensions
 		if (pGeometry->getDetectorCount() != pSinogram->getDetectorCount() || pGeometry->getProjectionAngleCount() != pSinogram->getAngleCount()) {
-			delete pGeometry;
 			delete cfg;
 			mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry.");
 		}
 
 		// If ok, change geometry
-		pSinogram->changeGeometry(pGeometry);
-		delete pGeometry;
+		pSinogram->changeGeometry(*pGeometry);
 		delete cfg;
 
 		return;
@@ -482,7 +451,7 @@ void astra_mex_data2d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 		}
 
 		// If ok, change geometry
-		pVolume->changeGeometry(pGeometry);
+		pVolume->changeGeometry(*pGeometry);
 		delete cfg;
 		delete pGeometry;
 

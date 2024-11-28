@@ -129,7 +129,7 @@ public:
 
 	/** Create a hard copy. 
 	*/
-	virtual CProjectionGeometry2D* clone() = 0;
+	virtual CProjectionGeometry2D* clone() const = 0;
 
 	/** Initialize the geometry with a config object.
 	 *
@@ -148,7 +148,7 @@ public:
 	 *
 	 * @return true if this geometry instance is the same as the one specified.
 	 */
-	virtual bool isEqual(CProjectionGeometry2D*) const = 0;
+	virtual bool isEqual(const CProjectionGeometry2D&) const = 0;
 
 	/** Get all settings in a Config object.
 	 *
