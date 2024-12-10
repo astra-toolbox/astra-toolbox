@@ -264,46 +264,33 @@ bool FDK_PreWeight(cudaPitchedPtr D_projData,
 }
 
 bool FDK_Filter(cudaPitchedPtr D_projData,
-                const float *pfFilter,
+                const astra::SFilterConfig &filterConfig,
                 const SDimensions3D& dims)
 {
-	// The filtering is a regular ramp filter per detector line.
-
-	// Generate filter
-	// TODO: Check errors
-	int iPaddedDetCount = calcNextPowerOfTwo(2 * dims.iProjU);
-	int iHalfFFTSize = astra::calcFFTFourierSize(iPaddedDetCount);
-
-	// TODO: We could free this vector earlier, once the async memcpy is done
-	std::vector<cufftComplex> pHostFilter(dims.iProjAngles * iHalfFFTSize);
-
-	if (pfFilter == 0){
-		astra::SFilterConfig filter;
-		filter.m_eType = astra::FILTER_RAMLAK;
-		astraCUDA::genCuFFTFilter(filter, dims.iProjAngles, &pHostFilter[0], iPaddedDetCount, iHalfFFTSize);
-	} else {
-		for (int i = 0; i < dims.iProjAngles * iHalfFFTSize; i++) {
-			pHostFilter[i].x = pfFilter[i];
-			pHostFilter[i].y = 0;
-		}
-	}
-
 	cudaStream_t stream;
 	if (!checkCuda(cudaStreamCreate(&stream), "FDK_Filter stream"))
 		return false;
 
-	cufftComplex * D_filter;
+	bool singleFilter;
+	cufftComplex *D_filter;
 
-	if (!astraCUDA::allocateComplexOnDevice(dims.iProjAngles, iHalfFFTSize, &D_filter)) {
+	bool ok = astraCUDA::prepareCuFFTFilter(filterConfig, D_filter, singleFilter, dims.iProjAngles, dims.iProjU, stream);
+
+	if (!ok) {
+		if (D_filter)
+			astraCUDA::freeComplexOnDevice(D_filter);
 		cudaStreamDestroy(stream);
 		return false;
 	}
 
-	if (!astraCUDA::uploadComplexArrayToDevice(dims.iProjAngles, iHalfFFTSize, &pHostFilter[0], D_filter, stream)) {
-		astraCUDA::freeComplexOnDevice(D_filter);
+	if (!D_filter) {
+		// For FILTER_NONE
 		cudaStreamDestroy(stream);
-		return false;
+		return true;
 	}
+
+	int iPaddedDetCount = calcNextPowerOfTwo(2 * dims.iProjU);
+	int iHalfFFTSize = astra::calcFFTFourierSize(iPaddedDetCount);
 
 	cufftHandle planF;
 	cufftHandle planI;
@@ -360,8 +347,7 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 		return false;
 	}
 
-	bool ok = true;
-
+	ok = true;
 	for (int v = 0; v < dims.iProjV; ++v) {
 		if (!checkCuda(cudaMemsetAsync(D_pfPadded, 0, bufferMemSize, stream), "FDK filter memset")) {
 			ok = false;
@@ -379,7 +365,7 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 			break;
 		}
 
-		if (!astraCUDA::applyFilter(dims.iProjAngles, iHalfFFTSize, D_pcSinoFFT, D_filter, false, stream)) {
+		if (!astraCUDA::applyFilter(dims.iProjAngles, iHalfFFTSize, D_pcSinoFFT, D_filter, singleFilter, stream)) {
 			ok = false;
 			break;
 		}
@@ -430,7 +416,7 @@ bool FDK(cudaPitchedPtr D_volumeData,
          cudaPitchedPtr D_projData,
          const SConeProjection* angles,
          const SDimensions3D& dims, SProjectorParams3D params, bool bShortScan,
-         const float* pfFilter)
+         const astra::SFilterConfig &filterConfig)
 {
 	bool ok;
 
@@ -473,7 +459,7 @@ bool FDK(cudaPitchedPtr D_volumeData,
 
 #if 1
 	// Perform filtering
-	ok = FDK_Filter(D_projData, pfFilter, dims);
+	ok = FDK_Filter(D_projData, filterConfig, dims);
 #endif
 
 	if (!ok)

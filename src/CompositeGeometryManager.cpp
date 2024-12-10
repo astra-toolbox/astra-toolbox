@@ -1242,7 +1242,7 @@ bool CCompositeGeometryManager::doFP(CProjector3D *pProjector, CFloat32VolumeDat
 
 bool CCompositeGeometryManager::doFDK(CProjector3D *pProjector, CFloat32VolumeData3D *pVolData,
                                      CFloat32ProjectionData3D *pProjData, bool bShortScan,
-                                     const float *pfFilter, SJob::EMode eMode)
+                                     const SFilterConfig &filterConfig, SJob::EMode eMode)
 {
 	if (!dynamic_cast<const CConeProjectionGeometry3D*>(pProjData->getGeometry()) &&
 	    !dynamic_cast<const CConeVecProjectionGeometry3D*>(pProjData->getGeometry())) {
@@ -1253,7 +1253,7 @@ bool CCompositeGeometryManager::doFDK(CProjector3D *pProjector, CFloat32VolumeDa
 	SJob job = createJobBP(pProjector, pVolData, pProjData, eMode);
 	job.eType = SJob::JOB_FDK;
 	job.FDKSettings.bShortScan = bShortScan;
-	job.FDKSettings.pfFilter = pfFilter;
+	job.FDKSettings.filterConfig = filterConfig;
 
 	TJobList L;
 	L.push_back(job);
@@ -1499,7 +1499,7 @@ static bool doJob(const CCompositeGeometryManager::TJobSet::const_iterator& iter
 			} else {
 				ASTRA_DEBUG("CCompositeGeometryManager::doJobs: doing FDK");
 
-				ok = astraCUDA3d::FDK(((CCompositeGeometryManager::CProjectionPart*)j.pInput.get())->pGeom, srcMem->hnd, ((CCompositeGeometryManager::CVolumePart*)j.pOutput.get())->pGeom, dstMem->hnd, j.FDKSettings.bShortScan, j.FDKSettings.pfFilter, fOutputScale );
+				ok = astraCUDA3d::FDK(((CCompositeGeometryManager::CProjectionPart*)j.pInput.get())->pGeom, srcMem->hnd, ((CCompositeGeometryManager::CVolumePart*)j.pOutput.get())->pGeom, dstMem->hnd, j.FDKSettings.bShortScan, j.FDKSettings.filterConfig, fOutputScale );
 				if (!ok) ASTRA_ERROR("Error performing sub-FDK");
 				ASTRA_DEBUG("CCompositeGeometryManager::doJobs: FDK done");
 			}
