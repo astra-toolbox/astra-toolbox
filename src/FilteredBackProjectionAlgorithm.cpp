@@ -80,8 +80,7 @@ void CFilteredBackProjectionAlgorithm::clear()
 	m_pReconstruction = NULL;
 	m_bIsInitialized = false;
 
-	delete[] m_filterConfig.m_pfCustomFilter;
-	m_filterConfig.m_pfCustomFilter = 0;
+	m_filterConfig.m_pfCustomFilter.clear();
 }
 
 
@@ -155,7 +154,7 @@ bool CFilteredBackProjectionAlgorithm::_check()
 
 	if((m_filterConfig.m_eType == FILTER_PROJECTION) || (m_filterConfig.m_eType == FILTER_SINOGRAM) || (m_filterConfig.m_eType == FILTER_RPROJECTION) || (m_filterConfig.m_eType == FILTER_RSINOGRAM))
 	{
-		ASTRA_CONFIG_CHECK(m_filterConfig.m_pfCustomFilter, "FBP", "Invalid filter pointer.");
+		ASTRA_CONFIG_CHECK(!m_filterConfig.m_pfCustomFilter.empty(), "FBP", "Invalid filter pointer.");
 	}
 
 	ASTRA_CONFIG_CHECK(checkCustomFilterSize(m_filterConfig, m_pSinogram->getGeometry()), "FBP", "Filter size mismatch");
@@ -231,11 +230,11 @@ void CFilteredBackProjectionAlgorithm::performFiltering(CFloat32ProjectionData2D
 		case FILTER_PROJECTION:
 			// Fourier space, real, half the coefficients (because symmetric)
 			// 1 x iHalfFFTSize
-			pfFilter = m_filterConfig.m_pfCustomFilter;
+			pfFilter = &m_filterConfig.m_pfCustomFilter[0];
 			break;
 		case FILTER_SINOGRAM:
 			bFilterMultiAngle = true;
-			pfFilter = m_filterConfig.m_pfCustomFilter;
+			pfFilter = &m_filterConfig.m_pfCustomFilter[0];
 			break;
 		case FILTER_RSINOGRAM:
 			bFilterMultiAngle = true;
@@ -260,7 +259,7 @@ void CFilteredBackProjectionAlgorithm::performFiltering(CFloat32ProjectionData2D
 
 			for (int i = 0; i < count; ++i) {
 				float *rOut = pfFilter + i * 2 * zpDetector;
-				float *rIn = m_filterConfig.m_pfCustomFilter + i * m_filterConfig.m_iCustomFilterWidth;
+				float *rIn = &m_filterConfig.m_pfCustomFilter[i * m_filterConfig.m_iCustomFilterWidth];
 				memset(rOut, 0, sizeof(float) * 2 * zpDetector);
 
 				for(int j = iStartFilterIndex; j < iMaxFilterIndex; j++) {
