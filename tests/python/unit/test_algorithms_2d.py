@@ -318,8 +318,6 @@ class TestOptionsGPU:
     @pytest.mark.parametrize('proj_geom', ['parallel', 'fanflat'], indirect=True)
     @pytest.mark.parametrize('filter_type', ['tukey', 'gaussian', 'blackman', 'kaiser'])
     def test_fbp_filter_parameter(self, proj_geom, filter_type):
-        if filter_type == 'kaiser':
-            pytest.xfail('Known bug')
         algorithm_config = make_algorithm_config(
             algorithm_type='FBP_CUDA', proj_geom=proj_geom,
             options={'FilterType': filter_type, 'FilterParameter': -1.0}

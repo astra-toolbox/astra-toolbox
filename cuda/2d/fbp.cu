@@ -128,6 +128,7 @@ bool FBP::setFilter(const astra::SFilterConfig &_cfg)
 		case astra::FILTER_BLACKMANHARRIS:
 		case astra::FILTER_BLACKMANNUTTALL:
 		case astra::FILTER_FLATTOP:
+		case astra::FILTER_KAISER:
 		case astra::FILTER_PARZEN:
 		{
 			genCuFFTFilter(_cfg, dims.iProjAngles, pHostFilter, iFFTRealDetCount, iFreqBinCount);
