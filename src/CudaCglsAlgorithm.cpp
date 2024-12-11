@@ -31,6 +31,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/cuda/2d/cgls.h"
 
+#include "astra/Logging.h"
+
 using namespace std;
 
 namespace astra {
@@ -56,6 +58,10 @@ CCudaCglsAlgorithm::~CCudaCglsAlgorithm()
 bool CCudaCglsAlgorithm::initialize(const Config& _cfg)
 {
 	ConfigReader<CAlgorithm> CR("CudaCglsAlgorithm", this, _cfg);
+
+	if (CR.hasOption("SinogramMaskId")) {
+		ASTRA_CONFIG_CHECK(false, "CGLS_CUDA", "Sinogram mask option is not supported.");
+	}
 
 	m_bIsInitialized = CCudaReconstructionAlgorithm2D::initialize(_cfg);
 
