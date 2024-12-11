@@ -134,4 +134,8 @@ class TestAll:
         assert not np.allclose(vol_buffer, vol_buffer_iter1)
 
     def test_getProjectedBBox(self, proj_geom):
-        minv, maxv = astra.experimental.getProjectedBBox(proj_geom, 0, 1, 2, 3, 4, 5)
+        minv, maxv = astra.experimental.getProjectedBBox(proj_geom, minx=0, maxx=1, miny=2, maxy=3,
+                                                         minz=4, maxz=5)
+
+    def test_projectPoint(self, proj_geom):
+        u, v = astra.experimental.projectPoint(proj_geom, x=0, y=1, z=2, angle=3)
