@@ -40,17 +40,17 @@ IF HAVE_CUDA==True:
 
     cdef extern from "astra/Filters.h" namespace "astra":
         cdef enum E_FBPFILTER:
-            FILTER_ERROR = 0,
-            FILTER_NONE = 1,
-            FILTER_RAMLAK = 2
+            FILTER_ERROR
+            FILTER_NONE
+            FILTER_RAMLAK
         cdef cppclass SFilterConfig:
             SFilterConfig()
             E_FBPFILTER m_eType
 
     cdef extern from "astra/CompositeGeometryManager.h" namespace "astra::CCompositeGeometryManager":
         cdef enum EJobMode:
-            MODE_ADD = 0
-            MODE_SET = 1
+            MODE_ADD
+            MODE_SET
     cdef extern from "astra/CompositeGeometryManager.h" namespace "astra":
         cdef cppclass CCompositeGeometryManager:
             bool doFP(CProjector3D *, vector[CFloat32VolumeData3D *], vector[CFloat32ProjectionData3D *], EJobMode) nogil
