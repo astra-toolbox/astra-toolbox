@@ -266,6 +266,44 @@ class TestOptionsCPU:
         reconstruction = get_algorithm_output(algorithm_config)
         assert not np.allclose(reconstruction, DATA_INIT_VALUE)
 
+    @pytest.mark.parametrize('filter_type', ['ram-lak', 'none'])
+    def test_fbp_filters_basic(self, proj_geom, projector, filter_type):
+        algorithm_config = make_algorithm_config(algorithm_type='FBP', proj_geom=proj_geom,
+                                                 projector=projector,
+                                                 options={'FilterType': filter_type})
+        reconstruction = get_algorithm_output(algorithm_config)
+        assert not np.allclose(reconstruction, DATA_INIT_VALUE)
+
+    @pytest.mark.parametrize('filter_type', ['tukey', 'gaussian', 'blackman', 'kaiser'])
+    def test_fbp_filter_parameter(self, proj_geom, projector, filter_type):
+        algorithm_config = make_algorithm_config(
+            algorithm_type='FBP', proj_geom=proj_geom, projector=projector,
+            options={'FilterType': filter_type, 'FilterParameter': -1.0}
+        )
+        reconstruction = get_algorithm_output(algorithm_config)
+        assert not np.allclose(reconstruction, DATA_INIT_VALUE)
+
+    @pytest.mark.parametrize('filter_type', ['shepp-logan', 'cosine', 'hamming', 'hann'])
+    def test_fbp_filter_d(self, proj_geom, projector, filter_type):
+        algorithm_config = make_algorithm_config(
+            algorithm_type='FBP', proj_geom=proj_geom, projector=projector,
+            options={'FilterType': filter_type, 'FilterD': 1.0}
+        )
+        reconstruction = get_algorithm_output(algorithm_config)
+        assert not np.allclose(reconstruction, DATA_INIT_VALUE)
+
+    @pytest.mark.parametrize(
+        'custom_filter', ['projection', 'sinogram', 'rprojection', 'rsinogram'], indirect=True
+    )
+    def test_fbp_custom_filters(self, proj_geom, projector, custom_filter):
+        filter_type, filter_data_id = custom_filter
+        algorithm_config = make_algorithm_config(
+            algorithm_type='FBP', proj_geom=proj_geom, projector=projector,
+            options={'FilterType': filter_type, 'FilterSinogramId': filter_data_id}
+        )
+        reconstruction = get_algorithm_output(algorithm_config)
+        assert not np.allclose(reconstruction, DATA_INIT_VALUE)
+
 
 class TestOptionsGPU:
     @pytest.mark.parametrize('proj_geom,', ['parallel', 'fanflat'], indirect=True)
