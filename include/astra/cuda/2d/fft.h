@@ -72,6 +72,12 @@ void genCuFFTFilter(const astra::SFilterConfig &_cfg, int _iProjectionCount,
                    cufftComplex * _pFilter, int _iFFTRealDetectorCount,
                    int _iFFTFourierDetectorCount);
 
+bool prepareCuFFTFilter(const astra::SFilterConfig &cfg,
+                        cufftComplex *&D_filter,
+                        bool &singleFilter,
+                        int iProjectionCount, int iDetectorCount,
+                        std::optional<cudaStream_t> _stream = {});
+
 void genIdenFilter(int _iProjectionCount, cufftComplex * _pFilter,
                    int _iFFTRealDetectorCount, int _iFFTFourierDetectorCount);
 

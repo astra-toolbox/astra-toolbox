@@ -94,6 +94,7 @@ protected:
 	void reset();
 
 	void* D_filter; // cufftComplex*
+	bool m_bSingleFilter; // Same filter for every projection?
 	bool m_bShortScan;
 	float fReconstructionScale;
 };

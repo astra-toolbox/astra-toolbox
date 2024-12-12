@@ -96,163 +96,10 @@ bool FBP::setFilter(const astra::SFilterConfig &_cfg)
 		D_filter = 0;
 	}
 
-	if (_cfg.m_eType == astra::FILTER_NONE)
-		return true; // leave D_filter set to 0
-
-
-	int iFFTRealDetCount = astra::calcNextPowerOfTwo(2 * dims.iProjDets);
-	int iFreqBinCount = astra::calcFFTFourierSize(iFFTRealDetCount);
-
-	cufftComplex * pHostFilter = new cufftComplex[dims.iProjAngles * iFreqBinCount];
-	memset(pHostFilter, 0, sizeof(cufftComplex) * dims.iProjAngles * iFreqBinCount);
-
-	allocateComplexOnDevice(dims.iProjAngles, iFreqBinCount, (cufftComplex**)&D_filter);
-
-	switch(_cfg.m_eType)
-	{
-		case astra::FILTER_NONE:
-			// handled above
-			break;
-		case astra::FILTER_RAMLAK:
-		case astra::FILTER_SHEPPLOGAN:
-		case astra::FILTER_COSINE:
-		case astra::FILTER_HAMMING:
-		case astra::FILTER_HANN:
-		case astra::FILTER_TUKEY:
-		case astra::FILTER_LANCZOS:
-		case astra::FILTER_TRIANGULAR:
-		case astra::FILTER_GAUSSIAN:
-		case astra::FILTER_BARTLETTHANN:
-		case astra::FILTER_BLACKMAN:
-		case astra::FILTER_NUTTALL:
-		case astra::FILTER_BLACKMANHARRIS:
-		case astra::FILTER_BLACKMANNUTTALL:
-		case astra::FILTER_FLATTOP:
-		case astra::FILTER_KAISER:
-		case astra::FILTER_PARZEN:
-		{
-			genCuFFTFilter(_cfg, dims.iProjAngles, pHostFilter, iFFTRealDetCount, iFreqBinCount);
-			uploadComplexArrayToDevice(dims.iProjAngles, iFreqBinCount, pHostFilter, (cufftComplex*)D_filter);
-
-			break;
-		}
-		case astra::FILTER_PROJECTION:
-		{
-			// make sure the offered filter has the correct size
-			assert(_cfg.m_iCustomFilterWidth == iFreqBinCount);
-
-			for(int iFreqBinIndex = 0; iFreqBinIndex < iFreqBinCount; iFreqBinIndex++)
-			{
-				float fValue = _cfg.m_pfCustomFilter[iFreqBinIndex];
-
-				for(int iProjectionIndex = 0; iProjectionIndex < (int)dims.iProjAngles; iProjectionIndex++)
-				{
-					pHostFilter[iFreqBinIndex + iProjectionIndex * iFreqBinCount].x = fValue;
-					pHostFilter[iFreqBinIndex + iProjectionIndex * iFreqBinCount].y = 0.0f;
-				}
-			}
-			uploadComplexArrayToDevice(dims.iProjAngles, iFreqBinCount, pHostFilter, (cufftComplex*)D_filter);
-			break;
-		}
-		case astra::FILTER_SINOGRAM:
-		{
-			// make sure the offered filter has the correct size
-			assert(_cfg.m_iCustomFilterWidth == iFreqBinCount);
-
-			for(int iFreqBinIndex = 0; iFreqBinIndex < iFreqBinCount; iFreqBinIndex++)
-			{
-				for(int iProjectionIndex = 0; iProjectionIndex < (int)dims.iProjAngles; iProjectionIndex++)
-				{
-					float fValue = _cfg.m_pfCustomFilter[iFreqBinIndex + iProjectionIndex * _cfg.m_iCustomFilterWidth];
-
-					pHostFilter[iFreqBinIndex + iProjectionIndex * iFreqBinCount].x = fValue;
-					pHostFilter[iFreqBinIndex + iProjectionIndex * iFreqBinCount].y = 0.0f;
-				}
-			}
-			uploadComplexArrayToDevice(dims.iProjAngles, iFreqBinCount, pHostFilter, (cufftComplex*)D_filter);
-			break;
-		}
-		case astra::FILTER_RPROJECTION:
-		{
-			int iProjectionCount = dims.iProjAngles;
-			int iRealFilterElementCount = iProjectionCount * iFFTRealDetCount;
-			float * pfHostRealFilter = new float[iRealFilterElementCount];
-			memset(pfHostRealFilter, 0, sizeof(float) * iRealFilterElementCount);
-
-			int iUsedFilterWidth = min(_cfg.m_iCustomFilterWidth, iFFTRealDetCount);
-			int iStartFilterIndex = (_cfg.m_iCustomFilterWidth - iUsedFilterWidth) / 2;
-			int iMaxFilterIndex = iStartFilterIndex + iUsedFilterWidth;
-
-			int iFilterShiftSize = _cfg.m_iCustomFilterWidth / 2;
-
-			for(int iDetectorIndex = iStartFilterIndex; iDetectorIndex < iMaxFilterIndex; iDetectorIndex++)
-			{
-				int iFFTInFilterIndex = (iDetectorIndex + iFFTRealDetCount - iFilterShiftSize) % iFFTRealDetCount;
-				float fValue = _cfg.m_pfCustomFilter[iDetectorIndex];
-
-				for(int iProjectionIndex = 0; iProjectionIndex < (int)dims.iProjAngles; iProjectionIndex++)
-				{
-					pfHostRealFilter[iFFTInFilterIndex + iProjectionIndex * iFFTRealDetCount] = fValue;
-				}
-			}
-
-			float* pfDevRealFilter = NULL;
-			cudaMalloc((void **)&pfDevRealFilter, sizeof(float) * iRealFilterElementCount); // TODO: check for errors
-			cudaMemcpy(pfDevRealFilter, pfHostRealFilter, sizeof(float) * iRealFilterElementCount, cudaMemcpyHostToDevice);
-			delete[] pfHostRealFilter;
-
-			runCudaFFT(iProjectionCount, pfDevRealFilter, iFFTRealDetCount, iFFTRealDetCount, iFFTRealDetCount, (cufftComplex*)D_filter);
-
-			cudaFree(pfDevRealFilter);
-
-			break;
-		}
-		case astra::FILTER_RSINOGRAM:
-		{
-			int iProjectionCount = dims.iProjAngles;
-			int iRealFilterElementCount = iProjectionCount * iFFTRealDetCount;
-			float* pfHostRealFilter = new float[iRealFilterElementCount];
-			memset(pfHostRealFilter, 0, sizeof(float) * iRealFilterElementCount);
-
-			int iUsedFilterWidth = min(_cfg.m_iCustomFilterWidth, iFFTRealDetCount);
-			int iStartFilterIndex = (_cfg.m_iCustomFilterWidth - iUsedFilterWidth) / 2;
-			int iMaxFilterIndex = iStartFilterIndex + iUsedFilterWidth;
-
-			int iFilterShiftSize = _cfg.m_iCustomFilterWidth / 2;
-
-			for(int iDetectorIndex = iStartFilterIndex; iDetectorIndex < iMaxFilterIndex; iDetectorIndex++)
-			{
-				int iFFTInFilterIndex = (iDetectorIndex + iFFTRealDetCount - iFilterShiftSize) % iFFTRealDetCount;
-
-				for(int iProjectionIndex = 0; iProjectionIndex < (int)dims.iProjAngles; iProjectionIndex++)
-				{
-					float fValue = _cfg.m_pfCustomFilter[iDetectorIndex + iProjectionIndex * _cfg.m_iCustomFilterWidth];
-					pfHostRealFilter[iFFTInFilterIndex + iProjectionIndex * iFFTRealDetCount] = fValue;
-				}
-			}
-
-			float* pfDevRealFilter = NULL;
-			cudaMalloc((void **)&pfDevRealFilter, sizeof(float) * iRealFilterElementCount); // TODO: check for errors
-			cudaMemcpy(pfDevRealFilter, pfHostRealFilter, sizeof(float) * iRealFilterElementCount, cudaMemcpyHostToDevice);
-			delete[] pfHostRealFilter;
-
-			runCudaFFT(iProjectionCount, pfDevRealFilter, iFFTRealDetCount, iFFTRealDetCount, iFFTRealDetCount, (cufftComplex*)D_filter);
-
-			cudaFree(pfDevRealFilter);
-
-			break;
-		}
-		default:
-		{
-			ASTRA_ERROR("FBP::setFilter: Unknown filter type requested");
-			delete [] pHostFilter;
-			return false;
-		}
-	}
-
-	delete [] pHostFilter;
-
-	return true;
+	cufftComplex *f;
+	bool ok = prepareCuFFTFilter(_cfg, f, m_bSingleFilter, dims.iProjAngles, dims.iProjDets);
+	D_filter = (void *)f;
+	return ok;
 }
 
 bool FBP::iterate(unsigned int iterations)
@@ -320,7 +167,7 @@ bool FBP::iterate(unsigned int iterations)
 
 		runCudaFFT(dims.iProjAngles, D_sinoData, sinoPitch, dims.iProjDets, iPaddedSize, D_pcFourier);
 
-		applyFilter(dims.iProjAngles, iFourierSize, D_pcFourier, (cufftComplex*)D_filter);
+		applyFilter(dims.iProjAngles, iFourierSize, D_pcFourier, (cufftComplex*)D_filter, m_bSingleFilter);
 
 		runCudaIFFT(dims.iProjAngles, D_pcFourier, D_sinoData, sinoPitch, dims.iProjDets, iPaddedSize);
 
