@@ -38,15 +38,15 @@ IF HAVE_CUDA==True:
     from .PyIncludes cimport *
     from libcpp.vector cimport vector
 
-    cdef extern from "astra/CompositeGeometryManager.h" namespace "astra::CCompositeGeometryManager::SJob":
-        cdef enum EMode:
+    cdef extern from "astra/CompositeGeometryManager.h" namespace "astra::CCompositeGeometryManager":
+        cdef enum EJobMode:
             MODE_ADD = 0
             MODE_SET = 1
     cdef extern from "astra/CompositeGeometryManager.h" namespace "astra":
         cdef cppclass CCompositeGeometryManager:
-            bool doFP(CProjector3D *, vector[CFloat32VolumeData3D *], vector[CFloat32ProjectionData3D *], EMode) nogil
-            bool doBP(CProjector3D *, vector[CFloat32VolumeData3D *], vector[CFloat32ProjectionData3D *], EMode) nogil
-            bool doFDK(CProjector3D *, CFloat32VolumeData3D *, CFloat32ProjectionData3D *, bool, const float*, EMode) nogil
+            bool doFP(CProjector3D *, vector[CFloat32VolumeData3D *], vector[CFloat32ProjectionData3D *], EJobMode) nogil
+            bool doBP(CProjector3D *, vector[CFloat32VolumeData3D *], vector[CFloat32ProjectionData3D *], EJobMode) nogil
+            bool doFDK(CProjector3D *, CFloat32VolumeData3D *, CFloat32ProjectionData3D *, bool, const float*, EJobMode) nogil
 
     cdef extern from *:
         CFloat32VolumeData3D * dynamic_cast_vol_mem "dynamic_cast<astra::CFloat32VolumeData3D*>" (CData3D * )
@@ -65,7 +65,7 @@ IF HAVE_CUDA==True:
     def do_composite(projector_id, vol_ids, proj_ids, mode, t):
         if mode != MODE_ADD and mode != MODE_SET:
             raise AstraError("Internal error: wrong composite mode")
-        cdef EMode eMode = mode;
+        cdef EJobMode eMode = mode;
         cdef vector[CFloat32VolumeData3D *] vol
         cdef CFloat32VolumeData3D * pVolObject
         cdef CFloat32ProjectionData3D * pProjObject
@@ -137,14 +137,12 @@ IF HAVE_CUDA==True:
     def direct_FPBP3D(projector_id, vol, proj, mode, t):
         if mode != MODE_ADD and mode != MODE_SET:
             raise AstraError("Internal error: wrong composite mode")
-        cdef EMode eMode = mode
+        cdef EJobMode eMode = mode
         cdef CProjector3D * projector = manProj.get(projector_id)
         if projector == NULL:
             raise AstraError("Projector not found")
-        cdef CVolumeGeometry3D *pGeometry = projector.getVolumeGeometry()
-        cdef CProjectionGeometry3D *ppGeometry = projector.getProjectionGeometry()
-        cdef CFloat32VolumeData3D * pVol = linkVolFromGeometry(pGeometry, vol)
-        cdef CFloat32ProjectionData3D * pProj = linkProjFromGeometry(ppGeometry, proj)
+        cdef CFloat32VolumeData3D * pVol = linkVolFromGeometry(projector.getVolumeGeometry(), vol)
+        cdef CFloat32ProjectionData3D * pProj = linkProjFromGeometry(projector.getProjectionGeometry(), proj)
         cdef vector[CFloat32VolumeData3D *] vols
         cdef vector[CFloat32ProjectionData3D *] projs
         vols.push_back(pVol)
@@ -193,18 +191,17 @@ IF HAVE_CUDA==True:
         direct_FPBP3D(projector_id, vol, proj, MODE_SET, "BP")
 
     def getProjectedBBox(geometry, minx, maxx, miny, maxy, minz, maxz):
-        cdef CProjectionGeometry3D * ppGeometry
+        cdef unique_ptr[CProjectionGeometry3D] ppGeometry
         cdef double minu=0., maxu=0., minv=0., maxv=0.
         ppGeometry = createProjectionGeometry3D(geometry)
-        ppGeometry.getProjectedBBox(minx, maxx, miny, maxy, minz, maxz, minu, maxu, minv, maxv)
-        del ppGeometry
+        ppGeometry.get().getProjectedBBox(minx, maxx, miny, maxy, minz, maxz, minu, maxu, minv, maxv)
         return (minv, maxv)
 
     def projectPoint(geometry, x, y, z, angle):
-        cdef CProjectionGeometry3D * ppGeometry
+        cdef unique_ptr[CProjectionGeometry3D] ppGeometry
         cdef double u=0., v=0.
         ppGeometry = createProjectionGeometry3D(geometry)
-        ppGeometry.projectPoint(x, y, z, angle, u, v)
+        ppGeometry.get().projectPoint(x, y, z, angle, u, v)
         return (u, v)
 
 

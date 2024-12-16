@@ -52,7 +52,7 @@ CParallelProjectionGeometry3D::CParallelProjectionGeometry3D(int _iProjectionAng
 															 int _iDetectorColCount, 
 															 float32 _fDetectorWidth, 
 															 float32 _fDetectorHeight, 
-															 const float32* _pfProjectionAngles) :
+															 std::vector<float32> &&_pfProjectionAngles) :
 	CProjectionGeometry3D() 
 {
 	initialize(_iProjectionAngleCount, 
@@ -60,7 +60,7 @@ CParallelProjectionGeometry3D::CParallelProjectionGeometry3D(int _iProjectionAng
 			   _iDetectorColCount, 
 			   _fDetectorWidth, 
 			   _fDetectorHeight, 
-			   _pfProjectionAngles);
+			   std::move(_pfProjectionAngles));
 }
 
 //----------------------------------------------------------------------------------------
@@ -93,14 +93,14 @@ bool CParallelProjectionGeometry3D::initialize(int _iProjectionAngleCount,
 											   int _iDetectorColCount, 
 											   float32 _fDetectorWidth, 
 											   float32 _fDetectorHeight, 
-											   const float32* _pfProjectionAngles)
+											   std::vector<float32> &&_pfProjectionAngles)
 {
 	_initialize(_iProjectionAngleCount, 
 			    _iDetectorRowCount, 
 			    _iDetectorColCount, 
 			    _fDetectorWidth, 
 			    _fDetectorHeight, 
-			    _pfProjectionAngles);
+			    std::move(_pfProjectionAngles));
 
 	// success
 	m_bInitialized = _check();
@@ -119,8 +119,7 @@ CProjectionGeometry3D* CParallelProjectionGeometry3D::clone() const
 	res->m_iDetectorTotCount		= m_iDetectorTotCount;
 	res->m_fDetectorSpacingX		= m_fDetectorSpacingX;
 	res->m_fDetectorSpacingY		= m_fDetectorSpacingY;
-	res->m_pfProjectionAngles		= new float32[m_iProjectionAngleCount];
-	memcpy(res->m_pfProjectionAngles, m_pfProjectionAngles, sizeof(float32)*m_iProjectionAngleCount);
+	res->m_pfProjectionAngles		= m_pfProjectionAngles;
 	return res;
 }
 
@@ -169,7 +168,7 @@ Config* CParallelProjectionGeometry3D::getConfiguration() const
 	CW.addInt("DetectorColCount", m_iDetectorColCount);
 	CW.addNumerical("DetectorSpacingX", m_fDetectorSpacingX);
 	CW.addNumerical("DetectorSpacingY", m_fDetectorSpacingY);
-	CW.addNumericalArray("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
+	CW.addNumericalArray("ProjectionAngles", &m_pfProjectionAngles[0], m_iProjectionAngleCount);
 
 	return CW.getConfig();
 }

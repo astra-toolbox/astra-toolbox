@@ -89,15 +89,15 @@ void astra_mex_direct_fp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 		mexErrMsgTxt("Only CUDA projectors are currently supported.");
 	}
 
-	astra::CVolumeGeometry3D* pVolGeom = pProjector->getVolumeGeometry();
-	astra::CProjectionGeometry3D* pProjGeom = pProjector->getProjectionGeometry();
+	const astra::CVolumeGeometry3D &pVolGeom = pProjector->getVolumeGeometry();
+	const astra::CProjectionGeometry3D &pProjGeom = pProjector->getProjectionGeometry();
 
 	const mxArray* const data = prhs[2];
 	if (!checkDataType(data)) {
 		mexErrMsgTxt("Data type must be single or double.");
 	}
 
-	if (!checkDataSize(data, pVolGeom)) {
+	if (!checkDataSize(data, &pVolGeom)) {
 		mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry.");
 	}
 
@@ -108,9 +108,9 @@ void astra_mex_direct_fp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 		astra::CDataStorage* m = new CDataMemory_simple((float *)mxGetData(data));
 		pInput = new astra::CFloat32VolumeData3D(pVolGeom, m);
 	} else {
-		size_t dataSize = pVolGeom->getGridColCount();
-		dataSize *= pVolGeom->getGridRowCount();
-		dataSize *= pVolGeom->getGridSliceCount();
+		size_t dataSize = pVolGeom.getGridColCount();
+		dataSize *= pVolGeom.getGridRowCount();
+		dataSize *= pVolGeom.getGridSliceCount();
 
 		CDataStorage* pStorage = new CDataMemory<float>(dataSize);
 		pInput = new astra::CFloat32VolumeData3D(pVolGeom, pStorage);
@@ -126,9 +126,9 @@ void astra_mex_direct_fp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 	mxArray *pOutputMx;
 	if (mxIsSingle(data)) {
 		mwSize dims[3];
-		dims[0] = pProjGeom->getDetectorColCount();
-		dims[1] = pProjGeom->getProjectionCount();
-		dims[2] = pProjGeom->getDetectorRowCount();
+		dims[0] = pProjGeom.getDetectorColCount();
+		dims[1] = pProjGeom.getProjectionCount();
+		dims[2] = pProjGeom.getDetectorRowCount();
 
 		// Allocate uninitialized mxArray of size dims.
 		// (It will be zeroed by CudaForwardProjectionAlgorithm3D)
@@ -142,9 +142,9 @@ void astra_mex_direct_fp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 		astra::CDataStorage* m = new CDataMemory_simple((float *)mxGetData(pOutputMx));
 		pOutput = new astra::CFloat32ProjectionData3D(pProjGeom, m);
 	} else {
-		size_t dataSize = pProjGeom->getDetectorColCount();
-		dataSize *= pProjGeom->getProjectionCount();
-		dataSize *= pProjGeom->getDetectorRowCount();
+		size_t dataSize = pProjGeom.getDetectorColCount();
+		dataSize *= pProjGeom.getProjectionCount();
+		dataSize *= pProjGeom.getDetectorRowCount();
 
 		CDataStorage* pStorage = new CDataMemory<float>(dataSize);
 		pOutput = new astra::CFloat32ProjectionData3D(pProjGeom, pStorage);
@@ -209,15 +209,15 @@ void astra_mex_direct_bp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 		mexErrMsgTxt("Only CUDA projectors are currently supported.");
 	}
 
-	astra::CVolumeGeometry3D* pVolGeom = pProjector->getVolumeGeometry();
-	astra::CProjectionGeometry3D* pProjGeom = pProjector->getProjectionGeometry();
+	const astra::CVolumeGeometry3D &pVolGeom = pProjector->getVolumeGeometry();
+	const astra::CProjectionGeometry3D &pProjGeom = pProjector->getProjectionGeometry();
 
 	const mxArray* const data = prhs[2];
 	if (!checkDataType(data)) {
 		mexErrMsgTxt("Data type must be single or double.");
 	}
 
-	if (!checkDataSize(data, pProjGeom)) {
+	if (!checkDataSize(data, &pProjGeom)) {
 		mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry.");
 	}
 
@@ -228,9 +228,9 @@ void astra_mex_direct_bp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 		astra::CDataStorage* m = new CDataMemory_simple((float *)mxGetData(data));
 		pInput = new astra::CFloat32ProjectionData3D(pProjGeom, m);
 	} else {
-		size_t dataSize = pProjGeom->getDetectorColCount();
-		dataSize *= pProjGeom->getProjectionCount();
-		dataSize *= pProjGeom->getDetectorRowCount();
+		size_t dataSize = pProjGeom.getDetectorColCount();
+		dataSize *= pProjGeom.getProjectionCount();
+		dataSize *= pProjGeom.getDetectorRowCount();
 
 		CDataStorage* pStorage = new CDataMemory<float>(dataSize);
 		pInput = new astra::CFloat32ProjectionData3D(pProjGeom, pStorage);
@@ -245,9 +245,9 @@ void astra_mex_direct_bp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 	mxArray *pOutputMx;
 	if (mxIsSingle(data)) {
 		mwSize dims[3];
-		dims[0] = pVolGeom->getGridColCount();
-		dims[1] = pVolGeom->getGridRowCount();
-		dims[2] = pVolGeom->getGridSliceCount();
+		dims[0] = pVolGeom.getGridColCount();
+		dims[1] = pVolGeom.getGridRowCount();
+		dims[2] = pVolGeom.getGridSliceCount();
 
 		// Allocate uninitialized mxArray of size dims.
 		// (It will be zeroed by CudaBackProjectionAlgorithm3D)
@@ -261,9 +261,9 @@ void astra_mex_direct_bp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 		astra::CDataStorage* m = new CDataMemory_simple((float *)mxGetData(pOutputMx));
 		pOutput = new astra::CFloat32VolumeData3D(pVolGeom, m);
 	} else {
-		size_t dataSize = pVolGeom->getGridColCount();
-		dataSize *= pVolGeom->getGridRowCount();
-		dataSize *= pVolGeom->getGridSliceCount();
+		size_t dataSize = pVolGeom.getGridColCount();
+		dataSize *= pVolGeom.getGridRowCount();
+		dataSize *= pVolGeom.getGridSliceCount();
 
 		CDataStorage* pStorage = new CDataMemory<float>(dataSize);
 		pOutput = new astra::CFloat32VolumeData3D(pVolGeom, pStorage);

@@ -26,7 +26,7 @@ requirements:
     - {{ compiler('cxx') }}  # [linux]
   host:
     - python
-    - cython >=0.13
+    - cython >=3
     - nomkl # [not win]
     - numpy {{ numpy_host }}
     - scipy

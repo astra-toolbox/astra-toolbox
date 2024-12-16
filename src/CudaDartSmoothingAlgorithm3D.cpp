@@ -98,12 +98,12 @@ bool CCudaDartSmoothingAlgorithm3D::initialize(const Config& _cfg)
 
 //----------------------------------------------------------------------------------------
 // Iterate
-void CCudaDartSmoothingAlgorithm3D::run(int _iNrIterations)
+bool CCudaDartSmoothingAlgorithm3D::run(int _iNrIterations)
 {
 	// check initialized
 	ASTRA_ASSERT(m_bIsInitialized);
 
-	const CVolumeGeometry3D& volgeom = *m_pIn->getGeometry();
+	const CVolumeGeometry3D& volgeom = m_pIn->getGeometry();
 	astraCUDA3d::SDimensions3D dims;
 	dims.iVolX = volgeom.getGridColCount();
 	dims.iVolY = volgeom.getGridRowCount();
@@ -111,6 +111,8 @@ void CCudaDartSmoothingAlgorithm3D::run(int _iNrIterations)
 
 	astraCUDA3d::setGPUIndex(m_iGPUIndex);
 	astraCUDA3d::dartSmoothing(m_pOut->getFloat32Memory(), m_pIn->getFloat32Memory(), m_fB, m_iRadius, dims);
+
+	return true;
 }
 
 //----------------------------------------------------------------------------------------

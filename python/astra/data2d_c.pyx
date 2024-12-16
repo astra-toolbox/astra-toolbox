@@ -81,7 +81,7 @@ def delete(ids):
 def create(datatype, geometry, data=None, link=False):
     cdef XMLConfig *cfg
     cdef CVolumeGeometry2D * pGeometry
-    cdef CProjectionGeometry2D * ppGeometry
+    cdef unique_ptr[CProjectionGeometry2D] ppGeometry
     cdef CFloat32Data2D * pDataObject2D
     cdef CFloat32CustomMemory * pCustom
 
@@ -100,36 +100,25 @@ def create(datatype, geometry, data=None, link=False):
             raise AstraError('Geometry class could not be initialized', append_log=True)
         if link:
             pCustom = <CFloat32CustomMemory*> new CFloat32CustomPython(data)
-            pDataObject2D = <CFloat32Data2D * > new CFloat32VolumeData2D(pGeometry, pCustom)
+            pDataObject2D = <CFloat32Data2D * > new CFloat32VolumeData2D(cython.operator.dereference(pGeometry), pCustom)
         else:
-            pDataObject2D = <CFloat32Data2D * > new CFloat32VolumeData2D(pGeometry)
+            pDataObject2D = <CFloat32Data2D * > new CFloat32VolumeData2D(cython.operator.dereference(pGeometry))
         del cfg
         del pGeometry
     elif datatype == '-sino':
         cfg = utils.dictToConfig(b'ProjectionGeometry', geometry)
-        tpe = wrap_from_bytes(cfg.self.getAttribute(b'type'))
-        if (tpe == 'sparse_matrix'):
-            ppGeometry = <CProjectionGeometry2D * >new CSparseMatrixProjectionGeometry2D()
-        elif (tpe == 'fanflat'):
-            ppGeometry = <CProjectionGeometry2D * >new CFanFlatProjectionGeometry2D()
-        elif (tpe == 'fanflat_vec'):
-            ppGeometry = <CProjectionGeometry2D * >new CFanFlatVecProjectionGeometry2D()
-        elif (tpe == 'parallel_vec'):
-            ppGeometry = <CProjectionGeometry2D * >new CParallelVecProjectionGeometry2D()
-        elif (tpe == 'parallel'):
-            ppGeometry = <CProjectionGeometry2D * >new CParallelProjectionGeometry2D()
-        else:
+        tpe = cfg.self.getAttribute(b'type')
+        ppGeometry = constructProjectionGeometry2D(tpe)
+        if not ppGeometry:
             raise ValueError("'{}' is not a valid 2D geometry type".format(tpe))
-        if not ppGeometry.initialize(cfg[0]):
+        if not ppGeometry.get().initialize(cfg[0]):
             del cfg
-            del ppGeometry
             raise AstraError('Geometry class could not be initialized', append_log=True)
         if link:
             pCustom = <CFloat32CustomMemory*> new CFloat32CustomPython(data)
-            pDataObject2D = <CFloat32Data2D * > new CFloat32ProjectionData2D(ppGeometry, pCustom)
+            pDataObject2D = <CFloat32Data2D * > new CFloat32ProjectionData2D(cython.operator.dereference(ppGeometry), pCustom)
         else:
-            pDataObject2D = <CFloat32Data2D * > new CFloat32ProjectionData2D(ppGeometry)
-        del ppGeometry
+            pDataObject2D = <CFloat32Data2D * > new CFloat32ProjectionData2D(cython.operator.dereference(ppGeometry))
         del cfg
     else:
         raise ValueError("Invalid datatype. Please specify '-vol' or '-sino'")
@@ -219,37 +208,27 @@ def check_compatible(i, proj_id):
 def change_geometry(i, geom):
     cdef XMLConfig *cfg
     cdef CVolumeGeometry2D * pGeometry
-    cdef CProjectionGeometry2D * ppGeometry
+    cdef unique_ptr[CProjectionGeometry2D] ppGeometry
     cdef CFloat32Data2D * pDataObject = getObject(i)
     cdef CFloat32ProjectionData2D * pDataObject2
     cdef CFloat32VolumeData2D * pDataObject3
     if pDataObject.getType() == TWOPROJECTION:
         pDataObject2 = <CFloat32ProjectionData2D * >pDataObject
         cfg = utils.dictToConfig(b'ProjectionGeometry', geom)
-        tpe = wrap_from_bytes(cfg.self.getAttribute(b'type'))
-        if (tpe == 'sparse_matrix'):
-            ppGeometry = <CProjectionGeometry2D * >new CSparseMatrixProjectionGeometry2D()
-        elif (tpe == 'fanflat'):
-            ppGeometry = <CProjectionGeometry2D * >new CFanFlatProjectionGeometry2D()
-        elif (tpe == 'fanflat_vec'):
-            ppGeometry = <CProjectionGeometry2D * >new CFanFlatVecProjectionGeometry2D()
-        elif (tpe == 'parallel_vec'):
-            ppGeometry = <CProjectionGeometry2D * >new CParallelVecProjectionGeometry2D()
-        else:
-            ppGeometry = <CProjectionGeometry2D * >new CParallelProjectionGeometry2D()
-        if not ppGeometry.initialize(cfg[0]):
+        tpe = cfg.self.getAttribute(b'type')
+        ppGeometry = constructProjectionGeometry2D(tpe)
+        if not ppGeometry:
+            raise ValueError("'{}' is not a valid 2D geometry type".format(tpe))
+        if not ppGeometry.get().initialize(cfg[0]):
             del cfg
-            del ppGeometry
             AstraError('Geometry class could not be initialized', append_log=True)
-        geom_shape = (ppGeometry.getProjectionAngleCount(), ppGeometry.getDetectorCount())
+        geom_shape = (ppGeometry.get().getProjectionAngleCount(), ppGeometry.get().getDetectorCount())
         obj_shape = (pDataObject2.getAngleCount(), pDataObject2.getDetectorCount())
         if geom_shape != obj_shape:
-            del ppGeometry
             del cfg
             raise ValueError("The dimensions of the data {} do not match those "
                              "specified in the geometry {}".format(obj_shape, geom_shape))
-        pDataObject2.changeGeometry(ppGeometry)
-        del ppGeometry
+        pDataObject2.changeGeometry(cython.operator.dereference(ppGeometry))
         del cfg
     elif pDataObject.getType() == TWOVOLUME:
         pDataObject3 = <CFloat32VolumeData2D * >pDataObject
@@ -266,7 +245,7 @@ def change_geometry(i, geom):
             del pGeometry
             raise ValueError("The dimensions of the data {} do not match those "
                              "specified in the geometry {}".format(obj_shape, geom_shape))
-        pDataObject3.changeGeometry(pGeometry)
+        pDataObject3.changeGeometry(cython.operator.dereference(pGeometry))
         del cfg
         del pGeometry
     else:

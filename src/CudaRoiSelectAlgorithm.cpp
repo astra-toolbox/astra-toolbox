@@ -95,12 +95,12 @@ bool CCudaRoiSelectAlgorithm::initialize(const Config& _cfg)
 
 //----------------------------------------------------------------------------------------
 // Iterate
-void CCudaRoiSelectAlgorithm::run(int _iNrIterations)
+bool CCudaRoiSelectAlgorithm::run(int _iNrIterations)
 {
 	// check initialized
 	ASTRA_ASSERT(m_bIsInitialized);
 
-	const CVolumeGeometry2D& volgeom = *m_pData->getGeometry();
+	const CVolumeGeometry2D& volgeom = m_pData->getGeometry();
 	unsigned int width = volgeom.getGridColCount();
 	unsigned int height = volgeom.getGridRowCount();
 
@@ -110,6 +110,8 @@ void CCudaRoiSelectAlgorithm::run(int _iNrIterations)
 
 	astraCUDA::setGPUIndex(m_iGPUIndex);
 	astraCUDA::roiSelect(m_pData->getData(), m_fRadius, width, height);
+
+	return true;
 }
 
 //----------------------------------------------------------------------------------------

@@ -26,13 +26,17 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "astra/GeometryUtil3D.h"
+#include "astra/ParallelProjectionGeometry3D.h"
+#include "astra/ParallelVecProjectionGeometry3D.h"
+#include "astra/ConeProjectionGeometry3D.h"
+#include "astra/ConeVecProjectionGeometry3D.h"
 
 #include <cmath>
 
 namespace astra {
 
 
-SConeProjection* genConeProjections(unsigned int iProjAngles,
+std::vector<SConeProjection> genConeProjections(unsigned int iProjAngles,
                                     unsigned int iProjU,
                                     unsigned int iProjV,
                                     double fOriginSourceDistance,
@@ -58,7 +62,8 @@ SConeProjection* genConeProjections(unsigned int iProjAngles,
 	base.fDetVY = 0.0f;
 	base.fDetVZ = fDetVSize;
 
-	SConeProjection* p = new SConeProjection[iProjAngles];
+	std::vector<SConeProjection> p;
+	p.resize(iProjAngles);
 
 #define ROTATE0(name,i,alpha) do { p[i].f##name##X = base.f##name##X * cos(alpha) - base.f##name##Y * sin(alpha); p[i].f##name##Y = base.f##name##X * sin(alpha) + base.f##name##Y * cos(alpha); p[i].f##name##Z = base.f##name##Z; } while(0)
 
@@ -74,7 +79,7 @@ SConeProjection* genConeProjections(unsigned int iProjAngles,
 	return p;
 }
 
-SPar3DProjection* genPar3DProjections(unsigned int iProjAngles,
+std::vector<SPar3DProjection> genPar3DProjections(unsigned int iProjAngles,
                                       unsigned int iProjU,
                                       unsigned int iProjV,
                                       double fDetUSize,
@@ -98,7 +103,8 @@ SPar3DProjection* genPar3DProjections(unsigned int iProjAngles,
 	base.fDetVY = 0.0f;
 	base.fDetVZ = fDetVSize;
 
-	SPar3DProjection* p = new SPar3DProjection[iProjAngles];
+	std::vector<SPar3DProjection> p;
+	p.resize(iProjAngles);
 
 #define ROTATE0(name,i,alpha) do { p[i].f##name##X = base.f##name##X * cos(alpha) - base.f##name##Y * sin(alpha); p[i].f##name##Y = base.f##name##X * sin(alpha) + base.f##name##Y * cos(alpha); p[i].f##name##Z = base.f##name##Z; } while(0)
 
@@ -113,6 +119,236 @@ SPar3DProjection* genPar3DProjections(unsigned int iProjAngles,
 
 	return p;
 }
+
+
+// Utility function to get newly allocated copy of projection vectors for any geometry
+template<class V, class P>
+static std::vector<V> getProjectionVectors(const P* geom);
+
+template<>
+std::vector<SConeProjection> getProjectionVectors(const CConeProjectionGeometry3D* pProjGeom)
+{
+	return genConeProjections(pProjGeom->getProjectionCount(),
+	                          pProjGeom->getDetectorColCount(),
+	                          pProjGeom->getDetectorRowCount(),
+	                          pProjGeom->getOriginSourceDistance(),
+	                          pProjGeom->getOriginDetectorDistance(),
+	                          pProjGeom->getDetectorSpacingX(),
+	                          pProjGeom->getDetectorSpacingY(),
+	                          pProjGeom->getProjectionAngles());
+}
+
+template<>
+std::vector<SConeProjection> getProjectionVectors(const CConeVecProjectionGeometry3D* pProjGeom)
+{
+	int nth = pProjGeom->getProjectionCount();
+
+	std::vector<SConeProjection> p;
+	p.resize(nth);
+
+	for (int i = 0; i < nth; ++i)
+		p[i] = pProjGeom->getProjectionVectors()[i];
+
+	return p;
+}
+
+template<>
+std::vector<SPar3DProjection> getProjectionVectors(const CParallelProjectionGeometry3D* pProjGeom)
+{
+	return genPar3DProjections(pProjGeom->getProjectionCount(),
+	                           pProjGeom->getDetectorColCount(),
+	                           pProjGeom->getDetectorRowCount(),
+	                           pProjGeom->getDetectorSpacingX(),
+	                           pProjGeom->getDetectorSpacingY(),
+	                           pProjGeom->getProjectionAngles());
+}
+
+template<>
+std::vector<SPar3DProjection> getProjectionVectors(const CParallelVecProjectionGeometry3D* pProjGeom)
+{
+	int nth = pProjGeom->getProjectionCount();
+
+	std::vector<SPar3DProjection> p;
+	p.resize(nth);
+
+	for (int i = 0; i < nth; ++i)
+		p[i] = pProjGeom->getProjectionVectors()[i];
+
+	return p;
+}
+
+
+// Translate detector location along u axis
+template<class V>
+static void translateDetectorVectorsU(std::vector<V> &projs, double du)
+{
+	for (auto &p : projs) {
+		p.fDetSX += du * p.fDetUX;
+		p.fDetSY += du * p.fDetUY;
+		p.fDetSZ += du * p.fDetUZ;
+	}
+}
+
+// Translate detector location along v axis
+template<class V>
+static void translateDetectorVectorsV(std::vector<V> &projs, double dv)
+{
+	for (auto &p : projs) {
+		p.fDetSX += dv * p.fDetVX;
+		p.fDetSY += dv * p.fDetVY;
+		p.fDetSZ += dv * p.fDetVZ;
+	}
+}
+
+
+
+
+
+CProjectionGeometry3D* getSubProjectionGeometry_U(const CProjectionGeometry3D* pProjGeom, int u, int size)
+{
+	// First convert to vectors, then translate, then convert into new object
+
+	const CConeProjectionGeometry3D* conegeom = dynamic_cast<const CConeProjectionGeometry3D*>(pProjGeom);
+	const CParallelProjectionGeometry3D* par3dgeom = dynamic_cast<const CParallelProjectionGeometry3D*>(pProjGeom);
+	const CParallelVecProjectionGeometry3D* parvec3dgeom = dynamic_cast<const CParallelVecProjectionGeometry3D*>(pProjGeom);
+	const CConeVecProjectionGeometry3D* conevec3dgeom = dynamic_cast<const CConeVecProjectionGeometry3D*>(pProjGeom);
+
+	if (conegeom || conevec3dgeom) {
+		std::vector<SConeProjection> coneProjs;
+		if (conegeom) {
+			coneProjs = getProjectionVectors<SConeProjection>(conegeom);
+		} else {
+			coneProjs = getProjectionVectors<SConeProjection>(conevec3dgeom);
+		}
+
+		translateDetectorVectorsU(coneProjs, u);
+
+		CProjectionGeometry3D* ret = new CConeVecProjectionGeometry3D(pProjGeom->getProjectionCount(),
+		                                                              pProjGeom->getDetectorRowCount(),
+		                                                              size,
+		                                                              std::move(coneProjs));
+
+
+		return ret;
+	} else if (par3dgeom || parvec3dgeom) {
+		std::vector<SPar3DProjection> parProjs;
+		if (par3dgeom) {
+			parProjs = getProjectionVectors<SPar3DProjection>(par3dgeom);
+		} else {
+			parProjs = getProjectionVectors<SPar3DProjection>(parvec3dgeom);
+		}
+
+		translateDetectorVectorsU(parProjs, u);
+
+		CProjectionGeometry3D* ret = new CParallelVecProjectionGeometry3D(pProjGeom->getProjectionCount(),
+		                                                                  pProjGeom->getDetectorRowCount(),
+		                                                                  size,
+		                                                                  std::move(parProjs));
+
+		return ret;
+	} else {
+		assert(false);
+		return nullptr;
+	}
+}
+
+
+
+CProjectionGeometry3D* getSubProjectionGeometry_V(const CProjectionGeometry3D* pProjGeom, int v, int size)
+{
+	// First convert to vectors, then translate, then convert into new object
+
+	const CConeProjectionGeometry3D* conegeom = dynamic_cast<const CConeProjectionGeometry3D*>(pProjGeom);
+	const CParallelProjectionGeometry3D* par3dgeom = dynamic_cast<const CParallelProjectionGeometry3D*>(pProjGeom);
+	const CParallelVecProjectionGeometry3D* parvec3dgeom = dynamic_cast<const CParallelVecProjectionGeometry3D*>(pProjGeom);
+	const CConeVecProjectionGeometry3D* conevec3dgeom = dynamic_cast<const CConeVecProjectionGeometry3D*>(pProjGeom);
+
+	if (conegeom || conevec3dgeom) {
+		std::vector<SConeProjection> coneProjs;
+		if (conegeom) {
+			coneProjs = getProjectionVectors<SConeProjection>(conegeom);
+		} else {
+			coneProjs = getProjectionVectors<SConeProjection>(conevec3dgeom);
+		}
+
+		translateDetectorVectorsV(coneProjs, v);
+
+		CProjectionGeometry3D* ret = new CConeVecProjectionGeometry3D(pProjGeom->getProjectionCount(),
+		                                                              size,
+		                                                              pProjGeom->getDetectorColCount(),
+		                                                              std::move(coneProjs));
+
+
+		return ret;
+	} else if (par3dgeom || parvec3dgeom) {
+		std::vector<SPar3DProjection> parProjs;
+		if (par3dgeom) {
+			parProjs = getProjectionVectors<SPar3DProjection>(par3dgeom);
+		} else {
+			parProjs = getProjectionVectors<SPar3DProjection>(parvec3dgeom);
+		}
+
+		translateDetectorVectorsV(parProjs, v);
+
+		CProjectionGeometry3D* ret = new CParallelVecProjectionGeometry3D(pProjGeom->getProjectionCount(),
+		                                                                  size,
+		                                                                  pProjGeom->getDetectorColCount(),
+		                                                                  std::move(parProjs));
+
+		return ret;
+	} else {
+		assert(false);
+		return nullptr;
+	}
+
+}
+
+CProjectionGeometry3D* getSubProjectionGeometry_Angle(const CProjectionGeometry3D* pProjGeom, int th, int size)
+{
+	// First convert to vectors, then convert into new object
+
+	const CConeProjectionGeometry3D* conegeom = dynamic_cast<const CConeProjectionGeometry3D*>(pProjGeom);
+	const CParallelProjectionGeometry3D* par3dgeom = dynamic_cast<const CParallelProjectionGeometry3D*>(pProjGeom);
+	const CParallelVecProjectionGeometry3D* parvec3dgeom = dynamic_cast<const CParallelVecProjectionGeometry3D*>(pProjGeom);
+	const CConeVecProjectionGeometry3D* conevec3dgeom = dynamic_cast<const CConeVecProjectionGeometry3D*>(pProjGeom);
+
+	if (conegeom || conevec3dgeom) {
+		std::vector<SConeProjection> coneProjs;
+		if (conegeom) {
+			coneProjs = getProjectionVectors<SConeProjection>(conegeom);
+		} else {
+			coneProjs = getProjectionVectors<SConeProjection>(conevec3dgeom);
+		}
+
+		CProjectionGeometry3D* ret = new CConeVecProjectionGeometry3D(size,
+		                                                              pProjGeom->getDetectorRowCount(),
+		                                                              pProjGeom->getDetectorColCount(),
+									      std::vector<SConeProjection>(coneProjs.begin() + th,
+										                           coneProjs.begin() + th+size));
+
+
+		return ret;
+	} else {
+		assert(par3dgeom || parvec3dgeom);
+		std::vector<SPar3DProjection> parProjs;
+		if (par3dgeom) {
+			parProjs = getProjectionVectors<SPar3DProjection>(par3dgeom);
+		} else {
+			parProjs = getProjectionVectors<SPar3DProjection>(parvec3dgeom);
+		}
+
+		CProjectionGeometry3D* ret = new CParallelVecProjectionGeometry3D(size,
+		                                                                  pProjGeom->getDetectorRowCount(),
+		                                                                  pProjGeom->getDetectorColCount(),
+		                                                                  std::vector<SPar3DProjection>(parProjs.begin() + th,
+		                                                                                                 parProjs.begin() + th+size));
+
+		return ret;
+	}
+
+}
+
+
 
 
 

@@ -25,43 +25,34 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#ifndef _INC_PYTHONPLUGINALGORITHM
-#define _INC_PYTHONPLUGINALGORITHM
+#include "astra/ProjectionGeometry3DFactory.h"
 
-#ifdef ASTRA_PYTHON
+#include "astra/ParallelProjectionGeometry3D.h"
+#include "astra/ParallelVecProjectionGeometry3D.h"
+#include "astra/ConeProjectionGeometry3D.h"
+#include "astra/ConeVecProjectionGeometry3D.h"
 
-#include "astra/Algorithm.h"
-#include "astra/Singleton.h"
-#include "astra/XMLDocument.h"
-#include "astra/XMLNode.h"
-#include "astra/PluginAlgorithmFactory.h"
+#include "astra/Logging.h"
 
-#include <Python.h>
+namespace astra
+{
 
-namespace astra {
-class CPluginAlgorithm : public CAlgorithm {
+_AstraExport std::unique_ptr<CProjectionGeometry3D> constructProjectionGeometry3D(const std::string &type)
+{
+	CProjectionGeometry3D* pProjGeometry = 0;
+	if (type == "parallel3d") {
+		pProjGeometry = new CParallelProjectionGeometry3D();
+	} else if (type == "parallel3d_vec") {
+		pProjGeometry = new CParallelVecProjectionGeometry3D();
+	} else if (type == "cone") {
+		pProjGeometry = new CConeProjectionGeometry3D();
+	} else if (type == "cone_vec") {
+		pProjGeometry = new CConeVecProjectionGeometry3D();
+	} else {
+		// invalid geometry type
+	}
 
-public:
-
-    CPluginAlgorithm(PyObject* pyclass);
-    ~CPluginAlgorithm();
-
-    bool initialize(const Config& _cfg);
-    bool run(int _iNrIterations);
-
-    // Return instance (including INCREF)
-    PyObject *getInstance() const;
-
-private:
-    PyObject * instance;
-
-};
-
-PyObject* XMLNode2dict(XMLNode node);
-
+	return std::unique_ptr<CProjectionGeometry3D>(pProjGeometry);
 }
 
-
-#endif
-
-#endif
+}

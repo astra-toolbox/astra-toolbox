@@ -25,43 +25,19 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#ifndef _INC_PYTHONPLUGINALGORITHM
-#define _INC_PYTHONPLUGINALGORITHM
+#ifndef _INC_ASTRA_PROJECTIONGEOMETRY2DFACTORY
+#define _INC_ASTRA_PROJECTIONGEOMETRY2DFACTORY
 
-#ifdef ASTRA_PYTHON
+#include "Globals.h"
 
-#include "astra/Algorithm.h"
-#include "astra/Singleton.h"
-#include "astra/XMLDocument.h"
-#include "astra/XMLNode.h"
-#include "astra/PluginAlgorithmFactory.h"
-
-#include <Python.h>
+#include <memory>
 
 namespace astra {
-class CPluginAlgorithm : public CAlgorithm {
 
-public:
+class CProjectionGeometry2D;
 
-    CPluginAlgorithm(PyObject* pyclass);
-    ~CPluginAlgorithm();
-
-    bool initialize(const Config& _cfg);
-    bool run(int _iNrIterations);
-
-    // Return instance (including INCREF)
-    PyObject *getInstance() const;
-
-private:
-    PyObject * instance;
-
-};
-
-PyObject* XMLNode2dict(XMLNode node);
+_AstraExport std::unique_ptr<CProjectionGeometry2D> constructProjectionGeometry2D(const std::string &type);
 
 }
-
-
-#endif
 
 #endif

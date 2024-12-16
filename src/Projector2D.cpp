@@ -27,10 +27,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/Projector2D.h"
 
-#include "astra/ParallelVecProjectionGeometry2D.h"
-#include "astra/FanFlatProjectionGeometry2D.h"
-#include "astra/FanFlatVecProjectionGeometry2D.h"
-#include "astra/SparseMatrixProjectionGeometry2D.h"
+#include "astra/ProjectionGeometry2DFactory.h"
 #include "astra/SparseMatrix.h"
 
 #include "astra/Logging.h"
@@ -48,10 +45,10 @@ CProjector2D::CProjector2D() : configCheckData(0)
 
 //----------------------------------------------------------------------------------------
 // constructor
-CProjector2D::CProjector2D(CProjectionGeometry2D* _pProjectionGeometry, CVolumeGeometry2D* _pVolumeGeometry) : configCheckData(0)
+CProjector2D::CProjector2D(const CProjectionGeometry2D &_pProjectionGeometry, const CVolumeGeometry2D &_pVolumeGeometry) : configCheckData(0)
 {
-	m_pProjectionGeometry = _pProjectionGeometry->clone();
-	m_pVolumeGeometry = _pVolumeGeometry->clone();
+	m_pProjectionGeometry = _pProjectionGeometry.clone();
+	m_pVolumeGeometry = _pVolumeGeometry.clone();
 	m_bIsInitialized = true;
 }
 
@@ -121,31 +118,18 @@ bool CProjector2D::initialize(const Config& _cfg)
 	if (!ok)
 		return false;
 
-	// FIXME: Change how the base class is created. (This is duplicated
-	// in astra_mex_data2d.cpp.)
-	if (type == "sparse_matrix") {
-		m_pProjectionGeometry = new CSparseMatrixProjectionGeometry2D();
-		m_pProjectionGeometry->initialize(*subcfg);
-	} else if (type == "fanflat") {
-		CFanFlatProjectionGeometry2D* pFanFlatProjectionGeometry = new CFanFlatProjectionGeometry2D();
-		pFanFlatProjectionGeometry->initialize(*subcfg);
-		m_pProjectionGeometry = pFanFlatProjectionGeometry;
-	} else if (type == "fanflat_vec") {
-		CFanFlatVecProjectionGeometry2D* pFanFlatVecProjectionGeometry = new CFanFlatVecProjectionGeometry2D();
-		pFanFlatVecProjectionGeometry->initialize(*subcfg);
-		m_pProjectionGeometry = pFanFlatVecProjectionGeometry;
-	} else if (type == "parallel_vec") {
-		CParallelVecProjectionGeometry2D* pParallelVecProjectionGeometry = new CParallelVecProjectionGeometry2D();
-		pParallelVecProjectionGeometry->initialize(*subcfg);
-		m_pProjectionGeometry = pParallelVecProjectionGeometry;
-	} else {
-		m_pProjectionGeometry = new CParallelProjectionGeometry2D();
-		m_pProjectionGeometry->initialize(*subcfg);
+	std::unique_ptr<CProjectionGeometry2D> pProjGeometry = constructProjectionGeometry2D(type);
+	if (!pProjGeometry) {
+		delete subcfg;
+		// Invalid geometry type
+		ASTRA_CONFIG_CHECK(false, "Projector2D", "Invalid projection geometry type \"%s\" specified.", type.c_str());
 	}
+
+	pProjGeometry->initialize(*subcfg);
 	delete subcfg;
+	m_pProjectionGeometry = pProjGeometry.release();
 
 	ASTRA_CONFIG_CHECK(m_pProjectionGeometry->isInitialized(), "Projector2D", "ProjectionGeometry not initialized.");	
-
 
 	ok = CR.getRequiredSubConfig("VolumeGeometry", subcfg, type);
 	if (!ok)

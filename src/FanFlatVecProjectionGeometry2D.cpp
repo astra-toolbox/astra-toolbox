@@ -158,19 +158,17 @@ bool CFanFlatVecProjectionGeometry2D::initializeAngles(const Config& _cfg)
 
 //----------------------------------------------------------------------------------------
 // Clone
-CProjectionGeometry2D* CFanFlatVecProjectionGeometry2D::clone()
+CProjectionGeometry2D* CFanFlatVecProjectionGeometry2D::clone() const
 {
 	return new CFanFlatVecProjectionGeometry2D(*this);
 }
 
 //----------------------------------------------------------------------------------------
 // is equal
-bool CFanFlatVecProjectionGeometry2D::isEqual(CProjectionGeometry2D* _pGeom2) const
+bool CFanFlatVecProjectionGeometry2D::isEqual(const CProjectionGeometry2D &_pGeom2) const
 {
-	if (_pGeom2 == NULL) return false;
-
 	// try to cast argument to CFanFlatVecProjectionGeometry2D
-	CFanFlatVecProjectionGeometry2D* pGeom2 = dynamic_cast<CFanFlatVecProjectionGeometry2D*>(_pGeom2);
+	const CFanFlatVecProjectionGeometry2D* pGeom2 = dynamic_cast<const CFanFlatVecProjectionGeometry2D*>(&_pGeom2);
 	if (pGeom2 == NULL) return false;
 
 	// both objects must be initialized

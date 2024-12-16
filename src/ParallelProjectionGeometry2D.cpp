@@ -129,19 +129,17 @@ bool CParallelProjectionGeometry2D::initialize(int _iProjectionAngleCount,
 
 //----------------------------------------------------------------------------------------
 // Clone
-CProjectionGeometry2D* CParallelProjectionGeometry2D::clone()
+CProjectionGeometry2D* CParallelProjectionGeometry2D::clone() const
 {
 	return new CParallelProjectionGeometry2D(*this);
 }
 
 //----------------------------------------------------------------------------------------
 // is equal
-bool CParallelProjectionGeometry2D::isEqual(CProjectionGeometry2D* _pGeom2) const
+bool CParallelProjectionGeometry2D::isEqual(const CProjectionGeometry2D &_pGeom2) const
 {
-	if (_pGeom2 == NULL) return false;
-
 	// try to cast argument to CParallelProjectionGeometry2D
-	CParallelProjectionGeometry2D* pGeom2 = dynamic_cast<CParallelProjectionGeometry2D*>(_pGeom2);
+	const CParallelProjectionGeometry2D* pGeom2 = dynamic_cast<const CParallelProjectionGeometry2D*>(&_pGeom2);
 	if (pGeom2 == NULL) return false;
 
 	// both objects must be initialized

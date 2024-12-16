@@ -41,7 +41,7 @@ CFloat32VolumeData2D::CFloat32VolumeData2D() :
 
 //----------------------------------------------------------------------------------------
 // Create an instance of the CFloat32VolumeData2D class, allocating (but not initializing) the data block.
-CFloat32VolumeData2D::CFloat32VolumeData2D(CVolumeGeometry2D* _pGeometry) 
+CFloat32VolumeData2D::CFloat32VolumeData2D(const CVolumeGeometry2D& _pGeometry)
 {
 	m_bInitialized = false;
 	m_bInitialized = initialize(_pGeometry);
@@ -49,7 +49,7 @@ CFloat32VolumeData2D::CFloat32VolumeData2D(CVolumeGeometry2D* _pGeometry)
 
 //----------------------------------------------------------------------------------------
 // Create an instance of the CFloat32VolumeData2D class with initialization of the data.
-CFloat32VolumeData2D::CFloat32VolumeData2D(CVolumeGeometry2D* _pGeometry, float32* _pfData) 
+CFloat32VolumeData2D::CFloat32VolumeData2D(const CVolumeGeometry2D& _pGeometry, float32* _pfData)
 {
 	m_bInitialized = false;
 	m_bInitialized = initialize(_pGeometry, _pfData);
@@ -57,7 +57,7 @@ CFloat32VolumeData2D::CFloat32VolumeData2D(CVolumeGeometry2D* _pGeometry, float3
 
 //----------------------------------------------------------------------------------------
 // Create an instance of the CFloat32VolumeData2D class with initialization of the data.
-CFloat32VolumeData2D::CFloat32VolumeData2D(CVolumeGeometry2D* _pGeometry, float32 _fScalar) 
+CFloat32VolumeData2D::CFloat32VolumeData2D(const CVolumeGeometry2D& _pGeometry, float32 _fScalar)
 {
 	m_bInitialized = false;
 	m_bInitialized = initialize(_pGeometry, _fScalar);
@@ -73,7 +73,7 @@ CFloat32VolumeData2D::CFloat32VolumeData2D(const CFloat32VolumeData2D& _other) :
 
 //----------------------------------------------------------------------------------------
 // Create an instance of the CFloat32VolumeData2D class with pre-allocated data
-CFloat32VolumeData2D::CFloat32VolumeData2D(CVolumeGeometry2D* _pGeometry, CFloat32CustomMemory* _pCustomMemory)
+CFloat32VolumeData2D::CFloat32VolumeData2D(const CVolumeGeometry2D& _pGeometry, CFloat32CustomMemory* _pCustomMemory)
 {
 	m_bInitialized = false;
 	m_bInitialized = initialize(_pGeometry, _pCustomMemory);
@@ -106,48 +106,48 @@ CFloat32VolumeData2D::~CFloat32VolumeData2D()
 
 //----------------------------------------------------------------------------------------
 // Initialization
-bool CFloat32VolumeData2D::initialize(CVolumeGeometry2D* _pGeometry)
+bool CFloat32VolumeData2D::initialize(const CVolumeGeometry2D& _pGeometry)
 {
-	m_pGeometry = _pGeometry->clone();
+	m_pGeometry = _pGeometry.clone();
 	m_bInitialized = _initialize(m_pGeometry->getGridColCount(), m_pGeometry->getGridRowCount());
 	return m_bInitialized;
 }
 
 //----------------------------------------------------------------------------------------
 // Initialization
-bool CFloat32VolumeData2D::initialize(CVolumeGeometry2D* _pGeometry, const float32* _pfData)
+bool CFloat32VolumeData2D::initialize(const CVolumeGeometry2D& _pGeometry, const float32* _pfData)
 {
-	m_pGeometry = _pGeometry->clone();
+	m_pGeometry = _pGeometry.clone();
 	m_bInitialized = _initialize(m_pGeometry->getGridColCount(), m_pGeometry->getGridRowCount(), _pfData);
 	return m_bInitialized;
 }
 
 //----------------------------------------------------------------------------------------
 // Initialization
-bool CFloat32VolumeData2D::initialize(CVolumeGeometry2D* _pGeometry, float32 _fScalar)
+bool CFloat32VolumeData2D::initialize(const CVolumeGeometry2D& _pGeometry, float32 _fScalar)
 {
-	m_pGeometry = _pGeometry->clone();
+	m_pGeometry = _pGeometry.clone();
 	m_bInitialized = _initialize(m_pGeometry->getGridColCount(), m_pGeometry->getGridRowCount(), _fScalar);
 	return m_bInitialized;
 }
 
 //----------------------------------------------------------------------------------------
 // Initialization
-bool CFloat32VolumeData2D::initialize(CVolumeGeometry2D* _pGeometry, CFloat32CustomMemory* _pCustomMemory) 
+bool CFloat32VolumeData2D::initialize(const CVolumeGeometry2D& _pGeometry, CFloat32CustomMemory* _pCustomMemory)
 {
-	m_pGeometry = _pGeometry->clone();
+	m_pGeometry = _pGeometry.clone();
 	m_bInitialized = _initialize(m_pGeometry->getGridColCount(), m_pGeometry->getGridRowCount(), _pCustomMemory);
 	return m_bInitialized;
 }
 
 
 //----------------------------------------------------------------------------------------
-void CFloat32VolumeData2D::changeGeometry(CVolumeGeometry2D* _pGeometry)
+void CFloat32VolumeData2D::changeGeometry(const CVolumeGeometry2D &_pGeometry)
 {
 	if (!m_bInitialized) return;
 
 	delete m_pGeometry;
-	m_pGeometry = _pGeometry->clone();
+	m_pGeometry = _pGeometry.clone();
 }
 
 
