@@ -31,6 +31,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "Globals.h"
 
 #include <string>
+#include <vector>
 
 namespace astra {
 
@@ -71,13 +72,13 @@ struct SFilterConfig {
 	float m_fD;
 	float m_fParameter;
 
-	float *m_pfCustomFilter;
+	std::vector<float> m_pfCustomFilter;
 	int m_iCustomFilterWidth;
 	int m_iCustomFilterHeight;
 
 	SFilterConfig() : m_eType(FILTER_ERROR), m_fD(1.0f), m_fParameter(-1.0f),
-	                  m_pfCustomFilter(0), m_iCustomFilterWidth(0),
-	                  m_iCustomFilterHeight(0) { };
+	                  m_iCustomFilterWidth(0),
+	                  m_iCustomFilterHeight(0) { }
 };
 
 // Generate filter of given size and parameters. Returns newly allocated array.

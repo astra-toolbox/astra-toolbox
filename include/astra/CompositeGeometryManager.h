@@ -30,6 +30,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "Globals.h"
 
+#include "Filters.h"
+
 #ifdef ASTRA_CUDA
 
 #include <list>
@@ -57,7 +59,7 @@ struct SGPUParams {
 
 struct SFDKSettings {
 	bool bShortScan;
-	const float *pfFilter;
+	SFilterConfig filterConfig;
 };
 
 
@@ -168,7 +170,7 @@ public:
 	          CFloat32ProjectionData3D *pProjData, SJob::EMode eMode = SJob::MODE_SET);
 	bool doFDK(CProjector3D *pProjector, CFloat32VolumeData3D *pVolData,
 	          CFloat32ProjectionData3D *pProjData, bool bShortScan,
-	          const float *pfFilter = 0, SJob::EMode eMode = SJob::MODE_SET);
+	          const SFilterConfig &filterConfig, SJob::EMode eMode = SJob::MODE_SET);
 
 	bool doFP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3D *>& volData, const std::vector<CFloat32ProjectionData3D *>& projData, SJob::EMode eMode = SJob::MODE_SET);
 	bool doBP(CProjector3D *pProjector, const std::vector<CFloat32VolumeData3D *>& volData, const std::vector<CFloat32ProjectionData3D *>& projData, SJob::EMode eMode = SJob::MODE_SET);

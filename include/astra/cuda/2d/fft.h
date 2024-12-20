@@ -65,11 +65,18 @@ bool runCudaIFFT(int _iProjectionCount, const cufftComplex* D_pcSource,
 
 bool applyFilter(int _iProjectionCount, int _iFreqBinCount,
                  cufftComplex * _pSinogram, cufftComplex * _pFilter,
+                 bool singleFilter = false,
                  std::optional<cudaStream_t> _stream = {});
 
 void genCuFFTFilter(const astra::SFilterConfig &_cfg, int _iProjectionCount,
                    cufftComplex * _pFilter, int _iFFTRealDetectorCount,
                    int _iFFTFourierDetectorCount);
+
+bool prepareCuFFTFilter(const astra::SFilterConfig &cfg,
+                        cufftComplex *&D_filter,
+                        bool &singleFilter,
+                        int iProjectionCount, int iDetectorCount,
+                        std::optional<cudaStream_t> _stream = {});
 
 void genIdenFilter(int _iProjectionCount, cufftComplex * _pFilter,
                    int _iFFTRealDetectorCount, int _iFFTFourierDetectorCount);
