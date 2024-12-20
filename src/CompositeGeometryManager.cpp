@@ -305,12 +305,12 @@ bool CCompositeGeometryManager::splitJobs(TJobSet &jobs, size_t maxSize, int div
 				TPartList splitInput2;
 				for (TPartList::iterator i_in = splitInput.begin(); i_in != splitInput.end(); ++i_in) {
 					std::shared_ptr<CPart> inputPart = *i_in;
-					inputPart.get()->splitX(splitInput2, UINT_MAX, maxBlockDim, 1);
+					inputPart.get()->splitX(splitInput2, 1024ULL*1024*1024*1024, maxBlockDim, 1);
 				}
 				splitInput.clear();
 				for (TPartList::iterator i_in = splitInput2.begin(); i_in != splitInput2.end(); ++i_in) {
 					std::shared_ptr<CPart> inputPart = *i_in;
-					inputPart.get()->splitY(splitInput, UINT_MAX, maxBlockDim, 1);
+					inputPart.get()->splitY(splitInput, 1024ULL*1024*1024*1024, maxBlockDim, 1);
 				}
 				splitInput2.clear();
 
