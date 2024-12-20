@@ -116,7 +116,7 @@ __global__ void dev_par3D_BP(void* D_volData, unsigned int volPitch, cudaTexture
 		endZ = dims.iVolZ - startZ;
 
 	for(int i=0; i < endZ; i++)
-		volData[((startZ+i)*dims.iVolY+Y)*volPitch+X] += Z[i] * fOutputScale;
+		volData[(size_t)((startZ+i)*dims.iVolY+Y)*volPitch+X] += Z[i] * fOutputScale;
 }
 
 // supersampling version
@@ -192,7 +192,7 @@ __global__ void dev_par3D_BP_SS(void* D_volData, unsigned int volPitch, cudaText
 
 		}
 
-		volData[(Z*dims.iVolY+Y)*volPitch+X] += fVal * fOutputScale;
+		volData[(size_t)(Z*dims.iVolY+Y)*volPitch+X] += fVal * fOutputScale;
 	}
 
 }

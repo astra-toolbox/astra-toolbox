@@ -226,7 +226,7 @@ __global__ void cone_FP_t(float* D_projData, unsigned int projPitch,
 
 		fVal *= fDistCorr;
 
-		D_projData[(detectorV*dims.iProjAngles+angle)*projPitch+detectorU] += fVal;
+		D_projData[(size_t)(detectorV*dims.iProjAngles+angle)*projPitch+detectorU] += fVal;
 	}
 }
 
@@ -318,7 +318,7 @@ __global__ void cone_FP_SS_t(float* D_projData, unsigned int projPitch,
 		}
 		}
 
-		D_projData[(detectorV*dims.iProjAngles+angle)*projPitch+detectorU] += fV / (iRaysPerDetDim * iRaysPerDetDim);
+		D_projData[(size_t)(detectorV*dims.iProjAngles+angle)*projPitch+detectorU] += fV / (iRaysPerDetDim * iRaysPerDetDim);
 	}
 }
 

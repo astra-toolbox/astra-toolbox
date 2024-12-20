@@ -225,7 +225,7 @@ __global__ void par3D_FP_t(float* D_projData, unsigned int projPitch,
 
 		fVal *= fDistCorr;
 
-		D_projData[(detectorV*dims.iProjAngles+angle)*projPitch+detectorU] += fVal;
+		D_projData[(size_t)(detectorV*dims.iProjAngles+angle)*projPitch+detectorU] += fVal;
 	}
 }
 
@@ -321,7 +321,7 @@ __global__ void par3D_FP_SS_t(float* D_projData, unsigned int projPitch,
 		}
 
 		fV *= fDistCorr;
-		D_projData[(detectorV*dims.iProjAngles+angle)*projPitch+detectorU] += fV / (iRaysPerDetDim * iRaysPerDetDim);
+		D_projData[(size_t)(detectorV*dims.iProjAngles+angle)*projPitch+detectorU] += fV / (iRaysPerDetDim * iRaysPerDetDim);
 	}
 }
 
@@ -414,7 +414,7 @@ __global__ void par3D_FP_SumSqW_t(float* D_projData, unsigned int projPitch,
 		}
 
 		fVal *= fDistCorr * fDistCorr;
-		D_projData[(detectorV*dims.iProjAngles+angle)*projPitch+detectorU] += fVal;
+		D_projData[(size_t)(detectorV*dims.iProjAngles+angle)*projPitch+detectorU] += fVal;
 	}
 }
 
