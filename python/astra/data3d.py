@@ -151,7 +151,7 @@ def dimensions(i):
     return d.dimensions(i)
 
 def delete(ids):
-    """Delete a 2D object.
+    """Delete a 3D object.
 
     :param ids: ID or list of ID's to delete.
     :type ids: :class:`int` or :class:`list`
