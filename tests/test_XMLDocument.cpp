@@ -31,7 +31,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include <boost/test/auto_unit_test.hpp>
 
 #include "astra/XMLDocument.h"
-#include "astra/Config.h"
+#include "astra/XMLConfig.h"
 
 BOOST_AUTO_TEST_CASE( testXMLDocument_Constructor1 )
 {
