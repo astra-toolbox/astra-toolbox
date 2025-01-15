@@ -31,13 +31,6 @@ def test_multigpu_consistency():
     gpus = [0]
 
     while True:
-
-        gpu = gpu + 1
-        if 'Invalid' in astra.get_gpu_info(gpu):
-            print(f"No GPU #%s. Aborting." % (gpu,))
-            break
-
-        gpus.append(gpu)
         print("Now using GPUs " + ", ".join(str(i) for i in gpus))
 
         for m in ( 0, 100000000 ):
@@ -53,4 +46,11 @@ def test_multigpu_consistency():
 
             print_diff(rec_single, rec_multi)
             assert(np.allclose(rec_multi, rec_single, rtol=1e-3, atol=1e-3))
+
+        gpu = gpu + 1
+        if 'Invalid' in astra.get_gpu_info(gpu):
+            print(f"No GPU #%s. Aborting." % (gpu,))
+            break
+
+        gpus.append(gpu)
 
