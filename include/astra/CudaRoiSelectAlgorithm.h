@@ -82,7 +82,7 @@ public:
 	 *
 	 * @param _iNrIterations amount of iterations to perform.
 	 */
-	virtual void run(int _iNrIterations = 0);
+	virtual bool run(int _iNrIterations = 0);
 
 
 protected:

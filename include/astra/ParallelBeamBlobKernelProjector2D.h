@@ -97,8 +97,8 @@ public:
 	 * @param _iBlobSampleCount			Number of samples.
 	 * @param _pfBlobValues				Array of _iBlobSampleCount blob evaluations.
 	 */
-	CParallelBeamBlobKernelProjector2D(CParallelProjectionGeometry2D* _pProjectionGeometry, 
-									   CVolumeGeometry2D* _pReconstructionGeometry,
+	CParallelBeamBlobKernelProjector2D(const CParallelProjectionGeometry2D &_pProjectionGeometry,
+									   const CVolumeGeometry2D &_pReconstructionGeometry,
 									   float32 _fBlobSize,
 									   float32 _fBlobSampleRate,
 									   int _iBlobSampleCount,
@@ -124,8 +124,8 @@ public:
 	 * @param _iBlobSampleCount			Number of samples.
 	 * @param _pfBlobValues				Array of _iBlobSampleCount blob evaluations. Will be HARDCOPIED.
 	 */
-	bool initialize(CParallelProjectionGeometry2D* _pProjectionGeometry, 
-					CVolumeGeometry2D* _pReconstructionGeometry, 
+	bool initialize(const CParallelProjectionGeometry2D &_pProjectionGeometry,
+					const CVolumeGeometry2D &_pReconstructionGeometry,
 					float32 _fBlobSize,
 					float32 _fBlobSampleRate,
 					int _iBlobSampleCount,

@@ -181,7 +181,7 @@ void CSirtAlgorithm::_init()
 
 //----------------------------------------------------------------------------------------
 // Iterate
-void CSirtAlgorithm::run(int _iNrIterations)
+bool CSirtAlgorithm::run(int _iNrIterations)
 {
 	// check initialized
 	ASTRA_ASSERT(m_bIsInitialized);
@@ -304,6 +304,8 @@ void CSirtAlgorithm::run(int _iNrIterations)
 	ASTRA_DELETE(pForwardProjector);
 	ASTRA_DELETE(pBackProjector);
 	ASTRA_DELETE(pFirstForwardProjector);
+
+	return true;
 }
 //----------------------------------------------------------------------------------------
 

@@ -30,6 +30,8 @@ from __future__ import print_function
 
 cimport cython
 
+from libcpp.utility cimport move
+
 from . cimport PyData3DManager
 from .PyData3DManager cimport CData3DManager
 
@@ -62,8 +64,8 @@ cdef CData3DManager * man3d = <CData3DManager * >PyData3DManager.getSingletonPtr
 
 
 def create(datatype,geometry,data=None, link=False):
-    cdef CVolumeGeometry3D * pGeometry
-    cdef CProjectionGeometry3D * ppGeometry
+    cdef unique_ptr[CVolumeGeometry3D] pGeometry
+    cdef unique_ptr[CProjectionGeometry3D] ppGeometry
     cdef CData3D * pDataObject3D
 
     if link:
@@ -81,17 +83,15 @@ def create(datatype,geometry,data=None, link=False):
     if datatype == '-vol':
         pGeometry = createVolumeGeometry3D(geometry)
         if link:
-            pDataObject3D = linkVolFromGeometry(pGeometry, data)
+            pDataObject3D = linkVolFromGeometry(cython.operator.dereference(pGeometry), data)
         else:
-            pDataObject3D = createCFloat32VolumeData3DMemory(pGeometry)
-        del pGeometry
+            pDataObject3D = createCFloat32VolumeData3DMemory(move(pGeometry))
     elif datatype == '-sino' or datatype == '-proj3d' or datatype == '-sinocone':
         ppGeometry = createProjectionGeometry3D(geometry)
         if link:
-            pDataObject3D = linkProjFromGeometry(ppGeometry, data)
+            pDataObject3D = linkProjFromGeometry(cython.operator.dereference(ppGeometry), data)
         else:
-            pDataObject3D = createCFloat32ProjectionData3DMemory(ppGeometry)
-        del ppGeometry
+            pDataObject3D = createCFloat32ProjectionData3DMemory(move(ppGeometry))
     else:
         raise ValueError("Invalid datatype. Please specify '-vol' or '-proj3d'")
 
@@ -125,27 +125,22 @@ def change_geometry(i, geom):
     if pDataObject.getType() == THREEPROJECTION:
         pDataObject2 = <CFloat32ProjectionData3D * >pDataObject
         ppGeometry = createProjectionGeometry3D(geom)
-        geom_shape = (ppGeometry.getDetectorRowCount(), ppGeometry.getProjectionCount(), ppGeometry.getDetectorColCount())
+        geom_shape = (ppGeometry.get().getDetectorRowCount(), ppGeometry.get().getProjectionCount(), ppGeometry.get().getDetectorColCount())
         obj_shape = (pDataObject2.getDetectorRowCount(), pDataObject2.getAngleCount(), pDataObject2.getDetectorColCount())
         if geom_shape != obj_shape:
-            del ppGeometry
             raise ValueError("The dimensions of the data {} do not match those "
                              "specified in the geometry {}".format(obj_shape, geom_shape))
-        pDataObject2.changeGeometry(ppGeometry)
-        del ppGeometry
+        pDataObject2.changeGeometry(move(ppGeometry))
 
     elif pDataObject.getType() == THREEVOLUME:
         pDataObject3 = <CFloat32VolumeData3D * >pDataObject
         pGeometry = createVolumeGeometry3D(geom)
-        geom_shape = (pGeometry.getGridSliceCount(), pGeometry.getGridRowCount(), pGeometry.getGridColCount())
+        geom_shape = (pGeometry.get().getGridSliceCount(), pGeometry.get().getGridRowCount(), pGeometry.get().getGridColCount())
         obj_shape = (pDataObject3.getSliceCount(), pDataObject3.getRowCount(), pDataObject3.getColCount())
         if geom_shape != obj_shape:
-            del pGeometry
             raise ValueError("The dimensions of the data {} do not match those "
                              "specified in the geometry {}".format(obj_shape, geom_shape))
-        pDataObject3.changeGeometry(pGeometry)
-        del pGeometry
-
+        pDataObject3.changeGeometry(move(pGeometry))
     else:
         raise AstraError("Not a known data object")
 

@@ -89,7 +89,7 @@ protected:
 	/** Dynamically allocated array of projection angles. All angles are represented in radians and lie in 
 	 * the [0,2pi[ interval.
 	 */
-	float32* m_pfProjectionAngles;
+	std::vector<float32> m_pfProjectionAngles;
 	
 	/** Default constructor. Sets all numeric member variables to 0 and all pointer member variables to NULL.
 	 *
@@ -111,11 +111,11 @@ protected:
 	 *                             are represented in radians and lie in the [0,2pi[ interval.
 	 */
 	CProjectionGeometry3D(int _iProjectionAngleCount,
-						  int _iDetectorRowCount,
-						  int _iDetectorColCount,
-						  float32 _fDetectorSpacingX,
-						  float32 _fDetectorSpacingY,
-						  const float32* _pfProjectionAngles);
+	                      int _iDetectorRowCount,
+	                      int _iDetectorColCount,
+	                      float32 _fDetectorSpacingX,
+	                      float32 _fDetectorSpacingY,
+	                      std::vector<float32> &&_pfProjectionAngles);
 
 	/** Copy constructor. 
 	 */
@@ -147,11 +147,11 @@ protected:
 	 *                             are represented in radians and lie in the [0,2pi[ interval.
 	 */
 	bool _initialize(int _iProjectionAngleCount,
-					 int _iDetectorRowCount,
-					 int _iDetectorColCount,
-					 float32 _fDetectorSpacingX,
-					 float32 _fDetectorSpacingY,
-					 const float32* _pfProjectionAngles);
+	                 int _iDetectorRowCount,
+	                 int _iDetectorColCount,
+	                 float32 _fDetectorSpacingX,
+	                 float32 _fDetectorSpacingY,
+	                 std::vector<float32> &&_pfProjectionAngles);
 
 public:
 
@@ -437,7 +437,7 @@ inline const float32* CProjectionGeometry3D::getProjectionAngles() const
 	// basic checks
 	ASTRA_ASSERT(m_bInitialized);
 
-	return m_pfProjectionAngles;
+	return &m_pfProjectionAngles[0];
 }
 
 

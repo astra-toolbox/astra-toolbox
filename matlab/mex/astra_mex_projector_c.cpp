@@ -161,7 +161,7 @@ void astra_mex_projector_projection_geometry(int nlhs, mxArray* plhs[], int nrhs
 
 	// step3: get projection_geometry and turn it into a MATLAB struct
 	if (1 <= nlhs) {
-		Config *cfg =  pProjector->getProjectionGeometry()->getConfiguration();
+		Config *cfg =  pProjector->getProjectionGeometry().getConfiguration();
 		plhs[0] = configToStruct(cfg);
 		delete cfg;
 	}
@@ -190,7 +190,7 @@ void astra_mex_projector_volume_geometry(int nlhs, mxArray* plhs[], int nrhs, co
 
 	// step3: get projection_geometry and turn it into a MATLAB struct
 	if (1 <= nlhs) {
-		Config *cfg = pProjector->getVolumeGeometry()->getConfiguration();
+		Config *cfg = pProjector->getVolumeGeometry().getConfiguration();
 		plhs[0] = configToStruct(cfg);
 		delete cfg;
 	}
@@ -277,7 +277,7 @@ void astra_mex_projector_weights_projection(int nlhs, mxArray* plhs[], int nrhs,
 
 	// step3: create output vars
 	SPixelWeight* pPixelsWheights = new SPixelWeight[pProjector->getProjectionWeightsCount(iProjectionIndex)];
-	int* piRayStoredPixelCount = new int[pProjector->getProjectionGeometry()->getDetectorCount()];
+	int* piRayStoredPixelCount = new int[pProjector->getProjectionGeometry().getDetectorCount()];
 
 	// step4: perform operation
 	pProjector->computeProjectionRayWeights(iProjectionIndex, pPixelsWheights, piRayStoredPixelCount);
@@ -285,9 +285,9 @@ void astra_mex_projector_weights_projection(int nlhs, mxArray* plhs[], int nrhs,
 	// step5: return output
 	if (1 <= nlhs) {
 		// get basic values
-		int iMatrixSize = pProjector->getVolumeGeometry()->getWindowLengthX() *
-						  pProjector->getVolumeGeometry()->getWindowLengthY();
-		int iDetectorCount = pProjector->getProjectionGeometry()->getDetectorCount();
+		int iMatrixSize = pProjector->getVolumeGeometry().getWindowLengthX() *
+						  pProjector->getVolumeGeometry().getWindowLengthY();
+		int iDetectorCount = pProjector->getProjectionGeometry().getDetectorCount();
 		int iTotalStoredPixelCount = 0;
 		for (int i = 0; i < iDetectorCount; i++) {
 			iTotalStoredPixelCount += piRayStoredPixelCount[i];
@@ -310,7 +310,7 @@ void astra_mex_projector_weights_projection(int nlhs, mxArray* plhs[], int nrhs,
 				rows[currentIndex + j] = pPixelsWheights[currentBase + j].m_iIndex;
 			}
 					
-			currentBase += pProjector->getProjectionWeightsCount(iProjectionIndex) / pProjector->getProjectionGeometry()->getDetectorCount();
+			currentBase += pProjector->getProjectionWeightsCount(iProjectionIndex) / pProjector->getProjectionGeometry().getDetectorCount();
 			currentIndex += piRayStoredPixelCount[i];
 		}
 		cols[0] = piRayStoredPixelCount[0];

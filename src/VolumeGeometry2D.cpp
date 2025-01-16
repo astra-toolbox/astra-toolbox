@@ -130,7 +130,7 @@ CVolumeGeometry2D::~CVolumeGeometry2D()
 
 //----------------------------------------------------------------------------------------
 // Clone
-CVolumeGeometry2D* CVolumeGeometry2D::clone()
+CVolumeGeometry2D* CVolumeGeometry2D::clone() const
 {
 	CVolumeGeometry2D* res = new CVolumeGeometry2D();
 	res->m_bInitialized		= m_bInitialized;
@@ -242,29 +242,27 @@ void CVolumeGeometry2D::_calculateDependents()
 
 //----------------------------------------------------------------------------------------
 // is of type
-bool CVolumeGeometry2D::isEqual(CVolumeGeometry2D* _pGeom2) const
+bool CVolumeGeometry2D::isEqual(const CVolumeGeometry2D &_pGeom2) const
 {
-	if (_pGeom2 == NULL) return false;
-
 	// both objects must be initialized
-	if (!m_bInitialized || !_pGeom2->m_bInitialized) return false;
+	if (!m_bInitialized || !_pGeom2.m_bInitialized) return false;
 
 	// check all values
-	if (m_iGridColCount != _pGeom2->m_iGridColCount)		return false;
-	if (m_iGridRowCount != _pGeom2->m_iGridRowCount)		return false;
-	if (m_iGridTotCount != _pGeom2->m_iGridTotCount)		return false;
-	if (m_fWindowLengthX != _pGeom2->m_fWindowLengthX)		return false;
-	if (m_fWindowLengthY != _pGeom2->m_fWindowLengthY)		return false;
-	if (m_fWindowArea != _pGeom2->m_fWindowArea)			return false;
-	if (m_fPixelLengthX != _pGeom2->m_fPixelLengthX)		return false;
-	if (m_fPixelLengthY != _pGeom2->m_fPixelLengthY)		return false;
-	if (m_fPixelArea != _pGeom2->m_fPixelArea)				return false;
-	if (m_fDivPixelLengthX != _pGeom2->m_fDivPixelLengthX)	return false;
-	if (m_fDivPixelLengthY != _pGeom2->m_fDivPixelLengthY)	return false;
-	if (m_fWindowMinX != _pGeom2->m_fWindowMinX)			return false;
-	if (m_fWindowMinY != _pGeom2->m_fWindowMinY)			return false;
-	if (m_fWindowMaxX != _pGeom2->m_fWindowMaxX)			return false;
-	if (m_fWindowMaxY != _pGeom2->m_fWindowMaxY)			return false;
+	if (m_iGridColCount != _pGeom2.m_iGridColCount)		return false;
+	if (m_iGridRowCount != _pGeom2.m_iGridRowCount)		return false;
+	if (m_iGridTotCount != _pGeom2.m_iGridTotCount)		return false;
+	if (m_fWindowLengthX != _pGeom2.m_fWindowLengthX)		return false;
+	if (m_fWindowLengthY != _pGeom2.m_fWindowLengthY)		return false;
+	if (m_fWindowArea != _pGeom2.m_fWindowArea)			return false;
+	if (m_fPixelLengthX != _pGeom2.m_fPixelLengthX)		return false;
+	if (m_fPixelLengthY != _pGeom2.m_fPixelLengthY)		return false;
+	if (m_fPixelArea != _pGeom2.m_fPixelArea)				return false;
+	if (m_fDivPixelLengthX != _pGeom2.m_fDivPixelLengthX)	return false;
+	if (m_fDivPixelLengthY != _pGeom2.m_fDivPixelLengthY)	return false;
+	if (m_fWindowMinX != _pGeom2.m_fWindowMinX)			return false;
+	if (m_fWindowMinY != _pGeom2.m_fWindowMinY)			return false;
+	if (m_fWindowMaxX != _pGeom2.m_fWindowMaxX)			return false;
+	if (m_fWindowMaxY != _pGeom2.m_fWindowMaxY)			return false;
 	
 	return true;
 }

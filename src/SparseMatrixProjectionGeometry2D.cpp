@@ -153,19 +153,17 @@ bool CSparseMatrixProjectionGeometry2D::_check()
 
 //----------------------------------------------------------------------------------------
 // Clone
-CProjectionGeometry2D* CSparseMatrixProjectionGeometry2D::clone()
+CProjectionGeometry2D* CSparseMatrixProjectionGeometry2D::clone() const
 {
 	return new CSparseMatrixProjectionGeometry2D(*this);
 }
 
 //----------------------------------------------------------------------------------------
 // is equal
-bool CSparseMatrixProjectionGeometry2D::isEqual(CProjectionGeometry2D* _pGeom2) const
+bool CSparseMatrixProjectionGeometry2D::isEqual(const CProjectionGeometry2D &_pGeom2) const
 {
-	if (_pGeom2 == NULL) return false;
-
 	// try to cast argument to CSparseMatrixProjectionGeometry2D
-	CSparseMatrixProjectionGeometry2D* pGeom2 = dynamic_cast<CSparseMatrixProjectionGeometry2D*>(_pGeom2);
+	const CSparseMatrixProjectionGeometry2D* pGeom2 = dynamic_cast<const CSparseMatrixProjectionGeometry2D*>(&_pGeom2);
 	if (pGeom2 == NULL) return false;
 
 	// both objects must be initialized

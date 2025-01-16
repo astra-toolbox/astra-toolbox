@@ -532,8 +532,8 @@ SFilterConfig getFilterConfigForAlgorithm(const Config& _cfg, CAlgorithm *_alg)
 
 	if (id != -1) {
 		const CFloat32ProjectionData2D * pFilterData = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(id));
-		c.m_iCustomFilterWidth = pFilterData->getGeometry()->getDetectorCount();
-		c.m_iCustomFilterHeight = pFilterData->getGeometry()->getProjectionAngleCount();
+		c.m_iCustomFilterWidth = pFilterData->getGeometry().getDetectorCount();
+		c.m_iCustomFilterHeight = pFilterData->getGeometry().getProjectionAngleCount();
 
 		c.m_pfCustomFilter = new float[c.m_iCustomFilterWidth * c.m_iCustomFilterHeight];
 		memcpy(c.m_pfCustomFilter, pFilterData->getDataConst(), sizeof(float) * c.m_iCustomFilterWidth * c.m_iCustomFilterHeight);

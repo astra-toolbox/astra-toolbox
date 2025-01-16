@@ -49,8 +49,8 @@ CFanFlatBeamLineKernelProjector2D::CFanFlatBeamLineKernelProjector2D()
 
 //----------------------------------------------------------------------------------------
 // constructor
-CFanFlatBeamLineKernelProjector2D::CFanFlatBeamLineKernelProjector2D(CFanFlatProjectionGeometry2D* _pProjectionGeometry,
-																	 CVolumeGeometry2D* _pReconstructionGeometry)
+CFanFlatBeamLineKernelProjector2D::CFanFlatBeamLineKernelProjector2D(const CFanFlatProjectionGeometry2D &_pProjectionGeometry,
+																	 const CVolumeGeometry2D &_pReconstructionGeometry)
 
 {
 	_clear();
@@ -116,8 +116,8 @@ bool CFanFlatBeamLineKernelProjector2D::initialize(const Config& _cfg)
 
 //---------------------------------------------------------------------------------------
 // Initialize
-bool CFanFlatBeamLineKernelProjector2D::initialize(CFanFlatProjectionGeometry2D* _pProjectionGeometry, 
-												   CVolumeGeometry2D* _pVolumeGeometry)
+bool CFanFlatBeamLineKernelProjector2D::initialize(const CFanFlatProjectionGeometry2D &_pProjectionGeometry,
+												   const CVolumeGeometry2D &_pVolumeGeometry)
 {
 	// if already initialized, clear first
 	if (m_bIsInitialized) {
@@ -125,8 +125,8 @@ bool CFanFlatBeamLineKernelProjector2D::initialize(CFanFlatProjectionGeometry2D*
 	}
 
 	// hardcopy geometries
-	m_pProjectionGeometry = _pProjectionGeometry->clone();
-	m_pVolumeGeometry = _pVolumeGeometry->clone();
+	m_pProjectionGeometry = _pProjectionGeometry.clone();
+	m_pVolumeGeometry = _pVolumeGeometry.clone();
 
 	// success
 	m_bIsInitialized = _check();

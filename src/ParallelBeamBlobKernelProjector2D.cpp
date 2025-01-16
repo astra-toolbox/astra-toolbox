@@ -48,8 +48,8 @@ CParallelBeamBlobKernelProjector2D::CParallelBeamBlobKernelProjector2D()
 
 //----------------------------------------------------------------------------------------
 // constructor
-CParallelBeamBlobKernelProjector2D::CParallelBeamBlobKernelProjector2D(CParallelProjectionGeometry2D* _pProjectionGeometry, 
-																	   CVolumeGeometry2D* _pReconstructionGeometry,
+CParallelBeamBlobKernelProjector2D::CParallelBeamBlobKernelProjector2D(const CParallelProjectionGeometry2D &_pProjectionGeometry,
+																	   const CVolumeGeometry2D &_pReconstructionGeometry,
 																	   float32 _fBlobSize,
 																	   float32 _fBlobSampleRate,
 																	   int _iBlobSampleCount,
@@ -152,8 +152,8 @@ bool CParallelBeamBlobKernelProjector2D::initialize(const Config& _cfg)
 
 //----------------------------------------------------------------------------------------
 // initialize
-bool CParallelBeamBlobKernelProjector2D::initialize(CParallelProjectionGeometry2D* _pProjectionGeometry, 
-													CVolumeGeometry2D* _pVolumeGeometry,
+bool CParallelBeamBlobKernelProjector2D::initialize(const CParallelProjectionGeometry2D &_pProjectionGeometry,
+													const CVolumeGeometry2D &_pVolumeGeometry,
 													float32 _fBlobSize,
 													float32 _fBlobSampleRate,
 													int _iBlobSampleCount,
@@ -164,10 +164,8 @@ bool CParallelBeamBlobKernelProjector2D::initialize(CParallelProjectionGeometry2
 		clear();
 	}
 
-	ASTRA_CONFIG_CHECK(_pProjectionGeometry, "BlobProjector", "Invalid ProjectionGeometry Object");
-	ASTRA_CONFIG_CHECK(m_pVolumeGeometry, "BlobProjector", "Invalid ProjectionGeometry Object");
-	m_pProjectionGeometry = _pProjectionGeometry->clone();
-	m_pVolumeGeometry = _pVolumeGeometry->clone();
+	m_pProjectionGeometry = _pProjectionGeometry.clone();
+	m_pVolumeGeometry = _pVolumeGeometry.clone();
 	m_fBlobSize = _fBlobSize;
 	m_fBlobSampleRate = _fBlobSampleRate;
 	m_iBlobSampleCount = _iBlobSampleCount;

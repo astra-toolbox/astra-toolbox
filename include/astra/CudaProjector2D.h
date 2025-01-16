@@ -73,8 +73,8 @@ public:
 	 * @param _pProjectionGeometry		Information class about the geometry of the projection.  Will be HARDCOPIED.
 	 * @param _pReconstructionGeometry	Information class about the geometry of the reconstruction volume. Will be HARDCOPIED.
 	 */
-	CCudaProjector2D(CParallelProjectionGeometry2D* _pProjectionGeometry, 
-	                 CVolumeGeometry2D* _pReconstructionGeometry);
+	CCudaProjector2D(const CParallelProjectionGeometry2D &_pProjectionGeometry,
+	                 const CVolumeGeometry2D &_pReconstructionGeometry);
 	
 	~CCudaProjector2D();
 

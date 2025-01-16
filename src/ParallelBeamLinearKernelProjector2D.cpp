@@ -49,8 +49,8 @@ CParallelBeamLinearKernelProjector2D::CParallelBeamLinearKernelProjector2D()
 
 //----------------------------------------------------------------------------------------
 // constructor
-CParallelBeamLinearKernelProjector2D::CParallelBeamLinearKernelProjector2D(CParallelProjectionGeometry2D* _pProjectionGeometry,
-																		   CVolumeGeometry2D* _pReconstructionGeometry)
+CParallelBeamLinearKernelProjector2D::CParallelBeamLinearKernelProjector2D(const CParallelProjectionGeometry2D &_pProjectionGeometry,
+																		   const CVolumeGeometry2D &_pReconstructionGeometry)
 
 {
 	_clear();
@@ -117,8 +117,8 @@ bool CParallelBeamLinearKernelProjector2D::initialize(const Config& _cfg)
 
 //---------------------------------------------------------------------------------------
 // Initialize
-bool CParallelBeamLinearKernelProjector2D::initialize(CParallelProjectionGeometry2D* _pProjectionGeometry, 
-													  CVolumeGeometry2D* _pVolumeGeometry)
+bool CParallelBeamLinearKernelProjector2D::initialize(const CParallelProjectionGeometry2D &_pProjectionGeometry,
+													  const CVolumeGeometry2D &_pVolumeGeometry)
 {
 	// if already initialized, clear first
 	if (m_bIsInitialized) {
@@ -126,8 +126,8 @@ bool CParallelBeamLinearKernelProjector2D::initialize(CParallelProjectionGeometr
 	}
 
 	// hardcopy geometries
-	m_pProjectionGeometry = _pProjectionGeometry->clone();
-	m_pVolumeGeometry = _pVolumeGeometry->clone();
+	m_pProjectionGeometry = _pProjectionGeometry.clone();
+	m_pVolumeGeometry = _pVolumeGeometry.clone();
 
 	// success
 	m_bIsInitialized = _check();

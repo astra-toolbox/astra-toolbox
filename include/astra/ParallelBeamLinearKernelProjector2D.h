@@ -83,8 +83,8 @@ public:
 	 * @param _pProjectionGeometry		Information class about the geometry of the projection.  Will be HARDCOPIED.
 	 * @param _pReconstructionGeometry	Information class about the geometry of the reconstruction volume. Will be HARDCOPIED.
 	 */
-	CParallelBeamLinearKernelProjector2D(CParallelProjectionGeometry2D* _pProjectionGeometry, 
-										 CVolumeGeometry2D* _pReconstructionGeometry);
+	CParallelBeamLinearKernelProjector2D(const CParallelProjectionGeometry2D &_pProjectionGeometry,
+										 const CVolumeGeometry2D &_pReconstructionGeometry);
 	
 	/** Destructor, is virtual to show that we are aware subclass destructor are called.
 	 */	
@@ -103,8 +103,8 @@ public:
 	 * @param _pReconstructionGeometry	Information class about the geometry of the reconstruction volume.  Will be HARDCOPIED.
 	 * @return initialization successful?
 	 */
-	bool initialize(CParallelProjectionGeometry2D* _pProjectionGeometry,
-	                CVolumeGeometry2D* _pVolumeGeometry);
+	bool initialize(const CParallelProjectionGeometry2D &_pProjectionGeometry,
+	                const CVolumeGeometry2D &_pVolumeGeometry);
 
 	/** Clear this class.
 	 */

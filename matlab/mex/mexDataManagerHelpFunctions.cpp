@@ -29,10 +29,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "mexHelpFunctions.h"
 
-#include "astra/ParallelProjectionGeometry3D.h"
-#include "astra/ParallelVecProjectionGeometry3D.h"
-#include "astra/ConeProjectionGeometry3D.h"
-#include "astra/ConeVecProjectionGeometry3D.h"
+#include "astra/ProjectionGeometry3DFactory.h"
 
 #ifdef USE_MATLAB_UNDOCUMENTED
 extern "C" {
@@ -223,16 +220,16 @@ allocateDataObject(const std::string & sDataType,
 			astra::CDataStorage* pHandle = new CDataStorageMatlab(data, bUnshare, iZ);
 
 			// Initialize data object
-			pDataObject3D = new astra::CFloat32VolumeData3D(pGeometry, pHandle);
+			pDataObject3D = new astra::CFloat32VolumeData3D(*pGeometry, pHandle);
 		}
 		else
 		{
 			astra::CDataStorage* pStorage = new astra::CDataMemory<float>(dataSize);
-			pDataObject3D = new astra::CFloat32VolumeData3D(pGeometry, pStorage);
+			pDataObject3D = new astra::CFloat32VolumeData3D(*pGeometry, pStorage);
 		}
 #else
 		astra::CDataStorage* pStorage = new astra::CDataMemory<float>(dataSize);
-		pDataObject3D = new astra::CFloat32VolumeData3D(pGeometry, pStorage);
+		pDataObject3D = new astra::CFloat32VolumeData3D(*pGeometry, pStorage);
 #endif
 		delete pGeometry;
 	}
@@ -240,25 +237,15 @@ allocateDataObject(const std::string & sDataType,
 	{
 		// Read geometry
 		astra::XMLConfig* cfg = structToConfig("ProjectionGeometry3D", geometry);
-		// FIXME: Change how the base class is created. (This is duplicated
-		// in Projector3D.cpp.)
 		std::string type = cfg->self.getAttribute("type");
-		astra::CProjectionGeometry3D* pGeometry = 0;
-		if (type == "parallel3d") {
-			pGeometry = new astra::CParallelProjectionGeometry3D();
-		} else if (type == "parallel3d_vec") {
-			pGeometry = new astra::CParallelVecProjectionGeometry3D();
-		} else if (type == "cone") {
-			pGeometry = new astra::CConeProjectionGeometry3D();
-		} else if (type == "cone_vec") {
-			pGeometry = new astra::CConeVecProjectionGeometry3D();
-		} else {
+		std::unique_ptr<astra::CProjectionGeometry3D> pGeometry = astra::constructProjectionGeometry3D(type);
+		if (!pGeometry) {
+			delete cfg;
 			std::string message = "'" + type + "' is not a valid 3D geometry type.";
 			mexErrMsgTxt(message.c_str());
 		}
 
 		if (!pGeometry->initialize(*cfg)) {
-			delete pGeometry;
 			delete cfg;
 			mexErrMsgWithAstraLog("Geometry class could not be initialized.");
 		}
@@ -268,10 +255,9 @@ allocateDataObject(const std::string & sDataType,
 		if (data && !mexIsScalar(data))
 		{
 			if (! (zIndex
-					? checkDataSize(data, pGeometry, iZ)
-					: checkDataSize(data, pGeometry)) )
+					? checkDataSize(data, pGeometry.get(), iZ)
+					: checkDataSize(data, pGeometry.get())) )
 			{
-				delete pGeometry;
 				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry.");
 			}
 		}
@@ -286,18 +272,17 @@ allocateDataObject(const std::string & sDataType,
 			astra::CDataStorage* pHandle = new CDataStorageMatlab(data, bUnshare, iZ);
 
 			// Initialize data object
-			pDataObject3D = new astra::CFloat32ProjectionData3D(pGeometry, pHandle);
+			pDataObject3D = new astra::CFloat32ProjectionData3D(*pGeometry, pHandle);
 		}
 		else
 		{
 			astra::CDataStorage* pStorage = new astra::CDataMemory<float>(dataSize);
-			pDataObject3D = new astra::CFloat32ProjectionData3D(pGeometry, pStorage);
+			pDataObject3D = new astra::CFloat32ProjectionData3D(*pGeometry, pStorage);
 		}
 #else
 		astra::CDataStorage* pStorage = new astra::CDataMemory<float>(dataSize);
-		pDataObject3D = new astra::CFloat32ProjectionData3D(pGeometry, pStorage);
+		pDataObject3D = new astra::CFloat32ProjectionData3D(*pGeometry, pStorage);
 #endif
-		delete pGeometry;
 	}
 	else
 	{

@@ -168,37 +168,37 @@ void CCudaForwardProjectionAlgorithm::setGPUIndex(int _iGPUIndex)
 
 //----------------------------------------------------------------------------------------
 // Run
-void CCudaForwardProjectionAlgorithm::run(int)
+bool CCudaForwardProjectionAlgorithm::run(int)
 {
 	// check initialized
 	assert(m_bIsInitialized);
 
 	bool ok;
 
-	const CVolumeGeometry2D* pVolGeom = m_pVolume->getGeometry();
-	const CProjectionGeometry2D* pProjGeom = m_pSinogram->getGeometry();
+	const CVolumeGeometry2D &pVolGeom = m_pVolume->getGeometry();
+	const CProjectionGeometry2D &pProjGeom = m_pSinogram->getGeometry();
 	astraCUDA::SDimensions dims;
 
-	ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
+	ok = convertAstraGeometry_dims(&pVolGeom, &pProjGeom, dims);
 
 	if (!ok)
-		return;
+		return false;
 
 	astraCUDA::SParProjection* pParProjs = 0;
 	astraCUDA::SFanProjection* pFanProjs = 0;
 	float fOutputScale = 1.0f;
 
-	ok = convertAstraGeometry(pVolGeom, pProjGeom, pParProjs, pFanProjs, fOutputScale);
+	ok = convertAstraGeometry(&pVolGeom, &pProjGeom, pParProjs, pFanProjs, fOutputScale);
 	if (!ok)
-		return;
+		return false;
 
 	if (pParProjs) {
 		assert(!pFanProjs);
 
 		ok = astraCudaFP(m_pVolume->getDataConst(), m_pSinogram->getData(),
-		                 pVolGeom->getGridColCount(), pVolGeom->getGridRowCount(),
-		                 pProjGeom->getProjectionAngleCount(),
-		                 pProjGeom->getDetectorCount(),
+		                 pVolGeom.getGridColCount(), pVolGeom.getGridRowCount(),
+		                 pProjGeom.getProjectionAngleCount(),
+		                 pProjGeom.getDetectorCount(),
 		                 pParProjs,
 		                 m_iDetectorSuperSampling, 1.0f * fOutputScale, m_iGPUIndex);
 
@@ -208,9 +208,9 @@ void CCudaForwardProjectionAlgorithm::run(int)
 		assert(pFanProjs);
 
 		ok = astraCudaFanFP(m_pVolume->getDataConst(), m_pSinogram->getData(),
-		                    pVolGeom->getGridColCount(), pVolGeom->getGridRowCount(),
-		                    pProjGeom->getProjectionAngleCount(),
-		                    pProjGeom->getDetectorCount(),
+		                    pVolGeom.getGridColCount(), pVolGeom.getGridRowCount(),
+		                    pProjGeom.getProjectionAngleCount(),
+		                    pProjGeom.getDetectorCount(),
 		                    pFanProjs,
 		                    m_iDetectorSuperSampling, fOutputScale, m_iGPUIndex);
 
@@ -220,6 +220,7 @@ void CCudaForwardProjectionAlgorithm::run(int)
 
 	ASTRA_ASSERT(ok);
 
+	return ok;
 }
 
 } // namespace astra

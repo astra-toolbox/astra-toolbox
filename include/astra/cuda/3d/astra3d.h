@@ -30,6 +30,9 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "dims3d.h"
 
+#include <variant>
+#include <vector>
+
 namespace astra {
 
 
@@ -48,6 +51,47 @@ class AstraSIRT3d_internal;
 using astraCUDA3d::Cuda3DProjectionKernel;
 using astraCUDA3d::ker3d_default;
 using astraCUDA3d::ker3d_sum_square_weights;
+using astraCUDA3d::SPar3DProjection;
+using astraCUDA3d::SConeProjection;
+
+
+
+class _AstraExport Geometry3DParameters {
+public:
+	using variant_t = std::variant<std::monostate, std::vector<SPar3DProjection>, std::vector<SConeProjection>>;
+
+	Geometry3DParameters() {}
+	Geometry3DParameters(variant_t && p) : projs(p) { }
+
+	bool isValid() const {
+		return !std::holds_alternative<std::monostate>(projs);
+	}
+
+	bool isParallel() const {
+		return std::holds_alternative<std::vector<SPar3DProjection>>(projs);
+	}
+	bool isCone() const {
+		return std::holds_alternative<std::vector<SConeProjection>>(projs);
+	}
+
+	const SPar3DProjection *getParallel() const {
+		if (!std::holds_alternative<std::vector<SPar3DProjection>>(projs))
+			return nullptr;
+
+		return &std::get<std::vector<SPar3DProjection>>(projs)[0];
+	}
+
+	const SConeProjection *getCone() const {
+		if (!std::holds_alternative<std::vector<SConeProjection>>(projs))
+			return nullptr;
+
+		return &std::get<std::vector<SConeProjection>>(projs)[0];
+	}
+
+private:
+	variant_t projs;
+};
+
 
 
 class _AstraExport AstraSIRT3d {
@@ -278,11 +322,9 @@ bool convertAstraGeometry_dims(const CVolumeGeometry3D* pVolGeom,
                                const CProjectionGeometry3D* pProjGeom,
                                astraCUDA3d::SDimensions3D& dims);
 
-bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
-                          const CProjectionGeometry3D* pProjGeom,
-                          SPar3DProjection*& pParProjs,
-                          SConeProjection*& pConeProjs,
-                          astraCUDA3d::SProjectorParams3D& params);
+Geometry3DParameters convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
+                                        const CProjectionGeometry3D* pProjGeom,
+                                        astraCUDA3d::SProjectorParams3D& params);
 
 _AstraExport bool astraCudaFP(const float* pfVolume, float* pfProjections,
                       const CVolumeGeometry3D* pVolGeom,

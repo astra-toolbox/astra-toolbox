@@ -42,7 +42,7 @@ namespace astra
 CParallelVecProjectionGeometry3D::CParallelVecProjectionGeometry3D() :
 	CProjectionGeometry3D() 
 {
-	m_pProjectionAngles = 0;
+
 }
 
 //----------------------------------------------------------------------------------------
@@ -50,21 +50,21 @@ CParallelVecProjectionGeometry3D::CParallelVecProjectionGeometry3D() :
 CParallelVecProjectionGeometry3D::CParallelVecProjectionGeometry3D(int _iProjectionAngleCount, 
                                                                    int _iDetectorRowCount, 
                                                                    int _iDetectorColCount, 
-                                                                   const SPar3DProjection* _pProjectionAngles
-															 ) :
-	CProjectionGeometry3D() 
+                                                                   std::vector<SPar3DProjection> &&_ProjectionAngles)
+
+: CProjectionGeometry3D()
 {
 	initialize(_iProjectionAngleCount, 
 	           _iDetectorRowCount, 
 	           _iDetectorColCount, 
-	           _pProjectionAngles);
+	           std::move(_ProjectionAngles));
 }
 
 //----------------------------------------------------------------------------------------
 // Destructor.
 CParallelVecProjectionGeometry3D::~CParallelVecProjectionGeometry3D()
 {
-	delete[] m_pProjectionAngles;
+
 }
 
 //---------------------------------------------------------------------------------------
@@ -94,10 +94,10 @@ bool CParallelVecProjectionGeometry3D::initializeAngles(const Config& _cfg)
 		return false;
 	ASTRA_CONFIG_CHECK(data.size() % 12 == 0, "ParallelVecProjectionGeometry3D", "Vectors doesn't consist of 12-tuples.");
 	m_iProjectionAngleCount = data.size() / 12;
-	m_pProjectionAngles = new SPar3DProjection[m_iProjectionAngleCount];
+	m_ProjectionAngles.resize(m_iProjectionAngleCount);
 
 	for (int i = 0; i < m_iProjectionAngleCount; ++i) {
-		SPar3DProjection& p = m_pProjectionAngles[i];
+		SPar3DProjection& p = m_ProjectionAngles[i];
 		p.fRayX  = data[12*i +  0];
 		p.fRayY  = data[12*i +  1];
 		p.fRayZ  = data[12*i +  2];
@@ -123,14 +123,12 @@ bool CParallelVecProjectionGeometry3D::initializeAngles(const Config& _cfg)
 bool CParallelVecProjectionGeometry3D::initialize(int _iProjectionAngleCount, 
                                                   int _iDetectorRowCount, 
                                                   int _iDetectorColCount, 
-                                                  const SPar3DProjection* _pProjectionAngles)
+                                                  std::vector<SPar3DProjection> &&_ProjectionAngles)
 {
 	m_iProjectionAngleCount = _iProjectionAngleCount;
 	m_iDetectorRowCount = _iDetectorRowCount;
 	m_iDetectorColCount = _iDetectorColCount;
-	m_pProjectionAngles = new SPar3DProjection[m_iProjectionAngleCount];
-	for (int i = 0; i < m_iProjectionAngleCount; ++i)
-		m_pProjectionAngles[i] = _pProjectionAngles[i];
+	m_ProjectionAngles = std::move(_ProjectionAngles);
 
 	// TODO: check?
 
@@ -151,8 +149,7 @@ CProjectionGeometry3D* CParallelVecProjectionGeometry3D::clone() const
 	res->m_iDetectorTotCount		= m_iDetectorTotCount;
 	res->m_fDetectorSpacingX		= m_fDetectorSpacingX;
 	res->m_fDetectorSpacingY		= m_fDetectorSpacingY;
-	res->m_pProjectionAngles		= new SPar3DProjection[m_iProjectionAngleCount];
-	memcpy(res->m_pProjectionAngles, m_pProjectionAngles, sizeof(m_pProjectionAngles[0])*m_iProjectionAngleCount);
+	res->m_ProjectionAngles		= m_ProjectionAngles;
 	return res;
 }
 
@@ -178,7 +175,7 @@ bool CParallelVecProjectionGeometry3D::isEqual(const CProjectionGeometry3D * _pG
 	//if (m_fDetectorSpacingY != pGeom2->m_fDetectorSpacingY) return false;
 	
 	for (int i = 0; i < m_iProjectionAngleCount; ++i) {
-		if (memcmp(&m_pProjectionAngles[i], &pGeom2->m_pProjectionAngles[i], sizeof(m_pProjectionAngles[i])) != 0) return false;
+		if (memcmp(&m_ProjectionAngles[i], &pGeom2->m_ProjectionAngles[i], sizeof(m_ProjectionAngles[i])) != 0) return false;
 	}
 
 	return true;
@@ -204,7 +201,7 @@ Config* CParallelVecProjectionGeometry3D::getConfiguration() const
 	vectors.resize(12 * m_iProjectionAngleCount);
 
 	for (int i = 0; i < m_iProjectionAngleCount; ++i) {
-		SPar3DProjection& p = m_pProjectionAngles[i];
+		const SPar3DProjection& p = m_ProjectionAngles[i];
 
 		vectors[12*i +  0] = p.fRayX;
 		vectors[12*i +  1] = p.fRayY;
@@ -235,7 +232,7 @@ void CParallelVecProjectionGeometry3D::projectPoint(double fX, double fY, double
 	double fUX, fUY, fUZ, fUC;
 	double fVX, fVY, fVZ, fVC;
 
-	computeBP_UV_Coeffs(m_pProjectionAngles[iAngleIndex],
+	computeBP_UV_Coeffs(m_ProjectionAngles[iAngleIndex],
 	                    fUX, fUY, fUZ, fUC, fVX, fVY, fVZ, fVC);
 
 	// The -0.5f shifts from corner to center of detector pixels
@@ -248,6 +245,8 @@ void CParallelVecProjectionGeometry3D::projectPoint(double fX, double fY, double
 
 bool CParallelVecProjectionGeometry3D::_check()
 {
+	ASTRA_CONFIG_CHECK(m_ProjectionAngles.size() == m_iProjectionAngleCount, "ParallelVecProjectionGeometry3D", "Number of vectors does not match number of angles");
+
 	// TODO
 	return true;
 }

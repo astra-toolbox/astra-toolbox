@@ -79,15 +79,15 @@ bool CCudaFDKAlgorithm3D::_check()
 	// check base class
 	ASTRA_CONFIG_CHECK(CReconstructionAlgorithm3D::_check(), "CUDA_FDK", "Error in ReconstructionAlgorithm3D initialization");
 
-	const CProjectionGeometry3D* projgeom = m_pSinogram->getGeometry();
-	ASTRA_CONFIG_CHECK(dynamic_cast<const CConeProjectionGeometry3D*>(projgeom) || dynamic_cast<const CConeVecProjectionGeometry3D*>(projgeom), "CUDA_FDK", "Error setting FDK geometry");
+	const CProjectionGeometry3D& projgeom = m_pSinogram->getGeometry();
+	ASTRA_CONFIG_CHECK(dynamic_cast<const CConeProjectionGeometry3D*>(&projgeom) || dynamic_cast<const CConeVecProjectionGeometry3D*>(&projgeom), "CUDA_FDK", "Error setting FDK geometry");
 
 
-	const CVolumeGeometry3D* volgeom = m_pReconstruction->getGeometry();
+	const CVolumeGeometry3D& volgeom = m_pReconstruction->getGeometry();
 	bool cube = true;
-	if (abs(volgeom->getPixelLengthX() / volgeom->getPixelLengthY() - 1.0) > 0.00001)
+	if (abs(volgeom.getPixelLengthX() / volgeom.getPixelLengthY() - 1.0) > 0.00001)
 		cube = false;
-	if (abs(volgeom->getPixelLengthX() / volgeom->getPixelLengthZ() - 1.0) > 0.00001)
+	if (abs(volgeom.getPixelLengthX() / volgeom.getPixelLengthZ() - 1.0) > 0.00001)
 		cube = false;
 	ASTRA_CONFIG_CHECK(cube, "CUDA_FDK", "Voxels must be cubes for FDK");
 
@@ -149,12 +149,12 @@ bool CCudaFDKAlgorithm3D::initialize(const Config& _cfg)
 			ASTRA_ERROR("Incorrect FilterSinogramId");
 			return false;
 		}
-		const CProjectionGeometry3D* projgeom = m_pSinogram->getGeometry();
-		const CProjectionGeometry2D* filtgeom = pFilterData->getGeometry();
-		int iPaddedDetCount = calcNextPowerOfTwo(2 * projgeom->getDetectorColCount());
+		const CProjectionGeometry3D &projgeom = m_pSinogram->getGeometry();
+		const CProjectionGeometry2D &filtgeom = pFilterData->getGeometry();
+		int iPaddedDetCount = calcNextPowerOfTwo(2 * projgeom.getDetectorColCount());
 		int iHalfFFTSize = calcFFTFourierSize(iPaddedDetCount);
-		if(filtgeom->getDetectorCount()!=iHalfFFTSize || filtgeom->getProjectionAngleCount()!=projgeom->getProjectionCount()){
-			ASTRA_ERROR("Filter size does not match required size (%i angles, %i detectors)",projgeom->getProjectionCount(),iHalfFFTSize);
+		if(filtgeom.getDetectorCount()!=iHalfFFTSize || filtgeom.getProjectionAngleCount()!=projgeom.getProjectionCount()){
+			ASTRA_ERROR("Filter size does not match required size (%i angles, %i detectors)",projgeom.getProjectionCount(),iHalfFFTSize);
 			return false;
 		}
 	}
@@ -191,7 +191,7 @@ bool CCudaFDKAlgorithm3D::initialize(CProjector3D* _pProjector,
 
 //----------------------------------------------------------------------------------------
 // Iterate
-void CCudaFDKAlgorithm3D::run(int _iNrIterations)
+bool CCudaFDKAlgorithm3D::run(int _iNrIterations)
 {
 	// check initialized
 	ASTRA_ASSERT(m_bIsInitialized);
@@ -220,10 +220,7 @@ void CCudaFDKAlgorithm3D::run(int _iNrIterations)
 
 	CCompositeGeometryManager cgm;
 
-	cgm.doFDK(m_pProjector, pReconMem, pSinoMem, m_bShortScan, filter);
-
-
-
+	return cgm.doFDK(m_pProjector, pReconMem, pSinoMem, m_bShortScan, filter);
 }
 //----------------------------------------------------------------------------------------
 
