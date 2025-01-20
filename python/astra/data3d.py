@@ -24,9 +24,7 @@
 # -----------------------------------------------------------------------
 
 from . import data3d_c as d
-import numpy as np
 
-from .pythonutils import GPULink, checkArrayForLink
 
 def create(datatype,geometry,data=None):
     """Create a 3D object.
