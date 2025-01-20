@@ -112,6 +112,36 @@ CDataStorageDLPackGPU<DLT>::~CDataStorageDLPackGPU()
 #endif
 
 
+bool isContiguous(DLTensor *tensor, bool allowPitch)
+{
+	if (!tensor->strides)
+		return true;
+	// For dimensions of size 1 the stride is not relevant, and it's optionall
+	// for tensor producers to set it to 1 as well
+	std::vector<int64_t> nonsingular_dims, nonsingular_strides;
+	for (int i = 0; i < tensor->ndim; ++i) {
+		if (tensor->shape[i] > 1) {
+			nonsingular_dims.push_back(tensor->shape[i]);
+			nonsingular_strides.push_back(tensor->strides[i]);
+		}
+	}
+	if (nonsingular_dims.size() < 2)
+		return true;
+	int64_t accumulator = 1;
+	for (int i = nonsingular_dims.size() - 1; i >= 0; --i) {
+		if (nonsingular_strides[i] != accumulator)
+			return false;
+		if (allowPitch && i == nonsingular_dims.size()-1)
+			// Accept non-contiguous second-to-last non-singular dimension,
+			// since such data can be represented using cudaPitchedPtr
+			accumulator *= nonsingular_strides[i-1];
+		else
+			accumulator *= nonsingular_dims[i];
+	}
+	return true;
+}
+
+
 bool checkDLTensor(DLTensor *tensor, std::array<int, 3> dims, bool allowPitch, std::string &error)
 {
 	// data type
@@ -138,29 +168,9 @@ bool checkDLTensor(DLTensor *tensor, std::array<int, 3> dims, bool allowPitch, s
 		return false;
 	}
 
-	if (tensor->strides) {
-		int64_t acc = 1;
-		for (int i = tensor->ndim-1; i >= 0; --i) {
-			// We don't check this for dimensions where the shape is 1.
-			// There the stride is not relevant, and torch can set it to 1.
-			if (tensor->shape[i] >= 2 && tensor->strides[i] != acc) {
-				if (allowPitch)
-					error = "Data must be contiguous in all dimensions except first";
-				else
-					error = "Data must be contiguous";
-				return false;
-			}
-			if (i == tensor->ndim-1 && allowPitch) {
-				// allow different stride in x. This stride
-				// will be the first valid stride for a lower
-				// axis
-				int j = i-1;
-				while (j >= 0 && tensor->shape[j] < 2)
-					--j;
-				acc *= tensor->strides[j];
-			} else
-				acc *= tensor->shape[i];
-		}
+	if (!isContiguous(tensor, allowPitch)) {
+		error = "Data must be contiguous";
+		return false;
 	}
 
 	error = "";
