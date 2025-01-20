@@ -230,9 +230,10 @@ astra::CDataStorage *getDLTensorStorage(PyObject *obj, std::array<int, 3> dims, 
 			return nullptr;
 		}
 
-		// TODO: handle read-only and copy flags
-		if (tensor_m->flags)
-			printf("unhandled flags: %zx\n", tensor_m->flags);
+		if (tensor_m->flags & DLPACK_FLAG_BITMASK_READ_ONLY) {
+			error = "Read-only dlpack tensor was provided";
+			return nullptr;
+		}
 
 		storage = getDLTensorStorage(tensor_m, dims, error);
 		if (storage) {
