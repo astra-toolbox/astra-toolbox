@@ -45,15 +45,15 @@ def create(datatype,geometry,data=None):
 def link(datatype, geometry, data):
     """Link a 3D array with ASTRA from another library supporting dlpack,
     such as numpy or pytorch.
-        
+
     :param datatype: Data object type, '-vol' or '-sino'.
     :type datatype: :class:`string`
     :param geometry: Volume or projection geometry.
     :type geometry: :class:`dict`
-    :param data: Numpy array to link
-    :type data: :class:`numpy.ndarray`
-    :returns: :class:`int` -- the ID of the constructed object.
-    
+    :param data: Array to link. Needs to implement the dlpack protocol.
+    :type data: :class:`object`
+    :returns: :class:`int` -- the ID assigned to the linked object.
+
     """
     return d.create(datatype,geometry,data,True)
 
@@ -61,7 +61,7 @@ def link(datatype, geometry, data):
 def get(i):
     """Get a 3D object.
 
-    :param i: ID of object to get.
+    :param i: ID of object to get. Linked GPU arrays are not supported.
     :type i: :class:`int`
     :returns: :class:`numpy.ndarray` -- The object data.
 
@@ -71,7 +71,7 @@ def get(i):
 def get_shared(i):
     """Get a 3D object with memory shared between the ASTRA toolbox and numpy array.
 
-    :param i: ID of object to get.
+    :param i: ID of object to get. Linked GPU arrays are not supported.
     :type i: :class:`int`
     :returns: :class:`numpy.ndarray` -- The object data.
 
@@ -81,7 +81,7 @@ def get_shared(i):
 def get_single(i):
     """Get a 3D object in single precision.
 
-    :param i: ID of object to get.
+    :param i: ID of object to get. Linked GPU arrays are not supported.
     :type i: :class:`int`
     :returns: :class:`numpy.ndarray` -- The object data.
 
@@ -91,7 +91,7 @@ def get_single(i):
 def store(i,data):
     """Fill existing 3D object with data.
 
-    :param i: ID of object to fill.
+    :param i: ID of object to fill. Linked GPU arrays are not supported.
     :type i: :class:`int`
     :param data: Data to fill the object with, either a scalar or array.
     :type data: :class:`float` or :class:`numpy.ndarray`
