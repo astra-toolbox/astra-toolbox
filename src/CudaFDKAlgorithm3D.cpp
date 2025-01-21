@@ -141,23 +141,13 @@ bool CCudaFDKAlgorithm3D::initialize(const Config& _cfg)
 		ok &= CR.getOptionInt("GPUindex", m_iGPUIndex, m_iGPUIndex);
 	if (!ok)
 		return false;
-	
-	// filter
-	if (CR.getOptionID("FilterSinogramId", m_iFilterDataId)) {
-		const CFloat32ProjectionData2D * pFilterData = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(m_iFilterDataId));
-		if (!pFilterData){
-			ASTRA_ERROR("Incorrect FilterSinogramId");
-			return false;
-		}
-		const CProjectionGeometry3D &projgeom = m_pSinogram->getGeometry();
-		const CProjectionGeometry2D &filtgeom = pFilterData->getGeometry();
-		int iPaddedDetCount = calcNextPowerOfTwo(2 * projgeom.getDetectorColCount());
-		int iHalfFFTSize = calcFFTFourierSize(iPaddedDetCount);
-		if(filtgeom.getDetectorCount()!=iHalfFFTSize || filtgeom.getProjectionAngleCount()!=projgeom.getProjectionCount()){
-			ASTRA_ERROR("Filter size does not match required size (%i angles, %i detectors)",projgeom.getProjectionCount(),iHalfFFTSize);
-			return false;
-		}
+
+	if ((CR.has("FilterSinogramId") || CR.hasOption("FilterSinogramId")) &&
+	    !(CR.has("FilterType") || CR.hasOption("FilterType")))
+	{
+		ASTRA_WARN("Setting FilterSinogramId without FilterType is no longer supported. Set FilterType to 'sinogram' for the old behaviour.");
 	}
+	m_filterConfig = getFilterConfigForAlgorithm(_cfg, this);
 
 	ok &= CR.getOptionBool("ShortScan", m_bShortScan, false);
 	if (!ok)
@@ -201,13 +191,6 @@ bool CCudaFDKAlgorithm3D::run(int _iNrIterations)
 	CFloat32VolumeData3D* pReconMem = dynamic_cast<CFloat32VolumeData3D*>(m_pReconstruction);
 	ASTRA_ASSERT(pReconMem);
 
-	const float *filter = NULL;
-	if (m_iFilterDataId != -1) {
-		const CFloat32ProjectionData2D *pFilterData = dynamic_cast<CFloat32ProjectionData2D*>(CData2DManager::getSingleton().get(m_iFilterDataId));
-		if (pFilterData)
-			filter = pFilterData->getDataConst();
-	}
-
 #if 0
 	bool ok = true;
 	
@@ -220,7 +203,7 @@ bool CCudaFDKAlgorithm3D::run(int _iNrIterations)
 
 	CCompositeGeometryManager cgm;
 
-	return cgm.doFDK(m_pProjector, pReconMem, pSinoMem, m_bShortScan, filter);
+	return cgm.doFDK(m_pProjector, pReconMem, pSinoMem, m_bShortScan, m_filterConfig);
 }
 //----------------------------------------------------------------------------------------
 

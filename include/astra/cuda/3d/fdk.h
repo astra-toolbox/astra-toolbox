@@ -30,6 +30,10 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "dims3d.h"
 
+namespace astra {
+struct SFilterConfig;
+}
+
 namespace astraCUDA3d {
 
 bool FDK_PreWeight(cudaPitchedPtr D_projData,
@@ -47,7 +51,7 @@ bool FDK(cudaPitchedPtr D_volumeData,
          cudaPitchedPtr D_projData,
          const SConeProjection* angles,
          const SDimensions3D& dims, SProjectorParams3D params, bool bShortScan,
-         const float* filter);
+         const astra::SFilterConfig& filterConfig);
 
 }
 

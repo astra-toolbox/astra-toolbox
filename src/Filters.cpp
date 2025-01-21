@@ -535,12 +535,12 @@ SFilterConfig getFilterConfigForAlgorithm(const Config& _cfg, CAlgorithm *_alg)
 		c.m_iCustomFilterWidth = pFilterData->getGeometry().getDetectorCount();
 		c.m_iCustomFilterHeight = pFilterData->getGeometry().getProjectionAngleCount();
 
-		c.m_pfCustomFilter = new float[c.m_iCustomFilterWidth * c.m_iCustomFilterHeight];
-		memcpy(c.m_pfCustomFilter, pFilterData->getDataConst(), sizeof(float) * c.m_iCustomFilterWidth * c.m_iCustomFilterHeight);
+		c.m_pfCustomFilter.resize(c.m_iCustomFilterWidth * c.m_iCustomFilterHeight);
+		memcpy(&c.m_pfCustomFilter[0], pFilterData->getDataConst(), sizeof(float) * c.m_iCustomFilterWidth * c.m_iCustomFilterHeight);
 	} else {
 		c.m_iCustomFilterWidth = 0;
 		c.m_iCustomFilterHeight = 0;
-		c.m_pfCustomFilter = NULL;
+		c.m_pfCustomFilter.clear();
 	}
 
 	// filter parameter

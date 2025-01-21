@@ -38,15 +38,24 @@ IF HAVE_CUDA==True:
     from .PyIncludes cimport *
     from libcpp.vector cimport vector
 
+    cdef extern from "astra/Filters.h" namespace "astra":
+        cdef enum E_FBPFILTER:
+            FILTER_ERROR
+            FILTER_NONE
+            FILTER_RAMLAK
+        cdef cppclass SFilterConfig:
+            SFilterConfig()
+            E_FBPFILTER m_eType
+
     cdef extern from "astra/CompositeGeometryManager.h" namespace "astra::CCompositeGeometryManager":
         cdef enum EJobMode:
-            MODE_ADD = 0
-            MODE_SET = 1
+            MODE_ADD
+            MODE_SET
     cdef extern from "astra/CompositeGeometryManager.h" namespace "astra":
         cdef cppclass CCompositeGeometryManager:
             bool doFP(CProjector3D *, vector[CFloat32VolumeData3D *], vector[CFloat32ProjectionData3D *], EJobMode) nogil
             bool doBP(CProjector3D *, vector[CFloat32VolumeData3D *], vector[CFloat32ProjectionData3D *], EJobMode) nogil
-            bool doFDK(CProjector3D *, CFloat32VolumeData3D *, CFloat32ProjectionData3D *, bool, const float*, EJobMode) nogil
+            bool doFDK(CProjector3D *, CFloat32VolumeData3D *, CFloat32ProjectionData3D *, bool, SFilterConfig &, EJobMode) nogil
 
     cdef extern from *:
         CFloat32VolumeData3D * dynamic_cast_vol_mem "dynamic_cast<astra::CFloat32VolumeData3D*>" (CData3D * )
@@ -125,9 +134,11 @@ IF HAVE_CUDA==True:
             raise AstraError("Data object not initialized properly")
         cdef CCompositeGeometryManager m
         cdef CProjector3D * projector = manProj.get(projector_id) # may be NULL
+        cdef SFilterConfig filterConfig
+        filterConfig.m_eType = FILTER_RAMLAK
         cdef bool ret = True
         with nogil:
-            ret = m.doFDK(projector, pVolObject, pProjObject, False, NULL, MODE_ADD)
+            ret = m.doFDK(projector, pVolObject, pProjObject, False, filterConfig, MODE_ADD)
         if not ret:
             raise AstraError("Failed to perform FDK", append_log=True)
 

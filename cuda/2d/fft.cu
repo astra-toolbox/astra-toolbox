@@ -71,6 +71,30 @@ __global__ static void applyFilter_kernel(int _iProjectionCount,
 	_pSinogram[iIndex].y = fA * fD + fC * fB;
 }
 
+__global__ static void applyFilter_singleFilter_kernel(int _iProjectionCount,
+                                          int _iFreqBinCount,
+                                          cufftComplex * _pSinogram,
+                                          cufftComplex * _pFilter)
+{
+	int iIndex = threadIdx.x + blockIdx.x * blockDim.x;
+	int iProjectionIndex = iIndex / _iFreqBinCount;
+	int iFilterIndex = iIndex % _iFreqBinCount;
+
+	if(iProjectionIndex >= _iProjectionCount)
+	{
+		return;
+	}
+
+	float fA = _pSinogram[iIndex].x;
+	float fB = _pSinogram[iIndex].y;
+	float fC = _pFilter[iFilterIndex].x;
+	float fD = _pFilter[iFilterIndex].y;
+
+	_pSinogram[iIndex].x = fA * fC - fB * fD;
+	_pSinogram[iIndex].y = fA * fD + fC * fB;
+}
+
+
 __global__ static void rescaleInverseFourier_kernel(int _iProjectionCount,
                                                     int _iDetectorCount,
                                                     float* _pfInFourierOutput)
@@ -108,6 +132,7 @@ bool rescaleInverseFourier(int _iProjectionCount, int _iDetectorCount,
 
 bool applyFilter(int _iProjectionCount, int _iFreqBinCount,
                  cufftComplex * _pSinogram, cufftComplex * _pFilter,
+                 bool singleFilter,
                  std::optional<cudaStream_t> _stream)
 {
 	StreamHelper stream(_stream);
@@ -118,9 +143,16 @@ bool applyFilter(int _iProjectionCount, int _iFreqBinCount,
 	int iElementCount = _iProjectionCount * _iFreqBinCount;
 	int iBlockCount = (iElementCount + iBlockSize - 1) / iBlockSize;
 
-	applyFilter_kernel<<< iBlockCount, iBlockSize, 0, stream() >>>(_iProjectionCount,
-	                                                  _iFreqBinCount,
-	                                                  _pSinogram, _pFilter);
+	if (singleFilter) {
+		applyFilter_singleFilter_kernel<<< iBlockCount, iBlockSize, 0, stream() >>>(_iProjectionCount,
+		                                                  _iFreqBinCount,
+		                                                  _pSinogram, _pFilter);
+	} else {
+		applyFilter_kernel<<< iBlockCount, iBlockSize, 0, stream() >>>(_iProjectionCount,
+		                                                  _iFreqBinCount,
+		                                                  _pSinogram, _pFilter);
+
+	}
 
 	return stream.syncIfSync("applyFilter");
 }
@@ -340,5 +372,233 @@ void genCuFFTFilter(const SFilterConfig &_cfg, int _iProjectionCount,
 	delete[] pfFilt;
 }
 
+bool prepareCuFFTFilter(const SFilterConfig &cfg,
+                        cufftComplex *&D_filter,
+                        bool &singleFilter,
+                        int iProjectionCount, int iDetectorCount,
+                        std::optional<cudaStream_t> _stream)
+{
+	D_filter = nullptr;
+	singleFilter = false;
+
+	StreamHelper stream(_stream);
+	if (!stream)
+		return false;
+
+	if (cfg.m_eType == astra::FILTER_NONE)
+		return true;
+
+	if (cfg.m_eType != astra::FILTER_SINOGRAM && cfg.m_eType != astra::FILTER_RSINOGRAM)
+		singleFilter = true;
+
+	int filterRows;
+	if (singleFilter)
+		filterRows = 1;
+	else
+		filterRows = iProjectionCount;
+
+	int iPaddedDetCount = calcNextPowerOfTwo(2 * iDetectorCount);
+	int iHalfFFTSize = astra::calcFFTFourierSize(iPaddedDetCount);
+	//int iFFTRealDetCount = astra::calcNextPowerOfTwo(2 * dims.iProjDets);
+	//int iFreqBinCount = astra::calcFFTFourierSize(iFFTRealDetCount);
+
+	size_t filterSize = (size_t)filterRows * iHalfFFTSize;
+
+	if (!allocateComplexOnDevice(filterRows, iHalfFFTSize, &D_filter)) {
+		D_filter = nullptr;
+		return false;
+	}
+
+	std::vector<cufftComplex> hostFilter(filterSize);
+
+	switch(cfg.m_eType)
+	{
+		case astra::FILTER_NONE:
+			// handled above
+			break;
+		case astra::FILTER_RAMLAK:
+		case astra::FILTER_SHEPPLOGAN:
+		case astra::FILTER_COSINE:
+		case astra::FILTER_HAMMING:
+		case astra::FILTER_HANN:
+		case astra::FILTER_TUKEY:
+		case astra::FILTER_LANCZOS:
+		case astra::FILTER_TRIANGULAR:
+		case astra::FILTER_GAUSSIAN:
+		case astra::FILTER_BARTLETTHANN:
+		case astra::FILTER_BLACKMAN:
+		case astra::FILTER_NUTTALL:
+		case astra::FILTER_BLACKMANHARRIS:
+		case astra::FILTER_BLACKMANNUTTALL:
+		case astra::FILTER_FLATTOP:
+		case astra::FILTER_KAISER:
+		case astra::FILTER_PARZEN:
+		{
+			genCuFFTFilter(cfg, filterRows, &hostFilter[0], iPaddedDetCount, iHalfFFTSize);
+			bool ok = uploadComplexArrayToDevice(filterRows, iHalfFFTSize, &hostFilter[0], D_filter, stream());
+			ok &= stream.syncIfSync("prepareCuFFTFilter upload");
+			if (!ok) {
+				cudaFree(D_filter);
+				D_filter = nullptr;
+				return false;
+			}
+			break;
+		}
+		case astra::FILTER_PROJECTION:
+		{
+			// make sure the offered filter has the correct size
+			assert(cfg.m_iCustomFilterWidth == iHalfFFTSize);
+			assert(cfg.m_iCustomFilterHeight == 1);
+
+			for (int i = 0; i < iHalfFFTSize; ++i)
+			{
+				float fValue = cfg.m_pfCustomFilter[i];
+
+				for (int j = 0; j < filterRows; ++j)
+				{
+					hostFilter[i + j * iHalfFFTSize].x = fValue;
+					hostFilter[i + j * iHalfFFTSize].y = 0.0f;
+				}
+			}
+			bool ok = uploadComplexArrayToDevice(filterRows, iHalfFFTSize, &hostFilter[0], D_filter, stream());
+			ok &= stream.syncIfSync("prepareCuFFTFilter upload");
+			if (!ok) {
+				cudaFree(D_filter);
+				D_filter = nullptr;
+				return false;
+			}
+			break;
+		}
+		case astra::FILTER_SINOGRAM:
+		{
+			// make sure the offered filter has the correct size
+			assert(cfg.m_iCustomFilterWidth == iHalfFFTSize);
+			assert(cfg.m_iCustomFilterHeight == iProjectionCount);
+			assert(filterRows == iProjectionCount);
+
+			for (int i = 0; i < iHalfFFTSize; ++i)
+			{
+				for (int j = 0; j < filterRows; ++j)
+				{
+					float fValue = cfg.m_pfCustomFilter[i + j * iHalfFFTSize];
+
+					hostFilter[i + j * iHalfFFTSize].x = fValue;
+					hostFilter[i + j * iHalfFFTSize].y = 0.0f;
+				}
+			}
+			bool ok = uploadComplexArrayToDevice(filterRows, iHalfFFTSize, &hostFilter[0], D_filter, stream());
+			ok &= stream.syncIfSync("prepareCuFFTFilter upload");
+			if (!ok) {
+				cudaFree(D_filter);
+				D_filter = nullptr;
+				return false;
+			}
+			break;
+		}
+		case astra::FILTER_RPROJECTION:
+		{
+			size_t iSpatialFilterSize = filterRows * iPaddedDetCount;
+			std::vector<float> hostSpatialFilter(iSpatialFilterSize);
+
+			int iUsedFilterWidth = min(cfg.m_iCustomFilterWidth, iPaddedDetCount);
+			int iStartFilterIndex = (cfg.m_iCustomFilterWidth - iUsedFilterWidth) / 2;
+			int iMaxFilterIndex = iStartFilterIndex + iUsedFilterWidth;
+
+			int iFilterShiftSize = cfg.m_iCustomFilterWidth / 2;
+
+			for (int iDetectorIndex = iStartFilterIndex; iDetectorIndex < iMaxFilterIndex; iDetectorIndex++)
+			{
+				int iFFTInFilterIndex = (iDetectorIndex + iPaddedDetCount - iFilterShiftSize) % iPaddedDetCount;
+				float fValue = cfg.m_pfCustomFilter[iDetectorIndex];
+
+				for (int iProjectionIndex = 0; iProjectionIndex < filterRows; iProjectionIndex++)
+				{
+					hostSpatialFilter[iFFTInFilterIndex + iProjectionIndex * iPaddedDetCount] = fValue;
+				}
+			}
+
+			float* D_spatialFilter = NULL;
+			if (!checkCuda(cudaMalloc((void **)&D_spatialFilter, sizeof(float) * iSpatialFilterSize), "prepareCuFFTFilter malloc")) {
+				cudaFree(D_filter);
+				D_filter = nullptr;
+				return false;
+			}
+			if (!checkCuda(cudaMemcpy(D_spatialFilter, &hostSpatialFilter[0], sizeof(float) * iSpatialFilterSize, cudaMemcpyHostToDevice), "prepareCuFFTFilter memcpy")) {
+				cudaFree(D_filter);
+				D_filter = nullptr;
+				return false;
+			}
+
+			bool ok = runCudaFFT(filterRows, D_spatialFilter, iPaddedDetCount, iPaddedDetCount, iPaddedDetCount, D_filter, stream());
+
+			// need to synchronize here for the cudaFree
+			ok &= stream.sync("prepareCuFFTFilter FFT");
+
+			cudaFree(D_spatialFilter);
+
+			if (!ok) {
+				cudaFree(D_filter);
+				D_filter = nullptr;
+				return false;
+			}
+			break;
+		}
+		case astra::FILTER_RSINOGRAM:
+		{
+			size_t iSpatialFilterSize = filterRows * iPaddedDetCount;
+			std::vector<float> hostSpatialFilter(iSpatialFilterSize);
+
+			int iUsedFilterWidth = min(cfg.m_iCustomFilterWidth, iPaddedDetCount);
+			int iStartFilterIndex = (cfg.m_iCustomFilterWidth - iUsedFilterWidth) / 2;
+			int iMaxFilterIndex = iStartFilterIndex + iUsedFilterWidth;
+
+			int iFilterShiftSize = cfg.m_iCustomFilterWidth / 2;
+
+			for(int iDetectorIndex = iStartFilterIndex; iDetectorIndex < iMaxFilterIndex; iDetectorIndex++)
+			{
+				int iFFTInFilterIndex = (iDetectorIndex + iPaddedDetCount - iFilterShiftSize) % iPaddedDetCount;
+
+				for(int iProjectionIndex = 0; iProjectionIndex < iProjectionCount; iProjectionIndex++)
+				{
+					float fValue = cfg.m_pfCustomFilter[iDetectorIndex + iProjectionIndex * cfg.m_iCustomFilterWidth];
+					hostSpatialFilter[iFFTInFilterIndex + iProjectionIndex * iPaddedDetCount] = fValue;
+				}
+			}
+
+			float* D_spatialFilter = NULL;
+			if (!checkCuda(cudaMalloc((void **)&D_spatialFilter, sizeof(float) * iSpatialFilterSize), "prepareCuFFTFilter malloc")) {
+				cudaFree(D_filter);
+				D_filter = nullptr;
+				return false;
+			}
+			if (!checkCuda(cudaMemcpy(D_spatialFilter, &hostSpatialFilter[0], sizeof(float) * iSpatialFilterSize, cudaMemcpyHostToDevice), "prepareCuFFTFilter memcpy")) {
+				cudaFree(D_filter);
+				D_filter = nullptr;
+				return false;
+			}
+
+			bool ok = runCudaFFT(filterRows, D_spatialFilter, iPaddedDetCount, iPaddedDetCount, iPaddedDetCount, D_filter, stream());
+
+			// need to synchronize here for the cudaFree
+			ok &= stream.sync("prepareCuFFTFilter FFT");
+
+			cudaFree(D_spatialFilter);
+
+			if (!ok) {
+				cudaFree(D_filter);
+				D_filter = nullptr;
+				return false;
+			}
+			break;
+		}
+		default:
+		{
+			ASTRA_ERROR("FBP::setFilter: Unknown filter type requested");
+			return false;
+		}
+	}
+
+	return true;
+}
 
 }

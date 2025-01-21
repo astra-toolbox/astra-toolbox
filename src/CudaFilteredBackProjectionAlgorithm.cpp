@@ -49,8 +49,7 @@ CCudaFilteredBackProjectionAlgorithm::CCudaFilteredBackProjectionAlgorithm()
 
 CCudaFilteredBackProjectionAlgorithm::~CCudaFilteredBackProjectionAlgorithm()
 {
-	delete[] m_filterConfig.m_pfCustomFilter;
-	m_filterConfig.m_pfCustomFilter = NULL;
+
 }
 
 bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
@@ -122,12 +121,12 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(CFloat32ProjectionData2D *
 			iFilterElementCount = m_pSinogram->getAngleCount();
 		}
 
-		m_filterConfig.m_pfCustomFilter = new float[iFilterElementCount];
-		memcpy(m_filterConfig.m_pfCustomFilter, _pfFilter, iFilterElementCount * sizeof(float));
+		m_filterConfig.m_pfCustomFilter.resize(iFilterElementCount);
+		memcpy(&m_filterConfig.m_pfCustomFilter[0], _pfFilter, iFilterElementCount * sizeof(float));
 	}
 	else
 	{
-		m_filterConfig.m_pfCustomFilter = NULL;
+		m_filterConfig.m_pfCustomFilter.clear();
 	}
 
 	m_filterConfig.m_fParameter = _fFilterParameter;
@@ -172,7 +171,7 @@ bool CCudaFilteredBackProjectionAlgorithm::check()
 
 	if((m_filterConfig.m_eType == FILTER_PROJECTION) || (m_filterConfig.m_eType == FILTER_SINOGRAM) || (m_filterConfig.m_eType == FILTER_RPROJECTION) || (m_filterConfig.m_eType == FILTER_RSINOGRAM))
 	{
-		ASTRA_CONFIG_CHECK(m_filterConfig.m_pfCustomFilter, "FBP_CUDA", "Invalid filter pointer.");
+		ASTRA_CONFIG_CHECK(!m_filterConfig.m_pfCustomFilter.empty(), "FBP_CUDA", "Invalid filter pointer.");
 	}
 
 	// check initializations

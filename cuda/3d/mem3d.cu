@@ -37,6 +37,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/cuda/2d/astra.h"
 
 #include "astra/Logging.h"
+#include "astra/Filters.h"
 
 #include <cstdio>
 #include <cassert>
@@ -282,7 +283,7 @@ bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, co
 
 }
 
-bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D &volData, bool bShortScan, const float *pfFilter, float fOutputScale)
+bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D &volData, bool bShortScan, const astra::SFilterConfig &filterConfig, float fOutputScale)
 {
 	assert(!projData.d->arr);
 	assert(!volData.d->arr);
@@ -301,7 +302,7 @@ bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, c
 
 	const SConeProjection* pConeProjs = res.getCone();
 
-	ok &= FDK(volData.d->ptr, projData.d->ptr, pConeProjs, dims, params, bShortScan, pfFilter);
+	ok &= FDK(volData.d->ptr, projData.d->ptr, pConeProjs, dims, params, bShortScan, filterConfig);
 
 	return ok;
 

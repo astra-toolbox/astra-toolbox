@@ -33,6 +33,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "Algorithm.h"
 #include "Data3D.h"
+#include "Filters.h"
 
 #include "ReconstructionAlgorithm3D.h"
 
@@ -136,8 +137,9 @@ protected:
 
 	int m_iGPUIndex;
 	int m_iVoxelSuperSampling;
-	int m_iFilterDataId;
 	bool m_bShortScan;
+
+	SFilterConfig m_filterConfig;
 
 	void initializeFromProjector();
 };
