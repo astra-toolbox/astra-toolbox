@@ -404,14 +404,14 @@ class TestOptionsGPU:
     def test_min_max_constraint(self, proj_geom, algorithm_type):
         algorithm_no_constrains = make_algorithm_config(algorithm_type, proj_geom)
         algorithm_with_constrains = make_algorithm_config(
-            algorithm_type, proj_geom, options={'MinConstraint': 0.0, 'MaxConstraint': 0.1}
+            algorithm_type, proj_geom, options={'MinConstraint': 0.0, 'MaxConstraint': 0.125}
         )
         reconstruction_no_constrains = get_algorithm_output(algorithm_no_constrains)
         reconstruction_with_constrains = get_algorithm_output(algorithm_with_constrains)
         assert reconstruction_no_constrains.min() < 0.0
-        assert reconstruction_no_constrains.max() > 0.1
+        assert reconstruction_no_constrains.max() > 0.125
         assert reconstruction_with_constrains.min() == 0.0
-        assert reconstruction_with_constrains.max() == 0.1
+        assert reconstruction_with_constrains.max() == 0.125
 
     @pytest.mark.parametrize('proj_geom,', ['parallel'], indirect=True)
     @pytest.mark.parametrize('algorithm_type', ['SIRT_CUDA', 'SART_CUDA', 'CGLS_CUDA'])

@@ -163,14 +163,14 @@ class TestOptions:
     def test_min_max_constraint(self, proj_geom):
         algorithm_no_constrains = make_algorithm_config('SIRT3D_CUDA', proj_geom)
         algorithm_with_constrains = make_algorithm_config(
-            'SIRT3D_CUDA', proj_geom, options={'MinConstraint': 0.0, 'MaxConstraint': 0.1}
+            'SIRT3D_CUDA', proj_geom, options={'MinConstraint': 0.0, 'MaxConstraint': 0.125}
         )
         reconstruction_no_constrains = get_algorithm_output(algorithm_no_constrains)
         reconstruction_with_constrains = get_algorithm_output(algorithm_with_constrains)
         assert reconstruction_no_constrains.min() < 0.0
-        assert reconstruction_no_constrains.max() > 0.1
+        assert reconstruction_no_constrains.max() > 0.125
         assert reconstruction_with_constrains.min() == 0.0
-        assert reconstruction_with_constrains.max() == 0.1
+        assert reconstruction_with_constrains.max() == 0.125
 
     @pytest.mark.parametrize('proj_geom,', ['parallel3d'], indirect=True)
     @pytest.mark.parametrize('algorithm_type', ['SIRT3D_CUDA', 'CGLS3D_CUDA'])
