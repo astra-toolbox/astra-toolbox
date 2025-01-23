@@ -38,16 +38,6 @@ def _convert_to_backend(data, backend):
         return jax.device_put(data, device=jax.devices('cuda')[0])
 
 
-def _allclose(data, reference):
-    try:
-        import torch
-        if isinstance(data, torch.Tensor) and data.device.type == 'cuda':
-            data = data.cpu()
-    except ImportError:
-        pass
-    return np.allclose(data, reference)
-
-
 @pytest.fixture
 def projector():
     projector_id = astra.create_projector('cuda3d', PROJ_GEOM, VOL_GEOM)
@@ -135,11 +125,15 @@ def vol_data_slice(singular_dims, backend):
 class TestAll:
     def test_backends_fp(self, backend, projector, vol_data, proj_data, reference_fp):
         astra.experimental.direct_FP3D(projector, vol_data, proj_data)
-        assert _allclose(proj_data, reference_fp)
+        if backend.startswith('pytorch'):
+            proj_data = proj_data.cpu()
+        assert np.allclose(proj_data, reference_fp)
 
     def test_backends_bp(self, backend, projector, vol_data, proj_data, reference_bp):
         astra.experimental.direct_BP3D(projector, vol_data, proj_data)
-        assert _allclose(vol_data, reference_bp)
+        if backend.startswith('pytorch'):
+            vol_data = vol_data.cpu()
+        assert np.allclose(vol_data, reference_bp)
 
     def test_non_contiguous(self, backend, proj_data_non_contiguous):
         if backend.startswith('jax'):
