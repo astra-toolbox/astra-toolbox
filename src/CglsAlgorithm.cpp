@@ -222,6 +222,7 @@ bool CCglsAlgorithm::run(int _iNrIterations)
 	for (int iIteration = _iNrIterations-1; iIteration >= 0; --iIteration) {
 	
 		// w = A*p;
+		w->setData(0.0f); // ensure masked out elements are zeroed
 		pForwardProjector->project();
 	
 		// alpha = gamma/dot(w,w);
