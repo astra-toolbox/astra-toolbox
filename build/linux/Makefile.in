@@ -48,7 +48,7 @@ NVCCFLAGS=@SAVED_NVCCFLAGS@
 LDFLAGS=@SAVED_LDFLAGS@
 LIBS=@SAVED_LIBS@
 
-CXXFLAGS+=-g -O3 -Wall -Wshadow --std=c++17
+CXXFLAGS+=-g -O3 -Wall --std=c++17
 LDFLAGS+=-g
 
 CXXFLAGS+=@CXXFLAGS_OS@
@@ -87,6 +87,7 @@ PYLIBVER = `basename $(PYINCDIR)`
 CPPFLAGS += -DASTRA_PYTHON -I$(PYINCDIR)
 PYCPPFLAGS  := $(CPPFLAGS)
 PYCPPFLAGS  += -I../include
+PYCXXFLAGS  := $(CXXFLAGS)
 
 # copy the current MODLDFLAGS to PYLDFLAGS, and then add flags for matlab/octave
 PYLDFLAGS := $(MODLDFLAGS)
@@ -94,6 +95,7 @@ MODLDFLAGS += -L$(PYLIBDIR)
 
 MODPYLIBS=-l$(PYLIBVER)
 
+PYBUILDERENV=CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS='${PYLDFLAGS}' CXXFLAGS="${PYCXXFLAGS}"
 PYBUILDERFLAGS=--astra_build_config_dir $(abs_top_builddir)/python/config --astra_build_cython_dir $(abs_top_builddir)/python/cython
 PYBUILDER_BUILD_FLAGS=--build-base=$(abs_top_builddir)/python/build
 
@@ -103,6 +105,9 @@ endif
 # This is below where PYCPPFLAGS copies CPPFLAGS.  The python code is built
 # from a different directory, so these relative includes would be wrong.
 CPPFLAGS+=-I$(srcdir)/../../include -I$(srcdir)/../../lib/include
+# Also enable -Wshadow except for the python extensions, since certain cython
+# versions generate code with much shadowing.
+CXXFLAGS += -Wshadow
 
 ifeq ($(matlab),yes)
 MEXFLAGS  = @MEXFLAGS@ -cxx
@@ -334,7 +339,7 @@ py: libastra.la
 	$(MKDIR) python/build
 	$(MKDIR) python/config
 # Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
-	cd $(srcdir)/../../python; CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS='${PYLDFLAGS}' \
+	cd $(srcdir)/../../python; $(PYBUILDERENV) \
 	$(PYTHON) builder.py $(PYBUILDERFLAGS) \
 	build $(PYBUILDER_BUILD_FLAGS) \
 	$(patsubst %,add_extra_lib --file=%,$(PYPKGDATA))
@@ -486,7 +491,7 @@ endif
 ifeq ($(python),yes)
 install-python: py
 	# Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
-	cd $(srcdir)/../../python; CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" \
+	cd $(srcdir)/../../python; $(PYBUILDERENV) \
 	$(PYTHON) builder.py $(PYBUILDERFLAGS) \
 	set_dist_dir --dist-dir=$(abs_top_builddir)/python/dist \
 	build $(PYBUILDER_BUILD_FLAGS) \
@@ -497,7 +502,7 @@ install-python: py
 
 install-python-site-packages: py
 # Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
-	cd $(srcdir)/../../python; CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" \
+	cd $(srcdir)/../../python; $(PYBUILDERENV) \
 	$(PYTHON) builder.py $(PYBUILDERFLAGS) \
 	set_dist_dir --dist-dir=$(abs_top_builddir)/python/dist \
 	build $(PYBUILDER_BUILD_FLAGS) \
@@ -506,7 +511,7 @@ install-python-site-packages: py
 	install $(patsubst %,--root=% --single-version-externally-managed,$(DESTDIR))
 python-wheel: py
 # Note: setting CC to CXX is intentional. Python uses CC for compilation even if input is C++.
-	cd $(srcdir)/../../python; CXX="${CXX}" CC="${CXX}" CPPFLAGS="${PYCPPFLAGS}" LDFLAGS="${PYLDFLAGS}" \
+	cd $(srcdir)/../../python; $(PYBUILDERENV) \
 	$(PYTHON) builder.py $(PYBUILDERFLAGS) --astra_cuda_dependencies \
 	set_dist_dir --dist-dir=$(abs_top_builddir)/python/dist \
 	build $(PYBUILDER_BUILD_FLAGS) \
