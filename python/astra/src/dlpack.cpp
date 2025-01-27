@@ -245,6 +245,11 @@ astra::CDataStorage *getDLTensorStorage(PyObject *obj, std::array<int, 3> dims, 
 			return nullptr;
 		}
 
+		// NB: We ignore the DLPACK_FLAG_BITMASK_IS_COPIED flag.
+		// If we ever add explicit support for differentiating between
+		// input and output objects, we may want to return an error
+		// when using a copied tensor for output.
+
 		storage = getDLTensorStorage(tensor_m, dims, error);
 		if (storage) {
 			// All checks passed, so we can officially consume this dltensor
