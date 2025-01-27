@@ -48,9 +48,9 @@ public:
 };
 
 //< Format a string, returning it as a std::string
-std::string vformat(const char *fmt, va_list ap);
+_AstraExport std::string vformat(const char *fmt, va_list ap);
 //< Format a string, returning it as a std::string
-std::string format(const char *fmt, ...) ATTRIBUTE_FORMAT(printf, 1, 2);
+_AstraExport std::string format(const char *fmt, ...) ATTRIBUTE_FORMAT(printf, 1, 2);
 
 
 //< Parse string as int.
