@@ -1,5 +1,4 @@
 import numpy as np
-import unittest
 import astra
 import math
 import pytest
@@ -77,10 +76,10 @@ def ProjectionGeometries(type,shortscan):
        yield pg
 
 @pytest.mark.slow
-class TestRecScale(unittest.TestCase):
+class TestRecScale:
   def single_test(self, geom_type, proj_type, alg, iters, vss, dss):
     if alg == 'FBP' and 'fanflat' in geom_type:
-      self.skipTest('CPU FBP is parallel-beam only')
+      pytest.skip('CPU FBP is parallel-beam only')
     is3D = (geom_type in ['parallel3d', 'cone'])
     for vg in VolumeGeometries(is3D, 'FDK' not in alg):
       for pg in ProjectionGeometries(geom_type, 'FDK' in alg):
@@ -134,7 +133,7 @@ class TestRecScale(unittest.TestCase):
           else:
             pylab.imshow(rec[:,32,:])
           pylab.show()
-        self.assertTrue(abs(val-1.0) < TOL)
+        assert abs(val-1.0) < TOL
 
   def single_test_adjoint3D(self, geom_type, proj_type):
     for vg in VolumeGeometries(True, True):
@@ -155,7 +154,7 @@ class TestRecScale(unittest.TestCase):
             print(vg)
             print(pg)
             print(m/da, da/db, da, db)
-          self.assertTrue(m / da < TOL)
+          assert m / da < TOL
 
 
 
@@ -233,7 +232,4 @@ for k, l in __combinations_ss.items():
         def h(k, v, a, i, vss, dss):
           return lambda self: self.single_test(k, v, a, i, vss, dss)
         setattr(TestRecScale, 'test_ss_' + a + '_' + k + '_' + v + '_' + str(vss) + '_' + str(dss), h(k, A['projector'], A['alg'], A['iters'], vss, dss))
-
-if __name__ == '__main__':
-  unittest.main()
 
