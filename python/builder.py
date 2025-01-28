@@ -142,6 +142,10 @@ for m in ext_modules:
     if m.name in ('astra.plugin_c'):
         m.sources.append(os.path.join('.', 'astra', 'src',
                                       'PythonPluginAlgorithmFactory.cpp'))
+    if m.name in ('astra.utils'):
+        m.sources.append(os.path.join('.', 'astra', 'src',
+                                      'dlpack.cpp'))
+
 
 setup(script_args=script_args,
       name='astra-toolbox',

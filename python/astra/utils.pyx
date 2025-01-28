@@ -35,6 +35,7 @@ from libcpp.vector cimport vector
 from libcpp.list cimport list
 from libcpp.utility cimport move
 from cython.operator cimport dereference as deref, preincrement as inc
+from cpython.pycapsule cimport PyCapsule_IsValid
 
 from . cimport PyXMLDocument
 from .PyXMLDocument cimport XMLDocument
@@ -44,15 +45,15 @@ from .PyIncludes cimport *
 from .pythonutils import GPULink, checkArrayForLink
 from .log import AstraError
 
-cdef extern from "CFloat32CustomPython.h":
-    cdef cppclass CDataStoragePython[T](CDataMemory[T]):
-        CDataStoragePython(np.ndarray arrIn)
-
 cdef extern from "Python.h":
     void* PyLong_AsVoidPtr(object)
 
 cdef extern from *:
     XMLConfig* dynamic_cast_XMLConfig "dynamic_cast<astra::XMLConfig*>" (Config*)
+
+cdef extern from "src/dlpack.h":
+    CFloat32VolumeData3D* getDLTensor(obj, const CVolumeGeometry3D &pGeom, string &error)
+    CFloat32ProjectionData3D* getDLTensor(obj, const CProjectionGeometry3D &pGeom, string &error)
 
 
 
@@ -232,63 +233,90 @@ cdef XMLNode2dict(XMLNode node):
     if len(opts)>0: dct['options'] = opts
     return dct
 
+def getDLPackCapsule(data):
+    # backward compatibility: check if the object is a dltensor capsule already
+    if PyCapsule_IsValid(data, "dltensor"):
+        return data
+    if not hasattr(data, "__dlpack__"):
+        return None
+    capsule = None
+    # TODO: investigate the stream argument to __dlpack__().
+    try:
+        capsule = data.__dlpack__(max_version = (1,0))
+    except AttributeError:
+        return None
+    except TypeError:
+        # unsupported max_version argument raises a TypeError
+        pass
+    if capsule is not None:
+        return capsule
+
+    try:
+        capsule = data.__dlpack__()
+    except AttributeError:
+        return None
+    return capsule
+
 cdef CFloat32VolumeData3D* linkVolFromGeometry(const CVolumeGeometry3D &pGeometry, data) except NULL:
     cdef CFloat32VolumeData3D * pDataObject3D = NULL
     cdef CDataStorage * pStorage
-    geom_shape = (pGeometry.getGridSliceCount(), pGeometry.getGridRowCount(), pGeometry.getGridColCount())
-    if isinstance(data, np.ndarray):
-        data_shape = data.shape
-    elif isinstance(data, GPULink):
-        data_shape = (data.z, data.y, data.x)
-    if geom_shape != data_shape:
-        raise ValueError("The dimensions of the data {} do not match those "
-                         "specified in the geometry {}".format(data_shape, geom_shape))
+    cdef string dlerror = b""
 
-    if isinstance(data, np.ndarray):
-        checkArrayForLink(data)
-        if data.dtype == np.float32:
-            pStorage = new CDataStoragePython[float32](data)
-        else:
-            raise NotImplementedError("Unknown data type for link")
-    elif isinstance(data, GPULink):
+    # TODO: investigate the stream argument to __dlpack__().
+    capsule = getDLPackCapsule(data)
+    if capsule is not None:
+        pDataObject3D = getDLTensor(capsule, pGeometry, dlerror)
+        if not pDataObject3D:
+            raise ValueError("Failed to link dlpack array: " + wrap_from_bytes(dlerror))
+        return pDataObject3D
+
+    if isinstance(data, GPULink):
+        geom_shape = (pGeometry.getGridSliceCount(), pGeometry.getGridRowCount(), pGeometry.getGridColCount())
+        data_shape = (data.z, data.y, data.x)
+        if geom_shape != data_shape:
+            raise ValueError("The dimensions of the data {} do not match those "
+                             "specified in the geometry {}".format(data_shape, geom_shape))
+
         IF HAVE_CUDA==True:
             hnd = wrapHandle(<float*>PyLong_AsVoidPtr(data.ptr), data.x, data.y, data.z, data.pitch/4)
             pStorage = new CDataGPU(hnd)
         ELSE:
             raise AstraError("CUDA support is not enabled in ASTRA")
-    else:
-        raise TypeError("data should be a numpy.ndarray or a GPULink object")
-    pDataObject3D = new CFloat32VolumeData3D(pGeometry, pStorage)
-    return pDataObject3D
+        pDataObject3D = new CFloat32VolumeData3D(pGeometry, pStorage)
+        return pDataObject3D
+
+    raise TypeError("Data should be an array with DLPack support, or a GPULink object")
+
 
 cdef CFloat32ProjectionData3D* linkProjFromGeometry(const CProjectionGeometry3D &pGeometry, data) except NULL:
     cdef CFloat32ProjectionData3D * pDataObject3D = NULL
     cdef CDataStorage * pStorage
-    geom_shape = (pGeometry.getDetectorRowCount(), pGeometry.getProjectionCount(), pGeometry.getDetectorColCount())
-    if isinstance(data, np.ndarray):
-        data_shape = data.shape
-    elif isinstance(data, GPULink):
-        data_shape = (data.z, data.y, data.x)
-    if geom_shape != data_shape:
-        raise ValueError("The dimensions of the data {} do not match those "
-                         "specified in the geometry {}".format(data_shape, geom_shape))
+    cdef string dlerror = b""
 
-    if isinstance(data, np.ndarray):
-        checkArrayForLink(data)
-        if data.dtype == np.float32:
-            pStorage = new CDataStoragePython[float32](data)
-        else:
-            raise NotImplementedError("Unknown data type for link")
-    elif isinstance(data, GPULink):
+    # TODO: investigate the stream argument to __dlpack__().
+    capsule = getDLPackCapsule(data)
+    if capsule is not None:
+        pDataObject3D = getDLTensor(capsule, pGeometry, dlerror)
+        if not pDataObject3D:
+            raise ValueError("Failed to link dlpack array: " + wrap_from_bytes(dlerror))
+        return pDataObject3D
+
+    if isinstance(data, GPULink):
+        geom_shape = (pGeometry.getDetectorRowCount(), pGeometry.getProjectionCount(), pGeometry.getDetectorColCount())
+        data_shape = (data.z, data.y, data.x)
+        if geom_shape != data_shape:
+            raise ValueError("The dimensions of the data {} do not match those "
+                             "specified in the geometry {}".format(data_shape, geom_shape))
+
         IF HAVE_CUDA==True:
             hnd = wrapHandle(<float*>PyLong_AsVoidPtr(data.ptr), data.x, data.y, data.z, data.pitch/4)
             pStorage = new CDataGPU(hnd)
         ELSE:
             raise AstraError("CUDA support is not enabled in ASTRA")
-    else:
-        raise TypeError("data should be a numpy.ndarray or a GPULink object")
-    pDataObject3D = new CFloat32ProjectionData3D(pGeometry, pStorage)
-    return pDataObject3D
+        pDataObject3D = new CFloat32ProjectionData3D(pGeometry, pStorage)
+        return pDataObject3D
+
+    raise TypeError("Data should be an array with DLPack support, or a GPULink object")
 
 cdef unique_ptr[CProjectionGeometry3D] createProjectionGeometry3D(geometry) except *:
     cdef XMLConfig *cfg

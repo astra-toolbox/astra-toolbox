@@ -41,7 +41,6 @@ from . import data3d_c
 from . import projector_c
 from . import algorithm_c
 from . import matrix_c
-import numpy as np
 
 
 def astra(command, *args):

@@ -86,7 +86,7 @@ PYLIBDIR := $(shell $(PYTHON) -c 'from __future__ import print_function; from di
 PYLIBVER = `basename $(PYINCDIR)`
 CPPFLAGS += -DASTRA_PYTHON -I$(PYINCDIR)
 PYCPPFLAGS  := $(CPPFLAGS)
-PYCPPFLAGS  += -I../include
+PYCPPFLAGS  += -I../include -I../lib/include
 PYCXXFLAGS  := $(CXXFLAGS)
 
 # copy the current MODLDFLAGS to PYLDFLAGS, and then add flags for matlab/octave
