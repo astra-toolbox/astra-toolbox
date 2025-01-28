@@ -143,6 +143,10 @@ std::vector<double> stringToDoubleVector(const std::string &s)
 {
 	return stringToNumericVector<double>(s);
 }
+std::vector<int> stringToIntVector(const std::string &s)
+{
+	return stringToNumericVector<int>(s);
+}
 
 template<typename T>
 std::vector<T> stringToVector(const std::string& s)
