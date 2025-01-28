@@ -1,12 +1,7 @@
 import astra
 import astra.experimental
-import cupy as cp
-import jax
-import jax.numpy as jnp
 import numpy as np
 import pytest
-import torch
-
 
 DET_SPACING_X = 1.0
 DET_SPACING_Y = 1.0
@@ -27,20 +22,29 @@ def _convert_to_backend(data, backend):
     if backend == 'numpy':
         return data
     elif backend == 'pytorch_cpu':
+        import torch
         return torch.tensor(data, device='cpu')
     elif backend == 'pytorch_cuda':
+        import torch
         return torch.tensor(data, device='cuda')
     elif backend == 'cupy':
+        import cupy as cp
         return cp.array(data)
     elif backend == 'jax_cpu':
+        import jax
         return jax.device_put(data, device=jax.devices('cpu')[0])
     elif backend == 'jax_cuda':
+        import jax
         return jax.device_put(data, device=jax.devices('cuda')[0])
 
 
 def _allclose(data, reference):
-    if isinstance(data, torch.Tensor) and data.device.type == 'cuda':
-        data = data.cpu()
+    try:
+        import torch
+        if isinstance(data, torch.Tensor) and data.device.type == 'cuda':
+            data = data.cpu()
+    except ImportError:
+        pass
     return np.allclose(data, reference)
 
 
