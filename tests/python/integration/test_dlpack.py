@@ -160,5 +160,7 @@ def test_allow_pitched(backend, singular_dims, vol_geom_singular_dim, vol_data_s
 @pytest.mark.parametrize('backend', ['numpy'])
 def test_read_only(backend, vol_data):
     vol_data.flags['WRITEABLE'] = False
-    with pytest.raises(ValueError):
+    # BufferError for numpy < 2 which doesn't support exporting read-only arrays
+    # ValueError for numpy >= 2 where astra rejects the read-only array
+    with pytest.raises((ValueError, BufferError)):
         astra.data3d.link('-vol', VOL_GEOM, vol_data)
