@@ -26,8 +26,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 */
 
 
-// TODO: fix include paths
-#include "../../lib/include/dlpack/dlpack.h"
+#include "dlpack/dlpack.h"
 
 #include "astra/Data3D.h"
 
