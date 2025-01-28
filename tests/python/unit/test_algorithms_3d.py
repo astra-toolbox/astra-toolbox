@@ -50,6 +50,45 @@ def proj_geom(request):
                                       SOURCE_ORIGIN, ORIGIN_DET)
 
 
+def _fourier_space_filter(proj_geom):
+    # The full filter size should be the smallest power of two that is at least
+    # twice the number of detector pixels
+    full_filter_size = int(2 ** np.ceil(np.log2(2 * proj_geom['DetectorColCount'])))
+    half_filter_size = full_filter_size // 2 + 1
+    return np.linspace(0, 1, half_filter_size).reshape(1, -1)
+
+
+def _real_space_filter(proj_geom):
+    n = proj_geom['DetectorColCount']
+    kernel = np.zeros([1, n])
+    for i in range(n//4):
+        f = np.pi * (2*i + 1)
+        val = -2.0 / (f * f)
+        kernel[0, n//2 + (2*i+1)] = val
+        kernel[0, n//2 - (2*i+1)] = val
+    kernel[0, n//2] = 0.5
+    return kernel
+
+
+@pytest.fixture
+def custom_filter(proj_geom, request):
+    filter_type = request.param
+    if filter_type == 'projection':
+        kernel = _fourier_space_filter(proj_geom)
+    elif filter_type == 'sinogram':
+        weights = np.random.rand(N_ANGLES)
+        kernel = np.outer(weights, _fourier_space_filter(proj_geom))
+    elif filter_type == 'rprojection':
+        kernel = _real_space_filter(proj_geom)
+    elif filter_type == 'rsinogram':
+        weights = np.random.rand(N_ANGLES)
+        kernel = np.outer(weights, _real_space_filter(proj_geom))
+    dummy_geom = astra.create_proj_geom('parallel', 1, kernel.shape[1], np.zeros(kernel.shape[0]))
+    filter_data_id = astra.data2d.create('-sino', dummy_geom, kernel)
+    yield filter_type, filter_data_id
+    astra.data2d.delete(filter_data_id)
+
+
 @pytest.fixture
 def sinogram_mask(proj_geom):
     mask = np.random.rand(DET_ROW_COUNT, N_ANGLES, DET_COL_COUNT) > 0.1
@@ -148,6 +187,47 @@ class TestOptions:
         reconstruction_with_supersampling = get_algorithm_output(algorithm_with_supersampling)
         assert not np.allclose(reconstruction_with_supersampling, DATA_INIT_VALUE)
         assert not np.allclose(reconstruction_with_supersampling, reconstruction_no_supersampling)
+
+    @pytest.mark.parametrize('proj_geom', ['cone'], indirect=True)
+    @pytest.mark.parametrize('filter_type', ['ram-lak', 'none'])
+    def test_fbp_filters_basic(self, proj_geom, filter_type):
+        algorithm_config = make_algorithm_config(algorithm_type='FDK_CUDA', proj_geom=proj_geom,
+                                                 options={'FilterType': filter_type})
+        reconstruction = get_algorithm_output(algorithm_config)
+        assert not np.allclose(reconstruction, DATA_INIT_VALUE)
+
+    @pytest.mark.parametrize('proj_geom', ['cone'], indirect=True)
+    @pytest.mark.parametrize('filter_type', ['tukey', 'gaussian', 'blackman', 'kaiser'])
+    def test_fbp_filter_parameter(self, proj_geom, filter_type):
+        algorithm_config = make_algorithm_config(
+            algorithm_type='FDK_CUDA', proj_geom=proj_geom,
+            options={'FilterType': filter_type, 'FilterParameter': -1.0}
+        )
+        reconstruction = get_algorithm_output(algorithm_config)
+        assert not np.allclose(reconstruction, DATA_INIT_VALUE)
+
+    @pytest.mark.parametrize('proj_geom', ['cone'], indirect=True)
+    @pytest.mark.parametrize('filter_type', ['shepp-logan', 'cosine', 'hamming', 'hann'])
+    def test_fbp_filter_d(self, proj_geom, filter_type):
+        algorithm_config = make_algorithm_config(
+            algorithm_type='FDK_CUDA', proj_geom=proj_geom,
+            options={'FilterType': filter_type, 'FilterD': 1.0}
+        )
+        reconstruction = get_algorithm_output(algorithm_config)
+        assert not np.allclose(reconstruction, DATA_INIT_VALUE)
+
+    @pytest.mark.parametrize('proj_geom', ['cone'], indirect=True)
+    @pytest.mark.parametrize(
+        'custom_filter', ['projection', 'sinogram', 'rprojection', 'rsinogram'], indirect=True
+    )
+    def test_fbp_custom_filters(self, proj_geom, custom_filter):
+        filter_type, filter_data_id = custom_filter
+        algorithm_config = make_algorithm_config(
+            algorithm_type='FDK_CUDA', proj_geom=proj_geom,
+            options={'FilterType': filter_type, 'FilterSinogramId': filter_data_id}
+        )
+        reconstruction = get_algorithm_output(algorithm_config)
+        assert not np.allclose(reconstruction, DATA_INIT_VALUE)
 
     @pytest.mark.parametrize('proj_geom', ['short_scan'], indirect=True)
     def test_short_scan(self, proj_geom):
