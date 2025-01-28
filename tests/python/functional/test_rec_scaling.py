@@ -2,7 +2,6 @@ import numpy as np
 import unittest
 import astra
 import math
-import pylab
 import pytest
 
 DISPLAY=False
@@ -126,6 +125,7 @@ class TestRecScale(unittest.TestCase):
           val = np.sum(rec[27:32,27:32,27:32]) / 125.
         TOL = 5e-2
         if DISPLAY and abs(val-1.0) >= TOL:
+          import pylab
           print(geom_type, proj_type, alg, vg, pg)
           print(val)
           pylab.gray()
