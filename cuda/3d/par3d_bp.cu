@@ -224,7 +224,15 @@ bool transferConstants(const SPar3DProjection* angles, unsigned int iProjAngles,
 		p[i].fNumV.z = det3z(r,u) / fDen;
 		p[i].fNumV.w = det3(r,d,u) / fDen;
 
-		s[i] = 1.0 / scaled_cross3(u,v,Vec3(params.fVolScaleX,params.fVolScaleY,params.fVolScaleZ)).norm();
+		if (params.projKernel == ker3d_2d_weighting) {
+			// We set the scale here to approximate the adjoint
+			// of a 2d parallel beam kernel. To be used when only
+			// operating on a single slice.
+			Vec3 ev(0, 0, 1);
+			s[i] = 1.0 / scaled_cross3(u,ev,Vec3(params.fVolScaleX,params.fVolScaleY,params.fVolScaleZ)).norm();
+		} else {
+			s[i] = 1.0 / scaled_cross3(u,v,Vec3(params.fVolScaleX,params.fVolScaleY,params.fVolScaleZ)).norm();
+		}
 	}
 
 	ok &= checkCuda(cudaMemcpyToSymbolAsync(gC_C, p, iProjAngles*sizeof(DevPar3DParams), 0, cudaMemcpyHostToDevice, stream), "transferConstants transfer C");

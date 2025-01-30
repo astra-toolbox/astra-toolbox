@@ -110,6 +110,8 @@ bool CCudaProjector3D::initialize(const Config& _cfg)
 		m_projectionKernel = ker3d_default;
 	} else if (sProjKernel == "sum_square_weights") {
 		m_projectionKernel = ker3d_sum_square_weights;
+	} else if (sProjKernel == "2d_weighting") {
+		m_projectionKernel = ker3d_2d_weighting;
 	} else {
 		ASTRA_ERROR("Unknown ProjectionKernel");
 		return false;

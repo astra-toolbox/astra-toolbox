@@ -466,8 +466,7 @@ bool FDK(cudaPitchedPtr D_volumeData,
 		return false;
 
 	// Perform BP
-
-	params.bFDKWeighting = true;
+	assert(params.projKernel == ker3d_fdk_weighting);
 
 	//ok = FDK_BP(D_volumeData, D_projData, fSrcOrigin, fDetOrigin, 0.0f, 0.0f, fDetUSize, fDetVSize, dims, pfAngles);
 	ok = ConeBP(D_volumeData, D_projData, dims, angles, params);

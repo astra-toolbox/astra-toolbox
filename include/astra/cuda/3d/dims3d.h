@@ -39,7 +39,9 @@ using astra::SPar3DProjection;
 
 enum Cuda3DProjectionKernel {
 	ker3d_default = 0,
-	ker3d_sum_square_weights
+	ker3d_sum_square_weights,
+	ker3d_fdk_weighting,
+	ker3d_2d_weighting
 };
 
 
@@ -57,8 +59,7 @@ struct SProjectorParams3D {
 	    iRaysPerDetDim(1), iRaysPerVoxelDim(1),
 	    fOutputScale(1.0f),
 	    fVolScaleX(1.0f), fVolScaleY(1.0f), fVolScaleZ(1.0f),
-	    ker(ker3d_default),
-	    bFDKWeighting(false)
+	    projKernel(ker3d_default)
 	{ }
 
 	unsigned int iRaysPerDetDim;
@@ -67,8 +68,7 @@ struct SProjectorParams3D {
 	float fVolScaleX;
 	float fVolScaleY;
 	float fVolScaleZ;
-	Cuda3DProjectionKernel ker;
-	bool bFDKWeighting;
+	Cuda3DProjectionKernel projKernel;
 };
 
 }
