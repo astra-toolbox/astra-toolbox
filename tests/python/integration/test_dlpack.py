@@ -137,7 +137,8 @@ class TestAll:
 
     def test_non_contiguous(self, backend, proj_data_non_contiguous):
         if backend.startswith('jax'):
-            pytest.skip('JAX should not produce non-contiguous tensors')
+            # JAX should not produce non-contiguous tensors, so nothing to test
+            return
         with pytest.raises(ValueError):
             astra.data3d.link('-sino', PROJ_GEOM, proj_data_non_contiguous)
 
