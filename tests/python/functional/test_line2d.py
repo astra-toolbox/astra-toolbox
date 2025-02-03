@@ -1,8 +1,6 @@
 import numpy as np
-import unittest
 import astra
 import math
-import pylab
 import pytest
 
 # Display sinograms with mismatch on test failure
@@ -357,6 +355,7 @@ def proj_type_to_fan(t):
     return t + '_fanflat'
 
 def display_mismatch(data, sinogram, a):
+  import pylab
   pylab.gray()
   pylab.imshow(data)
   pylab.figure()
@@ -368,6 +367,7 @@ def display_mismatch(data, sinogram, a):
   pylab.show()
 
 def display_mismatch_triple(data, sinogram, a, b, c):
+  import pylab
   pylab.gray()
   pylab.imshow(data)
   pylab.figure()
@@ -385,7 +385,7 @@ def display_mismatch_triple(data, sinogram, a, b, c):
   pylab.show()
 
 @pytest.mark.slow
-class Test2DKernel(unittest.TestCase):
+class Test2DKernel:
   def single_test(self, type, proj_type):
       shape = np.random.randint(*range2d, size=2)
       # these rectangles are biased, but that shouldn't matter
@@ -425,7 +425,7 @@ class Test2DKernel(unittest.TestCase):
 
       sinogram_id, sinogram = astra.create_sino(data, projector_id)
 
-      self.assertTrue(np.all(np.isfinite(sinogram)))
+      assert np.all(np.isfinite(sinogram))
 
       #print(pg)
       #print(vg)
@@ -468,14 +468,14 @@ class Test2DKernel(unittest.TestCase):
           raise RuntimeError("Invalid value in reference sinogram")
         if not np.all(np.isfinite(c)):
           raise RuntimeError("Invalid value in reference sinogram")
-        self.assertTrue(np.all(np.isfinite(sinogram)))
+        assert np.all(np.isfinite(sinogram))
 
         # Check if sinogram lies between a and c
         y = np.min(sinogram-a)
         z = np.min(c-sinogram)
         if DISPLAY and (z < 0 or y < 0):
           display_mismatch_triple(data, sinogram, a, b, c)
-        self.assertFalse(z < 0 or y < 0)
+        assert not(z < 0 or y < 0)
       elif proj_type == 'linear' or proj_type == 'cuda':
         a = np.zeros(np.prod(astra.functions.geom_size(pg)), dtype=np.float32)
         for i, (center, edge1, edge2) in enumerate(gen_lines(pg)):
@@ -510,7 +510,7 @@ class Test2DKernel(unittest.TestCase):
         TOL = 2e-3 if proj_type != 'cuda' else CUDA_TOL
         if DISPLAY and x > TOL:
           display_mismatch(data, sinogram, a)
-        self.assertFalse(x > TOL)
+        assert not(x > TOL)
       elif proj_type == 'distance_driven' and 'par' in type:
         a = np.zeros(np.prod(astra.functions.geom_size(pg)), dtype=np.float32)
         for i, (center, edge1, edge2) in enumerate(gen_lines(pg)):
@@ -539,7 +539,7 @@ class Test2DKernel(unittest.TestCase):
         TOL = 2e-3
         if DISPLAY and x > TOL:
           display_mismatch(data, sinogram, a)
-        self.assertFalse(x > TOL)
+        assert not(x > TOL)
       elif proj_type == 'strip' and 'fan' in type:
         a = np.zeros(np.prod(astra.functions.geom_size(pg)), dtype=np.float32)
         for i, (center, edge1, edge2) in enumerate(gen_lines(pg)):
@@ -567,7 +567,7 @@ class Test2DKernel(unittest.TestCase):
         TOL = 4e-2
         if DISPLAY and x > TOL:
           display_mismatch(data, sinogram, a)
-        self.assertFalse(x > TOL)
+        assert not(x > TOL)
       elif proj_type == 'strip':
         a = np.zeros(np.prod(astra.functions.geom_size(pg)), dtype=np.float32)
         for i, (center, edge1, edge2) in enumerate(gen_lines(pg)):
@@ -584,7 +584,7 @@ class Test2DKernel(unittest.TestCase):
         TOL = 8e-3
         if DISPLAY and x > TOL:
           display_mismatch(data, sinogram, a)
-        self.assertFalse(x > TOL)
+        assert not(x > TOL)
       else:
         raise RuntimeError("Unsupported projector")
 
@@ -636,7 +636,7 @@ class Test2DKernel(unittest.TestCase):
           print(vg)
           print(pg)
           print(m/da, da/db, da, db)
-        self.assertTrue(m / da < TOL)
+        assert m / da < TOL
       astra.projector.delete(projector_id)
 
 
@@ -662,7 +662,4 @@ for k, l in __combinations.items():
       return lambda self: self.multi_test_adjoint(k, v)
     setattr(Test2DKernel, 'test_' + k + '_' + v, f(k,v))
     setattr(Test2DKernel, 'test_' + k + '_' + v + '_adjoint', f_adj(k,v))
-
-if __name__ == '__main__':
-  unittest.main()
 

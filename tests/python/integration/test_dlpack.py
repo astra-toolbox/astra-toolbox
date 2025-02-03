@@ -1,12 +1,7 @@
 import astra
 import astra.experimental
-import cupy as cp
-import jax
-import jax.numpy as jnp
 import numpy as np
 import pytest
-import torch
-
 
 DET_SPACING_X = 1.0
 DET_SPACING_Y = 1.0
@@ -27,21 +22,20 @@ def _convert_to_backend(data, backend):
     if backend == 'numpy':
         return data
     elif backend == 'pytorch_cpu':
+        import torch
         return torch.tensor(data, device='cpu')
     elif backend == 'pytorch_cuda':
+        import torch
         return torch.tensor(data, device='cuda')
     elif backend == 'cupy':
+        import cupy as cp
         return cp.array(data)
     elif backend == 'jax_cpu':
+        import jax
         return jax.device_put(data, device=jax.devices('cpu')[0])
     elif backend == 'jax_cuda':
+        import jax
         return jax.device_put(data, device=jax.devices('cuda')[0])
-
-
-def _allclose(data, reference):
-    if isinstance(data, torch.Tensor) and data.device.type == 'cuda':
-        data = data.cpu()
-    return np.allclose(data, reference)
 
 
 @pytest.fixture
@@ -131,11 +125,15 @@ def vol_data_slice(singular_dims, backend):
 class TestAll:
     def test_backends_fp(self, backend, projector, vol_data, proj_data, reference_fp):
         astra.experimental.direct_FP3D(projector, vol_data, proj_data)
-        assert _allclose(proj_data, reference_fp)
+        if backend.startswith('pytorch'):
+            proj_data = proj_data.cpu()
+        assert np.allclose(proj_data, reference_fp)
 
     def test_backends_bp(self, backend, projector, vol_data, proj_data, reference_bp):
         astra.experimental.direct_BP3D(projector, vol_data, proj_data)
-        assert _allclose(vol_data, reference_bp)
+        if backend.startswith('pytorch'):
+            vol_data = vol_data.cpu()
+        assert np.allclose(vol_data, reference_bp)
 
     def test_non_contiguous(self, backend, proj_data_non_contiguous):
         if backend.startswith('jax'):
@@ -160,5 +158,7 @@ def test_allow_pitched(backend, singular_dims, vol_geom_singular_dim, vol_data_s
 @pytest.mark.parametrize('backend', ['numpy'])
 def test_read_only(backend, vol_data):
     vol_data.flags['WRITEABLE'] = False
-    with pytest.raises(ValueError):
+    # BufferError for numpy < 2 which doesn't support exporting read-only arrays
+    # ValueError for numpy >= 2 where astra rejects the read-only array
+    with pytest.raises((ValueError, BufferError)):
         astra.data3d.link('-vol', VOL_GEOM, vol_data)
