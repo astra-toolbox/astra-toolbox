@@ -199,19 +199,15 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, co
 	assert(!volData.d->arr);
 	SDimensions3D dims;
 	SProjectorParams3D params;
+	params.projKernel = projKernel;
 
 	bool ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
 	if (!ok)
 		return false;
 
-#if 1
 	params.iRaysPerDetDim = iDetectorSuperSampling;
 	if (iDetectorSuperSampling == 0)
 		return false;
-#else
-	astra::Cuda3DProjectionKernel projKernel = astra::ker3d_default;
-#endif
-
 
 	auto res = convertAstraGeometry(pVolGeom, pProjGeom, params);
 
@@ -219,10 +215,11 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, co
 		const SPar3DProjection* pParProjs = res.getParallel();
 
 		switch (projKernel) {
-		case astra::ker3d_default:
+		case ker3d_default:
+		case ker3d_2d_weighting:
 			ok &= Par3DFP(volData.d->ptr, projData.d->ptr, dims, pParProjs, params);
 			break;
-		case astra::ker3d_sum_square_weights:
+		case ker3d_sum_square_weights:
 			ok &= Par3DFP_SumSqW(volData.d->ptr, projData.d->ptr, dims, pParProjs, params);
 			break;
 		default:
@@ -232,7 +229,9 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, co
 		const SConeProjection* pConeProjs = res.getCone();
 
 		switch (projKernel) {
-		case astra::ker3d_default:
+		case ker3d_default:
+		case ker3d_fdk_weighting:
+		case ker3d_2d_weighting:
 			ok &= ConeFP(volData.d->ptr, projData.d->ptr, dims, pConeProjs, params);
 			break;
 		default:
@@ -245,36 +244,48 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, co
 	return ok;
 }
 
-bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D &volData, int iVoxelSuperSampling)
+bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D &volData, int iVoxelSuperSampling, astra::Cuda3DProjectionKernel projKernel)
 {
 	assert(!volData.d->arr);
 	SDimensions3D dims;
 	SProjectorParams3D params;
+	params.projKernel = projKernel;
 
 	bool ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
 	if (!ok)
 		return false;
 
-#if 1
 	params.iRaysPerVoxelDim = iVoxelSuperSampling;
-#endif
 
 	auto res = convertAstraGeometry(pVolGeom, pProjGeom, params);
 
-	params.bFDKWeighting = false;
-
 	if (res.isParallel()) {
 		const SPar3DProjection* pParProjs = res.getParallel();
-		if (projData.d->arr)
-			ok &= Par3DBP_Array(volData.d->ptr, projData.d->arr, dims, pParProjs, params);
-		else
-			ok &= Par3DBP(volData.d->ptr, projData.d->ptr, dims, pParProjs, params);
+		switch (projKernel) {
+		case ker3d_default:
+		case ker3d_2d_weighting:
+			if (projData.d->arr)
+				ok &= Par3DBP_Array(volData.d->ptr, projData.d->arr, dims, pParProjs, params);
+			else
+				ok &= Par3DBP(volData.d->ptr, projData.d->ptr, dims, pParProjs, params);
+			break;
+		default:
+			ok = false;
+		}
 	} else if (res.isCone()) {
 		const SConeProjection* pConeProjs = res.getCone();
-		if (projData.d->arr)
-			ok &= ConeBP_Array(volData.d->ptr, projData.d->arr, dims, pConeProjs, params);
-		else
-			ok &= ConeBP(volData.d->ptr, projData.d->ptr, dims, pConeProjs, params);
+		switch (projKernel) {
+		case ker3d_default:
+		case ker3d_fdk_weighting:
+		case ker3d_2d_weighting:
+			if (projData.d->arr)
+				ok &= ConeBP_Array(volData.d->ptr, projData.d->arr, dims, pConeProjs, params);
+			else
+				ok &= ConeBP(volData.d->ptr, projData.d->ptr, dims, pConeProjs, params);
+			break;
+		default:
+			ok = false;
+		}
 	} else {
 		ok = false;
 	}
@@ -290,6 +301,7 @@ bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, c
 	SDimensions3D dims;
 	SProjectorParams3D params;
 	params.fOutputScale = fOutputScale;
+	params.projKernel = ker3d_fdk_weighting;
 
 	bool ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
 	if (!ok)

@@ -1,11 +1,12 @@
 import numpy as np
 import astra
+import astra.experimental
 import math
 import pytest
 
 DISPLAY=False
 
-def VolumeGeometries(is3D,noncube):
+def VolumeGeometries(is3D,noncube,singleslice):
   if not is3D:
     for s in [0.8, 1.0, 1.25]:
       yield astra.create_vol_geom(128, 128, -64*s, 64*s, -64*s, 64*s)
@@ -14,12 +15,14 @@ def VolumeGeometries(is3D,noncube):
       for sy in [0.8, 1.0]:
         for sz in [0.8, 1.0]:
           yield astra.create_vol_geom(64, 64, 64, -32*sx, 32*sx, -32*sy, 32*sy, -32*sz, 32*sz)
+          if singleslice:
+            yield astra.create_vol_geom(64, 64, 1, -32*sx, 32*sx, -32*sy, 32*sy, -0.5*sz, 0.5*sz)
   else:
     for s in [0.8, 1.0]:
       yield astra.create_vol_geom(64, 64, 64, -32*s, 32*s, -32*s, 32*s, -32*s, 32*s)
 
 
-def ProjectionGeometries(type,shortscan):
+def ProjectionGeometries(type,shortscan,singleslice):
   if type == 'parallel':
     for dU in [0.8, 1.0, 1.25]:
       yield astra.create_proj_geom('parallel', dU, 256, np.linspace(0,np.pi,180,False))
@@ -31,7 +34,10 @@ def ProjectionGeometries(type,shortscan):
   elif type == 'parallel3d':
     for dU in [0.8, 1.0]:
       for dV in [0.8, 1.0]:
-        yield astra.create_proj_geom('parallel3d', dU, dV, 128, 128, np.linspace(0,np.pi,180,False))
+        if singleslice:
+          yield astra.create_proj_geom('parallel3d', dU, dV, 1, 128, np.linspace(0,np.pi,180,False))
+        else:
+          yield astra.create_proj_geom('parallel3d', dU, dV, 128, 128, np.linspace(0,np.pi,180,False))
   elif type == 'parallel3d_vec':
     for j in range(10):
        Vectors = np.zeros([180,12])
@@ -56,7 +62,10 @@ def ProjectionGeometries(type,shortscan):
         for src in [500, 1000]:
           for det in [0, 250]:
             for a in A:
-              yield astra.create_proj_geom('cone', dU, dV, 128, 128, np.linspace(0,a*np.pi,180,False), src, det)
+              if singleslice:
+                yield astra.create_proj_geom('cone', dU, dV, 1, 128, np.linspace(0,a*np.pi,180,False), src, det)
+              else:
+                yield astra.create_proj_geom('cone', dU, dV, 128, 128, np.linspace(0,a*np.pi,180,False), src, det)
   elif type == 'cone_vec':
     for j in range(10):
        Vectors = np.zeros([180,12])
@@ -81,8 +90,8 @@ class TestRecScale:
     if alg == 'FBP' and 'fanflat' in geom_type:
       pytest.skip('CPU FBP is parallel-beam only')
     is3D = (geom_type in ['parallel3d', 'cone'])
-    for vg in VolumeGeometries(is3D, 'FDK' not in alg):
-      for pg in ProjectionGeometries(geom_type, 'FDK' in alg):
+    for vg in VolumeGeometries(is3D, 'FDK' not in alg, False):
+      for pg in ProjectionGeometries(geom_type, 'FDK' in alg, False):
         if not is3D:
           vol = np.zeros((128,128),dtype=np.float32)
           vol[50:70,50:70] = 1
@@ -136,15 +145,23 @@ class TestRecScale:
         assert abs(val-1.0) < TOL
 
   def single_test_adjoint3D(self, geom_type, proj_type):
-    for vg in VolumeGeometries(True, True):
-      for pg in ProjectionGeometries(geom_type, False):
+    for vg in VolumeGeometries(True, True, 'vec' not in geom_type):
+      for pg in ProjectionGeometries(geom_type, False, vg['GridSliceCount'] == 1):
         for i in range(5):
-          X = np.random.random(astra.geom_size(vg))
-          Y = np.random.random(astra.geom_size(pg))
-          proj_id, fX = astra.create_sino3d_gpu(X, pg, vg)
-          bp_id, fTY = astra.create_backprojection3d_gpu(Y, pg, vg)
+          X = np.random.random(astra.geom_size(vg)).astype(np.float32)
+          Y = np.random.random(astra.geom_size(pg)).astype(np.float32)
+          projector_cfg = astra.astra_dict('cuda3d')
+          projector_cfg['ProjectionGeometry'] = pg
+          projector_cfg['VolumeGeometry'] = vg
+          if vg['GridSliceCount'] == 1:
+            projector_cfg['ProjectionKernel'] = '2d_weighting'
+          projector_id = astra.projector3d.create(projector_cfg)
+          fX = np.zeros(astra.geom_size(pg), dtype=np.float32)
+          astra.experimental.direct_FP3D(projector_id, X, fX)
+          fTY = np.zeros(astra.geom_size(vg), dtype=np.float32)
+          astra.experimental.direct_BP3D(projector_id, fTY, Y)
 
-          astra.data3d.delete([proj_id, bp_id])
+          astra.projector3d.delete(projector_id)
 
           da = np.dot(fX.ravel(), Y.ravel())
           db = np.dot(X.ravel(), fTY.ravel())

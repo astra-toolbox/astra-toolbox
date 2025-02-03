@@ -111,7 +111,7 @@ bool copyIntoArray(MemHandle3D &handle, MemHandle3D &subdata, const SSubDimensio
 
 bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D &volData, int iDetectorSuperSampling, astra::Cuda3DProjectionKernel projKernel);
 
-bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D &volData, int iVoxelSuperSampling);
+bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D &volData, int iVoxelSuperSampling, astra::Cuda3DProjectionKernel projKernel);
 
 bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D &volData, bool bShortScan, const astra::SFilterConfig &filterConfig, float fOutputScale = 1.0f);
 

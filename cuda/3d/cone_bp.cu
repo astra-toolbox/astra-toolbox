@@ -52,7 +52,7 @@ struct DevConeParams {
 __constant__ DevConeParams gC_C[g_MaxAngles];
 
 //__launch_bounds__(32*16, 4)
-template<bool FDKWEIGHT, unsigned int ZSIZE>
+template<Cuda3DProjectionKernel KERNEL, unsigned int ZSIZE>
 __global__ void dev_cone_BP(void* D_volData, unsigned int volPitch,
                             cudaTextureObject_t tex,
                             int startAngle, int angleOffset,
@@ -102,7 +102,7 @@ __global__ void dev_cone_BP(void* D_volData, unsigned int volPitch,
 
 			float fUNum = fCu.w + fX * fCu.x + fY * fCu.y + fZ * fCu.z;
 			float fVNum = fCv.w + fX * fCv.x + fY * fCv.y + fZ * fCv.z;
-			float fDen  = (FDKWEIGHT ? 1.0f : fCd.w) + fX * fCd.x + fY * fCd.y + fZ * fCd.z;
+			float fDen  = ((KERNEL == ker3d_fdk_weighting) ? 1.0f : fCd.w) + fX * fCd.x + fY * fCd.y + fZ * fCd.z;
 
 			float fU,fV, fr;
 
@@ -112,7 +112,10 @@ __global__ void dev_cone_BP(void* D_volData, unsigned int volPitch,
 				fU = fUNum * fr;
 				fV = fVNum * fr;
 				float fVal = tex3D<float>(tex, fU, fAngle, fV);
-				Z[idx] += fr*fr*fVal;
+				if (KERNEL == ker3d_2d_weighting)
+					Z[idx] += fr*fVal;
+				else
+					Z[idx] += fr*fr*fVal;
 
 				fUNum += fCu.z;
 				fVNum += fCv.z;
@@ -250,7 +253,21 @@ bool transferConstants(const SConeProjection* angles, unsigned int iProjAngles, 
 
 
 		double fScale;
-		if (!params.bFDKWeighting) {
+		if (params.projKernel == ker3d_fdk_weighting) {
+			// goal: 1/fDen = || u v s || / || u v (s-x) ||
+			// fDen = || u v (s-x) || / || u v s ||
+			// i.e., scale = 1 / || u v s ||
+
+			fScale = 1.0 / det3(u, v, s);
+		} else if (params.projKernel == ker3d_2d_weighting) {
+			// We set the weights here to approximate the adjoint
+			// of a 2d fanbeam kernel. To be used when only
+			// operating on a single slice.
+			// fDen = |cross(u,e_v)| || u v (s-x) || / || u v (s-d) ||
+			Vec3 ev(0, 0, 1);
+			fScale = scaled_cross3(u,ev,Vec3(params.fVolScaleX,params.fVolScaleY,params.fVolScaleZ)).norm() / det3(u, v, s-d);
+
+		} else {
 			// goal: 1/fDen^2 = || u v (s-d) ||^2 / ( |cross(u,v)| * || u v (s-x) ||^2 )
 			// fDen = ( sqrt(|cross(u,v)|) * || u v (s-x) || ) / || u v (s-d) || 
 			// i.e. scale = sqrt(|cross(u,v)|) / || u v (s-d) ||
@@ -261,12 +278,6 @@ bool transferConstants(const SConeProjection* angles, unsigned int iProjAngles, 
 			// the scaling of the adjoint
 
 			fScale = sqrt(scaled_cross3(u,v,Vec3(params.fVolScaleX,params.fVolScaleY,params.fVolScaleZ)).norm()) / det3(u, v, s-d);
-		} else {
-			// goal: 1/fDen = || u v s || / || u v (s-x) ||
-			// fDen = || u v (s-x) || / || u v s ||
-			// i.e., scale = 1 / || u v s ||
-
-			fScale = 1.0 / det3(u, v, s);
 		}
 
 		p[i].fNumU.w = fScale * det3(s,v,d);
@@ -309,7 +320,7 @@ bool ConeBP_Array(cudaPitchedPtr D_volumeData,
 	}
 
 	float fOutputScale;
-	if (params.bFDKWeighting) {
+	if (params.projKernel == ker3d_fdk_weighting) {
 		// NB: assuming cube voxels here
 		fOutputScale = params.fOutputScale / (params.fVolScaleX);
 	} else {
@@ -336,17 +347,19 @@ bool ConeBP_Array(cudaPitchedPtr D_volumeData,
 
 		for (unsigned int i = 0; i < angleCount; i += g_anglesPerBlock) {
 		// printf("Calling BP: %d, %dx%d, %dx%d to %p\n", i, dimBlock.x, dimBlock.y, dimGrid.x, dimGrid.y, (void*)D_volumeData.ptr); 
-			if (params.bFDKWeighting) {
+			if (params.projKernel == ker3d_fdk_weighting) {
 				if (dims.iVolZ == 1) {
-					dev_cone_BP<true, 1><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), D_texObj, i, th, dims, fOutputScale);
+					dev_cone_BP<ker3d_fdk_weighting, 1><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), D_texObj, i, th, dims, fOutputScale);
 				} else {
-					dev_cone_BP<true, g_volBlockZ><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), D_texObj, i, th, dims, fOutputScale);
+					dev_cone_BP<ker3d_fdk_weighting, g_volBlockZ><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), D_texObj, i, th, dims, fOutputScale);
 				}
+			} else if (params.projKernel == ker3d_2d_weighting) {
+				dev_cone_BP<ker3d_2d_weighting, 1><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), D_texObj, i, th, dims, fOutputScale);
 			} else if (params.iRaysPerVoxelDim == 1) {
 				if (dims.iVolZ == 1) {
-					dev_cone_BP<false, 1><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), D_texObj, i, th, dims, fOutputScale);
+					dev_cone_BP<ker3d_default, 1><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), D_texObj, i, th, dims, fOutputScale);
 				} else {
-					dev_cone_BP<false, g_volBlockZ><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), D_texObj, i, th, dims, fOutputScale);
+					dev_cone_BP<ker3d_default, g_volBlockZ><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), D_texObj, i, th, dims, fOutputScale);
 				}
 			} else
 				dev_cone_BP_SS<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), D_texObj, i, th, dims, params.iRaysPerVoxelDim, fOutputScale);
