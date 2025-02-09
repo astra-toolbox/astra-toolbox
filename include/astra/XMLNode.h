@@ -129,6 +129,7 @@ public:
 	 */ 
 	std::vector<float32> getContentNumericalArray() const;
 	std::vector<double> getContentNumericalArrayDouble() const;
+	std::vector<int> getContentNumericalArrayInt() const;
 
 
 
