@@ -146,24 +146,25 @@ for m in ext_modules:
         m.sources.append(os.path.join('.', 'astra', 'src',
                                       'dlpack.cpp'))
 
+with open('README.md', 'r') as f:
+    long_description = f.read()
 
-setup(script_args=script_args,
-      name='astra-toolbox',
-      version='2.2.0',
-      description='Python interface to the ASTRA Toolbox',
-      author='D.M. Pelt',
-      author_email='D.M.Pelt@cwi.nl',
-      url='https://github.com/astra-toolbox/astra-toolbox',
-      # ext_package='astra',
-      # ext_modules = cythonize(
-      #     Extension("astra/*.pyx",
-      #               extra_compile_args=extra_compile_args,
-      #               extra_linker_args=extra_compile_args)),
-      license='GPLv3',
-      ext_modules=ext_modules,
-      include_dirs=[np.get_include()],
-      cmdclass=cmdclass,
-      # ext_modules = [Extension("astra","astra/astra.pyx")],
-      packages=['astra', 'astra.plugins'],
-      install_requires=['numpy', 'scipy'] + extra_install_requires,
-      )
+
+setup(
+    script_args=script_args,
+    ext_modules=ext_modules,
+    include_dirs=[np.get_include()],
+    cmdclass=cmdclass,
+    packages=['astra', 'astra.plugins'],
+    install_requires=['numpy', 'scipy'] + extra_install_requires,
+    name='astra-toolbox',
+    version='2.2.0',
+    description='High-performance GPU primitives and algorithms for 2D and 3D tomography',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
+    license='GPLv3',
+    project_urls={
+        'Home page': 'https://astra-toolbox.com',
+        'Source': 'https://github.com/astra-toolbox/astra-toolbox'
+    }
+)
