@@ -8,6 +8,23 @@ License: Open Source under GPLv3
 Contact: astra@astra-toolbox.com
 Website: https://www.astra-toolbox.com/
 -----------------------------------------------------------------------
+2.3.0 (2025-02-22)
+ * add support for zero-copy linking of GPU/CPU arrays from Python libraries supporting the DLPack
+   standard, including PyTorch, TensorFlow, CuPy and JAX
+ * add support for using different filter types in FDK_CUDA.
+   The filter configuration for FDK_CUDA now matches that for FBP/FBP_CUDA.
+ * add conda packages for Python 3.13, CUDA 12.6, 12.8, and NumPy 2
+ * add automatic asynchronous execution to `astra.experimental` functions in Python
+ * add automatic splitting of FDK execution along angular dimension, allowing for larger maximum
+   number of projections
+ * add error reporting in `astra.algorithm.run` function
+ * add an extensive Python unit test suite
+ * fix incorrect results with GPUs with more than 48GB of memory
+ * fix multiple minor bugs
+ * require C++17, raising minimum system requirements to CUDA 11
+ * deprecate Python 3.7 conda packages
+ * remove boost and six dependencies
+
 2.2.0 (2024-07-12)
   * update Windows conda packages
   * add support for python 3.12, cuda 12.5, and numpy 2.0
