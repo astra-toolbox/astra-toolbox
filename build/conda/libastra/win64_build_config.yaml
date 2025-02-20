@@ -15,6 +15,7 @@ cuda_dep_type:
   #- modular
   - modular
   #- modular
+  - modular
 
 cudatoolkit:
   #- 10.2
@@ -33,7 +34,10 @@ cudatoolkit:
   #- 12.3
   - 12.4
   #- 12.5
+  - 12.8
 
+# Starting at CUDA 12.5, the libcufft packages depend on cuda-version,
+# so our dependencies can be more relaxed.
 libcufft_dep:
   #- ">=10.1,<10.2"
   #- ">=10.2,<10.3"
@@ -51,6 +55,7 @@ libcufft_dep:
   #- ">=11.0.11,<11.2.0"
   - ">=11.2.0,<11.2.3"
   #- ">=11.2.3,<11.2.4"
+  - ">=11.3.3.41"
 
 cudacudart_dep:
   #- ">=10.2,<10.3"
@@ -69,6 +74,7 @@ cudacudart_dep:
   #- ">=12.3,<12.4"
   - ">=12.4,<12.5"
   #- ">=12.5,<12.6"
+  - ">=12.8,<12.9"
 
 pytorchcuda_dep:
   #- ">=10.2,<10.3"
@@ -87,6 +93,7 @@ pytorchcuda_dep:
   #- ">=12.3,<12.4"
   - ">=12.4,<12.5"
   #- ">=12.5,<12.6"
+  - ">=12.8,<12.9"
 
 cudatoolkit_dep:
   #- ">=10.2,<10.3"
@@ -105,6 +112,7 @@ cudatoolkit_dep:
   #- ">=12.3,<12.4"
   - ">=12.4,<12.5"
   #- ">=12.5,<12.6"
+  - ">=12.8,<12.9"
 
 zip_keys:
   - cuda_dep_type
