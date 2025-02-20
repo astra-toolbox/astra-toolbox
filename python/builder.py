@@ -146,7 +146,7 @@ for m in ext_modules:
         m.sources.append(os.path.join('.', 'astra', 'src',
                                       'dlpack.cpp'))
 
-with open('README.md', 'r') as f:
+with open('README.md', 'r', encoding='utf-8') as f:
     long_description = f.read()
 
 
