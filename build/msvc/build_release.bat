@@ -14,7 +14,7 @@ rd /s /q release
 mkdir release
 cd release
 mkdir matlab
-mkdir python312
+mkdir python313
 
 pause
 
@@ -41,7 +41,7 @@ pause
 
 rem -------------------------------------------------------------------
 
-cd %R%\build\msvc\release\python312
+cd %R%\build\msvc\release\python313
 mkdir astra-%B_RELEASE%
 cd astra-%B_RELEASE%
 xcopy /e /i %R%\samples\python samples
@@ -78,6 +78,6 @@ pause
 
 cd %R%\build\msvc\release
 %B_WINPYTHON3%\python -c "import shutil; shutil.make_archive('astra-%B_RELEASE%-matlab-win-x64', 'zip', 'matlab')"
-%B_WINPYTHON3%\python -c "import shutil; shutil.make_archive('astra-%B_RELEASE%-python312-win-x64', 'zip', 'python312')"
+%B_WINPYTHON3%\python -c "import shutil; shutil.make_archive('astra-%B_RELEASE%-python313-win-x64', 'zip', 'python313')"
 
 pause
