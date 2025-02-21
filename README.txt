@@ -38,20 +38,32 @@ https://www.astra-toolbox.com/ .
 Installation instructions:
 ---------------------------
 
-Linux/Windows, using conda for python
--------------------------------------
+Linux/Windows, using conda for Python:
+--------------------------------------
 
-Requirements: `conda <https://conda.io/>`_ python environment, with 64 bit Python 3.9-3.12.
+Requirements: conda Python environment, with 64 bit Python 3.9-3.13.
 
 We provide packages for the ASTRA Toolbox in the astra-toolbox channel for the
 conda package manager. We depend on CUDA packages available from the nvidia
-channel. To install ASTRA into the current conda environement, run:
+channel. To install ASTRA into the current conda environment, run:
 
 conda install -c astra-toolbox -c nvidia astra-toolbox
 
 We also provide development packages between releases occasionally:
 
 conda install -c astra-toolbox/label/dev -c nvidia astra-toolbox
+
+
+Linux, using pip for Python packages:
+-------------------------------------
+
+Requirements: Python environment with 64 bit Python 3.9-3.13.
+
+pip install astra-toolbox
+
+Note that, unlike conda packages, we only provide packages built for Linux platform, and only with
+a single reasonably recent version of CUDA toolkit. These packages depend on PyPI CUDA distribution
+provided by NVIDIA.
 
 
 Windows, binary:
@@ -68,10 +80,9 @@ vc_redist.x64.exe in the ASTRA zip file.
 Linux, from source:
 --------------------
 
-For Matlab:
+For MATLAB:
 
-Requirements: g++ (7 or higher), boost, CUDA (11.0 or higher),
-              Matlab (R2012a or higher)
+Requirements: g++ (7 or higher), CUDA (11.0 or higher), MATLAB (R2012a or higher)
 
 cd build/linux
 ./autogen.sh   # when building a git version
@@ -82,27 +93,27 @@ cd build/linux
 make
 make install
 
-Add $HOME/astra/matlab and its subdirectories (tools, mex) to your matlab path.
+Add $HOME/astra/matlab and its subdirectories (tools, mex) to your MATLAB path.
 
-If you want to build the Octave interface instead of the Matlab interface,
+If you want to build the Octave interface instead of the MATLAB interface,
 specify --enable-octave instead of --with-matlab=... . The Octave files
 will be installed into $HOME/astra/octave . On some Linux distributions
 building the Astra Octave interface will require the Octave development package
 to be installed (e.g., liboctave-dev on Ubuntu).
 
 
-NB: Each matlab version only supports a specific range of g++ versions.
+NB: Each MATLAB version only supports a specific range of g++ versions.
 Despite this, if you have a newer g++ and if you get errors related to missing
 GLIBCXX_3.4.xx symbols, it is often possible to work around this requirement
-by deleting the version of libstdc++ supplied by matlab in
+by deleting the version of libstdc++ supplied by MATLAB in
 MATLAB_PATH/bin/glnx86 or MATLAB_PATH/bin/glnxa64 (at your own risk),
 or setting LD_PRELOAD=/usr/lib64/libstdc++.so.6 (or similar) when starting
-matlab.
+MATLAB.
 
 
 For Python:
 
-Requirements: g++ (7 or higher), boost, CUDA (11.0 or higher), Python (3.x)
+Requirements: g++ (7 or higher), CUDA (11.0 or higher), Python (3.x), setuptools, Cython, scipy
 
 cd build/linux
 ./autogen.sh   # when building a git version
@@ -131,7 +142,7 @@ This will install the Astra library and C++ headers.
 macOS, from source:
 --------------------
 
-Use the Homebrew package manager to install boost, libtool, autoconf, automake.
+Use the Homebrew package manager to install libtool, autoconf, automake.
 
 cd build/linux
 ./autogen.sh
@@ -147,28 +158,25 @@ make install
 Windows, from source using Visual Studio 2017:
 -----------------------------------------------
 
-Requirements: Visual Studio 2017 (full or community), boost (recent),
-              CUDA (11.0 or higher), Matlab (R2012a or higher)
-              and/or WinPython 3.x.
+Requirements: Visual Studio 2017 (full or community),
+              CUDA (11.0 or higher), MATLAB (R2012a or higher)
+              and/or Python 3.x + setuptools + Cython + scipy.
 
 Using the Visual Studio IDE:
 
-Set the environment variable MATLAB_ROOT to your matlab install location.
-Copy boost headers to lib\include\boost, and boost libraries to lib\x64.
-Open build\msvc\astra_vc14.sln in Visual Studio.
-Select the appropriate solution configuration (typically Release_CUDA|x64).
-Build the solution.
-Install by copying AstraCuda64.dll and all .mexw64 files from
-  build\msvc\bin\x64\Release_CUDA and the entire matlab/tools directory to a directory
-  to be added to your matlab path.
+* Set the environment variable MATLAB_ROOT to your MATLAB install location.
+* Open build\msvc\astra_vc14.sln in Visual Studio.
+* Select the appropriate solution configuration (typically Release_CUDA|x64).
+* Build the solution.
+* Install by copying AstraCuda64.dll and all .mexw64 files from build\msvc\bin\x64\Release_CUDA
+  and the entire matlab/tools directory to a directory to be added to your MATLAB path.
 
 
 Using .bat scripts in build\msvc:
 
-Edit build_env.bat and set up the correct directories.
-Run build_setup.bat to automatically copy the boost headers and libraries.
-For matlab: Run build_matlab.bat. The .dll and .mexw64 files will be in bin\x64\Release_Cuda.
-For python 3.12: Run build_python312.bat. Astra will be directly installed into site-packages.
+* Edit build_env.bat and set up the correct library versions and paths.
+* For MATLAB: Run build_MATLAB.bat. The .dll and .mexw64 files will be in bin\x64\Release_Cuda.
+* For Python: Run build_python3.bat. Astra will be directly installed into site-packages.
 
 
 Testing your installation:
@@ -181,7 +189,7 @@ import astra
 astra.test()
 
 
-To test your ASTRA installation in Matlab, the equivalent command is:
+To test your ASTRA installation in MATLAB, the equivalent command is:
 
 astra_test
 
