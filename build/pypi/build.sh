@@ -35,3 +35,7 @@ make -j 20 all python-wheel
 cp python/dist/*.whl /out
 make clean
 
+./configure --with-python=python3.13 --with-cuda=/usr/local/cuda-12.1 --with-install-type=module --with-python-wheel-platform=manylinux2014_x86_64
+make -j 20 all python-wheel
+cp python/dist/*.whl /out
+make clean
