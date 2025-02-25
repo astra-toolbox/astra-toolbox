@@ -55,7 +55,7 @@ using namespace astra;
 class CDataMemory_simple : public astra::CDataMemory<float> {
 public:
 	CDataMemory_simple(float *ptr) { m_pfData = ptr; }
-	~CDataMemory_simple() { }
+	~CDataMemory_simple() { m_pfData = nullptr; }
 };
 
 #ifdef ASTRA_CUDA
