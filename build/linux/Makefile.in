@@ -81,8 +81,8 @@ endif
 
 ifeq ($(python),yes)
 PYTHON      = @PYTHON@
-PYINCDIR := $(shell $(PYTHON) -c 'from __future__ import print_function; from distutils.sysconfig import get_python_inc; print(get_python_inc())')
-PYLIBDIR := $(shell $(PYTHON) -c 'from __future__ import print_function; from distutils.sysconfig import get_config_var; print(get_config_var("LIBDIR"))')
+PYINCDIR := $(shell $(PYTHON) -c 'import sysconfig; print(sysconfig.get_path("include"))')
+PYLIBDIR := $(shell $(PYTHON) -c 'import sysconfig; print(sysconfig.get_config_var("LIBDIR"))')
 PYLIBVER = `basename $(PYINCDIR)`
 CPPFLAGS += -DASTRA_PYTHON -I$(PYINCDIR)
 PYCPPFLAGS  := $(CPPFLAGS)
