@@ -112,6 +112,29 @@ rm -f conftest.cu conftest.o conftest.nvcc.out
 ])
 
 
+dnl ASTRA_CHECK_NVCC_ARCH_OPTION(arch-option,variable-to-set,cppflags-to-set)
+AC_DEFUN([ASTRA_CHECK_NVCC_ARCH_OPTION],[
+cat >conftest.cu <<_ACEOF
+#include <iostream>
+int main() {
+  std::cout << "Test" << std::endl;
+  return 0;
+}
+_ACEOF
+$2="no"
+NVCC_OPT="-arch=$1"
+ASTRA_RUN_LOGOUTPUT([$NVCC -c -o conftest.o conftest.cu $NVCCFLAGS $$3 $NVCC_OPT]) && {
+  $2="yes"
+  $3="$$3 $NVCC_OPT"
+}
+if test x$$2 = xno; then
+  AS_ECHO(["$as_me: failed program was:"]) >&AS_MESSAGE_LOG_FD
+  sed 's/^/| /' conftest.cu >&AS_MESSAGE_LOG_FD
+fi
+rm -f conftest.cu conftest.o
+])
+
+
 dnl ASTRA_FIND_NVCC_ARCHS(archs-to-try,cppflags-to-extend,output-list)
 dnl Architectures should be of the form 10,20,30,35,
 dnl and should be in order. The last accepted one will be used for PTX output.

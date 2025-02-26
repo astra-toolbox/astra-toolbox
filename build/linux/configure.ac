@@ -110,10 +110,11 @@ if test x"$HAVECUDA" = xyes; then
   AC_MSG_RESULT($HAVECUDA)
 fi
 
-AC_ARG_WITH(cuda_compute, [[  --with-cuda-compute=archs  comma separated list of CUDA compute models (optional)]],,)
+AC_ARG_WITH(cuda_compute, [[  --with-cuda-compute=archs  list of compute models, or all/all-major/native (optional)]],,)
 if test x"$HAVECUDA" = xyes; then
   AC_MSG_CHECKING([for nvcc archs])
-  dnl 10 11 12 13 20 21 30 32 35 37 50 52 53 60 61 62 70 72 75 80 86
+  dnl 10 11 12 13 20 21 30 32 35 37 50 52 53 60 61 62 70 72 75 80 86 87 89
+  dnl 90 90a 100 100a 101 101a 120 120a
   dnl
   dnl Build cubin for range of platforms, and ptx for newest for forward compat.
   dnl Build cubin x.0 for older platforms, and all x.y for "recent" ones.
@@ -126,11 +127,31 @@ if test x"$HAVECUDA" = xyes; then
   dnl "Binary compatibility is guaranteed from one minor revision to the next one, but not from one minor revision to the previous one or across major revisions."
   dnl
 
-  if test x"$with_cuda_compute" = x; then
-    with_cuda_compute="20,30,35,50,60,70,75,80,86"
+  NVCCARCHS_MAJOR=no
+  if test x"$with_cuda_compute" = xall-major -o x"$with_cuda_compute" = xall -o x"$with_cuda_compute" = xnative -o x"$with_cuda_compute" = x; then
+    nvcc_arch_option="$with_cuda_compute"
+    if test x"$with_cuda_compute" = x; then
+      nvcc_arch_option=all-major
+    fi
+    ASTRA_CHECK_NVCC_ARCH_OPTION([$nvcc_arch_option],NVCCARCHS_OPTION,NVCCFLAGS_EXTRA)
+
+    if test x$NVCCARCHS_OPTION = xno; then
+      if test x"$with_cuda_compute" != x; then
+        AC_MSG_ERROR([requested arch flag ($with_cuda_compute) not supported])
+      fi
+    fi
   fi
-  ASTRA_FIND_NVCC_ARCHS([$with_cuda_compute],NVCCFLAGS_EXTRA,NVCCARCHS)
-  AC_MSG_RESULT([$NVCCARCHS])
+
+  if test x$NVCCARCHS_OPTION = xyes; then
+    AC_MSG_RESULT([$nvcc_arch_option])
+  else
+    if test x"$with_cuda_compute" = x; then
+      with_cuda_compute="20,30,35,50,60,70,80,90,100,120"
+    fi
+    ASTRA_FIND_NVCC_ARCHS([$with_cuda_compute],NVCCFLAGS_EXTRA,NVCCARCHS)
+
+    AC_MSG_RESULT([$NVCCARCHS])
+  fi
 fi
 
 AC_ARG_VAR(NVCCFLAGS, [CUDA nvcc flags])
