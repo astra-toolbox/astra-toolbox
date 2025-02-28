@@ -25,6 +25,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
+#include "astra/cuda/gpu_runtime_wrapper.h"
+
 #include "astra/cuda/2d/util.h"
 #include "astra/cuda/2d/par_fp.h"
 #include "astra/cuda/2d/fan_fp.h"
@@ -48,8 +50,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include <cstdio>
 #include <cassert>
 #include <fstream>
-
-#include <cuda.h>
 
 using namespace astraCUDA;
 using namespace std;

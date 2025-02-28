@@ -28,7 +28,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _CUDA_ARITH3D_H
 #define _CUDA_ARITH3D_H
 
-#include <cuda.h>
 #include <optional>
 
 namespace astraCUDA3d {

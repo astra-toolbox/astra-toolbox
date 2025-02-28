@@ -25,13 +25,13 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
+#include "astra/cuda/gpu_runtime_wrapper.h"
+
 #include "astra/cuda/3d/util3d.h"
 #include "astra/cuda/3d/dims3d.h"
 
 #include <cstdio>
 #include <cassert>
-
-#include <cuda.h>
 
 namespace astraCUDA3d {
 

@@ -195,6 +195,8 @@ astra::CDataStorage *getDLTensorStorage(DLT *tensor_m, std::array<int, 3> dims, 
 			return nullptr;
 		return new CDataStorageDLPackGPU(tensor_m);
 #endif
+	// TODO: Add support for kDLROCM, for the case when astra is built with
+	// cuda-but-actually-hip, and later when it is in its own namespace
 	default:
 		error = "Unsupported dlpack device type";
 		return nullptr;

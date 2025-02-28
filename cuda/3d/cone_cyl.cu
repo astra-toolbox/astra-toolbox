@@ -39,10 +39,11 @@ SOFTWARE.
 //          coefficients would then sum to 1)
 // But typical ratio doesn't appear to be integral.
 
+#include "astra/cuda/gpu_runtime_wrapper.h"
+
 #include <cstdio>
 #include <cassert>
 
-#include <cuda.h>
 #include "astra/cuda/3d/util3d.h"
 
 #ifdef STANDALONE

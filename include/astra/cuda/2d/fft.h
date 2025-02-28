@@ -28,8 +28,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _CUDA_FFT_H
 #define _CUDA_FFT_H
 
-#include <cufft.h>
-#include <cuda.h>
+#include "astra/cuda/gpu_fft_wrapper.h"
+
 #include <optional>
 
 #include "astra/Filters.h"
