@@ -1396,7 +1396,7 @@ void CCompositeGeometryManager::setGlobalGPUParams(const SGPUParams& params)
 	for (unsigned int i = 0; i < params.GPUIndices.size(); ++i)
 		s << " " << params.GPUIndices[i];
 	std::string ss = s.str();
-	ASTRA_DEBUG(ss.c_str());
+	ASTRA_DEBUG("%s", ss.c_str());
 	ASTRA_DEBUG("Memory: %zu", params.memory);
 }
 

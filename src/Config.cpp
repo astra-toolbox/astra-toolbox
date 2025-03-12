@@ -101,7 +101,7 @@ bool ConfigReader<T>::stopParsing()
 		for (const std::string &str : errors)
 			os << str;
 
-		ASTRA_WARN(os.str().c_str());
+		ASTRA_WARN("%s", os.str().c_str());
 		return false;
 	}
 
