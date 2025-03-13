@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE( testVolumeGeometry2D_Clone )
 
 	BOOST_REQUIRE( geom2->isInitialized() );
 
-	BOOST_CHECK( geom.isEqual(geom2) );
+	BOOST_CHECK( geom.isEqual(*geom2) );
 	BOOST_CHECK( geom2->getGridColCount() == 16 );
 	BOOST_CHECK( geom2->getGridRowCount() == 32 );
 	BOOST_CHECK( geom2->getGridTotCount() == 512 );

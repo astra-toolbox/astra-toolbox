@@ -44,11 +44,11 @@ BOOST_AUTO_TEST_CASE( testFloat32ProjectionData2D_Constructor1 )
 	astra::CParallelProjectionGeometry2D geom(2, 4, 0.5f, angles);
 	BOOST_REQUIRE( geom.isInitialized() );
 
-	astra::CFloat32ProjectionData2D data(&geom);
+	astra::CFloat32ProjectionData2D data(geom);
 	BOOST_REQUIRE( data.isInitialized() );
 
 	BOOST_CHECK( data.getType() == astra::CFloat32Data2D::PROJECTION );
-	BOOST_CHECK( data.getGeometry()->isEqual(&geom) );
+	BOOST_CHECK( data.getGeometry().isEqual(geom) );
 }
 
 BOOST_AUTO_TEST_CASE( testFloat32ProjectionData2D_Constructor2 )
@@ -58,11 +58,11 @@ BOOST_AUTO_TEST_CASE( testFloat32ProjectionData2D_Constructor2 )
 	astra::CParallelProjectionGeometry2D geom(2, 4, 0.5f, angles);
 	BOOST_REQUIRE( geom.isInitialized() );
 
-	astra::CFloat32ProjectionData2D data(&geom, d);
+	astra::CFloat32ProjectionData2D data(geom, d);
 	BOOST_REQUIRE( data.isInitialized() );
 
 	BOOST_CHECK( data.getType() == astra::CFloat32Data2D::PROJECTION );
-	BOOST_CHECK( data.getGeometry()->isEqual(&geom) );
+	BOOST_CHECK( data.getGeometry().isEqual(geom) );
 
 	// CHECKME: should this be necessary?
 	data.updateStatistics();
@@ -76,11 +76,11 @@ BOOST_AUTO_TEST_CASE( testFloat32ProjectionData2D_Constructor3 )
 	astra::CParallelProjectionGeometry2D geom(2, 4, 0.5f, angles);
 	BOOST_REQUIRE( geom.isInitialized() );
 
-	astra::CFloat32ProjectionData2D data(&geom, 3.5f);
+	astra::CFloat32ProjectionData2D data(geom, 3.5f);
 	BOOST_REQUIRE( data.isInitialized() );
 
 	BOOST_CHECK( data.getType() == astra::CFloat32Data2D::PROJECTION );
-	BOOST_CHECK( data.getGeometry()->isEqual(&geom) );
+	BOOST_CHECK( data.getGeometry().isEqual(geom) );
 
 	// CHECKME: should this be necessary?
 	data.updateStatistics();
@@ -94,13 +94,13 @@ BOOST_AUTO_TEST_CASE( testFloat32ProjectionData2D_Clone )
 	astra::CParallelProjectionGeometry2D geom(2, 4, 0.5f, angles);
 	BOOST_REQUIRE( geom.isInitialized() );
 
-	astra::CFloat32ProjectionData2D data(&geom, 3.5f);
+	astra::CFloat32ProjectionData2D data(geom, 3.5f);
 	BOOST_REQUIRE( data.isInitialized() );
 
 	astra::CFloat32ProjectionData2D data2(data);
 	BOOST_REQUIRE( data2.isInitialized() );
 
-	BOOST_CHECK( data2.getGeometry()->isEqual(&geom) );
+	BOOST_CHECK( data2.getGeometry().isEqual(geom) );
 	BOOST_CHECK( data2.getDataConst()[0] == 3.5f );
 	BOOST_CHECK( data2.getDataConst()[3] == 3.5f );
 
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE( testFloat32ProjectionData2D_Clone )
 	data3 = data;
 	BOOST_REQUIRE( data3.isInitialized() );
 
-	BOOST_CHECK( data3.getGeometry()->isEqual(&geom) );
+	BOOST_CHECK( data3.getGeometry().isEqual(geom) );
 	BOOST_CHECK( data3.getDataConst()[0] == 3.5f );
 	BOOST_CHECK( data3.getDataConst()[3] == 3.5f );
 }

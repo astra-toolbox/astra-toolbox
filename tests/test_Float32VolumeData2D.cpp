@@ -42,11 +42,11 @@ BOOST_AUTO_TEST_CASE( testFloat32VolumeData2D_Constructor1 )
 	astra::CVolumeGeometry2D geom(16, 32);
 	BOOST_REQUIRE( geom.isInitialized() );
 
-	astra::CFloat32VolumeData2D data(&geom);
+	astra::CFloat32VolumeData2D data(geom);
 	BOOST_REQUIRE( data.isInitialized() );
 
 	BOOST_CHECK( data.getType() == astra::CFloat32Data2D::VOLUME );
-	BOOST_CHECK( data.getGeometry()->isEqual(&geom) );
+	BOOST_CHECK( data.getGeometry().isEqual(geom) );
 }
 
 BOOST_AUTO_TEST_CASE( testFloat32VolumeData2D_Constructor1odd )
@@ -54,11 +54,11 @@ BOOST_AUTO_TEST_CASE( testFloat32VolumeData2D_Constructor1odd )
 	astra::CVolumeGeometry2D geom(16, 32);
 	BOOST_REQUIRE( geom.isInitialized() );
 
-	astra::CFloat32VolumeData2D data(&geom, 1.0f);
+	astra::CFloat32VolumeData2D data(geom, 1.0f);
 	BOOST_REQUIRE( data.isInitialized() );
 
 	BOOST_CHECK( data.getType() == astra::CFloat32Data2D::VOLUME );
-	BOOST_CHECK( data.getGeometry()->isEqual(&geom) );
+	BOOST_CHECK( data.getGeometry().isEqual(geom) );
 
 	// CHECKME: should this be necessary?
 	data.updateStatistics();
@@ -71,12 +71,12 @@ BOOST_AUTO_TEST_CASE( testFloat32VolumeData2D_Constructor2 )
 	astra::CVolumeGeometry2D geom(2, 2);
 	BOOST_REQUIRE( geom.isInitialized() );
 
-	astra::CFloat32VolumeData2D data(&geom, d);
+	astra::CFloat32VolumeData2D data(geom, d);
 	BOOST_REQUIRE( data.isInitialized() );
 
 	BOOST_CHECK( data.getType() == astra::CFloat32Data2D::VOLUME );
 
-	BOOST_CHECK( data.getGeometry()->isEqual(&geom) );
+	BOOST_CHECK( data.getGeometry().isEqual(geom) );
 
 	// CHECKME: should this be necessary?
 	data.updateStatistics();
@@ -89,13 +89,13 @@ BOOST_AUTO_TEST_CASE( testFloat32VolumeData2D_Clone )
 	astra::CVolumeGeometry2D geom(2, 2);
 	BOOST_REQUIRE( geom.isInitialized() );
 
-	astra::CFloat32VolumeData2D data(&geom, d);
+	astra::CFloat32VolumeData2D data(geom, d);
 	BOOST_REQUIRE( data.isInitialized() );
 
 	astra::CFloat32VolumeData2D data2(data);
 	BOOST_REQUIRE( data2.isInitialized() );
 
-	BOOST_CHECK( data2.getGeometry()->isEqual(&geom) );
+	BOOST_CHECK( data2.getGeometry().isEqual(geom) );
 	BOOST_CHECK( data2.getDataConst()[0] == 1.0f );
 	BOOST_CHECK( data2.getDataConst()[3] == 4.0f );
 
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE( testFloat32VolumeData2D_Clone )
 	data3 = data;
 	BOOST_REQUIRE( data3.isInitialized() );
 
-	BOOST_CHECK( data3.getGeometry()->isEqual(&geom) );
+	BOOST_CHECK( data3.getGeometry().isEqual(geom) );
 	BOOST_CHECK( data3.getDataConst()[0] == 1.0f );
 	BOOST_CHECK( data3.getDataConst()[3] == 4.0f );
 }

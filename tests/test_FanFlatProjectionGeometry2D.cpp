@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE( testFanFlatProjectionGeometry2D_Clone )
 	BOOST_REQUIRE( geom2 );
 	BOOST_REQUIRE( geom2->isInitialized() );
 
-	BOOST_CHECK( geom.isEqual(geom2) );
+	BOOST_CHECK( geom.isEqual(*geom2) );
 	BOOST_CHECK( geom2->getProjectionAngleCount() == 4 );
 	BOOST_CHECK( geom2->getDetectorCount() == 8 );
 	BOOST_CHECK( geom2->getDetectorWidth() == 0.5f );
