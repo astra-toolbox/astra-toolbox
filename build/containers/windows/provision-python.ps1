@@ -1,7 +1,7 @@
 choco install -y python3 --version=3.12.2
 choco install -y miniconda3
 
-C:\python312\python -m pip install numpy scipy six cython setuptools
+C:\python312\python -m pip install numpy scipy cython setuptools
 
 C:\tools\miniconda3\shell\condabin\conda-hook.ps1
 conda activate base

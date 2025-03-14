@@ -56,7 +56,7 @@ before_install:
   - conda update conda
 
 install:
-  - conda install python=$TRAVIS_PYTHON_VERSION six numpy scipy cython
+  - conda install python=$TRAVIS_PYTHON_VERSION numpy scipy cython
   - conda info -a
 
 script:
