@@ -33,6 +33,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/VolumeGeometry3D.h"
 #include "astra/ConeProjectionGeometry3D.h"
 #include "astra/ConeVecProjectionGeometry3D.h"
+#include "astra/CylConeVecProjectionGeometry3D.h"
 #include "astra/ParallelProjectionGeometry3D.h"
 #include "astra/ParallelVecProjectionGeometry3D.h"
 #include "astra/Projector3D.h"
@@ -251,6 +252,8 @@ bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize,
 
 	split.clear();
 
+	size_t costHeuristic = 0;
+
 	for (TJobSetInternal::iterator i = jobs.begin(); i != jobs.end(); ++i)
 	{
 		std::unique_ptr<CPart> pOutput = std::move(i->first);
@@ -324,6 +327,21 @@ bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize,
 					newjob.pProjector = job.pProjector;
 					newjob.FDKSettings = job.FDKSettings;
 					newjob.eType = job.eType;
+
+					size_t tx, ty, tz;
+					newjob.pInput->getDims(tx, ty, tz);
+
+					switch (newjob.eType) {
+						case JOB_FP:
+							costHeuristic += outputPart.get()->getSize() * cbrt(tx * ty * tz);
+							break;
+						case JOB_BP: case JOB_FDK:
+							costHeuristic += outputPart.get()->getSize() * ty;
+							break;
+						case JOB_NOP:
+							break;
+					}
+
 					newjobs.push_back(std::move(newjob));
 
 					// Second and later (input) parts should always be added to
@@ -335,6 +353,8 @@ bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize,
 			split.push_back(std::make_pair(std::move(outputPart), std::move(newjobs)));
 		}
 	}
+
+	ASTRA_DEBUG("splitJobs cost heuristic: %zu", costHeuristic);
 
 	return true;
 }
@@ -512,6 +532,7 @@ reduceVolumePart(const CCompositeGeometryManager::CVolumePart *base,
 		while (zmin < zmax) {
 			int zmid = (zmin + zmax + 1) / 2;
 
+			// Test if this top area is entirely out of range
 			bool ok = testVolumeRange(fullRange, base->pGeom, other->pGeom,
 			                          0, zmid);
 
@@ -536,6 +557,7 @@ reduceVolumePart(const CCompositeGeometryManager::CVolumePart *base,
 		while (zmin < zmax) {
 			int zmid = (zmin + zmax) / 2;
 
+			// Test if this bottom area is entirely out of range
 			bool ok = testVolumeRange(fullRange, base->pGeom, other->pGeom,
 			                          zmid, base->pGeom->getGridSliceCount());
 
@@ -734,6 +756,42 @@ void CCompositeGeometryManager::CProjectionPart::getDims(size_t &x, size_t &y, s
 	z = pGeom->getDetectorRowCount();
 }
 
+static std::pair<int, int> reduceProjectionAngular(const CVolumeGeometry3D* pVolGeom, const CProjectionGeometry3D* pProjGeom)
+{
+	int iFirstAngle = pProjGeom->getProjectionCount();
+	int iLastAngle = -1;
+	for (int i = 0; i < pProjGeom->getProjectionCount(); ++i) {
+		double umin, umax;
+		double vmin, vmax;
+
+		double pixx = pVolGeom->getPixelLengthX();
+		double pixy = pVolGeom->getPixelLengthY();
+		double pixz = pVolGeom->getPixelLengthZ();
+
+		pProjGeom->getProjectedBBoxSingleAngle(i,
+		                            pVolGeom->getWindowMinX() - 0.5 * pixx,
+		                            pVolGeom->getWindowMaxX() + 0.5 * pixx,
+		                            pVolGeom->getWindowMinY() - 0.5 * pixy,
+		                            pVolGeom->getWindowMaxY() + 0.5 * pixy,
+		                            pVolGeom->getWindowMinZ() - 0.5 * pixz,
+		                            pVolGeom->getWindowMaxZ() + 0.5 * pixz,
+		                            umin, umax,
+		                            vmin, vmax);
+
+		bool out = umin >= pProjGeom->getDetectorColCount() || umax <= 0 ||
+		           vmin >= pProjGeom->getDetectorRowCount() || vmax <= 0;
+
+		if (!out && i <= iFirstAngle)
+			iFirstAngle = i;
+		if (!out)
+			iLastAngle = i;
+	}
+
+	ASTRA_DEBUG("reduceProjectionAngular: found [%d,%d]", iFirstAngle, iLastAngle);
+
+	return std::pair<int, int>(iFirstAngle, iLastAngle);
+}
+
 static CCompositeGeometryManager::CProjectionPart* createSubProjectionPart(const CCompositeGeometryManager::CProjectionPart* base,
                                                                            unsigned int offset_u,
                                                                            unsigned int offset_th,
@@ -762,25 +820,40 @@ reduceProjectionPart(const CCompositeGeometryManager::CProjectionPart *base,
 	const CCompositeGeometryManager::CVolumePart *other = dynamic_cast<const CCompositeGeometryManager::CVolumePart *>(_other);
 	assert(other);
 
-	std::pair<double, double> r = reduceProjectionVertical(other->pGeom, base->pGeom);
+	std::pair<int, int> angleRange = reduceProjectionAngular(other->pGeom, base->pGeom);
+	if (angleRange.first > angleRange.second) {
+		ASTRA_DEBUG("Reduce projection: no angular overlap");
+		return std::unique_ptr<CCompositeGeometryManager::CPart>(createSubProjectionPart(base, 0, 0, 0, nullptr));
+	}
+	ASTRA_DEBUG("Reduce projection: angular from %d - %d to %d - %d", base->subY, base->subY + base->pGeom->getProjectionCount(), base->subY + angleRange.first, base->subY + angleRange.second);
+
+	CProjectionGeometry3D *pSubGeom1 = getSubProjectionGeometry_Angle(base->pGeom, angleRange.first, angleRange.second - angleRange.first + 1);
+
+	// sub->subY += angleRange.first;
+
+
+	std::pair<double, double> r = reduceProjectionVertical(other->pGeom, pSubGeom1);
+
 	// fprintf(stderr, "v extent: %f %f\n", r.first, r.second);
 	int _vmin = (int)floor(r.first - 1.0);
 	int _vmax = (int)ceil(r.second + 1.0);
 	if (_vmin < 0)
 		_vmin = 0;
-	if (_vmax > base->pGeom->getDetectorRowCount())
-		_vmax = base->pGeom->getDetectorRowCount();
+	if (_vmax > pSubGeom1->getDetectorRowCount())
+		_vmax = pSubGeom1->getDetectorRowCount();
 
 	if (_vmin >= _vmax) {
 		_vmin = _vmax = 0;
 	}
 
-	CProjectionGeometry3D *pSubGeom = 0;
+	CProjectionGeometry3D *pSubGeom2 = 0;
 	if (_vmin != _vmax)
-		pSubGeom = getSubProjectionGeometry_V(base->pGeom, _vmin, _vmax - _vmin);
-	CCompositeGeometryManager::CProjectionPart *sub = createSubProjectionPart(base, 0, 0, _vmin, pSubGeom);
+		pSubGeom2 = getSubProjectionGeometry_V(pSubGeom1, _vmin, _vmax - _vmin);
+	CCompositeGeometryManager::CProjectionPart *sub = createSubProjectionPart(base, 0, 0, _vmin, pSubGeom2);
 
-	ASTRA_DEBUG("Reduce projection from %d - %d to %d - %d", base->subZ, base->subZ + base->pGeom->getDetectorRowCount(), base->subZ + _vmin, base->subZ + _vmax);
+	delete pSubGeom1;
+
+	ASTRA_DEBUG("Reduce projection: rows from %d - %d to %d - %d", base->subZ, base->subZ + base->pGeom->getDetectorRowCount(), base->subZ + _vmin, base->subZ + _vmax);
 
 	return std::unique_ptr<CCompositeGeometryManager::CPart>(sub);
 }

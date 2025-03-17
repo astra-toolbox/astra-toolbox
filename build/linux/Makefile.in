@@ -149,6 +149,7 @@ BASE_OBJECTS=\
 	src/CompositeGeometryManager.lo \
 	src/ConeProjectionGeometry3D.lo \
 	src/ConeVecProjectionGeometry3D.lo \
+	src/CylConeVecProjectionGeometry3D.lo \
 	src/Config.lo \
 	src/Data3D.lo \
 	src/DataProjector.lo \
@@ -244,6 +245,8 @@ CUDA_OBJECTS=\
 	cuda/3d/cgls3d.lo \
 	cuda/3d/cone_fp.lo \
 	cuda/3d/cone_bp.lo \
+	cuda/3d/cone_cyl.lo \
+	cuda/3d/cone_cyl_bp.lo \
 	cuda/3d/fdk.lo \
 	cuda/3d/par3d_fp.lo \
 	cuda/3d/par3d_bp.lo \

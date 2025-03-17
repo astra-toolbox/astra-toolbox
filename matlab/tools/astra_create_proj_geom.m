@@ -84,6 +84,22 @@ function proj_geom = astra_create_proj_geom(type, varargin)
 %          v  : the vector from detector pixel (0,0) to (1,0)
 % proj_geom: MATLAB struct containing all information of the geometry
 %--------------------------------------------------------------------------
+% proj_geom = astra_create_proj_geom('cyl_cone_vec',  det_row_count, det_col_count, vectors)
+%
+% Create a 3D cone beam geometry with a cylindrical detector specified by 3D vectors.
+%   See the API for more information.
+% det_row_count: number of detector rows in a single projection
+% det_col_count: number of detector columns in a single projection
+% vectors: a matrix containing the actual geometry. Each row corresponds
+%          to a single projection, and consists of:
+%          ( srcX, srcY, srcZ, dX, dY, dZ, uX, uY, uZ, vX, vY, vZ, R )
+%          src: the ray source
+%          d  : the center of the detector
+%          u  : the vector from detector pixel (0,0) to (0,1)
+%          v  : the vector from detector pixel (0,0) to (1,0)
+%          R  : the cylinder radius of the detector
+% proj_geom: MATLAB struct containing all information of the geometry
+%--------------------------------------------------------------------------
 %--------------------------------------------------------------------------
 % This file is part of the ASTRA Toolbox
 % 
@@ -193,6 +209,19 @@ elseif strcmp(type,'parallel3d_vec')
 	end
 	proj_geom = struct( ...
 		'type',					'parallel3d_vec',  ...
+		'DetectorRowCount',		varargin{1}, ...
+		'DetectorColCount',		varargin{2}, ...
+		'Vectors',				varargin{3}  ...
+	);
+elseif strcmp(type,'cyl_cone_vec')
+	if numel(varargin) < 3
+		error('Not enough input arguments. Usage: astra_create_proj_geom(cyl_cone_vec, det_row_count, det_col_count, V);')
+	end
+	if size(varargin{3}, 2) ~= 13
+		error('V should be a Nx13 matrix, with N the number of projections')
+	end
+	proj_geom = struct( ...
+		'type',					'cone_vec',  ...
 		'DetectorRowCount',		varargin{1}, ...
 		'DetectorColCount',		varargin{2}, ...
 		'Vectors',				varargin{3}  ...

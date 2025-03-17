@@ -50,6 +50,7 @@ class AstraSIRT3d_internal;
 
 using astraCUDA3d::Cuda3DProjectionKernel;
 using astraCUDA3d::ker3d_default;
+using astraCUDA3d::ker3d_matched_bp;
 using astraCUDA3d::ker3d_sum_square_weights;
 using astraCUDA3d::ker3d_fdk_weighting;
 using astraCUDA3d::ker3d_2d_weighting;
@@ -60,7 +61,7 @@ using astraCUDA3d::SConeProjection;
 
 class _AstraExport Geometry3DParameters {
 public:
-	using variant_t = std::variant<std::monostate, std::vector<SPar3DProjection>, std::vector<SConeProjection>>;
+	using variant_t = std::variant<std::monostate, std::vector<SPar3DProjection>, std::vector<SConeProjection>, std::vector<SCylConeProjection> >;
 
 	Geometry3DParameters() {}
 	Geometry3DParameters(variant_t && p) : projs(p) { }
@@ -75,6 +76,10 @@ public:
 	bool isCone() const {
 		return std::holds_alternative<std::vector<SConeProjection>>(projs);
 	}
+	bool isCylCone() const {
+		return std::holds_alternative<std::vector<SCylConeProjection>>(projs);
+	}
+
 
 	const SPar3DProjection *getParallel() const {
 		if (!std::holds_alternative<std::vector<SPar3DProjection>>(projs))
@@ -89,6 +94,13 @@ public:
 
 		return &std::get<std::vector<SConeProjection>>(projs)[0];
 	}
+	const SCylConeProjection *getCylCone() const {
+		if (!std::holds_alternative<std::vector<SCylConeProjection>>(projs))
+			return nullptr;
+
+		return &std::get<std::vector<SCylConeProjection>>(projs)[0];
+	}
+
 
 private:
 	variant_t projs;

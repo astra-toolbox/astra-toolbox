@@ -118,7 +118,7 @@ function proj_geom_vec = astra_geom_2vec(proj_geom)
 
 		proj_geom_vec = astra_create_proj_geom('parallel3d_vec', proj_geom.DetectorRowCount, proj_geom.DetectorColCount, vectors);
 
-	elseif ismember(proj_geom.type, {'parallel_vec', 'fanflat_vec', 'parallel3d_vec', 'cone_vec'})
+	elseif ismember(proj_geom.type, {'parallel_vec', 'fanflat_vec', 'parallel3d_vec', 'cone_vec', 'cyl_cone_vec'})
 		proj_geom_vec = proj_geom;
 
 	else
