@@ -32,7 +32,7 @@ function s = astra_geom_size(geom, dim)
 	elseif strcmp(geom.type,'fanflat_vec') || strcmp(geom.type,'parallel_vec')
 		s = [size(geom.Vectors,1), geom.DetectorCount];
 
-	elseif strcmp(geom.type,'parallel3d_vec') || strcmp(geom.type,'cone_vec')
+	elseif strcmp(geom.type,'parallel3d_vec') || strcmp(geom.type,'cone_vec') || strcmp(geom.type,'cyl_cone_vec')
 		s = [geom.DetectorColCount, size(geom.Vectors,1), geom.DetectorRowCount];
 
 	end

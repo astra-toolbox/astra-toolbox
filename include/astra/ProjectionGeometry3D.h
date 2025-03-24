@@ -311,7 +311,20 @@ public:
 	 *  It may not be the tighest possible bounding box.
 	 *  This may fall (partially or fully) outside of the actual detector.
 	 */
-	virtual void getProjectedBBox(double fXMin, double fXMax,
+	void getProjectedBBox(double fXMin, double fXMax,
+	                              double fYMin, double fYMax,
+	                              double fZMin, double fZMax,
+	                              double &fUMin, double &fUMax,
+	                              double &fVMin, double &fVMax) const;
+
+	/** Find a bounding box of the projections of a box in the volume
+	 *  for a single projection angle iAngle.
+	 *  It may not be the tighest possible bounding box.
+	 *  This may fall (partially or fully) outside of the actual detector.
+	 */
+
+	virtual void getProjectedBBoxSingleAngle(int iAngle,
+	                              double fXMin, double fXMax,
 	                              double fYMin, double fYMax,
 	                              double fZMin, double fZMax,
 	                              double &fUMin, double &fUMax,

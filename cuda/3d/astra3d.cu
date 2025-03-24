@@ -41,6 +41,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/ParallelVecProjectionGeometry3D.h"
 #include "astra/ConeProjectionGeometry3D.h"
 #include "astra/ConeVecProjectionGeometry3D.h"
+#include "astra/CylConeVecProjectionGeometry3D.h"
 #include "astra/VolumeGeometry3D.h"
 #include "astra/Data3D.h"
 #include "astra/Logging.h"
@@ -63,7 +64,7 @@ enum CUDAProjectionType3d {
 
 
 
-// adjust pProjs to normalize volume geometry
+// adjust pProjs to normalize volume geometry (translate + scale)
 template<typename ProjectionT>
 static bool convertAstraGeometry_internal(const CVolumeGeometry3D* pVolGeom,
                           std::vector<ProjectionT>& projs,
@@ -90,6 +91,31 @@ static bool convertAstraGeometry_internal(const CVolumeGeometry3D* pVolGeom,
 
 	return true;
 }
+
+// adjust pProjs to normalize volume geometry (translate only)
+template<typename ProjectionT>
+static bool convertAstraGeometry_unscaled_internal(const CVolumeGeometry3D* pVolGeom,
+                          std::vector<ProjectionT>& projs,
+                          SProjectorParams3D& params)
+{
+	assert(pVolGeom);
+
+	float dx = -(pVolGeom->getWindowMinX() + pVolGeom->getWindowMaxX()) / 2;
+	float dy = -(pVolGeom->getWindowMinY() + pVolGeom->getWindowMaxY()) / 2;
+	float dz = -(pVolGeom->getWindowMinZ() + pVolGeom->getWindowMaxZ()) / 2;
+
+	for (size_t i = 0; i < projs.size(); ++i) {
+		projs[i].translate(dx, dy, dz);
+	}
+
+	// TODO: Check consistency of use of these values
+	params.fVolScaleX = pVolGeom->getPixelLengthX();
+	params.fVolScaleY = pVolGeom->getPixelLengthY();
+	params.fVolScaleZ = pVolGeom->getPixelLengthZ();
+
+	return true;
+}
+
 
 
 bool convertAstraGeometry_dims(const CVolumeGeometry3D* pVolGeom,
@@ -204,6 +230,26 @@ bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
 	return ok;
 }
 
+bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
+                          const CCylConeVecProjectionGeometry3D* pProjGeom,
+                          std::vector<SCylConeProjection>& projs, SProjectorParams3D& params)
+{
+	assert(pVolGeom);
+	assert(pProjGeom);
+	assert(pProjGeom->getProjectionVectors());
+
+	int nth = pProjGeom->getProjectionCount();
+
+	projs.resize(nth);
+	for (int i = 0; i < nth; ++i)
+		projs[i] = pProjGeom->getProjectionVectors()[i];
+
+	bool ok;
+
+	ok = convertAstraGeometry_unscaled_internal(pVolGeom, projs, params);
+
+	return ok;
+}
 
 Geometry3DParameters convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
                                         const CProjectionGeometry3D* pProjGeom,
@@ -213,6 +259,7 @@ Geometry3DParameters convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
 	const CParallelProjectionGeometry3D* par3dgeom = dynamic_cast<const CParallelProjectionGeometry3D*>(pProjGeom);
 	const CParallelVecProjectionGeometry3D* parvec3dgeom = dynamic_cast<const CParallelVecProjectionGeometry3D*>(pProjGeom);
 	const CConeVecProjectionGeometry3D* conevec3dgeom = dynamic_cast<const CConeVecProjectionGeometry3D*>(pProjGeom);
+	const CCylConeVecProjectionGeometry3D* cylconevec3dgeom = dynamic_cast<const CCylConeVecProjectionGeometry3D*>(pProjGeom);
 
 	bool ok;
 
@@ -237,6 +284,13 @@ Geometry3DParameters convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
 
 		if (ok)
 			return Geometry3DParameters::variant_t(std::move(parProjs));
+		else
+			return Geometry3DParameters::variant_t();
+	} else if (cylconevec3dgeom) {
+		std::vector<SCylConeProjection> cylConeProjs;
+		ok = convertAstraGeometry(pVolGeom, cylconevec3dgeom, cylConeProjs, params);
+		if (ok)
+			return Geometry3DParameters::variant_t(std::move(cylConeProjs));
 		else
 			return Geometry3DParameters::variant_t();
 	} else {
