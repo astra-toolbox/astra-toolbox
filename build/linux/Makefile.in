@@ -595,7 +595,7 @@ config.status: $(srcdir)/configure
 	@echo "configure script has changed. Re-running it with last parameters"
 	$(SHELL) ./config.status --recheck
 
-$(srcdir)/configure: $(srcdir)/configure.ac
+$(srcdir)/configure: $(srcdir)/configure.ac $(srcdir)/acinclude.m4
 	@echo "configure.ac has been changed. Regenerating configure script"
 	cd $(srcdir) && $(SHELL) ./autogen.sh
 

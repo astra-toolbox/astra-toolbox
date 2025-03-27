@@ -121,11 +121,16 @@ int main() {
   return 0;
 }
 _ACEOF
+NVCC_extra=""
+# Add -Wno-deprecated-gpu-targets option if supported
+ASTRA_RUN_LOGOUTPUT([$NVCC -c -o conftest.o conftest.cu -Wno-deprecated-gpu-targets $NVCCFLAGS $$3]) && {
+  NVCC_extra="-Wno-deprecated-gpu-targets"
+}
 $2="no"
 NVCC_OPT="-arch=$1"
 ASTRA_RUN_LOGOUTPUT([$NVCC -c -o conftest.o conftest.cu $NVCCFLAGS $$3 $NVCC_OPT]) && {
   $2="yes"
-  $3="$$3 $NVCC_OPT"
+  $3="$$3 $NVCC_OPT $NVCC_extra"
 }
 if test x$$2 = xno; then
   AS_ECHO(["$as_me: failed program was:"]) >&AS_MESSAGE_LOG_FD
