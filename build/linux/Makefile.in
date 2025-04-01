@@ -366,11 +366,11 @@ libastra.la: $(ALL_OBJECTS)
 
 %.o: %.cpp
 	$(MKDIR) $(*D)/$(DEPDIR)
-	$(CXX) -Wp,-MMD,"$(*D)/$(DEPDIR)/$(*F).d",-MQ,"$@",-MP $(CXXFLAGS) -fPIC -DPIC $(CPPFLAGS) -c $(<) -o $*.o
+	$(CXX) -MMD -MF "$(*D)/$(DEPDIR)/$(*F).d" -MQ "$@" -MP $(CXXFLAGS) -fPIC -DPIC $(CPPFLAGS) -c $(<) -o $*.o
 
 %.lo: %.cpp
 	$(MKDIR) $(*D)/$(DEPDIR)
-	./libtool --mode=compile --tag=CXX $(CXX) -Wp,-MMD,"$(*D)/$(DEPDIR)/$(*F).d",-MQ,"$@",-MP $(CXXFLAGS) $(CPPFLAGS) -c $(<) -o $*.o
+	./libtool --mode=compile --tag=CXX $(CXX) -MMD -MF "$(*D)/$(DEPDIR)/$(*F).d" -MQ "$@" -MP $(CXXFLAGS) $(CPPFLAGS) -c $(<) -o $*.o
 
 gen_static_libs := `./libtool --features | grep -q 'disable static' && echo no || echo yes`
 
