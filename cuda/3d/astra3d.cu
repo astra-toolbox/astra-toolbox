@@ -54,15 +54,6 @@ using namespace astraCUDA3d;
 
 namespace astra {
 
-enum CUDAProjectionType3d {
-	PROJ_PARALLEL,
-	PROJ_CONE
-};
-
-
-
-
-
 
 // adjust pProjs to normalize volume geometry (translate + scale)
 template<typename ProjectionT>
