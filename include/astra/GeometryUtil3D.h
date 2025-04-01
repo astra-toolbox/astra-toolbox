@@ -28,12 +28,21 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _INC_ASTRA_GEOMETRYUTIL3D
 #define _INC_ASTRA_GEOMETRYUTIL3D
 
+#include "Globals.h"
+
 #include <cmath>
 #include <vector>
+#include <variant>
 
 namespace astra {
 
 class CProjectionGeometry3D;
+class CParallelProjectionGeometry3D;
+class CParallelVecProjectionGeometry3D;
+class CConeProjectionGeometry3D;
+class CConeVecProjectionGeometry3D;
+class CVolumeGeometry3D;
+
 
 struct SConeProjection {
 	// the source
@@ -143,6 +152,74 @@ struct SCylConeProjection {
 };
 
 
+struct SDimensions3D {
+	unsigned int iVolX;
+	unsigned int iVolY;
+	unsigned int iVolZ;
+	unsigned int iProjAngles;
+	unsigned int iProjU; // number of detectors in the U direction
+	unsigned int iProjV; // number of detectors in the V direction
+};
+
+
+struct SVolScale3D {
+	float fX = 1.0f;
+	float fY = 1.0f;
+	float fZ = 1.0f;
+};
+
+
+class _AstraExport Geometry3DParameters {
+public:
+	using variant_t = std::variant<std::monostate, std::vector<SPar3DProjection>, std::vector<SConeProjection>, std::vector<SCylConeProjection> >;
+
+	Geometry3DParameters() {}
+	Geometry3DParameters(variant_t && p) : projs(p) { }
+
+	bool isValid() const {
+		return !std::holds_alternative<std::monostate>(projs);
+	}
+
+	bool isParallel() const {
+		return std::holds_alternative<std::vector<SPar3DProjection>>(projs);
+	}
+	bool isCone() const {
+		return std::holds_alternative<std::vector<SConeProjection>>(projs);
+	}
+	bool isCylCone() const {
+		return std::holds_alternative<std::vector<SCylConeProjection>>(projs);
+	}
+
+
+	const SPar3DProjection *getParallel() const {
+		if (!std::holds_alternative<std::vector<SPar3DProjection>>(projs))
+			return nullptr;
+
+		return &std::get<std::vector<SPar3DProjection>>(projs)[0];
+	}
+
+	const SConeProjection *getCone() const {
+		if (!std::holds_alternative<std::vector<SConeProjection>>(projs))
+			return nullptr;
+
+		return &std::get<std::vector<SConeProjection>>(projs)[0];
+	}
+	const SCylConeProjection *getCylCone() const {
+		if (!std::holds_alternative<std::vector<SCylConeProjection>>(projs))
+			return nullptr;
+
+		return &std::get<std::vector<SCylConeProjection>>(projs)[0];
+	}
+
+
+private:
+	variant_t projs;
+};
+
+
+
+
+
 struct Vec3 {
 	double x;
 	double y;
@@ -234,6 +311,16 @@ void getCylConeAxes(const SCylConeProjection &p, Vec3 &cyla, Vec3 &cylb, Vec3 &c
 CProjectionGeometry3D* getSubProjectionGeometry_U(const CProjectionGeometry3D* pProjGeom, int u, int size);
 CProjectionGeometry3D* getSubProjectionGeometry_V(const CProjectionGeometry3D* pProjGeom, int v, int size);
 CProjectionGeometry3D* getSubProjectionGeometry_Angle(const CProjectionGeometry3D* pProjGeom, int th, int size);
+
+
+
+bool convertAstraGeometry_dims(const CVolumeGeometry3D* pVolGeom,
+                               const CProjectionGeometry3D* pProjGeom,
+                               SDimensions3D& dims);
+
+Geometry3DParameters convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
+                                        const CProjectionGeometry3D* pProjGeom,
+                                        SVolScale3D& scale);
 
 
 

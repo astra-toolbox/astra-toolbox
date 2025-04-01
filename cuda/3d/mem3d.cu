@@ -202,7 +202,7 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, co
 	SProjectorParams3D params;
 	params.projKernel = projKernel;
 
-	bool ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
+	bool ok = astra::convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
 	if (!ok)
 		return false;
 
@@ -210,7 +210,7 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, co
 	if (iDetectorSuperSampling == 0)
 		return false;
 
-	auto res = convertAstraGeometry(pVolGeom, pProjGeom, params);
+	auto res = astra::convertAstraGeometry(pVolGeom, pProjGeom, params.volScale);
 
 	if (res.isParallel()) {
 		const SPar3DProjection* pParProjs = res.getParallel();
@@ -262,13 +262,13 @@ bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, co
 	SProjectorParams3D params;
 	params.projKernel = projKernel;
 
-	bool ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
+	bool ok = astra::convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
 	if (!ok)
 		return false;
 
 	params.iRaysPerVoxelDim = iVoxelSuperSampling;
 
-	auto res = convertAstraGeometry(pVolGeom, pProjGeom, params);
+	auto res = astra::convertAstraGeometry(pVolGeom, pProjGeom, params.volScale);
 
 	if (res.isParallel()) {
 		const SPar3DProjection* pParProjs = res.getParallel();
@@ -330,11 +330,11 @@ bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, c
 	params.fOutputScale = fOutputScale;
 	params.projKernel = ker3d_fdk_weighting;
 
-	bool ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
+	bool ok = astra::convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
 	if (!ok)
 		return false;
 
-	astra::Geometry3DParameters res = convertAstraGeometry(pVolGeom, pProjGeom, params);
+	astra::Geometry3DParameters res = astra::convertAstraGeometry(pVolGeom, pProjGeom, params.volScale);
 
 	if (!res.isCone())
 		return false;

@@ -340,34 +340,34 @@ bool ConeFP_Array_internal(cudaPitchedPtr D_projData,
 	int blockDirection = 0;
 
 	bool cube = true;
-	if (abs(params.fVolScaleX / params.fVolScaleY - 1.0) > 0.00001)
+	if (abs(params.volScale.fX / params.volScale.fY - 1.0) > 0.00001)
 		cube = false;
-	if (abs(params.fVolScaleX / params.fVolScaleZ - 1.0) > 0.00001)
+	if (abs(params.volScale.fX / params.volScale.fZ - 1.0) > 0.00001)
 		cube = false;
 
 	SCALE_CUBE scube;
-	scube.fOutputScale = params.fOutputScale * params.fVolScaleX;
+	scube.fOutputScale = params.fOutputScale * params.volScale.fX;
 
 	SCALE_NONCUBE snoncubeX;
-	float fS1 = params.fVolScaleY / params.fVolScaleX;
+	float fS1 = params.volScale.fY / params.volScale.fX;
 	snoncubeX.fScale1 = fS1 * fS1;
-	float fS2 = params.fVolScaleZ / params.fVolScaleX;
+	float fS2 = params.volScale.fZ / params.volScale.fX;
 	snoncubeX.fScale2 = fS2 * fS2;
-	snoncubeX.fOutputScale = params.fOutputScale * params.fVolScaleX;
+	snoncubeX.fOutputScale = params.fOutputScale * params.volScale.fX;
 
 	SCALE_NONCUBE snoncubeY;
-	fS1 = params.fVolScaleX / params.fVolScaleY;
+	fS1 = params.volScale.fX / params.volScale.fY;
 	snoncubeY.fScale1 = fS1 * fS1;
-	fS2 = params.fVolScaleZ / params.fVolScaleY;
+	fS2 = params.volScale.fZ / params.volScale.fY;
 	snoncubeY.fScale2 = fS2 * fS2;
-	snoncubeY.fOutputScale = params.fOutputScale * params.fVolScaleY;
+	snoncubeY.fOutputScale = params.fOutputScale * params.volScale.fY;
 
 	SCALE_NONCUBE snoncubeZ;
-	fS1 = params.fVolScaleX / params.fVolScaleZ;
+	fS1 = params.volScale.fX / params.volScale.fZ;
 	snoncubeZ.fScale1 = fS1 * fS1;
-	fS2 = params.fVolScaleY / params.fVolScaleZ;
+	fS2 = params.volScale.fY / params.volScale.fZ;
 	snoncubeZ.fScale2 = fS2 * fS2;
-	snoncubeZ.fOutputScale = params.fOutputScale * params.fVolScaleZ;
+	snoncubeZ.fOutputScale = params.fOutputScale * params.volScale.fZ;
 
 	// timeval t;
 	// tic(t);

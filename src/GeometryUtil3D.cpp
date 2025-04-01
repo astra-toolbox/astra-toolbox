@@ -31,6 +31,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/ConeProjectionGeometry3D.h"
 #include "astra/ConeVecProjectionGeometry3D.h"
 #include "astra/CylConeVecProjectionGeometry3D.h"
+#include "astra/VolumeGeometry3D.h"
+
 
 #include <cmath>
 
@@ -557,6 +559,249 @@ void getCylConeAxes(const SCylConeProjection &p, Vec3 &cyla, Vec3 &cylb, Vec3 &c
 	//Vec3 cylaxis_n = v * (1.0 / v.norm());
 	cylaxis = v;
 }
+
+
+
+
+
+// adjust pProjs to normalize volume geometry (translate + scale)
+template<typename ProjectionT>
+static bool convertAstraGeometry_internal(const CVolumeGeometry3D* pVolGeom,
+                          std::vector<ProjectionT>& projs,
+                          SVolScale3D& volScale)
+{
+	assert(pVolGeom);
+
+	float dx = -(pVolGeom->getWindowMinX() + pVolGeom->getWindowMaxX()) / 2;
+	float dy = -(pVolGeom->getWindowMinY() + pVolGeom->getWindowMaxY()) / 2;
+	float dz = -(pVolGeom->getWindowMinZ() + pVolGeom->getWindowMaxZ()) / 2;
+
+	float fx = 1.0f / pVolGeom->getPixelLengthX();
+	float fy = 1.0f / pVolGeom->getPixelLengthY();
+	float fz = 1.0f / pVolGeom->getPixelLengthZ();
+
+	for (size_t i = 0; i < projs.size(); ++i) {
+		projs[i].translate(dx, dy, dz);
+		projs[i].scale(fx, fy, fz);
+	}
+
+	volScale.fX = pVolGeom->getPixelLengthX();
+	volScale.fY = pVolGeom->getPixelLengthY();
+	volScale.fZ = pVolGeom->getPixelLengthZ();
+
+	return true;
+}
+
+// adjust pProjs to normalize volume geometry (translate only)
+template<typename ProjectionT>
+static bool convertAstraGeometry_unscaled_internal(const CVolumeGeometry3D* pVolGeom,
+                          std::vector<ProjectionT>& projs,
+                          SVolScale3D& volScale)
+{
+	assert(pVolGeom);
+
+	float dx = -(pVolGeom->getWindowMinX() + pVolGeom->getWindowMaxX()) / 2;
+	float dy = -(pVolGeom->getWindowMinY() + pVolGeom->getWindowMaxY()) / 2;
+	float dz = -(pVolGeom->getWindowMinZ() + pVolGeom->getWindowMaxZ()) / 2;
+
+	for (size_t i = 0; i < projs.size(); ++i) {
+		projs[i].translate(dx, dy, dz);
+	}
+
+	// TODO: Check consistency of use of these values
+    volScale.fX = pVolGeom->getPixelLengthX();
+	volScale.fY = pVolGeom->getPixelLengthY();
+	volScale.fZ = pVolGeom->getPixelLengthZ();
+
+	return true;
+}
+
+
+
+bool convertAstraGeometry_dims(const CVolumeGeometry3D* pVolGeom,
+                               const CProjectionGeometry3D* pProjGeom,
+                               SDimensions3D& dims)
+{
+	dims.iVolX = pVolGeom->getGridColCount();
+	dims.iVolY = pVolGeom->getGridRowCount();
+	dims.iVolZ = pVolGeom->getGridSliceCount();
+	dims.iProjAngles = pProjGeom->getProjectionCount();
+	dims.iProjU = pProjGeom->getDetectorColCount();
+	dims.iProjV = pProjGeom->getDetectorRowCount();
+
+	if (dims.iVolX <= 0 || dims.iVolX <= 0 || dims.iVolX <= 0)
+		return false;
+	if (dims.iProjAngles <= 0 || dims.iProjU <= 0 || dims.iProjV <= 0)
+		return false;
+
+	return true;
+}
+
+
+static bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
+                          const CParallelProjectionGeometry3D* pProjGeom,
+                          std::vector<SPar3DProjection>& projs, SVolScale3D& volScale)
+{
+	assert(pVolGeom);
+	assert(pProjGeom);
+	assert(pProjGeom->getProjectionAngles());
+
+	int nth = pProjGeom->getProjectionCount();
+
+	projs = genPar3DProjections(nth,
+	                             pProjGeom->getDetectorColCount(),
+	                             pProjGeom->getDetectorRowCount(),
+	                             pProjGeom->getDetectorSpacingX(),
+	                             pProjGeom->getDetectorSpacingY(),
+	                             pProjGeom->getProjectionAngles());
+
+	bool ok;
+
+	ok = convertAstraGeometry_internal(pVolGeom, projs, volScale);
+
+	return ok;
+}
+
+static bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
+                          const CParallelVecProjectionGeometry3D* pProjGeom,
+                          std::vector<SPar3DProjection>& projs, SVolScale3D& volScale)
+{
+	assert(pVolGeom);
+	assert(pProjGeom);
+	assert(pProjGeom->getProjectionVectors());
+
+	int nth = pProjGeom->getProjectionCount();
+
+	projs.resize(nth);
+	for (int i = 0; i < nth; ++i)
+		projs[i] = pProjGeom->getProjectionVectors()[i];
+
+	bool ok;
+
+	ok = convertAstraGeometry_internal(pVolGeom, projs, volScale);
+
+	return ok;
+}
+
+static bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
+                          const CConeProjectionGeometry3D* pProjGeom,
+                          std::vector<SConeProjection>& projs, SVolScale3D& volScale)
+{
+	assert(pVolGeom);
+	assert(pProjGeom);
+	assert(pProjGeom->getProjectionAngles());
+
+	int nth = pProjGeom->getProjectionCount();
+
+	projs = genConeProjections(nth,
+	                            pProjGeom->getDetectorColCount(),
+	                            pProjGeom->getDetectorRowCount(),
+	                            pProjGeom->getOriginSourceDistance(),
+	                            pProjGeom->getOriginDetectorDistance(),
+	                            pProjGeom->getDetectorSpacingX(),
+	                            pProjGeom->getDetectorSpacingY(),
+	                            pProjGeom->getProjectionAngles());
+
+	bool ok;
+
+	ok = convertAstraGeometry_internal(pVolGeom, projs, volScale);
+
+	return ok;
+}
+
+static bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
+                          const CConeVecProjectionGeometry3D* pProjGeom,
+                          std::vector<SConeProjection>& projs, SVolScale3D& volScale)
+{
+	assert(pVolGeom);
+	assert(pProjGeom);
+	assert(pProjGeom->getProjectionVectors());
+
+	int nth = pProjGeom->getProjectionCount();
+
+	projs.resize(nth);
+	for (int i = 0; i < nth; ++i)
+		projs[i] = pProjGeom->getProjectionVectors()[i];
+
+	bool ok;
+
+	ok = convertAstraGeometry_internal(pVolGeom, projs, volScale);
+
+	return ok;
+}
+
+static bool convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
+                          const CCylConeVecProjectionGeometry3D* pProjGeom,
+                          std::vector<SCylConeProjection>& projs, SVolScale3D& volScale)
+{
+	assert(pVolGeom);
+	assert(pProjGeom);
+	assert(pProjGeom->getProjectionVectors());
+
+	int nth = pProjGeom->getProjectionCount();
+
+	projs.resize(nth);
+	for (int i = 0; i < nth; ++i)
+		projs[i] = pProjGeom->getProjectionVectors()[i];
+
+	bool ok;
+
+	ok = convertAstraGeometry_unscaled_internal(pVolGeom, projs, volScale);
+
+	return ok;
+}
+
+Geometry3DParameters convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
+                                        const CProjectionGeometry3D* pProjGeom,
+                                        SVolScale3D& volScale)
+{
+	const CConeProjectionGeometry3D* conegeom = dynamic_cast<const CConeProjectionGeometry3D*>(pProjGeom);
+	const CParallelProjectionGeometry3D* par3dgeom = dynamic_cast<const CParallelProjectionGeometry3D*>(pProjGeom);
+	const CParallelVecProjectionGeometry3D* parvec3dgeom = dynamic_cast<const CParallelVecProjectionGeometry3D*>(pProjGeom);
+	const CConeVecProjectionGeometry3D* conevec3dgeom = dynamic_cast<const CConeVecProjectionGeometry3D*>(pProjGeom);
+	const CCylConeVecProjectionGeometry3D* cylconevec3dgeom = dynamic_cast<const CCylConeVecProjectionGeometry3D*>(pProjGeom);
+
+	bool ok;
+
+
+	if (conegeom || conevec3dgeom) {
+		std::vector<SConeProjection> coneProjs;
+		if (conegeom)
+			ok = convertAstraGeometry(pVolGeom, conegeom, coneProjs, volScale);
+		else
+			ok = convertAstraGeometry(pVolGeom, conevec3dgeom, coneProjs, volScale);
+
+		if (ok)
+			return Geometry3DParameters::variant_t(std::move(coneProjs));
+		else
+			return Geometry3DParameters::variant_t();
+	} else if (par3dgeom || parvec3dgeom) {
+		std::vector<SPar3DProjection> parProjs;
+		if (par3dgeom)
+			ok = convertAstraGeometry(pVolGeom, par3dgeom, parProjs, volScale);
+		else
+			ok = convertAstraGeometry(pVolGeom, parvec3dgeom, parProjs, volScale);
+
+		if (ok)
+			return Geometry3DParameters::variant_t(std::move(parProjs));
+		else
+			return Geometry3DParameters::variant_t();
+	} else if (cylconevec3dgeom) {
+		std::vector<SCylConeProjection> cylConeProjs;
+		ok = convertAstraGeometry(pVolGeom, cylconevec3dgeom, cylConeProjs, volScale);
+		if (ok)
+			return Geometry3DParameters::variant_t(std::move(cylConeProjs));
+		else
+			return Geometry3DParameters::variant_t();
+	} else {
+		ok = false;
+	}
+
+	return Geometry3DParameters::variant_t();
+}
+
+
+
 
 
 }

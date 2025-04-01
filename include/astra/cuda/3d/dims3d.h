@@ -38,6 +38,10 @@ using astra::SCylConeProjection;
 using astra::SPar3DProjection;
 
 
+using astra::SDimensions3D;
+using astra::SVolScale3D;
+
+
 enum Cuda3DProjectionKernel {
 	ker3d_default = 0,
 	ker3d_sum_square_weights,
@@ -46,30 +50,18 @@ enum Cuda3DProjectionKernel {
 	ker3d_matched_bp
 };
 
-
-struct SDimensions3D {
-	unsigned int iVolX;
-	unsigned int iVolY;
-	unsigned int iVolZ;
-	unsigned int iProjAngles;
-	unsigned int iProjU; // number of detectors in the U direction
-	unsigned int iProjV; // number of detectors in the V direction
-};
-
 struct SProjectorParams3D {
 	SProjectorParams3D() :
+        volScale(), 
 	    iRaysPerDetDim(1), iRaysPerVoxelDim(1),
 	    fOutputScale(1.0f),
-	    fVolScaleX(1.0f), fVolScaleY(1.0f), fVolScaleZ(1.0f),
 	    projKernel(ker3d_default)
 	{ }
 
+	SVolScale3D volScale;
 	unsigned int iRaysPerDetDim;
 	unsigned int iRaysPerVoxelDim;
 	float fOutputScale;
-	float fVolScaleX;
-	float fVolScaleY;
-	float fVolScaleZ;
 	Cuda3DProjectionKernel projKernel;
 };
 

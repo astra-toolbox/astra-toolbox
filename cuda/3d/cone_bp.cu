@@ -265,7 +265,7 @@ bool transferConstants(const SConeProjection* angles, unsigned int iProjAngles, 
 			// operating on a single slice.
 			// fDen = |cross(u,e_v)| || u v (s-x) || / || u v (s-d) ||
 			Vec3 ev(0, 0, 1);
-			fScale = scaled_cross3(u,ev,Vec3(params.fVolScaleX,params.fVolScaleY,params.fVolScaleZ)).norm() / det3(u, v, s-d);
+			fScale = scaled_cross3(u,ev,Vec3(params.volScale.fX,params.volScale.fY,params.volScale.fZ)).norm() / det3(u, v, s-d);
 
 		} else {
 			// goal: 1/fDen^2 = || u v (s-d) ||^2 / ( |cross(u,v)| * || u v (s-x) ||^2 )
@@ -277,7 +277,7 @@ bool transferConstants(const SConeProjection* angles, unsigned int iProjAngles, 
 			// size normalization) to get the proper dimensions for
 			// the scaling of the adjoint
 
-			fScale = sqrt(scaled_cross3(u,v,Vec3(params.fVolScaleX,params.fVolScaleY,params.fVolScaleZ)).norm()) / det3(u, v, s-d);
+			fScale = sqrt(scaled_cross3(u,v,Vec3(params.volScale.fX,params.volScale.fY,params.volScale.fZ)).norm()) / det3(u, v, s-d);
 		}
 
 		p[i].fNumU.w = fScale * det3(s,v,d);
@@ -322,9 +322,9 @@ bool ConeBP_Array(cudaPitchedPtr D_volumeData,
 	float fOutputScale;
 	if (params.projKernel == ker3d_fdk_weighting) {
 		// NB: assuming cube voxels here
-		fOutputScale = params.fOutputScale / (params.fVolScaleX);
+		fOutputScale = params.fOutputScale / (params.volScale.fX);
 	} else {
-		fOutputScale = params.fOutputScale * (params.fVolScaleX * params.fVolScaleY * params.fVolScaleZ);
+		fOutputScale = params.fOutputScale * (params.volScale.fX * params.volScale.fY * params.volScale.fZ);
 	}
 
 	bool ok = true;

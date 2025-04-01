@@ -250,7 +250,7 @@ bool ConeCylBP_Array(cudaPitchedPtr D_volumeData,
 		return false;
 	}
 
-	float fOutputScale = params.fOutputScale * (params.fVolScaleX * params.fVolScaleY * params.fVolScaleZ);
+	float fOutputScale = params.fOutputScale * (params.volScale.fX * params.volScale.fY * params.volScale.fZ);
 
 	bool ok = true;
 
@@ -274,10 +274,10 @@ bool ConeCylBP_Array(cudaPitchedPtr D_volumeData,
 		// printf("Calling BP: %d, %dx%d, %dx%d to %p\n", i, dimBlock.x, dimBlock.y, dimGrid.x, dimGrid.y, (void*)D_volumeData.ptr); 
 			if (params.iRaysPerVoxelDim == 1) {
 				if (dims.iVolZ == 1) {
-					dev_cylcone_BP<1><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), D_texObj, i, th, dims, fOutputScale, params.fVolScaleX, params.fVolScaleY, params.fVolScaleZ);
+					dev_cylcone_BP<1><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), D_texObj, i, th, dims, fOutputScale, params.volScale.fX, params.volScale.fY, params.volScale.fZ);
 
 				} else {
-					dev_cylcone_BP<g_volBlockZ><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), D_texObj, i, th, dims, fOutputScale, params.fVolScaleX, params.fVolScaleY, params.fVolScaleZ);
+					dev_cylcone_BP<g_volBlockZ><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), D_texObj, i, th, dims, fOutputScale, params.volScale.fX, params.volScale.fY, params.volScale.fZ);
 				}
 			} else {
 				// TODO?

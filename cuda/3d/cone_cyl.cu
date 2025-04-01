@@ -523,13 +523,13 @@ bool ConeCylFP_Array_internal(cudaPitchedPtr D_projData,
 
 				if (blockDirection == 0) {
 					for (unsigned int i = 0; i < dims.iVolX; i += g_blockSlices)
-						cylcone_FP_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, i, blockStart, blockEnd, dims, fDetRadius, params.fVolScaleX, params.fVolScaleY, params.fVolScaleZ, params.fOutputScale);
+						cylcone_FP_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, i, blockStart, blockEnd, dims, fDetRadius, params.volScale.fX, params.volScale.fY, params.volScale.fZ, params.fOutputScale);
 				} else if (blockDirection == 1) {
 					for (unsigned int i = 0; i < dims.iVolY; i += g_blockSlices)
-						cylcone_FP_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, i, blockStart, blockEnd, dims, fDetRadius, params.fVolScaleX, params.fVolScaleY, params.fVolScaleZ, params.fOutputScale);
+						cylcone_FP_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, i, blockStart, blockEnd, dims, fDetRadius, params.volScale.fX, params.volScale.fY, params.volScale.fZ, params.fOutputScale);
 				} else if (blockDirection == 2) {
 					for (unsigned int i = 0; i < dims.iVolZ; i += g_blockSlices)
-						cylcone_FP_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, i, blockStart, blockEnd, dims, fDetRadius, params.fVolScaleX, params.fVolScaleY, params.fVolScaleZ, params.fOutputScale);
+						cylcone_FP_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, i, blockStart, blockEnd, dims, fDetRadius, params.volScale.fX, params.volScale.fY, params.volScale.fZ, params.fOutputScale);
 				}
 
 			}
@@ -596,13 +596,13 @@ bool ConeCylBP_Array_internal(cudaPitchedPtr D_volData,
 
 				if (blockDirection == 0) {
 					for (unsigned int i = 0; i < dims.iVolX; i += g_blockSlices)
-						cylcone_BP_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_volData.ptr, D_volData.pitch/sizeof(float), D_texObj, i, startAngle, blockStart, blockEnd, dims, fDetRadius, params.fVolScaleX, params.fVolScaleY, params.fVolScaleZ);
+						cylcone_BP_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_volData.ptr, D_volData.pitch/sizeof(float), D_texObj, i, startAngle, blockStart, blockEnd, dims, fDetRadius, params.volScale.fX, params.volScale.fY, params.volScale.fZ);
 				} else if (blockDirection == 1) {
 					for (unsigned int i = 0; i < dims.iVolY; i += g_blockSlices)
-						cylcone_BP_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_volData.ptr, D_volData.pitch/sizeof(float), D_texObj, i, startAngle, blockStart, blockEnd, dims, fDetRadius, params.fVolScaleX, params.fVolScaleY, params.fVolScaleZ);
+						cylcone_BP_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_volData.ptr, D_volData.pitch/sizeof(float), D_texObj, i, startAngle, blockStart, blockEnd, dims, fDetRadius, params.volScale.fX, params.volScale.fY, params.volScale.fZ);
 				} else if (blockDirection == 2) {
 					for (unsigned int i = 0; i < dims.iVolZ; i += g_blockSlices)
-						cylcone_BP_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_volData.ptr, D_volData.pitch/sizeof(float), D_texObj, i, startAngle, blockStart, blockEnd, dims, fDetRadius, params.fVolScaleX, params.fVolScaleY, params.fVolScaleZ);
+						cylcone_BP_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_volData.ptr, D_volData.pitch/sizeof(float), D_texObj, i, startAngle, blockStart, blockEnd, dims, fDetRadius, params.volScale.fX, params.volScale.fY, params.volScale.fZ);
 				}
 
 			}
