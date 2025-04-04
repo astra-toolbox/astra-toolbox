@@ -24,6 +24,7 @@
 # -----------------------------------------------------------------------
 
 from . import data3d_c as d
+from .pythonutils import GPULink
 
 
 def create(datatype,geometry,data=None):
