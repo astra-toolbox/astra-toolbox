@@ -516,7 +516,10 @@ def create_reconstruction(rec_type, proj_id, sinogram, iterations=1, use_mask='n
     else:
         sino_id = sinogram
     vol_geom = projector.volume_geometry(proj_id)
-    recon_id = data2d.create('-vol', vol_geom, 0)
+    if rec_type == 'EM_CUDA':
+        recon_id = data2d.create('-vol', vol_geom, 1.0)
+    else:
+        recon_id = data2d.create('-vol', vol_geom, 0.0)
     cfg = astra_dict(rec_type)
     cfg['ProjectorId'] = proj_id
     cfg['ProjectionDataId'] = sino_id
