@@ -27,9 +27,7 @@ import os
 import sys
 import numpy as np
 
-from distutils.core import setup
-
-from setuptools import Command
+from setuptools import setup, Command
 
 from Cython.Distutils import build_ext
 from Cython.Build import cythonize
