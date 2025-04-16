@@ -8,6 +8,11 @@ License: Open Source under GPLv3
 Contact: astra@astra-toolbox.com
 Website: https://www.astra-toolbox.com/
 -----------------------------------------------------------------------
+2.3.1 (2025-04-16)
+ * fix GPULink missing in astra.data3d module
+ * fix crash in Matlab when calling astra_mex_direct
+ * fix missing accelerated virtual GPU code for CUDA architectures > 8.6 in Linux packages
+
 2.3.0 (2025-02-22)
  * add support for zero-copy linking of GPU/CPU arrays from Python libraries supporting the DLPack
    standard, including PyTorch, TensorFlow, CuPy and JAX

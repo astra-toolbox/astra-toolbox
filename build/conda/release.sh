@@ -5,7 +5,7 @@ set -e
 D=`mktemp -d`
 cp build.sh $D
 
-V=2.3.0
+V=2.3.1
 B=0
 
 podman run --rm -v $D:/out:z astra-build-deb9 /bin/bash /out/build.sh $V $B deb9 full
