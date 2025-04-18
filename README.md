@@ -1,6 +1,6 @@
 # The ASTRA Toolbox
 
-The ASTRA Toolbox is a MATLAB and Python toolbox of high-performance GPU primitives for 2D and 3D tomography.
+The ASTRA Toolbox is a Python and MATLAB toolbox of high-performance GPU primitives for 2D and 3D tomography.
 
 We support 2D parallel and fan beam geometries, and 3D parallel and cone beam.  All of them have highly flexible source/detector positioning.
 
@@ -12,7 +12,7 @@ The basic forward and backward projection operations are GPU-accelerated, and di
 
 ## Documentation / samples
 
-See the MATLAB and Python code samples in the `samples/` directory and on https://www.astra-toolbox.com/.
+See the Python and MATLAB code samples in the `samples/` directory and https://www.astra-toolbox.com/docs/.
 
 
 ## Installation instructions
@@ -49,16 +49,27 @@ provided by NVIDIA.
 
 ### Windows, binary
 
-Add the mex and tools subdirectories to your MATLAB path, or install the Python
+Download and unpack .zip archive for the desired version from https://astra-toolbox.com/downloads/.
+Add the mex\ and tools\ subdirectories to your MATLAB path, or install the Python
 wheel using pip. We require the Microsoft Visual Studio 2017 redistributable
 package. If this is not already installed on your system, it is included as
 vc_redist.x64.exe in the ASTRA zip file.
 
 ### Linux, from source
 
+Requirements: automake, libtool, g++ (7 or higher), CUDA (11.0 or higher)
+
+Build dependencies can be obtained via the OS package manager or via conda. For example, a conda
+environment with a full set of dependencies can be created with:
+
+`conda create -n astra-build automake libtool gxx cuda-minimal-build libcufft-dev python cython scipy -c conda-forge`
+
+You can then do `conda activate astra-build` and use `--with-cuda=$CONDA_PREFIX` in the build
+configuration.
+
 #### For MATLAB
 
-Requirements: g++ (7 or higher), CUDA (11.0 or higher), MATLAB (R2012a or higher)
+Additional requirements: MATLAB (R2012a or higher)
 
 ```
 cd build/linux
@@ -89,7 +100,7 @@ MATLAB.
 
 #### For Python
 
-Requirements: g++ (7 or higher), CUDA (11.0 or higher), Python (3.x), setuptools, Cython, scipy
+Additional requirements: Python (3.x), setuptools, Cython, scipy
 
 ```
 cd build/linux
@@ -104,8 +115,6 @@ make install
 This will install Astra into your current Python environment.
 
 #### As a C++ library
-
-Requirements: g++ (7 or higher), CUDA (11.0 or higher)
 
 ```
 cd build/linux
@@ -140,21 +149,27 @@ Requirements: Visual Studio 2017 (full or community),
               CUDA (11.0 or higher), MATLAB (R2012a or higher)
               and/or Python 3.x + setuptools + Cython + scipy.
 
-Using the Visual Studio IDE:
+#### Using the Visual Studio IDE:
 
-* Set the environment variable MATLAB_ROOT to your MATLAB install location.
-* Open build\msvc\astra_vc14.sln in Visual Studio.
-* Select the appropriate solution configuration (typically Release_CUDA|x64).
-* Build the solution.
-* Install by copying AstraCuda64.dll and all .mexw64 files from build\msvc\bin\x64\Release_CUDA
-  and the entire matlab\tools directory to a directory to be added to your MATLAB path.
+1. Set the environment variable MATLAB_ROOT to your MATLAB install location.
+2. Open build\msvc\astra_vc14.sln in Visual Studio.
+3. Select the appropriate solution configuration (typically Release_CUDA|x64).
+4. Build the solution.
+5. Install by copying AstraCuda64.dll and all .mexw64 files from build\msvc\bin\x64\Release_CUDA
+   and the entire matlab\tools directory to a directory to be added to your MATLAB path.
 
 
-Using .bat scripts in build\msvc:
+#### Using .bat scripts in build\msvc:
 
-* Edit build_env.bat and set up the correct library versions and paths.
-* For MATLAB: Run build_matlab.bat. The .dll and .mexw64 files will be in build\msvc\bin\x64\Release_Cuda.
-* For Python: Run build_python3.bat. Astra will be directly installed into site-packages.
+1. Edit build_env.bat and set up the correct library versions and paths.
+2. * For MATLAB: Run build_matlab.bat. The .dll and .mexw64 files will be in build\msvc\bin\x64\Release_Cuda.
+   * For Python: Run build_python3.bat. This will produce a Wheel file in python\dist directory, which can be installed using pip.
+
+
+### Conda packages
+
+See the instructions [here](build/conda/README.md).
+
 
 ## Testing your installation
 
