@@ -1,4 +1,4 @@
-$c = @(
+@(
 #'https://developer.download.nvidia.com/compute/cuda/10.2/Prod/local_installers/cuda_10.2.89_441.22_win10.exe'
 #'https://developer.download.nvidia.com/compute/cuda/10.2/Prod/patches/1/cuda_10.2.1_win10.exe'
 #'https://developer.download.nvidia.com/compute/cuda/10.2/Prod/patches/2/cuda_10.2.2_win10.exe'
@@ -23,18 +23,17 @@ $c = @(
 #'https://developer.download.nvidia.com/compute/cuda/12.8.0/local_installers/cuda_12.8.0_571.96_windows.exe'
 'https://developer.download.nvidia.com/compute/cuda/12.8.1/local_installers/cuda_12.8.1_572.61_windows.exe'
 #'https://developer.download.nvidia.com/compute/cuda/12.9.0/local_installers/cuda_12.9.0_576.02_windows.exe'
-)
-
-$c | %{
-  $fn = ([uri] $_).Segments[-1]
-  $swfn = 'C:\vagrant\sw\' + $fn
-  if (Test-Path $swfn) {
-    echo ('Using local ' + $fn)
-    copy $swfn cuda.exe
+) | ForEach-Object {
+  $filename = ([uri] $_).Segments[-1]
+  $cache_filename = 'C:\vagrant\sw\' + $filename
+  if (Test-Path $cache_filename) {
+    Write-Host ('Using local ' + $filename)
+    Copy-Item $cache_filename cuda.exe
   } else {
-    echo ('Downloading ' + $fn)
+    Write-Host ('Downloading ' + $filename)
+    # curl is much faster than the native PowerShell Invoke-WebRequest
     curl.exe -L -o cuda.exe $_
   }
-  .\cuda.exe -s | more
-  del cuda.exe
+  Start-Process -Wait cuda.exe -s
+  Remove-Item cuda.exe
 }
