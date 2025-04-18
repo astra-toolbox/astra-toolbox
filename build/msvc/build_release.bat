@@ -77,7 +77,7 @@ echo Sample code can be found in the samples\ directory.
 pause
 
 cd %R%\build\msvc\release
-%B_WINPYTHON3%\python -c "import shutil; shutil.make_archive('astra-%B_RELEASE%-matlab-win-x64', 'zip', 'matlab')"
-%B_WINPYTHON3%\python -c "import shutil; shutil.make_archive('astra-%B_RELEASE%-python313-win-x64', 'zip', 'python313')"
+%B_WINPYTHON3%\python -c "import shutil; shutil.make_archive('astra-toolbox-%B_RELEASE%-matlab-win-x64', 'zip', 'matlab')"
+%B_WINPYTHON3%\python -c "import shutil; shutil.make_archive('astra-toolbox-%B_RELEASE%-python313-win-x64', 'zip', 'python313')"
 
 pause
