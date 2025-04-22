@@ -5,6 +5,4 @@ set B_VC=C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxili
 
 set B_VCREDIST=C:\Users\Vagrant\vc_redist.x64.exe
 
-set B_README_WP3=%B_WINPYTHON3%\Lib\site-packages
-
 set B_RELEASE=2.3.0
