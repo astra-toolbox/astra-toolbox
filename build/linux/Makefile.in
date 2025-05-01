@@ -65,13 +65,19 @@ NVCC       = @NVCC@
 endif
 
 ifeq ($(matlab),yes)
-# TODO: Do we also want -fopenmp for octave?
 CPPFLAGS+=-I$(MATLAB_ROOT)/extern/include -DMATLAB_MEX_FILE @CPPFLAGS_MATLAB@
 ifeq ($(macos),no)
 CXXFLAGS+=-fopenmp
 LDFLAGS+=-fopenmp
 endif
 endif
+ifeq ($(octave),yes)
+ifeq ($(macos),no)
+CXXFLAGS+=-fopenmp
+LDFLAGS+=-fopenmp
+endif
+endif
+
 
 # MODLDFLAGS are the base LDFLAGS for matlab, octave, python modules
 MODLDFLAGS=$(LDFLAGS) -L$(abs_top_builddir)/.libs
