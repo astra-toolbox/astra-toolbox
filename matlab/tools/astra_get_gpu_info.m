@@ -1,7 +1,7 @@
-function astra_set_gpu_index(index)
+function astra_get_gpu_info(index)
 
 %--------------------------------------------------------------------------
-% Set the index of the GPU to use
+% Print information on the available GPUs
 %--------------------------------------------------------------------------
 %--------------------------------------------------------------------------
 % This file is part of the ASTRA Toolbox
