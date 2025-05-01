@@ -243,7 +243,6 @@ class TestOptionsCPU:
     def test_sart_projection_order(self, proj_geom, projector, projection_order):
         options = {'ProjectionOrder': projection_order}
         if projection_order == 'custom':
-            pytest.xfail('Known bug')
             # Set projection order to 0, 5, 10, ..., 175, 1, 6, 11, ... , 176, 2, 7, ...
             proj_order_list = np.arange(N_ANGLES).reshape(-1, 5).T.flatten()
             options['ProjectionOrderList'] = proj_order_list
@@ -256,11 +255,10 @@ class TestOptionsCPU:
     def test_art_ray_order(self, proj_geom, projector, ray_order):
         options = {'RayOrder': ray_order}
         if ray_order == 'custom':
-            pytest.xfail('Known bug')
             # Every combination of (projection_id, detector_id)
             all_rays = np.mgrid[:N_ANGLES, :DET_COUNT].T.reshape(-1, 2)
             ray_order_list = np.random.permutation(all_rays).flatten()
-            options['ProjectionOrderList'] = ray_order_list
+            options['RayOrderList'] = ray_order_list
         algorithm_config = make_algorithm_config(algorithm_type='ART', proj_geom=proj_geom,
                                                  projector=projector, options=options)
         reconstruction = get_algorithm_output(algorithm_config)
