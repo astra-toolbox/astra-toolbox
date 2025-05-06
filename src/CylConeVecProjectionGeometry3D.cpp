@@ -300,10 +300,10 @@ void CCylConeVecProjectionGeometry3D::getProjectedBBoxSingleAngle(int iAngle,
 		double theta = (vol_u[j] + 0.5 - 0.5*m_iDetectorColCount) * fDetUT;
 
 		// truncate to half circle. (In particular for +/- infinity if rays miss the detector)
-		if (theta < -M_PI/2)
-			theta = -M_PI/2;
-		if (theta > M_PI/2)
-			theta = M_PI/2;
+		if (theta < -PI/2)
+			theta = -PI/2;
+		if (theta > PI/2)
+			theta = PI/2;
 
 
 		Vec3 x = cylc + cyla * cos(theta) + cylb * sin(theta) + v * vv;
@@ -465,11 +465,11 @@ void CCylConeVecProjectionGeometry3D::projectPoint(double fX, double fY, double 
 		double tu = det3(u, d-s, v);
 		double tx = det3(x-s, d-s, v);
 		if (tu*tx < 0) {
-			fU = -1.0/0.0;
+			fU = -INFINITY;
 		} else {
-			fU = 1.0/0.0;
+			fU = INFINITY;
 		}
-		fV = 0.0/0.0;
+		fV = NAN;
 	}
 }
 
