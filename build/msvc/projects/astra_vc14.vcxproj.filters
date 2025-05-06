@@ -195,6 +195,9 @@
     <ClCompile Include="..\..\..\src\ConeVecProjectionGeometry3D.cpp">
       <Filter>Geometries\source</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\CylConeVecProjectionGeometry3D.cpp">
+      <Filter>Geometries\source</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\FanFlatProjectionGeometry2D.cpp">
       <Filter>Geometries\source</Filter>
     </ClCompile>
@@ -462,6 +465,9 @@
       <Filter>Geometries\headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\astra\ConeVecProjectionGeometry3D.h">
+      <Filter>Geometries\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\astra\CylConeVecProjectionGeometry3D.h">
       <Filter>Geometries\headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\astra\FanFlatProjectionGeometry2D.h">

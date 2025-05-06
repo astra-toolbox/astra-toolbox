@@ -298,6 +298,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\CylConeVecProjectionGeometry3D.cpp" />
     <ClCompile Include="..\..\..\src\Data3D.cpp" />
     <ClCompile Include="..\..\..\src\DataProjector.cpp" />
     <ClCompile Include="..\..\..\src\DataProjectorPolicies.cpp" />
@@ -383,6 +384,7 @@
     <ClInclude Include="..\..\..\include\astra\CudaSartAlgorithm.h" />
     <ClInclude Include="..\..\..\include\astra\CudaSirtAlgorithm.h" />
     <ClInclude Include="..\..\..\include\astra\CudaSirtAlgorithm3D.h" />
+    <ClInclude Include="..\..\..\include\astra\CylConeVecProjectionGeometry3D.h" />
     <ClInclude Include="..\..\..\include\astra\Data3D.h" />
     <ClInclude Include="..\..\..\include\astra\DataProjector.h" />
     <ClInclude Include="..\..\..\include\astra\DataProjectorPolicies.h" />
