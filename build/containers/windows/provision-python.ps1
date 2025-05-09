@@ -12,5 +12,6 @@ C:\python313\python -m pip install numpy scipy cython setuptools wheel
 
 choco install -y miniconda3
 C:\tools\miniconda3\shell\condabin\conda-hook.ps1
+conda config --add channels defaults
 conda activate base
 conda install -y conda-build conda-verify

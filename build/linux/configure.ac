@@ -276,20 +276,18 @@ if test x"$with_python" != x -a x"$with_python" != xno; then
     AC_MSG_ERROR(You need the scipy module to use the ASTRA toolbox in Python)
   fi
   AC_MSG_RESULT(yes)
+  AC_MSG_CHECKING(for tomli/tomllib modules)
+  ASTRA_TRY_PYTHON([import tomllib],,HAVEPYTHON=no)
+  if test x$HAVEPYTHON = xno; then
+    ASTRA_TRY_PYTHON([import tomli],HAVEPYTHON=yes,HAVEPYTHON=no)
+    if test x$HAVEPYTHON = xno; then
+      AC_MSG_ERROR(You need the tomli or tomllib module to install the ASTRA toolbox for Python)
+    fi
+  fi
+  AC_MSG_RESULT(yes)
 fi
 
 AC_SUBST(HAVEPYTHON)
-
-AC_ARG_WITH(python-wheel-platform, [[  --with-python-wheel-platform=platform  platform name to use for .whl (optional)]],,)
-PYTHON_WHEEL_PLATFORM=
-AC_MSG_CHECKING(for platform name to use for Python wheel)
-if test x"$with_python_wheel_platform" != x -a x"$with_python_wheel_platform" != xno; then
-  PYTHON_WHEEL_PLATFORM=$with_python_wheel_platform
-  AC_MSG_RESULT($PYTHON_WHEEL_PLATFORM)
-else
-  AC_MSG_RESULT(default)
-fi
-AC_SUBST(PYTHON_WHEEL_PLATFORM)
 
 #OS specific setup
 AC_CANONICAL_HOST
