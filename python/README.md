@@ -4,9 +4,9 @@
 
 If you use the ASTRA Toolbox for your research, we would appreciate it if you would refer to the following papers:
 
-*W. van Aarle, W. J. Palenstijn, J. Cant, E. Janssens, F. Bleichrodt, A. Dabravolski, J. De Beenhouwer, K. J. Batenburg, and J. Sijbers, “Fast and Flexible X-ray Tomography Using the ASTRA Toolbox”, Optics Express, 24(22), 25129-25147, (2016), https://dx.doi.org/10.1364/OE.24.025129*
+*W. van Aarle, W. J. Palenstijn, J. Cant, E. Janssens, F. Bleichrodt, A. Dabravolski, J. De Beenhouwer, K. J. Batenburg, and J. Sijbers, "Fast and Flexible X-ray Tomography Using the ASTRA Toolbox", Optics Express, 24(22), 25129-25147, (2016), https://dx.doi.org/10.1364/OE.24.025129*
 
-*W. van Aarle, W. J. Palenstijn, J. De Beenhouwer, T. Altantzis, S. Bals, K. J. Batenburg, and J. Sijbers, “The ASTRA Toolbox: A platform for advanced algorithm development in electron tomography”, Ultramicroscopy, 157, 35–47, (2015), https://dx.doi.org/10.1016/j.ultramic.2015.05.002*
+*W. van Aarle, W. J. Palenstijn, J. De Beenhouwer, T. Altantzis, S. Bals, K. J. Batenburg, and J. Sijbers, "The ASTRA Toolbox: A platform for advanced algorithm development in electron tomography", Ultramicroscopy, 157, 35-47, (2015), https://dx.doi.org/10.1016/j.ultramic.2015.05.002*
 
 Additionally, if you use parallel beam GPU code, we would appreciate it if you would refer to the following paper:
 
