@@ -23,23 +23,53 @@
 #
 # -----------------------------------------------------------------------
 
-from . import matlab as m
-from .creators import astra_dict,create_vol_geom, create_proj_geom, create_backprojection, create_sino, create_reconstruction, create_projector,create_sino3d_gpu, create_backprojection3d_gpu
-from .functions import data_op, add_noise_to_sino, clear, move_vol_geom, geom_size, geom_2vec, geom_postalignment
-from .extrautils import clipCircle
-from .astra import set_gpu_index, get_gpu_info, use_cuda, has_feature
-from . import data2d
+# Import astra module first to make error message less confusing in case of import error
 from . import astra
-from . import data3d
+
 from . import algorithm
-from . import projector
-from . import projector3d
+from . import data2d
+from . import data3d
+from . import log
+from . import matlab as m
 from . import matrix
 from . import plugin
 from . import plugins
-from . import log
+from . import projector
+from . import projector3d
+
+from .astra import (
+    get_gpu_info,
+    has_feature,
+    set_gpu_index,
+    use_cuda
+)
+from .creators import (
+    astra_dict,
+    create_backprojection,
+    create_backprojection3d_gpu,
+    create_proj_geom,
+    create_projector,
+    create_reconstruction,
+    create_sino,
+    create_sino3d_gpu,
+    create_vol_geom
+)
+from .extrautils import clipCircle
+from .functions import (
+    add_noise_to_sino,
+    clear,
+    data_op,
+    geom_2vec,
+    geom_postalignment,
+    geom_size,
+    move_vol_geom
+)
 from .optomo import OpTomo
-from .tests import test, test_noCUDA, test_CUDA
+from .tests import (
+    test,
+    test_CUDA,
+    test_noCUDA
+)
 
 __version__ = '2.3.0'
 
