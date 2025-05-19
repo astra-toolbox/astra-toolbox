@@ -78,6 +78,7 @@ public:
 		// destroy the shared array
 		//fprintf(stderr, "Destroy:\narray: %p\tdata: %p\n", (void*)m_pLink, (void*)mxGetData(m_pLink));
 		mxDestroyArray(m_pLink);
+		this->m_pfData = nullptr;
 	}
 private:
 	mxArray* m_pLink;
