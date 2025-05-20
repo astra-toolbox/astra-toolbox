@@ -44,6 +44,7 @@ template<typename T>
 void CDataMemory<T>::_allocateData(size_t size)
 {
 	ASTRA_ASSERT(m_pfData == NULL);
+	ASTRA_ASSERT(m_bOwnData);
 
 	// allocate contiguous block
 #ifdef _MSC_VER
@@ -58,6 +59,9 @@ void CDataMemory<T>::_allocateData(size_t size)
 template<typename T>
 void CDataMemory<T>::_freeData()
 {
+	if (!m_bOwnData)
+		return;
+
 	// free memory for data block
 #ifdef _MSC_VER
 	_aligned_free(m_pfData);

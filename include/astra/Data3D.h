@@ -51,7 +51,7 @@ template <typename T>
 class _AstraExport CDataMemory : public CDataStorage {
 public:
 
-	CDataMemory(size_t size) : m_pfData(nullptr) { _allocateData(size); }
+	CDataMemory(size_t size) : m_bOwnData(true), m_pfData(nullptr) { _allocateData(size); }
 	virtual ~CDataMemory() { _freeData(); }
 
 	T* getData() { return m_pfData; }
@@ -62,8 +62,9 @@ public:
 	virtual bool isFloat32() const { return std::is_same_v<T, float32>; }
 
 protected:
+	bool m_bOwnData;
 	T* m_pfData;
-	CDataMemory() : m_pfData(nullptr) { }
+	CDataMemory() : m_bOwnData(false), m_pfData(nullptr) { }
 
 private:
 	void _allocateData(size_t size);
