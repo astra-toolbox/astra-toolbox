@@ -24,7 +24,6 @@
 # -----------------------------------------------------------------------
 #
 # distutils: language = c++
-# distutils: libraries = astra
 
 from __future__ import print_function
 

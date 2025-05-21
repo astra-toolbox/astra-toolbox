@@ -24,7 +24,6 @@
 # -----------------------------------------------------------------------
 #
 # distutils: language = c++
-# distutils: libraries = astra
 
 from libcpp.string cimport string
 

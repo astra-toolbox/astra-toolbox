@@ -24,7 +24,6 @@
 # -----------------------------------------------------------------------
 #
 # distutils: language = c++
-# distutils: libraries = astra
 
 from __future__ import print_function
 
@@ -59,7 +58,7 @@ cdef CData2DManager * man2d = <CData2DManager * >PyData2DManager.getSingletonPtr
 cdef CProjector2DManager * manProj = <CProjector2DManager * >PyProjector2DManager.getSingletonPtr()
 
 
-cdef extern from "CFloat32CustomPython.h":
+cdef extern from "src/CFloat32CustomPython.h":
     cdef cppclass CFloat32CustomPython:
         CFloat32CustomPython(np.ndarray arrIn)
 
