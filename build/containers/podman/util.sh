@@ -61,6 +61,7 @@ setup_conda() {
   echo Installing $(basename $MINICONDA)
   buildah run --volume `pwd`/sw:/sw:ro,z $ctr bash /sw/$(basename $MINICONDA) -b
   buildah config --env PATH=/root/miniconda3/bin:$(buildah run $ctr printenv PATH) $ctr
+  buildah run $ctr conda config --add channels defaults
   buildah run $ctr conda install -y conda-build conda-verify
   buildah run $ctr conda config --set solver libmamba
 }

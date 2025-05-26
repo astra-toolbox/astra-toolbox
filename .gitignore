@@ -40,6 +40,7 @@ __pycache__
 /build/linux/src/*
 /build/linux/matlab/*
 /build/linux/python/*
+/build/linux/*-stamp
 
 # MSVC build output
 /build/msvc/bin/

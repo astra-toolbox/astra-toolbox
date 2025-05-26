@@ -1,0 +1,32 @@
+# TODO: Move more metadata here from setup.py
+# (And figure out how to not make that ship every single file)
+
+[build-system]
+requires = ["setuptools", "numpy", "Cython"]
+build-backend = "setuptools.build_meta"
+
+[tool.astra.nocuda]
+cuda = false
+
+[tool.astra.cuda]
+cuda = true
+
+[tool.astra.linux_module]
+extra_lib = [ 'astra/libastra.so*' ]
+cuda = false
+
+[tool.astra.linux_module_cuda]
+extra_lib = [ 'astra/libastra.so*' ]
+cuda = true
+
+[tool.astra.windows_cuda]
+extra_lib = [ 'astra/AstraCuda64.dll', 'astra/cudart64_12.dll', 'astra/cufft64_11.dll' ]
+cuda = true
+
+[tool.astra.pypi_linux_cuda]
+install_requires = ['nvidia-cuda-runtime-cu12==12.5.82', 'nvidia-cufft-cu12==11.2.3.61']
+extra_lib = [ 'astra/libastra.so*' ]
+cuda = true
+
+[tool.astra.conda_cuda]
+cuda = true
