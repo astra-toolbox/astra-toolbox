@@ -28,8 +28,12 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/cuda/3d/algo3d.h"
 #include "astra/cuda/3d/cone_fp.h"
 #include "astra/cuda/3d/cone_bp.h"
+#include "astra/cuda/3d/cone_cyl.h"
 #include "astra/cuda/3d/par3d_fp.h"
 #include "astra/cuda/3d/par3d_bp.h"
+
+#include "astra/GeometryUtil3D.h"
+#include "astra/Logging.h"
 
 #include <cassert>
 
@@ -37,49 +41,27 @@ namespace astraCUDA3d {
 
 ReconAlgo3D::ReconAlgo3D()
 {
-	coneProjs = 0;
-	par3DProjs = 0;
+
 }
 
 ReconAlgo3D::~ReconAlgo3D()
 {
-	reset();
+
 }
 
 void ReconAlgo3D::reset()
 {
-	delete[] coneProjs;
-	coneProjs = 0;
-	delete[] par3DProjs;
-	par3DProjs = 0;
+	projs.clear();
 }
 
-bool ReconAlgo3D::setConeGeometry(const SDimensions3D& _dims, const SConeProjection* _angles, const SProjectorParams3D& _params)
+bool ReconAlgo3D::setGeometry(const SDimensions3D& _dims, const astra::Geometry3DParameters& _projs, const SProjectorParams3D& _params)
 {
 	dims = _dims;
 	params = _params;
-
-	coneProjs = new SConeProjection[dims.iProjAngles];
-	par3DProjs = 0;
-
-	memcpy(coneProjs, _angles, sizeof(coneProjs[0]) * dims.iProjAngles);
+	projs = _projs;
 
 	return true;
 }
-
-bool ReconAlgo3D::setPar3DGeometry(const SDimensions3D& _dims, const SPar3DProjection* _angles, const SProjectorParams3D& _params)
-{
-	dims = _dims;
-	params = _params;
-
-	par3DProjs = new SPar3DProjection[dims.iProjAngles];
-	coneProjs = 0;
-
-	memcpy(par3DProjs, _angles, sizeof(par3DProjs[0]) * dims.iProjAngles);
-
-	return true;
-}
-
 
 bool ReconAlgo3D::callFP(cudaPitchedPtr& D_volumeData,
                        cudaPitchedPtr& D_projData,
@@ -87,10 +69,15 @@ bool ReconAlgo3D::callFP(cudaPitchedPtr& D_volumeData,
 {
 	SProjectorParams3D p = params;
 	p.fOutputScale *= outputScale;
-	if (coneProjs) {
-		return ConeFP(D_volumeData, D_projData, dims, coneProjs, p);
+	if (projs.isCone()) {
+		return ConeFP(D_volumeData, D_projData, dims, projs.getCone(), p);
+	} else if (projs.isParallel()) {
+		return Par3DFP(D_volumeData, D_projData, dims, projs.getParallel(), p);
+	} else if (projs.isCylCone()) {
+		return ConeCylFP(D_volumeData, D_projData, dims, projs.getCylCone(), p);
 	} else {
-		return Par3DFP(D_volumeData, D_projData, dims, par3DProjs, p);
+		ASTRA_ERROR("Unsupported geometry type");
+		return false;
 	}
 }
 
@@ -100,10 +87,16 @@ bool ReconAlgo3D::callBP(cudaPitchedPtr& D_volumeData,
 {
 	SProjectorParams3D p = params;
 	p.fOutputScale *= outputScale;
-	if (coneProjs) {
-		return ConeBP(D_volumeData, D_projData, dims, coneProjs, p);
+	if (projs.isCone()) {
+		return ConeBP(D_volumeData, D_projData, dims, projs.getCone(), p);
+	} else if (projs.isParallel()) {
+		return Par3DBP(D_volumeData, D_projData, dims, projs.getParallel(), p);
+	} else if (projs.isCylCone()) {
+		return ConeCylBP(D_volumeData, D_projData, dims, projs.getCylCone(), p);
+
 	} else {
-		return Par3DBP(D_volumeData, D_projData, dims, par3DProjs, p);
+		ASTRA_ERROR("Unsupported geometry type");
+		return false;
 	}
 }
 

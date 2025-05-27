@@ -31,6 +31,10 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "dims3d.h"
 #include "util3d.h"
 
+namespace astra {
+class GeometryParameters3D;
+}
+
 namespace astraCUDA3d {
 
 class _AstraExport ReconAlgo3D {
@@ -38,8 +42,7 @@ public:
 	ReconAlgo3D();
 	~ReconAlgo3D();
 
-	bool setConeGeometry(const SDimensions3D& dims, const SConeProjection* projs, const SProjectorParams3D& params);
-	bool setPar3DGeometry(const SDimensions3D& dims, const SPar3DProjection* projs, const SProjectorParams3D& params);
+	bool setGeometry(const SDimensions3D& dims, const astra::Geometry3DParameters &projs, const SProjectorParams3D& params);
 
 protected:
 	void reset();
@@ -53,8 +56,7 @@ protected:
 
 	SDimensions3D dims;
 	SProjectorParams3D params;
-	SConeProjection* coneProjs;
-	SPar3DProjection* par3DProjs;
+	astra::Geometry3DParameters projs;
 
 	float fOutputScale;
 };

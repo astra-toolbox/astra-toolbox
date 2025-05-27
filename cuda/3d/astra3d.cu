@@ -215,13 +215,7 @@ bool AstraSIRT3d::init()
 
 	bool ok;
 
-	if (pData->projs.isParallel())
-		ok = pData->sirt.setPar3DGeometry(pData->dims, pData->projs.getParallel(), pData->params);
-	else if (pData->projs.isCone())
-		ok = pData->sirt.setConeGeometry(pData->dims, pData->projs.getCone(), pData->params);
-	else
-		ok = false;
-
+	ok = pData->sirt.setGeometry(pData->dims, pData->projs, pData->params);
 	if (!ok)
 		return false;
 
@@ -564,13 +558,7 @@ bool AstraCGLS3d::init()
 
 	bool ok;
 
-	if (pData->projs.isParallel())
-		ok = pData->cgls.setPar3DGeometry(pData->dims, pData->projs.getParallel(), pData->params);
-	else if (pData->projs.isCone())
-		ok = pData->cgls.setConeGeometry(pData->dims, pData->projs.getCone(), pData->params);
-	else
-		ok = false;
-
+	ok = pData->cgls.setGeometry(pData->dims, pData->projs, pData->params);
 	if (!ok)
 		return false;
 
