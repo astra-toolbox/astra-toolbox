@@ -28,6 +28,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef ASTRA_PYTHON_SRC_FLOAT32CUSTOMPYTHON_H
 #define ASTRA_PYTHON_SRC_FLOAT32CUSTOMPYTHON_H
 
+#ifndef Py_GIL_DISABLED
+
 class GILHelper {
 public:
     GILHelper() {
@@ -39,6 +41,16 @@ public:
 private:
     PyGILState_STATE state;
 };
+
+#else
+
+class GILHelper {
+public:
+    GILHelper() {
+    }
+};
+
+#endif
 
 class CFloat32CustomPython : public astra::CFloat32CustomMemory {
 public:
