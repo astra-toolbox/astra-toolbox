@@ -101,12 +101,6 @@ protected:
 	bool sliceInitialized;
 };
 
-_AstraExport bool doCGLS(cudaPitchedPtr D_volumeData, unsigned int volumePitch,
-            cudaPitchedPtr D_projData, unsigned int projPitch,
-            cudaPitchedPtr D_maskData, unsigned int maskPitch,
-            const SDimensions3D& dims, const SConeProjection* projs,
-            unsigned int iterations);
-
 }
 
 #endif

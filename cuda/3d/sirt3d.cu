@@ -336,38 +336,4 @@ float SIRT::computeDiffNorm()
 	return sqrt(s);
 }
 
-
-bool doSIRT(cudaPitchedPtr& D_volumeData, 
-            cudaPitchedPtr& D_sinoData,
-            cudaPitchedPtr& D_maskData,
-            const SDimensions3D& dims, const SConeProjection* angles,
-            unsigned int iterations)
-{
-	SIRT sirt;
-	bool ok = true;
-
-	ok &= sirt.setConeGeometry(dims, angles, SProjectorParams3D());
-	if (D_maskData.ptr)
-		ok &= sirt.enableVolumeMask();
-
-	if (!ok)
-		return false;
-
-	ok = sirt.init();
-	if (!ok)
-		return false;
-
-	if (D_maskData.ptr)
-		ok &= sirt.setVolumeMask(D_maskData);
-
-	ok &= sirt.setBuffers(D_volumeData, D_sinoData);
-	if (!ok)
-		return false;
-
-	ok = sirt.iterate(iterations);
-
-	return ok;
 }
-
-}
-

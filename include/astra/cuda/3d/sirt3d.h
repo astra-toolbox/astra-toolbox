@@ -110,12 +110,6 @@ protected:
 	cudaPitchedPtr D_pixelWeight;
 };
 
-bool doSIRT(cudaPitchedPtr D_volumeData, unsigned int volumePitch,
-            cudaPitchedPtr D_projData, unsigned int projPitch,
-            cudaPitchedPtr D_maskData, unsigned int maskPitch,
-            const SDimensions3D& dims, const SConeProjection* projs,
-            unsigned int iterations);
-
 }
 
 #endif
