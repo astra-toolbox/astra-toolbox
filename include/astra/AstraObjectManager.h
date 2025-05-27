@@ -30,6 +30,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include <map>
 #include <sstream>
+#include <mutex>
 
 #include "Globals.h"
 #include "Singleton.h"
@@ -59,16 +60,25 @@ public:
 };
 
 
+// CAstraIndexManager and the CAstraObjectManagers all have mutexes for
+// thread-safety. We never call into CAstraObjectManagers from
+// CAstraIndexManager functions, so they are always locked in the order
+// object->index, avoiding deadlocks.
+
 class _AstraExport CAstraIndexManager : public Singleton<CAstraIndexManager> {
 public:
 	CAstraIndexManager() : m_iLastIndex(0) { }
 
 	int store(CAstraObjectManagerBase* m) {
+		std::unique_lock lock{m_mutex};
+
 		m_table[++m_iLastIndex] = m;
 		return m_iLastIndex;
 	}
 
 	CAstraObjectManagerBase* get(int index) const {
+		std::unique_lock lock{m_mutex};
+
 		std::map<int, CAstraObjectManagerBase*>::const_iterator i;
 		i = m_table.find(index);
 		if (i != m_table.end())
@@ -78,6 +88,8 @@ public:
 	}
 
 	void remove(int index) {
+		std::unique_lock lock{m_mutex};
+
 		std::map<int, CAstraObjectManagerBase*>::iterator i;
 		i = m_table.find(index);
 		if (i != m_table.end())
@@ -89,6 +101,7 @@ private:
 	 */
 	int m_iLastIndex;
 	std::map<int, CAstraObjectManagerBase*> m_table;
+	mutable std::mutex m_mutex;
 };
 
 
@@ -161,6 +174,7 @@ protected:
 	/** Map each data object to a unique index.
 	 */
 	std::map<int, T*> m_mIndexToObject;
+	mutable std::recursive_mutex m_mutex;
 
 };
 
@@ -184,6 +198,8 @@ CAstraObjectManager<T>::~CAstraObjectManager()
 template <typename T>
 int CAstraObjectManager<T>::store(T* _pDataObject) 
 {
+	std::unique_lock lock{m_mutex};
+
 	int iIndex = CAstraIndexManager::getSingleton().store(this);
 	m_mIndexToObject[iIndex] = _pDataObject;
 	return iIndex;
@@ -194,6 +210,8 @@ int CAstraObjectManager<T>::store(T* _pDataObject)
 template <typename T>
 bool CAstraObjectManager<T>::hasIndex(int _iIndex) const
 {
+	std::unique_lock lock{m_mutex};
+
 	typename std::map<int,T*>::const_iterator it = m_mIndexToObject.find(_iIndex);
 	return it != m_mIndexToObject.end();
 }
@@ -203,6 +221,8 @@ bool CAstraObjectManager<T>::hasIndex(int _iIndex) const
 template <typename T>
 T* CAstraObjectManager<T>::get(int _iIndex) const
 {
+	std::unique_lock lock{m_mutex};
+
 	typename std::map<int,T*>::const_iterator it = m_mIndexToObject.find(_iIndex);
 	if (it != m_mIndexToObject.end())
 		return it->second;
@@ -215,6 +235,8 @@ T* CAstraObjectManager<T>::get(int _iIndex) const
 template <typename T>
 void CAstraObjectManager<T>::remove(int _iIndex)
 {
+	std::unique_lock lock{m_mutex};
+
 	// find data
 	typename std::map<int,T*>::iterator it = m_mIndexToObject.find(_iIndex);
 	if (it == m_mIndexToObject.end())
@@ -232,6 +254,8 @@ void CAstraObjectManager<T>::remove(int _iIndex)
 template <typename T>
 int CAstraObjectManager<T>::getIndex(const T* _pObject) const
 {
+	std::unique_lock lock{m_mutex};
+
 	for (typename std::map<int,T*>::const_iterator it = m_mIndexToObject.begin(); it != m_mIndexToObject.end(); it++) {
 		if ((*it).second == _pObject) return (*it).first;
 	}
@@ -244,6 +268,8 @@ int CAstraObjectManager<T>::getIndex(const T* _pObject) const
 template <typename T>
 void CAstraObjectManager<T>::clear()
 {
+	std::unique_lock lock{m_mutex};
+
 	for (typename std::map<int,T*>::iterator it = m_mIndexToObject.begin(); it != m_mIndexToObject.end(); it++) {
 		// delete data
 		delete (*it).second;
@@ -257,6 +283,8 @@ void CAstraObjectManager<T>::clear()
 // Print info to string
 template <typename T>
 std::string CAstraObjectManager<T>::getInfo(int index) const {
+	std::unique_lock lock{m_mutex};
+
 	typename std::map<int,T*>::const_iterator it = m_mIndexToObject.find(index);
 	if (it == m_mIndexToObject.end())
 		return "";
@@ -274,6 +302,8 @@ std::string CAstraObjectManager<T>::getInfo(int index) const {
 
 template <typename T>
 std::string CAstraObjectManager<T>::info() {
+	std::unique_lock lock{m_mutex};
+
 	std::stringstream res;
 	res << "id  init  description" << std::endl;
 	res << "-----------------------------------------" << std::endl;
