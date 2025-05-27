@@ -49,7 +49,7 @@ v2 = astra.data3d.create('-vol', vol_geom, A)
 
 # 2 projection directions, along x and y axis resp.
 V = np.array([[ 1,0,0, 0,0,0,  0,1,0, 0,0,1],
-      [0,1,0, 0,0,0, -1,0,0, 0,0,1]],dtype=np.float)
+      [0,1,0, 0,0,0, -1,0,0, 0,0,1]],dtype=float)
 # 32 rows (v), 64 columns (u)
 proj_geom = astra.create_proj_geom('parallel3d_vec', 32, 64, V)
 
