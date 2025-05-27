@@ -255,6 +255,13 @@ if test x"$with_python" != x -a x"$with_python" != xno; then
   AC_MSG_RESULT([$PYTHON])
   HAVEPYTHON=yes
   AC_SUBST(PYTHON)
+  AC_MSG_CHECKING(for setuptools.build_meta)
+  ASTRA_TRY_PYTHON([import setuptools.build_meta],,HAVEPYTHON=no)
+  if test x$HAVEPYTHON = xno; then
+    AC_MSG_RESULT(no)
+    AC_MSG_ERROR(You need setuptools supporting build_meta to install the ASTRA toolbox for Python)
+  fi
+  AC_MSG_RESULT(yes)
   AC_MSG_CHECKING(for numpy module)
   ASTRA_TRY_PYTHON([import numpy],,HAVEPYTHON=no)
   if test x$HAVEPYTHON = xno; then
@@ -266,7 +273,7 @@ if test x"$with_python" != x -a x"$with_python" != xno; then
   ASTRA_TRY_PYTHON([import Cython],,HAVEPYTHON=no)
   if test x$HAVEPYTHON = xno; then
     AC_MSG_RESULT(no)
-    AC_MSG_ERROR(You need the Cython module to use the ASTRA toolbox in Python)
+    AC_MSG_ERROR(You need the Cython module to install the ASTRA toolbox for Python)
   fi
   AC_MSG_RESULT(yes)
   AC_MSG_CHECKING(for scipy module)
