@@ -214,6 +214,20 @@ reducePart(const CCompositeGeometryManager::CPart *base,
            const CCompositeGeometryManager::CPart *other);
 
 
+static bool requiresInputGPUAllocation(const CCompositeGeometryManager::SJobInternal &job)
+{
+	if (job.pInput->pData->getStorage()->isMemory())
+		return true;
+	if (job.eType == CCompositeGeometryManager::JOB_FDK)
+		return true;
+	return false;
+}
+
+static bool requiresOutputGPUAllocation(const CCompositeGeometryManager::CPart &part)
+{
+	return part.pData->getStorage()->isMemory();
+}
+
 bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize, int div, TJobSetInternal &split)
 {
 	int maxBlockDim = astraCUDA3d::maxBlockDimension();
@@ -234,6 +248,29 @@ bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize,
 		//    b. split input part
 		//    c. create jobs for new (input,output) subparts
 
+		bool allInputOnGPU = true;
+		for (const SJobInternal &job : L) {
+			if (requiresInputGPUAllocation(job)) {
+				allInputOnGPU = false;
+				break;
+			}
+		}
+
+		// Three potential buffers: input, output, texture array
+		size_t outputMemSize;
+		if (requiresOutputGPUAllocation(*pOutput)) {
+			if (allInputOnGPU) {
+				// Needed buffers: output, texture array
+				outputMemSize = maxSize/2;
+			} else {
+				// Needed buffers: input, output, texture array
+				outputMemSize = maxSize/3;
+			}
+		} else {
+			// Output already on GPU
+			outputMemSize = 1024ULL*1024*1024*1024;
+		}
+
 		TPartList splitOutput;
 		// We now split projection data over the angle axis by default,
 		// and volume data over the z axis.
@@ -241,7 +278,7 @@ bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize,
 		if (pOutput->eType == CPart::PART_PROJ)
 			axisOutput = 1;
 
-		splitPart(axisOutput, std::move(pOutput), splitOutput, maxSize/3, UINT_MAX, div);
+		splitPart(axisOutput, std::move(pOutput), splitOutput, outputMemSize, UINT_MAX, div);
 #if 0
 		// There are currently no reasons to split the output over other axes
 
@@ -278,7 +315,11 @@ bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize,
 					continue;
 				}
 
-				size_t remainingSize = ( maxSize - outputPart->getSize() ) / 2;
+				size_t remainingSize = maxSize;
+				if (requiresOutputGPUAllocation(*outputPart))
+					remainingSize -= outputPart->getSize();
+				if (requiresInputGPUAllocation(job))
+					remainingSize /= 2;
 
 				int axisInputFirst = 2;
 				int axisInputSecond = 0;
