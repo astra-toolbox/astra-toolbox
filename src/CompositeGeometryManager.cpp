@@ -288,17 +288,25 @@ bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize,
 					axisInputSecond = 2;
 					axisInputThird = 0;
 				}
+
+				// We do two passes: first split along all dimensions only on maxBlockDim,
+				// and then split again along the first axis on memory size.
 				TPartList splitInput;
-				splitPart(axisInputFirst, std::move(input), splitInput, remainingSize, maxBlockDim, 1);
+				splitPart(axisInputFirst, std::move(input), splitInput, 1024ULL*1024*1024*1024, maxBlockDim, 1);
 				TPartList splitInput2;
 				for (std::unique_ptr<CPart> &inputPart : splitInput)
 					splitPart(axisInputSecond, std::move(inputPart), splitInput2, 1024ULL*1024*1024*1024, maxBlockDim, 1);
 
 				splitInput.clear();
+
+				TPartList splitInput3;
 				for (std::unique_ptr<CPart> &inputPart : splitInput2)
-					splitPart(axisInputThird, std::move(inputPart), splitInput, 1024ULL*1024*1024*1024, maxBlockDim, 1);
+					splitPart(axisInputThird, std::move(inputPart), splitInput3, 1024ULL*1024*1024*1024, maxBlockDim, 1);
 
 				splitInput2.clear();
+				for (std::unique_ptr<CPart> &inputPart : splitInput3)
+					splitPart(axisInputFirst, std::move(inputPart), splitInput, remainingSize, maxBlockDim, 1);
+				splitInput3.clear();
 
 				ASTRA_DEBUG("Input split into %zu parts", splitInput.size());
 
