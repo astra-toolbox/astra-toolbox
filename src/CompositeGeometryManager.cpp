@@ -67,37 +67,6 @@ CCompositeGeometryManager::CCompositeGeometryManager()
 }
 
 
-// JOB:
-//
-// VolumePart
-// ProjectionPart
-// FP-or-BP
-// SET-or-ADD
-
-
-// Running a set of jobs:
-//
-// [ Assume OUTPUT Parts in a single JobSet don't alias?? ]
-// Group jobs by output Part
-// One thread per group?
-
-// Automatically split parts if too large
-// Performance model for odd-sized tasks?
-// Automatically split parts if not enough tasks to fill available GPUs
-
-
-// Splitting:
-// Constraints:
-//   number of sub-parts divisible by N
-//   max size of sub-parts
-
-// For splitting on both input and output side:
-//   How to divide up memory? (Optimization problem; compute/benchmark)
-//   (First approach: 0.5/0.5)
-
-
-
-
 
 class _AstraExport CGPUMemory {
 public:
@@ -1313,7 +1282,7 @@ public:
 
 		unlock();
 
-		return true;	
+		return true;
 	}
 	void lock() {
 		m_mutex.lock();
