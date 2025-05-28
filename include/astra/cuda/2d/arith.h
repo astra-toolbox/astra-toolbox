@@ -30,8 +30,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include <optional>
 
-#include <cuda.h>
-
 namespace astraCUDA {
 
 

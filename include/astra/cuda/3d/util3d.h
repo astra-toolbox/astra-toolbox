@@ -28,7 +28,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _CUDA_UTIL3D_H
 #define _CUDA_UTIL3D_H
 
-#include <cuda.h>
 #include <optional>
 
 #include "dims3d.h"

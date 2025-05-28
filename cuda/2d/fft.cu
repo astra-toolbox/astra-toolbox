@@ -25,14 +25,14 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
+#include "astra/cuda/gpu_runtime_wrapper.h"
+#include "astra/cuda/gpu_fft_wrapper.h"
+
 #include "astra/cuda/2d/fft.h"
 #include "astra/cuda/2d/util.h"
 
 #include "astra/Logging.h"
 #include "astra/Fourier.h"
-
-#include <cufft.h>
-#include <cuda.h>
 
 
 using namespace astra;

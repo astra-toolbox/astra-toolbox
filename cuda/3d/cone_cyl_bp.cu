@@ -24,6 +24,7 @@ SOFTWARE.
 -----------------------------------------------------------------------
 */
 
+#include "astra/cuda/gpu_runtime_wrapper.h"
 
 #include "astra/cuda/3d/util3d.h"
 #include "astra/cuda/3d/dims3d.h"
@@ -32,8 +33,6 @@ SOFTWARE.
 
 #include <cstdio>
 #include <cassert>
-
-#include <cuda.h>
 
 namespace astraCUDA3d {
 

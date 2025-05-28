@@ -28,7 +28,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _CUDA_UTIL_H
 #define _CUDA_UTIL_H
 
-#include <cuda.h>
 #include <string>
 #include <optional>
 #include <vector>
