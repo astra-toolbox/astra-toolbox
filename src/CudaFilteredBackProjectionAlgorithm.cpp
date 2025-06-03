@@ -69,7 +69,9 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 	m_filterConfig = getFilterConfigForAlgorithm(_cfg, this);
 
 	// Fan beam short scan mode
-	if (m_pSinogram && dynamic_cast<const CFanFlatProjectionGeometry2D*>(&m_pSinogram->getGeometry())) {
+	m_bShortScan = false;
+	if (m_pSinogram && (dynamic_cast<const CFanFlatProjectionGeometry2D*>(&m_pSinogram->getGeometry())
+			|| dynamic_cast<const CFanFlatVecProjectionGeometry2D*>(&m_pSinogram->getGeometry()))) {
 		bool ok = true;
 		ok &= CR.getOptionBool("ShortScan", m_bShortScan, false);
 		if (!ok)
