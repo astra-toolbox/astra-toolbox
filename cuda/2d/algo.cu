@@ -25,6 +25,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
+#include "astra/cuda/gpu_runtime_wrapper.h"
+
 #include "astra/cuda/2d/algo.h"
 #include "astra/cuda/2d/par_fp.h"
 #include "astra/cuda/2d/fan_fp.h"

@@ -97,6 +97,7 @@ if test x"$NVCC" != xno; then
   AC_CHECK_LIB(cudart,cudaMalloc, ,HAVECUDA=no)
   AC_CHECK_LIB(cufft,cufftPlan1d, ,HAVECUDA=no)
 
+  LIBS="$SAVED_LIBS"
   LDFLAGS="$BACKUP_CUDA_LDFLAGS"
   unset BACKUP_CUDA_LDFLAGS
   # TODO: check for cuda headers?
@@ -168,6 +169,57 @@ AC_SUBST(HAVECUDA)
 AC_SUBST(LDFLAGS_CUDA)
 AC_SUBST(CPPFLAGS_CUDA)
 AC_SUBST(NVCCFLAGS_EXTRA)
+
+
+# AMD hip
+
+AC_ARG_WITH(hip, [[  --with-hip=path         path of AMD HIP (optional)]],,)
+
+dnl Currently we require this to be explicitly set, even if hipcc is in PATH
+if test x"$with_hip" != xno -a x"$with_hip" != x; then
+  HIPCC_PATH=$PATH
+  if test x"$with_hip" != x -a x"$with_hip" != xyes; then
+    HIPCC_PATH="$with_hip/bin:$HIPCC_PATH"
+  fi
+  AC_PATH_PROG([HIPCC], [hipcc], [no], [$HIPCC_PATH])
+else
+  HIPCC=no
+fi
+
+HAVEHIP=no
+if test x"$HIPCC" != xno; then
+  HAVEHIP=yes
+  BACKUP_HIP_LDFLAGS="$LDFLAGS"
+  if test x"$with_hip" != x -a x"$with_hip" != xyes; then
+    test -d $with_hip/lib64 && LDFLAGS_HIP="-L$with_hip/lib64" || LDFLAGS_HIP="-L$with_hip/lib"
+    CPPFLAGS_HIP="-I$with_hip/include"
+    LDFLAGS="$LDFLAGS $LDFLAGS_HIP"
+  fi
+  AC_CHECK_LIB(amdhip64,hipMalloc, ,HAVEHIP=no)
+  AC_CHECK_LIB(hipfft,hipfftPlan1d, ,HAVEHIP=no)
+
+  LIBS="$SAVED_LIBS"
+  LDFLAGS="$BACKUP_HIP_LDFLAGS"
+  unset BACKUP_HIP_LDFLAGS
+  # TODO: check for HIP headers?
+
+  AC_SUBST(HIPCC)
+fi
+
+dnl Decide if there is specific functionality or any flag to test for hipcc
+dnl if test x"$HAVEHIP" = xyes; then
+  dnl AC_MSG_CHECKING([if hipcc works])
+  dnl ASTRA_CHECK_HIPCC(HAVEHIP,HIPCCFLAGS_EXTRA)
+  dnl AC_MSG_RESULT($HAVEHIP)
+dnl fi
+
+AC_SUBST(HAVEHIP)
+AC_SUBST(LDFLAGS_HIP)
+AC_SUBST(CPPFLAGS_HIP)
+
+if test x"$HAVEHIP$HAVECUDA" = xyesyes; then
+  AC_MSG_ERROR(NVIDIA CUDA and AMD HIP can currently not both be enabled)
+fi
 
 
 # mex, matlab
@@ -350,10 +402,13 @@ AC_OUTPUT
 
 echo
 echo "Summary of ASTRA Toolbox build options:"
-echo "  CUDA  : $HAVECUDA"
-echo "  Matlab: $HAVEMATLAB"
-echo "  Octave: $HAVEOCTAVE"
-echo "  Python: $HAVEPYTHON"
+echo "  NVIDIA CUDA: $HAVECUDA"
+if test x$HAVEHIP = xyes; then
+  echo "  AMD HIP    : yes (experimental!)"
+fi
+echo "  Matlab     : $HAVEMATLAB"
+echo "  Octave     : $HAVEOCTAVE"
+echo "  Python     : $HAVEPYTHON"
 echo
 echo "Installation type: $with_install_type"
 case $with_install_type in
