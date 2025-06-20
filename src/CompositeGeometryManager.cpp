@@ -67,37 +67,6 @@ CCompositeGeometryManager::CCompositeGeometryManager()
 }
 
 
-// JOB:
-//
-// VolumePart
-// ProjectionPart
-// FP-or-BP
-// SET-or-ADD
-
-
-// Running a set of jobs:
-//
-// [ Assume OUTPUT Parts in a single JobSet don't alias?? ]
-// Group jobs by output Part
-// One thread per group?
-
-// Automatically split parts if too large
-// Performance model for odd-sized tasks?
-// Automatically split parts if not enough tasks to fill available GPUs
-
-
-// Splitting:
-// Constraints:
-//   number of sub-parts divisible by N
-//   max size of sub-parts
-
-// For splitting on both input and output side:
-//   How to divide up memory? (Optimization problem; compute/benchmark)
-//   (First approach: 0.5/0.5)
-
-
-
-
 
 class _AstraExport CGPUMemory {
 public:
@@ -245,6 +214,20 @@ reducePart(const CCompositeGeometryManager::CPart *base,
            const CCompositeGeometryManager::CPart *other);
 
 
+static bool requiresInputGPUAllocation(const CCompositeGeometryManager::SJobInternal &job)
+{
+	if (job.pInput->pData->getStorage()->isMemory())
+		return true;
+	if (job.eType == CCompositeGeometryManager::JOB_FDK)
+		return true;
+	return false;
+}
+
+static bool requiresOutputGPUAllocation(const CCompositeGeometryManager::CPart &part)
+{
+	return part.pData->getStorage()->isMemory();
+}
+
 bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize, int div, TJobSetInternal &split)
 {
 	int maxBlockDim = astraCUDA3d::maxBlockDimension();
@@ -265,6 +248,29 @@ bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize,
 		//    b. split input part
 		//    c. create jobs for new (input,output) subparts
 
+		bool allInputOnGPU = true;
+		for (const SJobInternal &job : L) {
+			if (requiresInputGPUAllocation(job)) {
+				allInputOnGPU = false;
+				break;
+			}
+		}
+
+		// Three potential buffers: input, output, texture array
+		size_t outputMemSize;
+		if (requiresOutputGPUAllocation(*pOutput)) {
+			if (allInputOnGPU) {
+				// Needed buffers: output, texture array
+				outputMemSize = maxSize/2;
+			} else {
+				// Needed buffers: input, output, texture array
+				outputMemSize = maxSize/3;
+			}
+		} else {
+			// Output already on GPU
+			outputMemSize = 1024ULL*1024*1024*1024;
+		}
+
 		TPartList splitOutput;
 		// We now split projection data over the angle axis by default,
 		// and volume data over the z axis.
@@ -272,7 +278,7 @@ bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize,
 		if (pOutput->eType == CPart::PART_PROJ)
 			axisOutput = 1;
 
-		splitPart(axisOutput, std::move(pOutput), splitOutput, maxSize/3, UINT_MAX, div);
+		splitPart(axisOutput, std::move(pOutput), splitOutput, outputMemSize, UINT_MAX, div);
 #if 0
 		// There are currently no reasons to split the output over other axes
 
@@ -309,7 +315,11 @@ bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize,
 					continue;
 				}
 
-				size_t remainingSize = ( maxSize - outputPart->getSize() ) / 2;
+				size_t remainingSize = maxSize;
+				if (requiresOutputGPUAllocation(*outputPart))
+					remainingSize -= outputPart->getSize();
+				if (requiresInputGPUAllocation(job))
+					remainingSize /= 2;
 
 				int axisInputFirst = 2;
 				int axisInputSecond = 0;
@@ -319,17 +329,25 @@ bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize,
 					axisInputSecond = 2;
 					axisInputThird = 0;
 				}
+
+				// We do two passes: first split along all dimensions only on maxBlockDim,
+				// and then split again along the first axis on memory size.
 				TPartList splitInput;
-				splitPart(axisInputFirst, std::move(input), splitInput, remainingSize, maxBlockDim, 1);
+				splitPart(axisInputFirst, std::move(input), splitInput, 1024ULL*1024*1024*1024, maxBlockDim, 1);
 				TPartList splitInput2;
 				for (std::unique_ptr<CPart> &inputPart : splitInput)
 					splitPart(axisInputSecond, std::move(inputPart), splitInput2, 1024ULL*1024*1024*1024, maxBlockDim, 1);
 
 				splitInput.clear();
+
+				TPartList splitInput3;
 				for (std::unique_ptr<CPart> &inputPart : splitInput2)
-					splitPart(axisInputThird, std::move(inputPart), splitInput, 1024ULL*1024*1024*1024, maxBlockDim, 1);
+					splitPart(axisInputThird, std::move(inputPart), splitInput3, 1024ULL*1024*1024*1024, maxBlockDim, 1);
 
 				splitInput2.clear();
+				for (std::unique_ptr<CPart> &inputPart : splitInput3)
+					splitPart(axisInputFirst, std::move(inputPart), splitInput, remainingSize, maxBlockDim, 1);
+				splitInput3.clear();
 
 				ASTRA_DEBUG("Input split into %zu parts", splitInput.size());
 
@@ -1313,7 +1331,7 @@ public:
 
 		unlock();
 
-		return true;	
+		return true;
 	}
 	void lock() {
 		m_mutex.lock();
