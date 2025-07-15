@@ -590,7 +590,6 @@ std::string CFloat32Data2D::description() const
 	return res.str();
 }
 
-
-
+template class CCustomMemory<float32>;
 
 } // end namespace astra

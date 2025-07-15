@@ -175,10 +175,6 @@ public:
 
 #endif
 
-template class CDataMemory<float32>;
-template class CData3DObject<CProjectionGeometry3D>;
-template class CData3DObject<CVolumeGeometry3D>;
-
 // Utility functions that create CDataMemory and Data3D objects together
 _AstraExport CFloat32ProjectionData3D *createCFloat32ProjectionData3DMemory(const CProjectionGeometry3D &geom);
 _AstraExport CFloat32ProjectionData3D *createCFloat32ProjectionData3DMemory(std::unique_ptr<CProjectionGeometry3D> &&geom);

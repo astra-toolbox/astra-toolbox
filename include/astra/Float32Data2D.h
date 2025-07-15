@@ -40,8 +40,6 @@ public:
 	T* m_fPtr;
 };
 
-template class CCustomMemory<float32>;
-
 typedef CCustomMemory<float32> CFloat32CustomMemory;
 
 /** 

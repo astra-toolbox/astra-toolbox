@@ -111,5 +111,8 @@ CFloat32VolumeData3D *createCFloat32VolumeData3DMemory(std::unique_ptr<CVolumeGe
 	return new CFloat32VolumeData3D(std::move(geom), storage);
 }
 
+template class CDataMemory<float32>;
+template class CData3DObject<CProjectionGeometry3D>;
+template class CData3DObject<CVolumeGeometry3D>;
 
 }
