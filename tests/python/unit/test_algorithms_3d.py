@@ -10,6 +10,7 @@ N_ANGLES = 180
 ANGLES = np.linspace(0, 2 * np.pi, N_ANGLES, endpoint=False)
 SOURCE_ORIGIN = 100
 ORIGIN_DET = 100
+DET_CURVATURE = 200
 N_ROWS = 40
 N_COLS = 30
 N_SLICES = 50
@@ -42,6 +43,16 @@ def proj_geom(request):
                                       DET_ROW_COUNT, DET_COL_COUNT, ANGLES,
                                       SOURCE_ORIGIN, ORIGIN_DET)
         return astra.geom_2vec(geom)
+    elif geometry_type == 'cyl_cone_vec':
+        geom = astra.create_proj_geom('cone', DET_SPACING_X, DET_SPACING_Y,
+                                      DET_ROW_COUNT, DET_COL_COUNT, ANGLES,
+                                      SOURCE_ORIGIN, ORIGIN_DET)
+        geom = astra.geom_2vec(geom)
+        vectors = np.hstack([
+            geom['Vectors'],
+            np.full([geom['Vectors'].shape[0], 1], DET_CURVATURE)
+        ])
+        return astra.create_proj_geom('cyl_cone_vec', DET_ROW_COUNT, DET_COL_COUNT, vectors)
     elif geometry_type == 'short_scan':
         cone_angle = np.arctan2(0.5 * DET_COL_COUNT * DET_SPACING_X, SOURCE_ORIGIN + ORIGIN_DET)
         angles = np.linspace(0, np.pi + 2 * cone_angle, 180)
@@ -144,7 +155,9 @@ def get_algorithm_output(algorithm_config, n_iter=None):
 
 
 @pytest.mark.parametrize(
-    'proj_geom,', ['parallel3d', 'parallel3d_vec', 'cone', 'cone_vec'], indirect=True
+    'proj_geom,',
+    ['parallel3d', 'parallel3d_vec', 'cone', 'cone_vec', 'cyl_cone_vec'],
+    indirect=True
 )
 @pytest.mark.parametrize(
     'algorithm_type', ['FP3D_CUDA', 'BP3D_CUDA', 'FDK_CUDA', 'SIRT3D_CUDA', 'CGLS3D_CUDA'],

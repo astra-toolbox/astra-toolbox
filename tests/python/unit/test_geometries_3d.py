@@ -61,3 +61,8 @@ class TestProjectionGeometries:
         vectors = np.random.rand(N_ANGLES, 12)
         geom = astra.create_proj_geom('cone_vec', DET_ROW_COUNT, DET_COL_COUNT, vectors)
         assert get_data_dimensions('-sino', geom) == (DET_ROW_COUNT, N_ANGLES, DET_COL_COUNT)
+
+    def test_cyl_cone_vec(self):
+        vectors = np.random.rand(N_ANGLES, 13)
+        geom = astra.create_proj_geom('cyl_cone_vec', DET_ROW_COUNT, DET_COL_COUNT, vectors)
+        assert get_data_dimensions('-sino', geom) == (DET_ROW_COUNT, N_ANGLES, DET_COL_COUNT)
