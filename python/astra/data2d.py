@@ -140,6 +140,8 @@ def shepp_logan(geometry, modified=True, returnData=True):
     :param returnData: If False, only return the ID of the new data object
     :returns: :class:`int` or (:class:`int`, :class`numpy.ndarray`)
 
+    .. versionadded:: 2.2
+
     """
     i = create('-vol', geometry)
     d.shepp_logan(i, modified)

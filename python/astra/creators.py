@@ -254,6 +254,9 @@ This method can be called in a number of ways:
 :type matrix_id: :class:`int`
 :returns: A projection geometry based on a sparse matrix.
 
+.. versionadded:: 2.4
+   Support for cylindrical detectors ('cyl_cone_vec' type).
+
 """
     if intype == 'parallel':
         if len(args) < 3:
