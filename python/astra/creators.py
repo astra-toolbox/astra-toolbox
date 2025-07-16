@@ -54,35 +54,38 @@ def create_vol_geom(*varargin):
 
 This method can be called in a number of ways:
 
-``create_vol_geom(n_rows_and_cols)``:
-    :returns: A 2D volume geometry of size :math:`N \\times N`.
+``create_vol_geom(N)``:
+
+:returns: A 2D volume geometry of size N x N.
 
 ``create_vol_geom((n_rows, n_cols))``:
-    :returns: A 2D volume geometry of size :math:`n_rows \\times n_cols`.
+
+:returns: A 2D volume geometry of size n_rows x n_cols.
 
 ``create_vol_geom(n_rows, n_cols)``:
-    :returns: A 2D volume geometry of size :math:`n_rows \\times n_cols`.
 
-``create_vol_geom(n_rows, n_cols, minx, maxx, miny, maxy)``:
-    :returns: A 2D volume geometry of size :math:`n_rows \\times n_cols`,
-    windowed as :math:`minx \\leq x \\leq maxx` and :math:`miny \\leq y \\leq
-    maxy`. Note that rows are oriented along the Y axis, and columns along the
-    X axis.
+:returns: A 2D volume geometry of size n_rows x n_cols.
+
+``create_vol_geom(n_rows, n_cols, min_x, max_x, min_y, max_y)``:
+
+:returns: A 2D volume geometry of size n_rows x n_cols, windowed as
+    min_x <= x <= max_x and min_y <= y <= max_y. Note that rows are oriented
+    along the Y axis, and columns along the X axis.
 
 ``create_vol_geom((n_rows, n_cols, n_slices))``:
-    :returns: A 3D volume geometry of size :math:`n_rows \\times n_cols \\times
-    n_slices`.
+
+:returns: A 3D volume geometry of size n_rows x n_cols x n_slices.
 
 ``create_vol_geom(n_rows, n_cols, n_slices)``:
-    :returns: A 3D volume geometry of size :math:`n_rows \\times n_cols \\times
-    n_slices`.
 
-``create_vol_geom(n_rows, n_cols, n_slices, minx, maxx, miny, maxy, minz, maxz)``:
-    :returns: A 3D volume geometry of size :math:`n_rows \\times n_cols \\times
-    n_slices`, windowed as :math:`minx \\leq x \\leq maxx`,
-    :math:`miny \\leq y \\leq maxy`, and :math:`minz \\leq z \\leq maxz`. Note
-    that rows are oriented along the Y axis, columns along the X axis, and
-    slices along the Z axis.
+:returns: A 3D volume geometry of size n_rows x n_cols x n_slices.
+
+``create_vol_geom(n_rows, n_cols, n_slices, min_x, max_x, min_y, max_y, min_z, max_z)``:
+
+:returns: A 3D volume geometry of size n_rows x n_cols x n_slices, windowed as
+    min_x <= x <= max_x, min_y <= y <= max_y, and min_z <= z <= max_z. Note that
+    rows are oriented along the Y axis, columns along the X axis, and slices
+    along the Z axis.
 
 """
     vol_geom = {'option': {}}
