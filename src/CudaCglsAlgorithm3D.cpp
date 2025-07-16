@@ -137,6 +137,11 @@ bool CCudaCglsAlgorithm3D::initialize(const Config& _cfg)
 	if (!ok)
 		return false;
 
+	if (m_pSinogram->getGeometry().isOfType("cyl_cone_vec")
+	    && (m_iDetectorSuperSampling > 1 || m_iVoxelSuperSampling > 1)) {
+		ASTRA_CONFIG_CHECK(false, "CGLS3D_CUDA",
+						   "Detector/voxel supersampling is not supported for cyl_cone_vec geometry.");
+	}
 
 	m_pCgls = new AstraCGLS3d();
 

@@ -141,6 +141,11 @@ bool CCudaSirtAlgorithm3D::initialize(const Config& _cfg)
 	if (!ok)
 		return false;
 
+	if (m_pSinogram->getGeometry().isOfType("cyl_cone_vec")
+	    && (m_iDetectorSuperSampling > 1 || m_iVoxelSuperSampling > 1)) {
+		ASTRA_CONFIG_CHECK(false, "SIRT3D_CUDA",
+						   "Detector/voxel supersampling is not supported for cyl_cone_vec geometry.");
+	}
 
 	m_pSirt = new AstraSIRT3d();
 
