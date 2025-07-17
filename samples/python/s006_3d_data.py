@@ -26,10 +26,10 @@
 import astra
 import numpy as np
 
+
 # Create a 3D volume geometry.
 # Parameter order: rows, colums, slices (y, x, z)
 vol_geom = astra.create_vol_geom(64, 48, 32)
-
 
 # Create volumes
 
@@ -44,12 +44,11 @@ v1 = astra.data3d.create('-vol', vol_geom, 3.0)
 A = np.zeros((32, 64, 48))
 v2 = astra.data3d.create('-vol', vol_geom, A)
 
-
 # Projection data
 
 # 2 projection directions, along x and y axis resp.
-V = np.array([[ 1,0,0, 0,0,0,  0,1,0, 0,0,1],
-      [0,1,0, 0,0,0, -1,0,0, 0,0,1]],dtype=float)
+V = np.array([[1,0,0, 0,0,0,  0,1,0, 0,0,1],
+              [0,1,0, 0,0,0, -1,0,0, 0,0,1]], dtype=float)
 # 32 rows (v), 64 columns (u)
 proj_geom = astra.create_proj_geom('parallel3d_vec', 32, 64, V)
 
@@ -62,10 +61,8 @@ s0 = astra.data3d.create('-proj3d', proj_geom)
 A = np.zeros((32, 2, 64))
 s1 = astra.data3d.create('-proj3d', proj_geom, A)
 
-
 # Retrieve data:
 R = astra.data3d.get(v1)
-
 
 # Delete all created data objects
 astra.data3d.delete(v0)

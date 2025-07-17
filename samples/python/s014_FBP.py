@@ -25,30 +25,32 @@
 
 import astra
 import numpy as np
+import matplotlib.pyplot as plt
+plt.gray()
+
 
 vol_geom = astra.create_vol_geom(256, 256)
-proj_geom = astra.create_proj_geom('parallel', 1.0, 384, np.linspace(0,np.pi,180,False))
+proj_geom = astra.create_proj_geom(
+    'parallel', 1.0, 384, np.linspace(0, np.pi, 180, False)
+)
 
 # As before, create a sinogram from a phantom
 phantom_id, P = astra.data2d.shepp_logan(vol_geom)
-proj_id = astra.create_projector('cuda',proj_geom,vol_geom)
+proj_id = astra.create_projector('cuda', proj_geom, vol_geom)
 sinogram_id, sinogram = astra.create_sino(P, proj_id)
 
-import pylab
-pylab.gray()
-pylab.figure(1)
-pylab.imshow(P)
-pylab.figure(2)
-pylab.imshow(sinogram)
+plt.imshow(P)
+plt.figure()
+plt.imshow(sinogram)
 
 # Create a data object for the reconstruction
 rec_id = astra.data2d.create('-vol', vol_geom)
 
-# create configuration 
+# Create configuration
 cfg = astra.astra_dict('FBP_CUDA')
 cfg['ReconstructionDataId'] = rec_id
 cfg['ProjectionDataId'] = sinogram_id
-cfg['option'] = { 'FilterType': 'Ram-Lak' }
+cfg['option'] = {'FilterType': 'Ram-Lak'}
 
 # possible values for FilterType:
 # none, ram-lak, shepp-logan, cosine, hamming, hann, tukey, lanczos,
@@ -62,9 +64,9 @@ astra.algorithm.run(alg_id)
 
 # Get the result
 rec = astra.data2d.get(rec_id)
-pylab.figure(3)
-pylab.imshow(rec)
-pylab.show()
+plt.figure()
+plt.imshow(rec)
+plt.show()
 
 # Clean up. Note that GPU memory is tied up in the algorithm object,
 # and main RAM in the data objects.

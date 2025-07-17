@@ -22,10 +22,10 @@
 # along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #
 # -----------------------------------------------------------------------
-from __future__ import print_function
 
 import astra
 import numpy as np
+
 
 # Define the plugin class (has to subclass astra.plugin.base)
 # Note that usually, these will be defined in a separate package/module
@@ -39,13 +39,13 @@ class LandweberPlugin(astra.plugin.base):
 
     # The astra_name variable defines the name to use to
     # call the plugin from ASTRA
-    astra_name = "LANDWEBER-PLUGIN"
+    astra_name = 'LANDWEBER-PLUGIN'
 
-    def initialize(self,cfg, Relaxation = 1.0):
+    def initialize(self, cfg, relaxation=1.0):
         self.W = astra.OpTomo(cfg['ProjectorId'])
         self.vid = cfg['ReconstructionDataId']
         self.sid = cfg['ProjectionDataId']
-        self.rel = Relaxation
+        self.rel = relaxation
 
     def run(self, its):
         v = astra.data2d.get_shared(self.vid)
@@ -53,23 +53,25 @@ class LandweberPlugin(astra.plugin.base):
         tv = np.zeros(v.shape, dtype=np.float32)
         ts = np.zeros(s.shape, dtype=np.float32)
         W = self.W
-        for i in range(its):
-            W.FP(v,out=ts)
-            ts -= s # ts = W*v - s
+        for _ in range(its):
+            W.FP(v, out=ts)
+            ts -= s  # ts = W*v - s
 
-            W.BP(ts,out=tv)
+            W.BP(ts, out=tv)
             tv *= self.rel / s.size
 
-            v -= tv # v = v - rel * W'*(W*v-s) / s.size
+            v -= tv  # v = v - rel * W'*(W*v-s) / s.size
 
-if __name__=='__main__':
 
+if __name__ == '__main__':
     vol_geom = astra.create_vol_geom(256, 256)
-    proj_geom = astra.create_proj_geom('parallel', 1.0, 384, np.linspace(0,np.pi,180,False))
+    proj_geom = astra.create_proj_geom(
+        'parallel', 1.0, 384, np.linspace(0, np.pi, 180, False)
+    )
 
     # As before, create a sinogram from a phantom
     phantom_id, P = astra.data2d.shepp_logan(vol_geom)
-    proj_id = astra.create_projector('cuda',proj_geom,vol_geom)
+    proj_id = astra.create_projector('cuda', proj_geom, vol_geom)
 
     # construct the OpTomo object
     W = astra.OpTomo(proj_id)
@@ -120,29 +122,30 @@ if __name__=='__main__':
     rec_rel = astra.data2d.get(vid)
 
     # We can also use OpTomo to call the plugin
-    rec_op = W.reconstruct('LANDWEBER-PLUGIN', sinogram, 100, extraOptions={'Relaxation':1.5})
-
+    rec_op = W.reconstruct(
+        'LANDWEBER-PLUGIN', sinogram, 100, extraOptions={'Relaxation': 1.5}
+    )
 
     # ASTRA also comes with built-in plugins:
     astra.plugin.register(astra.plugins.SIRTPlugin)
     astra.plugin.register(astra.plugins.CGLSPlugin)
-    rec_sirt = W.reconstruct('SIRT-PLUGIN', sinogram, 100, extraOptions={'Relaxation':1.5})
+    rec_sirt = W.reconstruct(
+        'SIRT-PLUGIN', sinogram, 100, extraOptions={'Relaxation': 1.5}
+    )
     rec_cgls = W.reconstruct('CGLS-PLUGIN', sinogram, 100)
 
-
-    import pylab as pl
-    pl.gray()
-    pl.figure(1)
-    pl.imshow(rec,vmin=0,vmax=1)
-    pl.figure(2)
-    pl.imshow(rec_rel,vmin=0,vmax=1)
-    pl.figure(3)
-    pl.imshow(rec_op,vmin=0,vmax=1)
-    pl.figure(4)
-    pl.imshow(rec_sirt,vmin=0,vmax=1)
-    pl.figure(5)
-    pl.imshow(rec_cgls,vmin=0,vmax=1)
-    pl.show()
+    import matplotlib.pyplot as plt
+    plt.gray()
+    plt.imshow(rec, vmin=0, vmax=1)
+    plt.figure()
+    plt.imshow(rec_rel, vmin=0, vmax=1)
+    plt.figure()
+    plt.imshow(rec_op, vmin=0, vmax=1)
+    plt.figure()
+    plt.imshow(rec_sirt, vmin=0, vmax=1)
+    plt.figure()
+    plt.imshow(rec_cgls, vmin=0, vmax=1)
+    plt.show()
 
     # Clean up.
     astra.projector.delete(proj_id)
