@@ -668,7 +668,7 @@ def write_main_project14():
       print('      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>', file=F)
     d='      <PreprocessorDefinitions>'
     if c.cuda:
-      d+="ASTRA_CUDA;"
+      d+="ASTRA_CUDA;ASTRA_BUILDING_CUDA;"
     d+="__SSE2__;"
     d+="DLL_EXPORTS;_CRT_SECURE_NO_WARNINGS;"
     d+='%(PreprocessorDefinitions)</PreprocessorDefinitions>'
@@ -739,7 +739,7 @@ def write_mex_project14(P):
 #      print('      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>', file=F)
     d='      <PreprocessorDefinitions>'
     if c.cuda:
-      d+="ASTRA_CUDA;"
+      d+="ASTRA_CUDA;ASTRA_BUILDING_CUDA;"
     d+="__SSE2__;"
     d+="MATLAB_MEXCMD_RELEASE=700;"
 #    d+="DLL_EXPORTS;_CRT_SECURE_NO_WARNINGS;"
