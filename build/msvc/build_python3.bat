@@ -25,6 +25,6 @@ copy ..\build\msvc\bin\x64\Release_CUDA\AstraCuda64.lib astra.lib
 copy ..\build\msvc\bin\x64\Release_CUDA\AstraCuda64.dll astra
 copy "%CUDA_PATH_V12_8%\bin\cudart64_12.dll" astra
 copy "%CUDA_PATH_V12_8%\bin\cufft64_11.dll" astra
-%B_WINPYTHON3%\python -m pip wheel --no-build-isolation --no-deps --no-cache-dir .
+"%B_WINPYTHON3%\python" -m pip wheel --no-build-isolation --no-deps --no-cache-dir .
 
 pause
