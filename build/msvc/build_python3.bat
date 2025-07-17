@@ -18,7 +18,7 @@ cd python
 rd /s /q build
 rd /s /q "%B_WINPYTHON3%\lib\site-packages\astra"
 
-set CL=/DASTRA_CUDA /DASTRA_PYTHON /std:c++17
+set CL=/DASTRA_CUDA /DASTRA_BUILDING_CUDA /DASTRA_PYTHON /std:c++17
 set INCLUDE=%R%\include;%R%\lib\include;%CUDA_PATH%\include;%INCLUDE%
 set ASTRA_CONFIG=windows_cuda
 copy ..\build\msvc\bin\x64\Release_CUDA\AstraCuda64.lib astra.lib
