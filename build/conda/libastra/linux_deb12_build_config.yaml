@@ -10,6 +10,7 @@ cudatoolkit:
   - 12.5
   - 12.6
   - 12.8
+  - 12.9
 
 # Starting at CUDA 12.5, the libcufft packages depend on cuda-version,
 # so our dependencies can be more relaxed.
@@ -22,6 +23,7 @@ libcufft_dep:
   - ">=11.2.3.18"
   - ">=11.2.6.28"
   - ">=11.3.3.41"
+  - ">=11.4.0.6"
 
 cudacudart_dep:
   - ">=12.0,<12.1"
@@ -32,6 +34,7 @@ cudacudart_dep:
   - ">=12.5,<12.6"
   - ">=12.6,<12.7"
   - ">=12.8,<12.9"
+  - ">=12.9,<12.10"
 
 pytorchcuda_dep:
   - ">=12.0,<12.1"
@@ -42,6 +45,7 @@ pytorchcuda_dep:
   - ">=12.5,<12.6"
   - ">=12.6,<12.7"
   - ">=12.8,<12.9"
+  - ">=12.9,<12.10"
 
 cudatoolkit_dep:
   - ">=12.0,<12.1"
@@ -52,6 +56,7 @@ cudatoolkit_dep:
   - ">=12.5,<12.6"
   - ">=12.6,<12.7"
   - ">=12.8,<12.9"
+  - ">=12.9,<12.10"
 
 c_compiler_version:    # [linux or win]
   - 11.2               # [linux or win]
