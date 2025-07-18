@@ -23,6 +23,13 @@
 #
 # -----------------------------------------------------------------------
 
+# On Windows, set CUDA DLL search path
+import os
+if os.name == 'nt':
+    nvidia_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'nvidia')
+    os.add_dll_directory(os.path.join(nvidia_path, 'cuda_runtime', 'bin'))
+    os.add_dll_directory(os.path.join(nvidia_path, 'cufft', 'bin'))
+
 # Import astra module first to make error message less confusing in case of import error
 from . import astra
 
