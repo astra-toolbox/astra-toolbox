@@ -8,6 +8,17 @@ License: Open Source under GPLv3
 Contact: astra@astra-toolbox.com
 Website: https://www.astra-toolbox.com/
 -----------------------------------------------------------------------
+2.4.0 (2025-08-04)
+ * add support for curved detectors (cyl_cone_vec 3D geometry type)
+ * add initial experimental support for building with AMD HIP instead of CUDA
+ * improve performance of automatic splitting for FDK/FP3D/BP3D when data doesn't fit in GPU memory
+ * add conda packages for CUDA 12.9
+ * fix non-deterministic results when FBP_CUDA was used with fanflat_vec geometries (e.g. when
+   post-alignment was applied)
+ * fix crash when trying to delete linked 3D data in MATLAB
+ * fix Python samples
+ * modernize Python build system
+
 2.3.1 (2025-04-16)
  * fix GPULink missing in astra.data3d module
  * fix crash in Matlab when calling astra_mex_direct
