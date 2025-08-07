@@ -35,8 +35,101 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include <utility>
 #include <cstring>
+#include <mutex>
 
 namespace astra {
+
+std::vector<float> generateRampFilter(size_t iSize)
+{
+	std::vector<float> data(2*iSize);
+
+	int *ip = new int[size_t(2+sqrt(iSize)+1)];
+	ip[0] = 0;
+	float32 *w = new float32[iSize/2];
+
+	for (size_t i = 0; i < iSize; ++i) {
+		data[2*i+1] = 0.0f;
+
+		if (i & 1) {
+			size_t j = i;
+			if (2*j > iSize)
+				j = iSize - j;
+			float f = PI * j;
+			data[2*i] = -1 / (f*f);
+		} else {
+			data[2*i] = 0.0f;
+		}
+	}
+
+	data[0] = 0.25f;
+
+	cdft(2*iSize, -1, &data[0], ip, w);
+	delete[] ip;
+	delete[] w;
+
+	return data;
+}
+
+struct FilterCacheEntry {
+	size_t m_iSize;
+	std::vector<float> m_filter;
+	std::mutex m_gen_mutex;
+};
+
+std::shared_ptr<std::vector<float>> getRampFilter(size_t iSize)
+{
+	// We cache one Fourier transform of a ramp filter for repeated FBP's
+	// of the same size.
+
+	// This could be done more efficiently with an atomic<shared_ptr<>>,
+	// but the current approach guarantees the cache is used if multiple
+	// threads are launched at the same time that need the same filter,
+	// which presumably is the common case for multithreaded FBP's.
+
+	static std::shared_ptr<FilterCacheEntry> static_cache;
+	static std::mutex static_mutex;
+
+	std::unique_lock lock{static_mutex};
+
+	// Get a local copy of the cache shared_ptr to inspect
+	std::shared_ptr<FilterCacheEntry> cache = static_cache;
+
+	if (cache && cache->m_iSize == iSize) {
+		// The cache entry is what we need.
+
+		// Unlock the main mutex, since we have a local copy.
+		lock.unlock();
+
+		// If still generating the filter, wait for that.
+		cache->m_gen_mutex.lock();
+		cache->m_gen_mutex.unlock();
+
+		// Return a shared_ptr to the contained vector, sharing a
+		// control structure with the cache shared_ptr
+		return std::shared_ptr<std::vector<float>>(cache, &cache->m_filter);
+	} else {
+		std::shared_ptr<FilterCacheEntry> f = std::make_shared<FilterCacheEntry>();
+		f->m_iSize = iSize;
+		f->m_gen_mutex.lock();
+
+		// Store this new entry to the cache. We do this while it is
+		// locked, so it will not be used until the generate call below
+		// is completed.
+		static_cache = f;
+
+		// Unlock the main mutex protecting static_cache.
+		lock.unlock();
+
+		f->m_filter = generateRampFilter(iSize);
+		f->m_gen_mutex.unlock();
+
+		// Return a shared_ptr to the contained vector, sharing a
+		// control structure with the cache shared_ptr
+		return std::shared_ptr<std::vector<float>>(f, &f->m_filter);
+	}
+}
+
+
 
 float *genFilter(const SFilterConfig &_cfg,
                int _iFFTRealDetectorCount,
@@ -45,41 +138,8 @@ float *genFilter(const SFilterConfig &_cfg,
 	float * pfFilt = new float[_iFFTFourierDetectorCount];
 	float * pfW = new float[_iFFTFourierDetectorCount];
 
-	// We cache one Fourier transform for repeated FBP's of the same size
-	static float *pfData = 0;
-	static int iFilterCacheSize = 0;
-
-	if (!pfData || iFilterCacheSize != _iFFTRealDetectorCount) {
-		// Compute filter in spatial domain
-
-		delete[] pfData;
-		pfData = new float[2*_iFFTRealDetectorCount];
-		int *ip = new int[int(2+sqrt(_iFFTRealDetectorCount)+1)];
-		ip[0] = 0;
-		float32 *w = new float32[_iFFTRealDetectorCount/2];
-
-		for (int i = 0; i < _iFFTRealDetectorCount; ++i) {
-			pfData[2*i+1] = 0.0f;
-
-			if (i & 1) {
-				int j = i;
-				if (2*j > _iFFTRealDetectorCount)
-					j = _iFFTRealDetectorCount - j;
-				float f = PI * j;
-				pfData[2*i] = -1 / (f*f);
-			} else {
-				pfData[2*i] = 0.0f;
-			}
-		}
-
-		pfData[0] = 0.25f;
-
-		cdft(2*_iFFTRealDetectorCount, -1, pfData, ip, w);
-		delete[] ip;
-		delete[] w;
-
-		iFilterCacheSize = _iFFTRealDetectorCount;
-	}
+	std::shared_ptr<std::vector<float>> data = getRampFilter(_iFFTRealDetectorCount);
+	float *pfData = &data->front();
 
 	for(int iDetectorIndex = 0; iDetectorIndex < _iFFTFourierDetectorCount; iDetectorIndex++)
 	{
