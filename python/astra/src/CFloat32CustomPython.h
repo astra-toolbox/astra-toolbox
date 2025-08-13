@@ -1,3 +1,5 @@
+#ifndef Py_GIL_DISABLED
+
 class GILHelper {
 public:
     GILHelper() {
@@ -9,6 +11,16 @@ public:
 private:
     PyGILState_STATE state;
 };
+
+#else
+
+class GILHelper {
+public:
+    GILHelper() {
+    }
+};
+
+#endif
 
 class CFloat32CustomPython : public astra::CFloat32CustomMemory {
 public:
