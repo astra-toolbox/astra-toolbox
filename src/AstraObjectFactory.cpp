@@ -29,9 +29,9 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 namespace astra {
 
-DEFINE_SINGLETON2(CAstraObjectFactory<CAlgorithm, AlgorithmTypeList>)
-DEFINE_SINGLETON2(CAstraObjectFactory<CProjector2D, Projector2DTypeList>)
-DEFINE_SINGLETON2(CAstraObjectFactory<CProjector3D, Projector3DTypeList>)
+DEFINE_SINGLETON(CAstraObjectFactory<CAlgorithm, AlgorithmTypeList>)
+DEFINE_SINGLETON(CAstraObjectFactory<CProjector2D, Projector2DTypeList>)
+DEFINE_SINGLETON(CAstraObjectFactory<CProjector3D, Projector3DTypeList>)
 
 template <>
 CAlgorithm* CAstraObjectFactory<CAlgorithm, AlgorithmTypeList>::findPlugin(std::string _sType)
