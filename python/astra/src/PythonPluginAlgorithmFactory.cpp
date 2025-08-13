@@ -56,10 +56,11 @@ CPythonPluginAlgorithmFactory::CPythonPluginAlgorithmFactory(){
 }
 
 CPythonPluginAlgorithmFactory::~CPythonPluginAlgorithmFactory(){
-    if(pluginDict!=NULL){
-        Py_DECREF(pluginDict);
-    }
-    if(inspect!=NULL) Py_DECREF(inspect);
+    // We skip these Py_DECREF calls on purpose, as this class is a Singleton,
+    // and its destruction might happen when the Python interpreter is no
+    // longer available.
+    // if(pluginDict!=NULL) Py_DECREF(pluginDict);
+    // if(inspect!=NULL) Py_DECREF(inspect);
 }
 
 PyObject * getClassFromString(std::string str){
