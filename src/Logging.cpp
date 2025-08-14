@@ -32,8 +32,12 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/Utilities.h"
 
 #include <cstdio>
+#include <mutex>
 
-using namespace astra;
+namespace astra {
+
+std::once_flag clog_initialization_flag;
+
 
 void CLogger::enableScreen()
 {
@@ -177,13 +181,11 @@ void CLogger::setOutputFile(const char *filename, log_level m_eLevel)
 
 void CLogger::_assureIsInitialized()
 {
-	if(!m_bInitialized)
-	{
+	std::call_once(clog_initialization_flag, []() {
 		clog_init_fd(0, 2);
 		clog_set_level(0, CLOG_INFO);
 		clog_set_fmt(0, "%l: %m\n");
-		m_bInitialized = true;
-	}
+	});
 }
 
 void CLogger::_setLastErrMsg(const char *sfile, int sline, const char *fmt, va_list ap)
@@ -224,5 +226,6 @@ bool CLogger::setCallbackScreen(void (*cb)(const char *msg, size_t len)){
 bool CLogger::m_bEnabledScreen = true;
 bool CLogger::m_bEnabledFile = true;
 bool CLogger::m_bFileProvided = false;
-bool CLogger::m_bInitialized = false;
 std::string CLogger::m_sLastErrMsg;
+
+}
