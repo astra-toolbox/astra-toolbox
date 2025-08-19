@@ -234,7 +234,7 @@ bool CArtAlgorithm::run(int _iNrIterations)
 		iDetector = m_piDetectorOrder[m_iCurrentRay];
 		m_iCurrentRay = (m_iCurrentRay + 1) % m_piProjectionOrder.size();
 
-		if (m_bUseSinogramMask && m_pSinogramMask->getData2D()[iProjection][iDetector] == 0) continue;	
+		if (m_bUseSinogramMask && m_pSinogramMask->getDataConst()[iProjection*m_pSinogramMask->getDetectorCount()+iDetector] == 0) continue;
 
 		m_pProjector->computeSingleRayWeights(iProjection, iDetector, pPixels, iPixelBufferSize, iUsedPixels);
 
@@ -250,7 +250,7 @@ bool CArtAlgorithm::run(int _iNrIterations)
 		if (fSumSquaredWeights == 0) continue;
 
 		// step2: difference
-		fProjectionDifference = m_pSinogram->getData2D()[iProjection][iDetector] - fRayForwardProj;
+		fProjectionDifference = m_pSinogram->getDataConst()[iProjection*m_pSinogram->getDetectorCount()+iDetector] - fRayForwardProj;
 
 		// step3: back projection
 		fBackProjectionFactor = m_fLambda * fProjectionDifference / fSumSquaredWeights;

@@ -155,7 +155,7 @@ cdef fillDataObjectScalar(CData3D * obj, float s):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cdef fillDataObjectArray(CData3D* obj, const float [:,:,::1] data):
-    cdef const float [:,:,::1] cView = <const float[:data.shape[0],:data.shape[1],:data.shape[2]]> obj.getFloat32Memory()
+    cdef float [:,:,::1] cView = <float[:data.shape[0],:data.shape[1],:data.shape[2]]> obj.getFloat32Memory()
     cView[:] = data
 
 cdef CData3D * getObject(i) except NULL:

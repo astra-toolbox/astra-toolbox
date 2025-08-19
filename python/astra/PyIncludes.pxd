@@ -117,7 +117,6 @@ cdef extern from "astra/Float32Data2D.h" namespace "astra":
         bool isInitialized()
         size_t getSize()
         float32 *getData()
-        float32 **getData2D()
         int getWidth()
         int getHeight()
         TWOEDataType getType()

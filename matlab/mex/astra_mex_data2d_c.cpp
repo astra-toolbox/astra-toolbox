@@ -204,7 +204,7 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 				int col, row;
 				for (col = 0; col < dims[1]; ++col) {
 					for (row = 0; row < dims[0]; ++row) {
-						pDataObject2D->getData2D()[row][col] = (float32)pbMatlabData[i];
+						pDataObject2D->getData()[row*dims[1]+col] = (float32)pbMatlabData[i];
 						++i;
 					}
 				}
@@ -215,7 +215,7 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 				int col, row;
 				for (col = 0; col < dims[1]; ++col) {
 					for (row = 0; row < dims[0]; ++row) {
-						pDataObject2D->getData2D()[row][col] = pdMatlabData[i];
+						pDataObject2D->getData()[row*dims[1]+col] = pdMatlabData[i];
 						++i;
 					}
 				}
@@ -226,7 +226,7 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 				int col, row;
 				for (col = 0; col < dims[1]; ++col) {
 					for (row = 0; row < dims[0]; ++row) {
-						pDataObject2D->getData2D()[row][col] = pfMatlabData[i];
+						pDataObject2D->getData()[row*dims[1]+col] = pfMatlabData[i];
 						++i;
 					}
 				}
@@ -298,7 +298,7 @@ void astra_mex_data2d_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 			int col, row;
 			for (col = 0; col < dims[1]; ++col) {
 				for (row = 0; row < dims[0]; ++row) {
-					pDataObject->getData2D()[row][col] = (float32)pbMatlabData[i];
+					pDataObject->getData()[row*dims[1]+col] = (float32)pbMatlabData[i];
 					++i;
 				}
 			}
@@ -309,7 +309,7 @@ void astra_mex_data2d_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 			int col, row;
 			for (col = 0; col < dims[1]; ++col) {
 				for (row = 0; row < dims[0]; ++row) {
-					pDataObject->getData2D()[row][col] = pdMatlabData[i];
+					pDataObject->getData()[row*dims[1]+col] = pdMatlabData[i];
 					++i;
 				}
 			}
@@ -320,7 +320,7 @@ void astra_mex_data2d_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 			int col, row;
 			for (col = 0; col < dims[1]; ++col) {
 				for (row = 0; row < dims[0]; ++row) {
-					pDataObject->getData2D()[row][col] = pfMatlabData[i];
+					pDataObject->getData()[row*dims[1]+col] = pfMatlabData[i];
 					++i;
 				}
 			}
@@ -496,7 +496,7 @@ void astra_mex_data2d_get(int nlhs, mxArray* plhs[], int nrhs, const mxArray* pr
 		int row, col;
 		for (col = 0; col < pDataObject->getWidth(); ++col) {
 			for (row = 0; row < pDataObject->getHeight(); ++row) {
-				out[i] = pDataObject->getData2D()[row][col];
+				out[i] = pDataObject->getDataConst()[row*pDataObject->getWidth()+col];
 				++i;
 			}
 		}	
@@ -539,7 +539,7 @@ void astra_mex_data2d_get_single(int nlhs, mxArray* plhs[], int nrhs, const mxAr
 		int row, col;
 		for (col = 0; col < pDataObject->getWidth(); ++col) {
 			for (row = 0; row < pDataObject->getHeight(); ++row) {
-				out[i] = pDataObject->getData2D()[row][col];
+				out[i] = pDataObject->getDataConst()[row*pDataObject->getWidth()+col];
 				++i;
 			}
 		}	

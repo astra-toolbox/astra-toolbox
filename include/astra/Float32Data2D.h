@@ -65,12 +65,6 @@ protected:
 	 */
 	float32* m_pfData;	
 
-	/** Array of float32 pointers, each pointing to a single horizontal 
-	 * line in the m_pfData memory block.
-	 * To access element (ix, iy) internally, use m_ppfData2D[iy][ix]
-     */
-	float32** m_ppfData2D;	
-
 	float32 m_fGlobalMin;	///< minimum value of the data
 	float32 m_fGlobalMax;	///< maximum value of the data
 	float32 m_fGlobalMean;  ///< mean value of the data
@@ -289,30 +283,6 @@ public:
 	 */
 	const float32* getDataConst() const;	
 	
-	/** Get a float32** to the data block, represented as a 2-dimensional array of float32 values. 
-	 *
-	 * After the call p = getData2D(), use p[iy][ix] to access element (ix, iy).
-	 * The data memory and pointer array are still "owned" by the CFloat32Data2D 
-	 * instance; this memory may NEVER be freed by the caller of this function. 
-	 * If changes are made to this data, the function updateStatistics() 
-	 * should be called after completion of all changes. 
-	 *
-	 * @return pointer to the 2-dimensional 32-bit floating point data block
- 	 */
-	float32** getData2D();
-
-	/** Get a const float32** to the data block, represented as a 2-dimensional array of float32 values. 
-	 *
-	 * After the call p = getData2D(), use p[iy][ix] to access element (ix, iy).
-	 * The data memory and pointer array are still "owned" by the CFloat32Data2D 
-	 * instance; this memory may NEVER be freed by the caller of this function. 
-	 * If changes are made to this data, the function updateStatistics() 
-	 * should be called after completion of all changes. 
-	 *
-	 * @return pointer to the 2-dimensional 32-bit floating point data block
- 	 */
-	const float32** getData2DConst() const;
-
 	/** Update data statistics, such as minimum and maximum value, after the data has been modified. 
 	 */
 	virtual void updateStatistics();
@@ -527,22 +497,6 @@ inline const float32* CFloat32Data2D::getDataConst() const
 {
 	ASTRA_ASSERT(m_bInitialized);
 	return (const float32*)m_pfData;
-}
-
-//----------------------------------------------------------------------------------------
-// Get a float32** to the data block, represented as a 2-dimensional array of float32 values.
-inline float32** CFloat32Data2D::getData2D()
-{
-	ASTRA_ASSERT(m_bInitialized);
-	return m_ppfData2D;
-}
-
-//----------------------------------------------------------------------------------------
-// Get a const float32** to the data block, represented as a 2-dimensional array of float32 values.
-inline const float32** CFloat32Data2D::getData2DConst() const
-{
-	ASTRA_ASSERT(m_bInitialized);
-	return (const float32**)m_ppfData2D;
 }
 
 //----------------------------------------------------------------------------------------

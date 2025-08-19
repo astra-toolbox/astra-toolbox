@@ -152,7 +152,7 @@ cdef fillDataObjectScalar(CFloat32Data2D * obj, float s):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cdef fillDataObjectArray(CFloat32Data2D * obj, const float [:,::1] data):
-    cdef const float [:,::1] cView =  <const float[:data.shape[0],:data.shape[1]]> obj.getData2D()[0]
+    cdef float [:,::1] cView =  <float[:data.shape[0],:data.shape[1]]> obj.getData()
     cView[:] = data
 
 cdef CFloat32Data2D * getObject(i) except NULL:
@@ -256,7 +256,7 @@ def get(i):
     cdef CFloat32Data2D * pDataObject = getObject(i)
     outArr = np.empty((pDataObject.getHeight(), pDataObject.getWidth()),dtype=np.float32,order='C')
     cdef float [:,::1] mView = outArr
-    cdef float [:,::1] cView =  <float[:outArr.shape[0],:outArr.shape[1]]> pDataObject.getData2D()[0]
+    cdef float [:,::1] cView =  <float[:outArr.shape[0],:outArr.shape[1]]> pDataObject.getData()
     mView[:] = cView
     return outArr
 
@@ -265,7 +265,7 @@ def get_shared(i):
     cdef np.npy_intp shape[2]
     shape[0] = <np.npy_intp> pDataObject.getHeight()
     shape[1] = <np.npy_intp> pDataObject.getWidth()
-    return np.PyArray_SimpleNewFromData(2,shape,np.NPY_FLOAT32,<void *>pDataObject.getData2D()[0])
+    return np.PyArray_SimpleNewFromData(2,shape,np.NPY_FLOAT32,<void *>pDataObject.getData())
 
 
 def get_single(i):

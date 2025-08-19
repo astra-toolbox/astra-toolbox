@@ -161,7 +161,6 @@ bool CFloat32Data2D::_initialize(int _iWidth, int _iHeight)
 
 	// allocate memory for the data, but do not fill it
 	m_pfData = 0;
-	m_ppfData2D = 0;
 	m_pCustomMemory = 0;
 	_allocateData();
 
@@ -196,7 +195,6 @@ bool CFloat32Data2D::_initialize(int _iWidth, int _iHeight, const float32 *_pfDa
 
 	// allocate memory for the data 
 	m_pfData = 0;
-	m_ppfData2D = 0;
 	m_pCustomMemory = 0;
 	_allocateData();
 
@@ -229,7 +227,6 @@ bool CFloat32Data2D::_initialize(int _iWidth, int _iHeight, float32 _fScalar)
 
 	// allocate memory for the data 
 	m_pfData = 0;
-	m_ppfData2D = 0;
 	m_pCustomMemory = 0;
 	_allocateData();
 
@@ -266,7 +263,6 @@ bool CFloat32Data2D::_initialize(int _iWidth, int _iHeight, CFloat32CustomMemory
 	// initialize the data pointers
 	m_pCustomMemory = _pCustomMemory;
 	m_pfData = 0;
-	m_ppfData2D = 0;
 	_allocateData();
 
 	// initialization complete
@@ -280,7 +276,7 @@ bool CFloat32Data2D::_initialize(int _iWidth, int _iHeight, CFloat32CustomMemory
 //----------------------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------------------
-// Allocate memory for m_pfData and m_ppfData2D arrays.
+// Allocate memory for m_pfData array.
 void CFloat32Data2D::_allocateData()
 {
 	// basic checks
@@ -289,7 +285,6 @@ void CFloat32Data2D::_allocateData()
 	ASTRA_ASSERT(m_iSize > 0);
 	ASTRA_ASSERT((size_t)m_iSize == (size_t)m_iWidth * m_iHeight);
 	ASTRA_ASSERT(m_pfData == NULL);
-	ASTRA_ASSERT(m_ppfData2D == NULL);
 
 	if (!m_pCustomMemory) {
 
@@ -304,24 +299,14 @@ void CFloat32Data2D::_allocateData()
 	} else {
 		m_pfData = m_pCustomMemory->m_fPtr;
 	}
-
-	// create array of pointers to each row of the data block
-	m_ppfData2D = new float32*[m_iHeight];
-	for (int iy = 0; iy < m_iHeight; iy++)
-	{
-		m_ppfData2D[iy] = &(m_pfData[iy * m_iWidth]);
-	}
 }
 
 //----------------------------------------------------------------------------------------
-// Free memory for m_pfData and m_ppfData2D arrays.
+// Free memory for m_pfData array.
 void CFloat32Data2D::_freeData()
 {
 	// basic checks
 	ASTRA_ASSERT(m_pfData != NULL);
-	ASTRA_ASSERT(m_ppfData2D != NULL);
-	// free memory for index table
-	delete[] m_ppfData2D;
 
 	if (!m_pCustomMemory) {
 		// free memory for data block
@@ -346,7 +331,6 @@ void CFloat32Data2D::_clear()
 	m_iSize = 0;
 
 	m_pfData = NULL;
-	m_ppfData2D = NULL;
 	m_pCustomMemory = NULL;
 
 	m_fGlobalMin = 0.0f;
