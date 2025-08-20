@@ -274,9 +274,6 @@ bool CArtAlgorithm::run(int _iNrIterations)
 	}
 	delete[] pPixels;
 
-	// update statistics
-	m_pReconstruction->updateStatistics();
-
 	return true;
 }
 

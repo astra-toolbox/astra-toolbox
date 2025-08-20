@@ -105,11 +105,6 @@ CFloat32Data2D& CFloat32Data2D::operator=(const CFloat32Data2D& _dataIn)
 	if (m_bInitialized) {
 		if (m_iWidth == _dataIn.m_iWidth && m_iHeight == _dataIn.m_iHeight) {
 			// Same dimensions, so no need to re-allocate memory
-
-			m_fGlobalMin = _dataIn.m_fGlobalMin;
-			m_fGlobalMax = _dataIn.m_fGlobalMax;
-			m_fGlobalMean = _dataIn.m_fGlobalMean;
-
 			ASTRA_ASSERT(m_iSize == (size_t)m_iWidth * m_iHeight);
 			ASTRA_ASSERT(m_pfData);
 
@@ -163,11 +158,6 @@ bool CFloat32Data2D::_initialize(int _iWidth, int _iHeight)
 	m_pfData = 0;
 	m_pCustomMemory = 0;
 	_allocateData();
-
-	// set minmax to default values
-	m_fGlobalMin = 0.0;
-	m_fGlobalMax = 0.0;
-	m_fGlobalMean = 0.0;
 
 	// initialization complete
 	return true;
@@ -332,9 +322,6 @@ void CFloat32Data2D::_clear()
 
 	m_pfData = NULL;
 	m_pCustomMemory = NULL;
-
-	m_fGlobalMin = 0.0f;
-	m_fGlobalMax = 0.0f;
 }
 
 //----------------------------------------------------------------------------------------
@@ -373,26 +360,6 @@ void CFloat32Data2D::copyData(const float32* _pfData)
 }	
 
 //----------------------------------------------------------------------------------------
-// scale m_pfData from 0 to 255.
-
-void CFloat32Data2D::scale() 
-{
-	// basic checks
-	ASTRA_ASSERT(m_bInitialized);
-	ASTRA_ASSERT(m_pfData != NULL);
-	ASTRA_ASSERT(m_iSize > 0);
-
-	_computeGlobalMinMax();
-	for (size_t i = 0; i < m_iSize; i++) 
-	{
-		// do checks
-		m_pfData[i]= (m_pfData[i] - m_fGlobalMin) / (m_fGlobalMax - m_fGlobalMin) * 255; ;
-	}
-
-
-}
-
-//----------------------------------------------------------------------------------------
 // Set each element of the data to a specific scalar value
 void CFloat32Data2D::setData(float32 _fScalar)
 {
@@ -425,51 +392,6 @@ void CFloat32Data2D::clearData()
 	}
 }
 //----------------------------------------------------------------------------------------
-
-
-
-  //----------------------------------------------------------------------------------------
- // Statistics Operations
-//----------------------------------------------------------------------------------------
-
-//----------------------------------------------------------------------------------------
-// Update data statistics, such as minimum and maximum value, after the data has been modified. 
-void CFloat32Data2D::updateStatistics()
-{
-	_computeGlobalMinMax();
-}
-
-//----------------------------------------------------------------------------------------
-// Find the minimum and maximum data value.
-void CFloat32Data2D::_computeGlobalMinMax() 
-{
-	// basic checks
-	ASTRA_ASSERT(m_bInitialized);
-	ASTRA_ASSERT(m_pfData != NULL);
-	ASTRA_ASSERT(m_iSize > 0);
-	
-	// initial values
-	m_fGlobalMin = m_pfData[0];
-	m_fGlobalMax = m_pfData[0];
-	m_fGlobalMean = 0.0f;
-
-	// loop
-	for (size_t i = 0; i < m_iSize; i++) 
-	{
-		// do checks
-		float32 v = m_pfData[i];
-		if (v < m_fGlobalMin) {
-			m_fGlobalMin = v;
-		}
-		if (v > m_fGlobalMax) {
-			m_fGlobalMax = v;
-		}
-		m_fGlobalMean +=v;
-	}
-	m_fGlobalMean /= m_iSize;
-}
-//----------------------------------------------------------------------------------------
-
 
 CFloat32Data2D& CFloat32Data2D::clampMin(float32& _fMin)
 {

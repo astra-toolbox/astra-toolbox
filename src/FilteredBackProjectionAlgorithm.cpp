@@ -187,8 +187,6 @@ bool CFilteredBackProjectionAlgorithm::run(int _iNrIterations)
 	float fPixelArea = volGeom.getPixelArea();
 	(*m_pReconstruction) *= PI/(2*iAngleCount*fPixelArea);
 
-	m_pReconstruction->updateStatistics();
-
 	return true;
 }
 

@@ -65,10 +65,6 @@ protected:
 	 */
 	float32* m_pfData;	
 
-	float32 m_fGlobalMin;	///< minimum value of the data
-	float32 m_fGlobalMax;	///< maximum value of the data
-	float32 m_fGlobalMean;  ///< mean value of the data
-
 	/** Allocate memory for m_pfData and m_ppfData2D arrays.
 	 *
 	 * The allocated block consists of m_iSize float32s. The block is
@@ -91,11 +87,6 @@ protected:
     /** Un-initialize the object, bringing it back in the uninitialized state.
 	 */
 	void _unInit();
-
-	/** Find the minimum and maximum data value and store them in 
-	 * m_fGlobalMin and m_fGlobalMax
-	 */
-	void _computeGlobalMinMax();
 
 	/** Initialization. Initializes an instance of the CFloat32Data2D class, without filling the data block.
 	 * Can only be called by derived classes.
@@ -246,11 +237,6 @@ public:
 	 */
 	void copyData(const float32* _pfData);
 
-    /** scale the grey value of the data from 0-255. 
- 	 * 
-	 */
-	void scale();
-
     /** Set each element of the data to a specified scalar value.
 	 *
 	 * @param _fScalar scalar value
@@ -264,9 +250,7 @@ public:
 	/** Get a pointer to the data block, represented as a 1-dimensional
 	 * array of float32 values. The data memory is still "owned" by the 
 	 * CFloat32Data2D instance; this memory may NEVER be freed by the 
-	 * caller of this function. If changes are made to this data, the
-	 * function updateStatistics() should be called after completion of
-	 * all changes.
+	 * caller of this function.
 	 *
 	 * @return pointer to the 1-dimensional 32-bit floating point data block
 	 */
@@ -275,46 +259,12 @@ public:
 	/** Get a const pointer to the data block, represented as a 1-dimensional
 	 * array of float32 values. The data memory is still "owned" by the 
 	 * CFloat32Data2D instance; this memory may NEVER be freed by the 
-	 * caller of this function. If changes are made to this data, the
-	 * function updateStatistics() should be called after completion of
-	 * all changes.
+	 * caller of this function.
 	 *
 	 * @return pointer to the 1-dimensional 32-bit floating point data block
 	 */
 	const float32* getDataConst() const;	
 	
-	/** Update data statistics, such as minimum and maximum value, after the data has been modified. 
-	 */
-	virtual void updateStatistics();
-
-	/** Get the minimum value in the data block.
-	 * If the data has been changed after construction, the function
-	 * updateStatistics() must be called at least once before 
-	 * a query can be made on this value.
-	 *
-	 * @return minimum value in the data block
-	 */
-	virtual float32 getGlobalMin() const;
-
-	/** Get the maximum value in the data block
-	 * If the data has been changed after construction, the function
-	 * updateStatistics() must be called at least once before 
-	 * a query can be made on this value.
-	 *
-	 * @return maximum value in the data block
-	 */
-	virtual float32 getGlobalMax() const;
-
-	/** Get the mean value in the data block
-	 * If the data has been changed after construction, the function
-	 * updateStatistics() must be called at least once before 
-	 * a query can be made on this value.
-	 *
-	 * @return maximum value in the data block
-	 */
-	virtual float32 getGlobalMean() const;
-
-
 	/** Get the width of the data block.
 	 *
 	 * @return width of the data block
@@ -497,30 +447,6 @@ inline const float32* CFloat32Data2D::getDataConst() const
 {
 	ASTRA_ASSERT(m_bInitialized);
 	return (const float32*)m_pfData;
-}
-
-//----------------------------------------------------------------------------------------
-// Get the minimum value in the data block.
-inline float32 CFloat32Data2D::getGlobalMin() const
-{
-	ASTRA_ASSERT(m_bInitialized);
-	return m_fGlobalMin;
-}
-
-//----------------------------------------------------------------------------------------
-// Get the maximum value in the data block
-inline float32 CFloat32Data2D::getGlobalMax() const
-{
-	ASTRA_ASSERT(m_bInitialized);
-	return m_fGlobalMax;
-}
-
-//----------------------------------------------------------------------------------------
-// Get the mean value in the data block
-inline float32 CFloat32Data2D::getGlobalMean() const
-{
-	ASTRA_ASSERT(m_bInitialized);
-	return m_fGlobalMean;
 }
 
 
