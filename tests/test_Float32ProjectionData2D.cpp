@@ -63,11 +63,6 @@ BOOST_AUTO_TEST_CASE( testFloat32ProjectionData2D_Constructor2 )
 
 	BOOST_CHECK( data.getType() == astra::CFloat32Data2D::PROJECTION );
 	BOOST_CHECK( data.getGeometry().isEqual(geom) );
-
-	// CHECKME: should this be necessary?
-	data.updateStatistics();
-
-	BOOST_CHECK( data.getGlobalMax() == 10.0f );
 }
 
 BOOST_AUTO_TEST_CASE( testFloat32ProjectionData2D_Constructor3 )
@@ -81,11 +76,6 @@ BOOST_AUTO_TEST_CASE( testFloat32ProjectionData2D_Constructor3 )
 
 	BOOST_CHECK( data.getType() == astra::CFloat32Data2D::PROJECTION );
 	BOOST_CHECK( data.getGeometry().isEqual(geom) );
-
-	// CHECKME: should this be necessary?
-	data.updateStatistics();
-
-	BOOST_CHECK( data.getGlobalMax() == 3.5f );
 }
 
 BOOST_AUTO_TEST_CASE( testFloat32ProjectionData2D_Clone )

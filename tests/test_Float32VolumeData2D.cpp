@@ -59,10 +59,6 @@ BOOST_AUTO_TEST_CASE( testFloat32VolumeData2D_Constructor1odd )
 
 	BOOST_CHECK( data.getType() == astra::CFloat32Data2D::VOLUME );
 	BOOST_CHECK( data.getGeometry().isEqual(geom) );
-
-	// CHECKME: should this be necessary?
-	data.updateStatistics();
-	BOOST_CHECK( data.getGlobalMax() == 1.0f );
 }
 
 BOOST_AUTO_TEST_CASE( testFloat32VolumeData2D_Constructor2 )
@@ -77,10 +73,6 @@ BOOST_AUTO_TEST_CASE( testFloat32VolumeData2D_Constructor2 )
 	BOOST_CHECK( data.getType() == astra::CFloat32Data2D::VOLUME );
 
 	BOOST_CHECK( data.getGeometry().isEqual(geom) );
-
-	// CHECKME: should this be necessary?
-	data.updateStatistics();
-	BOOST_CHECK( data.getGlobalMax() == 4.0f );
 }
 
 BOOST_AUTO_TEST_CASE( testFloat32VolumeData2D_Clone )

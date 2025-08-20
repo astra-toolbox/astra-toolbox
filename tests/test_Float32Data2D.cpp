@@ -85,32 +85,16 @@ BOOST_AUTO_TEST_CASE( testFloat32Data2D_Constructor1 )
 
 	BOOST_REQUIRE( data.getDataConst() != 0 );
 	BOOST_REQUIRE( data.getData() != 0 );
-	BOOST_REQUIRE( data.getData2D() != 0 );
-	BOOST_REQUIRE( data.getData2DConst() != 0 );
-	BOOST_REQUIRE( data.getData2D()[0] != 0 );
-	BOOST_REQUIRE( data.getData2DConst()[0] != 0 );
 
 	data.setData(1.0f);
 
-	// CHECKME: should this be necessary?
-	data.updateStatistics();
-
-	BOOST_CHECK( data.getGlobalMin() == 1.0f );
-	BOOST_CHECK( data.getGlobalMax() == 1.0f );
-	BOOST_CHECK( data.getGlobalMean() == 1.0f );
-
 	BOOST_CHECK( data.getData()[0] == 1.0f );
 	BOOST_CHECK( data.getDataConst()[0] == 1.0f );
-	BOOST_CHECK( data.getData2D()[0][0] == 1.0f );
-	BOOST_CHECK( data.getData2DConst()[0][0] == 1.0f );
 }
 
 BOOST_AUTO_TEST_CASE( testFloat32Data2D_Constructor2 )
 {
 	CTestFloat32Data2D data(2,2,1.5f);
-
-	// CHECKME: should this be necessary?
-	data.updateStatistics();
 
 	BOOST_REQUIRE( data.isInitialized() );
 
@@ -121,19 +105,9 @@ BOOST_AUTO_TEST_CASE( testFloat32Data2D_Constructor2 )
 
 	BOOST_REQUIRE( data.getDataConst() != 0 );
 	BOOST_REQUIRE( data.getData() != 0 );
-	BOOST_REQUIRE( data.getData2D() != 0 );
-	BOOST_REQUIRE( data.getData2DConst() != 0 );
-	BOOST_REQUIRE( data.getData2D()[0] != 0 );
-	BOOST_REQUIRE( data.getData2DConst()[0] != 0 );
-
-	BOOST_CHECK( data.getGlobalMin() == 1.5f );
-	BOOST_CHECK( data.getGlobalMax() == 1.5f );
-	BOOST_CHECK( data.getGlobalMean() == 1.5f );
 
 	BOOST_CHECK( data.getData()[0] == 1.5f );
 	BOOST_CHECK( data.getDataConst()[0] == 1.5f );
-	BOOST_CHECK( data.getData2D()[0][0] == 1.5f );
-	BOOST_CHECK( data.getData2DConst()[0][0] == 1.5f );
 }
 
 BOOST_AUTO_TEST_CASE( testFloat32Data2D_Constructor3 )
@@ -141,9 +115,6 @@ BOOST_AUTO_TEST_CASE( testFloat32Data2D_Constructor3 )
 	astra::float32 d[] = { 1.0f, 2.0f, 3.0f, 4.0f };
 	CTestFloat32Data2D data(2,2,d);
 
-	// CHECKME: should this be necessary?
-	data.updateStatistics();
-
 	BOOST_REQUIRE( data.isInitialized() );
 
 	BOOST_CHECK( data.getWidth() == 2 );
@@ -153,18 +124,9 @@ BOOST_AUTO_TEST_CASE( testFloat32Data2D_Constructor3 )
 
 	BOOST_REQUIRE( data.getDataConst() != 0 );
 	BOOST_REQUIRE( data.getData() != 0 );
-	BOOST_REQUIRE( data.getData2D() != 0 );
-	BOOST_REQUIRE( data.getData2DConst() != 0 );
-	BOOST_REQUIRE( data.getData2D()[0] != 0 );
-	BOOST_REQUIRE( data.getData2DConst()[0] != 0 );
-
-	BOOST_CHECK( data.getGlobalMin() == 1.0f );
-	BOOST_CHECK( data.getGlobalMax() == 4.0f );
 
 	BOOST_CHECK( data.getData()[0] == 1.0f );
 	BOOST_CHECK( data.getDataConst()[0] == 1.0f );
-	BOOST_CHECK( data.getData2D()[0][0] == 1.0f );
-	BOOST_CHECK( data.getData2DConst()[0][0] == 1.0f );
 
 }
 
@@ -172,13 +134,6 @@ BOOST_FIXTURE_TEST_CASE( testFloat32Data2D_Operators, TestFloat32Data2D )
 {
 	// Note: all operations below involve exactly representable floats,
 	// so there is no need to use epsilons in the checks
-
-	data.updateStatistics();
-
-	// FIXME: should those be correct here?
-	BOOST_CHECK( data.getGlobalMin() == 1.0f );
-	BOOST_CHECK( data.getGlobalMax() == 4.0f );
-	BOOST_CHECK( data.getGlobalMean() == 2.5f );
 
 	data *= 2.0f;
 
@@ -216,13 +171,3 @@ BOOST_FIXTURE_TEST_CASE( testFloat32Data2D_Operators, TestFloat32Data2D )
 	BOOST_CHECK( data.getDataConst()[3] == 76.0f );
 }
 
-BOOST_FIXTURE_TEST_CASE( testFloat32Data2D_Update, TestFloat32Data2D )
-{
-	data.getData()[2] = 42.0f;
-	data.getData()[1] = -37.0f;
-	data.updateStatistics();
-
-	BOOST_CHECK( data.getGlobalMin() == -37.0f );
-	BOOST_CHECK( data.getGlobalMax() == 42.0f );
-	BOOST_CHECK( data.getGlobalMean() == 2.5f );
-}
