@@ -31,7 +31,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "Globals.h"
 #include "Config.h"
 #include "Algorithm.h"
-#include "Float32VolumeData2D.h"
+#include "Data2D.h"
 
 #ifdef ASTRA_CUDA
 
@@ -95,9 +95,9 @@ protected:
 
 	int m_iGPUIndex;
 
-	CFloat32Data2D* m_pMask;
+	CData2D* m_pMask;
 
-	std::vector<CFloat32Data2D*> m_pData;
+	std::vector<CData2D*> m_pData;
 	std::vector<double> m_fScalar;
 
 	std::string m_sOperation;

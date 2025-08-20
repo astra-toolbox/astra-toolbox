@@ -218,11 +218,8 @@ P_astra["filters"]["Algorithms\\source"] = [
 ]
 P_astra["filters"]["Data Structures\\source"] = [
 "95346487-8185-487b-a794-3e7fb5fcbd4c",
+"src\\Data2D.cpp",
 "src\\Data3D.cpp",
-"src\\Float32Data.cpp",
-"src\\Float32Data2D.cpp",
-"src\\Float32ProjectionData2D.cpp",
-"src\\Float32VolumeData2D.cpp",
 "src\\SheppLogan.cpp",
 "src\\SparseMatrix.cpp",
 ]
@@ -356,11 +353,9 @@ P_astra["filters"]["Algorithms\\headers"] = [
 ]
 P_astra["filters"]["Data Structures\\headers"] = [
 "444c44b0-6454-483a-be26-7cb9c8ab0b98",
+"include\\astra\\Data.h",
+"include\\astra\\Data2D.h",
 "include\\astra\\Data3D.h",
-"include\\astra\\Float32Data.h",
-"include\\astra\\Float32Data2D.h",
-"include\\astra\\Float32ProjectionData2D.h",
-"include\\astra\\Float32VolumeData2D.h",
 "include\\astra\\SheppLogan.h",
 "include\\astra\\SparseMatrix.h",
 ]

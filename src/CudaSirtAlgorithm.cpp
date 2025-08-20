@@ -126,8 +126,8 @@ void CCudaSirtAlgorithm::initCUDAAlgorithm()
 		const CVolumeGeometry2D& volgeom = m_pReconstruction->getGeometry();
 		const float *pfMinMaskData = 0;
 		const float *pfMaxMaskData = 0;
-		if (m_pMinMask) pfMinMaskData = m_pMinMask->getDataConst();
-		if (m_pMaxMask) pfMaxMaskData = m_pMaxMask->getDataConst();
+		if (m_pMinMask) pfMinMaskData = m_pMinMask->getFloat32Memory();
+		if (m_pMaxMask) pfMaxMaskData = m_pMaxMask->getFloat32Memory();
 		bool ok = pSirt->uploadMinMaxMasks(pfMinMaskData, pfMaxMaskData, volgeom.getGridColCount());
 		ASTRA_ASSERT(ok);
 	}

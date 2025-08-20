@@ -109,7 +109,7 @@ bool CCudaDartSmoothingAlgorithm::run(int _iNrIterations)
 
 	astraCUDA::setGPUIndex(m_iGPUIndex);
 	
-	astraCUDA::dartSmoothing(m_pOut->getData(), m_pIn->getDataConst(), m_fB, m_iRadius, width, height);
+	astraCUDA::dartSmoothing(m_pOut->getFloat32Memory(), m_pIn->getFloat32Memory(), m_fB, m_iRadius, width, height);
 
 	return true;
 }

@@ -51,6 +51,8 @@ cdef extern from *:
     XMLConfig* dynamic_cast_XMLConfig "dynamic_cast<astra::XMLConfig*>" (Config*)
 
 cdef extern from "src/dlpack.h":
+    CFloat32VolumeData2D* getDLTensor(obj, const CVolumeGeometry2D &pGeom, string &error)
+    CFloat32ProjectionData2D* getDLTensor(obj, const CProjectionGeometry2D &pGeom, string &error)
     CFloat32VolumeData3D* getDLTensor(obj, const CVolumeGeometry3D &pGeom, string &error)
     CFloat32ProjectionData3D* getDLTensor(obj, const CProjectionGeometry3D &pGeom, string &error)
 
@@ -256,7 +258,46 @@ def getDLPackCapsule(data):
         return None
     return capsule
 
-cdef CFloat32VolumeData3D* linkVolFromGeometry(const CVolumeGeometry3D &pGeometry, data) except NULL:
+cdef CFloat32VolumeData2D* linkVolFromGeometry2D(const CVolumeGeometry2D &pGeometry, data) except NULL:
+    cdef CFloat32VolumeData2D * pDataObject2D = NULL
+    cdef CDataStorage * pStorage
+    cdef string dlerror = b""
+
+    # TODO: investigate the stream argument to __dlpack__().
+    capsule = getDLPackCapsule(data)
+    if capsule is not None:
+        pDataObject2D = getDLTensor(capsule, pGeometry, dlerror)
+        if not pDataObject2D:
+            raise ValueError("Failed to link dlpack array: " + wrap_from_bytes(dlerror))
+        # TODO: Refactoring 2D GPU algorithms to support this
+        # (And add checks to the CPU algorithms that data is in host memory)
+        if not pDataObject2D.isFloat32Memory():
+            raise ValueError("For 2D objects, linking GPU tensors is not yet supported.")
+        return pDataObject2D
+
+    raise TypeError("Data should be an array with DLPack support")
+
+
+cdef CFloat32ProjectionData2D* linkProjFromGeometry2D(const CProjectionGeometry2D &pGeometry, data) except NULL:
+    cdef CFloat32ProjectionData2D * pDataObject2D = NULL
+    cdef CDataStorage * pStorage
+    cdef string dlerror = b""
+
+    # TODO: investigate the stream argument to __dlpack__().
+    capsule = getDLPackCapsule(data)
+    if capsule is not None:
+        pDataObject2D = getDLTensor(capsule, pGeometry, dlerror)
+        if not pDataObject2D:
+            raise ValueError("Failed to link dlpack array: " + wrap_from_bytes(dlerror))
+        # TODO: Refactoring 2D GPU algorithms to support this
+        # (And add checks to the CPU algorithms that data is in host memory)
+        if not pDataObject2D.isFloat32Memory():
+            raise ValueError("For 2D objects, linking GPU tensors is not yet supported.")
+        return pDataObject2D
+
+    raise TypeError("Data should be an array with DLPack support")
+
+cdef CFloat32VolumeData3D* linkVolFromGeometry3D(const CVolumeGeometry3D &pGeometry, data) except NULL:
     cdef CFloat32VolumeData3D * pDataObject3D = NULL
     cdef CDataStorage * pStorage
     cdef string dlerror = b""
@@ -287,7 +328,7 @@ cdef CFloat32VolumeData3D* linkVolFromGeometry(const CVolumeGeometry3D &pGeometr
     raise TypeError("Data should be an array with DLPack support, or a GPULink object")
 
 
-cdef CFloat32ProjectionData3D* linkProjFromGeometry(const CProjectionGeometry3D &pGeometry, data) except NULL:
+cdef CFloat32ProjectionData3D* linkProjFromGeometry3D(const CProjectionGeometry3D &pGeometry, data) except NULL:
     cdef CFloat32ProjectionData3D * pDataObject3D = NULL
     cdef CDataStorage * pStorage
     cdef string dlerror = b""
@@ -316,6 +357,38 @@ cdef CFloat32ProjectionData3D* linkProjFromGeometry(const CProjectionGeometry3D 
         return pDataObject3D
 
     raise TypeError("Data should be an array with DLPack support, or a GPULink object")
+
+cdef unique_ptr[CProjectionGeometry2D] createProjectionGeometry2D(geometry) except *:
+    cdef XMLConfig *cfg
+    cdef unique_ptr[CProjectionGeometry2D] pGeometry
+
+    cfg = dictToConfig(b'ProjectionGeometry', geometry)
+    tpe = cfg.self.getAttribute(b'type')
+    pGeometry = constructProjectionGeometry2D(tpe)
+    if not pGeometry:
+        raise ValueError("'{}' is not a valid 2D geometry type".format(tpe))
+
+    if not pGeometry.get().initialize(cfg[0]):
+        del cfg
+        raise AstraError('Geometry class could not be initialized', append_log=True)
+
+    del cfg
+
+    return move(pGeometry)
+
+cdef unique_ptr[CVolumeGeometry2D] createVolumeGeometry2D(geometry) except *:
+    cdef XMLConfig *cfg
+    cdef CVolumeGeometry2D * pGeometry
+    cfg = dictToConfig(b'VolumeGeometry', geometry)
+    pGeometry = new CVolumeGeometry2D()
+    if not pGeometry.initialize(cfg[0]):
+        del cfg
+        del pGeometry
+        raise AstraError('Geometry class could not be initialized', append_log=True)
+
+    del cfg
+
+    return unique_ptr[CVolumeGeometry2D](pGeometry)
 
 cdef unique_ptr[CProjectionGeometry3D] createProjectionGeometry3D(geometry) except *:
     cdef XMLConfig *cfg

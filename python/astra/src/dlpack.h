@@ -35,6 +35,8 @@ namespace astra {
 	class CProjectionGeometry3D;
 }
 
+astra::CFloat32ProjectionData2D* getDLTensor(PyObject *obj, const astra::CProjectionGeometry2D &pGeom, std::string &error);
+astra::CFloat32VolumeData2D* getDLTensor(PyObject *obj, const astra::CVolumeGeometry2D &pGeom, std::string &error);
 astra::CFloat32ProjectionData3D* getDLTensor(PyObject *obj, const astra::CProjectionGeometry3D &pGeom, std::string &error);
 astra::CFloat32VolumeData3D* getDLTensor(PyObject *obj, const astra::CVolumeGeometry3D &pGeom, std::string &error);
 void dump_dltensor_info(PyObject *obj);
