@@ -33,7 +33,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "Globals.h"
 #include "Config.h"
-#include "Float32Data2D.h"
+#include "Data2D.h"
 #include "ParallelProjectionGeometry2D.h"
 #include "ProjectionGeometry2D.h"
 #include "VolumeGeometry2D.h"

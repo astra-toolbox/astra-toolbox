@@ -32,8 +32,8 @@ cdef extern from "astra/AstraObjectManager.h" namespace "astra":
         string info()
         void clear()
         void remove(int i)
-        int store(CFloat32Data2D *)
-        CFloat32Data2D * get(int i)
+        int store(CData2D *)
+        CData2D * get(int i)
 
 cdef extern from "astra/AstraObjectManager.h" namespace "astra::CData2DManager":
     cdef CData2DManager* getSingletonPtr()

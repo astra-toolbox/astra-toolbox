@@ -52,7 +52,7 @@ DefaultFPPolicy::~DefaultFPPolicy()
 //----------------------------------------------------------------------------------------	
 bool DefaultFPPolicy::rayPrior(int _iRayIndex) 
 {
-	m_pProjectionData->getData()[_iRayIndex] = 0.0f;
+	m_pProjectionData->getFloat32Memory()[_iRayIndex] = 0.0f;
 	return true;
 }
 //----------------------------------------------------------------------------------------
@@ -64,7 +64,7 @@ bool DefaultFPPolicy::pixelPrior(int _iVolumeIndex)
 //----------------------------------------------------------------------------------------	
 void DefaultFPPolicy::addWeight(int _iRayIndex, int _iVolumeIndex, float32 _fWeight) 
 {
-	m_pProjectionData->getData()[_iRayIndex] += m_pVolumeData->getData()[_iVolumeIndex] * _fWeight;
+	m_pProjectionData->getFloat32Memory()[_iRayIndex] += m_pVolumeData->getFloat32Memory()[_iVolumeIndex] * _fWeight;
 }
 //----------------------------------------------------------------------------------------
 void DefaultFPPolicy::rayPosterior(int _iRayIndex) 
@@ -113,7 +113,7 @@ bool DefaultBPPolicy::pixelPrior(int _iVolumeIndex)
 //----------------------------------------------------------------------------------------	
 void DefaultBPPolicy::addWeight(int _iRayIndex, int _iVolumeIndex, float32 _fWeight) 
 {
-	m_pVolumeData->getData()[_iVolumeIndex] += m_pProjectionData->getData()[_iRayIndex] * _fWeight;
+	m_pVolumeData->getFloat32Memory()[_iVolumeIndex] += m_pProjectionData->getFloat32Memory()[_iRayIndex] * _fWeight;
 }
 //----------------------------------------------------------------------------------------
 void DefaultBPPolicy::rayPosterior(int _iRayIndex) 
@@ -154,7 +154,7 @@ DiffFPPolicy::~DiffFPPolicy()
 //----------------------------------------------------------------------------------------	
  bool DiffFPPolicy::rayPrior(int _iRayIndex) 
 {
-	m_pDiffProjectionData->getData()[_iRayIndex] = m_pBaseProjectionData->getData()[_iRayIndex];
+	m_pDiffProjectionData->getFloat32Memory()[_iRayIndex] = m_pBaseProjectionData->getFloat32Memory()[_iRayIndex];
 	return true;
 }
 //----------------------------------------------------------------------------------------
@@ -165,7 +165,7 @@ bool DiffFPPolicy::pixelPrior(int _iVolumeIndex)
 //----------------------------------------------------------------------------------------	
 void DiffFPPolicy::addWeight(int _iRayIndex, int _iVolumeIndex, float32 _fWeight) 
 {
-	m_pDiffProjectionData->getData()[_iRayIndex] -= m_pVolumeData->getData()[_iVolumeIndex] * _fWeight;
+	m_pDiffProjectionData->getFloat32Memory()[_iRayIndex] -= m_pVolumeData->getFloat32Memory()[_iVolumeIndex] * _fWeight;
 }
 //----------------------------------------------------------------------------------------
 void DiffFPPolicy::rayPosterior(int _iRayIndex) 
@@ -268,7 +268,7 @@ bool TotalPixelWeightBySinogramPolicy::pixelPrior(int _iVolumeIndex)
 //----------------------------------------------------------------------------------------	
 void TotalPixelWeightBySinogramPolicy::addWeight(int _iRayIndex, int _iVolumeIndex, float32 _fWeight) 
 {
-	m_pPixelWeight->getData()[_iVolumeIndex] += _fWeight * m_pSinogram->getData()[_iRayIndex];
+	m_pPixelWeight->getFloat32Memory()[_iVolumeIndex] += _fWeight * m_pSinogram->getFloat32Memory()[_iRayIndex];
 }
 //----------------------------------------------------------------------------------------
 void TotalPixelWeightBySinogramPolicy::rayPosterior(int _iRayIndex) 
@@ -316,7 +316,7 @@ bool TotalPixelWeightPolicy::pixelPrior(int _iVolumeIndex)
 //----------------------------------------------------------------------------------------	
 void TotalPixelWeightPolicy::addWeight(int _iRayIndex, int _iVolumeIndex, float32 _fWeight) 
 {
-	m_pPixelWeight->getData()[_iVolumeIndex] += _fWeight;
+	m_pPixelWeight->getFloat32Memory()[_iVolumeIndex] += _fWeight;
 }
 //----------------------------------------------------------------------------------------
 void TotalPixelWeightPolicy::rayPosterior(int _iRayIndex) 
@@ -363,7 +363,7 @@ bool TotalRayLengthPolicy::pixelPrior(int _iVolumeIndex)
 //----------------------------------------------------------------------------------------	
 void TotalRayLengthPolicy::addWeight(int _iRayIndex, int _iVolumeIndex, float32 _fWeight) 
 {
-	m_pRayLength->getData()[_iRayIndex] += _fWeight; 
+	m_pRayLength->getFloat32Memory()[_iRayIndex] += _fWeight;
 }
 //----------------------------------------------------------------------------------------
 void TotalRayLengthPolicy::rayPosterior(int _iRayIndex) 
@@ -738,9 +738,9 @@ bool SIRTBPPolicy::pixelPrior(int _iVolumeIndex)
 //----------------------------------------------------------------------------------------	
 void SIRTBPPolicy::addWeight(int _iRayIndex, int _iVolumeIndex, float32 _fWeight) 
 {
-	float32 fGammaBeta = m_pTotalPixelWeight->getData()[_iVolumeIndex] * m_pTotalRayLength->getData()[_iRayIndex];
+	float32 fGammaBeta = m_pTotalPixelWeight->getFloat32Memory()[_iVolumeIndex] * m_pTotalRayLength->getFloat32Memory()[_iRayIndex];
 	if ((fGammaBeta > 0.001f) || (fGammaBeta < -0.001f)) {
-		m_pReconstruction->getData()[_iVolumeIndex] += _fWeight * m_fRelaxation * m_pSinogram->getData()[_iRayIndex] / fGammaBeta;
+		m_pReconstruction->getFloat32Memory()[_iVolumeIndex] += _fWeight * m_fRelaxation * m_pSinogram->getFloat32Memory()[_iRayIndex] / fGammaBeta;
 	}
 }
 //----------------------------------------------------------------------------------------
@@ -779,7 +779,7 @@ SinogramMaskPolicy::~SinogramMaskPolicy()
 //----------------------------------------------------------------------------------------	
 bool SinogramMaskPolicy::rayPrior(int _iRayIndex) 
 {
-	return (m_pSinogramMask->getData()[_iRayIndex] != 0);
+	return (m_pSinogramMask->getFloat32Memory()[_iRayIndex] != 0);
 }
 //----------------------------------------------------------------------------------------
 bool SinogramMaskPolicy::pixelPrior(int _iVolumeIndex) 
@@ -832,7 +832,7 @@ bool ReconstructionMaskPolicy::rayPrior(int _iRayIndex)
 //----------------------------------------------------------------------------------------
 bool ReconstructionMaskPolicy::pixelPrior(int _iVolumeIndex) 
 {
-	return (m_pReconstructionMask->getData()[_iVolumeIndex] != 0);
+	return (m_pReconstructionMask->getFloat32Memory()[_iVolumeIndex] != 0);
 }
 //----------------------------------------------------------------------------------------	
 void ReconstructionMaskPolicy::addWeight(int _iRayIndex, int _iVolumeIndex, float32 _fWeight) 

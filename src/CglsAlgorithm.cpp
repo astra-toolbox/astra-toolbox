@@ -120,10 +120,10 @@ bool CCglsAlgorithm::initialize(const Config& _cfg)
 	}
 
 	// member variables
-	r = new CFloat32ProjectionData2D(m_pSinogram->getGeometry());
-	w = new CFloat32ProjectionData2D(m_pSinogram->getGeometry());
-	z = new CFloat32VolumeData2D(m_pReconstruction->getGeometry());
-	p = new CFloat32VolumeData2D(m_pReconstruction->getGeometry());
+	r = createCFloat32ProjectionData2DMemory(m_pSinogram->getGeometry());
+	w = createCFloat32ProjectionData2DMemory(m_pSinogram->getGeometry());
+	z = createCFloat32VolumeData2DMemory(m_pReconstruction->getGeometry());
+	p = createCFloat32VolumeData2DMemory(m_pReconstruction->getGeometry());
 
 	alpha = 0.0f;
 	beta = 0.0f;
@@ -151,10 +151,10 @@ bool CCglsAlgorithm::initialize(CProjector2D* _pProjector,
 	m_pReconstruction = _pReconstruction;
 
 	// member variables
-	r = new CFloat32ProjectionData2D(m_pSinogram->getGeometry());
-	w = new CFloat32ProjectionData2D(m_pSinogram->getGeometry());
-	z = new CFloat32VolumeData2D(m_pReconstruction->getGeometry());
-	p = new CFloat32VolumeData2D(m_pReconstruction->getGeometry());
+	r = createCFloat32ProjectionData2DMemory(m_pSinogram->getGeometry());
+	w = createCFloat32ProjectionData2DMemory(m_pSinogram->getGeometry());
+	z = createCFloat32VolumeData2DMemory(m_pReconstruction->getGeometry());
+	p = createCFloat32VolumeData2DMemory(m_pReconstruction->getGeometry());
 
 	// success
 	m_bIsInitialized = _check();
@@ -196,7 +196,7 @@ bool CCglsAlgorithm::run(int _iNrIterations)
 
 	if (m_iIteration == 0) {
 		// r = b;
-		r->copyData(m_pSinogram->getData());
+		r->copyData(*m_pSinogram);
 
 		// z = A'*b;
 		z->setData(0.0f);
@@ -207,12 +207,12 @@ bool CCglsAlgorithm::run(int _iNrIterations)
 			z->clampMax(m_fMaxValue);
 
 		// p = z;
-		p->copyData(z->getData());
+		p->copyData(*z);
 
 		// gamma = dot(z,z);
 		gamma = 0.0f;
 		for (i = 0; i < z->getSize(); ++i) {
-			gamma += z->getData()[i] * z->getData()[i];
+			gamma += z->getFloat32Memory()[i] * z->getFloat32Memory()[i];
 		}
 		m_iIteration++;
 	}
@@ -228,18 +228,18 @@ bool CCglsAlgorithm::run(int _iNrIterations)
 		// alpha = gamma/dot(w,w);
 		float32 tmp = 0;
 		for (i = 0; i < w->getSize(); ++i) {
-			tmp += w->getData()[i] * w->getData()[i];
+			tmp += w->getFloat32Memory()[i] * w->getFloat32Memory()[i];
 		}
 		alpha = gamma / tmp;
 
 		// x = x + alpha*p;
 		for (i = 0; i < m_pReconstruction->getSize(); ++i) {
-			m_pReconstruction->getData()[i] += alpha * p->getData()[i];
+			m_pReconstruction->getFloat32Memory()[i] += alpha * p->getFloat32Memory()[i];
 		}
 
 		// r = r - alpha*w;
 		for (i = 0; i < r->getSize(); ++i) {
-			r->getData()[i] -= alpha * w->getData()[i];
+			r->getFloat32Memory()[i] -= alpha * w->getFloat32Memory()[i];
 		}
 
 		// z = A'*r;
@@ -258,7 +258,7 @@ bool CCglsAlgorithm::run(int _iNrIterations)
 		// gamma = dot(z,z);
 		gamma = 0;
 		for (i = 0; i < z->getSize(); ++i) {
-			gamma += z->getData()[i] * z->getData()[i];
+			gamma += z->getFloat32Memory()[i] * z->getFloat32Memory()[i];
 		}
 
 		// beta = gamma*beta;
@@ -266,7 +266,7 @@ bool CCglsAlgorithm::run(int _iNrIterations)
 
 		// p = z + beta*p;
 		for (i = 0; i < z->getSize(); ++i) {
-			p->getData()[i] = z->getData()[i] + beta * p->getData()[i];
+			p->getFloat32Memory()[i] = z->getFloat32Memory()[i] + beta * p->getFloat32Memory()[i];
 		}
 		
 		m_iIteration++;
