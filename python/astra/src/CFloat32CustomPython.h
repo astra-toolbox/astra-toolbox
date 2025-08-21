@@ -28,6 +28,15 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef ASTRA_PYTHON_SRC_FLOAT32CUSTOMPYTHON_H
 #define ASTRA_PYTHON_SRC_FLOAT32CUSTOMPYTHON_H
 
+// TODO: Do we need to toggle this at compile-time or at run-time?
+
+// TODO: Check this on Windows
+// https://docs.python.org/3/howto/free-threading-extensions.html
+// claims 'On Windows, this macro is not defined automatically, but must be
+// specified to the compiler when building.'
+
+#ifndef Py_GIL_DISABLED
+
 class GILHelper {
 public:
     GILHelper() {
@@ -39,6 +48,16 @@ public:
 private:
     PyGILState_STATE state;
 };
+
+#else
+
+class GILHelper {
+public:
+    GILHelper() {
+    }
+};
+
+#endif
 
 class CFloat32CustomPython : public astra::CFloat32CustomMemory {
 public:
