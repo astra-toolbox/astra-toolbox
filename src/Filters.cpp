@@ -30,7 +30,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/Fourier.h"
 #include "astra/Filters.h"
 #include "astra/Config.h"
-#include "astra/Float32ProjectionData2D.h"
 #include "astra/AstraObjectManager.h"
 
 #include <utility>
@@ -596,7 +595,7 @@ SFilterConfig getFilterConfigForAlgorithm(const Config& _cfg, CAlgorithm *_alg)
 		c.m_iCustomFilterHeight = pFilterData->getGeometry().getProjectionAngleCount();
 
 		c.m_pfCustomFilter.resize(c.m_iCustomFilterWidth * c.m_iCustomFilterHeight);
-		memcpy(&c.m_pfCustomFilter[0], pFilterData->getDataConst(), sizeof(float) * c.m_iCustomFilterWidth * c.m_iCustomFilterHeight);
+		memcpy(&c.m_pfCustomFilter[0], pFilterData->getFloat32Memory(), sizeof(float) * c.m_iCustomFilterWidth * c.m_iCustomFilterHeight);
 	} else {
 		c.m_iCustomFilterWidth = 0;
 		c.m_iCustomFilterHeight = 0;

@@ -72,7 +72,7 @@ bool CCudaDataOperationAlgorithm::initialize(const Config& _cfg)
 	if (!CR.getRequiredIntArray("DataId", data))
 		return false;
 	for (vector<int>::iterator it = data.begin(); it != data.end(); ++it){
-		m_pData.push_back(dynamic_cast<CFloat32Data2D*>(CData2DManager::getSingleton().get(*it)));
+		m_pData.push_back(dynamic_cast<CData2D*>(CData2DManager::getSingleton().get(*it)));
 	}
 
 	bool ok = true;
@@ -86,7 +86,7 @@ bool CCudaDataOperationAlgorithm::initialize(const Config& _cfg)
 
 	int id = -1;
 	if (CR.getOptionID("MaskId", id)) {
-		m_pMask = dynamic_cast<CFloat32Data2D*>(CData2DManager::getSingleton().get(id));
+		m_pMask = dynamic_cast<CData2D*>(CData2DManager::getSingleton().get(id));
 	}
 
 	_check();
@@ -121,32 +121,32 @@ bool CCudaDataOperationAlgorithm::run(int _iNrIterations)
 	if (m_sOperation == "$1*s1" || m_sOperation == "$1.*s1") // data * scalar
 	{
 		if (m_pMask == NULL)
-			astraCUDA::processVolCopy<astraCUDA::opMul>(m_pData[0]->getData(), m_fScalar[0], dims);
+			astraCUDA::processVolCopy<astraCUDA::opMul>(m_pData[0]->getFloat32Memory(), m_fScalar[0], dims);
 		else
-			astraCUDA::processVolCopy<astraCUDA::opMulMask>(m_pData[0]->getData(), m_pMask->getDataConst(), m_fScalar[0], dims);
+			astraCUDA::processVolCopy<astraCUDA::opMulMask>(m_pData[0]->getFloat32Memory(), m_pMask->getFloat32Memory(), m_fScalar[0], dims);
 	}
 	else if (m_sOperation == "$1/s1" || m_sOperation == "$1./s1") // data / scalar
 	{
 		if (m_pMask == NULL)
-			astraCUDA::processVolCopy<astraCUDA::opMul>(m_pData[0]->getData(), 1.0f/m_fScalar[0], dims);
+			astraCUDA::processVolCopy<astraCUDA::opMul>(m_pData[0]->getFloat32Memory(), 1.0f/m_fScalar[0], dims);
 		else
-			astraCUDA::processVolCopy<astraCUDA::opMulMask>(m_pData[0]->getData(), m_pMask->getDataConst(), 1.0f/m_fScalar[0], dims);
+			astraCUDA::processVolCopy<astraCUDA::opMulMask>(m_pData[0]->getFloat32Memory(), m_pMask->getFloat32Memory(), 1.0f/m_fScalar[0], dims);
 	}
 	else if (m_sOperation == "$1+s1") // data + scalar
 	{
-		astraCUDA::processVolCopy<astraCUDA::opAdd>(m_pData[0]->getData(), m_fScalar[0], dims);
+		astraCUDA::processVolCopy<astraCUDA::opAdd>(m_pData[0]->getFloat32Memory(), m_fScalar[0], dims);
 	}
 	else if (m_sOperation == "$1-s1") // data - scalar
 	{
-		astraCUDA::processVolCopy<astraCUDA::opAdd>(m_pData[0]->getData(), -m_fScalar[0], dims);
+		astraCUDA::processVolCopy<astraCUDA::opAdd>(m_pData[0]->getFloat32Memory(), -m_fScalar[0], dims);
 	} 
 	else if (m_sOperation == "$1.*$2") // data .* data
 	{
-		astraCUDA::processVolCopy<astraCUDA::opMul>(m_pData[0]->getData(), m_pData[1]->getDataConst(), dims);
+		astraCUDA::processVolCopy<astraCUDA::opMul>(m_pData[0]->getFloat32Memory(), m_pData[1]->getFloat32Memory(), dims);
 	}
 	else if (m_sOperation == "$1+$2") // data + data
 	{
-		astraCUDA::processVolCopy<astraCUDA::opAdd>(m_pData[0]->getData(), m_pData[1]->getDataConst(), dims);
+		astraCUDA::processVolCopy<astraCUDA::opAdd>(m_pData[0]->getFloat32Memory(), m_pData[1]->getFloat32Memory(), dims);
 	}
 
 	return true;

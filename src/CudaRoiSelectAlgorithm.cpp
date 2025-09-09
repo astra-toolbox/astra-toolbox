@@ -109,7 +109,7 @@ bool CCudaRoiSelectAlgorithm::run(int _iNrIterations)
 	}
 
 	astraCUDA::setGPUIndex(m_iGPUIndex);
-	astraCUDA::roiSelect(m_pData->getData(), m_fRadius, width, height);
+	astraCUDA::roiSelect(m_pData->getFloat32Memory(), m_fRadius, width, height);
 
 	return true;
 }

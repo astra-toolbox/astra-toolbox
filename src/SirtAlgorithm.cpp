@@ -173,10 +173,10 @@ bool CSirtAlgorithm::initialize(CProjector2D* _pProjector,
 void CSirtAlgorithm::_init()
 {
 	// create data objects
-	m_pTotalRayLength = new CFloat32ProjectionData2D(m_pProjector->getProjectionGeometry());
-	m_pTotalPixelWeight = new CFloat32VolumeData2D(m_pProjector->getVolumeGeometry());
-	m_pDiffSinogram = new CFloat32ProjectionData2D(m_pProjector->getProjectionGeometry());
-	m_pTmpVolume = new CFloat32VolumeData2D(m_pProjector->getVolumeGeometry());
+	m_pTotalRayLength = createCFloat32ProjectionData2DMemory(m_pProjector->getProjectionGeometry());
+	m_pTotalPixelWeight = createCFloat32VolumeData2DMemory(m_pProjector->getVolumeGeometry());
+	m_pDiffSinogram = createCFloat32ProjectionData2DMemory(m_pProjector->getProjectionGeometry());
+	m_pTmpVolume = createCFloat32VolumeData2DMemory(m_pProjector->getVolumeGeometry());
 }
 
 //----------------------------------------------------------------------------------------
@@ -232,7 +232,7 @@ bool CSirtAlgorithm::run(int _iNrIterations)
 	// forward projection, difference calculation and raylength/pixelweight computation
 	pFirstForwardProjector->project();
 
-	float32* pfT = m_pTotalPixelWeight->getData();
+	float32* pfT = m_pTotalPixelWeight->getFloat32Memory();
 	for (size_t i = 0; i < m_pTotalPixelWeight->getSize(); ++i) {
 		float32 x = pfT[i];
 		if (x < -eps || x > eps)
@@ -241,7 +241,7 @@ bool CSirtAlgorithm::run(int _iNrIterations)
 			x = 0.0f;
 		pfT[i] = m_fLambda * x;
 	}
-	pfT = m_pTotalRayLength->getData();
+	pfT = m_pTotalRayLength->getFloat32Memory();
 	for (size_t i = 0; i < m_pTotalRayLength->getSize(); ++i) {
 		float32 x = pfT[i];
 		if (x < -eps || x > eps)

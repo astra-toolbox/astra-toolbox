@@ -184,6 +184,7 @@ BASE_OBJECTS=\
 	src/ConeVecProjectionGeometry3D.lo \
 	src/CylConeVecProjectionGeometry3D.lo \
 	src/Config.lo \
+	src/Data2D.lo \
 	src/Data3D.lo \
 	src/DataProjector.lo \
 	src/DataProjectorPolicies.lo \
@@ -194,10 +195,6 @@ BASE_OBJECTS=\
 	src/Features.lo \
 	src/FilteredBackProjectionAlgorithm.lo \
 	src/Filters.lo \
-	src/Float32Data.lo \
-	src/Float32Data2D.lo \
-	src/Float32ProjectionData2D.lo \
-	src/Float32VolumeData2D.lo \
 	src/ForwardProjectionAlgorithm.lo \
 	src/Fourier.lo \
 	src/GeometryUtil2D.lo \
@@ -404,7 +401,6 @@ PYTHON_PYX=\
 	astra/utils.pxd
 
 PYTHON_SRC=\
-	astra/src/CFloat32CustomPython.h \
 	astra/src/dlpack.cpp \
 	astra/src/dlpack.h \
 	astra/src/PythonPluginAlgorithm.cpp \

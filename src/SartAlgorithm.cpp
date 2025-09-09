@@ -158,9 +158,9 @@ bool CSartAlgorithm::initialize(const Config& _cfg)
 		return false;
 
 	// create data objects
-	m_pTotalRayLength = new CFloat32ProjectionData2D(m_pProjector->getProjectionGeometry());
-	m_pTotalPixelWeight = new CFloat32VolumeData2D(m_pProjector->getVolumeGeometry());
-	m_pDiffSinogram = new CFloat32ProjectionData2D(m_pProjector->getProjectionGeometry());
+	m_pTotalRayLength = createCFloat32ProjectionData2DMemory(m_pProjector->getProjectionGeometry());
+	m_pTotalPixelWeight = createCFloat32VolumeData2DMemory(m_pProjector->getVolumeGeometry());
+	m_pDiffSinogram = createCFloat32ProjectionData2DMemory(m_pProjector->getProjectionGeometry());
 
 	// success
 	m_bIsInitialized = _check();
@@ -191,9 +191,9 @@ bool CSartAlgorithm::initialize(CProjector2D* _pProjector,
 	}
 
 	// create data objects
-	m_pTotalRayLength = new CFloat32ProjectionData2D(m_pProjector->getProjectionGeometry());
-	m_pTotalPixelWeight = new CFloat32VolumeData2D(m_pProjector->getVolumeGeometry());
-	m_pDiffSinogram = new CFloat32ProjectionData2D(m_pProjector->getProjectionGeometry());
+	m_pTotalRayLength = createCFloat32ProjectionData2DMemory(m_pProjector->getProjectionGeometry());
+	m_pTotalPixelWeight = createCFloat32VolumeData2DMemory(m_pProjector->getVolumeGeometry());
+	m_pDiffSinogram = createCFloat32ProjectionData2DMemory(m_pProjector->getProjectionGeometry());
 
 	// success
 	m_bIsInitialized = _check();
@@ -220,9 +220,9 @@ bool CSartAlgorithm::initialize(CProjector2D* _pProjector,
 	}
 
 	// create data objects
-	m_pTotalRayLength = new CFloat32ProjectionData2D(m_pProjector->getProjectionGeometry());
-	m_pTotalPixelWeight = new CFloat32VolumeData2D(m_pProjector->getVolumeGeometry());
-	m_pDiffSinogram = new CFloat32ProjectionData2D(m_pProjector->getProjectionGeometry());
+	m_pTotalRayLength = createCFloat32ProjectionData2DMemory(m_pProjector->getProjectionGeometry());
+	m_pTotalPixelWeight = createCFloat32VolumeData2DMemory(m_pProjector->getVolumeGeometry());
+	m_pDiffSinogram = createCFloat32ProjectionData2DMemory(m_pProjector->getProjectionGeometry());
 
 	// success
 	m_bIsInitialized = _check();
