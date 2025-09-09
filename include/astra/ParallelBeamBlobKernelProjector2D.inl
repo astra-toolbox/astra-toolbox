@@ -129,7 +129,7 @@ void CParallelBeamBlobKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 	for (int iAngle = _iProjFrom; iAngle < _iProjTo; ++iAngle) {
 
 		// variables
-		float32 Dx, Dy, Ex, Ey, c, r, deltac, deltar, offset, invBlobExtent, RxOverRy, RyOverRx;
+		float32 Dx, Dy, Ex, Ey, c, r, delta, offset, invBlobExtent, ratio;
 		int iVolumeIndex, iRayIndex, row, col, iDetector;
 		int col_left, col_right, row_top, row_bottom, index;
 
@@ -137,12 +137,12 @@ void CParallelBeamBlobKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 
 		bool vertical = fabs(proj->fRayX) < fabs(proj->fRayY);
 		if (vertical) {
-			RxOverRy = proj->fRayX/proj->fRayY;
-			deltac = -m_pVolumeGeometry->getPixelLengthY() * (proj->fRayX/proj->fRayY) * inv_pixelLengthX;
+			ratio = proj->fRayX/proj->fRayY;
+			delta = -m_pVolumeGeometry->getPixelLengthY() * (proj->fRayX/proj->fRayY) * inv_pixelLengthX;
 			invBlobExtent = m_pVolumeGeometry->getPixelLengthY() / abs(m_fBlobSize * sqrt(proj->fRayY*proj->fRayY + proj->fRayX*proj->fRayX) / proj->fRayY);
 		} else {
-			RyOverRx = proj->fRayY/proj->fRayX;
-			deltar = -m_pVolumeGeometry->getPixelLengthX() * (proj->fRayY/proj->fRayX) * inv_pixelLengthY;
+			ratio = proj->fRayY/proj->fRayX;
+			delta = -m_pVolumeGeometry->getPixelLengthX() * (proj->fRayY/proj->fRayX) * inv_pixelLengthY;
 			invBlobExtent = m_pVolumeGeometry->getPixelLengthX() / abs(m_fBlobSize * sqrt(proj->fRayY*proj->fRayY + proj->fRayX*proj->fRayX) / proj->fRayX);
 		}
 
@@ -164,10 +164,10 @@ void CParallelBeamBlobKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 			if (vertical) {
 
 				// calculate c for row 0
-				c = (Dx + (Ey - Dy)*RxOverRy - Ex) * inv_pixelLengthX;
+				c = (Dx + (Ey - Dy)*ratio - Ex) * inv_pixelLengthX;
 
 				// loop rows
-				for (row = 0; row < rowCount; ++row, c += deltac) {
+				for (row = 0; row < rowCount; ++row, c += delta) {
 
 					col_left = int(c - 0.5f - m_fBlobSize);
 					col_right = int(c + 0.5f + m_fBlobSize);
@@ -194,10 +194,10 @@ void CParallelBeamBlobKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 			else {
 
 				// calculate r for col 0
-				r = -(Dy + (Ex - Dx)*RyOverRx - Ey) * inv_pixelLengthY;
+				r = -(Dy + (Ex - Dx)*ratio - Ey) * inv_pixelLengthY;
 
 				// loop columns
-				for (col = 0; col < colCount; ++col, r += deltar) {
+				for (col = 0; col < colCount; ++col, r += delta) {
 
 					row_top = int(r - 0.5f - m_fBlobSize);
 					row_bottom = int(r + 0.5f + m_fBlobSize);
