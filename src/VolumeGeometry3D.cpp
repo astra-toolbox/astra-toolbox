@@ -365,7 +365,7 @@ CVolumeGeometry2D * CVolumeGeometry3D::createVolumeGeometry2D() const
 // Get the configuration object
 Config* CVolumeGeometry3D::getConfiguration() const 
 {
-	ConfigWriter CW("VolumeGeometry3D", "parallel");
+	ConfigWriter CW("VolumeGeometry3D");
 
 	CW.addInt("GridColCount", m_iGridColCount);
 	CW.addInt("GridRowCount", m_iGridRowCount);
