@@ -234,7 +234,7 @@ bool CArtAlgorithm::run(int _iNrIterations)
 		iDetector = m_piDetectorOrder[m_iCurrentRay];
 		m_iCurrentRay = (m_iCurrentRay + 1) % m_piProjectionOrder.size();
 
-		if (m_bUseSinogramMask && m_pSinogramMask->getDataConst()[iProjection*m_pSinogramMask->getDetectorCount()+iDetector] == 0) continue;
+		if (m_bUseSinogramMask && m_pSinogramMask->getFloat32Memory()[iProjection*m_pSinogramMask->getDetectorCount()+iDetector] == 0) continue;
 
 		m_pProjector->computeSingleRayWeights(iProjection, iDetector, pPixels, iPixelBufferSize, iUsedPixels);
 
@@ -242,32 +242,32 @@ bool CArtAlgorithm::run(int _iNrIterations)
 		fRayForwardProj = 0.0f;
 		fSumSquaredWeights = 0.0f;
 		for (iPixel = iUsedPixels-1; iPixel >= 0; --iPixel) {
-			if (m_bUseReconstructionMask && m_pReconstructionMask->getDataConst()[pPixels[iPixel].m_iIndex] == 0) continue;
+			if (m_bUseReconstructionMask && m_pReconstructionMask->getFloat32Memory()[pPixels[iPixel].m_iIndex] == 0) continue;
 
-			fRayForwardProj += pPixels[iPixel].m_fWeight * m_pReconstruction->getDataConst()[pPixels[iPixel].m_iIndex];
+			fRayForwardProj += pPixels[iPixel].m_fWeight * m_pReconstruction->getFloat32Memory()[pPixels[iPixel].m_iIndex];
 			fSumSquaredWeights += pPixels[iPixel].m_fWeight * pPixels[iPixel].m_fWeight;
 		}
 		if (fSumSquaredWeights == 0) continue;
 
 		// step2: difference
-		fProjectionDifference = m_pSinogram->getDataConst()[iProjection*m_pSinogram->getDetectorCount()+iDetector] - fRayForwardProj;
+		fProjectionDifference = m_pSinogram->getFloat32Memory()[iProjection*m_pSinogram->getDetectorCount()+iDetector] - fRayForwardProj;
 
 		// step3: back projection
 		fBackProjectionFactor = m_fLambda * fProjectionDifference / fSumSquaredWeights;
 		for (iPixel = iUsedPixels-1; iPixel >= 0; --iPixel) {
 			
 			// pixel must be loose
-			if (m_bUseReconstructionMask && m_pReconstructionMask->getDataConst()[pPixels[iPixel].m_iIndex] == 0) continue;
+			if (m_bUseReconstructionMask && m_pReconstructionMask->getFloat32Memory()[pPixels[iPixel].m_iIndex] == 0) continue;
 
 			// update
-			m_pReconstruction->getData()[pPixels[iPixel].m_iIndex] += fBackProjectionFactor * pPixels[iPixel].m_fWeight;
+			m_pReconstruction->getFloat32Memory()[pPixels[iPixel].m_iIndex] += fBackProjectionFactor * pPixels[iPixel].m_fWeight;
 			
 			// constraints
-			if (m_bUseMinConstraint && m_pReconstruction->getData()[pPixels[iPixel].m_iIndex] < m_fMinValue) {
-				m_pReconstruction->getData()[pPixels[iPixel].m_iIndex] = m_fMinValue;
+			if (m_bUseMinConstraint && m_pReconstruction->getFloat32Memory()[pPixels[iPixel].m_iIndex] < m_fMinValue) {
+				m_pReconstruction->getFloat32Memory()[pPixels[iPixel].m_iIndex] = m_fMinValue;
 			}
-			if (m_bUseMaxConstraint && m_pReconstruction->getData()[pPixels[iPixel].m_iIndex] > m_fMaxValue) {
-				m_pReconstruction->getData()[pPixels[iPixel].m_iIndex] = m_fMaxValue;
+			if (m_bUseMaxConstraint && m_pReconstruction->getFloat32Memory()[pPixels[iPixel].m_iIndex] > m_fMaxValue) {
+				m_pReconstruction->getFloat32Memory()[pPixels[iPixel].m_iIndex] = m_fMaxValue;
 			}
 		}
 

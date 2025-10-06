@@ -299,6 +299,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\..\src\CylConeVecProjectionGeometry3D.cpp" />
+    <ClCompile Include="..\..\..\src\Data2D.cpp" />
     <ClCompile Include="..\..\..\src\Data3D.cpp" />
     <ClCompile Include="..\..\..\src\DataProjector.cpp" />
     <ClCompile Include="..\..\..\src\DataProjectorPolicies.cpp" />
@@ -309,10 +310,6 @@
     <ClCompile Include="..\..\..\src\Features.cpp" />
     <ClCompile Include="..\..\..\src\FilteredBackProjectionAlgorithm.cpp" />
     <ClCompile Include="..\..\..\src\Filters.cpp" />
-    <ClCompile Include="..\..\..\src\Float32Data.cpp" />
-    <ClCompile Include="..\..\..\src\Float32Data2D.cpp" />
-    <ClCompile Include="..\..\..\src\Float32ProjectionData2D.cpp" />
-    <ClCompile Include="..\..\..\src\Float32VolumeData2D.cpp" />
     <ClCompile Include="..\..\..\src\ForwardProjectionAlgorithm.cpp" />
     <ClCompile Include="..\..\..\src\Fourier.cpp" />
     <ClCompile Include="..\..\..\src\GeometryUtil2D.cpp" />
@@ -385,6 +382,8 @@
     <ClInclude Include="..\..\..\include\astra\CudaSirtAlgorithm.h" />
     <ClInclude Include="..\..\..\include\astra\CudaSirtAlgorithm3D.h" />
     <ClInclude Include="..\..\..\include\astra\CylConeVecProjectionGeometry3D.h" />
+    <ClInclude Include="..\..\..\include\astra\Data.h" />
+    <ClInclude Include="..\..\..\include\astra\Data2D.h" />
     <ClInclude Include="..\..\..\include\astra\Data3D.h" />
     <ClInclude Include="..\..\..\include\astra\DataProjector.h" />
     <ClInclude Include="..\..\..\include\astra\DataProjectorPolicies.h" />
@@ -395,10 +394,6 @@
     <ClInclude Include="..\..\..\include\astra\Features.h" />
     <ClInclude Include="..\..\..\include\astra\FilteredBackProjectionAlgorithm.h" />
     <ClInclude Include="..\..\..\include\astra\Filters.h" />
-    <ClInclude Include="..\..\..\include\astra\Float32Data.h" />
-    <ClInclude Include="..\..\..\include\astra\Float32Data2D.h" />
-    <ClInclude Include="..\..\..\include\astra\Float32ProjectionData2D.h" />
-    <ClInclude Include="..\..\..\include\astra\Float32VolumeData2D.h" />
     <ClInclude Include="..\..\..\include\astra\ForwardProjectionAlgorithm.h" />
     <ClInclude Include="..\..\..\include\astra\Fourier.h" />
     <ClInclude Include="..\..\..\include\astra\GeometryUtil2D.h" />

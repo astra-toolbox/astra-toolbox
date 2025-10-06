@@ -35,8 +35,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/ParallelProjectionGeometry2D.h"
 #include "astra/FanFlatProjectionGeometry2D.h"
 #include "astra/FanFlatVecProjectionGeometry2D.h"
-#include "astra/Float32ProjectionData2D.h"
-#include "astra/Float32VolumeData2D.h"
 #include "astra/CudaProjector2D.h"
 
 #include "astra/Logging.h"
@@ -195,7 +193,7 @@ bool CCudaForwardProjectionAlgorithm::run(int)
 	if (pParProjs) {
 		assert(!pFanProjs);
 
-		ok = astraCudaFP(m_pVolume->getDataConst(), m_pSinogram->getData(),
+		ok = astraCudaFP(m_pVolume->getFloat32Memory(), m_pSinogram->getFloat32Memory(),
 		                 pVolGeom.getGridColCount(), pVolGeom.getGridRowCount(),
 		                 pProjGeom.getProjectionAngleCount(),
 		                 pProjGeom.getDetectorCount(),
@@ -207,7 +205,7 @@ bool CCudaForwardProjectionAlgorithm::run(int)
 	} else {
 		assert(pFanProjs);
 
-		ok = astraCudaFanFP(m_pVolume->getDataConst(), m_pSinogram->getData(),
+		ok = astraCudaFanFP(m_pVolume->getFloat32Memory(), m_pSinogram->getFloat32Memory(),
 		                    pVolGeom.getGridColCount(), pVolGeom.getGridRowCount(),
 		                    pProjGeom.getProjectionAngleCount(),
 		                    pProjGeom.getDetectorCount(),

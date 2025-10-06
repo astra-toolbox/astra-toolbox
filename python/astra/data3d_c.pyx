@@ -45,7 +45,7 @@ from .PyXMLDocument cimport XMLDocument
 
 from . cimport utils
 from .utils import wrap_from_bytes
-from .utils cimport linkVolFromGeometry, linkProjFromGeometry, createProjectionGeometry3D, createVolumeGeometry3D
+from .utils cimport linkVolFromGeometry3D, linkProjFromGeometry3D, createProjectionGeometry3D, createVolumeGeometry3D
 from .log import AstraError
 
 from .pythonutils import geom_size, GPULink
@@ -70,13 +70,13 @@ def create(datatype,geometry,data=None, link=False):
     if datatype == '-vol':
         pGeometry = createVolumeGeometry3D(geometry)
         if link:
-            pDataObject3D = linkVolFromGeometry(cython.operator.dereference(pGeometry), data)
+            pDataObject3D = linkVolFromGeometry3D(cython.operator.dereference(pGeometry), data)
         else:
             pDataObject3D = createCFloat32VolumeData3DMemory(move(pGeometry))
     elif datatype == '-sino' or datatype == '-proj3d' or datatype == '-sinocone':
         ppGeometry = createProjectionGeometry3D(geometry)
         if link:
-            pDataObject3D = linkProjFromGeometry(cython.operator.dereference(ppGeometry), data)
+            pDataObject3D = linkProjFromGeometry3D(cython.operator.dereference(ppGeometry), data)
         else:
             pDataObject3D = createCFloat32ProjectionData3DMemory(move(ppGeometry))
     else:
