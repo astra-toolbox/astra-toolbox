@@ -190,7 +190,7 @@ bool CSparseMatrixProjectionGeometry2D::isOfType(const std::string& _sType)
 // Get the configuration object
 Config* CSparseMatrixProjectionGeometry2D::getConfiguration() const 
 {
-	ConfigWriter CW("ProjectionGeometry2D", "sparse matrix");
+	ConfigWriter CW("ProjectionGeometry2D", "sparse_matrix");
 
 	CW.addInt("DetectorCount", getDetectorCount());
 	CW.addNumerical("DetectorWidth", getDetectorWidth());
