@@ -29,6 +29,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #define _INC_ASTRA_DATA3D
 
 #include "Globals.h"
+#include "Data.h"
 #include "VolumeGeometry3D.h"
 #include "ProjectionGeometry3D.h"
 #include "cuda/3d/mem3d.h"
@@ -37,77 +38,18 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 namespace astra {
 
-class _AstraExport CDataStorage {
+class _AstraExport CData3D : public CData<3> {
 public:
-	CDataStorage() { }
-	virtual ~CDataStorage() { }
-
-	virtual bool isMemory() const =0;
-	virtual bool isGPU() const =0;
-	virtual bool isFloat32() const =0;
-};
-
-template <typename T>
-class _AstraExport CDataMemory : public CDataStorage {
-public:
-
-	CDataMemory(size_t size) : m_bOwnData(true), m_pfData(nullptr) { _allocateData(size); }
-	virtual ~CDataMemory() { _freeData(); }
-
-	T* getData() { return m_pfData; }
-	const T* getData() const { return m_pfData; }
-
-	virtual bool isMemory() const { return true; }
-	virtual bool isGPU() const { return false; }
-	virtual bool isFloat32() const { return std::is_same_v<T, float32>; }
-
-protected:
-	bool m_bOwnData;
-	T* m_pfData;
-	CDataMemory() : m_bOwnData(false), m_pfData(nullptr) { }
-
-private:
-	void _allocateData(size_t size);
-	void _freeData();
-};
-
-
-
-class _AstraExport CData3D {
-public:
-
-	typedef enum {BASE, PROJECTION, VOLUME} EDataType;
-
-	virtual ~CData3D() { delete m_storage; }
-
-	int getDimensionCount() const { return 3; }
-	std::array<int, 3> getShape() const { return m_iDims; }
-
+	// These shape aliases can be less ambiguous than numbered indices with
+	// different conventions in C++, Python, Matlab
 	int getWidth() const { return m_iDims[0]; }
 	int getHeight() const { return m_iDims[1]; }
 	int getDepth() const { return m_iDims[2]; }
 
-	size_t getSize() const { return m_iSize; }
-
-	virtual EDataType getType() const =0;
 	std::string description() const;
 
-	CDataStorage *getStorage() const { return m_storage; }
-
-	// Convenience functions as this is the common case
-	bool isFloat32Memory() const { return m_storage->isMemory() && m_storage->isFloat32(); }
-	float32 *getFloat32Memory() const { return isFloat32Memory() ? dynamic_cast<CDataMemory<float32>*>(m_storage)->getData() : nullptr; }
-
-	bool isInitialized() const { return true; }
-
 protected:
-	CData3D(int x, int y, int z, CDataStorage *storage) : m_iDims{x, y, z}, m_iSize((size_t)x*y*z), m_storage(storage) { }
-
-
-	std::array<int, 3> m_iDims;			///< dimensions of the data (width, height, depth)
-	size_t m_iSize;			///< size of the data (width*height*depth)
-
-	CDataStorage *m_storage;
+	CData3D(int x, int y, int z, CDataStorage *storage) : CData({x, y, z}, storage) { }
 };
 
 template <class G>

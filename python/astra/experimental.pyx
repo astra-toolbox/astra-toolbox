@@ -142,7 +142,7 @@ IF HAVE_CUDA==True:
             raise AstraError("Failed to perform FDK", append_log=True)
 
     from . cimport utils
-    from .utils cimport linkVolFromGeometry, linkProjFromGeometry
+    from .utils cimport linkVolFromGeometry3D, linkProjFromGeometry3D
 
     def direct_FPBP3D(projector_id, vol, proj, mode, t):
         if mode != MODE_ADD and mode != MODE_SET:
@@ -151,8 +151,8 @@ IF HAVE_CUDA==True:
         cdef CProjector3D * projector = manProj.get(projector_id)
         if projector == NULL:
             raise AstraError("Projector not found")
-        cdef CFloat32VolumeData3D * pVol = linkVolFromGeometry(projector.getVolumeGeometry(), vol)
-        cdef CFloat32ProjectionData3D * pProj = linkProjFromGeometry(projector.getProjectionGeometry(), proj)
+        cdef CFloat32VolumeData3D * pVol = linkVolFromGeometry3D(projector.getVolumeGeometry(), vol)
+        cdef CFloat32ProjectionData3D * pProj = linkProjFromGeometry3D(projector.getProjectionGeometry(), proj)
         cdef vector[CFloat32VolumeData3D *] vols
         cdef vector[CFloat32ProjectionData3D *] projs
         vols.push_back(pVol)

@@ -241,10 +241,10 @@ bool CCudaReconstructionAlgorithm2D::run(int _iNrIterations)
 		m_bAlgoInit = true;
 	}
 
-	ok = m_pAlgo->copyDataToGPU(m_pSinogram->getDataConst(), m_pSinogram->getGeometry().getDetectorCount(),
-	                            m_pReconstruction->getDataConst(), volgeom.getGridColCount(),
-	                            m_bUseReconstructionMask ? m_pReconstructionMask->getDataConst() : 0, volgeom.getGridColCount(),
-	                            m_bUseSinogramMask ? m_pSinogramMask->getDataConst() : 0, m_pSinogram->getGeometry().getDetectorCount());
+	ok = m_pAlgo->copyDataToGPU(m_pSinogram->getFloat32Memory(), m_pSinogram->getGeometry().getDetectorCount(),
+	                            m_pReconstruction->getFloat32Memory(), volgeom.getGridColCount(),
+	                            m_bUseReconstructionMask ? m_pReconstructionMask->getFloat32Memory() : 0, volgeom.getGridColCount(),
+	                            m_bUseSinogramMask ? m_pSinogramMask->getFloat32Memory() : 0, m_pSinogram->getGeometry().getDetectorCount());
 
 	ASTRA_ASSERT(ok);
 
@@ -264,7 +264,7 @@ bool CCudaReconstructionAlgorithm2D::run(int _iNrIterations)
 	ok &= m_pAlgo->iterate(_iNrIterations);
 	ASTRA_ASSERT(ok);
 
-	ok &= m_pAlgo->getReconstruction(m_pReconstruction->getData(),
+	ok &= m_pAlgo->getReconstruction(m_pReconstruction->getFloat32Memory(),
 	                                 volgeom.getGridColCount());
 
 	ASTRA_ASSERT(ok);

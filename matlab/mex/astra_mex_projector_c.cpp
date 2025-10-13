@@ -39,8 +39,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/Projector2D.h"
 #include "astra/AstraObjectFactory.h"
 
-#include "astra/Float32VolumeData2D.h"
-
 #include "astra/ProjectionGeometry2D.h"
 #include "astra/ParallelProjectionGeometry2D.h"
 #include "astra/VolumeGeometry2D.h"

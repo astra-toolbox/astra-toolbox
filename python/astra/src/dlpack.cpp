@@ -28,6 +28,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "dlpack/dlpack.h"
 
+#include "astra/Data2D.h"
 #include "astra/Data3D.h"
 
 #include <Python.h>
@@ -141,7 +142,8 @@ bool isContiguous(DLTensor *tensor, bool allowPitch)
 }
 
 
-bool checkDLTensor(DLTensor *tensor, std::array<int, 3> dims, bool allowPitch, std::string &error)
+template<size_t D>
+bool checkDLTensor(DLTensor *tensor, std::array<int, D> dims, bool allowPitch, std::string &error)
 {
 	// data type
 	if (tensor->dtype.code != kDLFloat || tensor->dtype.bits != 32)
@@ -155,16 +157,30 @@ bool checkDLTensor(DLTensor *tensor, std::array<int, 3> dims, bool allowPitch, s
 	}
 
 	// shape
-	if (tensor->ndim != 3) {
-		error = "Data must be three-dimensional";
-		return false;
-	}
+	if constexpr (D == 2) {
+		if (tensor->ndim != 2) {
+			error = "Data must be two-dimensional";
+			return false;
+		}
 
-	if (tensor->shape[0] != dims[2] || tensor->shape[1] != dims[1] ||
-	    tensor->shape[2] != dims[0])
-	{
-		error = astra::StringUtil::format("Data shape (%zd x %zd x %zd) does not match geometry (%d x %d x %d)", tensor->shape[0], tensor->shape[1], tensor->shape[2], dims[2], dims[1], dims[0]);
-		return false;
+		if (tensor->shape[0] != dims[1] || tensor->shape[1] != dims[0])
+		{
+			error = astra::StringUtil::format("Data shape (%zd x %zd) does not match geometry (%d x %d)", tensor->shape[0], tensor->shape[1], dims[1], dims[0]);
+			return false;
+		}
+	}
+	if constexpr (D == 3) {
+		if (tensor->ndim != 3) {
+			error = "Data must be three-dimensional";
+			return false;
+		}
+
+		if (tensor->shape[0] != dims[2] || tensor->shape[1] != dims[1] ||
+		    tensor->shape[2] != dims[0])
+		{
+			error = astra::StringUtil::format("Data shape (%zd x %zd x %zd) does not match geometry (%d x %d x %d)", tensor->shape[0], tensor->shape[1], tensor->shape[2], dims[2], dims[1], dims[0]);
+			return false;
+		}
 	}
 
 	if (!isContiguous(tensor, allowPitch)) {
@@ -177,8 +193,8 @@ bool checkDLTensor(DLTensor *tensor, std::array<int, 3> dims, bool allowPitch, s
 }
 
 
-template<class DLT>
-astra::CDataStorage *getDLTensorStorage(DLT *tensor_m, std::array<int, 3> dims, std::string &error)
+template<class DLT, size_t D>
+astra::CDataStorage *getDLTensorStorage(DLT *tensor_m, std::array<int, D> dims, std::string &error)
 {
 	DLTensor *tensor = &tensor_m->dl_tensor;
 
@@ -203,7 +219,8 @@ astra::CDataStorage *getDLTensorStorage(DLT *tensor_m, std::array<int, 3> dims, 
 	}
 }
 
-astra::CDataStorage *getDLTensorStorage(PyObject *obj, std::array<int, 3> dims, std::string &error)
+template<size_t D>
+astra::CDataStorage *getDLTensorStorage(PyObject *obj, std::array<int, D> dims, std::string &error)
 {
 	if (!PyCapsule_CheckExact(obj)) {
 		error = "Invalid capsule";
@@ -259,6 +276,35 @@ astra::CDataStorage *getDLTensorStorage(PyObject *obj, std::array<int, 3> dims, 
 	}
 
 	return storage;
+}
+
+astra::CFloat32VolumeData2D* getDLTensor(PyObject *obj, const astra::CVolumeGeometry2D &pGeom, std::string &error)
+{
+	if (!PyCapsule_CheckExact(obj))
+		return nullptr;
+
+	// x,y,z
+	std::array<int, 2> dims{pGeom.getGridColCount(), pGeom.getGridRowCount()};
+
+	astra::CDataStorage *storage = getDLTensorStorage(obj, dims, error);
+	if (!storage)
+		return nullptr;
+
+	return new astra::CFloat32VolumeData2D(pGeom, storage);
+}
+astra::CFloat32ProjectionData2D* getDLTensor(PyObject *obj, const astra::CProjectionGeometry2D &pGeom, std::string &error)
+{
+	if (!PyCapsule_CheckExact(obj))
+		return nullptr;
+
+	// x,y,z
+	std::array<int, 2> dims{pGeom.getDetectorCount(), pGeom.getProjectionAngleCount()};
+
+	astra::CDataStorage *storage = getDLTensorStorage(obj, dims, error);
+	if (!storage)
+		return nullptr;
+
+	return new astra::CFloat32ProjectionData2D(pGeom, storage);
 }
 
 astra::CFloat32VolumeData3D* getDLTensor(PyObject *obj, const astra::CVolumeGeometry3D &pGeom, std::string &error)

@@ -39,8 +39,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/AstraObjectManager.h"
 
-#include "astra/Float32ProjectionData2D.h"
-#include "astra/Float32VolumeData2D.h"
+#include "astra/Data2D.h"
 #include "astra/ProjectionGeometry2DFactory.h"
 
 using namespace std;
@@ -95,7 +94,7 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 	}
 
 	string sDataType = mexToString(prhs[1]);	
-	CFloat32Data2D* pDataObject2D = NULL;
+	CData2D* pDataObject2D = NULL;
 
 	if (nrhs >= 4 && !(mexIsScalar(prhs[3])|| mxIsDouble(prhs[3]) || mxIsLogical(prhs[3]) || mxIsSingle(prhs[3]) )) {
 		mexErrMsgTxt("Data type must be single, double or logical.");
@@ -114,23 +113,20 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 		}
 		
 		XMLConfig* cfg = structToConfig("VolumeGeometry", prhs[2]);
-		CVolumeGeometry2D* pGeometry = new CVolumeGeometry2D();
+		std::unique_ptr<CVolumeGeometry2D> pGeometry = std::make_unique<CVolumeGeometry2D>();
 		if (!pGeometry->initialize(*cfg)) {
 			delete cfg;
-			delete pGeometry;
 			mexErrMsgWithAstraLog("Geometry class could not be initialized.");
 		}
 		// If data is specified, check dimensions
 		if (nrhs >= 4 && !mexIsScalar(prhs[3])) {
 			if (pGeometry->getGridColCount() != mxGetN(prhs[3]) || pGeometry->getGridRowCount() != mxGetM(prhs[3])) {
 				delete cfg;
-				delete pGeometry;
 				mexErrMsgTxt("The dimensions of the data do not match those specified in the geometry.");
 			}
 		}
 		// Initialize data object
-		pDataObject2D = new CFloat32VolumeData2D(*pGeometry);
-		delete pGeometry;
+		pDataObject2D = createCFloat32VolumeData2DMemory(std::move(pGeometry));
 		delete cfg;
 	}
 	else if (sDataType == "-sino") {
@@ -160,7 +156,7 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 			}
 		}
 		// Initialize data object
-		pDataObject2D = new CFloat32ProjectionData2D(*pGeometry);
+		pDataObject2D = createCFloat32ProjectionData2DMemory(std::move(pGeometry));
 		delete cfg;
 	}
 	else {
@@ -176,7 +172,7 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 	// Store data
 	if (nrhs == 3) {
 		for (int i = 0; i < pDataObject2D->getSize(); ++i) {
-			pDataObject2D->getData()[i] = 0.0f;
+			pDataObject2D->getFloat32Memory()[i] = 0.0f;
 		}
 	}
 
@@ -186,7 +182,7 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 		if (mexIsScalar(prhs[3])) {
 			float32 fValue = (float32)mxGetScalar(prhs[3]);
 			for (int i = 0; i < pDataObject2D->getSize(); ++i) {
-				pDataObject2D->getData()[i] = fValue;
+				pDataObject2D->getFloat32Memory()[i] = fValue;
 			}
 		}
 		// fill with array value
@@ -204,7 +200,7 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 				int col, row;
 				for (col = 0; col < dims[1]; ++col) {
 					for (row = 0; row < dims[0]; ++row) {
-						pDataObject2D->getData()[row*dims[1]+col] = (float32)pbMatlabData[i];
+						pDataObject2D->getFloat32Memory()[row*dims[1]+col] = (float32)pbMatlabData[i];
 						++i;
 					}
 				}
@@ -215,7 +211,7 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 				int col, row;
 				for (col = 0; col < dims[1]; ++col) {
 					for (row = 0; row < dims[0]; ++row) {
-						pDataObject2D->getData()[row*dims[1]+col] = pdMatlabData[i];
+						pDataObject2D->getFloat32Memory()[row*dims[1]+col] = pdMatlabData[i];
 						++i;
 					}
 				}
@@ -226,7 +222,7 @@ void astra_mex_data2d_create(int& nlhs, mxArray* plhs[], int& nrhs, const mxArra
 				int col, row;
 				for (col = 0; col < dims[1]; ++col) {
 					for (row = 0; row < dims[0]; ++row) {
-						pDataObject2D->getData()[row*dims[1]+col] = pfMatlabData[i];
+						pDataObject2D->getFloat32Memory()[row*dims[1]+col] = pfMatlabData[i];
 						++i;
 					}
 				}
@@ -272,7 +268,7 @@ void astra_mex_data2d_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 	}
 
 	// step2: get data object
-	CFloat32Data2D* pDataObject = astra::CData2DManager::getSingleton().get(iDataID);
+	CData2D* pDataObject = astra::CData2DManager::getSingleton().get(iDataID);
 	if (!pDataObject || !pDataObject->isInitialized()) {
 		mexErrMsgTxt("Data object not found or not initialized properly.");
 	}
@@ -282,7 +278,7 @@ void astra_mex_data2d_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 	if (mexIsScalar(prhs[2])) {
 		float32 fValue = (float32)mxGetScalar(prhs[2]);
 		for (int i = 0; i < pDataObject->getSize(); ++i) {
-			pDataObject->getData()[i] = fValue;
+			pDataObject->getFloat32Memory()[i] = fValue;
 		}
 	} else {
 		// Check Data dimensions
@@ -298,7 +294,7 @@ void astra_mex_data2d_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 			int col, row;
 			for (col = 0; col < dims[1]; ++col) {
 				for (row = 0; row < dims[0]; ++row) {
-					pDataObject->getData()[row*dims[1]+col] = (float32)pbMatlabData[i];
+					pDataObject->getFloat32Memory()[row*dims[1]+col] = (float32)pbMatlabData[i];
 					++i;
 				}
 			}
@@ -309,7 +305,7 @@ void astra_mex_data2d_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 			int col, row;
 			for (col = 0; col < dims[1]; ++col) {
 				for (row = 0; row < dims[0]; ++row) {
-					pDataObject->getData()[row*dims[1]+col] = pdMatlabData[i];
+					pDataObject->getFloat32Memory()[row*dims[1]+col] = pdMatlabData[i];
 					++i;
 				}
 			}
@@ -320,7 +316,7 @@ void astra_mex_data2d_store(int nlhs, mxArray* plhs[], int nrhs, const mxArray* 
 			int col, row;
 			for (col = 0; col < dims[1]; ++col) {
 				for (row = 0; row < dims[0]; ++row) {
-					pDataObject->getData()[row*dims[1]+col] = pfMatlabData[i];
+					pDataObject->getFloat32Memory()[row*dims[1]+col] = pfMatlabData[i];
 					++i;
 				}
 			}
@@ -349,19 +345,19 @@ void astra_mex_data2d_get_geometry(int nlhs, mxArray* plhs[], int nrhs, const mx
 	int iDataID = (int)(mxGetScalar(prhs[1]));
 
 	// fetch data object
-	CFloat32Data2D* pDataObject = astra::CData2DManager::getSingleton().get(iDataID);
+	const CData2D* pDataObject = astra::CData2DManager::getSingleton().get(iDataID);
 	if (!pDataObject || !pDataObject->isInitialized()) {
 		mexErrMsgTxt("Data object not found or not initialized properly.");
 	}
 
 	// create output
 	if (1 <= nlhs) {
-		if (pDataObject->getType() == CFloat32Data2D::PROJECTION) {
-			CFloat32ProjectionData2D* pDataObject2 = dynamic_cast<CFloat32ProjectionData2D*>(pDataObject);
+		if (pDataObject->getType() == CData2D::PROJECTION) {
+			const CFloat32ProjectionData2D* pDataObject2 = dynamic_cast<const CFloat32ProjectionData2D*>(pDataObject);
 			plhs[0] = configToStruct(pDataObject2->getGeometry().getConfiguration());
 		}
-		else if (pDataObject->getType() == CFloat32Data2D::VOLUME) {
-			CFloat32VolumeData2D* pDataObject2 = dynamic_cast<CFloat32VolumeData2D*>(pDataObject);
+		else if (pDataObject->getType() == CData2D::VOLUME) {
+			const CFloat32VolumeData2D* pDataObject2 = dynamic_cast<const CFloat32VolumeData2D*>(pDataObject);
 			plhs[0] = configToStruct(pDataObject2->getGeometry().getConfiguration());
 		}
 	}
@@ -386,7 +382,7 @@ void astra_mex_data2d_change_geometry(int nlhs, mxArray* plhs[], int nrhs, const
 
 	// step2: get data object
 	int iDataID = (int)(mxGetScalar(prhs[1]));
-	CFloat32Data2D* pDataObject = astra::CData2DManager::getSingleton().get(iDataID);
+	CData2D* pDataObject = astra::CData2DManager::getSingleton().get(iDataID);
 	if (!pDataObject || !pDataObject->isInitialized()) {
 		mexErrMsgTxt("Data object not found or not initialized properly.");
 	}
@@ -481,7 +477,7 @@ void astra_mex_data2d_get(int nlhs, mxArray* plhs[], int nrhs, const mxArray* pr
 
 	// step2: get data object
 	int iDataID = (int)(mxGetScalar(prhs[1]));
-	CFloat32Data2D* pDataObject = astra::CData2DManager::getSingleton().get(iDataID);
+	const CData2D* pDataObject = astra::CData2DManager::getSingleton().get(iDataID);
 	if (!pDataObject || !pDataObject->isInitialized()) {
 		mexErrMsgTxt("Data object not found or not initialized properly.");
 	}
@@ -496,7 +492,7 @@ void astra_mex_data2d_get(int nlhs, mxArray* plhs[], int nrhs, const mxArray* pr
 		int row, col;
 		for (col = 0; col < pDataObject->getWidth(); ++col) {
 			for (row = 0; row < pDataObject->getHeight(); ++row) {
-				out[i] = pDataObject->getDataConst()[row*pDataObject->getWidth()+col];
+				out[i] = pDataObject->getFloat32Memory()[row*pDataObject->getWidth()+col];
 				++i;
 			}
 		}	
@@ -523,7 +519,7 @@ void astra_mex_data2d_get_single(int nlhs, mxArray* plhs[], int nrhs, const mxAr
 
 	// step2: get data object
 	int iDataID = (int)(mxGetScalar(prhs[1]));
-	CFloat32Data2D* pDataObject = astra::CData2DManager::getSingleton().get(iDataID);
+	const CData2D* pDataObject = astra::CData2DManager::getSingleton().get(iDataID);
 	if (!pDataObject || !pDataObject->isInitialized()) {
 		mexErrMsgTxt("Data object not found or not initialized properly.");
 	}
@@ -539,7 +535,7 @@ void astra_mex_data2d_get_single(int nlhs, mxArray* plhs[], int nrhs, const mxAr
 		int row, col;
 		for (col = 0; col < pDataObject->getWidth(); ++col) {
 			for (row = 0; row < pDataObject->getHeight(); ++row) {
-				out[i] = pDataObject->getDataConst()[row*pDataObject->getWidth()+col];
+				out[i] = pDataObject->getFloat32Memory()[row*pDataObject->getWidth()+col];
 				++i;
 			}
 		}	

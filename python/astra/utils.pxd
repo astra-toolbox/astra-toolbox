@@ -34,8 +34,13 @@ from .PyIncludes cimport *
 
 cdef configToDict(Config *)
 cdef XMLConfig * dictToConfig(string rootname, dc) except NULL
-cdef CFloat32VolumeData3D* linkVolFromGeometry(const CVolumeGeometry3D &pGeometry, data) except NULL
-cdef CFloat32ProjectionData3D* linkProjFromGeometry(const CProjectionGeometry3D &pGeometry, data) except NULL
+cdef CFloat32VolumeData2D* linkVolFromGeometry2D(const CVolumeGeometry2D &pGeometry, data) except NULL
+cdef CFloat32ProjectionData2D* linkProjFromGeometry2D(const CProjectionGeometry2D &pGeometry, data) except NULL
+cdef CFloat32VolumeData3D* linkVolFromGeometry3D(const CVolumeGeometry3D &pGeometry, data) except NULL
+cdef CFloat32ProjectionData3D* linkProjFromGeometry3D(const CProjectionGeometry3D &pGeometry, data) except NULL
+
+cdef unique_ptr[CProjectionGeometry2D] createProjectionGeometry2D(geometry) except *
+cdef unique_ptr[CVolumeGeometry2D] createVolumeGeometry2D(geometry) except *
 cdef unique_ptr[CProjectionGeometry3D] createProjectionGeometry3D(geometry) except *
 cdef unique_ptr[CVolumeGeometry3D] createVolumeGeometry3D(geometry) except *
 

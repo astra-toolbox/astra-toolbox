@@ -31,7 +31,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "Globals.h"
 #include "Config.h"
 #include "Algorithm.h"
-#include "Float32VolumeData2D.h"
+#include "Data2D.h"
 
 
 #ifdef ASTRA_CUDA

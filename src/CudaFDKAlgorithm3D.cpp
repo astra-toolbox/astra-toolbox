@@ -35,8 +35,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/CompositeGeometryManager.h"
 #include "astra/VolumeGeometry3D.h"
 
-#include "astra/Float32ProjectionData2D.h"
-
 #include "astra/Logging.h"
 #include "astra/Filters.h"
 

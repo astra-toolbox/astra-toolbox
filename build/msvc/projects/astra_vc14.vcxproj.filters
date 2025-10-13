@@ -126,19 +126,10 @@
     <ClCompile Include="..\..\..\src\SirtAlgorithm.cpp">
       <Filter>Algorithms\source</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\Data2D.cpp">
+      <Filter>Data Structures\source</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\Data3D.cpp">
-      <Filter>Data Structures\source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\Float32Data.cpp">
-      <Filter>Data Structures\source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\Float32Data2D.cpp">
-      <Filter>Data Structures\source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\Float32ProjectionData2D.cpp">
-      <Filter>Data Structures\source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\Float32VolumeData2D.cpp">
       <Filter>Data Structures\source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\SheppLogan.cpp">
@@ -386,19 +377,13 @@
     <ClInclude Include="..\..\..\include\astra\SirtAlgorithm.h">
       <Filter>Algorithms\headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\astra\Data.h">
+      <Filter>Data Structures\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\astra\Data2D.h">
+      <Filter>Data Structures\headers</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\astra\Data3D.h">
-      <Filter>Data Structures\headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\astra\Float32Data.h">
-      <Filter>Data Structures\headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\astra\Float32Data2D.h">
-      <Filter>Data Structures\headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\astra\Float32ProjectionData2D.h">
-      <Filter>Data Structures\headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\astra\Float32VolumeData2D.h">
       <Filter>Data Structures\headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\astra\SheppLogan.h">
