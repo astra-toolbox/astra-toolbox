@@ -35,6 +35,7 @@ from Cython.Distutils import build_ext
 import argparse
 import sys
 import glob
+import sysconfig
 
 
 # Load configuration data from pyproject.toml's tool.astra section,
@@ -162,7 +163,9 @@ def prepare_ext_modules():
                                   'dlpack.cpp'))
         ext = Extension(modulename, sources=sources, libraries=["astra"])
         assert not hasattr(ext, 'cython_directives')
-        ext.cython_directives = {'language_level': "3", 'freethreading_compatible': True}
+        ext.cython_directives = {'language_level': "3" }
+        if sysconfig.get_config_var("Py_GIL_DISABLED") == 1:
+            ext.cython_directives['freethreading_compatible'] = True
         ext_modules.append(ext)
 
     return ext_modules
