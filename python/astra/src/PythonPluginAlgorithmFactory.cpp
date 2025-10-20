@@ -43,6 +43,24 @@ namespace astra {
 
 void logPythonError();
 
+PyObject *getItemStringRef(PyObject *dict, const char *key)
+{
+#if PY_VERSION_HEX < 0x030d0000
+    PyObject *value;
+    value = PyDict_GetItemString(dict, key);
+    if (!value)
+        return nullptr;
+    Py_INCREF(value);
+    return value;
+#else
+    PyObject *value = nullptr;
+    int res = PyDict_GetItemStringRef(dict, key, &value);
+    if (res != 1)
+        return nullptr;
+    return value;
+#endif
+}
+
 CPythonPluginAlgorithmFactory::CPythonPluginAlgorithmFactory(){
     if(!Py_IsInitialized()){
         Py_Initialize();
@@ -122,9 +140,8 @@ bool CPythonPluginAlgorithmFactory::registerPluginClass(PyObject * className){
 }
 
 CAlgorithm * CPythonPluginAlgorithmFactory::getPlugin(const std::string &name){
-    PyObject *className = nullptr;
-    int res = PyDict_GetItemStringRef(pluginDict, name.c_str(), &className);
-    if(res!=1) return NULL;
+    PyObject *className = getItemStringRef(pluginDict, name.c_str());
+    if (!className) return NULL;
     CPluginAlgorithm *alg = NULL;
     if(PyBytes_Check(className)){
         std::string str = std::string(PyBytes_AsString(className));
@@ -173,9 +190,8 @@ std::map<std::string, std::string> CPythonPluginAlgorithmFactory::getRegisteredM
 }
 
 std::string CPythonPluginAlgorithmFactory::getHelp(const std::string &name){
-    PyObject *className = nullptr;
-    int res = PyDict_GetItemStringRef(pluginDict, name.c_str(), &className);
-    if(res!=1){
+    PyObject *className = getItemStringRef(pluginDict, name.c_str());
+    if (!className) {
         ASTRA_ERROR("Plugin %s not found!",name.c_str());
         PyErr_Clear();
         return "";
