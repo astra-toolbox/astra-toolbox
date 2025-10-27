@@ -69,7 +69,7 @@ public:
 	                 Cuda3DProjectionKernel _projectionKernel=ker3d_default,
 	                 int _iVoxelSuperSampling=1,
 	                 int _iDetectorSuperSampling=1,
-	                 int _iGPUIndex=-1);
+	                 std::vector<int> _GPUIndices={});
 
 	/** Initialize the projector with a config object.
 	 *
@@ -83,7 +83,7 @@ public:
 	                Cuda3DProjectionKernel _projectionKernel=ker3d_default,
 	                int _iVoxelSuperSampling=1,
 	                int _iDetectorSuperSampling=1,
-	                int _iGPUIndex=-1);
+	                std::vector<int> _GPUIndices={});
 
 	virtual void computeSingleRayWeights(int _iProjectionIndex,
 	                                     int _iSliceIndex,
@@ -117,14 +117,14 @@ public:
 	Cuda3DProjectionKernel getProjectionKernel() const { return m_projectionKernel; }
 	int getVoxelSuperSampling() const { return m_iVoxelSuperSampling; }
 	int getDetectorSuperSampling() const { return m_iDetectorSuperSampling; }
-	int getGPUIndex() const { return m_iGPUIndex; }
+	const std::vector<int>& getGPUIndices() const { return m_GPUIndices; }
 
 protected:
 
 	Cuda3DProjectionKernel m_projectionKernel;
 	int m_iVoxelSuperSampling;
 	int m_iDetectorSuperSampling;
-	int m_iGPUIndex;
+	std::vector<int> m_GPUIndices;
 
 };
 
