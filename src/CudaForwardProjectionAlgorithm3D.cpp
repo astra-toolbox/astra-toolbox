@@ -221,6 +221,8 @@ bool CCudaForwardProjectionAlgorithm3D::run(int)
 	assert(m_bIsInitialized);
 
 	CCompositeGeometryManager cgm;
+	if (m_iGPUIndex != -1)
+		cgm.setGPUIndices({m_iGPUIndex});
 
 	return cgm.doFP(m_pProjector, m_pVolume, m_pProjections);
 }
