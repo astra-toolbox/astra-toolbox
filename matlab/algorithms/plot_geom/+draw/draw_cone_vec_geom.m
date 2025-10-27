@@ -47,8 +47,8 @@ function [] = draw_cone_vec_geom(h_ax, geom, options)
     detector = struct;
     detector.u = vectors(options.VectorIdx, 7:9);
     detector.v = vectors(options.VectorIdx, 10:12);
-    detector.height = geom.DetectorColCount;
-    detector.width = geom.DetectorRowCount;
+    detector.width = geom.DetectorColCount;
+    detector.height = geom.DetectorRowCount;
     detector.origin = detector_center(options.VectorIdx, :);
 
     vertices = draw.draw_detector_vec(h_ax, detector, options);
