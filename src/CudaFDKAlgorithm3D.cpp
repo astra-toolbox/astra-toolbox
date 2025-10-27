@@ -200,6 +200,8 @@ bool CCudaFDKAlgorithm3D::run(int _iNrIterations)
 #endif
 
 	CCompositeGeometryManager cgm;
+	if (m_iGPUIndex != -1)
+		cgm.setGPUIndices({m_iGPUIndex});
 
 	return cgm.doFDK(m_pProjector, pReconMem, pSinoMem, m_bShortScan, m_filterConfig);
 }
