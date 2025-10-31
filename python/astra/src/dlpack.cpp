@@ -82,6 +82,18 @@ CDataStorageDLPackCPU<DLT>::~CDataStorageDLPackCPU()
 	m_pfData = nullptr;
 }
 
+static void getNonSingletonDims(DLTensor *tensor,
+                                std::vector<int64_t> &nonsingular_dims,
+                                std::vector<int64_t> &nonsingular_strides)
+{
+	for (int i = 0; i < tensor->ndim; ++i) {
+		if (tensor->shape[i] > 1) {
+			nonsingular_dims.push_back(tensor->shape[i]);
+			nonsingular_strides.push_back(tensor->strides[i]);
+		}
+	}
+}
+
 #ifdef ASTRA_CUDA
 template<class DLT>
 CDataStorageDLPackGPU<DLT>::CDataStorageDLPackGPU(DLT *tensor_m)
@@ -112,31 +124,29 @@ CDataStorageDLPackGPU<DLT>::~CDataStorageDLPackGPU()
 #endif
 
 
-bool isContiguous(DLTensor *tensor, bool allowPitch)
+static bool isContiguous(DLTensor *tensor, bool allowPitch)
 {
 	if (!tensor->strides)
 		return true;
-	// For dimensions of size 1 the stride is not relevant, and it's optionall
-	// for tensor producers to set it to 1 as well
-	std::vector<int64_t> nonsingular_dims, nonsingular_strides;
-	for (int i = 0; i < tensor->ndim; ++i) {
-		if (tensor->shape[i] > 1) {
-			nonsingular_dims.push_back(tensor->shape[i]);
-			nonsingular_strides.push_back(tensor->strides[i]);
-		}
-	}
-	if (nonsingular_dims.size() < 2)
+
+	// Ignore singleton dimensions as they don't affect contiguity and tensor producers
+	// may optionally set their strides to 1
+	std::vector<int64_t> non_singleton_dims, non_singleton_strides;
+	getNonSingletonDims(tensor, non_singleton_dims, non_singleton_strides);
+
+	if (non_singleton_dims.size() < 2)
 		return true;
+
 	int64_t accumulator = 1;
-	for (int i = nonsingular_dims.size() - 1; i >= 0; --i) {
-		if (nonsingular_strides[i] != accumulator)
+	for (int i = non_singleton_dims.size() - 1; i >= 0; --i) {
+		if (non_singleton_strides[i] != accumulator)
 			return false;
-		if (allowPitch && i == nonsingular_dims.size()-1)
+		if (allowPitch && i == non_singleton_dims.size()-1)
 			// Accept non-contiguous second-to-last non-singular dimension,
 			// since such data can be represented using cudaPitchedPtr
-			accumulator *= nonsingular_strides[i-1];
+			accumulator *= non_singleton_strides[i-1];
 		else
-			accumulator *= nonsingular_dims[i];
+			accumulator *= non_singleton_dims[i];
 	}
 	return true;
 }
