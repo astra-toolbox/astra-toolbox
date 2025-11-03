@@ -20,7 +20,8 @@ extra_lib = [ 'astra/libastra.so*' ]
 cuda = true
 
 [tool.astra.windows_cuda]
-extra_lib = [ 'astra/AstraCuda64.dll', 'astra/cudart64_12.dll', 'astra/cufft64_11.dll' ]
+install_requires = ['nvidia-cuda-runtime-cu12==12.8.90', 'nvidia-cufft-cu12==11.3.3.83']
+extra_lib = [ 'astra/AstraCuda64.dll' ]
 cuda = true
 
 [tool.astra.pypi_linux_cuda]
