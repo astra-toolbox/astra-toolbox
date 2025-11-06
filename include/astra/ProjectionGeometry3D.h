@@ -74,10 +74,6 @@ protected:
 	 */
 	int m_iDetectorColCount;
 
-	/** Total number of detectors.
-	 */
-	int m_iDetectorTotCount;
-
 	/** The x-distance between projected rays on the detector plate (or width of projected strips).
 	 */
 	float32 m_fDetectorSpacingX;
@@ -390,7 +386,7 @@ inline int CProjectionGeometry3D::getDetectorColCount() const
 inline int CProjectionGeometry3D::getDetectorTotCount() const
 {
 	ASTRA_ASSERT(m_bInitialized);
-	return m_iDetectorTotCount;
+	return m_iDetectorRowCount * m_iDetectorColCount;
 }
 
 //----------------------------------------------------------------------------------------
@@ -481,7 +477,7 @@ inline float32 CProjectionGeometry3D::indexToDetectorOffsetX(int _iIndex) const
 	// basic checks
 	ASTRA_ASSERT(m_bInitialized);
 	ASTRA_ASSERT(_iIndex >= 0);
-	ASTRA_ASSERT(_iIndex < m_iDetectorTotCount);
+	ASTRA_ASSERT(_iIndex < getDetectorTotCount());
 
 	_iIndex = _iIndex % m_iDetectorColCount;
 	return (_iIndex - (m_iDetectorColCount-1.0f) / 2.0f) * m_fDetectorSpacingX;
@@ -494,7 +490,7 @@ inline float32 CProjectionGeometry3D::indexToDetectorOffsetY(int _iIndex) const
 	// basic checks
 	ASTRA_ASSERT(m_bInitialized);
 	ASTRA_ASSERT(_iIndex >= 0);
-	ASTRA_ASSERT(_iIndex < m_iDetectorTotCount);
+	ASTRA_ASSERT(_iIndex < getDetectorTotCount());
 
 	_iIndex = _iIndex / m_iDetectorColCount;
 	return -(_iIndex - (m_iDetectorRowCount-1.0f) / 2.0f) * m_fDetectorSpacingY;
@@ -530,7 +526,7 @@ inline void CProjectionGeometry3D::detectorIndexToRowCol(int _iDetectorIndex, in
 {
 	ASTRA_ASSERT(m_bInitialized);
 	ASTRA_ASSERT(_iDetectorIndex >= 0);
-	ASTRA_ASSERT(_iDetectorIndex < m_iDetectorTotCount);
+	ASTRA_ASSERT(_iDetectorIndex < getDetectorTotCount());
 	
 	_iDetectorRow = _iDetectorIndex / m_iDetectorColCount;
 	_iDetectorCol = _iDetectorIndex % m_iDetectorColCount;
@@ -541,7 +537,7 @@ inline void CProjectionGeometry3D::indexToAngleDetectorIndex(int _iIndex, int& _
 {
 	ASTRA_ASSERT(m_bInitialized);
 	ASTRA_ASSERT(_iIndex >= 0);
-	ASTRA_ASSERT(_iIndex < m_iDetectorTotCount * m_iProjectionAngleCount);
+	ASTRA_ASSERT(_iIndex < getDetectorTotCount() * m_iProjectionAngleCount);
 
 //	int det_row = _iIndex / (m_iDetectorColCount*m_iProjectionAngleCount);
 //	int det_col = _iIndex % m_iDetectorColCount;

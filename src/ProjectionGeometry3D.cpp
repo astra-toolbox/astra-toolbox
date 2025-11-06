@@ -151,8 +151,6 @@ bool CProjectionGeometry3D::initialize(const Config& _cfg)
 	if (!ok)
 		return false;
 
-	m_iDetectorTotCount = m_iDetectorRowCount * m_iDetectorColCount;
-
 	return true;
 }
 
@@ -200,7 +198,6 @@ bool CProjectionGeometry3D::_initialize(int _iProjectionAngleCount,
 	m_iProjectionAngleCount = _iProjectionAngleCount;
 	m_iDetectorRowCount = _iDetectorRowCount;
 	m_iDetectorColCount = _iDetectorColCount;
-	m_iDetectorTotCount = _iDetectorRowCount * _iDetectorColCount;
 	m_fDetectorSpacingX = _fDetectorSpacingX;
 	m_fDetectorSpacingY = _fDetectorSpacingY;
 	m_pfProjectionAngles = std::move(_pfProjectionAngles);

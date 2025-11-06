@@ -146,7 +146,6 @@ CProjectionGeometry3D* CCylConeVecProjectionGeometry3D::clone() const
 	res->m_iProjectionAngleCount	= m_iProjectionAngleCount;
 	res->m_iDetectorRowCount		= m_iDetectorRowCount;
 	res->m_iDetectorColCount		= m_iDetectorColCount;
-	res->m_iDetectorTotCount		= m_iDetectorTotCount;
 	res->m_fDetectorSpacingX		= m_fDetectorSpacingX;
 	res->m_fDetectorSpacingY		= m_fDetectorSpacingY;
 	res->m_ProjectionAngles		= m_ProjectionAngles;
@@ -170,7 +169,6 @@ bool CCylConeVecProjectionGeometry3D::isEqual(const CProjectionGeometry3D * _pGe
 	if (m_iProjectionAngleCount != pGeom2->m_iProjectionAngleCount) return false;
 	if (m_iDetectorRowCount != pGeom2->m_iDetectorRowCount) return false;
 	if (m_iDetectorColCount != pGeom2->m_iDetectorColCount) return false;
-	if (m_iDetectorTotCount != pGeom2->m_iDetectorTotCount) return false;
 	//if (m_fDetectorSpacingX != pGeom2->m_fDetectorSpacingX) return false;
 	//if (m_fDetectorSpacingY != pGeom2->m_fDetectorSpacingY) return false;
 	
