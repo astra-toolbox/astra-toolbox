@@ -48,7 +48,8 @@ public:
 
 	std::string description() const;
 
-protected:
+	virtual EDataType getType() const { return BASE; }
+
 	CData3D(int x, int y, int z, CDataStorage *storage) : CData({x, y, z}, storage) { }
 };
 

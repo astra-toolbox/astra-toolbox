@@ -36,6 +36,8 @@ namespace astra {
 class CVolumeGeometry3D;
 class CProjectionGeometry3D;
 struct SFilterConfig;
+class CData3D;
+class CDataGPU;
 }
 
 
@@ -74,6 +76,11 @@ struct SSubDimensions3D {
 	unsigned int subx;
 	unsigned int suby;
 	unsigned int subz;
+
+	bool isFullVolume() const {
+		return (subx == 0 && suby == 0 && subz == 0 &&
+		        subnx == nx && subny == ny && subnz == nz);
+	}
 };
 
 /*
@@ -94,26 +101,26 @@ int maxBlockDimension();
 _AstraExport MemHandle3D wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch);
 MemHandle3D createProjectionArrayHandle(const float *ptr, unsigned int x, unsigned int y, unsigned int z);
 
-MemHandle3D allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Mem3DZeroMode zero);
+astra::CDataGPU *allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Mem3DZeroMode zero);
 
-bool copyToGPUMemory(const float *src, MemHandle3D &dst, const SSubDimensions3D &pos);
+bool copyToGPUMemory(const astra::CData3D *src, astra::CData3D *dst, const SSubDimensions3D &pos);
 
-bool copyFromGPUMemory(float *dst, MemHandle3D &src, const SSubDimensions3D &pos);
+bool copyFromGPUMemory(astra::CData3D *dst, const astra::CData3D *src, const SSubDimensions3D &pos);
 
-bool freeGPUMemory(MemHandle3D &handle);
+bool freeGPUMemory(astra::CData3D *data);
 
-bool zeroGPUMemory(MemHandle3D &handle, unsigned int x, unsigned int y, unsigned int z);
+bool zeroGPUMemory(astra::CData3D *data, unsigned int x, unsigned int y, unsigned int z);
 
 bool setGPUIndex(int index);
 
 bool copyIntoArray(MemHandle3D &handle, MemHandle3D &subdata, const SSubDimensions3D &pos);
 
 
-bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D &volData, int iDetectorSuperSampling, astra::Cuda3DProjectionKernel projKernel);
+bool FP(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData, const astra::CVolumeGeometry3D* pVolGeom, astra::CData3D *volData, int iDetectorSuperSampling, astra::Cuda3DProjectionKernel projKernel);
 
-bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D &volData, int iVoxelSuperSampling, astra::Cuda3DProjectionKernel projKernel);
+bool BP(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData, const astra::CVolumeGeometry3D* pVolGeom, astra::CData3D *volData, int iVoxelSuperSampling, astra::Cuda3DProjectionKernel projKernel);
 
-bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D &volData, bool bShortScan, const astra::SFilterConfig &filterConfig, float fOutputScale = 1.0f);
+bool FDK(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData, const astra::CVolumeGeometry3D* pVolGeom, astra::CData3D *volData, bool bShortScan, const astra::SFilterConfig &filterConfig, float fOutputScale = 1.0f);
 
 }
 
