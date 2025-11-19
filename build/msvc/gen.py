@@ -344,6 +344,7 @@ P_astra["filters"]["CUDA\\cuda headers"] = [
 "include\\astra\\cuda\\3d\\dims3d.h",
 "include\\astra\\cuda\\3d\\fdk.h",
 "include\\astra\\cuda\\3d\\mem3d.h",
+"include\\astra\\cuda\\3d\\mem3d_internal.h",
 "include\\astra\\cuda\\3d\\par3d_bp.h",
 "include\\astra\\cuda\\3d\\par3d_fp.h",
 "include\\astra\\cuda\\3d\\sirt3d.h",

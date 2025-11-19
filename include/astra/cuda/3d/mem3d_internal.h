@@ -25,22 +25,45 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
+#ifndef ASTRA_CUDA_MEM3D_INTERNAL_H
+#define ASTRA_CUDA_MEM3D_INTERNAL_H
 
-#ifndef _ASTRA_CUDA_DLPACK_SUPPORT_H
-#define _ASTRA_CUDA_DLPACK_SUPPORT_H
+#include "astra/Data.h"
+#include "astra/cuda/3d/mem3d.h"
 
-#include "astra/Globals.h"
 
-#include "dlpack/dlpack.h"
+namespace astraCUDA3d {
 
-namespace astra {
-class CDataStorage;
+struct SMemHandle3D_internal;
+
+struct MemHandle3D {
+	std::shared_ptr<SMemHandle3D_internal> d;
+	operator bool() const { return (bool)d; }
+};
+
 }
 
 namespace astraCUDA {
 
-_AstraExport astra::CDataStorage *wrapDLTensor(DLManagedTensorVersioned *tensor_m);
-_AstraExport astra::CDataStorage *wrapDLTensor(DLManagedTensor *tensor_m);
+
+class _AstraExport CDataGPU : public astra::CDataStorage {
+
+protected:
+	/** Handle for the memory block */
+	astraCUDA3d::MemHandle3D m_hnd;
+	CDataGPU() { }
+
+public:
+
+	CDataGPU(astraCUDA3d::MemHandle3D hnd) : m_hnd(hnd) { }
+
+	virtual bool isMemory() const { return false; }
+	virtual bool isGPU() const { return true; }
+	virtual bool isFloat32() const { return true; } // TODO
+
+	astraCUDA3d::MemHandle3D& getHandle() { return m_hnd; }
+
+};
 
 }
 

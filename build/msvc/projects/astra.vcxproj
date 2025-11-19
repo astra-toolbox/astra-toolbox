@@ -461,6 +461,7 @@
     <ClInclude Include="..\..\..\include\astra\cuda\3d\dims3d.h" />
     <ClInclude Include="..\..\..\include\astra\cuda\3d\fdk.h" />
     <ClInclude Include="..\..\..\include\astra\cuda\3d\mem3d.h" />
+    <ClInclude Include="..\..\..\include\astra\cuda\3d\mem3d_internal.h" />
     <ClInclude Include="..\..\..\include\astra\cuda\3d\par3d_bp.h" />
     <ClInclude Include="..\..\..\include\astra\cuda\3d\par3d_fp.h" />
     <ClInclude Include="..\..\..\include\astra\cuda\3d\sirt3d.h" />

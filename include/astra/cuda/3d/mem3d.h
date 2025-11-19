@@ -37,7 +37,7 @@ class CVolumeGeometry3D;
 class CProjectionGeometry3D;
 struct SFilterConfig;
 class CData3D;
-class CDataGPU;
+class CDataStorage;
 }
 
 
@@ -52,18 +52,6 @@ class CDataGPU;
 // data into it, performing a BP from the array, and freeing the array.
 
 namespace astraCUDA3d {
-
-// TODO: Make it possible to delete these handles when they're no longer
-// necessary inside the FP/BP
-//
-// TODO: Add functions for querying capacity
-
-struct SMemHandle3D_internal;
-
-struct MemHandle3D {
-	std::shared_ptr<SMemHandle3D_internal> d;
-	operator bool() const { return (bool)d; }
-};
 
 struct SSubDimensions3D {
 	unsigned int nx;
@@ -98,10 +86,10 @@ enum Mem3DZeroMode {
 
 int maxBlockDimension();
 
-_AstraExport MemHandle3D wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch);
-MemHandle3D createProjectionArrayHandle(const float *ptr, unsigned int x, unsigned int y, unsigned int z);
+_AstraExport astra::CDataStorage* wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch);
+astra::CDataStorage* createProjectionArrayHandle(const float *ptr, unsigned int x, unsigned int y, unsigned int z);
 
-astra::CDataGPU *allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Mem3DZeroMode zero);
+astra::CDataStorage *allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Mem3DZeroMode zero);
 
 bool copyToGPUMemory(const astra::CData3D *src, astra::CData3D *dst, const SSubDimensions3D &pos);
 
@@ -113,7 +101,7 @@ bool zeroGPUMemory(astra::CData3D *data, unsigned int x, unsigned int y, unsigne
 
 bool setGPUIndex(int index);
 
-bool copyIntoArray(MemHandle3D &handle, MemHandle3D &subdata, const SSubDimensions3D &pos);
+bool copyIntoArray(astra::CData3D *data, astra::CData3D *subdata, const SSubDimensions3D &pos);
 
 
 bool FP(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData, const astra::CVolumeGeometry3D* pVolGeom, astra::CData3D *volData, int iDetectorSuperSampling, astra::Cuda3DProjectionKernel projKernel);

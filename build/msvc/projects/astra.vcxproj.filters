@@ -677,6 +677,9 @@
     <ClInclude Include="..\..\..\include\astra\cuda\3d\mem3d.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\astra\cuda\3d\mem3d_internal.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\astra\cuda\3d\par3d_bp.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>

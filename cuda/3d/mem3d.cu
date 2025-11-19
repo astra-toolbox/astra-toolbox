@@ -39,6 +39,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/cuda/2d/astra.h"
 
+#include "astra/cuda/3d/mem3d_internal.h"
+
 #include "astra/Logging.h"
 #include "astra/Filters.h"
 
@@ -50,6 +52,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 
 namespace astraCUDA3d {
+
 
 
 struct SMemHandle3D_internal
@@ -78,7 +81,7 @@ int maxBlockDimension()
 	return std::min(props.maxTexture3D[0], std::min(props.maxTexture3D[1], props.maxTexture3D[2]));
 }
 
-astra::CDataGPU *allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Mem3DZeroMode zero)
+astra::CDataStorage *allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Mem3DZeroMode zero)
 {
 	SMemHandle3D_internal hnd;
 	hnd.nx = x;
@@ -109,14 +112,14 @@ astra::CDataGPU *allocateGPUMemory(unsigned int x, unsigned int y, unsigned int 
 	handle.d = std::make_shared<SMemHandle3D_internal>();
 	*handle.d = hnd;
 
-	astra::CDataGPU *ret = new astra::CDataGPU(handle);
+	astraCUDA::CDataGPU *ret = new astraCUDA::CDataGPU(handle);
 
 	return ret;
 }
 
 bool zeroGPUMemory(astra::CData3D *data, unsigned int x, unsigned int y, unsigned int z)
 {
-	astra::CDataGPU *ds = dynamic_cast<astra::CDataGPU*>(data->getStorage());
+	astraCUDA::CDataGPU *ds = dynamic_cast<astraCUDA::CDataGPU*>(data->getStorage());
 	assert(ds);
 
 	MemHandle3D &handle = ds->getHandle();
@@ -128,7 +131,7 @@ bool zeroGPUMemory(astra::CData3D *data, unsigned int x, unsigned int y, unsigne
 
 bool freeGPUMemory(astra::CData3D *data)
 {
-	astra::CDataGPU *ds = dynamic_cast<astra::CDataGPU*>(data->getStorage());
+	astraCUDA::CDataGPU *ds = dynamic_cast<astraCUDA::CDataGPU*>(data->getStorage());
 	assert(ds);
 
 	MemHandle3D &handle = ds->getHandle();
@@ -151,7 +154,7 @@ bool copyToGPUMemory(const astra::CData3D *src, astra::CData3D *dst, const SSubD
 	ASTRA_DEBUG("Offset %d,%d,%d", pos.subx, pos.suby, pos.subz);
 
 	assert(src->isFloat32Memory());
-	astra::CDataGPU *ds = dynamic_cast<astra::CDataGPU*>(dst->getStorage());
+	astraCUDA::CDataGPU *ds = dynamic_cast<astraCUDA::CDataGPU*>(dst->getStorage());
 	assert(ds);
 
 	//assert(!dst.d->arr);
@@ -188,7 +191,7 @@ bool copyFromGPUMemory(astra::CData3D *dst, const astra::CData3D *src, const SSu
 	ASTRA_DEBUG("Offset %d,%d,%d", pos.subx, pos.suby, pos.subz);
 
 	assert(dst->isFloat32Memory());
-	const astra::CDataGPU *ss = dynamic_cast<const astra::CDataGPU*>(src->getStorage());
+	const astraCUDA::CDataGPU *ss = dynamic_cast<const astraCUDA::CDataGPU*>(src->getStorage());
 	assert(ss);
 
 	//assert(!src.d->arr);
@@ -207,7 +210,7 @@ bool copyFromGPUMemory(astra::CData3D *dst, const astra::CData3D *src, const SSu
 	p.dstPtr = d;
 
 	// TODO: Clean up const-ness after MemHandle3D is gone
-	MemHandle3D &srcHandle = const_cast<astra::CDataGPU*>(ss)->getHandle();
+	MemHandle3D &srcHandle = const_cast<astraCUDA::CDataGPU*>(ss)->getHandle();
 
         if (srcHandle.d->ptr.ptr) {
             p.srcArray = 0;
@@ -227,11 +230,11 @@ bool copyFromGPUMemory(astra::CData3D *dst, const astra::CData3D *src, const SSu
 
 bool FP(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData, const astra::CVolumeGeometry3D* pVolGeom, astra::CData3D *volData, int iDetectorSuperSampling, astra::Cuda3DProjectionKernel projKernel)
 {
-	astra::CDataGPU *projs = dynamic_cast<astra::CDataGPU*>(projData->getStorage());
+	astraCUDA::CDataGPU *projs = dynamic_cast<astraCUDA::CDataGPU*>(projData->getStorage());
 	assert(projs);
 	MemHandle3D &projHandle = projs->getHandle();
 
-	astra::CDataGPU *vols = dynamic_cast<astra::CDataGPU*>(volData->getStorage());
+	astraCUDA::CDataGPU *vols = dynamic_cast<astraCUDA::CDataGPU*>(volData->getStorage());
 	assert(vols);
 	MemHandle3D &volHandle = vols->getHandle();
 
@@ -296,11 +299,11 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData,
 
 bool BP(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData, const astra::CVolumeGeometry3D* pVolGeom, astra::CData3D *volData, int iVoxelSuperSampling, astra::Cuda3DProjectionKernel projKernel)
 {
-	astra::CDataGPU *projs = dynamic_cast<astra::CDataGPU*>(projData->getStorage());
+	astraCUDA::CDataGPU *projs = dynamic_cast<astraCUDA::CDataGPU*>(projData->getStorage());
 	assert(projs);
 	MemHandle3D &projHandle = projs->getHandle();
 
-	astra::CDataGPU *vols = dynamic_cast<astra::CDataGPU*>(volData->getStorage());
+	astraCUDA::CDataGPU *vols = dynamic_cast<astraCUDA::CDataGPU*>(volData->getStorage());
 	assert(vols);
 	MemHandle3D &volHandle = vols->getHandle();
 
@@ -370,11 +373,11 @@ bool BP(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData,
 
 bool FDK(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData, const astra::CVolumeGeometry3D* pVolGeom, astra::CData3D *volData, bool bShortScan, const astra::SFilterConfig &filterConfig, float fOutputScale)
 {
-	astra::CDataGPU *projs = dynamic_cast<astra::CDataGPU*>(projData->getStorage());
+	astraCUDA::CDataGPU *projs = dynamic_cast<astraCUDA::CDataGPU*>(projData->getStorage());
 	assert(projs);
 	MemHandle3D &projHandle = projs->getHandle();
 
-	astra::CDataGPU *vols = dynamic_cast<astra::CDataGPU*>(volData->getStorage());
+	astraCUDA::CDataGPU *vols = dynamic_cast<astraCUDA::CDataGPU*>(volData->getStorage());
 	assert(vols);
 	MemHandle3D &volHandle = vols->getHandle();
 
@@ -406,7 +409,7 @@ bool FDK(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData
 
 }
 
-_AstraExport MemHandle3D wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch)
+_AstraExport astra::CDataStorage *wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch)
 {
 	cudaPitchedPtr ptr;
 	ptr.ptr = D_ptr;
@@ -422,10 +425,12 @@ _AstraExport MemHandle3D wrapHandle(float *D_ptr, unsigned int x, unsigned int y
 	hnd.d = std::make_shared<SMemHandle3D_internal>();
 	*hnd.d = h;
 
-	return hnd;
+	astraCUDA::CDataGPU *ret = new astraCUDA::CDataGPU(hnd);
+
+	return ret;
 }
 
-MemHandle3D createProjectionArrayHandle(const float *ptr, unsigned int x, unsigned int y, unsigned int z)
+astra::CDataStorage* createProjectionArrayHandle(const float *ptr, unsigned int x, unsigned int y, unsigned int z)
 {
 	SDimensions3D dims;
 	dims.iProjU = x;
@@ -443,24 +448,34 @@ MemHandle3D createProjectionArrayHandle(const float *ptr, unsigned int x, unsign
 	hnd.d = std::make_shared<SMemHandle3D_internal>();
 	*hnd.d = h;
 
-	return hnd;
+	astraCUDA::CDataGPU *ret = new astraCUDA::CDataGPU(hnd);
+
+	return ret;
 }
 
-bool copyIntoArray(MemHandle3D &handle, MemHandle3D &subdata, const SSubDimensions3D &pos)
+bool copyIntoArray(astra::CData3D *data, astra::CData3D *subdata, const SSubDimensions3D &pos)
 {
+	astraCUDA::CDataGPU *datas = dynamic_cast<astraCUDA::CDataGPU*>(data->getStorage());
+	assert(datas);
+	MemHandle3D &handle = datas->getHandle();
+
+	astraCUDA::CDataGPU *subdatas = dynamic_cast<astraCUDA::CDataGPU*>(subdata->getStorage());
+	assert(subdatas);
+	MemHandle3D &subhandle = subdatas->getHandle();
+
 	assert(handle.d->arr);
 	assert(!handle.d->ptr.ptr);
-	assert(!subdata.d->arr);
-	assert(subdata.d->ptr.ptr);
+	assert(!subhandle.d->arr);
+	assert(subhandle.d->ptr.ptr);
 
 	ASTRA_DEBUG("Copying %d x %d x %d into GPU array", pos.subnx, pos.subny, pos.subnz);
 	ASTRA_DEBUG("Offset %d,%d,%d", pos.subx, pos.suby, pos.subz);
-	ASTRA_DEBUG("Pitch %zu, xsize %zu, ysize %zu", subdata.d->ptr.pitch, subdata.d->ptr.xsize, subdata.d->ptr.ysize);
+	ASTRA_DEBUG("Pitch %zu, xsize %zu, ysize %zu", subhandle.d->ptr.pitch, subhandle.d->ptr.xsize, subhandle.d->ptr.ysize);
 
 	cudaMemcpy3DParms p;
 	p.srcArray = 0;
 	p.srcPos = make_cudaPos(0, 0, 0);
-	p.srcPtr = subdata.d->ptr;
+	p.srcPtr = subhandle.d->ptr;
 
 	p.dstArray = handle.d->arr;
 	p.dstPos = make_cudaPos(pos.subx, pos.suby, pos.subz);

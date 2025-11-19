@@ -28,13 +28,14 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/cuda/gpu_runtime_wrapper.h"
 
 #include "astra/cuda/dlpack_support.h"
+#include "astra/cuda/3d/mem3d_internal.h"
 
 #include "astra/Data3D.h"
 
 namespace astraCUDA {
 
 template<class DLT>
-class CDataStorageDLPackGPU : public astra::CDataGPU {
+class CDataStorageDLPackGPU : public CDataGPU {
 public:
 	CDataStorageDLPackGPU(DLT* tensor);
 	virtual ~CDataStorageDLPackGPU();
@@ -53,7 +54,8 @@ CDataStorageDLPackGPU<DLT>::CDataStorageDLPackGPU(DLT *tensor_m)
 	data += tensor->byte_offset;
 	unsigned int pitch = tensor->shape[2];
 
-	m_hnd = astraCUDA3d::wrapHandle(reinterpret_cast<float*>(data), tensor->shape[2], tensor->shape[1], tensor->shape[0], pitch);
+	CDataStorage *s = astraCUDA3d::wrapHandle(reinterpret_cast<float*>(data), tensor->shape[2], tensor->shape[1], tensor->shape[0], pitch);
+	m_hnd = dynamic_cast<CDataGPU*>(s)->getHandle();
 }
 
 
@@ -70,12 +72,12 @@ CDataStorageDLPackGPU<DLT>::~CDataStorageDLPackGPU()
 
 
 
-astra::CDataGPU *wrapDLTensor(DLManagedTensorVersioned *tensor_m)
+astra::CDataStorage *wrapDLTensor(DLManagedTensorVersioned *tensor_m)
 {
 	return new CDataStorageDLPackGPU<DLManagedTensorVersioned>(tensor_m);
 }
 
-astra::CDataGPU *wrapDLTensor(DLManagedTensor *tensor_m)
+astra::CDataStorage *wrapDLTensor(DLManagedTensor *tensor_m)
 {
 	return new CDataStorageDLPackGPU<DLManagedTensor>(tensor_m);
 }

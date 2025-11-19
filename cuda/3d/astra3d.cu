@@ -1023,10 +1023,6 @@ _AstraExport bool uploadMultipleProjections(CFloat32ProjectionData3D *proj,
                                          const float *data,
                                          unsigned int y_min, unsigned int y_max)
 {
-	assert(proj->getStorage()->isGPU());
-	CDataGPU *storage = dynamic_cast<CDataGPU*>(proj->getStorage());
-	astraCUDA3d::MemHandle3D hnd = storage->getHandle();
-
 	astraCUDA3d::SDimensions3D dims1;
 	dims1.iProjU = proj->getDetectorColCount();
 	dims1.iProjV = proj->getDetectorRowCount();
@@ -1039,10 +1035,12 @@ _AstraExport bool uploadMultipleProjections(CFloat32ProjectionData3D *proj,
 		return false;
 	}
 
-	astraCUDA3d::MemHandle3D hnd1 = astraCUDA3d::wrapHandle(
+	CDataStorage *storage = astraCUDA3d::wrapHandle(
 			(float *)D_proj.ptr,
 			dims1.iProjU, dims1.iProjAngles, dims1.iProjV,
 			D_proj.pitch / sizeof(float));
+	CData3D *inputData = new CData3D(dims1.iProjU, dims1.iProjAngles, dims1.iProjV, storage);
+
 
 	astraCUDA3d::SSubDimensions3D subdims;
 	subdims.nx = dims1.iProjU;
@@ -1056,7 +1054,7 @@ _AstraExport bool uploadMultipleProjections(CFloat32ProjectionData3D *proj,
 	subdims.suby = y_min;
 	subdims.subz = 0;
 
-	ok = astraCUDA3d::copyIntoArray(hnd, hnd1, subdims);
+	ok = astraCUDA3d::copyIntoArray(proj, inputData, subdims);
 	if (!ok) {
 		ASTRA_ERROR("Failed to copy projection into 3d data");
 		return false;
