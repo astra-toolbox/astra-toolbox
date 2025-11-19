@@ -185,6 +185,7 @@ P_astra["filters"]["Global &amp; Other"] = [ "72fbe846-10ef-4c52-88df-13bd66c4cb
 P_astra["filters"]["Geometries"] = [ "7ef37c12-c98c-4dd6-938d-12f49279eae0" ]
 P_astra["filters"]["CUDA\\cuda source"] = [
 "04a878ed-77b4-4525-9bc2-38ccd65282c5",
+"cuda\\dlpack_support.cu",
 "cuda\\2d\\algo.cu",
 "cuda\\2d\\arith.cu",
 "cuda\\2d\\astra.cu",
@@ -315,6 +316,7 @@ P_astra["filters"]["CUDA\\astra source"] = [
 ]
 P_astra["filters"]["CUDA\\cuda headers"] = [
 "4e17872e-db7d-41bc-9760-fad1c253b583",
+"include\\astra\\cuda\\dlpack_support.h",
 "include\\astra\\cuda\\2d\\algo.h",
 "include\\astra\\cuda\\2d\\arith.h",
 "include\\astra\\cuda\\2d\\astra.h",

@@ -1,6 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <CudaCompile Include="..\..\..\cuda\dlpack_support.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
     <CudaCompile Include="..\..\..\cuda\2d\algo.cu">
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>
@@ -589,6 +592,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\include\astra\CudaSirtAlgorithm3D.h">
       <Filter>CUDA\astra headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\astra\cuda\dlpack_support.h">
+      <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\astra\cuda\2d\algo.h">
       <Filter>CUDA\cuda headers</Filter>

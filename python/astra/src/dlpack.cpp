@@ -31,6 +31,10 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/Data2D.h"
 #include "astra/Data3D.h"
 
+#ifdef ASTRA_CUDA
+#include "astra/cuda/dlpack_support.h"
+#endif
+
 #include <Python.h>
 #include <cstdio>
 
@@ -44,18 +48,6 @@ protected:
 	DLT *m_pTensor;
 
 };
-
-#ifdef ASTRA_CUDA
-template<class DLT>
-class CDataStorageDLPackGPU : public astra::CDataGPU {
-public:
-	CDataStorageDLPackGPU(DLT* tensor);
-	virtual ~CDataStorageDLPackGPU();
-
-protected:
-	DLT *m_pTensor;
-};
-#endif
 
 template<class DLT>
 CDataStorageDLPackCPU<DLT>::CDataStorageDLPackCPU(DLT *tensor_m)
@@ -93,33 +85,6 @@ static void getNonSingletonDims(DLTensor *tensor,
 		}
 	}
 }
-
-#ifdef ASTRA_CUDA
-template<class DLT>
-CDataStorageDLPackGPU<DLT>::CDataStorageDLPackGPU(DLT *tensor_m)
-	: m_pTensor(tensor_m)
-{
-	DLTensor *tensor = &m_pTensor->dl_tensor;
-
-	uint8_t* data = static_cast<uint8_t*>(tensor->data);
-	data += tensor->byte_offset;
-	unsigned int pitch = tensor->shape[2];
-
-	m_hnd = astraCUDA3d::wrapHandle(reinterpret_cast<float*>(data), tensor->shape[2], tensor->shape[1], tensor->shape[0], pitch);
-}
-
-
-template<class DLT>
-CDataStorageDLPackGPU<DLT>::~CDataStorageDLPackGPU()
-{
-	if (m_pTensor) {
-		assert(m_pTensor->deleter);
-		m_pTensor->deleter(m_pTensor);
-	}
-	m_pTensor = nullptr;
-}
-#endif
-
 
 static bool isContiguous(DLTensor *tensor)
 {
@@ -211,7 +176,7 @@ astra::CDataStorage *getDLTensorStorage(DLT *tensor_m, std::array<int, D> dims, 
 	case kDLCUDAManaged:
 		if (!checkDLTensor(tensor, dims, error))
 			return nullptr;
-		return new CDataStorageDLPackGPU(tensor_m);
+		return astraCUDA::wrapDLTensor(tensor_m);
 #endif
 	// TODO: Add support for kDLROCM, for the case when astra is built with
 	// cuda-but-actually-hip, and later when it is in its own namespace
