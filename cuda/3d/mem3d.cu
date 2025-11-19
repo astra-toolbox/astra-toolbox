@@ -55,15 +55,6 @@ namespace astraCUDA3d {
 
 
 
-struct SMemHandle3D_internal
-{
-	cudaPitchedPtr ptr;
-	cudaArray *arr;
-	unsigned int nx;
-	unsigned int ny;
-	unsigned int nz;
-};
-
 int maxBlockDimension()
 {
 	int dev;
@@ -83,15 +74,11 @@ int maxBlockDimension()
 
 astra::CDataStorage *allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Mem3DZeroMode zero)
 {
-	SMemHandle3D_internal hnd;
-	hnd.nx = x;
-	hnd.ny = y;
-	hnd.nz = z;
-	hnd.arr = 0;
+	cudaPitchedPtr ptr;
 
 	size_t free = astraCUDA::availableGPUMemory();
 
-	if (!checkCuda(cudaMalloc3D(&hnd.ptr, make_cudaExtent(sizeof(float)*x, y, z)), "allocateGPUMemory malloc3d")) {
+	if (!checkCuda(cudaMalloc3D(&ptr, make_cudaExtent(sizeof(float)*x, y, z)), "allocateGPUMemory malloc3d")) {
 		return nullptr;
 	}
 
@@ -102,17 +89,13 @@ astra::CDataStorage *allocateGPUMemory(unsigned int x, unsigned int y, unsigned 
 
 
 	if (zero == INIT_ZERO) {
-		if (!checkCuda(cudaMemset3D(hnd.ptr, 0, make_cudaExtent(sizeof(float)*x, y, z)), "allocateGPUMemory memset3d")) {
-			cudaFree(hnd.ptr.ptr);
+		if (!checkCuda(cudaMemset3D(ptr, 0, make_cudaExtent(sizeof(float)*x, y, z)), "allocateGPUMemory memset3d")) {
+			cudaFree(ptr.ptr);
 			return nullptr;
 		}
 	}
 
-	MemHandle3D handle;
-	handle.d = std::make_shared<SMemHandle3D_internal>();
-	*handle.d = hnd;
-
-	astraCUDA::CDataGPU *ret = new astraCUDA::CDataGPU(handle);
+	astraCUDA::CDataGPU *ret = new astraCUDA::CDataGPU(ptr);
 
 	return ret;
 }
@@ -122,11 +105,8 @@ bool zeroGPUMemory(astra::CData3D *data, unsigned int x, unsigned int y, unsigne
 	astraCUDA::CDataGPU *ds = dynamic_cast<astraCUDA::CDataGPU*>(data->getStorage());
 	assert(ds);
 
-	MemHandle3D &handle = ds->getHandle();
-
-	SMemHandle3D_internal& hnd = *handle.d.get();
-	assert(!hnd.arr);
-	return checkCuda(cudaMemset3D(hnd.ptr, 0, make_cudaExtent(sizeof(float)*x, y, z)), "zeroGPUMemory");
+	assert(!ds->getArray());
+	return checkCuda(cudaMemset3D(ds->getPtr(), 0, make_cudaExtent(sizeof(float)*x, y, z)), "zeroGPUMemory");
 }
 
 bool freeGPUMemory(astra::CData3D *data)
@@ -134,13 +114,12 @@ bool freeGPUMemory(astra::CData3D *data)
 	astraCUDA::CDataGPU *ds = dynamic_cast<astraCUDA::CDataGPU*>(data->getStorage());
 	assert(ds);
 
-	MemHandle3D &handle = ds->getHandle();
 	size_t free = astraCUDA::availableGPUMemory();
 	bool ok;
-	if (handle.d->arr)
-		ok = checkCuda(cudaFreeArray(handle.d->arr), "freeGPUMemory array");
+	if (ds->getArray())
+		ok = checkCuda(cudaFreeArray(ds->getArray()), "freeGPUMemory array");
 	else
-		ok = checkCuda(cudaFree(handle.d->ptr.ptr), "freeGPUMemory");
+		ok = checkCuda(cudaFree(ds->getPtr().ptr), "freeGPUMemory");
 	size_t free2 = astraCUDA::availableGPUMemory();
 
 	ASTRA_DEBUG("Freeing memory. (Pre: %lu, post: %lu)", free, free2);
@@ -157,9 +136,7 @@ bool copyToGPUMemory(const astra::CData3D *src, astra::CData3D *dst, const SSubD
 	astraCUDA::CDataGPU *ds = dynamic_cast<astraCUDA::CDataGPU*>(dst->getStorage());
 	assert(ds);
 
-	//assert(!dst.d->arr);
-
-	MemHandle3D &dstHandle = ds->getHandle();
+	assert(!ds->getArray());
 
 	cudaPitchedPtr s;
 	s.ptr = (void*)src->getFloat32Memory(); // const cast away
@@ -175,7 +152,7 @@ bool copyToGPUMemory(const astra::CData3D *src, astra::CData3D *dst, const SSubD
 
 	p.dstArray = 0;
 	p.dstPos = make_cudaPos(0, 0, 0);
-	p.dstPtr = dstHandle.d->ptr;
+	p.dstPtr = ds->getPtr();
 
 	p.extent = make_cudaExtent(pos.subnx * sizeof(float), pos.subny, pos.subnz);
 
@@ -209,18 +186,16 @@ bool copyFromGPUMemory(astra::CData3D *dst, const astra::CData3D *src, const SSu
 	p.dstPos = make_cudaPos(pos.subx * sizeof(float), pos.suby, pos.subz);
 	p.dstPtr = d;
 
-	// TODO: Clean up const-ness after MemHandle3D is gone
-	MemHandle3D &srcHandle = const_cast<astraCUDA::CDataGPU*>(ss)->getHandle();
-
-        if (srcHandle.d->ptr.ptr) {
-            p.srcArray = 0;
-            p.srcPtr = srcHandle.d->ptr;
-            p.extent = make_cudaExtent(pos.subnx * sizeof(float), pos.subny, pos.subnz);
-        } else {
-            p.srcArray = srcHandle.d->arr;
-            p.srcPtr.ptr = 0;
-            p.extent = make_cudaExtent(pos.subnx, pos.subny, pos.subnz);
-        }
+	if (!ss->getArray()) {
+		p.srcArray = 0;
+		p.srcPtr = ss->getPtr();
+		p.extent = make_cudaExtent(pos.subnx * sizeof(float), pos.subny, pos.subnz);
+	} else {
+		// CUDA interface limitation: cast const away
+		p.srcArray = const_cast<cudaArray*>(ss->getArray());
+		p.srcPtr.ptr = 0;
+		p.extent = make_cudaExtent(pos.subnx, pos.subny, pos.subnz);
+	}
 
 	p.kind = cudaMemcpyDeviceToHost;
 
@@ -232,14 +207,12 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData,
 {
 	astraCUDA::CDataGPU *projs = dynamic_cast<astraCUDA::CDataGPU*>(projData->getStorage());
 	assert(projs);
-	MemHandle3D &projHandle = projs->getHandle();
 
 	astraCUDA::CDataGPU *vols = dynamic_cast<astraCUDA::CDataGPU*>(volData->getStorage());
 	assert(vols);
-	MemHandle3D &volHandle = vols->getHandle();
 
-	assert(!projHandle.d->arr);
-	assert(!volHandle.d->arr);
+	assert(!projs->getArray());
+	assert(!vols->getArray());
 	SDimensions3D dims;
 	SProjectorParams3D params;
 	params.projKernel = projKernel;
@@ -261,10 +234,10 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData,
 		case ker3d_default:
 		case ker3d_2d_weighting:
 		case ker3d_matched_bp:
-			ok &= Par3DFP(volHandle.d->ptr, projHandle.d->ptr, dims, pParProjs, params);
+			ok &= Par3DFP(vols->getPtr(), projs->getPtr(), dims, pParProjs, params);
 			break;
 		case ker3d_sum_square_weights:
-			ok &= Par3DFP_SumSqW(volHandle.d->ptr, projHandle.d->ptr, dims, pParProjs, params);
+			ok &= Par3DFP_SumSqW(vols->getPtr(), projs->getPtr(), dims, pParProjs, params);
 			break;
 		default:
 			ok = false;
@@ -277,7 +250,7 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData,
 		case ker3d_fdk_weighting:
 		case ker3d_2d_weighting:
 		case ker3d_matched_bp:
-			ok &= ConeFP(volHandle.d->ptr, projHandle.d->ptr, dims, pConeProjs, params);
+			ok &= ConeFP(vols->getPtr(), projs->getPtr(), dims, pConeProjs, params);
 			break;
 		default:
 			ok = false;
@@ -286,7 +259,7 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData,
 		const SCylConeProjection* pCylConeProjs = res.getCylCone();
 		switch (projKernel) {
 		case ker3d_default: case ker3d_matched_bp:
-			ok &= ConeCylFP(volHandle.d->ptr, projHandle.d->ptr, dims, pCylConeProjs, params);
+			ok &= ConeCylFP(vols->getPtr(), projs->getPtr(), dims, pCylConeProjs, params);
 			break;
 		default:
 			ok = false;
@@ -301,13 +274,11 @@ bool BP(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData,
 {
 	astraCUDA::CDataGPU *projs = dynamic_cast<astraCUDA::CDataGPU*>(projData->getStorage());
 	assert(projs);
-	MemHandle3D &projHandle = projs->getHandle();
 
 	astraCUDA::CDataGPU *vols = dynamic_cast<astraCUDA::CDataGPU*>(volData->getStorage());
 	assert(vols);
-	MemHandle3D &volHandle = vols->getHandle();
 
-	assert(!volHandle.d->arr);
+	assert(!vols->getArray());
 	SDimensions3D dims;
 	SProjectorParams3D params;
 	params.projKernel = projKernel;
@@ -325,10 +296,10 @@ bool BP(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData,
 		switch (projKernel) {
 		case ker3d_default:
 		case ker3d_2d_weighting:
-			if (projHandle.d->arr)
-				ok &= Par3DBP_Array(volHandle.d->ptr, projHandle.d->arr, dims, pParProjs, params);
+			if (projs->getArray())
+				ok &= Par3DBP_Array(vols->getPtr(), projs->getArray(), dims, pParProjs, params);
 			else
-				ok &= Par3DBP(volHandle.d->ptr, projHandle.d->ptr, dims, pParProjs, params);
+				ok &= Par3DBP(vols->getPtr(), projs->getPtr(), dims, pParProjs, params);
 			break;
 		default:
 			ok = false;
@@ -339,10 +310,10 @@ bool BP(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData,
 		case ker3d_default:
 		case ker3d_fdk_weighting:
 		case ker3d_2d_weighting:
-			if (projHandle.d->arr)
-				ok &= ConeBP_Array(volHandle.d->ptr, projHandle.d->arr, dims, pConeProjs, params);
+			if (projs->getArray())
+				ok &= ConeBP_Array(vols->getPtr(), projs->getArray(), dims, pConeProjs, params);
 			else
-				ok &= ConeBP(volHandle.d->ptr, projHandle.d->ptr, dims, pConeProjs, params);
+				ok &= ConeBP(vols->getPtr(), projs->getPtr(), dims, pConeProjs, params);
 			break;
 		default:
 			ok = false;
@@ -352,15 +323,15 @@ bool BP(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData,
 		// TODO: Add support for ker3d_2d_weighting?
 		// TODO: Add support for ker3d_fdk_weighting?
 		if (projKernel == ker3d_default) {
-			if (projHandle.d->arr)
-				ok &= ConeCylBP_Array(volHandle.d->ptr, projHandle.d->arr, dims, pCylConeProjs, params);
+			if (projs->getArray())
+				ok &= ConeCylBP_Array(vols->getPtr(), projs->getArray(), dims, pCylConeProjs, params);
 			else
-				ok &= ConeCylBP(volHandle.d->ptr, projHandle.d->ptr, dims, pCylConeProjs, params);
+				ok &= ConeCylBP(vols->getPtr(), projs->getPtr(), dims, pCylConeProjs, params);
 		} else if (projKernel == ker3d_matched_bp) {
-			if (projHandle.d->arr)
-				ok &= ConeCylBP_Array_matched(volHandle.d->ptr, projHandle.d->arr, dims, pCylConeProjs, params);
+			if (projs->getArray())
+				ok &= ConeCylBP_Array_matched(vols->getPtr(), projs->getArray(), dims, pCylConeProjs, params);
 			else
-				ok &= ConeCylBP_matched(volHandle.d->ptr, projHandle.d->ptr, dims, pCylConeProjs, params);
+				ok &= ConeCylBP_matched(vols->getPtr(), projs->getPtr(), dims, pCylConeProjs, params);
 		} else {
 			ok = false;
 		}
@@ -375,16 +346,14 @@ bool FDK(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData
 {
 	astraCUDA::CDataGPU *projs = dynamic_cast<astraCUDA::CDataGPU*>(projData->getStorage());
 	assert(projs);
-	MemHandle3D &projHandle = projs->getHandle();
 
 	astraCUDA::CDataGPU *vols = dynamic_cast<astraCUDA::CDataGPU*>(volData->getStorage());
 	assert(vols);
-	MemHandle3D &volHandle = vols->getHandle();
 
 
 
-	assert(!projHandle.d->arr);
-	assert(!volHandle.d->arr);
+	assert(!projs->getArray());
+	assert(!vols->getArray());
 	SDimensions3D dims;
 	SProjectorParams3D params;
 	params.fOutputScale = fOutputScale;
@@ -401,7 +370,7 @@ bool FDK(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData
 
 	const SConeProjection* pConeProjs = res.getCone();
 
-	ok &= FDK(volHandle.d->ptr, projHandle.d->ptr, pConeProjs, dims, params, bShortScan, filterConfig);
+	ok &= FDK(vols->getPtr(), projs->getPtr(), pConeProjs, dims, params, bShortScan, filterConfig);
 
 	return ok;
 
@@ -417,15 +386,7 @@ _AstraExport astra::CDataStorage *wrapHandle(float *D_ptr, unsigned int x, unsig
 	ptr.pitch = sizeof(float) * pitch;
 	ptr.ysize = y;
 
-	SMemHandle3D_internal h;
-	h.ptr = ptr;
-	h.arr = 0;
-
-	MemHandle3D hnd;
-	hnd.d = std::make_shared<SMemHandle3D_internal>();
-	*hnd.d = h;
-
-	astraCUDA::CDataGPU *ret = new astraCUDA::CDataGPU(hnd);
+	astraCUDA::CDataGPU *ret = new astraCUDA::CDataGPU(ptr);
 
 	return ret;
 }
@@ -440,15 +401,7 @@ astra::CDataStorage* createProjectionArrayHandle(const float *ptr, unsigned int 
 	cudaArray* cuArray = allocateProjectionArray(dims);
 	transferHostProjectionsToArray(ptr, cuArray, dims);
 
-	SMemHandle3D_internal h;
-	h.arr = cuArray;
-	h.ptr.ptr = 0;
-
-	MemHandle3D hnd;
-	hnd.d = std::make_shared<SMemHandle3D_internal>();
-	*hnd.d = h;
-
-	astraCUDA::CDataGPU *ret = new astraCUDA::CDataGPU(hnd);
+	astraCUDA::CDataGPU *ret = new astraCUDA::CDataGPU(cuArray);
 
 	return ret;
 }
@@ -457,27 +410,23 @@ bool copyIntoArray(astra::CData3D *data, astra::CData3D *subdata, const SSubDime
 {
 	astraCUDA::CDataGPU *datas = dynamic_cast<astraCUDA::CDataGPU*>(data->getStorage());
 	assert(datas);
-	MemHandle3D &handle = datas->getHandle();
 
 	astraCUDA::CDataGPU *subdatas = dynamic_cast<astraCUDA::CDataGPU*>(subdata->getStorage());
 	assert(subdatas);
-	MemHandle3D &subhandle = subdatas->getHandle();
 
-	assert(handle.d->arr);
-	assert(!handle.d->ptr.ptr);
-	assert(!subhandle.d->arr);
-	assert(subhandle.d->ptr.ptr);
+	assert(datas->getArray());
+	assert(!subdatas->getArray());
 
 	ASTRA_DEBUG("Copying %d x %d x %d into GPU array", pos.subnx, pos.subny, pos.subnz);
 	ASTRA_DEBUG("Offset %d,%d,%d", pos.subx, pos.suby, pos.subz);
-	ASTRA_DEBUG("Pitch %zu, xsize %zu, ysize %zu", subhandle.d->ptr.pitch, subhandle.d->ptr.xsize, subhandle.d->ptr.ysize);
+	ASTRA_DEBUG("Pitch %zu, xsize %zu, ysize %zu", subdatas->getPtr().pitch, subdatas->getPtr().xsize, subdatas->getPtr().ysize);
 
 	cudaMemcpy3DParms p;
 	p.srcArray = 0;
 	p.srcPos = make_cudaPos(0, 0, 0);
-	p.srcPtr = subhandle.d->ptr;
+	p.srcPtr = subdatas->getPtr();
 
-	p.dstArray = handle.d->arr;
+	p.dstArray = datas->getArray();
 	p.dstPos = make_cudaPos(pos.subx, pos.suby, pos.subz);
 	p.dstPtr.ptr = 0;
 

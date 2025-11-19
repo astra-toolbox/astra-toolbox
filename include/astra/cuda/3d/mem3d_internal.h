@@ -31,37 +31,31 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/Data.h"
 #include "astra/cuda/3d/mem3d.h"
 
-
-namespace astraCUDA3d {
-
-struct SMemHandle3D_internal;
-
-struct MemHandle3D {
-	std::shared_ptr<SMemHandle3D_internal> d;
-	operator bool() const { return (bool)d; }
-};
-
-}
-
 namespace astraCUDA {
 
 
+// TODO: Turn CDataGPU wrapping cudaArray into separate type
 class _AstraExport CDataGPU : public astra::CDataStorage {
 
 protected:
-	/** Handle for the memory block */
-	astraCUDA3d::MemHandle3D m_hnd;
-	CDataGPU() { }
+	cudaPitchedPtr ptr;
+	cudaArray *arr;
+
+	CDataGPU() : arr(nullptr) { ptr.ptr = nullptr; }
 
 public:
 
-	CDataGPU(astraCUDA3d::MemHandle3D hnd) : m_hnd(hnd) { }
+	CDataGPU(cudaPitchedPtr _ptr) : ptr(_ptr), arr(nullptr)  { }
+	CDataGPU(cudaArray *_arr) : arr(_arr)  { ptr.ptr = nullptr; }
 
 	virtual bool isMemory() const { return false; }
 	virtual bool isGPU() const { return true; }
 	virtual bool isFloat32() const { return true; } // TODO
 
-	astraCUDA3d::MemHandle3D& getHandle() { return m_hnd; }
+	// The CUDA API isn't very const-friendly, so these functions drop
+	// consts from the pointers.
+	cudaArray* getArray() const { return const_cast<cudaArray*>(arr); }
+	cudaPitchedPtr getPtr() const { return ptr; }
 
 };
 

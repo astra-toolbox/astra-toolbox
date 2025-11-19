@@ -41,16 +41,6 @@ class CDataStorage;
 }
 
 
-// MemHandle3D defines a very basic opaque interface to GPU memory pointers.
-// Its intended use is allowing ASTRA code to pass around GPU pointers without
-// requiring CUDA headers.
-//
-// It generally wraps CUDA linear global memory.
-//
-// As a very basic extension, it also allows wrapping a CUDA 3D array.
-// This extension (only) allows creating a CUDA 3D array, copying projection
-// data into it, performing a BP from the array, and freeing the array.
-
 namespace astraCUDA3d {
 
 struct SSubDimensions3D {

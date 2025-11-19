@@ -54,8 +54,10 @@ CDataStorageDLPackGPU<DLT>::CDataStorageDLPackGPU(DLT *tensor_m)
 	data += tensor->byte_offset;
 	unsigned int pitch = tensor->shape[2];
 
-	CDataStorage *s = astraCUDA3d::wrapHandle(reinterpret_cast<float*>(data), tensor->shape[2], tensor->shape[1], tensor->shape[0], pitch);
-	m_hnd = dynamic_cast<CDataGPU*>(s)->getHandle();
+	ptr.ptr = data;
+	ptr.xsize = sizeof(float) * tensor->shape[2];
+	ptr.pitch = sizeof(float) * pitch;
+	ptr.ysize = tensor->shape[1];
 }
 
 

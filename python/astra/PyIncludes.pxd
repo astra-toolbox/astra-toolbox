@@ -164,10 +164,6 @@ IF HAVE_CUDA==True:
         cdef cppclass CCudaProjector2D
 
     cdef extern from "astra/Data3D.h" namespace "astraCUDA3d":
-        cdef cppclass MemHandle3D:
-            pass
-
-    cdef extern from "astra/Data3D.h" namespace "astraCUDA3d":
         cdef CDataStorage* wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch)
 
 
