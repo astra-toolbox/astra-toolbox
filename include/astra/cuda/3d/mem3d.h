@@ -35,6 +35,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 namespace astra {
 class CVolumeGeometry3D;
 class CProjectionGeometry3D;
+class CFloat32VolumeData3D;
+class CFloat32ProjectionData3D;
 struct SFilterConfig;
 class CData3D;
 class CDataStorage;
@@ -94,11 +96,11 @@ bool setGPUIndex(int index);
 bool copyIntoArray(astra::CData3D *data, astra::CData3D *subdata, const SSubDimensions3D &pos);
 
 
-bool FP(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData, const astra::CVolumeGeometry3D* pVolGeom, astra::CData3D *volData, int iDetectorSuperSampling, astra::Cuda3DProjectionKernel projKernel);
+bool FP(astra::CFloat32ProjectionData3D *projData, const astra::CFloat32VolumeData3D *volData, int iDetectorSuperSampling, astra::Cuda3DProjectionKernel projKernel);
 
-bool BP(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData, const astra::CVolumeGeometry3D* pVolGeom, astra::CData3D *volData, int iVoxelSuperSampling, astra::Cuda3DProjectionKernel projKernel);
+bool BP(const astra::CFloat32ProjectionData3D *projData, astra::CFloat32VolumeData3D *volData, int iVoxelSuperSampling, astra::Cuda3DProjectionKernel projKernel);
 
-bool FDK(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData, const astra::CVolumeGeometry3D* pVolGeom, astra::CData3D *volData, bool bShortScan, const astra::SFilterConfig &filterConfig, float fOutputScale = 1.0f);
+bool FDK(astra::CFloat32ProjectionData3D *projData, astra::CFloat32VolumeData3D *volData, bool bShortScan, const astra::SFilterConfig &filterConfig, float fOutputScale = 1.0f);
 
 }
 

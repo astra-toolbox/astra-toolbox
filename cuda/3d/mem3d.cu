@@ -203,13 +203,15 @@ bool copyFromGPUMemory(astra::CData3D *dst, const astra::CData3D *src, const SSu
 }
 
 
-bool FP(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData, const astra::CVolumeGeometry3D* pVolGeom, astra::CData3D *volData, int iDetectorSuperSampling, astra::Cuda3DProjectionKernel projKernel)
+bool FP(astra::CFloat32ProjectionData3D *projData, const astra::CFloat32VolumeData3D *volData, int iDetectorSuperSampling, astra::Cuda3DProjectionKernel projKernel)
 {
 	astraCUDA::CDataGPU *projs = dynamic_cast<astraCUDA::CDataGPU*>(projData->getStorage());
 	assert(projs);
+	const astra::CProjectionGeometry3D &pProjGeom = projData->getGeometry();
 
-	astraCUDA::CDataGPU *vols = dynamic_cast<astraCUDA::CDataGPU*>(volData->getStorage());
+	const astraCUDA::CDataGPU *vols = dynamic_cast<const astraCUDA::CDataGPU*>(volData->getStorage());
 	assert(vols);
+	const astra::CVolumeGeometry3D &pVolGeom = volData->getGeometry();
 
 	assert(!projs->getArray());
 	assert(!vols->getArray());
@@ -220,7 +222,7 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData,
 	if (iDetectorSuperSampling == 0)
 		return false;
 
-	auto res = astra::convertAstraGeometry(pVolGeom, pProjGeom);
+	auto res = astra::convertAstraGeometry(&pVolGeom, &pProjGeom);
 	params.volScale = res.getVolScale();
 
 	bool ok = true;
@@ -268,13 +270,15 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData,
 	return ok;
 }
 
-bool BP(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData, const astra::CVolumeGeometry3D* pVolGeom, astra::CData3D *volData, int iVoxelSuperSampling, astra::Cuda3DProjectionKernel projKernel)
+bool BP(const astra::CFloat32ProjectionData3D *projData, astra::CFloat32VolumeData3D *volData, int iVoxelSuperSampling, astra::Cuda3DProjectionKernel projKernel)
 {
-	astraCUDA::CDataGPU *projs = dynamic_cast<astraCUDA::CDataGPU*>(projData->getStorage());
+	const astraCUDA::CDataGPU *projs = dynamic_cast<const astraCUDA::CDataGPU*>(projData->getStorage());
 	assert(projs);
+	const astra::CProjectionGeometry3D &pProjGeom = projData->getGeometry();
 
 	astraCUDA::CDataGPU *vols = dynamic_cast<astraCUDA::CDataGPU*>(volData->getStorage());
 	assert(vols);
+	const astra::CVolumeGeometry3D &pVolGeom = volData->getGeometry();
 
 	assert(!vols->getArray());
 	SProjectorParams3D params;
@@ -282,7 +286,7 @@ bool BP(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData,
 
 	params.iRaysPerVoxelDim = iVoxelSuperSampling;
 
-	auto res = astra::convertAstraGeometry(pVolGeom, pProjGeom);
+	auto res = astra::convertAstraGeometry(&pVolGeom, &pProjGeom);
 	params.volScale = res.getVolScale();
 
 	bool ok = true;
@@ -338,13 +342,15 @@ bool BP(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData,
 
 }
 
-bool FDK(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData, const astra::CVolumeGeometry3D* pVolGeom, astra::CData3D *volData, bool bShortScan, const astra::SFilterConfig &filterConfig, float fOutputScale)
+bool FDK(astra::CFloat32ProjectionData3D *projData, astra::CFloat32VolumeData3D *volData, bool bShortScan, const astra::SFilterConfig &filterConfig, float fOutputScale)
 {
 	astraCUDA::CDataGPU *projs = dynamic_cast<astraCUDA::CDataGPU*>(projData->getStorage());
 	assert(projs);
+	const astra::CProjectionGeometry3D &pProjGeom = projData->getGeometry();
 
 	astraCUDA::CDataGPU *vols = dynamic_cast<astraCUDA::CDataGPU*>(volData->getStorage());
 	assert(vols);
+	const astra::CVolumeGeometry3D &pVolGeom = volData->getGeometry();
 
 
 
@@ -354,7 +360,7 @@ bool FDK(const astra::CProjectionGeometry3D* pProjGeom, astra::CData3D *projData
 	params.fOutputScale = fOutputScale;
 	params.projKernel = ker3d_fdk_weighting;
 
-	astra::Geometry3DParameters res = astra::convertAstraGeometry(pVolGeom, pProjGeom);
+	astra::Geometry3DParameters res = astra::convertAstraGeometry(&pVolGeom, &pProjGeom);
 	params.volScale = res.getVolScale();
 
 	if (!res.isCone())
