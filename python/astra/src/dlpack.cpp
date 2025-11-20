@@ -102,10 +102,7 @@ CDataStorageDLPackGPU<DLT>::CDataStorageDLPackGPU(DLT *tensor_m)
 
 	uint8_t* data = static_cast<uint8_t*>(tensor->data);
 	data += tensor->byte_offset;
-
-	unsigned int pitch = tensor->shape[0];
-	if (tensor->strides)
-		pitch = tensor->strides[1];
+	unsigned int pitch = tensor->shape[2];
 
 	m_hnd = astraCUDA3d::wrapHandle(reinterpret_cast<float*>(data), tensor->shape[2], tensor->shape[1], tensor->shape[0], pitch);
 }
@@ -123,7 +120,7 @@ CDataStorageDLPackGPU<DLT>::~CDataStorageDLPackGPU()
 #endif
 
 
-static bool isContiguous(DLTensor *tensor, bool allowPitch)
+static bool isContiguous(DLTensor *tensor)
 {
 	if (!tensor->strides)
 		return true;
@@ -140,18 +137,13 @@ static bool isContiguous(DLTensor *tensor, bool allowPitch)
 	for (int i = non_singleton_dims.size() - 1; i >= 0; --i) {
 		if (non_singleton_strides[i] != accumulator)
 			return false;
-		if (allowPitch && i == non_singleton_dims.size()-1)
-			// Accept non-contiguous second-to-last non-singular dimension,
-			// since such data can be represented using cudaPitchedPtr
-			accumulator *= non_singleton_strides[i-1];
-		else
-			accumulator *= non_singleton_dims[i];
+		accumulator *= non_singleton_dims[i];
 	}
 	return true;
 }
 
 
-bool checkDLTensor(DLTensor *tensor, std::array<int, 3> dims, bool allowPitch, std::string &error)
+bool checkDLTensor(DLTensor *tensor, std::array<int, 3> dims, std::string &error)
 {
 	// data type
 	if (tensor->dtype.code != kDLFloat || tensor->dtype.bits != 32)
@@ -177,7 +169,7 @@ bool checkDLTensor(DLTensor *tensor, std::array<int, 3> dims, bool allowPitch, s
 		return false;
 	}
 
-	if (!isContiguous(tensor, allowPitch)) {
+	if (!isContiguous(tensor)) {
 		error = "Data must be contiguous";
 		return false;
 	}
@@ -195,13 +187,13 @@ astra::CDataStorage *getDLTensorStorage(DLT *tensor_m, std::array<int, 3> dims, 
 	switch (tensor->device.device_type) {
 	case kDLCPU:
 	case kDLCUDAHost:
-		if (!checkDLTensor(tensor, dims, false, error))
+		if (!checkDLTensor(tensor, dims, error))
 			return nullptr;
 		return new CDataStorageDLPackCPU(tensor_m);
 #ifdef ASTRA_CUDA
 	case kDLCUDA:
 	case kDLCUDAManaged:
-		if (!checkDLTensor(tensor, dims, true, error))
+		if (!checkDLTensor(tensor, dims, error))
 			return nullptr;
 		return new CDataStorageDLPackGPU(tensor_m);
 #endif
