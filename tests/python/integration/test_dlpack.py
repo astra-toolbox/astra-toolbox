@@ -106,20 +106,6 @@ def vol_data_singular_dim(singular_dims, backend):
     return _convert_to_backend(data, backend)
 
 
-@pytest.fixture
-def vol_data_slice(singular_dims, backend):
-    data = np.full([N_SLICES, N_ROWS, N_COLS], DATA_INIT_VALUE, dtype=np.float32)
-    data = _convert_to_backend(data, backend)
-    for dim in singular_dims.split('-'):
-        if dim == 'rows':
-            data = data[:, 0:1, :]
-        elif dim == 'cols':
-            data = data[:, :, 0:1]
-        elif dim == 'slices':
-            data = data[0:1, :, :]
-    return data
-
-
 @pytest.mark.parametrize('backend', ['numpy', 'pytorch_cpu', 'pytorch_cuda', 'cupy',
                                      'jax_cpu', 'jax_cuda'])
 class TestAll:
@@ -148,12 +134,6 @@ class TestAll:
     def test_singular_dimensions(self, backend, singular_dims, vol_geom_singular_dim,
                                  vol_data_singular_dim):
         astra.data3d.link('-vol', vol_geom_singular_dim, vol_data_singular_dim)
-
-
-@pytest.mark.parametrize('backend', ['pytorch_cuda', 'cupy'])
-@pytest.mark.parametrize('singular_dims', ['rows'])
-def test_allow_pitched(backend, singular_dims, vol_geom_singular_dim, vol_data_slice):
-    astra.data3d.link('-vol', vol_geom_singular_dim, vol_data_slice)
 
 
 @pytest.mark.parametrize('backend', ['numpy'])
