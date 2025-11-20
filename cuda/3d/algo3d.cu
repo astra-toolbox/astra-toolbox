@@ -51,9 +51,9 @@ ReconAlgo3D::~ReconAlgo3D()
 
 }
 
-bool ReconAlgo3D::setGeometry(const SDimensions3D& _dims, const astra::Geometry3DParameters& _projs, const SProjectorParams3D& _params)
+bool ReconAlgo3D::setGeometry(const astra::Geometry3DParameters& _projs, const SProjectorParams3D& _params)
 {
-	dims = _dims;
+	dims = _projs.getDims();
 	params = _params;
 	projs = _projs;
 

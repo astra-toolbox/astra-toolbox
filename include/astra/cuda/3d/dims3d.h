@@ -52,7 +52,7 @@ enum Cuda3DProjectionKernel {
 
 struct SProjectorParams3D {
 	SProjectorParams3D() :
-        volScale(), 
+	    volScale(),
 	    iRaysPerDetDim(1), iRaysPerVoxelDim(1),
 	    fOutputScale(1.0f),
 	    projKernel(ker3d_default)

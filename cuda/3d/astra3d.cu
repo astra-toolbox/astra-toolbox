@@ -132,12 +132,8 @@ bool AstraSIRT3d::setGeometry(const CVolumeGeometry3D* pVolGeom,
 	if (pData->initialized)
 		return false;
 
-	bool ok = astra::convertAstraGeometry_dims(pVolGeom, pProjGeom, pData->dims);
-
-	if (!ok)
-		return false;
-
-	pData->projs = astra::convertAstraGeometry(pVolGeom, pProjGeom, pData->params.volScale);
+	pData->projs = astra::convertAstraGeometry(pVolGeom, pProjGeom);
+	pData->params.volScale = pData->projs.getVolScale();
 
 	if (!pData->projs.isValid())
 		return false;
@@ -212,12 +208,7 @@ bool AstraSIRT3d::init()
 	if (pData->initialized)
 		return false;
 
-	if (pData->dims.iVolX == 0 || pData->dims.iProjAngles == 0)
-		return false;
-
-	bool ok;
-
-	ok = pData->sirt.setGeometry(pData->dims, pData->projs, pData->params);
+	bool ok = pData->sirt.setGeometry(pData->projs, pData->params);
 	if (!ok)
 		return false;
 
@@ -227,12 +218,12 @@ bool AstraSIRT3d::init()
 	if (!ok)
 		return false;
 
-	pData->D_volumeData = allocateVolumeData(pData->dims);
+	pData->D_volumeData = allocateVolumeData(pData->projs.getDims());
 	ok = pData->D_volumeData.ptr;
 	if (!ok)
 		return false;
 
-	pData->D_projData = allocateProjectionData(pData->dims);
+	pData->D_projData = allocateProjectionData(pData->projs.getDims());
 	ok = pData->D_projData.ptr;
 	if (!ok) {
 		cudaFree(pData->D_volumeData.ptr);
@@ -241,7 +232,7 @@ bool AstraSIRT3d::init()
 	}
 
 	if (pData->useVolumeMask) {
-		pData->D_maskData = allocateVolumeData(pData->dims);
+		pData->D_maskData = allocateVolumeData(pData->projs.getDims());
 		ok = pData->D_maskData.ptr;
 		if (!ok) {
 			cudaFree(pData->D_volumeData.ptr);
@@ -253,7 +244,7 @@ bool AstraSIRT3d::init()
 	}
 
 	if (pData->useSinogramMask) {
-		pData->D_smaskData = allocateProjectionData(pData->dims);
+		pData->D_smaskData = allocateProjectionData(pData->projs.getDims());
 		ok = pData->D_smaskData.ptr;
 		if (!ok) {
 			cudaFree(pData->D_volumeData.ptr);
@@ -293,7 +284,7 @@ bool AstraSIRT3d::setSinogram(const float* pfSinogram,
 	if (!pfSinogram)
 		return false;
 
-	bool ok = copyProjectionsToDevice(pfSinogram, pData->D_projData, pData->dims, iSinogramPitch);
+	bool ok = copyProjectionsToDevice(pfSinogram, pData->D_projData, pData->projs.getDims(), iSinogramPitch);
 
 	if (!ok)
 		return false;
@@ -317,7 +308,7 @@ bool AstraSIRT3d::setVolumeMask(const float* pfMask, unsigned int iMaskPitch)
 		return false;
 
 	bool ok = copyVolumeToDevice(pfMask, pData->D_maskData,
-	                             pData->dims, iMaskPitch);
+	                             pData->projs.getDims(), iMaskPitch);
 	if (!ok)
 		return false;
 
@@ -337,7 +328,7 @@ bool AstraSIRT3d::setSinogramMask(const float* pfMask, unsigned int iMaskPitch)
 	if (!pfMask)
 		return false;
 
-	bool ok = copyProjectionsToDevice(pfMask, pData->D_smaskData, pData->dims, iMaskPitch);
+	bool ok = copyProjectionsToDevice(pfMask, pData->D_smaskData, pData->projs.getDims(), iMaskPitch);
 
 	if (!ok)
 		return false;
@@ -358,7 +349,7 @@ bool AstraSIRT3d::setStartReconstruction(const float* pfReconstruction,
 		return false;
 
 	bool ok = copyVolumeToDevice(pfReconstruction, pData->D_volumeData,
-	                             pData->dims, iReconstructionPitch);
+	                             pData->projs.getDims(), iReconstructionPitch);
 	if (!ok)
 		return false;
 
@@ -373,7 +364,7 @@ bool AstraSIRT3d::iterate(unsigned int iIterations)
 		return false;
 
 	if (!pData->setStartReconstruction)
-		zeroVolumeData(pData->D_volumeData, pData->dims);
+		zeroVolumeData(pData->D_volumeData, pData->projs.getDims());
 
 	bool ok = pData->sirt.iterate(iIterations);
 	if (!ok)
@@ -389,7 +380,7 @@ bool AstraSIRT3d::getReconstruction(float* pfReconstruction,
 		return false;
 
 	bool ok = copyVolumeFromDevice(pfReconstruction, pData->D_volumeData,
-	                               pData->dims, iReconstructionPitch);
+	                               pData->projs.getDims(), iReconstructionPitch);
 	if (!ok)
 		return false;
 
@@ -409,7 +400,6 @@ float AstraSIRT3d::computeDiffNorm()
 
 class AstraCGLS3d_internal {
 public:
-	SDimensions3D dims;
 	SProjectorParams3D params;
 
 	float* angles;
@@ -442,13 +432,6 @@ AstraCGLS3d::AstraCGLS3d()
 	pData->D_volumeData.ptr = 0;
 	pData->D_maskData.ptr = 0;
 	pData->D_smaskData.ptr = 0;
-
-	pData->dims.iVolX = 0;
-	pData->dims.iVolY = 0;
-	pData->dims.iVolZ = 0;
-	pData->dims.iProjAngles = 0;
-	pData->dims.iProjU = 0;
-	pData->dims.iProjV = 0;
 
 	pData->initialized = false;
 	pData->setStartReconstruction = false;
@@ -484,12 +467,8 @@ bool AstraCGLS3d::setGeometry(const CVolumeGeometry3D* pVolGeom,
 	if (pData->initialized)
 		return false;
 
-	bool ok = astra::convertAstraGeometry_dims(pVolGeom, pProjGeom, pData->dims);
-
-	if (!ok)
-		return false;
-
-	pData->projs = astra::convertAstraGeometry(pVolGeom, pProjGeom, pData->params.volScale);
+	pData->projs = astra::convertAstraGeometry(pVolGeom, pProjGeom);
+	pData->params.volScale = pData->projs.getVolScale();
 
 	if (!pData->projs.isValid())
 		return false;
@@ -555,12 +534,9 @@ bool AstraCGLS3d::init()
 	if (pData->initialized)
 		return false;
 
-	if (pData->dims.iVolX == 0 || pData->dims.iProjAngles == 0)
-		return false;
-
 	bool ok;
 
-	ok = pData->cgls.setGeometry(pData->dims, pData->projs, pData->params);
+	ok = pData->cgls.setGeometry(pData->projs, pData->params);
 	if (!ok)
 		return false;
 
@@ -568,12 +544,12 @@ bool AstraCGLS3d::init()
 	if (!ok)
 		return false;
 
-	pData->D_volumeData = allocateVolumeData(pData->dims);
+	pData->D_volumeData = allocateVolumeData(pData->projs.getDims());
 	ok = pData->D_volumeData.ptr;
 	if (!ok)
 		return false;
 
-	pData->D_projData = allocateProjectionData(pData->dims);
+	pData->D_projData = allocateProjectionData(pData->projs.getDims());
 	ok = pData->D_projData.ptr;
 	if (!ok) {
 		cudaFree(pData->D_volumeData.ptr);
@@ -582,7 +558,7 @@ bool AstraCGLS3d::init()
 	}
 
 	if (pData->useVolumeMask) {
-		pData->D_maskData = allocateVolumeData(pData->dims);
+		pData->D_maskData = allocateVolumeData(pData->projs.getDims());
 		ok = pData->D_maskData.ptr;
 		if (!ok) {
 			cudaFree(pData->D_volumeData.ptr);
@@ -594,7 +570,7 @@ bool AstraCGLS3d::init()
 	}
 
 	if (pData->useSinogramMask) {
-		pData->D_smaskData = allocateProjectionData(pData->dims);
+		pData->D_smaskData = allocateProjectionData(pData->projs.getDims());
 		ok = pData->D_smaskData.ptr;
 		if (!ok) {
 			cudaFree(pData->D_volumeData.ptr);
@@ -636,7 +612,7 @@ bool AstraCGLS3d::setSinogram(const float* pfSinogram,
 	if (!pfSinogram)
 		return false;
 
-	bool ok = copyProjectionsToDevice(pfSinogram, pData->D_projData, pData->dims, iSinogramPitch);
+	bool ok = copyProjectionsToDevice(pfSinogram, pData->D_projData, pData->projs.getDims(), iSinogramPitch);
 
 	if (!ok)
 		return false;
@@ -660,7 +636,7 @@ bool AstraCGLS3d::setVolumeMask(const float* pfMask, unsigned int iMaskPitch)
 		return false;
 
 	bool ok = copyVolumeToDevice(pfMask, pData->D_maskData,
-	                             pData->dims, iMaskPitch);
+	                             pData->projs.getDims(), iMaskPitch);
 	if (!ok)
 		return false;
 
@@ -681,7 +657,7 @@ bool AstraCGLS3d::setSinogramMask(const float* pfMask, unsigned int iMaskPitch)
 	if (!pfMask)
 		return false;
 
-	bool ok = copyProjectionsToDevice(pfMask, pData->D_smaskData, pData->dims, iMaskPitch);
+	bool ok = copyProjectionsToDevice(pfMask, pData->D_smaskData, pData->projs.getDims(), iMaskPitch);
 
 	if (!ok)
 		return false;
@@ -703,7 +679,7 @@ bool AstraCGLS3d::setStartReconstruction(const float* pfReconstruction,
 		return false;
 
 	bool ok = copyVolumeToDevice(pfReconstruction, pData->D_volumeData,
-	                             pData->dims, iReconstructionPitch);
+	                             pData->projs.getDims(), iReconstructionPitch);
 	if (!ok)
 		return false;
 
@@ -718,7 +694,7 @@ bool AstraCGLS3d::iterate(unsigned int iIterations)
 		return false;
 
 	if (!pData->setStartReconstruction)
-		zeroVolumeData(pData->D_volumeData, pData->dims);
+		zeroVolumeData(pData->D_volumeData, pData->projs.getDims());
 
 	bool ok = pData->cgls.iterate(iIterations);
 	if (!ok)
@@ -734,7 +710,7 @@ bool AstraCGLS3d::getReconstruction(float* pfReconstruction,
 		return false;
 
 	bool ok = copyVolumeFromDevice(pfReconstruction, pData->D_volumeData,
-	                               pData->dims, iReconstructionPitch);
+	                               pData->projs.getDims(), iReconstructionPitch);
 	if (!ok)
 		return false;
 
@@ -757,20 +733,15 @@ bool astraCudaFP(const float* pfVolume, float* pfProjections,
                  int iGPUIndex, int iDetectorSuperSampling,
                  Cuda3DProjectionKernel projKernel)
 {
-	SDimensions3D dims;
 	SProjectorParams3D params;
 
 	params.iRaysPerDetDim = iDetectorSuperSampling;
 
-	bool ok = astra::convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
-	if (!ok)
-		return false;
-
 	if (iDetectorSuperSampling == 0)
 		return false;
 
-	Geometry3DParameters projs = astra::convertAstraGeometry(pVolGeom, pProjGeom,
-	                                                  params.volScale);
+	Geometry3DParameters projs = astra::convertAstraGeometry(pVolGeom, pProjGeom);
+	params.volScale = projs.getVolScale();
 
 
 	if (iGPUIndex != -1) {
@@ -783,21 +754,21 @@ bool astraCudaFP(const float* pfVolume, float* pfProjections,
 	}
 
 
-	cudaPitchedPtr D_volumeData = allocateVolumeData(dims);
-	ok = D_volumeData.ptr;
+	cudaPitchedPtr D_volumeData = allocateVolumeData(projs.getDims());
+	bool ok = D_volumeData.ptr;
 	if (!ok)
 		return false;
 
-	cudaPitchedPtr D_projData = allocateProjectionData(dims);
+	cudaPitchedPtr D_projData = allocateProjectionData(projs.getDims());
 	ok = D_projData.ptr;
 	if (!ok) {
 		cudaFree(D_volumeData.ptr);
 		return false;
 	}
 
-	ok &= copyVolumeToDevice(pfVolume, D_volumeData, dims, dims.iVolX);
+	ok &= copyVolumeToDevice(pfVolume, D_volumeData, projs.getDims(), projs.getDims().iVolX);
 
-	ok &= zeroProjectionData(D_projData, dims);
+	ok &= zeroProjectionData(D_projData, projs.getDims());
 
 	if (!ok) {
 		cudaFree(D_volumeData.ptr);
@@ -808,10 +779,10 @@ bool astraCudaFP(const float* pfVolume, float* pfProjections,
 	if (projs.isParallel()) {
 		switch (projKernel) {
 		case ker3d_default:
-			ok &= Par3DFP(D_volumeData, D_projData, dims, projs.getParallel(), params);
+			ok &= Par3DFP(D_volumeData, D_projData, projs.getDims(), projs.getParallel(), params);
 			break;
 		case ker3d_sum_square_weights:
-			ok &= Par3DFP_SumSqW(D_volumeData, D_projData, dims, projs.getParallel(), params);
+			ok &= Par3DFP_SumSqW(D_volumeData, D_projData, projs.getDims(), projs.getParallel(), params);
 			break;
 		default:
 			ok = false;
@@ -819,7 +790,7 @@ bool astraCudaFP(const float* pfVolume, float* pfProjections,
 	} else if (projs.isCone()) {
 		switch (projKernel) {
 		case ker3d_default:
-			ok &= ConeFP(D_volumeData, D_projData, dims, projs.getCone(), params);
+			ok &= ConeFP(D_volumeData, D_projData, projs.getDims(), projs.getCone(), params);
 			break;
 		default:
 			ok = false;
@@ -829,7 +800,7 @@ bool astraCudaFP(const float* pfVolume, float* pfProjections,
 	}
 
 	ok &= copyProjectionsFromDevice(pfProjections, D_projData,
-	                                dims, dims.iProjU);
+	                                projs.getDims(), projs.getDims().iProjU);
 
 
 	cudaFree(D_volumeData.ptr);
@@ -845,16 +816,12 @@ bool astraCudaBP(float* pfVolume, const float* pfProjections,
                  const CProjectionGeometry3D* pProjGeom,
                  int iGPUIndex, int iVoxelSuperSampling)
 {
-	SDimensions3D dims;
 	SProjectorParams3D params;
 
 	params.iRaysPerVoxelDim = iVoxelSuperSampling;
 
-	bool ok = astra::convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
-	if (!ok)
-		return false;
-
-	Geometry3DParameters projs = astra::convertAstraGeometry(pVolGeom, pProjGeom, params.volScale);
+	Geometry3DParameters projs = astra::convertAstraGeometry(pVolGeom, pProjGeom);
+	params.volScale = projs.getVolScale();
 
 	if (!projs.isValid())
 		return false;
@@ -869,12 +836,12 @@ bool astraCudaBP(float* pfVolume, const float* pfProjections,
 	}
 
 
-	cudaPitchedPtr D_volumeData = allocateVolumeData(dims);
-	ok = D_volumeData.ptr;
+	cudaPitchedPtr D_volumeData = allocateVolumeData(projs.getDims());
+	bool ok = D_volumeData.ptr;
 	if (!ok)
 		return false;
 
-	cudaPitchedPtr D_projData = allocateProjectionData(dims);
+	cudaPitchedPtr D_projData = allocateProjectionData(projs.getDims());
 	ok = D_projData.ptr;
 	if (!ok) {
 		cudaFree(D_volumeData.ptr);
@@ -882,9 +849,9 @@ bool astraCudaBP(float* pfVolume, const float* pfProjections,
 	}
 
 	ok &= copyProjectionsToDevice(pfProjections, D_projData,
-	                              dims, dims.iProjU);
+	                              projs.getDims(), projs.getDims().iProjU);
 
-	ok &= zeroVolumeData(D_volumeData, dims);
+	ok &= zeroVolumeData(D_volumeData, projs.getDims());
 
 	if (!ok) {
 		cudaFree(D_volumeData.ptr);
@@ -893,13 +860,13 @@ bool astraCudaBP(float* pfVolume, const float* pfProjections,
 	}
 
 	if (projs.isParallel())
-		ok &= Par3DBP(D_volumeData, D_projData, dims, projs.getParallel(), params);
+		ok &= Par3DBP(D_volumeData, D_projData, projs.getDims(), projs.getParallel(), params);
 	else if (projs.isCone())
-		ok &= ConeBP(D_volumeData, D_projData, dims, projs.getCone(), params);
+		ok &= ConeBP(D_volumeData, D_projData, projs.getDims(), projs.getCone(), params);
 	else
 		ok = false;
 
-	ok &= copyVolumeFromDevice(pfVolume, D_volumeData, dims, dims.iVolX);
+	ok &= copyVolumeFromDevice(pfVolume, D_volumeData, projs.getDims(), projs.getDims().iVolX);
 
 	cudaFree(D_volumeData.ptr);
 	cudaFree(D_projData.ptr);
@@ -918,17 +885,12 @@ bool astraCudaBP_SIRTWeighted(float* pfVolume,
                       const CProjectionGeometry3D* pProjGeom,
                       int iGPUIndex, int iVoxelSuperSampling)
 {
-	SDimensions3D dims;
 	SProjectorParams3D params;
 
 	params.iRaysPerVoxelDim = iVoxelSuperSampling;
 
-	bool ok = astra::convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
-	if (!ok)
-		return false;
-
-
-	Geometry3DParameters projs = astra::convertAstraGeometry(pVolGeom, pProjGeom, params.volScale);
+	Geometry3DParameters projs = astra::convertAstraGeometry(pVolGeom, pProjGeom);
+	params.volScale = projs.getVolScale();
 
 	if (!projs.isValid())
 		return false;
@@ -943,19 +905,19 @@ bool astraCudaBP_SIRTWeighted(float* pfVolume,
 	}
 
 
-	cudaPitchedPtr D_pixelWeight = allocateVolumeData(dims);
-	ok = D_pixelWeight.ptr;
+	cudaPitchedPtr D_pixelWeight = allocateVolumeData(projs.getDims());
+	bool ok = D_pixelWeight.ptr;
 	if (!ok)
 		return false;
 
-	cudaPitchedPtr D_volumeData = allocateVolumeData(dims);
+	cudaPitchedPtr D_volumeData = allocateVolumeData(projs.getDims());
 	ok = D_volumeData.ptr;
 	if (!ok) {
 		cudaFree(D_pixelWeight.ptr);
 		return false;
 	}
 
-	cudaPitchedPtr D_projData = allocateProjectionData(dims);
+	cudaPitchedPtr D_projData = allocateProjectionData(projs.getDims());
 	ok = D_projData.ptr;
 	if (!ok) {
 		cudaFree(D_pixelWeight.ptr);
@@ -964,17 +926,17 @@ bool astraCudaBP_SIRTWeighted(float* pfVolume,
 	}
 
 	// Compute weights
-	ok &= zeroVolumeData(D_pixelWeight, dims);
-	ok &= processSino3D<opSet>(D_projData, 1.0f, dims);
+	ok &= zeroVolumeData(D_pixelWeight, projs.getDims());
+	ok &= processSino3D<opSet>(D_projData, 1.0f, projs.getDims());
 
 	if (projs.isParallel())
-		ok &= Par3DBP(D_pixelWeight, D_projData, dims, projs.getParallel(), params);
+		ok &= Par3DBP(D_pixelWeight, D_projData, projs.getDims(), projs.getParallel(), params);
 	else if (projs.isCone())
-		ok &= ConeBP(D_pixelWeight, D_projData, dims, projs.getCone(), params);
+		ok &= ConeBP(D_pixelWeight, D_projData, projs.getDims(), projs.getCone(), params);
 	else
 		ok = false;
 
-	ok &= processVol3D<opInvert>(D_pixelWeight, dims);
+	ok &= processVol3D<opInvert>(D_pixelWeight, projs.getDims());
 	if (!ok) {
 		cudaFree(D_pixelWeight.ptr);
 		cudaFree(D_volumeData.ptr);
@@ -983,21 +945,21 @@ bool astraCudaBP_SIRTWeighted(float* pfVolume,
 	}
 
 	ok &= copyProjectionsToDevice(pfProjections, D_projData,
-	                              dims, dims.iProjU);
-	ok &= zeroVolumeData(D_volumeData, dims);
+	                              projs.getDims(), projs.getDims().iProjU);
+	ok &= zeroVolumeData(D_volumeData, projs.getDims());
 	// Do BP into D_volumeData
 	if (projs.isParallel())
-		ok &= Par3DBP(D_volumeData, D_projData, dims, projs.getParallel(), params);
+		ok &= Par3DBP(D_volumeData, D_projData, projs.getDims(), projs.getParallel(), params);
 	else if (projs.isCone())
-		ok &= ConeBP(D_volumeData, D_projData, dims, projs.getCone(), params);
+		ok &= ConeBP(D_volumeData, D_projData, projs.getDims(), projs.getCone(), params);
 	else
 		ok = false;
 
 	// Multiply with weights
-	ok &= processVol3D<opMul>(D_volumeData, D_pixelWeight, dims);
+	ok &= processVol3D<opMul>(D_volumeData, D_pixelWeight, projs.getDims());
 
 	// Upload previous iterate to D_pixelWeight...
-	ok &= copyVolumeToDevice(pfVolume, D_pixelWeight, dims, dims.iVolX);
+	ok &= copyVolumeToDevice(pfVolume, D_pixelWeight, projs.getDims(), projs.getDims().iVolX);
 	if (!ok) {
 		cudaFree(D_pixelWeight.ptr);
 		cudaFree(D_volumeData.ptr);
@@ -1005,10 +967,10 @@ bool astraCudaBP_SIRTWeighted(float* pfVolume,
 		return false;
 	}
 	// ...and add it to the weighted BP
-	ok &= processVol3D<opAdd>(D_volumeData, D_pixelWeight, dims);
+	ok &= processVol3D<opAdd>(D_volumeData, D_pixelWeight, projs.getDims());
 
 	// Then copy the result back
-	ok &= copyVolumeFromDevice(pfVolume, D_volumeData, dims, dims.iVolX);
+	ok &= copyVolumeFromDevice(pfVolume, D_volumeData, projs.getDims(), projs.getDims().iVolX);
 
 
 	cudaFree(D_pixelWeight.ptr);

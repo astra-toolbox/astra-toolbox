@@ -42,7 +42,7 @@ public:
 	ReconAlgo3D();
 	~ReconAlgo3D();
 
-	bool setGeometry(const SDimensions3D& dims, const astra::Geometry3DParameters &projs, const SProjectorParams3D& params);
+	bool setGeometry(const astra::Geometry3DParameters &projs, const SProjectorParams3D& params);
 
 protected:
 	bool callFP(cudaPitchedPtr& D_volumeData, 

@@ -86,8 +86,7 @@ public:
 	// Allocate GPU buffers and
 	// precompute geometry-specific data.
 	//
-	// This must be called after calling setReconstructionGeometry() and
-	// setProjectionGeometry() or setFanProjectionGeometry().
+	// This must be called after calling setGeometry()
 	bool init();
 
 	// Setup input sinogram for a slice.
@@ -199,8 +198,7 @@ public:
 	// Allocate GPU buffers and
 	// precompute geometry-specific data.
 	//
-	// This must be called after calling setReconstructionGeometry() and
-	// setProjectionGeometry() or setFanProjectionGeometry().
+	// This must be called after calling setGeometry()
 	bool init();
 
 	// Setup input sinogram for a slice.
