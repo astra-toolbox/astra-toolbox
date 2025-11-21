@@ -82,6 +82,18 @@ CDataStorageDLPackCPU<DLT>::~CDataStorageDLPackCPU()
 	m_pfData = nullptr;
 }
 
+static void getNonSingletonDims(DLTensor *tensor,
+                                std::vector<int64_t> &nonsingular_dims,
+                                std::vector<int64_t> &nonsingular_strides)
+{
+	for (int i = 0; i < tensor->ndim; ++i) {
+		if (tensor->shape[i] > 1) {
+			nonsingular_dims.push_back(tensor->shape[i]);
+			nonsingular_strides.push_back(tensor->strides[i]);
+		}
+	}
+}
+
 #ifdef ASTRA_CUDA
 template<class DLT>
 CDataStorageDLPackGPU<DLT>::CDataStorageDLPackGPU(DLT *tensor_m)
@@ -91,10 +103,7 @@ CDataStorageDLPackGPU<DLT>::CDataStorageDLPackGPU(DLT *tensor_m)
 
 	uint8_t* data = static_cast<uint8_t*>(tensor->data);
 	data += tensor->byte_offset;
-
-	unsigned int pitch = tensor->shape[0];
-	if (tensor->strides)
-		pitch = tensor->strides[1];
+	unsigned int pitch = tensor->shape[2];
 
 	m_hnd = astraCUDA3d::wrapHandle(reinterpret_cast<float*>(data), tensor->shape[2], tensor->shape[1], tensor->shape[0], pitch);
 }
@@ -112,38 +121,31 @@ CDataStorageDLPackGPU<DLT>::~CDataStorageDLPackGPU()
 #endif
 
 
-bool isContiguous(DLTensor *tensor, bool allowPitch)
+static bool isContiguous(DLTensor *tensor)
 {
 	if (!tensor->strides)
 		return true;
-	// For dimensions of size 1 the stride is not relevant, and it's optionall
-	// for tensor producers to set it to 1 as well
-	std::vector<int64_t> nonsingular_dims, nonsingular_strides;
-	for (int i = 0; i < tensor->ndim; ++i) {
-		if (tensor->shape[i] > 1) {
-			nonsingular_dims.push_back(tensor->shape[i]);
-			nonsingular_strides.push_back(tensor->strides[i]);
-		}
-	}
-	if (nonsingular_dims.size() < 2)
+
+	// Ignore singleton dimensions as they don't affect contiguity and tensor producers
+	// may optionally set their strides to 1
+	std::vector<int64_t> non_singleton_dims, non_singleton_strides;
+	getNonSingletonDims(tensor, non_singleton_dims, non_singleton_strides);
+
+	if (non_singleton_dims.size() < 2)
 		return true;
+
 	int64_t accumulator = 1;
-	for (int i = nonsingular_dims.size() - 1; i >= 0; --i) {
-		if (nonsingular_strides[i] != accumulator)
+	for (int i = non_singleton_dims.size() - 1; i >= 0; --i) {
+		if (non_singleton_strides[i] != accumulator)
 			return false;
-		if (allowPitch && i == nonsingular_dims.size()-1)
-			// Accept non-contiguous second-to-last non-singular dimension,
-			// since such data can be represented using cudaPitchedPtr
-			accumulator *= nonsingular_strides[i-1];
-		else
-			accumulator *= nonsingular_dims[i];
+		accumulator *= non_singleton_dims[i];
 	}
 	return true;
 }
 
 
 template<size_t D>
-bool checkDLTensor(DLTensor *tensor, std::array<int, D> dims, bool allowPitch, std::string &error)
+bool checkDLTensor(DLTensor *tensor, std::array<int, D> dims, std::string &error)
 {
 	// data type
 	if (tensor->dtype.code != kDLFloat || tensor->dtype.bits != 32)
@@ -183,7 +185,7 @@ bool checkDLTensor(DLTensor *tensor, std::array<int, D> dims, bool allowPitch, s
 		}
 	}
 
-	if (!isContiguous(tensor, allowPitch)) {
+	if (!isContiguous(tensor)) {
 		error = "Data must be contiguous";
 		return false;
 	}
@@ -201,13 +203,13 @@ astra::CDataStorage *getDLTensorStorage(DLT *tensor_m, std::array<int, D> dims, 
 	switch (tensor->device.device_type) {
 	case kDLCPU:
 	case kDLCUDAHost:
-		if (!checkDLTensor(tensor, dims, false, error))
+		if (!checkDLTensor(tensor, dims, error))
 			return nullptr;
 		return new CDataStorageDLPackCPU(tensor_m);
 #ifdef ASTRA_CUDA
 	case kDLCUDA:
 	case kDLCUDAManaged:
-		if (!checkDLTensor(tensor, dims, true, error))
+		if (!checkDLTensor(tensor, dims, error))
 			return nullptr;
 		return new CDataStorageDLPackGPU(tensor_m);
 #endif
