@@ -450,10 +450,8 @@
     <ClInclude Include="..\..\..\include\astra\cuda\2d\sart.h" />
     <ClInclude Include="..\..\..\include\astra\cuda\2d\sirt.h" />
     <ClInclude Include="..\..\..\include\astra\cuda\2d\util.h" />
-    <ClInclude Include="..\..\..\include\astra\cuda\3d\algo3d.h" />
     <ClInclude Include="..\..\..\include\astra\cuda\3d\arith3d.h" />
     <ClInclude Include="..\..\..\include\astra\cuda\3d\astra3d.h" />
-    <ClInclude Include="..\..\..\include\astra\cuda\3d\cgls3d.h" />
     <ClInclude Include="..\..\..\include\astra\cuda\3d\cone_bp.h" />
     <ClInclude Include="..\..\..\include\astra\cuda\3d\cone_cyl.h" />
     <ClInclude Include="..\..\..\include\astra\cuda\3d\cone_fp.h" />
@@ -464,7 +462,6 @@
     <ClInclude Include="..\..\..\include\astra\cuda\3d\mem3d_internal.h" />
     <ClInclude Include="..\..\..\include\astra\cuda\3d\par3d_bp.h" />
     <ClInclude Include="..\..\..\include\astra\cuda\3d\par3d_fp.h" />
-    <ClInclude Include="..\..\..\include\astra\cuda\3d\sirt3d.h" />
     <ClInclude Include="..\..\..\include\astra\cuda\3d\util3d.h" />
     <ClInclude Include="..\..\..\include\astra\cuda\dlpack_support.h" />
     <ClInclude Include="..\..\..\include\astra\cuda\stream.h" />
@@ -531,19 +528,11 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\cuda\3d\algo3d.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </CudaCompile>
     <CudaCompile Include="..\..\..\cuda\3d\arith3d.cu">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </CudaCompile>
     <CudaCompile Include="..\..\..\cuda\3d\astra3d.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </CudaCompile>
-    <CudaCompile Include="..\..\..\cuda\3d\cgls3d.cu">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </CudaCompile>
@@ -580,10 +569,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </CudaCompile>
     <CudaCompile Include="..\..\..\cuda\3d\par3d_fp.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </CudaCompile>
-    <CudaCompile Include="..\..\..\cuda\3d\sirt3d.cu">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </CudaCompile>

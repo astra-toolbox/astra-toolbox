@@ -139,7 +139,7 @@ CDataGPUHandler::CDataGPUHandler(const CCompositeGeometryManager::CPart &part, a
 	assert(z == _dataSource->getShape()[2]);
 
 	if (zero == astraCUDA3d::INIT_ZERO) {
-		astraCUDA3d::zeroGPUMemory(_data, x, y, z);
+		astraCUDA3d::zeroGPUMemory(_data);
 	}
 }
 bool CDataGPUHandler::copyToGPUMemory(const astraCUDA3d::SSubDimensions3D &pos) {
@@ -1146,7 +1146,7 @@ static bool doJob(const CCompositeGeometryManager::TJobSetInternal::const_iterat
 				assert(output->pData->getStorage()->isGPU());
 				assert(output->isFull()); // TODO: zero subset?
 
-				astraCUDA3d::zeroGPUMemory(output->pData, outx, outy, outz);
+				astraCUDA3d::zeroGPUMemory(output->pData);
 			}
 		}
 		return true;

@@ -202,10 +202,8 @@ P_astra["filters"]["CUDA\\cuda source"] = [
 "cuda\\2d\\sart.cu",
 "cuda\\2d\\sirt.cu",
 "cuda\\2d\\util.cu",
-"cuda\\3d\\algo3d.cu",
 "cuda\\3d\\arith3d.cu",
 "cuda\\3d\\astra3d.cu",
-"cuda\\3d\\cgls3d.cu",
 "cuda\\3d\\cone_bp.cu",
 "cuda\\3d\\cone_fp.cu",
 "cuda\\3d\\cone_cyl.cu",
@@ -215,7 +213,6 @@ P_astra["filters"]["CUDA\\cuda source"] = [
 "cuda\\3d\\mem3d.cu",
 "cuda\\3d\\par3d_bp.cu",
 "cuda\\3d\\par3d_fp.cu",
-"cuda\\3d\\sirt3d.cu",
 "cuda\\3d\\util3d.cu",
 ]
 P_astra["filters"]["Algorithms\\source"] = [
@@ -336,10 +333,8 @@ P_astra["filters"]["CUDA\\cuda headers"] = [
 "include\\astra\\cuda\\2d\\sart.h",
 "include\\astra\\cuda\\2d\\sirt.h",
 "include\\astra\\cuda\\2d\\util.h",
-"include\\astra\\cuda\\3d\\algo3d.h",
 "include\\astra\\cuda\\3d\\arith3d.h",
 "include\\astra\\cuda\\3d\\astra3d.h",
-"include\\astra\\cuda\\3d\\cgls3d.h",
 "include\\astra\\cuda\\3d\\cone_bp.h",
 "include\\astra\\cuda\\3d\\cone_fp.h",
 "include\\astra\\cuda\\3d\\cone_cyl.h",
@@ -350,7 +345,6 @@ P_astra["filters"]["CUDA\\cuda headers"] = [
 "include\\astra\\cuda\\3d\\mem3d_internal.h",
 "include\\astra\\cuda\\3d\\par3d_bp.h",
 "include\\astra\\cuda\\3d\\par3d_fp.h",
-"include\\astra\\cuda\\3d\\sirt3d.h",
 "include\\astra\\cuda\\3d\\util3d.h",
 ]
 P_astra["filters"]["Algorithms\\headers"] = [

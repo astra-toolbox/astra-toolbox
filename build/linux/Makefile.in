@@ -280,8 +280,6 @@ CUDA_OBJECTS=\
 	cuda/2d/fft.lo \
 	cuda/2d/darthelper.lo \
 	cuda/3d/darthelper3d.lo \
-	cuda/3d/algo3d.lo \
-	cuda/3d/cgls3d.lo \
 	cuda/3d/cone_fp.lo \
 	cuda/3d/cone_bp.lo \
 	cuda/3d/cone_cyl.lo \
@@ -289,7 +287,6 @@ CUDA_OBJECTS=\
 	cuda/3d/fdk.lo \
 	cuda/3d/par3d_fp.lo \
 	cuda/3d/par3d_bp.lo \
-	cuda/3d/sirt3d.lo \
 	cuda/3d/astra3d.lo \
 	cuda/3d/util3d.lo \
 	cuda/3d/arith3d.lo \

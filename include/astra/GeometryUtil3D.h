@@ -174,7 +174,7 @@ public:
 	using variant_t = std::variant<std::monostate, std::vector<SPar3DProjection>, std::vector<SConeProjection>, std::vector<SCylConeProjection> >;
 
 	Geometry3DParameters() { }
-	Geometry3DParameters(variant_t && p, SDimensions3D d, SVolScale3D vs) : projs(p), dims(d), volScale(vs) { }
+	Geometry3DParameters(variant_t && p, SDimensions3D d, SVolScale3D vs) : projs(std::move(p)), dims(d), volScale(vs) { }
 
 	bool isValid() const {
 		return !std::holds_alternative<std::monostate>(projs);

@@ -83,13 +83,18 @@ astra::CDataStorage* createProjectionArrayHandle(const float *ptr, unsigned int 
 
 astra::CDataStorage *allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Mem3DZeroMode zero);
 
+bool copyToGPUMemory(const astra::CData3D *src, astra::CData3D *dst);
 bool copyToGPUMemory(const astra::CData3D *src, astra::CData3D *dst, const SSubDimensions3D &pos);
 
+bool copyFromGPUMemory(astra::CData3D *dst, const astra::CData3D *src);
 bool copyFromGPUMemory(astra::CData3D *dst, const astra::CData3D *src, const SSubDimensions3D &pos);
+
 
 bool freeGPUMemory(astra::CData3D *data);
 
-bool zeroGPUMemory(astra::CData3D *data, unsigned int x, unsigned int y, unsigned int z);
+bool zeroGPUMemory(astra::CData3D *data);
+
+bool assignGPUMemory(astra::CData3D *dst, const astra::CData3D *src);
 
 bool setGPUIndex(int index);
 
@@ -97,10 +102,15 @@ bool copyIntoArray(astra::CData3D *data, astra::CData3D *subdata, const SSubDime
 
 
 bool FP(astra::CFloat32ProjectionData3D *projData, const astra::CFloat32VolumeData3D *volData, int iDetectorSuperSampling, astra::Cuda3DProjectionKernel projKernel);
+bool FP(astra::CData3D *projData, const astra::CData3D *volData, const astra::Geometry3DParameters &geom, SProjectorParams3D params);
 
 bool BP(const astra::CFloat32ProjectionData3D *projData, astra::CFloat32VolumeData3D *volData, int iVoxelSuperSampling, astra::Cuda3DProjectionKernel projKernel);
+bool BP(const astra::CData3D *projData, astra::CData3D *volData, const astra::Geometry3DParameters &geom, SProjectorParams3D params);
 
 bool FDK(astra::CFloat32ProjectionData3D *projData, astra::CFloat32VolumeData3D *volData, bool bShortScan, const astra::SFilterConfig &filterConfig, float fOutputScale = 1.0f);
+
+// TODO: This is currently defined in util3d, not in mem3d
+float dotProduct3D(const astra::CData3D *D_data);
 
 }
 

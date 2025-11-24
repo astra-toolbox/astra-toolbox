@@ -48,20 +48,13 @@ struct opSet;
 struct opClampMin;
 struct opClampMax;
 
-template<typename op> bool processVol3D(cudaPitchedPtr& out, const SDimensions3D& dims, const Stream &stream = Stream(automatic_sync));
-template<typename op> bool processVol3D(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims, const Stream &stream = Stream(automatic_sync));
-template<typename op> bool processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims, const Stream &stream = Stream(automatic_sync));
-template<typename op> bool processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims, const Stream &stream = Stream(automatic_sync));
-template<typename op> bool processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims, const Stream &stream = Stream(automatic_sync));
-template<typename op> bool processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims, const Stream &stream = Stream(automatic_sync));
 
-template<typename op> bool processSino3D(cudaPitchedPtr& out, const SDimensions3D& dims, const Stream &stream = Stream(automatic_sync));
-template<typename op> bool processSino3D(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims, const Stream &stream = Stream(automatic_sync));
-template<typename op> bool processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims, const Stream &stream = Stream(automatic_sync));
-template<typename op> bool processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims, const Stream &stream = Stream(automatic_sync));
-template<typename op> bool processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims, const Stream &stream = Stream(automatic_sync));
-template<typename op> bool processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims, const Stream &stream = Stream(automatic_sync));
-
+template<typename op> bool processVol3D(astra::CData3D *out, const Stream &stream = Stream(automatic_sync));
+template<typename op> bool processVol3D(astra::CData3D *out, float fParam, const Stream &stream = Stream(automatic_sync));
+template<typename op> bool processVol3D(astra::CData3D *out, const astra::CData3D *in, const Stream &stream = Stream(automatic_sync));
+template<typename op> bool processVol3D(astra::CData3D *out, const astra::CData3D *in, float fParam, const Stream &stream = Stream(automatic_sync));
+template<typename op> bool processVol3D(astra::CData3D *out, const astra::CData3D *in1, const astra::CData3D *in2, float fParam, const Stream &stream = Stream(automatic_sync));
+template<typename op> bool processVol3D(astra::CData3D *out, const astra::CData3D *in1, const astra::CData3D *in2, const Stream &stream = Stream(automatic_sync));
 
 
 }

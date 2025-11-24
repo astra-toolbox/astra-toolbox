@@ -40,8 +40,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 namespace astra {
 
-class AstraSIRT3d;
-
 /**
  * \brief
  * This class contains the 3D implementation of the SIRT (Simultaneous Iterative Reconstruction Technique) algorithm.
@@ -146,16 +144,39 @@ public:
 	virtual bool getResidualNorm(float32& _fNorm);
 
 protected:
+	void initializeFromProjector();
 
-	AstraSIRT3d* m_pSirt;
+	bool setupGeometry();
+
+	bool precomputeWeights();
+
+	bool m_bBuffersInitialized;
 
 	int m_iGPUIndex;
-	bool m_bAstraSIRTInit;
-	int m_iDetectorSuperSampling;
-	int m_iVoxelSuperSampling;
-	float m_fLambda;
 
-	void initializeFromProjector();
+	float m_fRelaxation;
+
+	// Input/output buffers (on device)
+	CData3D *D_projData;
+	CData3D *D_volData;
+
+	// Temporary buffers (on device)
+	CData3D *D_tmpProjData;
+	CData3D *D_tmpVolData;
+
+	// Geometry-specific precomputed data (on device)
+	CData3D *D_lineWeight;
+	CData3D *D_pixelWeight;
+
+	// Mask data (on device)
+	CData3D *D_projMaskData;
+	CData3D *D_volMaskData;
+
+	astraCUDA3d::SProjectorParams3D m_params;
+	Geometry3DParameters m_geometry;
+
+	bool callFP(const CData3D *D_vol, CData3D *D_proj, float fScale);
+	bool callBP(CData3D *D_vol, const CData3D *D_proj, float fScale);
 };
 
 // inline functions
