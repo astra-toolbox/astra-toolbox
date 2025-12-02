@@ -41,9 +41,9 @@ namespace astra
 //----------------------------------------------------------------------------------------
 // Default constructor. Sets all variables to zero. 
 CFanFlatVecProjectionGeometry2D::CFanFlatVecProjectionGeometry2D()
+	: m_pProjectionAngles(nullptr)
 {
-	_clear();
-	m_pProjectionAngles = 0;
+
 }
 
 //----------------------------------------------------------------------------------------
@@ -51,20 +51,21 @@ CFanFlatVecProjectionGeometry2D::CFanFlatVecProjectionGeometry2D()
 CFanFlatVecProjectionGeometry2D::CFanFlatVecProjectionGeometry2D(int _iProjectionAngleCount, 
                                                                  int _iDetectorCount, 
                                                                  const SFanProjection* _pProjectionAngles)
+	: CFanFlatVecProjectionGeometry2D()
 {
-	this->initialize(_iProjectionAngleCount, 
-	                 _iDetectorCount, 
-	                 _pProjectionAngles);
+	initialize(_iProjectionAngleCount,
+	           _iDetectorCount,
+	           _pProjectionAngles);
 }
 
 //----------------------------------------------------------------------------------------
 // Copy Constructor
 CFanFlatVecProjectionGeometry2D::CFanFlatVecProjectionGeometry2D(const CFanFlatVecProjectionGeometry2D& _projGeom)
+	: CFanFlatVecProjectionGeometry2D()
 {
-	_clear();
-	this->initialize(_projGeom.m_iProjectionAngleCount,
-	                 _projGeom.m_iDetectorCount,
-	                 _projGeom.m_pProjectionAngles);
+	initialize(_projGeom.m_iProjectionAngleCount,
+	           _projGeom.m_iDetectorCount,
+	           _projGeom.m_pProjectionAngles);
 }
 
 //----------------------------------------------------------------------------------------
@@ -86,7 +87,6 @@ CFanFlatVecProjectionGeometry2D& CFanFlatVecProjectionGeometry2D::operator=(cons
 // Destructor.
 CFanFlatVecProjectionGeometry2D::~CFanFlatVecProjectionGeometry2D()
 {
-	// TODO
 	delete[] m_pProjectionAngles;
 }
 
@@ -94,9 +94,11 @@ CFanFlatVecProjectionGeometry2D::~CFanFlatVecProjectionGeometry2D()
 //----------------------------------------------------------------------------------------
 // Initialization.
 bool CFanFlatVecProjectionGeometry2D::initialize(int _iProjectionAngleCount, 
-											  int _iDetectorCount, 
-											  const SFanProjection* _pProjectionAngles)
+                                                 int _iDetectorCount,
+                                                 const SFanProjection* _pProjectionAngles)
 {
+	assert(!m_bInitialized);
+
 	m_iProjectionAngleCount = _iProjectionAngleCount;
 	m_iDetectorCount = _iDetectorCount;
 	m_pProjectionAngles = new SFanProjection[m_iProjectionAngleCount];
@@ -114,6 +116,8 @@ bool CFanFlatVecProjectionGeometry2D::initialize(int _iProjectionAngleCount,
 // Initialization with a Config object
 bool CFanFlatVecProjectionGeometry2D::initialize(const Config& _cfg)
 {
+	assert(!m_bInitialized);
+
 	ConfigReader<CProjectionGeometry2D> CR("FanFlatVecProjectionGeometry2D", this, _cfg);	
 
 	XMLNode node;

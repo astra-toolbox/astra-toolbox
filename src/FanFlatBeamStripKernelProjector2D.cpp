@@ -43,16 +43,15 @@ using namespace astra;
 // default constructor
 CFanFlatBeamStripKernelProjector2D::CFanFlatBeamStripKernelProjector2D()
 {
-	_clear();
+
 }
 
 //----------------------------------------------------------------------------------------
 // constructor
 CFanFlatBeamStripKernelProjector2D::CFanFlatBeamStripKernelProjector2D(const CFanFlatProjectionGeometry2D &_pProjectionGeometry,
-																	   const CVolumeGeometry2D &_pReconstructionGeometry)
-
+                                                                       const CVolumeGeometry2D &_pReconstructionGeometry)
+	: CFanFlatBeamStripKernelProjector2D()
 {
-	_clear();
 	initialize(_pProjectionGeometry, _pReconstructionGeometry);
 }
 
@@ -60,23 +59,7 @@ CFanFlatBeamStripKernelProjector2D::CFanFlatBeamStripKernelProjector2D(const CFa
 // destructor
 CFanFlatBeamStripKernelProjector2D::~CFanFlatBeamStripKernelProjector2D()
 {
-	clear();
-}
 
-//---------------------------------------------------------------------------------------
-// Clear - Constructors
-void CFanFlatBeamStripKernelProjector2D::_clear()
-{
-	CProjector2D::_clear();
-	m_bIsInitialized = false;
-}
-
-//---------------------------------------------------------------------------------------
-// Clear - Public
-void CFanFlatBeamStripKernelProjector2D::clear()
-{
-	CProjector2D::clear();
-	m_bIsInitialized = false;
 }
 
 //---------------------------------------------------------------------------------------
@@ -98,10 +81,7 @@ bool CFanFlatBeamStripKernelProjector2D::_check()
 // Initialize, use a Config object
 bool CFanFlatBeamStripKernelProjector2D::initialize(const Config& _cfg)
 {
-	// if already initialized, clear first
-	if (m_bIsInitialized) {
-		clear();
-	}
+	assert(!m_bIsInitialized);
 
 	// initialization of parent class
 	if (!CProjector2D::initialize(_cfg)) {
@@ -116,12 +96,9 @@ bool CFanFlatBeamStripKernelProjector2D::initialize(const Config& _cfg)
 //---------------------------------------------------------------------------------------
 // Initialize
 bool CFanFlatBeamStripKernelProjector2D::initialize(const CFanFlatProjectionGeometry2D &_pProjectionGeometry,
-													 const CVolumeGeometry2D &_pVolumeGeometry)
+                                                    const CVolumeGeometry2D &_pVolumeGeometry)
 {
-	// if already initialized, clear first
-	if (m_bIsInitialized) {
-		clear();
-	}
+	assert(!m_bIsInitialized);
 
 	// hardcopy geometries
 	m_pProjectionGeometry = _pProjectionGeometry.clone();

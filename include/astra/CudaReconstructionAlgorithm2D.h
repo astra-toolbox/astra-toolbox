@@ -61,10 +61,6 @@ public:
 	 */
 	virtual bool initialize(const Config& _cfg);
 
-	/** Clear this class.
-	 */
-	virtual void clear();
-
 	/** Get a description of the class.
 	 *
 	 * @return description string
@@ -100,10 +96,6 @@ protected:
 	 * @return object initialized
 	 */
 	bool _check();
-
-	/** Initial clearing. Only to be used by constructors.
-	 */
-	void _clear();
 
 	/** Initialize class. For internal use only.
 	 */

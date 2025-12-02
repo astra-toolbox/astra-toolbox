@@ -45,20 +45,19 @@ namespace astra {
 
 //----------------------------------------------------------------------------------------
 // Constructor
-CCudaFDKAlgorithm3D::CCudaFDKAlgorithm3D() 
+CCudaFDKAlgorithm3D::CCudaFDKAlgorithm3D()
+	: m_iGPUIndex(-1), m_iVoxelSuperSampling(1)
 {
-	m_bIsInitialized = false;
-	m_iGPUIndex = -1;
-	m_iVoxelSuperSampling = 1;
+
 }
 
 //----------------------------------------------------------------------------------------
 // Constructor with initialization
 CCudaFDKAlgorithm3D::CCudaFDKAlgorithm3D(CProjector3D* _pProjector, 
-								   CFloat32ProjectionData3D* _pProjectionData, 
-								   CFloat32VolumeData3D* _pReconstruction)
+                                         CFloat32ProjectionData3D* _pProjectionData,
+                                         CFloat32VolumeData3D* _pReconstruction)
+	: CCudaFDKAlgorithm3D()
 {
-	_clear();
 	initialize(_pProjector, _pProjectionData, _pReconstruction);
 }
 
@@ -66,7 +65,7 @@ CCudaFDKAlgorithm3D::CCudaFDKAlgorithm3D(CProjector3D* _pProjector,
 // Destructor
 CCudaFDKAlgorithm3D::~CCudaFDKAlgorithm3D() 
 {
-	CReconstructionAlgorithm3D::_clear();
+
 }
 
 
@@ -116,12 +115,9 @@ void CCudaFDKAlgorithm3D::initializeFromProjector()
 // Initialize - Config
 bool CCudaFDKAlgorithm3D::initialize(const Config& _cfg)
 {
-	ConfigReader<CAlgorithm> CR("CudaFDKAlgorithm3D", this, _cfg);
+	assert(!m_bIsInitialized);
 
-	// if already initialized, clear first
-	if (m_bIsInitialized) {
-		clear();
-	}
+	ConfigReader<CAlgorithm> CR("CudaFDKAlgorithm3D", this, _cfg);
 
 	// initialization of parent class
 	if (!CReconstructionAlgorithm3D::initialize(_cfg)) {
@@ -162,10 +158,7 @@ bool CCudaFDKAlgorithm3D::initialize(CProjector3D* _pProjector,
 								  CFloat32ProjectionData3D* _pSinogram, 
 								  CFloat32VolumeData3D* _pReconstruction)
 {
-	// if already initialized, clear first
-	if (m_bIsInitialized) {
-		clear();
-	}
+	assert(!m_bIsInitialized);
 
 	// required classes
 	m_pProjector = _pProjector;
@@ -188,16 +181,6 @@ bool CCudaFDKAlgorithm3D::run(int _iNrIterations)
 	ASTRA_ASSERT(pSinoMem);
 	CFloat32VolumeData3D* pReconMem = dynamic_cast<CFloat32VolumeData3D*>(m_pReconstruction);
 	ASTRA_ASSERT(pReconMem);
-
-#if 0
-	bool ok = true;
-	
-	ok = astraCudaFDK(pReconMem->getData(), pSinoMem->getDataConst(),
-	                  &volgeom, conegeom,
-	                  m_bShortScan, m_iGPUIndex, m_iVoxelSuperSampling, filter);
-
-	ASTRA_ASSERT(ok);
-#endif
 
 	CCompositeGeometryManager cgm;
 

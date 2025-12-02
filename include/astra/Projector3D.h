@@ -61,11 +61,6 @@ protected:
 	 */
 	bool _check();
 
-	/** Clear all member variables, setting all numeric variables to 0 and all pointers to NULL. 
-	 * Should only be used by constructors.  Otherwise use the clear() function.
-	 */
-	void _clear();
-
 public:
 
 	/**
@@ -77,10 +72,6 @@ public:
 	 */
 	virtual ~CProjector3D();
 	
-	/** Clear all member variables, setting all numeric variables to 0 and all pointers to NULL. 
-	 */
-	void clear();
-
 	/** Initialize the projector with a config object.
 	 * This function does not set m_bInitialized to true.
 	 *

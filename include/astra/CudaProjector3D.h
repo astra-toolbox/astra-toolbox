@@ -54,11 +54,6 @@ protected:
 	 */
 	bool _check();
 
-	/** Clear all member variables, setting all numeric variables to 0 and all pointers to NULL. 
-	 * Should only be used by constructors.  Otherwise use the clear() function.
-	 */
-	void _clear();
-
 public:
 
 	// type of the projector, needed to register with CProjectorFactory
@@ -72,10 +67,6 @@ public:
 	/** Destructor, is virtual to show that we are aware subclass destructor is called.
 	 */
 	virtual ~CCudaProjector3D();
-	
-	/** Clear all member variables, setting all numeric variables to 0 and all pointers to NULL. 
-	 */
-	void clear();
 
 	/** Initialize the projector with a config object.
 	 *

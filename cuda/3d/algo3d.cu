@@ -51,11 +51,6 @@ ReconAlgo3D::~ReconAlgo3D()
 
 }
 
-void ReconAlgo3D::reset()
-{
-	projs.clear();
-}
-
 bool ReconAlgo3D::setGeometry(const SDimensions3D& _dims, const astra::Geometry3DParameters& _projs, const SProjectorParams3D& _params)
 {
 	dims = _dims;

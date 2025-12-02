@@ -40,18 +40,24 @@ namespace astra {
 
 //----------------------------------------------------------------------------------------
 // Constructor
-CSirtAlgorithm::CSirtAlgorithm() 
+CSirtAlgorithm::CSirtAlgorithm()
+	: m_pTotalRayLength(nullptr),
+	  m_pTotalPixelWeight(nullptr),
+	  m_pDiffSinogram(nullptr),
+	  m_pTmpVolume(nullptr),
+	  m_iIterationCount(0),
+	  m_fLambda(1.0f)
 {
-	_clear();
+
 }
 
 //---------------------------------------------------------------------------------------
 // Initialize - C++
 CSirtAlgorithm::CSirtAlgorithm(CProjector2D* _pProjector, 
-							   CFloat32ProjectionData2D* _pSinogram, 
-							   CFloat32VolumeData2D* _pReconstruction)
+                               CFloat32ProjectionData2D* _pSinogram, 
+                               CFloat32VolumeData2D* _pReconstruction)
+	: CSirtAlgorithm()
 {
-	_clear();
 	initialize(_pProjector, _pSinogram, _pReconstruction);
 }
 
@@ -59,39 +65,10 @@ CSirtAlgorithm::CSirtAlgorithm(CProjector2D* _pProjector,
 // Destructor
 CSirtAlgorithm::~CSirtAlgorithm() 
 {
-	clear();
-}
-
-//---------------------------------------------------------------------------------------
-// Clear - Constructors
-void CSirtAlgorithm::_clear()
-{
-	CReconstructionAlgorithm2D::_clear();
-	m_bIsInitialized = false;
-
-	m_pTotalRayLength = NULL;
-	m_pTotalPixelWeight = NULL;
-	m_pDiffSinogram = NULL;
-	m_pTmpVolume = NULL;
-
-	m_fLambda = 1.0f;
-	m_iIterationCount = 0;
-}
-
-//---------------------------------------------------------------------------------------
-// Clear - Public
-void CSirtAlgorithm::clear()
-{
-	CReconstructionAlgorithm2D::_clear();
-	m_bIsInitialized = false;
-
-	ASTRA_DELETE(m_pTotalRayLength);
-	ASTRA_DELETE(m_pTotalPixelWeight);
-	ASTRA_DELETE(m_pDiffSinogram);
-	ASTRA_DELETE(m_pTmpVolume);
-
-	m_fLambda = 1.0f;
-	m_iIterationCount = 0;
+	delete m_pTotalRayLength;
+	delete m_pTotalPixelWeight;
+	delete m_pDiffSinogram;
+	delete m_pTmpVolume;
 }
 
 //----------------------------------------------------------------------------------------
@@ -115,12 +92,9 @@ bool CSirtAlgorithm::_check()
 // Initialize - Config
 bool CSirtAlgorithm::initialize(const Config& _cfg)
 {
-	ConfigReader<CAlgorithm> CR("SirtAlgorithm", this, _cfg);
+	assert(!m_bIsInitialized);
 
-	// if already initialized, clear first
-	if (m_bIsInitialized) {
-		clear();
-	}
+	ConfigReader<CAlgorithm> CR("SirtAlgorithm", this, _cfg);
 
 	// initialization of parent class
 	if (!CReconstructionAlgorithm2D::initialize(_cfg)) {
@@ -148,10 +122,7 @@ bool CSirtAlgorithm::initialize(CProjector2D* _pProjector,
 								CFloat32ProjectionData2D* _pSinogram, 
 								CFloat32VolumeData2D* _pReconstruction)
 {
-	// if already initialized, clear first
-	if (m_bIsInitialized) {
-		clear();
-	}
+	assert(!m_bIsInitialized);
 
 	// required classes
 	m_pProjector = _pProjector;

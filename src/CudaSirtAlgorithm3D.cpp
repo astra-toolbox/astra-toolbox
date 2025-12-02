@@ -47,22 +47,23 @@ namespace astra {
 //----------------------------------------------------------------------------------------
 // Constructor
 CCudaSirtAlgorithm3D::CCudaSirtAlgorithm3D() 
+	: m_pSirt(nullptr),
+	  m_iGPUIndex(-1),
+	  m_bAstraSIRTInit(false),
+	  m_iDetectorSuperSampling(1),
+	  m_iVoxelSuperSampling(1),
+	  m_fLambda(1.0f)
 {
-	m_bIsInitialized = false;
-	m_pSirt = 0;
-	m_iGPUIndex = -1;
-	m_iVoxelSuperSampling = 1;
-	m_iDetectorSuperSampling = 1;
-	m_fLambda = 1.0f;
+
 }
 
 //----------------------------------------------------------------------------------------
 // Constructor with initialization
 CCudaSirtAlgorithm3D::CCudaSirtAlgorithm3D(CProjector3D* _pProjector,
-								   CFloat32ProjectionData3D* _pProjectionData,
-								   CFloat32VolumeData3D* _pReconstruction)
+                                           CFloat32ProjectionData3D* _pProjectionData,
+                                           CFloat32VolumeData3D* _pReconstruction)
+	: CCudaSirtAlgorithm3D()
 {
-	_clear();
 	initialize(_pProjector, _pProjectionData, _pReconstruction);
 }
 
@@ -71,9 +72,6 @@ CCudaSirtAlgorithm3D::CCudaSirtAlgorithm3D(CProjector3D* _pProjector,
 CCudaSirtAlgorithm3D::~CCudaSirtAlgorithm3D() 
 {
 	delete m_pSirt;
-	m_pSirt = 0;
-
-	CReconstructionAlgorithm3D::_clear();
 }
 
 
@@ -112,13 +110,9 @@ void CCudaSirtAlgorithm3D::initializeFromProjector()
 // Initialize - Config
 bool CCudaSirtAlgorithm3D::initialize(const Config& _cfg)
 {
+	assert(!m_bIsInitialized);
+
 	ConfigReader<CAlgorithm> CR("CudaSirtAlgorithm3D", this, _cfg);
-
-
-	// if already initialized, clear first
-	if (m_bIsInitialized) {
-		clear();
-	}
 
 	// initialization of parent class
 	if (!CReconstructionAlgorithm3D::initialize(_cfg)) {
@@ -163,10 +157,7 @@ bool CCudaSirtAlgorithm3D::initialize(CProjector3D* _pProjector,
 								  CFloat32ProjectionData3D* _pSinogram,
 								  CFloat32VolumeData3D* _pReconstruction)
 {
-	// if already initialized, clear first
-	if (m_bIsInitialized) {
-		clear();
-	}
+	assert(!m_bIsInitialized);
 
 	m_fLambda = 1.0f;
 

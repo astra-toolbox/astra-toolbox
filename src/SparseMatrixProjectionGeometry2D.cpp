@@ -40,30 +40,30 @@ namespace astra
 //----------------------------------------------------------------------------------------
 // Default constructor.
 CSparseMatrixProjectionGeometry2D::CSparseMatrixProjectionGeometry2D() :
-	CProjectionGeometry2D() 
+	m_pMatrix(nullptr)
 {
-	m_pMatrix = 0;
+
 }
 
 //----------------------------------------------------------------------------------------
 // Constructor.
-CSparseMatrixProjectionGeometry2D::CSparseMatrixProjectionGeometry2D(int _iProjectionAngleCount, 
-															 int _iDetectorCount,
-															 const CSparseMatrix* _pMatrix)
+CSparseMatrixProjectionGeometry2D::CSparseMatrixProjectionGeometry2D(int _iProjectionAngleCount,
+                                                                     int _iDetectorCount,
+                                                                     const CSparseMatrix* _pMatrix)
+	: CSparseMatrixProjectionGeometry2D()
 {
-	_clear();
 	initialize(_iProjectionAngleCount,
-				_iDetectorCount, 
-				_pMatrix);
+	           _iDetectorCount,
+	           _pMatrix);
 }
 
 //----------------------------------------------------------------------------------------
 CSparseMatrixProjectionGeometry2D::CSparseMatrixProjectionGeometry2D(const CSparseMatrixProjectionGeometry2D& _projGeom)
+	: CSparseMatrixProjectionGeometry2D()
 {
-	_clear();
 	initialize(_projGeom.m_iProjectionAngleCount,
-				_projGeom.m_iDetectorCount, 
-				_projGeom.m_pMatrix);
+	           _projGeom.m_iDetectorCount, 
+	           _projGeom.m_pMatrix);
 }
 
 //----------------------------------------------------------------------------------------
@@ -84,13 +84,15 @@ CSparseMatrixProjectionGeometry2D& CSparseMatrixProjectionGeometry2D::operator=(
 // Destructor.
 CSparseMatrixProjectionGeometry2D::~CSparseMatrixProjectionGeometry2D()
 {
-	m_pMatrix = 0;
+
 }
 
 //---------------------------------------------------------------------------------------
 // Initialize - Config
 bool CSparseMatrixProjectionGeometry2D::initialize(const Config& _cfg)
 {
+	assert(!m_bInitialized);
+
 	ConfigReader<CProjectionGeometry2D> CR("SparseMatrixProjectionGeometry2D", this, _cfg);	
 
 	// initialization of parent class
@@ -112,13 +114,11 @@ bool CSparseMatrixProjectionGeometry2D::initialize(const Config& _cfg)
 
 //----------------------------------------------------------------------------------------
 // Initialization.
-bool CSparseMatrixProjectionGeometry2D::initialize(int _iProjectionAngleCount, 
-											   int _iDetectorCount, 
-											   const CSparseMatrix* _pMatrix)
+bool CSparseMatrixProjectionGeometry2D::initialize(int _iProjectionAngleCount,
+                                                   int _iDetectorCount,
+                                                   const CSparseMatrix* _pMatrix)
 {
-	if (m_bInitialized) {
-		clear();
-	}
+	assert(!m_bInitialized);
 
 	m_iProjectionAngleCount = _iProjectionAngleCount;
 	m_iDetectorCount = _iDetectorCount;

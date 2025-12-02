@@ -145,10 +145,6 @@ public:
 	 */
 	virtual ~CVolumeGeometry2D();
 
-	/** Clear all member variables, setting all numeric variables to 0 and all pointers to NULL. 
-	*/
-	void clear();
-
 	/** Create a hard copy. 
 	*/
 	CVolumeGeometry2D* clone() const;

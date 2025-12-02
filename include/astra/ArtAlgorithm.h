@@ -82,11 +82,6 @@ namespace astra {
 class _AstraExport CArtAlgorithm : public CReconstructionAlgorithm2D {
 
 protected:
-
-	/** Initial clearing. Only to be used by constructors.
-	 */
-	virtual void _clear();
-
 	/** Check the values of this object.  If everything is ok, the object can be set to the initialized state.
 	 * The following statements are then guaranteed to hold:
 	 * - no NULL pointers
@@ -125,10 +120,6 @@ public:
 	bool initialize(CProjector2D* _pProjector, 
 					CFloat32ProjectionData2D* _pSinogram, 
 					CFloat32VolumeData2D* _pReconstruction);
-
-	/** Clear this class.
-	 */
-	virtual void clear();
 
 	/** Set the relaxation factor.
 	 *

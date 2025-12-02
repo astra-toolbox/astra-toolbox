@@ -35,19 +35,25 @@ namespace astra
 
 //----------------------------------------------------------------------------------------
 // Default constructor.
-CProjectionGeometry2D::CProjectionGeometry2D() : configCheckData(0)
+CProjectionGeometry2D::CProjectionGeometry2D()
+	: m_bInitialized(false),
+	  m_iProjectionAngleCount(0),
+	  m_iDetectorCount(0),
+	  m_fDetectorWidth(0.0f),
+	  m_pfProjectionAngles(nullptr),
+	  configCheckData(nullptr)
 {
-	_clear();
+
 }
 
 //----------------------------------------------------------------------------------------
 // Constructor.
 CProjectionGeometry2D::CProjectionGeometry2D(int _iAngleCount, 
-											 int _iDetectorCount, 
-											 float32 _fDetectorWidth, 
-											 const float32* _pfProjectionAngles) : configCheckData(0)
+                                             int _iDetectorCount,
+                                             float32 _fDetectorWidth,
+                                             const float32* _pfProjectionAngles)
+	: CProjectionGeometry2D()
 {
-	_clear();
 	_initialize(_iAngleCount, _iDetectorCount, _fDetectorWidth, _pfProjectionAngles);
 }
 
@@ -55,35 +61,7 @@ CProjectionGeometry2D::CProjectionGeometry2D(int _iAngleCount,
 // Destructor.
 CProjectionGeometry2D::~CProjectionGeometry2D()
 {
-	if (m_bInitialized)	{
-		clear();
-	}
-}
-
-//----------------------------------------------------------------------------------------
-// Clear all member variables, setting all numeric variables to 0 and all pointers to NULL. 
-// Should only be used by constructors.  Otherwise use the clear() function.
-void CProjectionGeometry2D::_clear()
-{
-	m_iProjectionAngleCount = 0;
-	m_iDetectorCount = 0;
-	m_fDetectorWidth = 0.0f;
-	m_pfProjectionAngles = NULL;
-	m_bInitialized = false;
-}
-
-//----------------------------------------------------------------------------------------
-// Clear all member variables, setting all numeric variables to 0 and all pointers to NULL. 
-void CProjectionGeometry2D::clear()
-{
-	m_iProjectionAngleCount = 0;
-	m_iDetectorCount = 0;
-	m_fDetectorWidth = 0.0f;
-	if (m_bInitialized){
-		delete[] m_pfProjectionAngles;
-	}
-	m_pfProjectionAngles = NULL;
-	m_bInitialized = false;
+	delete[] m_pfProjectionAngles;
 }
 
 //----------------------------------------------------------------------------------------
@@ -109,12 +87,9 @@ bool CProjectionGeometry2D::_check()
 // Initialization with a Config object
 bool CProjectionGeometry2D::initialize(const Config& _cfg)
 {
-	ConfigReader<CProjectionGeometry2D> CR("ProjectionGeometry2D", this, _cfg);	
+	assert(!m_bInitialized);
 
-	// uninitialize if the object was initialized before
-	if (m_bInitialized)	{
-		clear();
-	}
+	ConfigReader<CProjectionGeometry2D> CR("ProjectionGeometry2D", this, _cfg);
 
 	bool ok = true;
 
@@ -164,13 +139,11 @@ bool CProjectionGeometry2D::initializeAngles(const Config& _cfg)
 //----------------------------------------------------------------------------------------
 // Initialization.
 bool CProjectionGeometry2D::_initialize(int _iProjectionAngleCount, 
-									    int _iDetectorCount, 
-									    float32 _fDetectorWidth, 
-									    const float32* _pfProjectionAngles)
+                                        int _iDetectorCount,
+                                        float32 _fDetectorWidth,
+                                        const float32* _pfProjectionAngles)
 {
-	if (m_bInitialized) {
-		clear();
-	}
+	assert(!m_bInitialized);
 
 	// copy parameters
 	m_iProjectionAngleCount = _iProjectionAngleCount;

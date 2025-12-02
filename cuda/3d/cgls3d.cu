@@ -82,8 +82,6 @@ void CGLS::reset()
 	useSinogramMask = false;
 
 	sliceInitialized = false;
-
-	ReconAlgo3D::reset();
 }
 
 bool CGLS::enableVolumeMask()

@@ -41,21 +41,22 @@ namespace astra {
 // Constructor
 CCudaEMAlgorithm::CCudaEMAlgorithm() 
 {
-	m_bIsInitialized = false;
-	CCudaReconstructionAlgorithm2D::_clear();
+
 }
 
 //----------------------------------------------------------------------------------------
 // Destructor
 CCudaEMAlgorithm::~CCudaEMAlgorithm() 
 {
-	// The actual work is done by ~CCudaReconstructionAlgorithm2D
+
 }
 
 //---------------------------------------------------------------------------------------
 // Initialize - Config
 bool CCudaEMAlgorithm::initialize(const Config& _cfg)
 {
+	assert(!m_bIsInitialized);
+
 	ConfigReader<CAlgorithm> CR("CudaEMAlgorithm", this, _cfg);
 
 	if (CR.hasOption("SinogramMaskId")) {
@@ -79,9 +80,11 @@ bool CCudaEMAlgorithm::initialize(const Config& _cfg)
 //---------------------------------------------------------------------------------------
 // Initialize - C++
 bool CCudaEMAlgorithm::initialize(CProjector2D* _pProjector,
-                                     CFloat32ProjectionData2D* _pSinogram, 
-                                     CFloat32VolumeData2D* _pReconstruction)
+                                  CFloat32ProjectionData2D* _pSinogram, 
+                                  CFloat32VolumeData2D* _pReconstruction)
 {
+	assert(!m_bIsInitialized);
+
 	m_bIsInitialized = CCudaReconstructionAlgorithm2D::initialize(_pProjector, _pSinogram, _pReconstruction);
 
 	if (!m_bIsInitialized)

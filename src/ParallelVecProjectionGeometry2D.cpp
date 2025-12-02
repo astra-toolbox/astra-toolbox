@@ -41,37 +41,37 @@ namespace astra
 //----------------------------------------------------------------------------------------
 // Default constructor. Sets all variables to zero. 
 CParallelVecProjectionGeometry2D::CParallelVecProjectionGeometry2D()
+	: m_pProjectionAngles(nullptr)
 {
-	_clear();
-	m_pProjectionAngles = 0;
+
 }
 
 //----------------------------------------------------------------------------------------
 // Constructor.
 CParallelVecProjectionGeometry2D::CParallelVecProjectionGeometry2D(int _iProjectionAngleCount, 
-                                                                 int _iDetectorCount, 
-                                                                 const SParProjection* _pProjectionAngles)
+                                                                   int _iDetectorCount,
+                                                                   const SParProjection* _pProjectionAngles)
+	: CParallelVecProjectionGeometry2D()
 {
-	this->initialize(_iProjectionAngleCount, 
-	                 _iDetectorCount, 
-	                 _pProjectionAngles);
+	initialize(_iProjectionAngleCount,
+	           _iDetectorCount,
+	           _pProjectionAngles);
 }
 
 //----------------------------------------------------------------------------------------
 // Copy Constructor
 CParallelVecProjectionGeometry2D::CParallelVecProjectionGeometry2D(const CParallelVecProjectionGeometry2D& _projGeom)
+	: CParallelVecProjectionGeometry2D()
 {
-	_clear();
-	this->initialize(_projGeom.m_iProjectionAngleCount,
-	                 _projGeom.m_iDetectorCount,
-	                 _projGeom.m_pProjectionAngles);
+	initialize(_projGeom.m_iProjectionAngleCount,
+	           _projGeom.m_iDetectorCount,
+	           _projGeom.m_pProjectionAngles);
 }
 
 //----------------------------------------------------------------------------------------
 // Destructor.
 CParallelVecProjectionGeometry2D::~CParallelVecProjectionGeometry2D()
 {
-	// TODO
 	delete[] m_pProjectionAngles;
 }
 
@@ -79,9 +79,11 @@ CParallelVecProjectionGeometry2D::~CParallelVecProjectionGeometry2D()
 //----------------------------------------------------------------------------------------
 // Initialization.
 bool CParallelVecProjectionGeometry2D::initialize(int _iProjectionAngleCount, 
-											  int _iDetectorCount, 
-											  const SParProjection* _pProjectionAngles)
+                                                  int _iDetectorCount,
+                                                  const SParProjection* _pProjectionAngles)
 {
+	assert(!m_bInitialized);
+
 	m_iProjectionAngleCount = _iProjectionAngleCount;
 	m_iDetectorCount = _iDetectorCount;
 	m_pProjectionAngles = new SParProjection[m_iProjectionAngleCount];
@@ -99,6 +101,8 @@ bool CParallelVecProjectionGeometry2D::initialize(int _iProjectionAngleCount,
 // Initialization with a Config object
 bool CParallelVecProjectionGeometry2D::initialize(const Config& _cfg)
 {
+	assert(!m_bInitialized);
+
 	ConfigReader<CProjectionGeometry2D> CR("ParallelVecProjectionGeometry2D", this, _cfg);	
 
 	// initialization of parent class

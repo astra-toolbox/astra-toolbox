@@ -87,9 +87,9 @@ protected:
 	 *  All angles are represented in radians.
 	 */
 	CProjectionGeometry2D(int _iProjectionAngleCount, 
-						  int _iDetectorCount, 
-						  float32 _fDetectorWidth, 
-						  const float32* _pfProjectionAngles);
+	                      int _iDetectorCount, 
+	                      float32 _fDetectorWidth, 
+	                      const float32* _pfProjectionAngles);
 
 	/** Copy constructor. 
 	 */
@@ -99,11 +99,6 @@ protected:
 	 */
 	bool _check();
 	
-	/** Clear all member variables, setting all numeric variables to 0 and all pointers to NULL. 
-	 * Should only be used by constructors.  Otherwise use the clear() function.
-	 */
-	void _clear();
-
 	/** Initialization. Initializes an instance of the CProjectionGeometry2D class. If the object has been 
 	 * initialized before, the object is reinitialized and memory is freed and reallocated if necessary.
 	 *
@@ -113,19 +108,15 @@ protected:
 	 *  @param _pfProjectionAngles Pointer to an array of projection angles. The angles will be copied from this array.
 	 */
 	bool _initialize(int _iProjectionAngleCount,
-					 int _iDetectorCount,
-					 float32 _fDetectorWidth,
-					 const float32* _pfProjectionAngles);
+	                 int _iDetectorCount,
+	                 float32 _fDetectorWidth,
+	                 const float32* _pfProjectionAngles);
 
 public:
 
 	/** Destructor 
 	 */
 	virtual ~CProjectionGeometry2D();
-
-	/** Clear all member variables, setting all numeric variables to 0 and all pointers to NULL. 
-	 */
-	virtual void clear();
 
 	/** Create a hard copy. 
 	*/
@@ -138,13 +129,13 @@ public:
 	 */
 	virtual bool initialize(const Config& _cfg);
 
-    /** Get the initialization state of the object.
+	/** Get the initialization state of the object.
 	 *
 	 * @return true iff the object has been initialized
 	 */
 	bool isInitialized() const;
 
-    /** Return true if this geometry instance is the same as the one specified.
+	/** Return true if this geometry instance is the same as the one specified.
 	 *
 	 * @return true if this geometry instance is the same as the one specified.
 	 */

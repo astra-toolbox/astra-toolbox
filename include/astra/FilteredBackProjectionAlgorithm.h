@@ -65,11 +65,6 @@ namespace astra {
 class _AstraExport CFilteredBackProjectionAlgorithm : public CReconstructionAlgorithm2D {
 
 protected:
-
-	/** Initial clearing. Only to be used by constructors.
-	 */
-	virtual void _clear();
-
 	/** Check the values of this object.  If everything is ok, the object can be set to the initialized state.
 	 * The following statements are then guaranteed to hold:
 	 * - valid projector
@@ -108,10 +103,6 @@ public:
 	 * @return initialization successful?
 	 */
 	virtual bool initialize(const Config& _cfg);
-
-	/** Clear this class.
-	 */
-	virtual void clear();
 
 	/** Perform a number of iterations.
 	 *

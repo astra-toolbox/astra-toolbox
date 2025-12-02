@@ -82,10 +82,6 @@ public:
 					CFloat32ProjectionData2D* _pSinogram, 
 					CFloat32VolumeData2D* _pReconstruction);
 
-	/** Clear this class.
-	 */
-	virtual void clear();
-
 	/** Add a min/max constraint to the reconstruction process
 	 *
 	 * @param _bUseMin		True if the algorithm should use a min constraint.
@@ -162,10 +158,6 @@ protected:
 	 * @return object initialized
 	 */
 	bool _check();
-
-	/** Initial clearing. Only to be used by constructors.
-	 */
-	void _clear();
 
 	//< Projector object.
 	CProjector2D* m_pProjector;

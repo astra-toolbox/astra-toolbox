@@ -86,10 +86,6 @@ public:
 	 */
 	virtual ~CCudaCglsAlgorithm3D();
 
-	/** Clear this class.
-	 */
-/*	virtual void clear();*/
-
 	/** Initialize the algorithm with a config object.
 	 *
 	 * @param _cfg Configuration Object

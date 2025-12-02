@@ -41,36 +41,19 @@ namespace astra
 //----------------------------------------------------------------------------------------
 // Default constructor
 CCudaProjector3D::CCudaProjector3D()
+	: m_projectionKernel(ker3d_default),
+	  m_iVoxelSuperSampling(1),
+	  m_iDetectorSuperSampling(1),
+	  m_iGPUIndex(-1)
 {
-	_clear();
+
 }
 
 //----------------------------------------------------------------------------------------
 // Destructor
 CCudaProjector3D::~CCudaProjector3D()
 {
-	if (m_bIsInitialized) clear();
-}
 
-//----------------------------------------------------------------------------------------
-// Clear for constructors
-void CCudaProjector3D::_clear()
-{
-	m_pProjectionGeometry.reset();
-	m_pVolumeGeometry.reset();
-	m_bIsInitialized = false;
-
-	m_projectionKernel = ker3d_default;
-	m_iVoxelSuperSampling = 1;
-	m_iDetectorSuperSampling = 1;
-	m_iGPUIndex = -1;
-}
-
-//----------------------------------------------------------------------------------------
-// Clear
-void CCudaProjector3D::clear()
-{
-	m_bIsInitialized = false;
 }
 
 //----------------------------------------------------------------------------------------
@@ -92,12 +75,9 @@ bool CCudaProjector3D::_check()
 // Initialize, use a Config object
 bool CCudaProjector3D::initialize(const Config& _cfg)
 {
-	ConfigReader<CProjector3D> CR("CudaProjector3D", this, _cfg);
+	assert(!m_bIsInitialized);
 
-	// if already initialized, clear first
-	if (m_bIsInitialized) {
-		clear();
-	}
+	ConfigReader<CProjector3D> CR("CudaProjector3D", this, _cfg);
 
 	// initialization of parent class
 	if (!CProjector3D::initialize(_cfg)) {
@@ -134,15 +114,6 @@ bool CCudaProjector3D::initialize(const Config& _cfg)
 	m_bIsInitialized = _check();
 	return m_bIsInitialized;
 }
-
-/*
-bool CProjector3D::initialize(astra::CProjectionGeometry3D *, astra::CVolumeGeometry3D *)
-{
-	ASTRA_ASSERT(false);
-
-	return false;
-}
-*/
 
 std::string CCudaProjector3D::description() const
 {
