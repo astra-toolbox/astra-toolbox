@@ -4,6 +4,9 @@
     <CudaCompile Include="..\..\..\cuda\dlpack_support.cu">
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>
+    <CudaCompile Include="..\..\..\cuda\stream.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
     <CudaCompile Include="..\..\..\cuda\2d\algo.cu">
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>
@@ -594,6 +597,12 @@
       <Filter>CUDA\astra headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\astra\cuda\dlpack_support.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\astra\cuda\stream.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\astra\cuda\stream_internal.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\astra\cuda\2d\algo.h">

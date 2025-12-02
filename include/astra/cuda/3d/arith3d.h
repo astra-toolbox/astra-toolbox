@@ -28,9 +28,12 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _CUDA_ARITH3D_H
 #define _CUDA_ARITH3D_H
 
-#include <optional>
+#include "astra/cuda/stream.h"
 
 namespace astraCUDA3d {
+
+using astraCUDA::Stream;
+using astraCUDA::automatic_sync;
 
 struct opAddScaled;
 struct opScaleAndAdd;
@@ -45,19 +48,19 @@ struct opSet;
 struct opClampMin;
 struct opClampMax;
 
-template<typename op> bool processVol3D(cudaPitchedPtr& out, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
-template<typename op> bool processVol3D(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
-template<typename op> bool processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
-template<typename op> bool processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
-template<typename op> bool processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
-template<typename op> bool processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
+template<typename op> bool processVol3D(cudaPitchedPtr& out, const SDimensions3D& dims, const Stream &stream = Stream(automatic_sync));
+template<typename op> bool processVol3D(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims, const Stream &stream = Stream(automatic_sync));
+template<typename op> bool processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims, const Stream &stream = Stream(automatic_sync));
+template<typename op> bool processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims, const Stream &stream = Stream(automatic_sync));
+template<typename op> bool processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims, const Stream &stream = Stream(automatic_sync));
+template<typename op> bool processVol3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims, const Stream &stream = Stream(automatic_sync));
 
-template<typename op> bool processSino3D(cudaPitchedPtr& out, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
-template<typename op> bool processSino3D(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
-template<typename op> bool processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
-template<typename op> bool processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
-template<typename op> bool processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
-template<typename op> bool processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
+template<typename op> bool processSino3D(cudaPitchedPtr& out, const SDimensions3D& dims, const Stream &stream = Stream(automatic_sync));
+template<typename op> bool processSino3D(cudaPitchedPtr& out, float fParam, const SDimensions3D& dims, const Stream &stream = Stream(automatic_sync));
+template<typename op> bool processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, const SDimensions3D& dims, const Stream &stream = Stream(automatic_sync));
+template<typename op> bool processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in, float fParam, const SDimensions3D& dims, const Stream &stream = Stream(automatic_sync));
+template<typename op> bool processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, float fParam, const SDimensions3D& dims, const Stream &stream = Stream(automatic_sync));
+template<typename op> bool processSino3D(cudaPitchedPtr& out, const cudaPitchedPtr& in1, const cudaPitchedPtr& in2, const SDimensions3D& dims, const Stream &stream = Stream(automatic_sync));
 
 
 
