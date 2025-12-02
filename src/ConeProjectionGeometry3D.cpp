@@ -40,33 +40,33 @@ namespace astra
 
 //----------------------------------------------------------------------------------------
 // Default constructor.
-CConeProjectionGeometry3D::CConeProjectionGeometry3D() :
-	CProjectionGeometry3D() 
+CConeProjectionGeometry3D::CConeProjectionGeometry3D()
+	: m_fOriginSourceDistance(0.0),
+	  m_fOriginDetectorDistance(0.0f)
 {
-	m_fOriginSourceDistance = 0.0f;
-	m_fOriginDetectorDistance = 0.0f;
+
 }
 
 //----------------------------------------------------------------------------------------
 // Constructor.
-CConeProjectionGeometry3D::CConeProjectionGeometry3D(int _iProjectionAngleCount, 
-					 									     int _iDetectorRowCount, 
-															 int _iDetectorColCount, 
-															 float32 _fDetectorWidth, 
-															 float32 _fDetectorHeight, 
-															 std::vector<float32> &&_pfProjectionAngles,
-															 float32 _fOriginSourceDistance, 
-															 float32 _fOriginDetectorDistance) :
-	CProjectionGeometry3D() 
+CConeProjectionGeometry3D::CConeProjectionGeometry3D(int _iProjectionAngleCount,
+                                                     int _iDetectorRowCount,
+                                                     int _iDetectorColCount,
+                                                     float32 _fDetectorWidth,
+                                                     float32 _fDetectorHeight,
+                                                     std::vector<float32> &&_pfProjectionAngles,
+                                                     float32 _fOriginSourceDistance,
+                                                     float32 _fOriginDetectorDistance)
+	: CConeProjectionGeometry3D() 
 {
-	initialize(_iProjectionAngleCount, 
-			   _iDetectorRowCount, 
-			   _iDetectorColCount, 
-			   _fDetectorWidth, 
-			   _fDetectorHeight, 
-			   std::move(_pfProjectionAngles),
-			   _fOriginSourceDistance,
-			   _fOriginDetectorDistance);
+	initialize(_iProjectionAngleCount,
+	           _iDetectorRowCount,
+	           _iDetectorColCount,
+	           _fDetectorWidth,
+	           _fDetectorHeight,
+	           std::move(_pfProjectionAngles),
+	           _fOriginSourceDistance,
+	           _fOriginDetectorDistance);
 }
 
 //----------------------------------------------------------------------------------------
@@ -80,6 +80,8 @@ CConeProjectionGeometry3D::~CConeProjectionGeometry3D()
 // Initialize - Config
 bool CConeProjectionGeometry3D::initialize(const Config& _cfg)
 {
+	assert(!m_bInitialized);
+
 	ConfigReader<CProjectionGeometry3D> CR("ConeProjectionGeometry3D", this, _cfg);	
 
 	// initialization of parent class
@@ -101,15 +103,16 @@ bool CConeProjectionGeometry3D::initialize(const Config& _cfg)
 
 //----------------------------------------------------------------------------------------
 // Initialization.
-bool CConeProjectionGeometry3D::initialize(int _iProjectionAngleCount, 
-											   int _iDetectorRowCount, 
-											   int _iDetectorColCount, 
-											   float32 _fDetectorWidth, 
-											   float32 _fDetectorHeight, 
-											   std::vector<float32> &&_pfProjectionAngles,
-											   float32 _fOriginSourceDistance, 
-											   float32 _fOriginDetectorDistance)
+bool CConeProjectionGeometry3D::initialize(int _iProjectionAngleCount,
+                                           int _iDetectorRowCount,
+                                           int _iDetectorColCount,
+                                           float32 _fDetectorWidth,
+                                           float32 _fDetectorHeight,
+                                           std::vector<float32> &&_pfProjectionAngles,
+                                           float32 _fOriginSourceDistance,
+                                           float32 _fOriginDetectorDistance)
 {
+	assert(!m_bInitialized);
 	_initialize(_iProjectionAngleCount, 
 			    _iDetectorRowCount, 
 			    _iDetectorColCount, 

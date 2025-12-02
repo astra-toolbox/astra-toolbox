@@ -47,37 +47,20 @@ namespace astra {
 //----------------------------------------------------------------------------------------
 // Constructor
 CCudaReconstructionAlgorithm2D::CCudaReconstructionAlgorithm2D() 
+	: m_pAlgo(nullptr),
+	  m_iDetectorSuperSampling(1),
+	  m_iPixelSuperSampling(1),
+	  m_iGPUIndex(-1),
+	  m_bAlgoInit(false)
 {
-	_clear();
+
 }
-
-
 
 //----------------------------------------------------------------------------------------
 // Destructor
 CCudaReconstructionAlgorithm2D::~CCudaReconstructionAlgorithm2D() 
 {
 	delete m_pAlgo;
-	m_pAlgo = 0;
-	m_bAlgoInit = false;
-}
-
-void CCudaReconstructionAlgorithm2D::clear()
-{
-	delete m_pAlgo;
-	_clear();
-}
-
-void CCudaReconstructionAlgorithm2D::_clear()
-{
-	m_bIsInitialized = false;
-	m_pAlgo = 0;
-	m_bAlgoInit = false;
-	CReconstructionAlgorithm2D::_clear();
-
-	m_iGPUIndex = -1;
-	m_iDetectorSuperSampling = 1;
-	m_iPixelSuperSampling = 1;
 }
 
 //---------------------------------------------------------------------------------------
@@ -104,6 +87,8 @@ void CCudaReconstructionAlgorithm2D::initializeFromProjector()
 // Initialize - Config
 bool CCudaReconstructionAlgorithm2D::initialize(const Config& _cfg)
 {
+	assert(!m_bIsInitialized);
+
 	ConfigReader<CAlgorithm> CR("CudaReconstructionAlgorithm2D", this, _cfg);
 
 	m_bIsInitialized = CReconstructionAlgorithm2D::initialize(_cfg);
@@ -133,13 +118,10 @@ bool CCudaReconstructionAlgorithm2D::initialize(const Config& _cfg)
 //---------------------------------------------------------------------------------------
 // Initialize - C++
 bool CCudaReconstructionAlgorithm2D::initialize(CProjector2D* _pProjector,
-                                     CFloat32ProjectionData2D* _pSinogram, 
-                                     CFloat32VolumeData2D* _pReconstruction)
+                                                CFloat32ProjectionData2D* _pSinogram, 
+                                                CFloat32VolumeData2D* _pReconstruction)
 {
-	// if already initialized, clear first
-	if (m_bIsInitialized) {
-		clear();
-	}
+	assert(!m_bIsInitialized);
 	
 	m_pProjector = _pProjector;
 	

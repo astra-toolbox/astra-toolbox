@@ -39,8 +39,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 namespace astra
 {
 
-class XMLNode;
-
 /**
  * This class defines the interface for each 3D projection geometry. 
  * It has a number of data fields, such as width and height of detector
@@ -126,11 +124,6 @@ protected:
 	 */
 	bool _check();
 	
-	/** Clear all member variables, setting all numeric variables to 0 and all pointers to NULL. 
-	 * Should only be used by constructors.  Otherwise use the clear() function.
-	 */
-	void _clear();
-
 	/** Initialize the geometry. If the object has been initialized before, the object is reinitialized 
 	 * and memory is freed and reallocated if necessary.
 	 *
@@ -155,10 +148,6 @@ public:
 	 */
 	virtual ~CProjectionGeometry3D();
 	
-	/** Clear all member variables, setting all numeric variables to 0 and all pointers to NULL. 
-	 */
-	virtual void clear();
-
 	/** Create a hard copy. 
 	*/
 	virtual CProjectionGeometry3D* clone() const = 0;

@@ -37,68 +37,34 @@ namespace astra {
 //----------------------------------------------------------------------------------------
 // Constructor
 CReconstructionAlgorithm3D::CReconstructionAlgorithm3D() 
+	: m_pProjector(nullptr),
+	  m_pSinogram(nullptr),
+	  m_pReconstruction(nullptr),
+	  m_bUseMinConstraint(false),
+	  m_fMinValue(0.0f),
+	  m_bUseMaxConstraint(false),
+	  m_fMaxValue(0.0f),
+	  m_pReconstructionMask(nullptr),
+	  m_bUseReconstructionMask(false),
+	  m_pSinogramMask(nullptr),
+	  m_bUseSinogramMask(false)
 {
-	m_pProjector = NULL;
-	m_pSinogram = NULL;
-	m_pReconstruction = NULL;
-	m_bUseMinConstraint = false;
-	m_fMinValue = 0.0f;
-	m_bUseMaxConstraint = false;
-	m_fMaxValue = 0.0f;
-	m_bUseReconstructionMask = false;
-	m_pReconstructionMask = NULL;
-	m_bUseSinogramMask = false;
-	m_pSinogramMask = NULL;
-	m_bIsInitialized = false;
+
 }
 
 //----------------------------------------------------------------------------------------
 // Destructor
 CReconstructionAlgorithm3D::~CReconstructionAlgorithm3D() 
 {
-	clear();
-}
 
-//---------------------------------------------------------------------------------------
-// Clear - Constructors
-void CReconstructionAlgorithm3D::_clear()
-{
-	m_pProjector = NULL;
-	m_pSinogram = NULL;
-	m_pReconstruction = NULL;
-	m_bUseMinConstraint = false;
-	m_fMinValue = 0.0f;
-	m_bUseMaxConstraint = false;
-	m_fMaxValue = 0.0f;
-	m_bUseReconstructionMask = false;
-	m_pReconstructionMask = NULL;
-	m_bUseSinogramMask = false;
-	m_pSinogramMask = NULL;
-	m_bIsInitialized = false;
-}
-
-//---------------------------------------------------------------------------------------
-// Clear - Public
-void CReconstructionAlgorithm3D::clear()
-{
-	m_pProjector = NULL;
-	m_pSinogram = NULL;
-	m_pReconstruction = NULL;
-	m_bUseMinConstraint = false;
-	m_fMinValue = 0.0f;
-	m_bUseMaxConstraint = false;
-	m_fMaxValue = 0.0f;
-	m_bUseReconstructionMask = false;
-	m_pReconstructionMask = NULL;
-	m_bUseSinogramMask = false;
-	m_pSinogramMask = NULL;
-	m_bIsInitialized = false;
 }
 
 //---------------------------------------------------------------------------------------
 // Initialize - Config
 bool CReconstructionAlgorithm3D::initialize(const Config& _cfg)
 {
+	assert(!m_bIsInitialized);
+
 	ConfigReader<CAlgorithm> CR("ReconstructionAlgorithm3D", this, _cfg);
 
 	// projector
@@ -170,9 +136,11 @@ bool CReconstructionAlgorithm3D::initialize(const Config& _cfg)
 //----------------------------------------------------------------------------------------
 // Initialize - C++
 bool CReconstructionAlgorithm3D::initialize(CProjector3D* _pProjector, 
-							   CFloat32ProjectionData3D* _pSinogram, 
-							   CFloat32VolumeData3D* _pReconstruction)
+                                            CFloat32ProjectionData3D* _pSinogram, 
+                                            CFloat32VolumeData3D* _pReconstruction)
 {
+	assert(!m_bIsInitialized);
+
 	m_pProjector = _pProjector;
 	m_pSinogram = _pSinogram;
 	m_pReconstruction = _pReconstruction;

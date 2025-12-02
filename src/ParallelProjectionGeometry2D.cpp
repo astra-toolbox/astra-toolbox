@@ -39,8 +39,7 @@ namespace astra
 
 //----------------------------------------------------------------------------------------
 // Default constructor.
-CParallelProjectionGeometry2D::CParallelProjectionGeometry2D() :
-	CProjectionGeometry2D() 
+CParallelProjectionGeometry2D::CParallelProjectionGeometry2D()
 {
 
 }
@@ -48,25 +47,25 @@ CParallelProjectionGeometry2D::CParallelProjectionGeometry2D() :
 //----------------------------------------------------------------------------------------
 // Constructor.
 CParallelProjectionGeometry2D::CParallelProjectionGeometry2D(int _iProjectionAngleCount, 
-															 int _iDetectorCount, 
-															 float32 _fDetectorWidth, 
-															 const float32* _pfProjectionAngles)
+                                                             int _iDetectorCount, 
+                                                             float32 _fDetectorWidth, 
+                                                             const float32* _pfProjectionAngles)
+	: CParallelProjectionGeometry2D()
 {
-	_clear();
 	initialize(_iProjectionAngleCount,
-				_iDetectorCount, 
-				_fDetectorWidth, 
-				_pfProjectionAngles);
+	           _iDetectorCount, 
+	           _fDetectorWidth, 
+	           _pfProjectionAngles);
 }
 
 //----------------------------------------------------------------------------------------
 CParallelProjectionGeometry2D::CParallelProjectionGeometry2D(const CParallelProjectionGeometry2D& _projGeom)
+	: CParallelProjectionGeometry2D()
 {
-	_clear();
 	initialize(_projGeom.m_iProjectionAngleCount,
-				_projGeom.m_iDetectorCount, 
-				_projGeom.m_fDetectorWidth, 
-				_projGeom.m_pfProjectionAngles);
+	           _projGeom.m_iDetectorCount, 
+	           _projGeom.m_fDetectorWidth, 
+	           _projGeom.m_pfProjectionAngles);
 }
 
 //----------------------------------------------------------------------------------------
@@ -98,6 +97,8 @@ CParallelProjectionGeometry2D::~CParallelProjectionGeometry2D()
 // Initialize - Config
 bool CParallelProjectionGeometry2D::initialize(const Config& _cfg)
 {
+	assert(!m_bInitialized);
+
 	ConfigReader<CProjectionGeometry2D> CR("ParallelProjectionGeometry2D", this, _cfg);	
 
 
@@ -113,14 +114,16 @@ bool CParallelProjectionGeometry2D::initialize(const Config& _cfg)
 //----------------------------------------------------------------------------------------
 // Initialization.
 bool CParallelProjectionGeometry2D::initialize(int _iProjectionAngleCount, 
-											   int _iDetectorCount, 
-											   float32 _fDetectorWidth, 
-											   const float32* _pfProjectionAngles)
+                                               int _iDetectorCount, 
+                                               float32 _fDetectorWidth, 
+                                               const float32* _pfProjectionAngles)
 {
-	_initialize(_iProjectionAngleCount, 
-			    _iDetectorCount, 
-			    _fDetectorWidth, 
-			    _pfProjectionAngles);
+	assert(!m_bInitialized);
+
+	_initialize(_iProjectionAngleCount,
+	            _iDetectorCount,
+	            _fDetectorWidth,
+	            _pfProjectionAngles);
 
 	// success
 	m_bInitialized = _check();
