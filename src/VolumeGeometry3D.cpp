@@ -63,52 +63,40 @@ bool CVolumeGeometry3D::_check()
 }
 
 //----------------------------------------------------------------------------------------
-// Clear all member variables, setting all numeric variables to 0 and all pointers to NULL. 
-void CVolumeGeometry3D::clear()
-{
-	m_iGridColCount = 0;
-	m_iGridRowCount = 0;
-	m_iGridSliceCount = 0;
-	m_iGridTotCount = 0;
-
-	m_fWindowLengthX = 0.0f;
-	m_fWindowLengthY = 0.0f;
-	m_fWindowLengthZ = 0.0f;
-	m_fWindowArea = 0.0f;
-
-	m_fPixelLengthX = 0.0f;
-	m_fPixelLengthY = 0.0f;
-	m_fPixelLengthZ = 0.0f;
-	m_fPixelArea = 0.0f;
-
-	m_fDivPixelLengthX = 0.0f;  
-	m_fDivPixelLengthY = 0.0f;
-	m_fDivPixelLengthZ = 0.0f;
-
-	m_fWindowMinX = 0.0f;
-	m_fWindowMinY = 0.0f;
-	m_fWindowMinZ = 0.0f;
-	m_fWindowMaxX = 0.0f;
-	m_fWindowMaxY = 0.0f;
-	m_fWindowMaxZ = 0.0f;
-
-	m_bInitialized = false;
-}
-
-//----------------------------------------------------------------------------------------
 // Default constructor.
-CVolumeGeometry3D::CVolumeGeometry3D() : configCheckData(0)
+CVolumeGeometry3D::CVolumeGeometry3D()
+	: m_bInitialized(false),
+	  m_iGridColCount(0),
+	  m_iGridRowCount(0),
+	  m_iGridSliceCount(0),
+	  m_iGridTotCount(0),
+	  m_fWindowLengthX(0.0f),
+	  m_fWindowLengthY(0.0f),
+	  m_fWindowLengthZ(0.0f),
+	  m_fWindowArea(0.0f),
+	  m_fPixelLengthX(0.0f),
+	  m_fPixelLengthY(0.0f),
+	  m_fPixelLengthZ(0.0f),
+	  m_fPixelArea(0.0f),
+	  m_fDivPixelLengthX(0.0f),
+	  m_fDivPixelLengthY(0.0f),
+	  m_fDivPixelLengthZ(0.0f),
+	  m_fWindowMinX(0.0f),
+	  m_fWindowMinY(0.0f),
+	  m_fWindowMinZ(0.0f),
+	  m_fWindowMaxX(0.0f),
+	  m_fWindowMaxY(0.0f),
+	  m_fWindowMaxZ(0.0f),
+	  configCheckData(nullptr)
 {
-	clear();
-	m_bInitialized = false;
+
 }
 
 //----------------------------------------------------------------------------------------
 // Default constructor
 CVolumeGeometry3D::CVolumeGeometry3D(int _iGridColCount, int _iGridRowCount, int _iGridSliceCount)
- : configCheckData(0)
+	: CVolumeGeometry3D()
 {
-	clear();
 	initialize(_iGridColCount, _iGridRowCount, _iGridSliceCount);
 }
 
@@ -123,8 +111,8 @@ CVolumeGeometry3D::CVolumeGeometry3D(int _iGridColCount,
 									 float32 _fWindowMaxX,
 									 float32 _fWindowMaxY,
 									 float32 _fWindowMaxZ)
+	: CVolumeGeometry3D()
 {
-	clear();
 	initialize(_iGridColCount, 
 			   _iGridRowCount, 
 			   _iGridSliceCount, 
@@ -137,6 +125,7 @@ CVolumeGeometry3D::CVolumeGeometry3D(int _iGridColCount,
 }
 
 CVolumeGeometry3D::CVolumeGeometry3D(const CVolumeGeometry3D& _other)
+	: CVolumeGeometry3D()
 {
 	*this = _other;
 }
@@ -174,21 +163,16 @@ CVolumeGeometry3D& CVolumeGeometry3D::operator=(const CVolumeGeometry3D& _other)
 // Destructor.
 CVolumeGeometry3D::~CVolumeGeometry3D()
 {
-	if (m_bInitialized) {
-		clear();
-	}
+
 }
 
 //----------------------------------------------------------------------------------------
 // Initialization with a Config object
 bool CVolumeGeometry3D::initialize(const Config& _cfg)
 {
-	ConfigReader<CVolumeGeometry3D> CR("VolumeGeometry3D", this, _cfg);
+	assert(!m_bInitialized);
 
-	// uninitialize if the object was initialized before
-	if (m_bInitialized)	{
-		clear();
-	}
+	ConfigReader<CVolumeGeometry3D> CR("VolumeGeometry3D", this, _cfg);
 
 	bool ok = true;
 
@@ -255,9 +239,7 @@ bool CVolumeGeometry3D::initialize(int _iGridColCount,
 								   float32 _fWindowMaxY,
 								   float32 _fWindowMaxZ)
 {
-	if (m_bInitialized)	{
-		clear();
-	}
+	assert(!m_bInitialized);
 
 	m_iGridColCount = _iGridColCount;
 	m_iGridRowCount = _iGridRowCount;

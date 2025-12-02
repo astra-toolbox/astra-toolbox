@@ -86,10 +86,6 @@ class _AstraExport CSartAlgorithm : public CReconstructionAlgorithm2D {
 
 protected:
 
-	/** Initial clearing. Only to be used by constructors.
-	 */
-	virtual void _clear();
-
 	/** Check the values of this object.  If everything is ok, the object can be set to the initialized state.
 	 * The following statements are then guaranteed to hold:
 	 * - valid projector
@@ -142,10 +138,6 @@ public:
 	 */
 	virtual ~CSartAlgorithm();
 	
-	/** Clear this class.
-	 */
-	virtual void clear();
-
 	/** Initialize the algorithm with a config object.
 	 *
 	 * @param _cfg Configuration Object

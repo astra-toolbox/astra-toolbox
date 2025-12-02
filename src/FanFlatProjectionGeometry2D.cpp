@@ -42,40 +42,41 @@ namespace astra
 //----------------------------------------------------------------------------------------
 // Default constructor. Sets all variables to zero. 
 CFanFlatProjectionGeometry2D::CFanFlatProjectionGeometry2D()
+	: m_fOriginSourceDistance(0.0f),
+	  m_fOriginDetectorDistance(0.0f)
 {
-	_clear();
-	m_fOriginSourceDistance = 0.0f;
-	m_fOriginDetectorDistance = 0.0f;
+
 }
 
 //----------------------------------------------------------------------------------------
 // Constructor.
 CFanFlatProjectionGeometry2D::CFanFlatProjectionGeometry2D(int _iProjectionAngleCount, 
-														   int _iDetectorCount, 
-														   float32 _fDetectorWidth, 
-														   const float32* _pfProjectionAngles,
-														   float32 _fOriginSourceDistance, 
-														   float32 _fOriginDetectorDistance)
+                                                           int _iDetectorCount,
+                                                           float32 _fDetectorWidth,
+                                                           const float32* _pfProjectionAngles,
+                                                           float32 _fOriginSourceDistance, 
+                                                           float32 _fOriginDetectorDistance)
+	: CFanFlatProjectionGeometry2D()
 {
-	this->initialize(_iProjectionAngleCount, 
-					 _iDetectorCount, 
-					 _fDetectorWidth, 
-					 _pfProjectionAngles, 
-					 _fOriginSourceDistance, 
-					 _fOriginDetectorDistance);
+	initialize(_iProjectionAngleCount,
+	           _iDetectorCount,
+	           _fDetectorWidth,
+	           _pfProjectionAngles,
+	           _fOriginSourceDistance,
+	           _fOriginDetectorDistance);
 }
 
 //----------------------------------------------------------------------------------------
 // Copy Constructor
 CFanFlatProjectionGeometry2D::CFanFlatProjectionGeometry2D(const CFanFlatProjectionGeometry2D& _projGeom)
+	: CFanFlatProjectionGeometry2D()
 {
-	_clear();
-	this->initialize(_projGeom.m_iProjectionAngleCount, 
-					 _projGeom.m_iDetectorCount, 
-					 _projGeom.m_fDetectorWidth, 
-					 _projGeom.m_pfProjectionAngles, 
-					 _projGeom.m_fOriginSourceDistance, 
-					 _projGeom.m_fOriginDetectorDistance);
+	initialize(_projGeom.m_iProjectionAngleCount, 
+	           _projGeom.m_iDetectorCount, 
+	           _projGeom.m_fDetectorWidth, 
+	           _projGeom.m_pfProjectionAngles, 
+	           _projGeom.m_fOriginSourceDistance, 
+	           _projGeom.m_fOriginDetectorDistance);
 }
 
 //----------------------------------------------------------------------------------------
@@ -113,6 +114,8 @@ bool CFanFlatProjectionGeometry2D::initialize(int _iProjectionAngleCount,
 											  float32 _fOriginSourceDistance, 
 											  float32 _fOriginDetectorDistance)
 {
+	assert(!m_bInitialized);
+
 	m_fOriginSourceDistance = _fOriginSourceDistance;
 	m_fOriginDetectorDistance = _fOriginDetectorDistance;
 	_initialize(_iProjectionAngleCount, 
@@ -129,6 +132,8 @@ bool CFanFlatProjectionGeometry2D::initialize(int _iProjectionAngleCount,
 // Initialization with a Config object
 bool CFanFlatProjectionGeometry2D::initialize(const Config& _cfg)
 {
+	assert(!m_bInitialized);
+
 	ConfigReader<CProjectionGeometry2D> CR("FanFlatProjectionGeometry2D", this, _cfg);		
 
 	// initialization of parent class

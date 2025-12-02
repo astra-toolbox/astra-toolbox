@@ -37,42 +37,18 @@ namespace astra {
 
 //----------------------------------------------------------------------------------------
 // Constructor
-CArtAlgorithm::CArtAlgorithm() 
- : CReconstructionAlgorithm2D()
+CArtAlgorithm::CArtAlgorithm()
+	: m_fLambda(1.0f),
+	  m_iCurrentRay(0)
 {
-	m_fLambda = 1.0f;
-	m_iCurrentRay = 0;
-	m_bIsInitialized = false;
+
 }
 
 //----------------------------------------------------------------------------------------
 // Destructor
-CArtAlgorithm::~CArtAlgorithm() 
+CArtAlgorithm::~CArtAlgorithm()
 {
 
-}
-
-//---------------------------------------------------------------------------------------
-// Clear - Constructors
-void CArtAlgorithm::_clear()
-{
-	CReconstructionAlgorithm2D::_clear();
-	m_piDetectorOrder.clear();
-	m_piProjectionOrder.clear();
-	m_iCurrentRay = 0;
-	m_bIsInitialized = false;
-}
-
-//---------------------------------------------------------------------------------------
-// Clear - Public
-void CArtAlgorithm::clear()
-{
-	CReconstructionAlgorithm2D::clear();
-	m_piDetectorOrder.clear();
-	m_piProjectionOrder.clear();
-	m_fLambda = 1.0f;
-	m_iCurrentRay = 0;
-	m_bIsInitialized = false;
 }
 
 //---------------------------------------------------------------------------------------
@@ -102,12 +78,9 @@ bool CArtAlgorithm::_check()
 // Initialize - Config
 bool CArtAlgorithm::initialize(const Config& _cfg)
 {
-	ConfigReader<CAlgorithm> CR("ArtAlgorithm", this, _cfg);
+	assert(!m_bIsInitialized);
 
-	// if already initialized, clear first
-	if (m_bIsInitialized) {
-		clear();
-	}
+	ConfigReader<CAlgorithm> CR("ArtAlgorithm", this, _cfg);
 	
 	// initialization of parent class
 	if (!CReconstructionAlgorithm2D::initialize(_cfg)) {
@@ -159,14 +132,11 @@ bool CArtAlgorithm::initialize(const Config& _cfg)
 
 //----------------------------------------------------------------------------------------
 // Initialize - C++
-bool CArtAlgorithm::initialize(CProjector2D* _pProjector, 
-							   CFloat32ProjectionData2D* _pSinogram, 
-							   CFloat32VolumeData2D* _pReconstruction)
+bool CArtAlgorithm::initialize(CProjector2D* _pProjector,
+                               CFloat32ProjectionData2D* _pSinogram,
+                               CFloat32VolumeData2D* _pReconstruction)
 {
-	// if already initialized, clear first
-	if (m_bIsInitialized) {
-		clear();
-	}
+	assert(!m_bIsInitialized);
 
 	// required classes
 	m_pProjector = _pProjector;
