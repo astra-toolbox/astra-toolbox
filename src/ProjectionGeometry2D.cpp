@@ -40,7 +40,6 @@ CProjectionGeometry2D::CProjectionGeometry2D()
 	  m_iProjectionAngleCount(0),
 	  m_iDetectorCount(0),
 	  m_fDetectorWidth(0.0f),
-	  m_pfProjectionAngles(nullptr),
 	  configCheckData(nullptr)
 {
 
@@ -51,17 +50,11 @@ CProjectionGeometry2D::CProjectionGeometry2D()
 CProjectionGeometry2D::CProjectionGeometry2D(int _iAngleCount, 
                                              int _iDetectorCount,
                                              float32 _fDetectorWidth,
-                                             const float32* _pfProjectionAngles)
+                                             std::vector<float32> &&_pfProjectionAngles)
 	: CProjectionGeometry2D()
 {
-	_initialize(_iAngleCount, _iDetectorCount, _fDetectorWidth, _pfProjectionAngles);
-}
-
-//----------------------------------------------------------------------------------------
-// Destructor.
-CProjectionGeometry2D::~CProjectionGeometry2D()
-{
-	delete[] m_pfProjectionAngles;
+	_initialize(_iAngleCount, _iDetectorCount, _fDetectorWidth,
+	            std::move(_pfProjectionAngles));
 }
 
 //----------------------------------------------------------------------------------------
@@ -71,7 +64,7 @@ bool CProjectionGeometry2D::_check()
 	ASTRA_CONFIG_CHECK(m_iDetectorCount > 0, "ProjectionGeometry2D", "Detector Count should be positive.");
 	ASTRA_CONFIG_CHECK(m_fDetectorWidth > 0.0f, "ProjectionGeometry2D", "Detector Width should be positive.");
 	ASTRA_CONFIG_CHECK(m_iProjectionAngleCount > 0, "ProjectionGeometry2D", "ProjectionAngleCount should be positive.");
-	ASTRA_CONFIG_CHECK(m_pfProjectionAngles != NULL, "ProjectionGeometry2D", "ProjectionAngles not initialized");
+	ASTRA_CONFIG_CHECK(m_pfProjectionAngles.size() == m_iProjectionAngleCount, "ProjectionGeometry2D", "Number of angles does not match");
 
 	// autofix: angles in [0,2pi[
 	for (int i = 0; i < m_iProjectionAngleCount; i++) {
@@ -126,11 +119,10 @@ bool CProjectionGeometry2D::initializeAngles(const Config& _cfg)
 		return false;
 	m_iProjectionAngleCount = angles.size();
 	ASTRA_CONFIG_CHECK(m_iProjectionAngleCount > 0, "ProjectionGeometry2D", "Not enough ProjectionAngles specified.");
-	m_pfProjectionAngles = new float32[m_iProjectionAngleCount];
+	m_pfProjectionAngles.resize(m_iProjectionAngleCount);
 	for (int i = 0; i < m_iProjectionAngleCount; i++) {
 		m_pfProjectionAngles[i] = (float)angles[i];
 	}
-	ASTRA_CONFIG_CHECK(m_pfProjectionAngles != NULL, "ProjectionGeometry2D", "ProjectionAngles not initialized");
 
 	ASTRA_CONFIG_CHECK(m_fDetectorWidth > 0.0f, "ProjectionGeometry2D", "DetectorWidth should be positive.");
 	return true;
@@ -141,7 +133,7 @@ bool CProjectionGeometry2D::initializeAngles(const Config& _cfg)
 bool CProjectionGeometry2D::_initialize(int _iProjectionAngleCount, 
                                         int _iDetectorCount,
                                         float32 _fDetectorWidth,
-                                        const float32* _pfProjectionAngles)
+                                        std::vector<float32> &&_pfProjectionAngles)
 {
 	assert(!m_bInitialized);
 
@@ -149,12 +141,8 @@ bool CProjectionGeometry2D::_initialize(int _iProjectionAngleCount,
 	m_iProjectionAngleCount = _iProjectionAngleCount;
 	m_iDetectorCount = _iDetectorCount;
 	m_fDetectorWidth = _fDetectorWidth;
-	m_pfProjectionAngles = new float32[m_iProjectionAngleCount];
-	for (int i = 0; i < m_iProjectionAngleCount; i++) {
-		m_pfProjectionAngles[i] = _pfProjectionAngles[i];		
-	}
+	m_pfProjectionAngles = std::move(_pfProjectionAngles);
 
-	// Interface class, so don't set m_bInitialized to true
 	return true;
 }
 //---------------------------------------------------------------------------------------

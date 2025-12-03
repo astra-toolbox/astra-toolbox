@@ -60,13 +60,6 @@ CConeVecProjectionGeometry3D::CConeVecProjectionGeometry3D(int _iProjectionAngle
 	           std::move(_pProjectionAngles));
 }
 
-//----------------------------------------------------------------------------------------
-// Destructor.
-CConeVecProjectionGeometry3D::~CConeVecProjectionGeometry3D()
-{
-
-}
-
 //---------------------------------------------------------------------------------------
 // Initialize - Config
 bool CConeVecProjectionGeometry3D::initialize(const Config& _cfg)
@@ -139,15 +132,7 @@ bool CConeVecProjectionGeometry3D::initialize(int _iProjectionAngleCount,
 // Clone
 CProjectionGeometry3D* CConeVecProjectionGeometry3D::clone() const
 {
-	CConeVecProjectionGeometry3D* res = new CConeVecProjectionGeometry3D();
-	res->m_bInitialized				= m_bInitialized;
-	res->m_iProjectionAngleCount	= m_iProjectionAngleCount;
-	res->m_iDetectorRowCount		= m_iDetectorRowCount;
-	res->m_iDetectorColCount		= m_iDetectorColCount;
-	res->m_fDetectorSpacingX		= m_fDetectorSpacingX;
-	res->m_fDetectorSpacingY		= m_fDetectorSpacingY;
-	res->m_ProjectionAngles		= m_ProjectionAngles;
-	return res;
+	return new CConeVecProjectionGeometry3D(*this);
 }
 
 //----------------------------------------------------------------------------------------

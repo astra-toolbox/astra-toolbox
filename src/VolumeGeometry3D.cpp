@@ -124,41 +124,6 @@ CVolumeGeometry3D::CVolumeGeometry3D(int _iGridColCount,
 			   _fWindowMaxZ);
 }
 
-CVolumeGeometry3D::CVolumeGeometry3D(const CVolumeGeometry3D& _other)
-	: CVolumeGeometry3D()
-{
-	*this = _other;
-}
-
-CVolumeGeometry3D& CVolumeGeometry3D::operator=(const CVolumeGeometry3D& _other)
-{
-	m_bInitialized = _other.m_bInitialized;
-	m_iGridColCount = _other.m_iGridColCount;
-	m_iGridRowCount = _other.m_iGridRowCount;
-	m_iGridSliceCount = _other.m_iGridSliceCount;
-	m_fWindowLengthX = _other.m_fWindowLengthX;	
-	m_fWindowLengthY = _other.m_fWindowLengthY;	
-	m_fWindowLengthZ = _other.m_fWindowLengthZ;
-	m_fWindowArea = _other.m_fWindowArea;
-	m_fPixelLengthX = _other.m_fPixelLengthX;
-	m_fPixelLengthY = _other.m_fPixelLengthY;
-	m_fPixelLengthZ = _other.m_fPixelLengthZ;
-	m_fDivPixelLengthX = _other.m_fDivPixelLengthX;
-	m_fDivPixelLengthY = _other.m_fDivPixelLengthY;
-	m_fDivPixelLengthZ = _other.m_fDivPixelLengthZ;
-	m_fWindowMinX = _other.m_fWindowMinX;
-	m_fWindowMinY = _other.m_fWindowMinY;
-	m_fWindowMinZ = _other.m_fWindowMinZ;
-	m_fWindowMaxX = _other.m_fWindowMaxX;
-	m_fWindowMaxY = _other.m_fWindowMaxY;
-	m_fWindowMaxZ = _other.m_fWindowMaxZ;
-
-	m_iGridTotCount = _other.m_iGridTotCount;	
-	m_fPixelArea = _other.m_fPixelArea;
-
-	return *this;
-}
-
 //----------------------------------------------------------------------------------------
 // Destructor.
 CVolumeGeometry3D::~CVolumeGeometry3D()
@@ -275,30 +240,7 @@ bool CVolumeGeometry3D::initialize(int _iGridColCount,
 // Clone
 CVolumeGeometry3D* CVolumeGeometry3D::clone() const
 {
-	CVolumeGeometry3D* res = new CVolumeGeometry3D();
-	res->m_bInitialized		= m_bInitialized;
-	res->m_iGridColCount	= m_iGridColCount;
-	res->m_iGridRowCount	= m_iGridRowCount;
-	res->m_iGridSliceCount	= m_iGridSliceCount;
-	res->m_iGridTotCount	= m_iGridTotCount;
-	res->m_fWindowLengthX	= m_fWindowLengthX;
-	res->m_fWindowLengthY	= m_fWindowLengthY;
-	res->m_fWindowLengthZ	= m_fWindowLengthZ;
-	res->m_fWindowArea		= m_fWindowArea;
-	res->m_fPixelLengthX	= m_fPixelLengthX;
-	res->m_fPixelLengthY	= m_fPixelLengthY;
-	res->m_fPixelLengthZ	= m_fPixelLengthZ;
-	res->m_fPixelArea		= m_fPixelArea;
-	res->m_fDivPixelLengthX = m_fDivPixelLengthX;
-	res->m_fDivPixelLengthY = m_fDivPixelLengthY;
-	res->m_fDivPixelLengthZ = m_fDivPixelLengthZ;
-	res->m_fWindowMinX		= m_fWindowMinX;
-	res->m_fWindowMinY		= m_fWindowMinY;
-	res->m_fWindowMinZ		= m_fWindowMinZ;
-	res->m_fWindowMaxX		= m_fWindowMaxX;
-	res->m_fWindowMaxY		= m_fWindowMaxY;
-	res->m_fWindowMaxZ		= m_fWindowMaxZ;
-	return res;
+	return new CVolumeGeometry3D(*this);
 }
 
 //----------------------------------------------------------------------------------------

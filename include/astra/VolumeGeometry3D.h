@@ -165,15 +165,8 @@ public:
 					  float32 _fWindowMaxY,
 					  float32 _fWindowMaxZ);
 
-	/**
-	 * Copy constructor
-	 */
-	CVolumeGeometry3D(const CVolumeGeometry3D& _other);
-
-	/**
-	 * Assignment operator
-	 */
-	CVolumeGeometry3D& operator=(const CVolumeGeometry3D& _other);
+	// Delete copy operator to prevent copying VolumeGeometry3D objects
+	CVolumeGeometry3D& operator=(const CVolumeGeometry3D&)=delete;
 
 	/** Destructor.
 	 */
@@ -490,6 +483,9 @@ private:
 	//< For Config unused argument checking
 	ConfigCheckData* configCheckData;
 	friend class ConfigReader<CVolumeGeometry3D>;
+
+	// Private default copy constructor for use by clone()
+	CVolumeGeometry3D(const CVolumeGeometry3D&)=default;
 };
 
 

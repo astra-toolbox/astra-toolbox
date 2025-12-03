@@ -28,6 +28,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _INC_ASTRA_GEOMETRYUTIL2D
 #define _INC_ASTRA_GEOMETRYUTIL2D
 
+#include <vector>
+
 namespace astra {
 
 struct SParProjection {
@@ -52,6 +54,12 @@ struct SParProjection {
 		fDetSY *= factor;
 		fDetUX *= factor;
 		fDetUY *= factor;
+	}
+
+	bool operator==(const SParProjection& o) const {
+		return fRayX == o.fRayX && fRayY == o.fRayY &&
+		       fDetSX == o.fDetSX && fDetSY == o.fDetSY &&
+		       fDetUX == o.fDetUX && fDetUY == o.fDetUY;
 	}
 };
 
@@ -80,17 +88,23 @@ struct SFanProjection {
 		fDetUX *= factor;
 		fDetUY *= factor;
 	}
+
+	bool operator==(const SFanProjection& o) const {
+		return fSrcX == o.fSrcX && fSrcY == o.fSrcY &&
+		       fDetSX == o.fDetSX && fDetSY == o.fDetSY &&
+		       fDetUX == o.fDetUX && fDetUY == o.fDetUY;
+	}
 };
 
 
 
-SParProjection* genParProjections(unsigned int iProjAngles,
+std::vector<SParProjection> genParProjections(unsigned int iProjAngles,
                                   unsigned int iProjDets,
                                   double fDetSize,
                                   const float *pfAngles,
                                   const float *pfExtraOffsets);
 
-SFanProjection* genFanProjections(unsigned int iProjAngles,
+std::vector<SFanProjection> genFanProjections(unsigned int iProjAngles,
                                   unsigned int iProjDets,
                                   double fOriginSource, double fOriginDetector,
                                   double fDetSize,

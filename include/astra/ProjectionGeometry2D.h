@@ -67,7 +67,7 @@ protected:
 	/** Dynamically allocated array of projection angles. All angles are represented in radians and lie in 
 	 * the [0,2pi[ interval.
 	 */
-	float32* m_pfProjectionAngles;
+	std::vector<float32> m_pfProjectionAngles;
 
 	/** Default constructor. Sets all numeric member variables to 0 and all pointer member variables to NULL.
 	 *
@@ -83,17 +83,19 @@ protected:
 	 *  @param _iProjectionAngleCount Number of projection angles.
 	 *  @param _iDetectorCount Number of detectors, i.e., the number of detector measurements for each projection angle.
 	 *  @param _fDetectorWidth Width of a detector cell, in unit lengths. All detector cells are assumed to have equal width.
-	 *  @param _pfProjectionAngles Pointer to an array of projection angles. The angles will be copied from this array. 
+	 *  @param _pfProjectionAngles A vector of projection angles.
 	 *  All angles are represented in radians.
 	 */
 	CProjectionGeometry2D(int _iProjectionAngleCount, 
 	                      int _iDetectorCount, 
 	                      float32 _fDetectorWidth, 
-	                      const float32* _pfProjectionAngles);
+	                      std::vector<float32> &&_pfProjectionAngles);
 
-	/** Copy constructor. 
-	 */
-	CProjectionGeometry2D(const CProjectionGeometry2D& _projGeom);
+	// Delete copy operator to prevent copying ProjectionGeometry2D objects
+	CProjectionGeometry2D& operator=(const CProjectionGeometry2D&)=delete;
+
+	// Protected default copy constructor for use by derived classes
+	CProjectionGeometry2D(const CProjectionGeometry2D&)=default;
 
 	/** Check variable values.
 	 */
@@ -105,18 +107,18 @@ protected:
 	 *  @param _iProjectionAngleCount Number of projection angles.
 	 *  @param _iDetectorCount Number of detectors, i.e., the number of detector measurements for each projection angle.
 	 *  @param _fDetectorWidth Width of a detector cell, in unit lengths. All detector cells are assumed to have equal width.
-	 *  @param _pfProjectionAngles Pointer to an array of projection angles. The angles will be copied from this array.
+	 *  @param _pfProjectionAngles Vector of projection angles. All angles are represented in radians.
 	 */
 	bool _initialize(int _iProjectionAngleCount,
 	                 int _iDetectorCount,
 	                 float32 _fDetectorWidth,
-	                 const float32* _pfProjectionAngles);
+	                 std::vector<float32> &&_pfProjectionAngles);
 
 public:
 
 	/** Destructor 
 	 */
-	virtual ~CProjectionGeometry2D();
+	virtual ~CProjectionGeometry2D()=default;
 
 	/** Create a hard copy. 
 	*/
@@ -270,7 +272,7 @@ inline int CProjectionGeometry2D::getProjectionAngleCount() const
 inline const float32* CProjectionGeometry2D::getProjectionAngles() const
 {
 	ASTRA_ASSERT(m_bInitialized);
-	return m_pfProjectionAngles;
+	return &m_pfProjectionAngles[0];
 }
 
 // Get a projection angle, represented in Radians.

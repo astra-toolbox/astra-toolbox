@@ -72,6 +72,10 @@ public:
 	 */
 	virtual ~CProjector3D();
 	
+	// Delete copy ctor/operator to prevent copying Projector3D objects
+	CProjector3D(const CProjector3D&)=delete;
+	CProjector3D& operator=(const CProjector3D&)=delete;
+
 	/** Initialize the projector with a config object.
 	 * This function does not set m_bInitialized to true.
 	 *

@@ -36,8 +36,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 BOOST_AUTO_TEST_CASE( testParallelProjectionGeometry2D_Constructor )
 {
-	astra::float32 angles[] = { 0.0f, 1.0f, 2.0f, 3.0f };
-	astra::CParallelProjectionGeometry2D geom(4, 8, 0.5f, angles);
+	std::vector<float> angles{ 0.0f, 1.0f, 2.0f, 3.0f };
+	astra::CParallelProjectionGeometry2D geom(4, 8, 0.5f, std::move(angles));
 
 	BOOST_REQUIRE( geom.isInitialized() );
 
@@ -54,8 +54,8 @@ BOOST_AUTO_TEST_CASE( testParallelProjectionGeometry2D_Constructor )
 
 BOOST_AUTO_TEST_CASE( testParallelProjectionGeometry2D_Offsets )
 {
-	astra::float32 angles[] = { 0.0f, 1.0f, 2.0f, 3.0f };
-	astra::CParallelProjectionGeometry2D geom(4, 8, 0.5f, angles);
+	std::vector<float> angles{ 0.0f, 1.0f, 2.0f, 3.0f };
+	astra::CParallelProjectionGeometry2D geom(4, 8, 0.5f, std::move(angles));
 
 	BOOST_REQUIRE( geom.isInitialized() );
 
@@ -76,8 +76,8 @@ BOOST_AUTO_TEST_CASE( testParallelProjectionGeometry2D_Offsets )
 
 BOOST_AUTO_TEST_CASE( testParallelProjectionGeometry2D_Offsets_odd )
 {
-	astra::float32 angles[] = { 0.0f, 1.0f, 2.0f, 3.0f };
-	astra::CParallelProjectionGeometry2D geom(4, 7, 0.5f, angles);
+	std::vector<float> angles{ 0.0f, 1.0f, 2.0f, 3.0f };
+	astra::CParallelProjectionGeometry2D geom(4, 7, 0.5f, std::move(angles));
 
 	BOOST_REQUIRE( geom.isInitialized() );
 
@@ -88,8 +88,8 @@ BOOST_AUTO_TEST_CASE( testParallelProjectionGeometry2D_Offsets_odd )
 
 BOOST_AUTO_TEST_CASE( testParallelProjectionGeometry2D_Clone )
 {
-	astra::float32 angles[] = { 0.0f, 1.0f, 2.0f, 3.0f };
-	astra::CParallelProjectionGeometry2D geom(4, 8, 0.5f, angles);
+	std::vector<float> angles{ 0.0f, 1.0f, 2.0f, 3.0f };
+	astra::CParallelProjectionGeometry2D geom(4, 8, 0.5f, std::move(angles));
 
 	BOOST_REQUIRE( geom.isInitialized() );
 

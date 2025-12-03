@@ -69,13 +69,6 @@ CConeProjectionGeometry3D::CConeProjectionGeometry3D(int _iProjectionAngleCount,
 	           _fOriginDetectorDistance);
 }
 
-//----------------------------------------------------------------------------------------
-// Destructor.
-CConeProjectionGeometry3D::~CConeProjectionGeometry3D()
-{
-
-}
-
 //---------------------------------------------------------------------------------------
 // Initialize - Config
 bool CConeProjectionGeometry3D::initialize(const Config& _cfg)
@@ -132,17 +125,7 @@ bool CConeProjectionGeometry3D::initialize(int _iProjectionAngleCount,
 // Clone
 CProjectionGeometry3D* CConeProjectionGeometry3D::clone() const
 {
-	CConeProjectionGeometry3D* res = new CConeProjectionGeometry3D();
-	res->m_bInitialized				= m_bInitialized;
-	res->m_iProjectionAngleCount	= m_iProjectionAngleCount;
-	res->m_iDetectorRowCount		= m_iDetectorRowCount;
-	res->m_iDetectorColCount		= m_iDetectorColCount;
-	res->m_fDetectorSpacingX		= m_fDetectorSpacingX;
-	res->m_fDetectorSpacingY		= m_fDetectorSpacingY;
-	res->m_pfProjectionAngles		= m_pfProjectionAngles;
-	res->m_fOriginSourceDistance	= m_fOriginSourceDistance;
-	res->m_fOriginDetectorDistance	= m_fOriginDetectorDistance;
-	return res;
+	return new CConeProjectionGeometry3D(*this);
 }
 
 //----------------------------------------------------------------------------------------
@@ -166,10 +149,7 @@ bool CConeProjectionGeometry3D::isEqual(const CProjectionGeometry3D* _pGeom2) co
 	if (m_fDetectorSpacingY != pGeom2->m_fDetectorSpacingY) return false;
 	if (m_fOriginSourceDistance != pGeom2->m_fOriginSourceDistance) return false;
 	if (m_fOriginDetectorDistance != pGeom2->m_fOriginDetectorDistance) return false;
-
-	for (int i = 0; i < m_iProjectionAngleCount; ++i) {
-		if (m_pfProjectionAngles[i] != pGeom2->m_pfProjectionAngles[i]) return false;
-	}
+	if (m_pfProjectionAngles != pGeom2->m_pfProjectionAngles) return false;
 
 	return true;
 }
