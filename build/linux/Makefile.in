@@ -373,6 +373,7 @@ PYTHON_PY_PLUGINS=\
 PYTHON_PYX=\
 	astra/algorithm_c.pyx \
 	astra/astra_c.pyx \
+	astra/config_c.pyx \
 	astra/data2d_c.pyx \
 	astra/data3d_c.pyx \
 	astra/experimental.pyx \

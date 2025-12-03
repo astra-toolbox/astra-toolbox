@@ -23,6 +23,13 @@
 #
 # -----------------------------------------------------------------------
 
+# Load CUDA shared libs
+from . import config_c as c
+if c.have_cuda():
+    from cuda.pathfinder import load_nvidia_dynamic_lib
+    load_nvidia_dynamic_lib('cudart')
+    load_nvidia_dynamic_lib('cufft')
+
 # Import astra module first to make error message less confusing in case of import error
 from . import astra
 
