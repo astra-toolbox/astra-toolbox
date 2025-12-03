@@ -119,24 +119,7 @@ CVolumeGeometry2D::~CVolumeGeometry2D()
 // Clone
 CVolumeGeometry2D* CVolumeGeometry2D::clone() const
 {
-	CVolumeGeometry2D* res = new CVolumeGeometry2D();
-	res->m_bInitialized		= m_bInitialized;
-	res->m_iGridColCount	= m_iGridColCount;
-	res->m_iGridRowCount	= m_iGridRowCount;
-	res->m_iGridTotCount	= m_iGridTotCount;
-	res->m_fWindowLengthX	= m_fWindowLengthX;
-	res->m_fWindowLengthY	= m_fWindowLengthY;
-	res->m_fWindowArea		= m_fWindowArea;
-	res->m_fPixelLengthX	= m_fPixelLengthX;
-	res->m_fPixelLengthY	= m_fPixelLengthY;
-	res->m_fPixelArea		= m_fPixelArea;
-	res->m_fDivPixelLengthX = m_fDivPixelLengthX;
-	res->m_fDivPixelLengthY = m_fDivPixelLengthY;
-	res->m_fWindowMinX		= m_fWindowMinX;
-	res->m_fWindowMinY		= m_fWindowMinY;
-	res->m_fWindowMaxX		= m_fWindowMaxX;
-	res->m_fWindowMaxY		= m_fWindowMaxY;
-	return res;
+	return new CVolumeGeometry2D(*this);
 }
 
 //----------------------------------------------------------------------------------------

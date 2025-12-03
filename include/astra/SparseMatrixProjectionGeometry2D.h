@@ -62,21 +62,9 @@ public:
 	 *  @param _iDetectorCount Number of detectors, i.e., the number of detector measurements for each projection angle.
 	 *  @param _pMatrix Pointer to a CSparseMatrix. The caller is responsible for keeping this matrix valid until it is no longer required.
 	 */
-	CSparseMatrixProjectionGeometry2D(int _iProjectionAngleCount, 
-								  int _iDetectorCount, 
-								  const CSparseMatrix* _pMatrix);
-
-	/** Copy constructor. 
-	 */
-	CSparseMatrixProjectionGeometry2D(const CSparseMatrixProjectionGeometry2D& _projGeom);
-
-	/** Destructor.
-	 */
-	~CSparseMatrixProjectionGeometry2D();
-
-	/** Assignment operator.
-	 */
-	CSparseMatrixProjectionGeometry2D& operator=(const CSparseMatrixProjectionGeometry2D& _other);
+	CSparseMatrixProjectionGeometry2D(int _iProjectionAngleCount,
+	                                  int _iDetectorCount,
+	                                  const CSparseMatrix* _pMatrix);
 
 	/** Initialize the geometry with a config object. This does not allow
 	 *  setting a matrix. Use the setMatrix() method for that afterwards.
@@ -93,9 +81,9 @@ public:
 	 *  @param _iDetectorCount Number of detectors, i.e., the number of detector measurements for each projection angle.
 	 *  @param _pMatrix Pointer to a CSparseMatrix. The caller is responsible for keeping this matrix valid until it is no longer required.
 	 */
-	bool initialize(int _iProjectionAngleCount, 
-					int _iDetectorCount, 
-					const CSparseMatrix* _pMatrix);
+	bool initialize(int _iProjectionAngleCount,
+	                int _iDetectorCount,
+	                const CSparseMatrix* _pMatrix);
 
 	/** Set the associated sparse matrix. The previous one is deleted.
 	 *
@@ -122,7 +110,7 @@ public:
 	/** Returns true if the type of geometry defined in this class is the one specified in _sType.
 	 *
 	 * @param _sType geometry type to compare to.
-	 * @return true if _sType == "parallel".
+	 * @return true if _sType == "sparse_matrix".
 	 */
 	 virtual bool isOfType(const std::string& _sType);
 
@@ -141,6 +129,12 @@ protected:
 	bool _check();
 
 	const CSparseMatrix* m_pMatrix;
+
+private:
+	// Private default copy constructor for use by clone()
+	CSparseMatrixProjectionGeometry2D(const CSparseMatrixProjectionGeometry2D&)=default;
+
+
 };
 
 } // namespace astra

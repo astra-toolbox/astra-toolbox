@@ -89,26 +89,6 @@ CProjectionGeometry3D::CProjectionGeometry3D(int _iAngleCount,
 }
 
 //----------------------------------------------------------------------------------------
-// Copy constructor.
-CProjectionGeometry3D::CProjectionGeometry3D(const CProjectionGeometry3D& _projGeom)
-	: CProjectionGeometry3D()
-{
-	_initialize(_projGeom.m_iProjectionAngleCount,
-	            _projGeom.m_iDetectorRowCount,
-	            _projGeom.m_iDetectorColCount,
-	            _projGeom.m_fDetectorSpacingX,
-	            _projGeom.m_fDetectorSpacingY,
-	            std::vector<float32>(_projGeom.m_pfProjectionAngles));
-}
-
-//----------------------------------------------------------------------------------------
-// Destructor.
-CProjectionGeometry3D::~CProjectionGeometry3D()
-{
-
-}
-
-//----------------------------------------------------------------------------------------
 // Initialization with a Config object
 bool CProjectionGeometry3D::initialize(const Config& _cfg)
 {

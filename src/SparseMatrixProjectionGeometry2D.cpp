@@ -57,36 +57,6 @@ CSparseMatrixProjectionGeometry2D::CSparseMatrixProjectionGeometry2D(int _iProje
 	           _pMatrix);
 }
 
-//----------------------------------------------------------------------------------------
-CSparseMatrixProjectionGeometry2D::CSparseMatrixProjectionGeometry2D(const CSparseMatrixProjectionGeometry2D& _projGeom)
-	: CSparseMatrixProjectionGeometry2D()
-{
-	initialize(_projGeom.m_iProjectionAngleCount,
-	           _projGeom.m_iDetectorCount, 
-	           _projGeom.m_pMatrix);
-}
-
-//----------------------------------------------------------------------------------------
-
-CSparseMatrixProjectionGeometry2D& CSparseMatrixProjectionGeometry2D::operator=(const CSparseMatrixProjectionGeometry2D& _other)
-{
-	m_bInitialized = _other.m_bInitialized;
-	if (_other.m_bInitialized) {
-		m_pMatrix = _other.m_pMatrix;
-		m_iDetectorCount = _other.m_iDetectorCount;
-		m_fDetectorWidth = _other.m_fDetectorWidth;
-	}
-	return *this;
-	
-}
-
-//----------------------------------------------------------------------------------------
-// Destructor.
-CSparseMatrixProjectionGeometry2D::~CSparseMatrixProjectionGeometry2D()
-{
-
-}
-
 //---------------------------------------------------------------------------------------
 // Initialize - Config
 bool CSparseMatrixProjectionGeometry2D::initialize(const Config& _cfg)
@@ -125,7 +95,7 @@ bool CSparseMatrixProjectionGeometry2D::initialize(int _iProjectionAngleCount,
 
 	// FIXME: We should probably require these for consistency?
 	m_fDetectorWidth = 1.0f;
-	m_pfProjectionAngles = new float32[m_iProjectionAngleCount];
+	m_pfProjectionAngles.resize(m_iProjectionAngleCount);
 	for (int i = 0; i < m_iProjectionAngleCount; ++i)
 		m_pfProjectionAngles[i] = 0.0f;
 
@@ -194,7 +164,7 @@ Config* CSparseMatrixProjectionGeometry2D::getConfiguration() const
 
 	CW.addInt("DetectorCount", getDetectorCount());
 	CW.addNumerical("DetectorWidth", getDetectorWidth());
-	CW.addNumericalArray("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
+	CW.addNumericalArray("ProjectionAngles", &m_pfProjectionAngles[0], m_iProjectionAngleCount);
 	CW.addID("MatrixID", CMatrixManager::getSingleton().getIndex(m_pMatrix));
 
 	return CW.getConfig();

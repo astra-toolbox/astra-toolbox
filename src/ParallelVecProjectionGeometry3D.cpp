@@ -60,13 +60,6 @@ CParallelVecProjectionGeometry3D::CParallelVecProjectionGeometry3D(int _iProject
 	           std::move(_ProjectionAngles));
 }
 
-//----------------------------------------------------------------------------------------
-// Destructor.
-CParallelVecProjectionGeometry3D::~CParallelVecProjectionGeometry3D()
-{
-
-}
-
 //---------------------------------------------------------------------------------------
 // Initialize - Config
 bool CParallelVecProjectionGeometry3D::initialize(const Config& _cfg)
@@ -141,15 +134,7 @@ bool CParallelVecProjectionGeometry3D::initialize(int _iProjectionAngleCount,
 // Clone
 CProjectionGeometry3D* CParallelVecProjectionGeometry3D::clone() const
 {
-	CParallelVecProjectionGeometry3D* res = new CParallelVecProjectionGeometry3D();
-	res->m_bInitialized				= m_bInitialized;
-	res->m_iProjectionAngleCount	= m_iProjectionAngleCount;
-	res->m_iDetectorRowCount		= m_iDetectorRowCount;
-	res->m_iDetectorColCount		= m_iDetectorColCount;
-	res->m_fDetectorSpacingX		= m_fDetectorSpacingX;
-	res->m_fDetectorSpacingY		= m_fDetectorSpacingY;
-	res->m_ProjectionAngles		= m_ProjectionAngles;
-	return res;
+	return new CParallelVecProjectionGeometry3D(*this);
 }
 
 //----------------------------------------------------------------------------------------
