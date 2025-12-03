@@ -91,14 +91,6 @@ public:
 	                                int _iDetectorColCount,
 	                                std::vector<SCylConeProjection> &&_pProjectionAngles);
 
-	/** Copy constructor. 
-	 */
-	CCylConeVecProjectionGeometry3D(const CCylConeVecProjectionGeometry3D& _projGeom);
-
-	/** Destructor.
-	 */
-	~CCylConeVecProjectionGeometry3D();
-
 	/** Initialize the geometry with a config object.
 	 *
 	 * @param _cfg Configuration Object
@@ -159,6 +151,11 @@ public:
 
 protected:
 	virtual bool initializeAngles(const Config& _cfg);
+
+private:
+	// Private default copy constructor for use by clone()
+	CCylConeVecProjectionGeometry3D(const CCylConeVecProjectionGeometry3D&)=default;
+
 };
 
 } // namespace astra

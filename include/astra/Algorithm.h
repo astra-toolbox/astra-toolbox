@@ -48,6 +48,10 @@ public:
 	 */
 	virtual ~CAlgorithm();
 
+	// Delete copy ctor/operator to prevent copying Algorithm objects
+	CAlgorithm(const CAlgorithm&)=delete;
+	CAlgorithm& operator=(const CAlgorithm&)=delete;
+
 	/** Initialize the algorithm with a config object.
 	 *
 	 * @param _cfg Configuration Object
@@ -84,16 +88,6 @@ protected:
 	bool m_bIsInitialized;
 
 private:
-	/**
-	 * Private copy constructor to prevent CAlgorithms from being copied.
-	 */
-	CAlgorithm(const CAlgorithm&);
-
-	/**
-	 * Private assignment operator to prevent CAlgorithms from being copied.
-	 */
-	CAlgorithm& operator=(const CAlgorithm&);
-
 	//< For Config unused argument checking
 	ConfigCheckData* configCheckData;
 	friend class ConfigReader<CAlgorithm>;

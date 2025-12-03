@@ -41,7 +41,6 @@ namespace astra
 //----------------------------------------------------------------------------------------
 // Default constructor. Sets all variables to zero. 
 CFanFlatVecProjectionGeometry2D::CFanFlatVecProjectionGeometry2D()
-	: m_pProjectionAngles(nullptr)
 {
 
 }
@@ -50,60 +49,25 @@ CFanFlatVecProjectionGeometry2D::CFanFlatVecProjectionGeometry2D()
 // Constructor.
 CFanFlatVecProjectionGeometry2D::CFanFlatVecProjectionGeometry2D(int _iProjectionAngleCount, 
                                                                  int _iDetectorCount, 
-                                                                 const SFanProjection* _pProjectionAngles)
+                                                                 std::vector<SFanProjection> &&_pProjectionAngles)
 	: CFanFlatVecProjectionGeometry2D()
 {
 	initialize(_iProjectionAngleCount,
 	           _iDetectorCount,
-	           _pProjectionAngles);
+	           std::move(_pProjectionAngles));
 }
-
-//----------------------------------------------------------------------------------------
-// Copy Constructor
-CFanFlatVecProjectionGeometry2D::CFanFlatVecProjectionGeometry2D(const CFanFlatVecProjectionGeometry2D& _projGeom)
-	: CFanFlatVecProjectionGeometry2D()
-{
-	initialize(_projGeom.m_iProjectionAngleCount,
-	           _projGeom.m_iDetectorCount,
-	           _projGeom.m_pProjectionAngles);
-}
-
-//----------------------------------------------------------------------------------------
-// Assignment operator.
-CFanFlatVecProjectionGeometry2D& CFanFlatVecProjectionGeometry2D::operator=(const CFanFlatVecProjectionGeometry2D& _other)
-{
-	if (m_bInitialized)
-		delete[] m_pProjectionAngles;
-	m_bInitialized = _other.m_bInitialized;
-	if (m_bInitialized) {
-		m_iProjectionAngleCount = _other.m_iProjectionAngleCount;
-		m_iDetectorCount = _other.m_iDetectorCount;
-		m_pProjectionAngles = new SFanProjection[m_iProjectionAngleCount];
-		memcpy(m_pProjectionAngles, _other.m_pProjectionAngles, sizeof(m_pProjectionAngles[0])*m_iProjectionAngleCount);
-	}
-	return *this;
-}
-//----------------------------------------------------------------------------------------
-// Destructor.
-CFanFlatVecProjectionGeometry2D::~CFanFlatVecProjectionGeometry2D()
-{
-	delete[] m_pProjectionAngles;
-}
-
 
 //----------------------------------------------------------------------------------------
 // Initialization.
 bool CFanFlatVecProjectionGeometry2D::initialize(int _iProjectionAngleCount, 
                                                  int _iDetectorCount,
-                                                 const SFanProjection* _pProjectionAngles)
+                                                 std::vector<SFanProjection>&& _pProjectionAngles)
 {
 	assert(!m_bInitialized);
 
 	m_iProjectionAngleCount = _iProjectionAngleCount;
 	m_iDetectorCount = _iDetectorCount;
-	m_pProjectionAngles = new SFanProjection[m_iProjectionAngleCount];
-	for (int i = 0; i < m_iProjectionAngleCount; ++i)
-		m_pProjectionAngles[i] = _pProjectionAngles[i];
+	m_pProjectionAngles = std::move(_pProjectionAngles);
 
 	// TODO: check?
 
@@ -142,7 +106,7 @@ bool CFanFlatVecProjectionGeometry2D::initializeAngles(const Config& _cfg)
 		return false;
 	ASTRA_CONFIG_CHECK(data.size() % 6 == 0, "FanFlatVecProjectionGeometry2D", "Vectors doesn't consist of 6-tuples.");
 	m_iProjectionAngleCount = data.size() / 6;
-	m_pProjectionAngles = new SFanProjection[m_iProjectionAngleCount];
+	m_pProjectionAngles.resize(m_iProjectionAngleCount);
 
 	for (int i = 0; i < m_iProjectionAngleCount; ++i) {
 		SFanProjection& p = m_pProjectionAngles[i];
@@ -181,11 +145,8 @@ bool CFanFlatVecProjectionGeometry2D::isEqual(const CProjectionGeometry2D &_pGeo
 	// check all values
 	if (m_iProjectionAngleCount != pGeom2->m_iProjectionAngleCount) return false;
 	if (m_iDetectorCount != pGeom2->m_iDetectorCount) return false;
+	if (m_pProjectionAngles != pGeom2->m_pProjectionAngles) return false;
 	
-	for (int i = 0; i < m_iProjectionAngleCount; ++i) {
-		if (memcmp(&m_pProjectionAngles[i], &pGeom2->m_pProjectionAngles[i], sizeof(m_pProjectionAngles[i])) != 0) return false;
-	}
-
 	return true;
 }
 
@@ -200,6 +161,7 @@ bool CFanFlatVecProjectionGeometry2D::isOfType(const std::string& _sType)
 
 bool CFanFlatVecProjectionGeometry2D::_check()
 {
+	ASTRA_CONFIG_CHECK(m_pProjectionAngles.size() == m_iProjectionAngleCount, "FanFlatVecProjectionGeometry2D", "Number of vectors does not match number of angles");
 	// TODO
 	return true;
 }
@@ -217,7 +179,7 @@ Config* CFanFlatVecProjectionGeometry2D::getConfiguration() const
 	vectors.resize(6 * m_iProjectionAngleCount);
 
 	for (int i = 0; i < m_iProjectionAngleCount; ++i) {
-		SFanProjection& p = m_pProjectionAngles[i];
+		const SFanProjection& p = m_pProjectionAngles[i];
 		vectors[6*i + 0] = p.fSrcX;
 		vectors[6*i + 1] = p.fSrcY;
 		vectors[6*i + 2] = p.fDetSX + 0.5 * m_iDetectorCount * p.fDetUX;

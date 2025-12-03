@@ -101,14 +101,6 @@ public:
 							  float32 _fOriginSourceDistance,
 							  float32 _fOriginDetectorDistance);
 
-	/** Copy constructor. 
-	 */
-	CConeProjectionGeometry3D(const CConeProjectionGeometry3D& _projGeom);
-
-	/** Destructor.
-	 */
-	~CConeProjectionGeometry3D();
-
 	/** Initialize the geometry with a config object.
 	 *
 	 * @param _cfg Configuration Object
@@ -183,6 +175,11 @@ public:
 	virtual void projectPoint(double fX, double fY, double fZ,
 	                          int iAngleIndex,
 	                          double &fU, double &fV) const;
+
+private:
+	// Private default copy constructor for use by clone()
+	CConeProjectionGeometry3D(const CConeProjectionGeometry3D& _projGeom)=default;
+
 
 };
 

@@ -81,29 +81,16 @@ public:
 	 * @param _iProjectionAngleCount Number of projection angles.
 	 * @param _iDetectorCount Number of detectors, i.e., the number of detector measurements for each projection angle.
 	 * @param _fDetectorWidth Width of a detector cell, in unit lengths. All detector cells are assumed to have equal width.
-	 * @param _pfProjectionAngles Pointer to an array of projection angles. The angles will be copied from this array. 
-	 *		  All angles are represented in radians.
+	 * @param _pfProjectionAngles Vector of projection angles. All angles are represented in radians.
 	 * @param _fOriginSourceDistance Distance from the origin of the coordinate system to the source
 	 * @param _fOriginDetectorDistance Distance from the origin of the coordinate system to the detector
 	 */
-	CFanFlatProjectionGeometry2D(int _iProjectionAngleCount, 
-								 int _iDetectorCount, 
-								 float32 _fDetectorWidth, 
-								 const float32* _pfProjectionAngles,
-								 float32 _fOriginSourceDistance, 
-								 float32 _fOriginDetectorDistance);
-
-	/** Copy constructor. 
-	 */
-	CFanFlatProjectionGeometry2D(const CFanFlatProjectionGeometry2D& _projGeom);
-
-	/** Assignment operator.
-	 */
-	CFanFlatProjectionGeometry2D& operator=(const CFanFlatProjectionGeometry2D& _other);
-
-	/** Destructor.
-	 */
-	virtual ~CFanFlatProjectionGeometry2D();
+	CFanFlatProjectionGeometry2D(int _iProjectionAngleCount,
+	                             int _iDetectorCount,
+	                             float32 _fDetectorWidth,
+	                             std::vector<float32>&& _pfProjectionAngles,
+	                             float32 _fOriginSourceDistance,
+	                             float32 _fOriginDetectorDistance);
 
 	/** Initialize the geometry with a config object.
 	 *
@@ -118,16 +105,16 @@ public:
 	 * @param _iProjectionAngleCount Number of projection angles.
 	 * @param _iDetectorCount Number of detectors, i.e., the number of detector measurements for each projection angle.
 	 * @param _fDetectorWidth Width of a detector cell, in unit lengths. All detector cells are assumed to have equal width.
-	 * @param _pfProjectionAngles Pointer to an array of projection angles. The angles will be copied from this array.
+	 * @param _pfProjectionAngles Vector of projection angles. All angles are represented in radians.
 	 * @param _fOriginSourceDistance Distance from the origin of the coordinate system to the source
 	 * @param _fOriginDetectorDistance Distance from the origin of the coordinate system to the detector
 	 */
-	bool initialize(int _iProjectionAngleCount, 
-					int _iDetectorCount, 
-					float32 _fDetectorWidth, 
-					const float32* _pfProjectionAngles,
-					float32 _fOriginSourceDistance, 
-					float32 _fOriginDetectorDistance);
+	bool initialize(int _iProjectionAngleCount,
+	                int _iDetectorCount,
+	                float32 _fDetectorWidth,
+	                std::vector<float32>&& _pfProjectionAngles,
+	                float32 _fOriginSourceDistance,
+	                float32 _fOriginDetectorDistance);
 
 	/** Create a hard copy. 
 	*/
@@ -175,6 +162,10 @@ public:
 	/** Create a vector geom
 	*/
 	CFanFlatVecProjectionGeometry2D* toVectorGeometry();	
+
+private:
+	// Private default copy constructor for use by clone()
+	CFanFlatProjectionGeometry2D(const CFanFlatProjectionGeometry2D&)=default;
 };
 
 

@@ -59,7 +59,7 @@ class _AstraExport CParallelVecProjectionGeometry2D : public CProjectionGeometry
 {
 protected:
 
-	SParProjection *m_pProjectionAngles;
+	std::vector<SParProjection> m_pProjectionAngles;
 
 public:
 
@@ -72,23 +72,11 @@ public:
 	 *
 	 * @param _iProjectionAngleCount Number of projection angles.
 	 * @param _iDetectorCount Number of detectors, i.e., the number of detector measurements for each projection angle.
-	 * @param _pfProjectionAngles Pointer to an array of projection angles. The angles will be copied from this array. 
+	 * @param _pfProjectionAngles Vector of projection vectors.
 	 */
-	CParallelVecProjectionGeometry2D(int _iProjectionAngleCount, 
-	                                int _iDetectorCount, 
-	                                const SParProjection* _pfProjectionAngles);
-
-	/** Copy constructor. 
-	 */
-	CParallelVecProjectionGeometry2D(const CParallelVecProjectionGeometry2D& _projGeom);
-
-	/** Assignment operator.
-	 */
-	CParallelVecProjectionGeometry2D& operator=(const CParallelVecProjectionGeometry2D& _other);
-
-	/** Destructor.
-	 */
-	virtual ~CParallelVecProjectionGeometry2D();
+	CParallelVecProjectionGeometry2D(int _iProjectionAngleCount,
+	                                 int _iDetectorCount,
+	                                 std::vector<SParProjection>&& _pfProjectionAngles);
 
 	/** Initialize the geometry with a config object.
 	 *
@@ -102,11 +90,11 @@ public:
 	 *
 	 * @param _iProjectionAngleCount Number of projection angles.
 	 * @param _iDetectorCount Number of detectors, i.e., the number of detector measurements for each projection angle.
-	 * @param _pfProjectionAngles Pointer to an array of projection angles. The angles will be copied from this array.
+	 * @param _pfProjectionAngles Vector of projection vectors.
 	 */
 	bool initialize(int _iProjectionAngleCount, 
 	                int _iDetectorCount, 
-	                const SParProjection* _pfProjectionAngles);
+	                std::vector<SParProjection>&& _pfProjectionAngles);
 
 	virtual bool _check();
 
@@ -133,10 +121,15 @@ public:
 	 */
 	virtual Config* getConfiguration() const;
 
-	const SParProjection* getProjectionVectors() const { return m_pProjectionAngles; }
+	const SParProjection* getProjectionVectors() const { return &m_pProjectionAngles[0]; }
 
 protected:
 	virtual bool initializeAngles(const Config& _cfg);
+
+private:
+	// Private default copy constructor for use by clone()
+	CParallelVecProjectionGeometry2D(const CParallelVecProjectionGeometry2D& _projGeom)=default;
+
 };
 
 } // namespace astra
