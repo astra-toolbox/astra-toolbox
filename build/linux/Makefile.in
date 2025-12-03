@@ -304,12 +304,9 @@ endif
 TEST_OBJECTS=\
 	tests/main.o \
 	tests/test_AstraObjectManager.o \
-	tests/test_Float32Data2D.o \
 	tests/test_VolumeGeometry2D.o \
 	tests/test_ParallelProjectionGeometry2D.o \
 	tests/test_FanFlatProjectionGeometry2D.o \
-	tests/test_Float32VolumeData2D.o \
-	tests/test_Float32ProjectionData2D.o \
 	tests/test_Fourier.o \
 	tests/test_XMLDocument.o
 
