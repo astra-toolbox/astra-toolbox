@@ -57,6 +57,8 @@ protected:
 	std::unique_ptr<CVolumeGeometry3D> m_pVolumeGeometry; ///< Used volume geometry
 	bool m_bIsInitialized; ///< Has this class been initialized?
 
+	CProjector3D(const CProjectionGeometry3D &_pProjectionGeometry, const CVolumeGeometry3D &_pVolumeGeometry);
+
 	/** Check variable values.
 	 */
 	bool _check();
@@ -68,7 +70,7 @@ public:
 	 */
 	CProjector3D();
 
-	/** Destructor, is virtual to show that we are aware subclass destructor is called.
+	/** Virtual destructor.
 	 */
 	virtual ~CProjector3D();
 	
