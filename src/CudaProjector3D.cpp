@@ -49,9 +49,17 @@ CCudaProjector3D::CCudaProjector3D()
 
 }
 
-//----------------------------------------------------------------------------------------
-// Destructor
-CCudaProjector3D::~CCudaProjector3D()
+CCudaProjector3D::CCudaProjector3D(const CProjectionGeometry3D &_pProjectionGeometry,
+                                   const CVolumeGeometry3D &_pVolumeGeometry,
+                                   Cuda3DProjectionKernel _projectionKernel,
+                                   int _iVoxelSuperSampling,
+                                   int _iDetectorSuperSampling,
+                                   int _iGPUIndex)
+	: CProjector3D(_pProjectionGeometry, _pVolumeGeometry),
+	  m_projectionKernel(_projectionKernel),
+	  m_iVoxelSuperSampling(_iVoxelSuperSampling),
+	  m_iDetectorSuperSampling(_iDetectorSuperSampling),
+	  m_iGPUIndex(_iGPUIndex)
 {
 
 }
@@ -114,6 +122,28 @@ bool CCudaProjector3D::initialize(const Config& _cfg)
 	m_bIsInitialized = _check();
 	return m_bIsInitialized;
 }
+
+bool CCudaProjector3D::initialize(const CProjectionGeometry3D &_pProjectionGeometry,
+                                  const CVolumeGeometry3D &_pVolumeGeometry,
+                                  Cuda3DProjectionKernel _projectionKernel,
+                                  int _iVoxelSuperSampling,
+                                  int _iDetectorSuperSampling,
+                                  int _iGPUIndex)
+{
+	assert(!m_bIsInitialized);
+
+	m_pProjectionGeometry.reset(_pProjectionGeometry.clone());
+	m_pVolumeGeometry.reset(_pVolumeGeometry.clone());
+
+	m_projectionKernel = _projectionKernel;
+	m_iVoxelSuperSampling = _iVoxelSuperSampling;
+	m_iDetectorSuperSampling = _iDetectorSuperSampling;
+	m_iGPUIndex = _iGPUIndex;
+
+	m_bIsInitialized = _check();
+	return m_bIsInitialized;
+}
+
 
 std::string CCudaProjector3D::description() const
 {
