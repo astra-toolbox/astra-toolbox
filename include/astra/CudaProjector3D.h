@@ -64,9 +64,12 @@ public:
 	 */
 	CCudaProjector3D();
 
-	/** Destructor, is virtual to show that we are aware subclass destructor is called.
-	 */
-	virtual ~CCudaProjector3D();
+	CCudaProjector3D(const CProjectionGeometry3D &_pProjectionGeometry,
+	                 const CVolumeGeometry3D &_pVolumeGeometry,
+	                 Cuda3DProjectionKernel _projectionKernel=ker3d_default,
+	                 int _iVoxelSuperSampling=1,
+	                 int _iDetectorSuperSampling=1,
+	                 int _iGPUIndex=-1);
 
 	/** Initialize the projector with a config object.
 	 *
@@ -75,12 +78,19 @@ public:
 	 */
 	virtual bool initialize(const Config& _cfg);
 
-	virtual void computeSingleRayWeights(int _iProjectionIndex, 
-										 int _iSliceIndex,
-										 int _iDetectorIndex, 
-										 SPixelWeight* _pWeightedPixels,
-		                                 int _iMaxPixelCount, 
-										 int& _iStoredPixelCount) {}
+	bool initialize(const CProjectionGeometry3D &_pProjectionGeometry,
+	                const CVolumeGeometry3D &_pVolumeGeometry,
+	                Cuda3DProjectionKernel _projectionKernel=ker3d_default,
+	                int _iVoxelSuperSampling=1,
+	                int _iDetectorSuperSampling=1,
+	                int _iGPUIndex=-1);
+
+	virtual void computeSingleRayWeights(int _iProjectionIndex,
+	                                     int _iSliceIndex,
+	                                     int _iDetectorIndex,
+	                                     SPixelWeight* _pWeightedPixels,
+	                                     int _iMaxPixelCount,
+	                                     int& _iStoredPixelCount) {}
 	virtual int getProjectionWeightsCount(int _iProjectionIndex) { return 0; }
 	template <typename Policy>
 	void project(Policy& _policy) {}

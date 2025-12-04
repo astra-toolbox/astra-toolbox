@@ -53,12 +53,14 @@ CCudaFDKAlgorithm3D::CCudaFDKAlgorithm3D()
 
 //----------------------------------------------------------------------------------------
 // Constructor with initialization
-CCudaFDKAlgorithm3D::CCudaFDKAlgorithm3D(CProjector3D* _pProjector, 
+CCudaFDKAlgorithm3D::CCudaFDKAlgorithm3D(CProjector3D* _pProjector,
                                          CFloat32ProjectionData3D* _pProjectionData,
-                                         CFloat32VolumeData3D* _pReconstruction)
+                                         CFloat32VolumeData3D* _pReconstruction,
+                                         const SFilterConfig& _filterConfig,
+                                         bool _bShortScan)
 	: CCudaFDKAlgorithm3D()
 {
-	initialize(_pProjector, _pProjectionData, _pReconstruction);
+	initialize(_pProjector, _pProjectionData, _pReconstruction, _filterConfig, _bShortScan);
 }
 
 //----------------------------------------------------------------------------------------
@@ -154,9 +156,11 @@ bool CCudaFDKAlgorithm3D::initialize(const Config& _cfg)
 
 //----------------------------------------------------------------------------------------
 // Initialize - C++
-bool CCudaFDKAlgorithm3D::initialize(CProjector3D* _pProjector, 
-								  CFloat32ProjectionData3D* _pSinogram, 
-								  CFloat32VolumeData3D* _pReconstruction)
+bool CCudaFDKAlgorithm3D::initialize(CProjector3D* _pProjector,
+                                     CFloat32ProjectionData3D* _pSinogram,
+                                     CFloat32VolumeData3D* _pReconstruction,
+                                     const SFilterConfig& _filterConfig,
+                                     bool _bShortScan)
 {
 	assert(!m_bIsInitialized);
 
@@ -164,6 +168,9 @@ bool CCudaFDKAlgorithm3D::initialize(CProjector3D* _pProjector,
 	m_pProjector = _pProjector;
 	m_pSinogram = _pSinogram;
 	m_pReconstruction = _pReconstruction;
+
+	m_filterConfig = _filterConfig;
+	m_bShortScan = _bShortScan;
 
 	// success
 	m_bIsInitialized = _check();

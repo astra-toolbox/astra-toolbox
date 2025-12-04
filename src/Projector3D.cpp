@@ -43,11 +43,11 @@ CProjector3D::CProjector3D() : m_bIsInitialized(false), configCheckData(nullptr)
 
 }
 
-//----------------------------------------------------------------------------------------
-// Destructor
-CProjector3D::~CProjector3D()
+CProjector3D::CProjector3D(const CProjectionGeometry3D &_pProjectionGeometry, const CVolumeGeometry3D &_pVolumeGeometry)
+	: CProjector3D()
 {
-
+	m_pProjectionGeometry.reset(_pProjectionGeometry.clone());
+	m_pVolumeGeometry.reset(_pVolumeGeometry.clone());
 }
 
 //----------------------------------------------------------------------------------------
