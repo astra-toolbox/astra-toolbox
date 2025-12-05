@@ -119,13 +119,21 @@ ifeq ($(install_type),module)
 ifeq ($(cuda),yes)
 ASTRA_CONFIG = linux_module_cuda
 else
+ifeq ($(amdhip),yes)
+ASTRA_CONFIG = linux_module_cuda
+else
 ASTRA_CONFIG = linux_module
+endif
 endif
 else
 ifeq ($(cuda),yes)
 ASTRA_CONFIG = cuda
 else
+ifeq ($(amdhip),yes)
+ASTRA_CONFIG = cuda
+else
 ASTRA_CONFIG = nocuda
+endif
 endif
 endif
 
