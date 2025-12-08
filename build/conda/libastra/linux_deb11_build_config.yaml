@@ -18,6 +18,16 @@ cudatoolkit:
   - 11.7
   - 11.8
 
+cudatoolkit_build:
+  - 11.1
+  - 11.2
+  - 11.3
+  - 11.4
+  - 11.5
+  - 11.6
+  - 11.7
+  - 11.8
+
 # Version ranges from the pytorch-cuda libcufft dependency:
 # 11.6_1: >=10.7.0.55,<10.7.2.50
 # 11.7_5: >=10.7.2.50,<10.9.0.58
@@ -69,6 +79,7 @@ cxx_compiler_version:  # [linux or win]
 zip_keys:
   - cuda_dep_type
   - cudatoolkit
+  - cudatoolkit_build
   - libcufft_dep
   - cudacudart_dep
   - pytorchcuda_dep

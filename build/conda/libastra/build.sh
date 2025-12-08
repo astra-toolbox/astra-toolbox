@@ -7,8 +7,8 @@ case `uname` in
     CXX=g++
     ;;
   Linux*)
-    [ -n "$cudatoolkit" ] || exit 1
-    CUDA_ROOT=/usr/local/cuda-$cudatoolkit
+    [ -n "$cudatoolkit_build" ] || exit 1
+    CUDA_ROOT=/usr/local/cuda-$cudatoolkit_build
     ;;
 esac
 

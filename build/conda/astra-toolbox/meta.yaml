@@ -25,6 +25,7 @@ requirements:
     - {{ compiler('c') }}    # [win or linux]
     - {{ compiler('cxx') }}  # [linux]
   host:
+    - setuptools
     - python
     - cython >=3
     - nomkl # [not win]

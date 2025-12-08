@@ -3,7 +3,7 @@
 set R=%SRC_DIR%
 
 cd /D %R%/build/msvc
-python gen.py %cudatoolkit%
+python gen.py %cudatoolkit_build%
 
 msbuild astra_vc14.sln /p:Configuration=Release_CUDA /p:Platform=x64 /t:astra_vc14 /maxcpucount:20
 
