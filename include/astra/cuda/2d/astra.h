@@ -79,37 +79,6 @@ _AstraExport bool astraCudaFanFP(const float* pfVolume, float* pfSinogram,
                     unsigned int iDetSuperSampling = 1,
                     float fOutputScale = 1.0f, int iGPUIndex = 0);
 
-
-_AstraExport bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
-                    const CParallelProjectionGeometry2D* pProjGeom,
-                    astraCUDA::SParProjection*& pProjs,
-                    float& fOutputScale);
-
-_AstraExport bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
-                    const CParallelVecProjectionGeometry2D* pProjGeom,
-                    astraCUDA::SParProjection*& pProjs,
-                    float& fOutputScale);
-
-
-_AstraExport bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
-                    const CFanFlatProjectionGeometry2D* pProjGeom,
-                    astraCUDA::SFanProjection*& pProjs,
-                    float& outputScale);
-
-_AstraExport bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
-                    const CFanFlatVecProjectionGeometry2D* pProjGeom,
-                    astraCUDA::SFanProjection*& pProjs,
-                    float& outputScale);
-
-_AstraExport bool convertAstraGeometry_dims(const CVolumeGeometry2D* pVolGeom,
-                          const CProjectionGeometry2D* pProjGeom,
-                          astraCUDA::SDimensions& dims);
-
-_AstraExport bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
-                          const CProjectionGeometry2D* pProjGeom,
-                          astraCUDA::SParProjection*& pParProjs,
-                          astraCUDA::SFanProjection*& pFanProjs,
-                          float& outputScale);
 }
 
 namespace astraCUDA {

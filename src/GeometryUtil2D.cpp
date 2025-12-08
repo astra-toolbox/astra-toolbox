@@ -181,7 +181,7 @@ bool getFanParameters(const SFanProjection &proj, unsigned int iProjDets, float 
 template<typename ProjectionT>
 static bool convertAstraGeometry_internal(const CVolumeGeometry2D* pVolGeom,
                           unsigned int iProjectionAngleCount,
-                          ProjectionT*& pProjs,
+                          std::vector<ProjectionT>& projs,
                           float& fOutputScale)
 {
 	// TODO: Make EPS relative
@@ -198,8 +198,8 @@ static bool convertAstraGeometry_internal(const CVolumeGeometry2D* pVolGeom,
 
 	for (int i = 0; i < iProjectionAngleCount; ++i) {
 		// CHECKME: Order of scaling and translation
-		pProjs[i].translate(dx, dy);
-		pProjs[i].scale(factor);
+		projs[i].translate(dx, dy);
+		projs[i].scale(factor);
 	}
 	// CHECKME: Check factor
 	// NB: Only valid for square pixels
@@ -212,7 +212,7 @@ static bool convertAstraGeometry_internal(const CVolumeGeometry2D* pVolGeom,
 
 bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
                           const CParallelProjectionGeometry2D* pProjGeom,
-                          SParProjection*& pProjs,
+                          std::vector<SParProjection>& projs,
                           float& fOutputScale)
 {
 	assert(pVolGeom);
@@ -221,31 +221,25 @@ bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
 
 	int nth = pProjGeom->getProjectionAngleCount();
 
-	std::vector<SParProjection> projs = genParProjections(nth,
-	                           pProjGeom->getDetectorCount(),
-	                           pProjGeom->getDetectorWidth(),
-	                           pProjGeom->getProjectionAngles(), 0);
-	// TODO: Directly use vector<SParProjection> in convertAstra
-	pProjs = new SParProjection[nth];
-	for (int i = 0; i < nth; ++i)
-		pProjs[i] = projs[i];
+	projs = genParProjections(nth,
+	                          pProjGeom->getDetectorCount(),
+	                          pProjGeom->getDetectorWidth(),
+	                          pProjGeom->getProjectionAngles(), 0);
 
 	bool ok;
 	fOutputScale = 1.0f;
 
-	ok = convertAstraGeometry_internal(pVolGeom, nth, pProjs, fOutputScale);
+	ok = convertAstraGeometry_internal(pVolGeom, nth, projs, fOutputScale);
 
-	if (!ok) {
-		delete[] pProjs;
-		pProjs = 0;
-	}
+	if (!ok)
+		projs.clear();
 
 	return ok;
 }
 
 bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
                           const CParallelVecProjectionGeometry2D* pProjGeom,
-                          SParProjection*& pProjs,
+                          std::vector<SParProjection>& projs,
                           float& fOutputScale)
 {
 	assert(pVolGeom);
@@ -254,21 +248,19 @@ bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
 
 	int nth = pProjGeom->getProjectionAngleCount();
 
-	pProjs = new SParProjection[nth];
+	projs.resize(nth);
 
 	for (int i = 0; i < nth; ++i) {
-		pProjs[i] = pProjGeom->getProjectionVectors()[i];
+		projs[i] = pProjGeom->getProjectionVectors()[i];
 	}
 
 	bool ok;
 	fOutputScale = 1.0f;
 
-	ok = convertAstraGeometry_internal(pVolGeom, nth, pProjs, fOutputScale);
+	ok = convertAstraGeometry_internal(pVolGeom, nth, projs, fOutputScale);
 
-	if (!ok) {
-		delete[] pProjs;
-		pProjs = 0;
-	}
+	if (!ok)
+		projs.clear();
 
 	return ok;
 }
@@ -277,7 +269,7 @@ bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
 
 bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
                           const CFanFlatProjectionGeometry2D* pProjGeom,
-                          SFanProjection*& pProjs,
+                          std::vector<SFanProjection>& projs,
                           float& outputScale)
 {
 	assert(pVolGeom);
@@ -303,15 +295,14 @@ bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
 	float fDetSize = pProjGeom->getDetectorWidth();
 	const float *pfAngles = pProjGeom->getProjectionAngles();
 
-	std::vector<SFanProjection> projs = genFanProjections(nth, pProjGeom->getDetectorCount(),
-                               fOriginSourceDistance, fOriginDetectorDistance,
-	                           fDetSize, pfAngles);
-	// TODO: Directly use vector<SFanProjection> in convertAstra
-	pProjs = new SFanProjection[nth];
-	for (int i = 0; i < nth; ++i)
-		pProjs[i] = projs[i];
+	projs = genFanProjections(nth, pProjGeom->getDetectorCount(),
+	                          fOriginSourceDistance, fOriginDetectorDistance,
+	                          fDetSize, pfAngles);
 
-	convertAstraGeometry_internal(pVolGeom, nth, pProjs, outputScale);
+	bool ok = convertAstraGeometry_internal(pVolGeom, nth, projs, outputScale);
+
+	if (!ok)
+		projs.clear();
 
 	return true;
 
@@ -319,7 +310,7 @@ bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
 
 bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
                           const CFanFlatVecProjectionGeometry2D* pProjGeom,
-                          SFanProjection*& pProjs,
+                          std::vector<SFanProjection>& projs,
                           float& outputScale)
 {
 	assert(pVolGeom);
@@ -337,41 +328,16 @@ bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
 	if (abs(pVolGeom->getPixelLengthX() - pVolGeom->getPixelLengthY()) > EPS)
 		return false;
 
-	pProjs = new SFanProjection[nth];
+	projs.resize(nth);
 
 	// Copy vectors
 	for (int i = 0; i < nth; ++i)
-		pProjs[i] = pProjGeom->getProjectionVectors()[i];
+		projs[i] = pProjGeom->getProjectionVectors()[i];
 
-	convertAstraGeometry_internal(pVolGeom, nth, pProjs, outputScale);
+	bool ok = convertAstraGeometry_internal(pVolGeom, nth, projs, outputScale);
 
-	return true;
-}
-
-bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
-                          const CProjectionGeometry2D* pProjGeom,
-                          SParProjection*& pParProjs,
-                          SFanProjection*& pFanProjs,
-                          float& outputScale)
-{
-	const CParallelProjectionGeometry2D* parProjGeom = dynamic_cast<const CParallelProjectionGeometry2D*>(pProjGeom);
-	const CParallelVecProjectionGeometry2D* parVecProjGeom = dynamic_cast<const CParallelVecProjectionGeometry2D*>(pProjGeom);
-	const CFanFlatProjectionGeometry2D* fanProjGeom = dynamic_cast<const CFanFlatProjectionGeometry2D*>(pProjGeom);
-	const CFanFlatVecProjectionGeometry2D* fanVecProjGeom = dynamic_cast<const CFanFlatVecProjectionGeometry2D*>(pProjGeom);
-
-	bool ok = false;
-
-	if (parProjGeom) {
-		ok = convertAstraGeometry(pVolGeom, parProjGeom, pParProjs, outputScale);
-	} else if (parVecProjGeom) {
-		ok = convertAstraGeometry(pVolGeom, parVecProjGeom, pParProjs, outputScale);
-	} else if (fanProjGeom) {
-		ok = convertAstraGeometry(pVolGeom, fanProjGeom, pFanProjs, outputScale);
-	} else if (fanVecProjGeom) {
-		ok = convertAstraGeometry(pVolGeom, fanVecProjGeom, pFanProjs, outputScale);
-	} else {
-		ok = false;
-	}
+	if (!ok)
+		projs.clear();
 
 	return ok;
 }
@@ -387,6 +353,48 @@ bool convertAstraGeometry_dims(const CVolumeGeometry2D* pVolGeom,
 	dims.iProjDets = pProjGeom->getDetectorCount();
 
 	return true;
+}
+
+
+Geometry2DParameters convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
+                                          const CProjectionGeometry2D* pProjGeom)
+{
+	const CParallelProjectionGeometry2D* parProjGeom = dynamic_cast<const CParallelProjectionGeometry2D*>(pProjGeom);
+	const CParallelVecProjectionGeometry2D* parVecProjGeom = dynamic_cast<const CParallelVecProjectionGeometry2D*>(pProjGeom);
+	const CFanFlatProjectionGeometry2D* fanProjGeom = dynamic_cast<const CFanFlatProjectionGeometry2D*>(pProjGeom);
+	const CFanFlatVecProjectionGeometry2D* fanVecProjGeom = dynamic_cast<const CFanFlatVecProjectionGeometry2D*>(pProjGeom);
+
+	SDimensions dims;
+	float outputScale = 1.0f;
+
+	bool ok = true;
+	ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
+	if (!ok)
+		return Geometry2DParameters();
+
+	if (parProjGeom) {
+		std::vector<SParProjection> parProjs;
+		ok = convertAstraGeometry(pVolGeom, parProjGeom, parProjs, outputScale);
+		if (ok)
+			return Geometry2DParameters(std::move(parProjs), dims, outputScale);
+	} else if (parVecProjGeom) {
+		std::vector<SParProjection> parProjs;
+		ok = convertAstraGeometry(pVolGeom, parVecProjGeom, parProjs, outputScale);
+		if (ok)
+			return Geometry2DParameters(std::move(parProjs), dims, outputScale);
+	} else if (fanProjGeom) {
+		std::vector<SFanProjection> fanProjs;
+		ok = convertAstraGeometry(pVolGeom, fanProjGeom, fanProjs, outputScale);
+		if (ok)
+			return Geometry2DParameters(std::move(fanProjs), dims, outputScale);
+	} else if (fanVecProjGeom) {
+		std::vector<SFanProjection> fanProjs;
+		ok = convertAstraGeometry(pVolGeom, fanVecProjGeom, fanProjs, outputScale);
+		if (ok)
+			return Geometry2DParameters(std::move(fanProjs), dims, outputScale);
+	}
+
+	return Geometry2DParameters();
 }
 
 

@@ -175,44 +175,29 @@ bool CCudaForwardProjectionAlgorithm::run(int)
 
 	const CVolumeGeometry2D &pVolGeom = m_pVolume->getGeometry();
 	const CProjectionGeometry2D &pProjGeom = m_pSinogram->getGeometry();
-	astraCUDA::SDimensions dims;
 
-	ok = convertAstraGeometry_dims(&pVolGeom, &pProjGeom, dims);
+	Geometry2DParameters geom = convertAstraGeometry(&pVolGeom, &pProjGeom);
 
-	if (!ok)
+	if (!geom.isValid())
 		return false;
 
-	astraCUDA::SParProjection* pParProjs = 0;
-	astraCUDA::SFanProjection* pFanProjs = 0;
-	float fOutputScale = 1.0f;
-
-	ok = convertAstraGeometry(&pVolGeom, &pProjGeom, pParProjs, pFanProjs, fOutputScale);
-	if (!ok)
-		return false;
-
-	if (pParProjs) {
-		assert(!pFanProjs);
+	if (geom.isParallel()) {
 
 		ok = astraCudaFP(m_pVolume->getFloat32Memory(), m_pSinogram->getFloat32Memory(),
 		                 pVolGeom.getGridColCount(), pVolGeom.getGridRowCount(),
 		                 pProjGeom.getProjectionAngleCount(),
 		                 pProjGeom.getDetectorCount(),
-		                 pParProjs,
-		                 m_iDetectorSuperSampling, 1.0f * fOutputScale, m_iGPUIndex);
-
-		delete[] pParProjs;
+		                 geom.getParallel(),
+		                 m_iDetectorSuperSampling, geom.getOutputScale(), m_iGPUIndex);
 
 	} else {
-		assert(pFanProjs);
 
 		ok = astraCudaFanFP(m_pVolume->getFloat32Memory(), m_pSinogram->getFloat32Memory(),
 		                    pVolGeom.getGridColCount(), pVolGeom.getGridRowCount(),
 		                    pProjGeom.getProjectionAngleCount(),
 		                    pProjGeom.getDetectorCount(),
-		                    pFanProjs,
-		                    m_iDetectorSuperSampling, fOutputScale, m_iGPUIndex);
-
-		delete[] pFanProjs;
+		                    geom.getFan(),
+		                    m_iDetectorSuperSampling, geom.getOutputScale(), m_iGPUIndex);
 
 	}
 

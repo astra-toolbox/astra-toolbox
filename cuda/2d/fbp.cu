@@ -109,7 +109,7 @@ bool FBP::iterate(unsigned int iterations)
 	bool ok = false;
 
 	float fFanDetSize = 0.0f;
-	if (fanProjs) {
+	if (geometry.isFan()) {
 		// Call FDK_PreWeight to handle fan beam geometry. We treat
 		// this as a cone beam setup of a single slice:
 
@@ -122,7 +122,7 @@ bool FBP::iterate(unsigned int iterations)
 
 		float fOriginSource, fOriginDetector, fOffset;
 		for (unsigned int i = 0; i < dims.iProjAngles; ++i) {
-			bool ok = astra::getFanParameters(fanProjs[i], dims.iProjDets,
+			bool ok = astra::getFanParameters(geometry.getFan()[i], dims.iProjDets,
 			                                  pfAngles[i],
 			                                  fOriginSource, fOriginDetector,
 			                                  fFanDetSize, fOffset);
@@ -178,15 +178,15 @@ bool FBP::iterate(unsigned int iterations)
 
 	}
 
-	if (fanProjs) {
-		ok = FanBP_FBPWeighted(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, params, fanProjs, fProjectorScale * fReconstructionScale);
+	if (geometry.isFan()) {
+		ok = FanBP_FBPWeighted(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, params, geometry.getFan(), fProjectorScale * fReconstructionScale);
 
 	} else {
 		// scale by number of angles. For the fan-beam case, this is already
 		// handled by FDK_PreWeight
 		float fOutputScale = (M_PI / 2.0f) / (float)dims.iProjAngles;
 
-		ok = BP(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, params, parProjs, fOutputScale * fProjectorScale * fReconstructionScale);
+		ok = BP(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, params, geometry.getParallel(), fOutputScale * fProjectorScale * fReconstructionScale);
 	}
 	if(!ok)
 	{

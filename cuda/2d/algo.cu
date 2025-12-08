@@ -42,9 +42,6 @@ namespace astraCUDA {
 
 ReconAlgo::ReconAlgo()
 {
-	parProjs = 0;
-	fanProjs = 0;
-
 	useVolumeMask = false;
 	useSinogramMask = false;
 	D_maskData = 0;
@@ -66,18 +63,12 @@ ReconAlgo::~ReconAlgo()
 
 void ReconAlgo::reset()
 {
-	delete[] parProjs;
-	delete[] fanProjs;
-
 	if (freeGPUMemory) {
 		cudaFree(D_maskData);
 		cudaFree(D_smaskData);
 		cudaFree(D_sinoData);
 		cudaFree(D_volumeData);
 	}
-
-	parProjs = 0;
-	fanProjs = 0;
 
 	useVolumeMask = false;
 	useSinogramMask = false;
@@ -124,24 +115,11 @@ bool ReconAlgo::enableSinogramMask()
 bool ReconAlgo::setGeometry(const astra::CVolumeGeometry2D* pVolGeom,
                             const astra::CProjectionGeometry2D* pProjGeom)
 {
-	bool ok;
+	geometry = convertAstraGeometry(pVolGeom, pProjGeom);
+	dims = geometry.getDims();
+	fProjectorScale = geometry.getOutputScale();
 
-	ok = convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
-
-	if (!ok)
-		return false;
-
-	delete[] parProjs;
-	parProjs = 0;
-	delete[] fanProjs;
-	fanProjs = 0;
-
-	fProjectorScale = 1.0f;
-	ok = convertAstraGeometry(pVolGeom, pProjGeom, parProjs, fanProjs, fProjectorScale);
-	if (!ok)
-		return false;
-
-	return true;
+	return geometry.isValid();
 }
 
 bool ReconAlgo::setSuperSampling(int raysPerDet, int raysPerPixelDim)
@@ -310,14 +288,12 @@ bool ReconAlgo::callFP(float* D_volumeData, unsigned int volumePitch,
                        float* D_projData, unsigned int projPitch,
                        float outputScale)
 {
-	if (parProjs) {
-		assert(!fanProjs);
+	if (geometry.isParallel()) {
 		return FP(D_volumeData, volumePitch, D_projData, projPitch,
-		          dims, params, parProjs, fProjectorScale * outputScale);
+		          dims, params, geometry.getParallel(), fProjectorScale * outputScale);
 	} else {
-		assert(fanProjs);
 		return FanFP(D_volumeData, volumePitch, D_projData, projPitch,
-		             dims, params, fanProjs, fProjectorScale * outputScale);
+		             dims, params, geometry.getFan(), fProjectorScale * outputScale);
 	}
 }
 
@@ -325,14 +301,12 @@ bool ReconAlgo::callBP(float* D_volumeData, unsigned int volumePitch,
                        float* D_projData, unsigned int projPitch,
                        float outputScale)
 {
-	if (parProjs) {
-		assert(!fanProjs);
+	if (geometry.isParallel()) {
 		return BP(D_volumeData, volumePitch, D_projData, projPitch,
-		          dims, params, parProjs, fProjectorScale * outputScale);
+		          dims, params, geometry.getParallel(), fProjectorScale * outputScale);
 	} else {
-		assert(fanProjs);
 		return FanBP(D_volumeData, volumePitch, D_projData, projPitch,
-		             dims, params, fanProjs, fProjectorScale * outputScale);
+		             dims, params, geometry.getFan(), fProjectorScale * outputScale);
 	}
 
 }

@@ -168,7 +168,7 @@ bool SIRT::doSlabCorrections()
 		return false;
 
 	// Parallel-beam only
-	if (!parProjs)
+	if (!geometry.isParallel())
 		return false;
 
 	// multiply by line weights
@@ -183,7 +183,7 @@ bool SIRT::doSlabCorrections()
 	float* t = (float*)D_sinoData;
 	for (int i = 0; i < dims.iProjAngles; ++i) {
 		float angle, detsize, offset;
-		getParParameters(parProjs[i], dims.iProjDets, angle, detsize, offset);
+		getParParameters(geometry.getParallel()[i], dims.iProjDets, angle, detsize, offset);
 		float f = fabs(cosf(angle));
 
 		if (f < bound)

@@ -28,9 +28,15 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _INC_ASTRA_GEOMETRYUTIL2D
 #define _INC_ASTRA_GEOMETRYUTIL2D
 
+#include "Globals.h"
+
 #include <vector>
+#include <variant>
 
 namespace astra {
+
+class CProjectionGeometry2D;
+class CVolumeGeometry2D;
 
 struct SDimensions {
 	// Width, height of reconstruction volume
@@ -43,7 +49,6 @@ struct SDimensions {
 	// Number of detector pixels
 	unsigned int iProjDets;
 };
-
 
 
 struct SParProjection {
@@ -110,6 +115,55 @@ struct SFanProjection {
 	}
 };
 
+class _AstraExport Geometry2DParameters {
+public:
+	using variant_t = std::variant<std::monostate, std::vector<SParProjection>, std::vector<SFanProjection> >;
+
+	Geometry2DParameters() { }
+	Geometry2DParameters(variant_t && p, SDimensions d, float sc) : projs(std::move(p)), dims(d), fOutputScale(sc) { }
+
+	bool isValid() const {
+		return !std::holds_alternative<std::monostate>(projs);
+	}
+
+	bool isParallel() const {
+		return std::holds_alternative<std::vector<SParProjection>>(projs);
+	}
+	bool isFan() const {
+		return std::holds_alternative<std::vector<SFanProjection>>(projs);
+	}
+
+	const SParProjection *getParallel() const {
+		if (!std::holds_alternative<std::vector<SParProjection>>(projs))
+			return nullptr;
+
+		return &std::get<std::vector<SParProjection>>(projs)[0];
+	}
+
+	const SFanProjection *getFan() const {
+		if (!std::holds_alternative<std::vector<SFanProjection>>(projs))
+			return nullptr;
+
+		return &std::get<std::vector<SFanProjection>>(projs)[0];
+	}
+
+	const SDimensions& getDims() const {
+		return dims;
+	}
+
+	float getOutputScale() const {
+		return fOutputScale;
+	}
+
+private:
+	variant_t projs;
+
+	SDimensions dims;
+	float fOutputScale;
+
+};
+
+
 
 
 std::vector<SParProjection> genParProjections(unsigned int iProjAngles,
@@ -127,6 +181,9 @@ std::vector<SFanProjection> genFanProjections(unsigned int iProjAngles,
 bool getParParameters(const SParProjection &proj, unsigned int iProjDets, float &fAngle, float &fDetSize, float &fOffset);
 
 bool getFanParameters(const SFanProjection &proj, unsigned int iProjDets, float &fAngle, float &fOriginSource, float &fOriginDetector, float &fDetSize, float &fOffset);
+
+Geometry2DParameters convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
+                                          const CProjectionGeometry2D* pProjGeom);
 
 
 }

@@ -259,14 +259,12 @@ bool SART::callFP_SART(float* D_volumeData, unsigned int volumePitch,
 {
 	SDimensions d = dims;
 	d.iProjAngles = 1;
-	if (parProjs) {
-		assert(!fanProjs);
+	if (geometry.isParallel()) {
 		return FP(D_volumeData, volumePitch, D_projData, projPitch,
-		          d, params, &parProjs[angle], outputScale * fProjectorScale);
+		          d, params, &geometry.getParallel()[angle], outputScale * fProjectorScale);
 	} else {
-		assert(fanProjs);
 		return FanFP(D_volumeData, volumePitch, D_projData, projPitch,
-		             d, params, &fanProjs[angle], outputScale * fProjectorScale);
+		             d, params, &geometry.getFan()[angle], outputScale * fProjectorScale);
 	}
 }
 
@@ -275,14 +273,12 @@ bool SART::callBP_SART(float* D_volumeData, unsigned int volumePitch,
                        unsigned int angle, float outputScale)
 {
 	// NB: No fProjectorScale here, as that it is cancelled out in the SART weighting
-	if (parProjs) {
-		assert(!fanProjs);
+	if (geometry.isParallel()) {
 		return BP_SART(D_volumeData, volumePitch, D_projData, projPitch,
-		               angle, dims, params, parProjs, outputScale);
+		               angle, dims, params, geometry.getParallel(), outputScale);
 	} else {
-		assert(fanProjs);
 		return FanBP_SART(D_volumeData, volumePitch, D_projData, projPitch,
-		                  angle, dims, params, fanProjs, outputScale);
+		                  angle, dims, params, geometry.getFan(), outputScale);
 	}
 
 }

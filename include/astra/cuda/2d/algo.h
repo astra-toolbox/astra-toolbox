@@ -29,6 +29,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #define _CUDA_ALGO_H
 
 #include "astra/Globals.h"
+#include "astra/GeometryUtil2D.h"
 #include "dims.h"
 
 namespace astra {
@@ -134,9 +135,8 @@ protected:
 
 
 	SDimensions dims;
+	astra::Geometry2DParameters geometry;
 	SProjectorParams2D params;
-	SParProjection* parProjs;
-	SFanProjection* fanProjs;
 	float fProjectorScale;
 
 	bool freeGPUMemory;
