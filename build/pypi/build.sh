@@ -2,7 +2,7 @@
 
 set -e
 
-BRANCH=master
+BRANCH=release-2.4
 URL=https://github.com/astra-toolbox/astra-toolbox
 CUDA_RPATHS='$ORIGIN/../nvidia/cuda_runtime/lib:$ORIGIN/../nvidia/cufft/lib'
 
