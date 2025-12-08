@@ -70,7 +70,7 @@ bool CFanFlatBeamLineKernelProjector2D::_check()
 	// check base class
 	ASTRA_CONFIG_CHECK(CProjector2D::_check(), "FanFlatBeamLineKernelProjector2D", "Error in Projector2D initialization");
 
-	ASTRA_CONFIG_CHECK(dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pProjectionGeometry) || dynamic_cast<CFanFlatVecProjectionGeometry2D*>(m_pProjectionGeometry), "FanFlatBeamLineKernelProjector2D", "Unsupported projection geometry");
+	ASTRA_CONFIG_CHECK(dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pProjectionGeometry.get()) || dynamic_cast<CFanFlatVecProjectionGeometry2D*>(m_pProjectionGeometry.get()), "FanFlatBeamLineKernelProjector2D", "Unsupported projection geometry");
 
 	ASTRA_CONFIG_CHECK(abs(m_pVolumeGeometry->getPixelLengthX() / m_pVolumeGeometry->getPixelLengthY()) - 1 < eps, "FanFlatBeamLineKernelProjector2D", "Pixel height must equal pixel width.");
 	
@@ -102,8 +102,8 @@ bool CFanFlatBeamLineKernelProjector2D::initialize(const CFanFlatProjectionGeome
 	assert(!m_bIsInitialized);
 
 	// hardcopy geometries
-	m_pProjectionGeometry = _pProjectionGeometry.clone();
-	m_pVolumeGeometry = _pVolumeGeometry.clone();
+	m_pProjectionGeometry.reset(_pProjectionGeometry.clone());
+	m_pVolumeGeometry.reset(_pVolumeGeometry.clone());
 
 	// success
 	m_bIsInitialized = _check();
