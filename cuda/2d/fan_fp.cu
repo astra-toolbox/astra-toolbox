@@ -52,7 +52,7 @@ static const unsigned int g_blockSlices = 64;
 
 // projection for angles that are roughly horizontal
 // (detector roughly vertical)
-__global__ void FanFPhorizontal(float* D_projData, unsigned int projPitch, cudaTextureObject_t tex, unsigned int startSlice, unsigned int startAngle, unsigned int endAngle, const SDimensions dims, float outputScale)
+__global__ void FanFPhorizontal(float* D_projData, unsigned int projPitch, cudaTextureObject_t tex, unsigned int startSlice, unsigned int startAngle, unsigned int endAngle, const SDimensions dims, int iRaysPerDet, float outputScale)
 {
 	float* projData = (float*)D_projData;
 	const int relDet = threadIdx.x;
@@ -83,8 +83,8 @@ __global__ void FanFPhorizontal(float* D_projData, unsigned int projPitch, cudaT
 		return;
 
 
-	for (int iSubT = 0; iSubT < dims.iRaysPerDet; ++iSubT) {
-		const float fDet = detector + (0.5f + iSubT) / dims.iRaysPerDet;
+	for (int iSubT = 0; iSubT < iRaysPerDet; ++iSubT) {
+		const float fDet = detector + (0.5f + iSubT) / iRaysPerDet;
 
 		const float fDetX = fDetSX + fDet * fDetUX;
 		const float fDetY = fDetSY + fDet * fDetUY;
@@ -93,7 +93,7 @@ __global__ void FanFPhorizontal(float* D_projData, unsigned int projPitch, cudaT
 		const float alpha = (fSrcY - fDetY) / (fSrcX - fDetX);
 		const float beta = fSrcY - alpha * fSrcX;
 	
-		const float fDistCorr = sqrt(alpha*alpha+1.0f) * outputScale / dims.iRaysPerDet;
+		const float fDistCorr = sqrt(alpha*alpha+1.0f) * outputScale / iRaysPerDet;
 
 		// intersect ray with first slice
 
@@ -122,7 +122,7 @@ __global__ void FanFPhorizontal(float* D_projData, unsigned int projPitch, cudaT
 
 // projection for angles that are roughly vertical
 // (detector roughly horizontal)
-__global__ void FanFPvertical(float* D_projData, unsigned int projPitch, cudaTextureObject_t tex, unsigned int startSlice, unsigned int startAngle, unsigned int endAngle, const SDimensions dims, float outputScale)
+__global__ void FanFPvertical(float* D_projData, unsigned int projPitch, cudaTextureObject_t tex, unsigned int startSlice, unsigned int startAngle, unsigned int endAngle, const SDimensions dims, int iRaysPerDet, float outputScale)
 {
 	const int relDet = threadIdx.x;
 	const int relAngle = threadIdx.y;
@@ -155,8 +155,8 @@ __global__ void FanFPvertical(float* D_projData, unsigned int projPitch, cudaTex
 		return;
 
 
-	for (int iSubT = 0; iSubT < dims.iRaysPerDet; ++iSubT) {
-		const float fDet = detector + (0.5f + iSubT) / dims.iRaysPerDet /*- gC_angle_offset[angle]*/;
+	for (int iSubT = 0; iSubT < iRaysPerDet; ++iSubT) {
+		const float fDet = detector + (0.5f + iSubT) / iRaysPerDet /*- gC_angle_offset[angle]*/;
 
 		const float fDetX = fDetSX + fDet * fDetUX;
 		const float fDetY = fDetSY + fDet * fDetUY;
@@ -165,7 +165,7 @@ __global__ void FanFPvertical(float* D_projData, unsigned int projPitch, cudaTex
 		const float alpha = (fSrcX - fDetX) / (fSrcY - fDetY);
 		const float beta = fSrcX - alpha * fSrcY;
 	
-		const float fDistCorr = sqrt(alpha*alpha+1) * outputScale / dims.iRaysPerDet;
+		const float fDistCorr = sqrt(alpha*alpha+1) * outputScale / iRaysPerDet;
 
 		// intersect ray with first slice
 
@@ -220,7 +220,7 @@ static bool transferConstants(const SFanProjection *projs, unsigned int nth,
 
 bool FanFP_internal(float* D_volumeData, unsigned int volumePitch,
            float* D_projData, unsigned int projPitch,
-           const SDimensions& dims, const SFanProjection* angles,
+           const SDimensions& dims, const SProjectorParams2D& params, const SFanProjection* angles,
            float outputScale, cudaStream_t stream)
 {
 	assert(dims.iProjAngles <= g_MaxAngles);
@@ -242,10 +242,10 @@ bool FanFP_internal(float* D_volumeData, unsigned int volumePitch,
 	             (dims.iProjDets+g_blockSliceSize-1)/g_blockSliceSize); // angle blocks, regions
 
 	for (unsigned int i = 0; i < dims.iVolWidth; i += g_blockSlices)
-		FanFPhorizontal<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, D_texObj, i, blockStart, blockEnd, dims, outputScale);
+		FanFPhorizontal<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, D_texObj, i, blockStart, blockEnd, dims, params.iRaysPerDet, outputScale);
 
 	for (unsigned int i = 0; i < dims.iVolHeight; i += g_blockSlices)
-		FanFPvertical<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, D_texObj, i, blockStart, blockEnd, dims, outputScale);
+		FanFPvertical<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, D_texObj, i, blockStart, blockEnd, dims, params.iRaysPerDet, outputScale);
 
 	bool ok = true;
 
@@ -259,7 +259,7 @@ bool FanFP_internal(float* D_volumeData, unsigned int volumePitch,
 
 bool FanFP(float* D_volumeData, unsigned int volumePitch,
            float* D_projData, unsigned int projPitch,
-           const SDimensions& dims, const SFanProjection* angles,
+           const SDimensions& dims, const SProjectorParams2D& params, const SFanProjection* angles,
            float outputScale)
 {
 	TransferConstantsBuffer tcbuf(g_MaxAngles);
@@ -283,7 +283,7 @@ bool FanFP(float* D_volumeData, unsigned int volumePitch,
 
 		ok &= FanFP_internal(D_volumeData, volumePitch,
 		                         D_projData + iAngle * projPitch, projPitch,
-		                         subdims, angles + iAngle,
+		                         subdims, params, angles + iAngle,
 		                         outputScale, stream);
 		if (!ok)
 			break;

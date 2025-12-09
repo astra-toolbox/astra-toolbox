@@ -112,6 +112,7 @@ bool astraCudaFP(const float* pfVolume, float* pfSinogram,
                  float fOutputScale, int iGPUIndex)
 {
 	SDimensions dims;
+	SProjectorParams2D params;
 
 	if (iProjAngles == 0 || iProjDets == 0 || pAngles == 0)
 		return false;
@@ -122,7 +123,7 @@ bool astraCudaFP(const float* pfVolume, float* pfSinogram,
 	if (iDetSuperSampling == 0)
 		return false;
 
-	dims.iRaysPerDet = iDetSuperSampling;
+	params.iRaysPerDet = iDetSuperSampling;
 
 	if (iVolWidth <= 0 || iVolHeight <= 0)
 		return false;
@@ -167,7 +168,7 @@ bool astraCudaFP(const float* pfVolume, float* pfSinogram,
 	}
 
 	zeroProjectionData(D_sinoData, sinoPitch, dims);
-	ok = FP(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, pAngles, fOutputScale);
+	ok = FP(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, params, pAngles, fOutputScale);
 	if (!ok) {
 		cudaFree(D_volumeData);
 		cudaFree(D_sinoData);
@@ -196,6 +197,7 @@ bool astraCudaFanFP(const float* pfVolume, float* pfSinogram,
                     int iGPUIndex)
 {
 	SDimensions dims;
+	SProjectorParams2D params;
 
 	if (iProjAngles == 0 || iProjDets == 0 || pAngles == 0)
 		return false;
@@ -206,7 +208,7 @@ bool astraCudaFanFP(const float* pfVolume, float* pfSinogram,
 	if (iDetSuperSampling == 0)
 		return false;
 
-	dims.iRaysPerDet = iDetSuperSampling;
+	params.iRaysPerDet = iDetSuperSampling;
 
 	if (iVolWidth <= 0 || iVolHeight <= 0)
 		return false;
@@ -252,7 +254,7 @@ bool astraCudaFanFP(const float* pfVolume, float* pfSinogram,
 
 	zeroProjectionData(D_sinoData, sinoPitch, dims);
 
-	ok = FanFP(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, pAngles, fOutputScale);
+	ok = FanFP(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, params, pAngles, fOutputScale);
 
 	if (!ok) {
 		cudaFree(D_volumeData);
@@ -485,9 +487,6 @@ bool convertAstraGeometry_dims(const CVolumeGeometry2D* pVolGeom,
 
 	dims.iProjAngles = pProjGeom->getProjectionAngleCount();
 	dims.iProjDets = pProjGeom->getDetectorCount();
-
-	dims.iRaysPerDet = 1;
-	dims.iRaysPerPixelDim = 1;
 
 	return true;
 }

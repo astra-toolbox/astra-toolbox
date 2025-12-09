@@ -262,11 +262,11 @@ bool SART::callFP_SART(float* D_volumeData, unsigned int volumePitch,
 	if (parProjs) {
 		assert(!fanProjs);
 		return FP(D_volumeData, volumePitch, D_projData, projPitch,
-		          d, &parProjs[angle], outputScale * fProjectorScale);
+		          d, params, &parProjs[angle], outputScale * fProjectorScale);
 	} else {
 		assert(fanProjs);
 		return FanFP(D_volumeData, volumePitch, D_projData, projPitch,
-		             d, &fanProjs[angle], outputScale * fProjectorScale);
+		             d, params, &fanProjs[angle], outputScale * fProjectorScale);
 	}
 }
 
@@ -278,11 +278,11 @@ bool SART::callBP_SART(float* D_volumeData, unsigned int volumePitch,
 	if (parProjs) {
 		assert(!fanProjs);
 		return BP_SART(D_volumeData, volumePitch, D_projData, projPitch,
-		               angle, dims, parProjs, outputScale);
+		               angle, dims, params, parProjs, outputScale);
 	} else {
 		assert(fanProjs);
 		return FanBP_SART(D_volumeData, volumePitch, D_projData, projPitch,
-		                  angle, dims, fanProjs, outputScale);
+		                  angle, dims, params, fanProjs, outputScale);
 	}
 
 }

@@ -32,7 +32,7 @@ namespace astraCUDA {
 
 _AstraExport bool FP(float* D_volumeData, unsigned int volumePitch,
         float* D_projData, unsigned int projPitch,
-        const SDimensions& dims, const SParProjection* angles,
+        const SDimensions& dims, const SProjectorParams2D& params, const SParProjection* angles,
         float fOutputScale);
 
 }

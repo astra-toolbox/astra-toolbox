@@ -32,6 +32,20 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 namespace astra {
 
+struct SDimensions {
+	// Width, height of reconstruction volume
+	unsigned int iVolWidth;
+	unsigned int iVolHeight;
+
+	// Number of projection angles
+	unsigned int iProjAngles;
+
+	// Number of detector pixels
+	unsigned int iProjDets;
+};
+
+
+
 struct SParProjection {
 	// the ray direction
 	float fRayX, fRayY;

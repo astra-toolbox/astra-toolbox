@@ -134,6 +134,7 @@ protected:
 
 
 	SDimensions dims;
+	SProjectorParams2D params;
 	SParProjection* parProjs;
 	SFanProjection* fanProjs;
 	float fProjectorScale;

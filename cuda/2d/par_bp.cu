@@ -87,7 +87,7 @@ __global__ void devBP(float* D_volData, unsigned int volPitch, cudaTextureObject
 }
 
 // supersampling version
-__global__ void devBP_SS(float* D_volData, unsigned int volPitch, cudaTextureObject_t tex, unsigned int startAngle, const SDimensions dims, float fOutputScale)
+__global__ void devBP_SS(float* D_volData, unsigned int volPitch, cudaTextureObject_t tex, unsigned int startAngle, const SDimensions dims, int iRaysPerPixelDim, float fOutputScale)
 {
 	const int relX = threadIdx.x;
 	const int relY = threadIdx.y;
@@ -101,17 +101,17 @@ __global__ void devBP_SS(float* D_volData, unsigned int volPitch, cudaTextureObj
 	if (X >= dims.iVolWidth || Y >= dims.iVolHeight)
 		return;
 
-	const float fX = ( X - 0.5f*dims.iVolWidth + 0.5f - 0.5f + 0.5f/dims.iRaysPerPixelDim);
-	const float fY = ( Y - 0.5f*dims.iVolHeight + 0.5f - 0.5f + 0.5f/dims.iRaysPerPixelDim);
+	const float fX = ( X - 0.5f*dims.iVolWidth + 0.5f - 0.5f + 0.5f/iRaysPerPixelDim);
+	const float fY = ( Y - 0.5f*dims.iVolHeight + 0.5f - 0.5f + 0.5f/iRaysPerPixelDim);
 
-	const float fSubStep = 1.0f/(dims.iRaysPerPixelDim); // * dims.fDetScale);
+	const float fSubStep = 1.0f/(iRaysPerPixelDim); // * dims.fDetScale);
 
 	float* volData = (float*)D_volData;
 
 	float fVal = 0.0f;
 	float fA = startAngle + 0.5f;
 
-	fOutputScale /= (dims.iRaysPerPixelDim * dims.iRaysPerPixelDim);
+	fOutputScale /= (iRaysPerPixelDim * iRaysPerPixelDim);
 
 	for (int angle = startAngle; angle < endAngle; ++angle)
 	{
@@ -122,10 +122,10 @@ __global__ void devBP_SS(float* D_volData, unsigned int volPitch, cudaTextureObj
 
 		float fT = fX * cos_theta - fY * sin_theta + TOffset;
 
-		for (int iSubX = 0; iSubX < dims.iRaysPerPixelDim; ++iSubX) {
+		for (int iSubX = 0; iSubX < iRaysPerPixelDim; ++iSubX) {
 			float fTy = fT;
 			fT += fSubStep * cos_theta;
-			for (int iSubY = 0; iSubY < dims.iRaysPerPixelDim; ++iSubY) {
+			for (int iSubY = 0; iSubY < iRaysPerPixelDim; ++iSubY) {
 				fVal += tex2D<float>(tex, fTy, fA) * scale;
 				fTy -= fSubStep * sin_theta;
 			}
@@ -193,7 +193,7 @@ static bool transferConstants(const SParProjection *angles, unsigned int nth,
 
 bool BP_internal(float* D_volumeData, unsigned int volumePitch,
         float* D_projData, unsigned int projPitch,
-        const SDimensions& dims, const SParProjection* angles,
+        const SDimensions& dims, const SProjectorParams2D& params, const SParProjection* angles,
         float fOutputScale, cudaStream_t stream)
 {
 	assert(dims.iProjAngles <= g_MaxAngles);
@@ -208,8 +208,8 @@ bool BP_internal(float* D_volumeData, unsigned int volumePitch,
 
 	for (unsigned int i = 0; i < dims.iProjAngles; i += g_anglesPerBlock) {
 
-		if (dims.iRaysPerPixelDim > 1)
-			devBP_SS<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, D_texObj, i, dims, fOutputScale);
+		if (params.iRaysPerPixelDim > 1)
+			devBP_SS<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, D_texObj, i, dims, params.iRaysPerPixelDim, fOutputScale);
 		else
 			devBP<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, D_texObj, i, dims, fOutputScale);
 	}
@@ -223,7 +223,8 @@ bool BP_internal(float* D_volumeData, unsigned int volumePitch,
 
 bool BP(float* D_volumeData, unsigned int volumePitch,
         float* D_projData, unsigned int projPitch,
-        const SDimensions& dims, const SParProjection* angles, float fOutputScale)
+        const SDimensions& dims, const SProjectorParams2D& params,
+        const SParProjection* angles, float fOutputScale)
 {
 	TransferConstantsBuffer tcbuf(g_MaxAngles);
 
@@ -246,7 +247,7 @@ bool BP(float* D_volumeData, unsigned int volumePitch,
 
 		ok &= BP_internal(D_volumeData, volumePitch,
 		                  D_projData + iAngle * projPitch, projPitch,
-		                  subdims, angles + iAngle, fOutputScale, stream);
+		                  subdims, params, angles + iAngle, fOutputScale, stream);
 		if (!ok)
 			break;
 	}
@@ -259,9 +260,11 @@ bool BP(float* D_volumeData, unsigned int volumePitch,
 
 bool BP_SART(float* D_volumeData, unsigned int volumePitch,
              float* D_projData, unsigned int projPitch,
-             unsigned int angle, const SDimensions& dims,
+             unsigned int angle, const SDimensions& dims, const SProjectorParams2D& params,
              const SParProjection* angles, float fOutputScale)
 {
+	assert(params.iRaysPerPixelDim == 1);
+
 	// Only one angle.
 	// We need to Clamp to the border pixels instead of to zero, because
 	// SART weights with ray length.

@@ -35,19 +35,12 @@ namespace astraCUDA {
 
 using astra::SParProjection;
 using astra::SFanProjection;
+using astra::SDimensions;
 
-
-
-struct SDimensions {
-	// Width, height of reconstruction volume
-	unsigned int iVolWidth;
-	unsigned int iVolHeight;
-
-	// Number of projection angles
-	unsigned int iProjAngles;
-
-	// Number of detector pixels
-	unsigned int iProjDets;
+struct SProjectorParams2D {
+	SProjectorParams2D() :
+		iRaysPerDet(1), iRaysPerPixelDim(1)
+	{ }
 
 	// in FP, number of rays to trace per detector pixel.
 	// This should usually be set to 1.
@@ -60,6 +53,7 @@ struct SDimensions {
 	// If fDetScale < 1, this should be set to an integer of roughly
 	// the same size as 1 / fDetScale.
 	unsigned int iRaysPerPixelDim;
+
 };
 
 }

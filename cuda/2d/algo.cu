@@ -149,8 +149,8 @@ bool ReconAlgo::setSuperSampling(int raysPerDet, int raysPerPixelDim)
 	if (raysPerDet <= 0 || raysPerPixelDim <= 0)
 		return false;
 
-	dims.iRaysPerDet = raysPerDet;
-	dims.iRaysPerPixelDim = raysPerPixelDim;
+	params.iRaysPerDet = raysPerDet;
+	params.iRaysPerPixelDim = raysPerPixelDim;
 
 	return true;
 }
@@ -313,11 +313,11 @@ bool ReconAlgo::callFP(float* D_volumeData, unsigned int volumePitch,
 	if (parProjs) {
 		assert(!fanProjs);
 		return FP(D_volumeData, volumePitch, D_projData, projPitch,
-		          dims, parProjs, fProjectorScale * outputScale);
+		          dims, params, parProjs, fProjectorScale * outputScale);
 	} else {
 		assert(fanProjs);
 		return FanFP(D_volumeData, volumePitch, D_projData, projPitch,
-		             dims, fanProjs, fProjectorScale * outputScale);
+		             dims, params, fanProjs, fProjectorScale * outputScale);
 	}
 }
 
@@ -328,11 +328,11 @@ bool ReconAlgo::callBP(float* D_volumeData, unsigned int volumePitch,
 	if (parProjs) {
 		assert(!fanProjs);
 		return BP(D_volumeData, volumePitch, D_projData, projPitch,
-		          dims, parProjs, fProjectorScale * outputScale);
+		          dims, params, parProjs, fProjectorScale * outputScale);
 	} else {
 		assert(fanProjs);
 		return FanBP(D_volumeData, volumePitch, D_projData, projPitch,
-		             dims, fanProjs, fProjectorScale * outputScale);
+		             dims, params, fanProjs, fProjectorScale * outputScale);
 	}
 
 }

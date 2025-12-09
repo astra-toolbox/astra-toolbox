@@ -179,14 +179,14 @@ bool FBP::iterate(unsigned int iterations)
 	}
 
 	if (fanProjs) {
-		ok = FanBP_FBPWeighted(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, fanProjs, fProjectorScale * fReconstructionScale);
+		ok = FanBP_FBPWeighted(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, params, fanProjs, fProjectorScale * fReconstructionScale);
 
 	} else {
 		// scale by number of angles. For the fan-beam case, this is already
 		// handled by FDK_PreWeight
 		float fOutputScale = (M_PI / 2.0f) / (float)dims.iProjAngles;
 
-		ok = BP(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, parProjs, fOutputScale * fProjectorScale * fReconstructionScale);
+		ok = BP(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, params, parProjs, fOutputScale * fProjectorScale * fReconstructionScale);
 	}
 	if(!ok)
 	{
