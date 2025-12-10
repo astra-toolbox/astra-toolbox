@@ -8,6 +8,14 @@ License: Open Source under GPLv3
 Contact: astra@astra-toolbox.com
 Website: https://www.astra-toolbox.com/
 -----------------------------------------------------------------------
+2.4.1 (2025-12-19)
+ * fix DLPack support for certain arrays with dimensions of size 1
+ * fix using FBP from a multi-threaded script
+ * fix a memory leak in the CPU parallel beam blob kernel
+ * add conda packages for CUDA 13 and for Python 3.14
+ * our conda packages for CUDA 12 and for CUDA 13 no longer depend on a
+   specific minor version of CUDA
+
 2.4.0 (2025-08-04)
  * add support for curved detectors (cyl_cone_vec 3D geometry type)
  * add initial experimental support for building with AMD HIP instead of CUDA
