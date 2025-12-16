@@ -88,6 +88,7 @@ cudatoolkit_dep:
 zip_keys:
   - cuda_dep_type
   - cudatoolkit
+  - cudatoolkit_build
   - libcufft_dep
   - cudacudart_dep
   - pytorchcuda_dep
