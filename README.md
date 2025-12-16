@@ -19,7 +19,7 @@ See the Python and MATLAB code samples in the `samples/` directory and https://w
 
 ### Windows/Linux, using conda for Python packages
 
-Requirements: [conda](https://conda.io/) Python environment, with 64 bit Python 3.9-3.13.
+Requirements: [conda](https://conda.io/) Python environment, with 64 bit Python 3.10-3.14.
 
 We provide packages for the ASTRA Toolbox in the `astra-toolbox` channel for the
 conda package manager. We depend on CUDA packages available from the `nvidia`
@@ -37,7 +37,7 @@ conda install -c astra-toolbox/label/dev -c nvidia astra-toolbox
 
 ### Linux, using pip for Python packages
 
-Requirements: Python environment with 64 bit Python 3.9-3.13.
+Requirements: Python environment with 64 bit Python 3.10-3.14.
 
 ```
 pip install astra-toolbox

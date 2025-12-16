@@ -8,11 +8,14 @@ License: Open Source under GPLv3
 Contact: astra@astra-toolbox.com
 Website: https://www.astra-toolbox.com/
 -----------------------------------------------------------------------
-2.4.1 (2025-12-19)
+2.4.1 (2025-12-16)
  * fix DLPack support for certain arrays with dimensions of size 1
  * fix using FBP from a multi-threaded script
  * fix a memory leak in the CPU parallel beam blob kernel
  * add conda packages for CUDA 13 and for Python 3.14
+   WARNING: CUDA 13 packages no longer support GTX 9* and 10* GPUs. For those, you can
+   force CUDA 12 packages using `conda install -c astra-toolbox -c nvidia astra-toolbox
+   cuda-version=12` command.
  * our conda packages for CUDA 12 and for CUDA 13 no longer depend on a
    specific minor version of CUDA
 
