@@ -36,6 +36,6 @@
     # curl is much faster than the native PowerShell Invoke-WebRequest
     curl.exe -L -o cuda.exe $_
   }
-  Start-Process -Wait cuda.exe -s
+  Start-Process -Wait cuda.exe -ArgumentList "-s"
   Remove-Item cuda.exe
 }
