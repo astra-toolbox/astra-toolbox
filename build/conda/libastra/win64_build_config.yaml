@@ -34,6 +34,32 @@ cudatoolkit_build:
   - 12.9
   # - 13.0
 
+c_compiler:
+  #- vs2017
+  #- vs2017
+  - vs2017
+  #- vs2017
+  #- vs2017
+  #- vs2017
+  #- vs2017
+  - vs2017
+  - vs2017
+  #- vs2022
+
+cxx_compiler:
+  #- vs2017
+  #- vs2017
+  - vs2017
+  #- vs2017
+  #- vs2017
+  #- vs2017
+  #- vs2017
+  - vs2017
+  - vs2017
+  - vs2022
+
+
+
 
 # Starting at CUDA 12.5, the libcufft packages depend on cuda-version,
 # so our dependencies can be more relaxed.
@@ -93,3 +119,5 @@ zip_keys:
   - cudacudart_dep
   - pytorchcuda_dep
   - cudatoolkit_dep
+  - c_compiler
+  - cxx_compiler

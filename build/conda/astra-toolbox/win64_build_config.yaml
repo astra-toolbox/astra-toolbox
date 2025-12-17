@@ -20,3 +20,7 @@ zip_keys:
   - python
   - numpy_host
   - numpy_run
+c_compiler:
+  vs2022
+cxx_compiler:
+  vs2022
