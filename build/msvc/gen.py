@@ -39,6 +39,12 @@ CUDA_CC = {
   (13,1): "compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_87,sm_87;compute_89,sm_89;compute_90,sm_90;compute_100,sm_100;compute_120,sm_120;compute_120,compute_120",
 }
 
+TOOLSET= {
+  "vs2017": "v141",
+  "vs2019": "v142",
+  "vs2022": "v143",
+}
+
 def create_mex_project(name, uuid):
     return { "type": vcppguid, "name": name, "file": name + ".vcxproj", "uuid": uuid, "files": [] }
 
@@ -539,7 +545,7 @@ def write_sln():
   print("EndGlobal", file=F)
   F.close()
 
-def write_project_start(P, F):
+def write_project_start(P, vs_version, F):
   print(bom + '<?xml version="1.0" encoding="utf-8"?>', file=F)
   print('<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">', file=F)
   print('  <ItemGroup Label="ProjectConfigurations">', file=F)
@@ -568,7 +574,7 @@ def write_project_start(P, F):
         print('    <UseDebugLibraries>true</UseDebugLibraries>', file=F)
       else:
         print('    <UseDebugLibraries>false</UseDebugLibraries>', file=F)
-    print('    <PlatformToolset>v141</PlatformToolset>', file=F)
+    print('    <PlatformToolset>' + TOOLSET[vs_version] + '</PlatformToolset>', file=F)
     if 'mex' not in P["name"]:
       if not c.debug:
         print('    <WholeProgramOptimization>true</WholeProgramOptimization>', file=F)
@@ -632,10 +638,10 @@ def write_project_end(P, F):
   print('</Project>', end="", file=F)
 
 
-def write_main_project():
+def write_main_project(vs_version):
   P = P_astra;
   F = open(os.path.join("projects", P["file"]), "w", encoding="utf-8")
-  write_project_start(P, F)
+  write_project_start(P, vs_version, F)
   for c in configs:
     print('''  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='%s'">''' % (c.name(), ), file=F)
     print('    <OutDir>..\\bin\\$(Platform)\\$(Configuration)\\</OutDir>', file=F)
@@ -702,9 +708,9 @@ def write_main_project():
   write_project_end(P, F)
   F.close()
 
-def write_mex_project(P):
+def write_mex_project(P, vs_version):
   F = open(os.path.join("projects", P["name"] + ".vcxproj"), "w", encoding="utf-8")
-  write_project_start(P, F)
+  write_project_start(P, vs_version, F)
   print('  <PropertyGroup>', file=F)
   print('    <_ProjectFileVersion>11.0.60610.1</_ProjectFileVersion>', file=F)
   print('  </PropertyGroup>', file=F)
@@ -832,11 +838,11 @@ def check_cuda_version(ver):
     pass
   return False
 
-if (len(sys.argv) != 2) or not check_cuda_version(sys.argv[1]):
-  print("Usage: python gen.py [10.2|11.0|...]", file=sys.stderr)
+if (len(sys.argv) != 3) or (sys.argv[1] not in ["vs2017", "vs2019", "vs2022"]) or not check_cuda_version(sys.argv[2]):
+  print("Usage: python gen.py [vs2017|vs2019|vs2022] [11.1|12.0|...]", file=sys.stderr)
   sys.exit(1)
 
-CUDA_MAJOR, CUDA_MINOR = parse_cuda_version(sys.argv[1])
+CUDA_MAJOR, CUDA_MINOR = parse_cuda_version(sys.argv[2])
 
 try:
   open("../../src/AstraObjectManager.cpp", "r")
@@ -848,14 +854,14 @@ except IOError:
 os.makedirs("projects", exist_ok=True)
 
 write_sln()
-write_main_project()
+write_main_project(sys.argv[1])
 write_main_filters()
-write_mex_project(P0)
-write_mex_project(P1)
-write_mex_project(P2)
-write_mex_project(P3)
-write_mex_project(P4)
-write_mex_project(P5)
-write_mex_project(P6)
-write_mex_project(P7)
-write_mex_project(P8)
+write_mex_project(P0, sys.argv[1])
+write_mex_project(P1, sys.argv[1])
+write_mex_project(P2, sys.argv[1])
+write_mex_project(P3, sys.argv[1])
+write_mex_project(P4, sys.argv[1])
+write_mex_project(P5, sys.argv[1])
+write_mex_project(P6, sys.argv[1])
+write_mex_project(P7, sys.argv[1])
+write_mex_project(P8, sys.argv[1])
