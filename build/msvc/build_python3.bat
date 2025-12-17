@@ -10,7 +10,7 @@ call "%B_VC%\vcvars64.bat" 10.0.22621.0
 
 cd /D %~dp0
 
-msbuild astra_vc14.sln /p:Configuration=Release_CUDA /p:Platform=x64 /t:astra_vc14 /maxcpucount:20
+msbuild astra.sln /p:Configuration=Release_CUDA /p:Platform=x64 /t:astra /maxcpucount:20
 
 cd /D %R%
 cd python

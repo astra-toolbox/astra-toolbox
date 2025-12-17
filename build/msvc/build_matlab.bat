@@ -8,6 +8,6 @@ cd /D %~dp0
 
 set MATLAB_ROOT=%B_MATLAB_ROOT%
 
-msbuild astra_vc14.sln /p:Configuration=Release_CUDA /p:Platform=x64 /maxcpucount:20
+msbuild astra.sln /p:Configuration=Release_CUDA /p:Platform=x64 /maxcpucount:20
 
 pause

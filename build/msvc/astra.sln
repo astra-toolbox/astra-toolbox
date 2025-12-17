@@ -3,54 +3,54 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "astra_vc14", "projects\astra_vc14.vcxproj", "{DABD9D82-609E-4C71-B1CA-A41B07495290}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "astra", "projects\astra.vcxproj", "{DABD9D82-609E-4C71-B1CA-A41B07495290}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "astra_mex", "projects\astra_mex", "{2076FB73-ECFE-4B1B-9A8C-E351C500FAAB}"
 	ProjectSection(ProjectDependencies) = postProject
 		{DABD9D82-609E-4C71-B1CA-A41B07495290} = {DABD9D82-609E-4C71-B1CA-A41B07495290}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "astra_mex", "projects\astra_mex_vc14.vcxproj", "{6FDF72C4-A855-4F1C-A401-6500040B5E28}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "astra_mex", "projects\astra_mex.vcxproj", "{6FDF72C4-A855-4F1C-A401-6500040B5E28}"
 	ProjectSection(ProjectDependencies) = postProject
 		{DABD9D82-609E-4C71-B1CA-A41B07495290} = {DABD9D82-609E-4C71-B1CA-A41B07495290}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "astra_mex_algorithm", "projects\astra_mex_algorithm_vc14.vcxproj", "{CE5EF874-830C-4C10-8651-CCA2A34ED9E4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "astra_mex_algorithm", "projects\astra_mex_algorithm.vcxproj", "{CE5EF874-830C-4C10-8651-CCA2A34ED9E4}"
 	ProjectSection(ProjectDependencies) = postProject
 		{DABD9D82-609E-4C71-B1CA-A41B07495290} = {DABD9D82-609E-4C71-B1CA-A41B07495290}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "astra_mex_data2d", "projects\astra_mex_data2d_vc14.vcxproj", "{D2CDCDB3-7AD9-4853-8D87-BDB1DAD9C9C1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "astra_mex_data2d", "projects\astra_mex_data2d.vcxproj", "{D2CDCDB3-7AD9-4853-8D87-BDB1DAD9C9C1}"
 	ProjectSection(ProjectDependencies) = postProject
 		{DABD9D82-609E-4C71-B1CA-A41B07495290} = {DABD9D82-609E-4C71-B1CA-A41B07495290}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "astra_mex_data3d", "projects\astra_mex_data3d_vc14.vcxproj", "{2A7084C6-62ED-4235-85F4-094C17689DEB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "astra_mex_data3d", "projects\astra_mex_data3d.vcxproj", "{2A7084C6-62ED-4235-85F4-094C17689DEB}"
 	ProjectSection(ProjectDependencies) = postProject
 		{DABD9D82-609E-4C71-B1CA-A41B07495290} = {DABD9D82-609E-4C71-B1CA-A41B07495290}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "astra_mex_matrix", "projects\astra_mex_matrix_vc14.vcxproj", "{6BFA8857-37EB-4E43-A97C-B860E21599F5}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "astra_mex_matrix", "projects\astra_mex_matrix.vcxproj", "{6BFA8857-37EB-4E43-A97C-B860E21599F5}"
 	ProjectSection(ProjectDependencies) = postProject
 		{DABD9D82-609E-4C71-B1CA-A41B07495290} = {DABD9D82-609E-4C71-B1CA-A41B07495290}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "astra_mex_projector", "projects\astra_mex_projector_vc14.vcxproj", "{85ECCF1D-C5F6-4E0E-A4F9-0DE7C0B916B2}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "astra_mex_projector", "projects\astra_mex_projector.vcxproj", "{85ECCF1D-C5F6-4E0E-A4F9-0DE7C0B916B2}"
 	ProjectSection(ProjectDependencies) = postProject
 		{DABD9D82-609E-4C71-B1CA-A41B07495290} = {DABD9D82-609E-4C71-B1CA-A41B07495290}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "astra_mex_projector3d", "projects\astra_mex_projector3d_vc14.vcxproj", "{CA85BDA0-9BDD-495E-B200-BFE863EB6318}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "astra_mex_projector3d", "projects\astra_mex_projector3d.vcxproj", "{CA85BDA0-9BDD-495E-B200-BFE863EB6318}"
 	ProjectSection(ProjectDependencies) = postProject
 		{DABD9D82-609E-4C71-B1CA-A41B07495290} = {DABD9D82-609E-4C71-B1CA-A41B07495290}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "astra_mex_log", "projects\astra_mex_log_vc14.vcxproj", "{88539382-66DB-4BBC-A48E-8B6B3CA6064F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "astra_mex_log", "projects\astra_mex_log.vcxproj", "{88539382-66DB-4BBC-A48E-8B6B3CA6064F}"
 	ProjectSection(ProjectDependencies) = postProject
 		{DABD9D82-609E-4C71-B1CA-A41B07495290} = {DABD9D82-609E-4C71-B1CA-A41B07495290}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "astra_mex_direct", "projects\astra_mex_direct_vc14.vcxproj", "{47460476-912B-4313-8B10-BDF1D60A84C4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "astra_mex_direct", "projects\astra_mex_direct.vcxproj", "{47460476-912B-4313-8B10-BDF1D60A84C4}"
 	ProjectSection(ProjectDependencies) = postProject
 		{DABD9D82-609E-4C71-B1CA-A41B07495290} = {DABD9D82-609E-4C71-B1CA-A41B07495290}
 	EndProjectSection

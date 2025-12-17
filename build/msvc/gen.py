@@ -35,12 +35,14 @@ CUDA_CC = {
   (12,5): "compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_87,sm_87;compute_89,sm_89;compute_90,sm_90;compute_90,compute_90",
   (12,8): "compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_87,sm_87;compute_89,sm_89;compute_90,sm_90;compute_100,sm_100;compute_101,sm_101;compute_120,sm_120;compute_120,compute_120",
   (12,9): "compute_50,sm_50;compute_60,sm_60;compute_70,sm_70;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_87,sm_87;compute_89,sm_89;compute_90,sm_90;compute_100,sm_100;compute_101,sm_101;compute_120,sm_120;compute_120,compute_120",
+  (13,0): "compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_87,sm_87;compute_89,sm_89;compute_90,sm_90;compute_100,sm_100;compute_120,sm_120;compute_120,compute_120",
+  (13,1): "compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;compute_87,sm_87;compute_89,sm_89;compute_90,sm_90;compute_100,sm_100;compute_120,sm_120;compute_120,compute_120",
 }
 
-def create_mex_project(name, uuid14):
-    return { "type": vcppguid, "name": name, "file14": name + "_vc14.vcxproj", "uuid14": uuid14, "files": [] }
+def create_mex_project(name, uuid):
+    return { "type": vcppguid, "name": name, "file": name + ".vcxproj", "uuid": uuid, "files": [] }
 
-P_astra = { "type": vcppguid, "name": "astra_vc14", "file14": "astra_vc14.vcxproj", "uuid14": "DABD9D82-609E-4C71-B1CA-A41B07495290" }
+P_astra = { "type": vcppguid, "name": "astra", "file": "astra.vcxproj", "uuid": "DABD9D82-609E-4C71-B1CA-A41B07495290" }
 
 P0 = create_mex_project("astra_mex", "6FDF72C4-A855-4F1C-A401-6500040B5E28")
 
@@ -55,8 +57,8 @@ P8 = create_mex_project("astra_mex_direct", "47460476-912B-4313-8B10-BDF1D60A84C
 
 F_astra_mex = { "type": siguid,
                 "name": "astra_mex",
-                "file14": "astra_mex",
-                "uuid14": "2076FB73-ECFE-4B1B-9A8C-E351C500FAAB",
+                "file": "astra_mex",
+                "uuid": "2076FB73-ECFE-4B1B-9A8C-E351C500FAAB",
                 "entries": [ P0, P1, P2, P3, P4, P5, P6, P7, P8 ] }
 
 
@@ -497,18 +499,18 @@ configs = [ Configuration(a,b) for a in [ True, False ] for b in [ True, False ]
 
 def write_sln():
   main_project = P_astra
-  F = open("astra_vc14.sln", "w", encoding="utf-8")
+  F = open("astra.sln", "w", encoding="utf-8")
   print(bom, file=F)
   print("Microsoft Visual Studio Solution File, Format Version 12.00", file=F)
   print("# Visual Studio 14", file=F)
   print("VisualStudioVersion = 14.0.25420.1", file=F)
   print("MinimumVisualStudioVersion = 10.0.40219.1", file=F)
   for p in projects:
-    s = '''Project("{%s}") = "%s", "projects\\%s", "{%s}"''' % (p["type"], p["name"], p["file14"], p["uuid14"])
+    s = '''Project("{%s}") = "%s", "projects\\%s", "{%s}"''' % (p["type"], p["name"], p["file"], p["uuid"])
     print(s, file=F)
     if "mex" in p["name"]:
       print("\tProjectSection(ProjectDependencies) = postProject", file=F)
-      print("\t\t{%s} = {%s}" % (main_project["uuid14"], main_project["uuid14"]), file=F)
+      print("\t\t{%s} = {%s}" % (main_project["uuid"], main_project["uuid"]), file=F)
       print("\tEndProjectSection", file=F)
     print("EndProject", file=F)
   print("Global", file=F)
@@ -521,8 +523,8 @@ def write_sln():
     if "entries" in p:
       continue
     for c in configs:
-      print("\t\t{" + p["uuid14"] + "}." + c.name() + ".ActiveCfg = " + c.name(), file=F)
-      print("\t\t{" + p["uuid14"] + "}." + c.name() + ".Build.0 = " + c.name(), file=F)
+      print("\t\t{" + p["uuid"] + "}." + c.name() + ".ActiveCfg = " + c.name(), file=F)
+      print("\t\t{" + p["uuid"] + "}." + c.name() + ".Build.0 = " + c.name(), file=F)
   print("\tEndGlobalSection", file=F)
   print("\tGlobalSection(SolutionProperties) = preSolution", file=F)
   print("\t\tHideSolutionNode = FALSE", file=F)
@@ -532,12 +534,12 @@ def write_sln():
     if "entries" not in p:
       continue
     for e in p["entries"]:
-      print("\t\t{" + e["uuid14"] + "} = {" + p["uuid14"] + "}", file=F)
+      print("\t\t{" + e["uuid"] + "} = {" + p["uuid"] + "}", file=F)
   print("\tEndGlobalSection", file=F)
   print("EndGlobal", file=F)
   F.close()
 
-def write_project14_start(P, F):
+def write_project_start(P, F):
   print(bom + '<?xml version="1.0" encoding="utf-8"?>', file=F)
   print('<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">', file=F)
   print('  <ItemGroup Label="ProjectConfigurations">', file=F)
@@ -550,7 +552,7 @@ def write_project14_start(P, F):
   print('  <PropertyGroup Label="Globals">', file=F)
   if 'mex' in P["name"]:
     print('    <ProjectName>' + P["name"] + '</ProjectName>', file=F)
-  print('    <ProjectGuid>{' + P["uuid14"] + '}</ProjectGuid>', file=F)
+  print('    <ProjectGuid>{' + P["uuid"] + '}</ProjectGuid>', file=F)
   if 'mex' in P["name"]:
     print('    <RootNamespace>astraMatlab</RootNamespace>', file=F)
   else:
@@ -583,7 +585,7 @@ def write_project14_start(P, F):
     print('''  </ImportGroup>''', file=F)
   print('  <PropertyGroup Label="UserMacros" />', file=F)
 
-def write_project14_end(P, F):
+def write_project_end(P, F):
   relpath = '..\\..\\..\\'
   if 'mex' in P["name"]:
       relpath += 'matlab\\mex\\'
@@ -630,10 +632,10 @@ def write_project14_end(P, F):
   print('</Project>', end="", file=F)
 
 
-def write_main_project14():
+def write_main_project():
   P = P_astra;
-  F = open(os.path.join("projects", P["file14"]), "w", encoding="utf-8")
-  write_project14_start(P, F)
+  F = open(os.path.join("projects", P["file"]), "w", encoding="utf-8")
+  write_project_start(P, F)
   for c in configs:
     print('''  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='%s'">''' % (c.name(), ), file=F)
     print('    <OutDir>..\\bin\\$(Platform)\\$(Configuration)\\</OutDir>', file=F)
@@ -697,12 +699,12 @@ def write_main_project14():
       print('      <AdditionalCompilerOptions>/std:c++17</AdditionalCompilerOptions>', file=F)
       print('    </CudaCompile>', file=F)
     print('  </ItemDefinitionGroup>', file=F)
-  write_project14_end(P, F)
+  write_project_end(P, F)
   F.close()
 
-def write_mex_project14(P):
-  F = open(os.path.join("projects", P["name"] + "_vc14.vcxproj"), "w", encoding="utf-8")
-  write_project14_start(P, F)
+def write_mex_project(P):
+  F = open(os.path.join("projects", P["name"] + ".vcxproj"), "w", encoding="utf-8")
+  write_project_start(P, F)
   print('  <PropertyGroup>', file=F)
   print('    <_ProjectFileVersion>11.0.60610.1</_ProjectFileVersion>', file=F)
   print('  </PropertyGroup>', file=F)
@@ -764,10 +766,10 @@ def write_mex_project14(P):
     print('      <GenerateDebugInformation>true</GenerateDebugInformation>', file=F)
     print('    </Link>', file=F)
     print('  </ItemDefinitionGroup>', file=F)
-  write_project14_end(P, F)
+  write_project_end(P, F)
   F.close()
 
-def write_main_filters14():
+def write_main_filters():
   P = P_astra
   F = open(os.path.join("projects", P["name"] + ".vcxproj.filters"), "w", encoding="utf-8")
   print(bom + '<?xml version="1.0" encoding="utf-8"?>', file=F)
@@ -846,14 +848,14 @@ except IOError:
 os.makedirs("projects", exist_ok=True)
 
 write_sln()
-write_main_project14()
-write_main_filters14()
-write_mex_project14(P0)
-write_mex_project14(P1)
-write_mex_project14(P2)
-write_mex_project14(P3)
-write_mex_project14(P4)
-write_mex_project14(P5)
-write_mex_project14(P6)
-write_mex_project14(P7)
-write_mex_project14(P8)
+write_main_project()
+write_main_filters()
+write_mex_project(P0)
+write_mex_project(P1)
+write_mex_project(P2)
+write_mex_project(P3)
+write_mex_project(P4)
+write_mex_project(P5)
+write_mex_project(P6)
+write_mex_project(P7)
+write_mex_project(P8)
