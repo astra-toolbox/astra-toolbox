@@ -25,7 +25,7 @@ xcopy /e /i %R%\samples\matlab samples
 xcopy /e /i %R%\matlab\algorithms algorithms
 xcopy /e /i %R%\matlab\tools tools
 copy %R%\NEWS.txt .
-copy %R%\README.txt .
+copy %R%\README.md .
 copy %R%\COPYING COPYING.txt
 
 copy %B_VCREDIST% .
