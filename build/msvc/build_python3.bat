@@ -17,6 +17,7 @@ cd python
 
 IF EXIST build rd /s /q build
 IF EXIST "%B_WINPYTHON3%\lib\site-packages\astra" rd /s /q "%B_WINPYTHON3%\lib\site-packages\astra"
+IF EXIST dist rd /s /q dist
 
 set CL=/DASTRA_CUDA /DASTRA_BUILDING_CUDA /DASTRA_PYTHON /std:c++17
 set INCLUDE=%R%\include;%R%\lib\include;%B_CUDA_PATH%\include;%INCLUDE%
@@ -27,5 +28,8 @@ copy ..\build\msvc\bin\x64\Release_CUDA\AstraCuda64.dll astra
 copy "%B_CUDA_PATH%\bin\cudart64_12.dll" astra
 copy "%B_CUDA_PATH%\bin\cufft64_11.dll" astra
 "%B_WINPYTHON3%\python" -m pip wheel --no-build-isolation --no-deps --no-cache-dir .
+
+mkdir dist
+move *.whl dist
 
 pause
