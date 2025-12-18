@@ -9,7 +9,7 @@ call "%~dp0build_env.bat"
 
 cd /D %~dp0
 
-rd /s /q release
+IF EXIST release rd /s /q release
 
 mkdir release
 cd release

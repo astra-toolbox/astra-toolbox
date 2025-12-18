@@ -15,8 +15,8 @@ msbuild astra.sln /p:Configuration=Release_CUDA /p:Platform=x64 /t:astra /maxcpu
 cd /D %R%
 cd python
 
-rd /s /q build
-rd /s /q "%B_WINPYTHON3%\lib\site-packages\astra"
+IF EXIST build rd /s /q build
+IF EXIST "%B_WINPYTHON3%\lib\site-packages\astra" rd /s /q "%B_WINPYTHON3%\lib\site-packages\astra"
 
 set CL=/DASTRA_CUDA /DASTRA_BUILDING_CUDA /DASTRA_PYTHON /std:c++17
 set INCLUDE=%R%\include;%R%\lib\include;%CUDA_PATH%\include;%INCLUDE%
