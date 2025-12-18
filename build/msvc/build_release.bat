@@ -34,8 +34,8 @@ mkdir mex
 copy %R%\build\msvc\bin\x64\Release_CUDA\*.mexw64 mex
 copy %R%\build\msvc\bin\x64\Release_CUDA\AstraCuda64.dll mex
 copy %R%\build\msvc\bin\x64\Release_CUDA\AstraCuda64.lib mex
-copy "%CUDA_PATH_V12_8%\bin\cudart64_12.dll" mex
-copy "%CUDA_PATH_V12_8%\bin\cufft64_11.dll" mex
+copy "%B_CUDA_PATH%\bin\cudart64_12.dll" mex
+copy "%B_CUDA_PATH%\bin\cufft64_11.dll" mex
 
 pause
 
