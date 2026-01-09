@@ -30,8 +30,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra3d.h"
 
-#include <memory>
-
 namespace astra {
 class CVolumeGeometry3D;
 class CProjectionGeometry3D;
