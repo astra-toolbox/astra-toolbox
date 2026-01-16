@@ -112,37 +112,31 @@ public:
 	 *
 	 * @return projector
 	 */
-	CProjector3D* getProjector() const;
+	CProjector3D* getProjector() const { return m_pProjector; }
 
 	/** Get sinogram data object
 	 *
 	 * @return sinogram data object
 	 */
-	CFloat32ProjectionData3D* getSinogram() const;
+	CFloat32ProjectionData3D* getSinogram() const { return m_pSinogram; }
 
 	/** Get Reconstructed Data
 	 *
 	 * @return reconstruction
 	 */
-	CFloat32VolumeData3D* getReconstruction() const;
+	CFloat32VolumeData3D* getReconstruction() const { return m_pReconstruction; }
 
 	/** Get Fixed Reconstruction Mask
 	 *
 	 * @return fixed reconstruction mask
 	 */
-	CFloat32VolumeData3D* getReconstructionMask() const;
+	CFloat32VolumeData3D* getReconstructionMask() const { return m_pReconstructionMask; }
 
 	/** Perform a number of iterations.
 	 *
 	 * @param _iNrIterations amount of iterations to perform.
 	 */
 	virtual bool run(int _iNrIterations = 0) = 0;
-
-	/** Get a description of the class.
-	 *
-	 * @return description string
-	 */
-	virtual std::string description() const;
 
 	/** Get the norm of the residual image.
 	 *  Only a few algorithms support this method.
@@ -187,13 +181,6 @@ protected:
 	bool m_bUseSinogramMask;
 
 };
-
-// inline functions
-inline std::string CReconstructionAlgorithm3D::description() const { return "3D Reconstruction Algorithm"; };
-inline CProjector3D* CReconstructionAlgorithm3D::getProjector() const { return m_pProjector; }
-inline CFloat32ProjectionData3D* CReconstructionAlgorithm3D::getSinogram() const { return m_pSinogram; }
-inline CFloat32VolumeData3D* CReconstructionAlgorithm3D::getReconstruction() const { return m_pReconstruction; }
-inline CFloat32VolumeData3D* CReconstructionAlgorithm3D::getReconstructionMask() const { return m_pReconstructionMask; }
 
 } // end namespace
 
