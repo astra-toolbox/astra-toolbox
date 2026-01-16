@@ -61,12 +61,6 @@ public:
 	 */
 	virtual bool initialize(const Config& _cfg);
 
-	/** Get a description of the class.
-	 *
-	 * @return description string
-	 */
-	virtual std::string description() const;
-
 	/** Get the norm of the residual image.
 	 *  Only a few algorithms support this method.
 	 *
@@ -125,9 +119,6 @@ protected:
 	void initializeFromProjector();
 	virtual bool requiresProjector() const { return false; }
 };
-
-// inline functions
-inline std::string CCudaReconstructionAlgorithm2D::description() const { return "2D CUDA Reconstruction Algorithm"; };
 
 } // end namespace
 

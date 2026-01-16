@@ -75,7 +75,7 @@ public:
 	 *
 	 * @return description string
 	 */
-	virtual std::string description() const;
+	virtual std::string description() const = 0;
 
 	/** Set the GPU Index to run on.
 	 * TODO: Move this from CAlgorithm to a Context-like class
@@ -95,7 +95,6 @@ private:
 };
 
 // inline functions
-inline std::string CAlgorithm::description() const { return "Algorithm"; };
 inline bool CAlgorithm::isInitialized() const { return m_bIsInitialized; }
 
 } // end namespace
