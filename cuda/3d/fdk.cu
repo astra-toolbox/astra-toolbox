@@ -93,7 +93,7 @@ __global__ void devFDK_preweight(void* D_projData, unsigned int projPitch, unsig
 
 	// Contributions to the weighting factors:
 	// fCentralRayLength / fRayLength   : the main FDK preweighting factor
-	// fSrcOrigin / (fDetUSize * fCentralRayLength)
+	// fCentralRayLength / (fDetUSize * fSrcOrigin)
 	//                                  : to adjust the filter to the det width
 	// pi / (2 * iProjAngles)           : scaling of the integral over angles
 
