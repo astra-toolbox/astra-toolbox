@@ -45,6 +45,12 @@ TOOLSET= {
   "vs2022": "v143",
 }
 
+SDK = {
+  "vs2017": "10.0.22621.0",
+  "vs2019": "10.0.26100.0",
+  "vs2022": "10.0.26100.0"
+}
+
 def create_mex_project(name, uuid):
     return { "type": vcppguid, "name": name, "file": name + ".vcxproj", "uuid": uuid, "files": [] }
 
@@ -563,7 +569,7 @@ def write_project_start(P, vs_version, F):
     print('    <RootNamespace>astraMatlab</RootNamespace>', file=F)
   else:
     print('    <RootNamespace>' + P["name"] + '</RootNamespace>', file=F)
-  print('    <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>', file=F)
+  print('    <WindowsTargetPlatformVersion>' + SDK[vs_version] + '</WindowsTargetPlatformVersion>', file=F)
   print('  </PropertyGroup>', file=F)
   print('  <Import Project="$(VCTargetsPath)\\Microsoft.Cpp.Default.props" />', file=F)
   for c in configs:
