@@ -25,7 +25,8 @@
 #'https://developer.download.nvidia.com/compute/cuda/12.9.0/local_installers/cuda_12.9.0_576.02_windows.exe'
 'https://developer.download.nvidia.com/compute/cuda/12.9.1/local_installers/cuda_12.9.1_576.57_windows.exe'
 #'https://developer.download.nvidia.com/compute/cuda/13.0.0/local_installers/cuda_13.0.0_windows.exe'
-'https://developer.download.nvidia.com/compute/cuda/13.1.0/local_installers/cuda_13.1.0_windows.exe'
+#'https://developer.download.nvidia.com/compute/cuda/13.1.0/local_installers/cuda_13.1.0_windows.exe'
+'https://developer.download.nvidia.com/compute/cuda/13.1.1/local_installers/cuda_13.1.1_windows.exe'
 
 ) | ForEach-Object {
   $filename = ([uri] $_).Segments[-1]
