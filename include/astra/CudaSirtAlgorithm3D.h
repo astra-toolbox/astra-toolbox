@@ -148,6 +148,9 @@ protected:
 
 	bool setupGeometry();
 
+	bool allocateBuffers();
+	void freeBuffers();
+
 	bool precomputeWeights();
 
 	bool m_bBuffersInitialized;

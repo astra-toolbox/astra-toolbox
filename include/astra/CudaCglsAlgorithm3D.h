@@ -136,6 +136,9 @@ protected:
 
 	bool setupGeometry();
 
+	bool allocateBuffers();
+	void freeBuffers();
+
 	bool m_bBuffersInitialized;
 
 	int m_iGPUIndex;

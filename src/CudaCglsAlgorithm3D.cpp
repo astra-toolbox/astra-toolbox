@@ -76,34 +76,7 @@ CCudaCglsAlgorithm3D::CCudaCglsAlgorithm3D(CProjector3D* _pProjector,
 // Destructor
 CCudaCglsAlgorithm3D::~CCudaCglsAlgorithm3D() 
 {
-	if (D_projData) {
-		astraCUDA3d::freeGPUMemory(D_projData);
-		delete D_projData;
-	}
-	if (D_volData) {
-		astraCUDA3d::freeGPUMemory(D_volData);
-		delete D_volData;
-	}
-	if (D_p) {
-		astraCUDA3d::freeGPUMemory(D_p);
-		delete D_p;
-	}
-	if (D_r) {
-		astraCUDA3d::freeGPUMemory(D_r);
-		delete D_r;
-	}
-	if (D_w) {
-		astraCUDA3d::freeGPUMemory(D_w);
-		delete D_w;
-	}
-	if (D_z) {
-		astraCUDA3d::freeGPUMemory(D_z);
-		delete D_z;
-	}
-	if (D_volMaskData) {
-		astraCUDA3d::freeGPUMemory(D_volMaskData);
-		delete D_volMaskData;
-	}
+	freeBuffers();
 }
 
 
@@ -176,8 +149,8 @@ bool CCudaCglsAlgorithm3D::initialize(const Config& _cfg)
 						   "Detector/voxel supersampling is not supported for cyl_cone_vec geometry.");
 	}
 
-	m_bBuffersInitialized = false;
-
+	if (!allocateBuffers())
+		return false;
 	if (!setupGeometry())
 		return false;
 
@@ -201,8 +174,8 @@ bool CCudaCglsAlgorithm3D::initialize(CProjector3D* _pProjector,
 
 	initializeFromProjector();
 
-	m_bBuffersInitialized = false;
-
+	if (!allocateBuffers())
+		return false;
 	if (!setupGeometry())
 		return false;
 
@@ -220,7 +193,39 @@ bool CCudaCglsAlgorithm3D::setupGeometry()
 	return m_geometry.isValid();
 }
 
+bool CCudaCglsAlgorithm3D::allocateBuffers()
+{
+	if (m_iGPUIndex != -1)
+		astraCUDA3d::setGPUIndex(m_iGPUIndex);
+
+	if ((D_volData = astraCUDA3d::createGPUData3DLike(m_pReconstruction)) == nullptr)
+		return false;
+	if ((D_p = astraCUDA3d::createGPUData3DLike(m_pReconstruction)) == nullptr)
+		return false;
+	if ((D_z = astraCUDA3d::createGPUData3DLike(m_pReconstruction)) == nullptr)
+		return false;
+	if (m_bUseReconstructionMask) {
+		if ((D_volMaskData = astraCUDA3d::createGPUData3DLike(m_pReconstruction)) == nullptr)
+			return false;
+	}
+	if ((D_projData = astraCUDA3d::createGPUData3DLike(m_pSinogram)) == nullptr)
+		return false;
+	if ((D_r = astraCUDA3d::createGPUData3DLike(m_pSinogram)) == nullptr)
+		return false;
+	if ((D_w = astraCUDA3d::createGPUData3DLike(m_pSinogram)) == nullptr)
+		return false;
+#if 0
+	if (m_bUseSinogramMask) {
+		if ((D_projMaskData = astraCUDA3d::createGPUData3DLike(m_pSinogram)) == nullptr)
+			return false;
+	}
+#endif
+
+	return true;
+}
+
 // TODO: Centralize this somehow
+// (By making GPU DataStorage objects keep track of if they should free their storage in their destructor)
 static void freeGPUMem(CData3D*& ptr)
 {
 	if (ptr) {
@@ -230,6 +235,21 @@ static void freeGPUMem(CData3D*& ptr)
 	}
 }
 
+void CCudaCglsAlgorithm3D::freeBuffers()
+{
+	freeGPUMem(D_volData);
+	freeGPUMem(D_p);
+	freeGPUMem(D_z);
+	freeGPUMem(D_volMaskData);
+	freeGPUMem(D_projData);
+	freeGPUMem(D_r);
+	freeGPUMem(D_w);
+#if 0
+	freeGPUMem(D_projMaskData);
+#endif
+}
+
+//----------------------------------------------------------------------------------------
 // Iterate
 bool CCudaCglsAlgorithm3D::run(int _iNrIterations)
 {
@@ -241,86 +261,7 @@ bool CCudaCglsAlgorithm3D::run(int _iNrIterations)
 	if (m_iGPUIndex != -1)
 		astraCUDA3d::setGPUIndex(m_iGPUIndex);
 
-	if (!m_bBuffersInitialized) {
-		std::array<int, 3> volDims = m_pReconstruction->getShape();
-		std::array<int, 3> projDims = m_pSinogram->getShape();
-
-		const astra::CProjectionGeometry3D &pProjGeom = m_pSinogram->getGeometry();
-		const astra::CVolumeGeometry3D &pVolGeom = m_pReconstruction->getGeometry();
-
-		m_geometry = convertAstraGeometry(&pVolGeom, &pProjGeom);
-		m_params.volScale = m_geometry.getVolScale();
-
-		CDataStorage *s;
-
-		s = astraCUDA3d::allocateGPUMemory(volDims[0], volDims[1], volDims[2], astraCUDA3d::INIT_ZERO);
-		if (!s) {
-			return false;
-		}
-		D_volData = new CData3D(volDims[0], volDims[1], volDims[2], s);
-
-		s = astraCUDA3d::allocateGPUMemory(volDims[0], volDims[1], volDims[2], astraCUDA3d::INIT_ZERO);
-		if (!s) {
-			freeGPUMem(D_volData);
-			return false;
-		}
-		D_p = new CData3D(volDims[0], volDims[1], volDims[2], s);
-
-		s = astraCUDA3d::allocateGPUMemory(volDims[0], volDims[1], volDims[2], astraCUDA3d::INIT_ZERO);
-		if (!s) {
-			freeGPUMem(D_volData);
-			freeGPUMem(D_p);
-			return false;
-		}
-		D_z = new CData3D(volDims[0], volDims[1], volDims[2], s);
-
-		if (m_bUseReconstructionMask) {
-			s = astraCUDA3d::allocateGPUMemory(volDims[0], volDims[1], volDims[2], astraCUDA3d::INIT_ZERO);
-			if (!s) {
-				freeGPUMem(D_volData);
-				freeGPUMem(D_p);
-				freeGPUMem(D_z);
-				return false;
-			}
-			D_volMaskData = new CData3D(volDims[0], volDims[1], volDims[2], s);
-		}
-
-		s = astraCUDA3d::allocateGPUMemory(projDims[0], projDims[1], projDims[2], astraCUDA3d::INIT_ZERO);
-		if (!s) {
-			freeGPUMem(D_volData);
-			freeGPUMem(D_p);
-			freeGPUMem(D_z);
-			freeGPUMem(D_volMaskData);
-			return false;
-		}
-		D_projData = new CData3D(projDims[0], projDims[1], projDims[2], s);
-
-		s = astraCUDA3d::allocateGPUMemory(projDims[0], projDims[1], projDims[2], astraCUDA3d::INIT_ZERO);
-		if (!s) {
-			freeGPUMem(D_volData);
-			freeGPUMem(D_p);
-			freeGPUMem(D_z);
-			freeGPUMem(D_volMaskData);
-			freeGPUMem(D_projData);
-			return false;
-		}
-		D_r = new CData3D(projDims[0], projDims[1], projDims[2], s);
-
-		s = astraCUDA3d::allocateGPUMemory(projDims[0], projDims[1], projDims[2], astraCUDA3d::INIT_ZERO);
-		if (!s) {
-			freeGPUMem(D_volData);
-			freeGPUMem(D_p);
-			freeGPUMem(D_z);
-			freeGPUMem(D_volMaskData);
-			freeGPUMem(D_projData);
-			freeGPUMem(D_r);
-			return false;
-		}
-		D_w = new CData3D(projDims[0], projDims[1], projDims[2], s);
-
-
-		m_bBuffersInitialized = true;
-	}
+	m_bBuffersInitialized = true;
 
 	ASTRA_ASSERT(m_pSinogram->isFloat32Memory());
 
