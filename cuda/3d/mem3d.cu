@@ -100,6 +100,47 @@ astra::CDataStorage *allocateGPUMemory(unsigned int x, unsigned int y, unsigned 
 	return ret;
 }
 
+astra::CDataStorage *allocateGPUMemoryLike(const astra::CData3D *model, Mem3DZeroMode zero)
+{
+	assert(model);
+
+	std::array<int, 3> dims = model->getShape();
+
+	return allocateGPUMemory(dims[0], dims[1], dims[2], zero);
+}
+
+astra::CFloat32VolumeData3D *createGPUVolumeData3DLike(const astra::CFloat32VolumeData3D *model)
+{
+	astra::CDataStorage *storage = allocateGPUMemoryLike(model, INIT_ZERO);
+	if (!storage)
+		return nullptr;
+
+	return new astra::CFloat32VolumeData3D(model->getGeometry(), storage);
+}
+
+
+astra::CFloat32ProjectionData3D *createGPUProjectionData3DLike(const astra::CFloat32ProjectionData3D *model)
+{
+	astra::CDataStorage *storage = allocateGPUMemoryLike(model, INIT_ZERO);
+	if (!storage)
+		return nullptr;
+
+	return new astra::CFloat32ProjectionData3D(model->getGeometry(), storage);
+}
+
+astra::CData3D *createGPUData3DLike(const astra::CData3D *model)
+{
+	assert(model->getStorage());
+	assert(model->getStorage()->isFloat32());
+
+	std::array<int, 3> dims = model->getShape();
+	astra::CDataStorage *storage = allocateGPUMemory(dims[0], dims[1], dims[2], INIT_ZERO);
+	if (!storage)
+		return nullptr;
+	return new astra::CData3D(dims[0], dims[1], dims[2], storage);
+}
+
+
 bool zeroGPUMemory(astra::CData3D *data)
 {
 	astraCUDA::CDataGPU *ds = dynamic_cast<astraCUDA::CDataGPU*>(data->getStorage());

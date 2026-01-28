@@ -81,6 +81,13 @@ astra::CDataStorage* createProjectionArrayHandle(const float *ptr, unsigned int 
 
 astra::CDataStorage *allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Mem3DZeroMode zero);
 
+astra::CDataStorage *allocateGPUMemoryLike(const astra::CData3D *model, Mem3DZeroMode zero);
+astra::CFloat32VolumeData3D *createGPUVolumeData3DLike(const astra::CFloat32VolumeData3D *model);
+astra::CFloat32ProjectionData3D *createGPUProjectionData3DLike(const astra::CFloat32ProjectionData3D *model);
+
+// Create base object without attached geometry
+astra::CData3D *createGPUData3DLike(const astra::CData3D *model);
+
 bool copyToGPUMemory(const astra::CData3D *src, astra::CData3D *dst);
 bool copyToGPUMemory(const astra::CData3D *src, astra::CData3D *dst, const SSubDimensions3D &pos);
 
