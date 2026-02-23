@@ -151,6 +151,8 @@ bool FBP::iterate(unsigned int iterations)
 		              fOriginDetector, 0.0f,
 		              fFanDetSize, 1.0f,
 		              m_bShortScan, dims3d, pfAngles);
+
+		delete[] pfAngles;
 	} else {
 		// TODO: How should different detector pixel size in different
 		// projections be handled?
