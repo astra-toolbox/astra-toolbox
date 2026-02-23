@@ -127,6 +127,7 @@ bool FBP::iterate(unsigned int iterations)
 			                                  fOriginSource, fOriginDetector,
 			                                  fFanDetSize, fOffset);
 			if (!ok) {
+				delete[] pfAngles;
 				ASTRA_ERROR("FBP_CUDA: Failed to extract circular fan beam parameters from fan beam geometry");
 				return false;
 			}
