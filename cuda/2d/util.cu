@@ -28,8 +28,10 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/cuda/gpu_runtime_wrapper.h"
 
 #include "astra/cuda/2d/util.h"
+#include "astra/cuda/3d/mem3d_internal.h"
 
 #include "astra/Logging.h"
+#include "astra/Data2D.h"
 
 #include <cstdio>
 #include <cassert>
@@ -343,6 +345,18 @@ float dotProduct2D(float* D_data, unsigned int pitch,
 
 	return x;
 }
+
+float dotProduct2D(const astra::CData2D *D_data)
+{
+	const astraCUDA::CDataGPU *datas = dynamic_cast<const astraCUDA::CDataGPU*>(D_data->getStorage());
+	assert(datas);
+	assert(!datas->getArray());
+
+	std::array<int, 2> dims = D_data->getShape();
+
+	return dotProduct2D((float*)datas->getPtr().ptr, datas->getPtr().pitch/sizeof(float), dims[0], dims[1]);
+}
+
 
 bool checkCuda(cudaError_t err, const char *msg)
 {

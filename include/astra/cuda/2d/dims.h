@@ -39,7 +39,7 @@ using astra::SDimensions;
 
 struct SProjectorParams2D {
 	SProjectorParams2D() :
-		iRaysPerDet(1), iRaysPerPixelDim(1)
+		iRaysPerDet(1), iRaysPerPixelDim(1), fOutputScale(1.0f)
 	{ }
 
 	// in FP, number of rays to trace per detector pixel.
@@ -54,6 +54,8 @@ struct SProjectorParams2D {
 	// the same size as 1 / fDetScale.
 	unsigned int iRaysPerPixelDim;
 
+	// Constant factor to multiply the output with
+	float fOutputScale;
 };
 
 }

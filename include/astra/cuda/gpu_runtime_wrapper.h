@@ -92,6 +92,7 @@
 #define CUFFT_SUCCESS HIPFFT_SUCCESS
 #define make_cudaExtent make_hipExtent
 #define make_cudaPos make_hipPos
+#define make_cudaPitchedPtr make_hipPitchedPtr
 
 // Special case
 #define cudaMemcpyToSymbolAsync(S,...) hipMemcpyToSymbolAsync(HIP_SYMBOL(S),__VA_ARGS__)

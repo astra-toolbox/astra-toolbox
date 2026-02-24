@@ -29,6 +29,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/CudaSartAlgorithm.h"
 
+#include "astra/cuda/2d/mem2d.h"
+#include "astra/cuda/2d/arith.h"
 #include "astra/cuda/2d/sart.h"
 
 #include "astra/Logging.h"
@@ -40,7 +42,15 @@ namespace astra {
 //----------------------------------------------------------------------------------------
 // Constructor
 CCudaSartAlgorithm::CCudaSartAlgorithm() 
-	: m_fLambda(1.0f)
+	: m_bBuffersInitialized(),
+	  D_projData(nullptr),
+	  D_volData(nullptr),
+	  D_tmpProjData(nullptr),
+	  D_tmpVolData(nullptr),
+	  D_volMaskData(nullptr),
+	  D_lineWeight(nullptr),
+	  m_fLambda(1.0f),
+	  m_iIteration(0)
 {
 
 }
@@ -49,7 +59,7 @@ CCudaSartAlgorithm::CCudaSartAlgorithm()
 // Destructor
 CCudaSartAlgorithm::~CCudaSartAlgorithm() 
 {
-
+	freeBuffers();
 }
 
 //---------------------------------------------------------------------------------------
@@ -60,15 +70,8 @@ bool CCudaSartAlgorithm::initialize(const Config& _cfg)
 
 	ConfigReader<CAlgorithm> CR("CudaSartAlgorithm", this, _cfg);
 
-	m_bIsInitialized = CCudaReconstructionAlgorithm2D::initialize(_cfg);
-
-	if (!m_bIsInitialized)
+	if (!CCudaReconstructionAlgorithm2D::initialize(_cfg))
 		return false;
-
-	astraCUDA::SART *sart = new astraCUDA::SART();
-
-	m_pAlgo = sart;
-	m_bAlgoInit = false;
 
 	if (CR.hasOption("SinogramMaskId")) {
 		ASTRA_CONFIG_CHECK(false, "SART_CUDA", "Sinogram mask option is not supported.");
@@ -76,32 +79,29 @@ bool CCudaSartAlgorithm::initialize(const Config& _cfg)
 
 	// projection order
 	int projectionCount = m_pSinogram->getGeometry().getProjectionAngleCount();
-	std::vector<int> projectionOrder;
 	std::string projOrder;
 	if (!CR.getOptionString("ProjectionOrder", projOrder, "random"))
 		return false;
 	if (projOrder == "sequential") {
-		projectionOrder.resize(projectionCount);
+		m_projectionOrder.resize(projectionCount);
 		for (int i = 0; i < projectionCount; i++) {
-			projectionOrder[i] = i;
+			m_projectionOrder[i] = i;
 		}
-		sart->setProjectionOrder(&projectionOrder[0], projectionCount);
 	} else if (projOrder == "random") {
-		projectionOrder.resize(projectionCount);
+		m_projectionOrder.resize(projectionCount);
 		for (int i = 0; i < projectionCount; i++) {
-			projectionOrder[i] = i;
+			m_projectionOrder[i] = i;
 		}
 		for (int i = 0; i < projectionCount-1; i++) {
 			int k = (rand() % (projectionCount - i));
-			int t = projectionOrder[i];
-			projectionOrder[i] = projectionOrder[i + k];
-			projectionOrder[i + k] = t;
+			int t = m_projectionOrder[i];
+			m_projectionOrder[i] = m_projectionOrder[i + k];
+			m_projectionOrder[i + k] = t;
 		}
-		sart->setProjectionOrder(&projectionOrder[0], projectionCount);
 	} else if (projOrder == "custom") {
-		if (!CR.getOptionIntArray("ProjectionOrderList", projectionOrder))
+		// NB: For custom orders, length of vector can be different than projectionCount
+		if (!CR.getOptionIntArray("ProjectionOrderList", m_projectionOrder))
 			return false;
-		sart->setProjectionOrder(&projectionOrder[0], projectionOrder.size());
 	} else {
 		ASTRA_ERROR("Unknown ProjectionOrder");
 		return false;
@@ -110,7 +110,12 @@ bool CCudaSartAlgorithm::initialize(const Config& _cfg)
 	if (!CR.getOptionNumerical("Relaxation", m_fLambda, 1.0f))
 		return false;
 
-	return true;
+	if (!allocateBuffers())
+		return false;
+
+	// success
+	m_bIsInitialized = _check();
+	return m_bIsInitialized;
 }
 
 //---------------------------------------------------------------------------------------
@@ -121,31 +126,232 @@ bool CCudaSartAlgorithm::initialize(CProjector2D* _pProjector,
 {
 	assert(!m_bIsInitialized);
 
-	m_bIsInitialized = CCudaReconstructionAlgorithm2D::initialize(_pProjector, _pSinogram, _pReconstruction);
-
-	if (!m_bIsInitialized)
+	if (!CCudaReconstructionAlgorithm2D::initialize(_pProjector, _pSinogram, _pReconstruction))
 		return false;
 
 	m_fLambda = 1.0f;
 
-	m_pAlgo = new astraCUDA::SART();
-	m_bAlgoInit = false;
+	if (!allocateBuffers())
+		return false;
+
+	// success
+	m_bIsInitialized = _check();
+	return m_bIsInitialized;
+}
+
+//----------------------------------------------------------------------------------------
+
+bool CCudaSartAlgorithm::allocateBuffers()
+{
+	if (m_iGPUIndex != -1)
+		astraCUDA::setGPUIndex(m_iGPUIndex);
+
+	if ((D_volData = astraCUDA::createGPUData2DLike(m_pReconstruction)) == nullptr)
+		return false;
+	if (m_bUseReconstructionMask) {
+		if ((D_volMaskData = astraCUDA::createGPUData2DLike(m_pReconstruction)) == nullptr)
+			return false;
+
+		// Only allocate D_tmpVolData if we use a mask
+		if ((D_tmpVolData = astraCUDA::createGPUData2DLike(m_pReconstruction)) == nullptr)
+			return false;
+	}
+	if ((D_projData = astraCUDA::createGPUData2DLike(m_pSinogram)) == nullptr)
+		return false;
+	if ((D_lineWeight = astraCUDA::createGPUData2DLike(m_pSinogram)) == nullptr)
+		return false;
+
+	astra::CDataStorage *storage = astraCUDA::allocateGPUMemory(m_pSinogram->getDetectorCount(), 1, astraCUDA::INIT_ZERO);
+	if (!storage)
+		return false;
+	D_tmpProjData = new astra::CData2D(m_pSinogram->getDetectorCount(), 1, storage);
+
+	return true;
+}
+
+// TODO: Centralize this somehow
+// (By making GPU DataStorage objects keep track of if they should free their storage in their destructor)
+static void freeGPUMem(CData2D*& ptr)
+{
+	if (ptr) {
+		astraCUDA::freeGPUMemory(ptr);
+		delete ptr;
+		ptr = nullptr;
+	}
+}
+
+
+void CCudaSartAlgorithm::freeBuffers()
+{
+	freeGPUMem(D_volData);
+	freeGPUMem(D_tmpVolData);
+	freeGPUMem(D_volMaskData);
+	freeGPUMem(D_projData);
+	freeGPUMem(D_tmpProjData);
+	freeGPUMem(D_lineWeight);
+}
+
+//----------------------------------------------------------------------------------------
+
+bool CCudaSartAlgorithm::precomputeWeights()
+{
+	astraCUDA::zeroGPUMemory(D_lineWeight);
+	if (m_bUseReconstructionMask) {
+		callFP(D_volMaskData, D_lineWeight, 1.0f);
+	} else {
+		// Allocate tmpData temporarily
+		CData2D *D_tmpData = astraCUDA::createGPUData2DLike(m_pReconstruction);
+		if (!D_tmpData)
+			return false;
+
+		astraCUDA::processData<astraCUDA::opSet>(D_tmpData, 1.0f);
+		callFP(D_tmpData, D_lineWeight, 1.0f);
+
+		freeGPUMem(D_tmpData);
+	}
+	astraCUDA::processData<astraCUDA::opInvert>(D_lineWeight);
+
+	return true;
+}
+
+
+//----------------------------------------------------------------------------------------
+
+bool CCudaSartAlgorithm::run(int _iNrIterations)
+{
+	// check initialized
+	ASTRA_ASSERT(m_bIsInitialized);
+
+	if (m_iGPUIndex != -1)
+		astraCUDA::setGPUIndex(m_iGPUIndex);
+
+
+	if (!m_bBuffersInitialized) {
+		bool ok = true;
+		if (!m_bUseReconstructionMask)
+			ok = precomputeWeights();
+		if (!ok)
+			return false;
+		m_bBuffersInitialized = true;
+	}
+
+	ASTRA_ASSERT(m_pSinogram->isFloat32Memory());
+	bool ok = astraCUDA::copyToGPUMemory(m_pSinogram, D_projData);
+	if (m_bUseReconstructionMask) {
+		ASTRA_ASSERT(m_pReconstructionMask->isFloat32Memory());
+		ok &= astraCUDA::copyToGPUMemory(m_pReconstructionMask, D_volMaskData);
+	}
+	ASTRA_ASSERT(m_pReconstruction->isFloat32Memory());
+	ok &= astraCUDA::copyToGPUMemory(m_pReconstruction, D_volData);
+
+	if (!ok)
+		return false;
+
+	if (m_bUseReconstructionMask) {
+		ok &= precomputeWeights();
+		if (!ok)
+			return false;
+	}
+
+	// iteration
+	for (int iter = 0; iter < _iNrIterations && !shouldAbort(); ++iter) {
+
+		int angle;
+		if (!m_projectionOrder.empty()) {
+			angle = m_projectionOrder[m_iIteration % m_projectionOrder.size()];
+		} else {
+			angle = m_iIteration % m_pSinogram->getAngleCount();
+		}
+
+		// copy one line of sinogram to projection data
+		astraCUDA::copy_SART(D_tmpProjData, D_projData, angle);
+
+		// do FP, subtracting projection from sinogram
+		if (m_bUseReconstructionMask) {
+			astraCUDA::assignGPUMemory(D_tmpVolData, D_volData);
+			astraCUDA::processData<astraCUDA::opMul>(D_tmpVolData, D_volMaskData);
+			FP_SART(D_tmpVolData, D_tmpProjData, angle, -1.0f);
+		} else {
+			FP_SART(D_volData, D_tmpProjData, angle, -1.0f);
+		}
+
+		astraCUDA::mul_SART(D_tmpProjData, D_lineWeight, angle);
+		if (m_bUseReconstructionMask) {
+			// BP, mask, and add back
+			// TODO: Try putting the masking directly in the BP
+			astraCUDA::zeroGPUMemory(D_tmpVolData);
+			BP_SART(D_tmpVolData, D_tmpProjData, angle, m_fLambda);
+			astraCUDA::processData<astraCUDA::opAddMul>(D_volData, D_volMaskData, D_tmpVolData);
+		} else {
+			BP_SART(D_volData, D_tmpProjData, angle, m_fLambda);
+		}
+
+		if (m_bUseMinConstraint)
+			astraCUDA::processData<astraCUDA::opClampMin>(D_volData, m_fMinValue);
+		if (m_bUseMaxConstraint)
+			astraCUDA::processData<astraCUDA::opClampMax>(D_volData, m_fMaxValue);
+
+		m_iIteration++;
+
+	}
+
+	ok &= astraCUDA::copyFromGPUMemory(m_pReconstruction, D_volData);
+	if (!ok)
+		return false;
 
 	return true;
 }
 
 //----------------------------------------------------------------------------------------
 
-void CCudaSartAlgorithm::initCUDAAlgorithm()
+bool CCudaSartAlgorithm::FP_SART(const astra::CData2D *D_vol, astra::CData2D *D_proj, int angle, float fScale)
 {
-	CCudaReconstructionAlgorithm2D::initCUDAAlgorithm();
+	astraCUDA::SProjectorParams2D p = m_params;
+	p.fOutputScale *= fScale;
+	return astraCUDA::FP_SART(D_proj, D_vol, m_geometry, p, angle);
+}
 
-	astraCUDA::SART* pSart = dynamic_cast<astraCUDA::SART*>(m_pAlgo);
-
-	pSart->setRelaxation(m_fLambda);
+bool CCudaSartAlgorithm::BP_SART(astra::CData2D *D_vol, const astra::CData2D *D_proj, int angle, float fScale)
+{
+	astraCUDA::SProjectorParams2D p = m_params;
+	p.fOutputScale *= fScale;
+	return astraCUDA::BP_SART(D_proj, D_vol, m_geometry, p, angle);
 }
 
 
+//----------------------------------------------------------------------------------------
+
+bool CCudaSartAlgorithm::getResidualNorm(float32& _fNorm)
+{
+	// Ensure we've performed at least one iteration
+	if (!m_bIsInitialized || !m_bBuffersInitialized)
+		return false;
+
+	CData2D *D_p;
+	if ((D_p = astraCUDA::createGPUData2DLike(m_pSinogram)) == nullptr)
+		return false;
+
+	// copy sinogram to D_p
+	astraCUDA::assignGPUMemory(D_p, D_projData);
+
+	// do FP, subtracting projection from sinogram
+	if (m_bUseReconstructionMask) {
+			astraCUDA::assignGPUMemory(D_tmpVolData, D_volData);
+			astraCUDA::processData<astraCUDA::opMul>(D_tmpVolData, D_volMaskData);
+			callFP(D_tmpVolData, D_p, -1.0f);
+	} else {
+			callFP(D_volData, D_p, -1.0f);
+	}
+
+	// compute norm of D_p
+	float s = astraCUDA::dotProduct2D(D_p);
+
+	freeGPUMem(D_p);
+
+	_fNorm = sqrt(s);
+
+	return true;
+}
 
 } // namespace astra
 

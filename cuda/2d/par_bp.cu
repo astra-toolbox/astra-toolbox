@@ -194,7 +194,7 @@ static bool transferConstants(const SParProjection *angles, unsigned int nth,
 bool BP_internal(float* D_volumeData, unsigned int volumePitch,
         float* D_projData, unsigned int projPitch,
         const SDimensions& dims, const SProjectorParams2D& params, const SParProjection* angles,
-        float fOutputScale, cudaStream_t stream)
+        cudaStream_t stream)
 {
 	assert(dims.iProjAngles <= g_MaxAngles);
 
@@ -209,9 +209,9 @@ bool BP_internal(float* D_volumeData, unsigned int volumePitch,
 	for (unsigned int i = 0; i < dims.iProjAngles; i += g_anglesPerBlock) {
 
 		if (params.iRaysPerPixelDim > 1)
-			devBP_SS<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, D_texObj, i, dims, params.iRaysPerPixelDim, fOutputScale);
+			devBP_SS<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, D_texObj, i, dims, params.iRaysPerPixelDim, params.fOutputScale);
 		else
-			devBP<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, D_texObj, i, dims, fOutputScale);
+			devBP<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, D_texObj, i, dims, params.fOutputScale);
 	}
 
 	bool ok = checkCuda(cudaStreamSynchronize(stream), "par_bp");
@@ -224,7 +224,7 @@ bool BP_internal(float* D_volumeData, unsigned int volumePitch,
 bool BP(float* D_volumeData, unsigned int volumePitch,
         float* D_projData, unsigned int projPitch,
         const SDimensions& dims, const SProjectorParams2D& params,
-        const SParProjection* angles, float fOutputScale)
+        const SParProjection* angles)
 {
 	TransferConstantsBuffer tcbuf(g_MaxAngles);
 
@@ -247,7 +247,7 @@ bool BP(float* D_volumeData, unsigned int volumePitch,
 
 		ok &= BP_internal(D_volumeData, volumePitch,
 		                  D_projData + iAngle * projPitch, projPitch,
-		                  subdims, params, angles + iAngle, fOutputScale, stream);
+		                  subdims, params, angles + iAngle, stream);
 		if (!ok)
 			break;
 	}
@@ -261,7 +261,7 @@ bool BP(float* D_volumeData, unsigned int volumePitch,
 bool BP_SART(float* D_volumeData, unsigned int volumePitch,
              float* D_projData, unsigned int projPitch,
              unsigned int angle, const SDimensions& dims, const SProjectorParams2D& params,
-             const SParProjection* angles, float fOutputScale)
+             const SParProjection* angles)
 {
 	assert(params.iRaysPerPixelDim == 1);
 
@@ -289,7 +289,7 @@ bool BP_SART(float* D_volumeData, unsigned int volumePitch,
 		return false;
 	}
 
-	devBP_SART<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, D_texObj, angle_offset, angle_scaled_sin, angle_scaled_cos, dims, fOutputScale);
+	devBP_SART<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, D_texObj, angle_offset, angle_scaled_sin, angle_scaled_cos, dims, params.fOutputScale);
 
 	bool ok = checkCuda(cudaStreamSynchronize(stream), "BP_SART");
 

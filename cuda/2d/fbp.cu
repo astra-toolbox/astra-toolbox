@@ -31,80 +31,74 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/cuda/2d/fft.h"
 #include "astra/cuda/2d/par_bp.h"
 #include "astra/cuda/2d/fan_bp.h"
+#include "astra/cuda/2d/mem2d.h"
 #include "astra/cuda/2d/util.h"
+#include "astra/cuda/3d/mem3d_internal.h"
 
 // For fan-beam preweighting
 #include "astra/cuda/3d/fdk.h"
 
 #include "astra/Logging.h"
 #include "astra/Filters.h"
+#include "astra/Data2D.h"
 
 namespace astraCUDA {
 
+struct SFilter_internal {
+	cufftComplex *D_filter;
+	bool single;
+};
 
-// static
-int FBP::calcFourierFilterSize(int _iDetectorCount)
+SFilter_internal *prepareFilter(const astra::SFilterConfig &_cfg, const SDimensions &dims)
 {
-	int iFFTRealDetCount = astra::calcNextPowerOfTwo(2 * _iDetectorCount);
-	int iFreqBinCount = astra::calcFFTFourierSize(iFFTRealDetCount);
-
-	// CHECKME: Matlab makes this at least 64. Do we also need to?
-	return iFreqBinCount;
-}
-
-
-
-
-FBP::FBP() : ReconAlgo()
-{
-	D_filter = 0;
-	m_bShortScan = false;
-	fReconstructionScale = 1.0f;
-}
-
-FBP::~FBP()
-{
-	reset();
-}
-
-void FBP::reset()
-{
-	if (D_filter) {
-		freeComplexOnDevice((cufftComplex *)D_filter);
-		D_filter = 0;
-	}
-	m_bShortScan = false;
-	fReconstructionScale = 1.0f;
-}
-
-bool FBP::init()
-{
-	return true;
-}
-
-bool FBP::setReconstructionScale(float fScale)
-{
-	fReconstructionScale = fScale;
-	return true;
-}
-
-bool FBP::setFilter(const astra::SFilterConfig &_cfg)
-{
-	if (D_filter)
-	{
-		freeComplexOnDevice((cufftComplex*)D_filter);
-		D_filter = 0;
-	}
-
+	bool singleFilter;
 	cufftComplex *f;
-	bool ok = prepareCuFFTFilter(_cfg, f, m_bSingleFilter, dims.iProjAngles, dims.iProjDets);
-	D_filter = (void *)f;
-	return ok;
+
+	bool ok = prepareCuFFTFilter(_cfg, f, singleFilter, dims.iProjAngles, dims.iProjDets);
+
+	if (!ok)
+		return nullptr;
+
+	SFilter_internal *sf = new SFilter_internal;
+	sf->D_filter = f;
+	sf->single = singleFilter;
+
+	return sf;
 }
 
-bool FBP::iterate(unsigned int iterations)
+void freeFilter(SFilter_internal *f)
 {
-	zeroVolumeData(D_volumeData, volumePitch, dims);
+	assert(f);
+	if (f->D_filter)
+		freeComplexOnDevice(f->D_filter);
+	delete f;
+}
+
+bool FBP(astra::CData2D *D_vol, astra::CData2D *D_proj,
+         const astra::Geometry2DParameters &geometry, SProjectorParams2D params,
+	 const SFilter_internal *f,
+	 bool shortScan)
+{
+	astraCUDA::CDataGPU *projs = dynamic_cast<astraCUDA::CDataGPU*>(D_proj->getStorage());
+	assert(projs);
+
+	const astraCUDA::CDataGPU *vols = dynamic_cast<const astraCUDA::CDataGPU*>(D_vol->getStorage());
+	assert(vols);
+
+	assert(!projs->getArray());
+	assert(!vols->getArray());
+
+	float *D_sinoData = (float *)projs->getPtr().ptr;
+	int sinoPitch = projs->getPtr().pitch / sizeof(float);
+	float *D_volumeData = (float *)vols->getPtr().ptr;
+	int volumePitch = vols->getPtr().pitch / sizeof(float);
+
+
+
+
+	const SDimensions &dims = geometry.getDims();
+
+	zeroGPUMemory(D_vol);
 
 	bool ok = false;
 
@@ -118,7 +112,8 @@ bool FBP::iterate(unsigned int iterations)
 		// TODO: We take the fan parameters from the last projection here
 		// without checking if they're the same in all projections
 
-		float *pfAngles = new float[dims.iProjAngles];
+		std::vector<float> pfAngles;
+		pfAngles.resize(dims.iProjAngles);
 
 		float fOriginSource, fOriginDetector, fOffset;
 		for (unsigned int i = 0; i < dims.iProjAngles; ++i) {
@@ -127,7 +122,6 @@ bool FBP::iterate(unsigned int iterations)
 			                                  fOriginSource, fOriginDetector,
 			                                  fFanDetSize, fOffset);
 			if (!ok) {
-				delete[] pfAngles;
 				ASTRA_ERROR("FBP_CUDA: Failed to extract circular fan beam parameters from fan beam geometry");
 				return false;
 			}
@@ -151,15 +145,13 @@ bool FBP::iterate(unsigned int iterations)
 		astraCUDA3d::FDK_PreWeight(tmp, fOriginSource,
 		              fOriginDetector, 0.0f,
 		              fFanDetSize, 1.0f,
-		              m_bShortScan, dims3d, pfAngles);
-
-		delete[] pfAngles;
+		              shortScan, dims3d, &pfAngles[0]);
 	} else {
 		// TODO: How should different detector pixel size in different
 		// projections be handled?
 	}
 
-	if (D_filter) {
+	if (f->D_filter) {
 
 		int iPaddedSize = astra::calcNextPowerOfTwo(2 * dims.iProjDets);
 		int iFourierSize = astra::calcFFTFourierSize(iPaddedSize);
@@ -170,7 +162,7 @@ bool FBP::iterate(unsigned int iterations)
 
 		runCudaFFT(dims.iProjAngles, D_sinoData, sinoPitch, dims.iProjDets, iPaddedSize, D_pcFourier);
 
-		applyFilter(dims.iProjAngles, iFourierSize, D_pcFourier, (cufftComplex*)D_filter, m_bSingleFilter);
+		applyFilter(dims.iProjAngles, iFourierSize, D_pcFourier, f->D_filter, f->single);
 
 		runCudaIFFT(dims.iProjAngles, D_pcFourier, D_sinoData, sinoPitch, dims.iProjDets, iPaddedSize);
 
@@ -179,14 +171,15 @@ bool FBP::iterate(unsigned int iterations)
 	}
 
 	if (geometry.isFan()) {
-		ok = FanBP_FBPWeighted(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, params, geometry.getFan(), fProjectorScale * fReconstructionScale);
+		ok = FanBP_FBPWeighted(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, params, geometry.getFan());
 
 	} else {
 		// scale by number of angles. For the fan-beam case, this is already
 		// handled by FDK_PreWeight
-		float fOutputScale = (M_PI / 2.0f) / (float)dims.iProjAngles;
+		params.fOutputScale *= (M_PI / 2.0f) / (float)dims.iProjAngles;
 
-		ok = BP(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, params, geometry.getParallel(), fOutputScale * fProjectorScale * fReconstructionScale);
+
+		ok = BP(D_volumeData, volumePitch, D_sinoData, sinoPitch, dims, params, geometry.getParallel());
 	}
 	if(!ok)
 	{
@@ -195,6 +188,5 @@ bool FBP::iterate(unsigned int iterations)
 
 	return true;
 }
-
 
 }

@@ -29,19 +29,17 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/cuda/2d/sart.h"
 #include "astra/cuda/2d/util.h"
-#include "astra/cuda/2d/arith.h"
-#include "astra/cuda/2d/fan_fp.h"
-#include "astra/cuda/2d/fan_bp.h"
-#include "astra/cuda/2d/par_fp.h"
-#include "astra/cuda/2d/par_bp.h"
+#include "astra/cuda/3d/mem3d_internal.h"
+
+#include "astra/Data2D.h"
 
 #include <cstdio>
 #include <cassert>
+#include <array>
 
 namespace astraCUDA {
 
-// FIXME: Remove these functions. (Outdated)
-__global__ void devMUL_SART(float* pfOut, const float* pfIn, unsigned int pitch, unsigned int width)
+__global__ void devMUL_SART(float* pfOut, const float* pfIn, unsigned int width)
 {
 	unsigned int x = threadIdx.x + 16*blockIdx.x;
 	if (x >= width) return;
@@ -49,240 +47,60 @@ __global__ void devMUL_SART(float* pfOut, const float* pfIn, unsigned int pitch,
 	pfOut[x] *= pfIn[x];
 }
 
-bool MUL_SART(float* pfOut, const float* pfIn, unsigned int pitch, unsigned int width)
+bool mul_SART(astra::CData2D *dst, const astra::CData2D *src, int angle)
 {
+	assert(dst->getShape()[0] == src->getShape()[0]);
+	assert(dst->getShape()[1] == 1);
+
+	astraCUDA::CDataGPU *dsts = dynamic_cast<astraCUDA::CDataGPU*>(dst->getStorage());
+	assert(dsts);
+	assert(!dsts->getArray());
+	const astraCUDA::CDataGPU *srcs = dynamic_cast<const astraCUDA::CDataGPU*>(src->getStorage());
+	assert(srcs);
+	assert(!srcs->getArray());
+
+	std::array<int, 2> dims = src->getShape();
+	assert(angle >= 0);
+	assert(angle < dims[1]);
+
+	const float *src_ptr = (float*)srcs->getPtr().ptr;
+	src_ptr += angle * (srcs->getPtr().pitch / sizeof(float));
+
 	dim3 blockSize(16,16);
-	dim3 gridSize((width+15)/16, 1);
+	dim3 gridSize((dims[0]+15)/16, 1);
 
 	cudaStream_t stream;
 	if (!checkCuda(cudaStreamCreate(&stream), "MUL_SART stream"))
 		return false;
 
-	devMUL_SART<<<gridSize, blockSize, 0, stream>>>(pfOut, pfIn, pitch, width);
+	devMUL_SART<<<gridSize, blockSize, 0, stream>>>((float*)dsts->getPtr().ptr, src_ptr, dims[0]);
 
 	bool ok = checkCuda(cudaStreamSynchronize(stream), "MUL_SART");
 	cudaStreamDestroy(stream);
 	return ok;
 }
 
-
-
-SART::SART() : ReconAlgo()
+bool copy_SART(astra::CData2D *dst, const astra::CData2D *src, int angle)
 {
-	D_projData = 0;
-	D_tmpData = 0;
+	assert(dst->getShape()[0] == src->getShape()[0]);
+	assert(dst->getShape()[1] == 1);
 
-	D_lineWeight = 0;
+	astraCUDA::CDataGPU *dsts = dynamic_cast<astraCUDA::CDataGPU*>(dst->getStorage());
+	assert(dsts);
+	assert(!dsts->getArray());
+	const astraCUDA::CDataGPU *srcs = dynamic_cast<const astraCUDA::CDataGPU*>(src->getStorage());
+	assert(srcs);
+	assert(!srcs->getArray());
 
-	projectionOrder = 0;
-	projectionCount = 0;
-	iteration = 0;
-	customOrder = false;
+	std::array<int, 2> dims = src->getShape();
+	assert(angle >= 0);
+	assert(angle < dims[1]);
 
-	fRelaxation = 1.0f;
+	const float *src_ptr = (float*)srcs->getPtr().ptr;
+	src_ptr += angle * (srcs->getPtr().pitch / sizeof(float));
+
+	return checkCuda(cudaMemcpy(dsts->getPtr().ptr, src_ptr, sizeof(float)*dims[0], cudaMemcpyDeviceToDevice), "copy_SART memcpy");
 }
-
-
-SART::~SART()
-{
-	reset();
-}
-
-void SART::reset()
-{
-	cudaFree(D_projData);
-	cudaFree(D_tmpData);
-	cudaFree(D_lineWeight);
-
-	D_projData = 0;
-	D_tmpData = 0;
-
-	D_lineWeight = 0;
-
-	useVolumeMask = false;
-	useSinogramMask = false;
-
-	if (projectionOrder != NULL) delete[] projectionOrder;
-	projectionOrder = 0;
-	projectionCount = 0;
-	iteration = 0;
-	customOrder = false;
-	fRelaxation = 1.0f;
-
-	ReconAlgo::reset();
-}
-
-bool SART::init()
-{
-	if (useVolumeMask) {
-		allocateVolumeData(D_tmpData, tmpPitch, dims);
-		zeroVolumeData(D_tmpData, tmpPitch, dims);
-	}
-
-	// NB: Non-standard dimensions
-	SDimensions linedims = dims;
-	linedims.iProjAngles = 1;
-	allocateProjectionData(D_projData, projPitch, linedims);
-	zeroProjectionData(D_projData, projPitch, linedims);
-	
-	allocateProjectionData(D_lineWeight, linePitch, dims);
-	zeroProjectionData(D_lineWeight, linePitch, dims);
-
-	// We can't precompute lineWeights when using a mask
-	if (!useVolumeMask)
-		precomputeWeights();
-
-	// TODO: check if allocations succeeded
-	return true;
-}
-
-bool SART::setProjectionOrder(int* _projectionOrder, int _projectionCount)
-{
-	customOrder = true;
-	projectionCount = _projectionCount;
-	projectionOrder = new int[projectionCount];
-	for (int i = 0; i < projectionCount; i++) {
-		projectionOrder[i] = _projectionOrder[i];
-	}
-
-	return true;
-}
-
-
-bool SART::precomputeWeights()
-{
-	zeroProjectionData(D_lineWeight, linePitch, dims);
-	if (useVolumeMask) {
-		callFP(D_maskData, maskPitch, D_lineWeight, linePitch, 1.0f);
-	} else {
-		// Allocate tmpData temporarily
-		allocateVolumeData(D_tmpData, tmpPitch, dims);
-		zeroVolumeData(D_tmpData, tmpPitch, dims);
-
-
-		processVol<opSet>(D_tmpData, 1.0f, tmpPitch, dims);
-		callFP(D_tmpData, tmpPitch, D_lineWeight, linePitch, 1.0f);
-
-
-		cudaFree(D_tmpData);
-		D_tmpData = 0;
-	}
-	processSino<opInvert>(D_lineWeight, linePitch, dims);
-
-	return true;
-}
-
-bool SART::iterate(unsigned int iterations)
-{
-	if (useVolumeMask)
-		precomputeWeights();
-
-	// iteration
-	for (unsigned int iter = 0; iter < iterations && !astra::shouldAbort(); ++iter) {
-
-		int angle;
-		if (customOrder) {
-			angle = projectionOrder[iteration % projectionCount];
-		} else {
-			angle = iteration % dims.iProjAngles;  
-		}
-
-		// copy one line of sinogram to projection data
-		// NB: Non-standard dimensions
-		SDimensions linedims = dims;
-		linedims.iProjAngles = 1;
-		duplicateProjectionData(D_projData, D_sinoData + angle*sinoPitch, sinoPitch, linedims);
-
-		// do FP, subtracting projection from sinogram
-		if (useVolumeMask) {
-				duplicateVolumeData(D_tmpData, D_volumeData, volumePitch, dims);
-				processVol<opMul>(D_tmpData, D_maskData, tmpPitch, dims);
-				callFP_SART(D_tmpData, tmpPitch, D_projData, projPitch, angle, -1.0f);
-		} else {
-				callFP_SART(D_volumeData, volumePitch, D_projData, projPitch, angle, -1.0f);
-		}
-
-		MUL_SART(D_projData, D_lineWeight + angle*linePitch, projPitch, dims.iProjDets);
-
-		if (useVolumeMask) {
-			// BP, mask, and add back
-			// TODO: Try putting the masking directly in the BP
-			zeroVolumeData(D_tmpData, tmpPitch, dims);
-			callBP_SART(D_tmpData, tmpPitch, D_projData, projPitch, angle, fRelaxation);
-			processVol<opAddMul>(D_volumeData, D_maskData, D_tmpData, volumePitch, dims);
-		} else {
-			callBP_SART(D_volumeData, volumePitch, D_projData, projPitch, angle, fRelaxation);
-		}
-
-		if (useMinConstraint)
-			processVol<opClampMin>(D_volumeData, fMinConstraint, volumePitch, dims);
-		if (useMaxConstraint)
-			processVol<opClampMax>(D_volumeData, fMaxConstraint, volumePitch, dims);
-
-		iteration++;
-
-	}
-
-	return true;
-}
-
-float SART::computeDiffNorm()
-{
-	unsigned int pPitch;
-	float *D_p;
-	allocateProjectionData(D_p, pPitch, dims);
-
-	// copy sinogram to D_p
-	duplicateProjectionData(D_p, D_sinoData, sinoPitch, dims);
-
-	// do FP, subtracting projection from sinogram
-	if (useVolumeMask) {
-			duplicateVolumeData(D_tmpData, D_volumeData, volumePitch, dims);
-			processVol<opMul>(D_tmpData, D_maskData, tmpPitch, dims);
-			callFP(D_tmpData, tmpPitch, D_p, pPitch, -1.0f);
-	} else {
-			callFP(D_volumeData, volumePitch, D_p, pPitch, -1.0f);
-	}
-
-
-	// compute norm of D_p
-	float s = dotProduct2D(D_p, pPitch, dims.iProjDets, dims.iProjAngles);
-
-	cudaFree(D_p);
-
-	return sqrt(s);
-}
-
-bool SART::callFP_SART(float* D_volumeData, unsigned int volumePitch,
-                       float* D_projData, unsigned int projPitch,
-                       unsigned int angle, float outputScale)
-{
-	SDimensions d = dims;
-	d.iProjAngles = 1;
-	if (geometry.isParallel()) {
-		return FP(D_volumeData, volumePitch, D_projData, projPitch,
-		          d, params, &geometry.getParallel()[angle], outputScale * fProjectorScale);
-	} else {
-		return FanFP(D_volumeData, volumePitch, D_projData, projPitch,
-		             d, params, &geometry.getFan()[angle], outputScale * fProjectorScale);
-	}
-}
-
-bool SART::callBP_SART(float* D_volumeData, unsigned int volumePitch,
-                       float* D_projData, unsigned int projPitch,
-                       unsigned int angle, float outputScale)
-{
-	// NB: No fProjectorScale here, as that it is cancelled out in the SART weighting
-	if (geometry.isParallel()) {
-		return BP_SART(D_volumeData, volumePitch, D_projData, projPitch,
-		               angle, dims, params, geometry.getParallel(), outputScale);
-	} else {
-		return FanBP_SART(D_volumeData, volumePitch, D_projData, projPitch,
-		                  angle, dims, params, geometry.getFan(), outputScale);
-	}
-
-}
-
 
 }
 

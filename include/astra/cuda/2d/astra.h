@@ -29,7 +29,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #define _CUDA_ASTRA_H
 
 #include "dims.h"
-#include "algo.h"
 
 using astraCUDA::SFanProjection;
 
@@ -38,46 +37,6 @@ namespace astra {
 enum Cuda2DProjectionKernel {
 	ker2d_default = 0
 };
-
-class CParallelProjectionGeometry2D;
-class CParallelVecProjectionGeometry2D;
-class CFanFlatProjectionGeometry2D;
-class CFanFlatVecProjectionGeometry2D;
-class CVolumeGeometry2D;
-class CProjectionGeometry2D;
-
-
-class _AstraExport BPalgo : public astraCUDA::ReconAlgo {
-public:
-	BPalgo();
-	~BPalgo();
-
-	virtual bool init();
-
-	virtual bool iterate(unsigned int iterations);
-
-	virtual float computeDiffNorm();
-};
-
-
-
-
-// TODO: Clean up this interface to FP
-
-// Do a single forward projection
-_AstraExport bool astraCudaFP(const float* pfVolume, float* pfSinogram,
-                 unsigned int iVolWidth, unsigned int iVolHeight,
-                 unsigned int iProjAngles, unsigned int iProjDets,
-                 const SParProjection *pAngles,
-                 unsigned int iDetSuperSampling = 1,
-                 float fOutputScale = 1.0f, int iGPUIndex = 0);
-
-_AstraExport bool astraCudaFanFP(const float* pfVolume, float* pfSinogram,
-                    unsigned int iVolWidth, unsigned int iVolHeight,
-                    unsigned int iProjAngles, unsigned int iProjDets,
-                    const SFanProjection *pAngles,
-                    unsigned int iDetSuperSampling = 1,
-                    float fOutputScale = 1.0f, int iGPUIndex = 0);
 
 }
 
@@ -90,37 +49,6 @@ _AstraExport std::string getCudaDeviceString(int device);
 _AstraExport bool setGPUIndex(int index);
 
 _AstraExport size_t availableGPUMemory();
-
-
-struct opAddScaled;
-struct opScaleAndAdd;
-struct opAddMulScaled;
-struct opAddMul;
-struct opAdd;
-struct opAdd2;
-struct opMul;
-struct opDiv;
-struct opMul2;
-struct opDividedBy;
-struct opInvert;
-struct opSet;
-struct opClampMin;
-struct opClampMax;
-struct opClampMinMask;
-struct opClampMaxMask;
-struct opSegmentAndMask;
-struct opSetMaskedValues;
-
-struct opMulMask;
-
-
-template<typename op> bool processVolCopy(float* out, const SDimensions& dims);
-template<typename op> bool processVolCopy(float* out, float param, const SDimensions& dims);
-template<typename op> bool processVolCopy(float* out1, float* out2, float param1, float param2, const SDimensions& dims);
-template<typename op> bool processVolCopy(float* out, const float* in, const SDimensions& dims);
-template<typename op> bool processVolCopy(float* out, const float* in, float param, const SDimensions& dims);
-template<typename op> bool processVolCopy(float* out, const float* in1, const float* in2, const SDimensions& dims);
-template<typename op> bool processVolCopy(float* out, const float* in1, const float* in2, float param, const SDimensions& dims);
 
 }
 #endif

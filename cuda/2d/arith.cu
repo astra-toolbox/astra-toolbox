@@ -30,6 +30,11 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/cuda/2d/util.h"
 #include "astra/cuda/2d/arith.h"
 
+#include "astra/cuda/stream_internal.h"
+#include "astra/cuda/3d/mem3d_internal.h"
+
+#include "astra/Data2D.h"
+
 #include <cassert>
 
 namespace astraCUDA {
@@ -280,453 +285,188 @@ __global__ void devDDFtoD(float* pfOut, const float* pfIn1, const float* pfIn2, 
 
 
 
-
-
-
-
-
-
-
-
-
 template<typename op>
-bool processVolCopy(float* out, const SDimensions& dims)
+bool processData(astra::CData2D *out, const Stream &stream)
 {
-	float* D_out;
-	size_t width = dims.iVolWidth;
-	unsigned int pitch;
+	CDataGPU *outs = dynamic_cast<CDataGPU*>(out->getStorage());
+	assert(outs);
+	assert(!outs->getArray());
+	assert(stream.isValid());
 
-	bool ok = true;
-
-	ok &= allocateVolumeData(D_out, pitch, dims);
-	if (!ok)
-		return false;
-	ok &= copyVolumeToDevice(out, width, dims, D_out, pitch);
-
-	ok &= processVol<op>(D_out, pitch, dims);
-
-	ok &= copyVolumeFromDevice(out, width, dims, D_out, pitch);
-
-	cudaFree(D_out);
-	return ok;
-}
-
-template<typename op>
-bool processVolCopy(float* out, float param, const SDimensions& dims)
-{
-	float* D_out;
-	size_t width = dims.iVolWidth;
-	unsigned int pitch;
-
-	bool ok = true;
-
-	ok &= allocateVolumeData(D_out, pitch, dims);
-	if (!ok)
-		return false;
-
-	ok &= copyVolumeToDevice(out, width, dims, D_out, pitch);
-
-	ok &= processVol<op>(D_out, param, pitch, dims);
-
-	ok &= copyVolumeFromDevice(out, width, dims, D_out, pitch);
-
-	cudaFree(D_out);
-	return ok;
-}
-
-template<typename op>
-bool processVolCopy(float* out1, float* out2, float param1, float param2, const SDimensions& dims)
-{
-	float* D_out1;
-	float* D_out2;
-	size_t width = dims.iVolWidth;
-	unsigned int pitch;
-
-	bool ok = true;
-
-	ok &= allocateVolumeData(D_out1, pitch, dims);
-	if (!ok)
-		return false;
-	ok &= allocateVolumeData(D_out2, pitch, dims);
-	if (!ok) {
-		cudaFree(D_out1);
-		return false;
-	}
-
-	ok &= copyVolumeToDevice(out1, width, dims, D_out1, pitch);
-	ok &= copyVolumeToDevice(out2, width, dims, D_out2, pitch);
-
-	ok &= processVol<op>(D_out1, D_out2, param1, param2, pitch, dims);
-
-	ok &= copyVolumeFromDevice(out1, width, dims, D_out1, pitch);
-	ok &= copyVolumeFromDevice(out2, width, dims, D_out2, pitch);
-
-	cudaFree(D_out1);
-	cudaFree(D_out2);
-	return ok;
-}
-
-
-template<typename op>
-bool processVolCopy(float* out, const float* in, const SDimensions& dims)
-{
-	float* D_out;
-	float* D_in;
-	size_t width = dims.iVolWidth;
-	unsigned int pitch;
-
-	bool ok = true;
-
-	ok &= allocateVolumeData(D_out, pitch, dims);
-	if (!ok)
-		return false;
-	ok &= allocateVolumeData(D_in, pitch, dims);
-	if (!ok) {
-		cudaFree(D_out);
-		return false;
-	}
-
-	ok &= copyVolumeToDevice(out, width, dims, D_out, pitch);
-	ok &= copyVolumeToDevice(in, width, dims, D_in, pitch);
-
-	ok &= processVol<op>(D_out, D_in, pitch, dims);
-
-	ok &= copyVolumeFromDevice(out, width, dims, D_out, pitch);
-
-	cudaFree(D_out);
-	cudaFree(D_in);
-	return ok;
-}
-
-template<typename op>
-bool processVolCopy(float* out, const float* in, float param, const SDimensions& dims)
-{
-	float* D_out;
-	float* D_in;
-	size_t width = dims.iVolWidth;
-	unsigned int pitch;
-
-	bool ok = true;
-
-	ok &= allocateVolumeData(D_out, pitch, dims);
-	if (!ok)
-		return false;
-	ok &= allocateVolumeData(D_in, pitch, dims);
-	if (!ok) {
-		cudaFree(D_out);
-		return false;
-	}
-
-	ok &= copyVolumeToDevice(out, width, dims, D_out, pitch);
-	ok &= copyVolumeToDevice(in, width, dims, D_in, pitch);
-
-	ok &= processVol<op>(D_out, D_in, param, pitch, dims);
-
-	ok &= copyVolumeFromDevice(out, width, dims, D_out, pitch);
-
-	cudaFree(D_out);
-	cudaFree(D_in);
-	return ok;
-}
-
-template<typename op>
-bool processVolCopy(float* out, const float* in1, const float* in2, const SDimensions& dims)
-{
-	float* D_out;
-	float* D_in1;
-	float* D_in2;
-	size_t width = dims.iVolWidth;
-	unsigned int pitch;
-
-	bool ok = true;
-
-	ok &= allocateVolumeData(D_out, pitch, dims);
-	if (!ok)
-		return false;
-	ok &= allocateVolumeData(D_in1, pitch, dims);
-	if (!ok) {
-		cudaFree(D_out);
-		return false;
-	}
-	ok &= allocateVolumeData(D_in2, pitch, dims);
-	if (!ok) {
-		cudaFree(D_out);
-		cudaFree(D_in1);
-		return false;
-	}
-
-	ok &= copyVolumeToDevice(out, width, dims, D_out, pitch);
-	ok &= copyVolumeToDevice(in1, width, dims, D_in1, pitch);
-	ok &= copyVolumeToDevice(in2, width, dims, D_in2, pitch);
-
-	ok &= processVol<op>(D_out, D_in1, D_in2, pitch, dims);
-
-	ok &= copyVolumeFromDevice(out, width, dims, D_out, pitch);
-
-	cudaFree(D_out);
-	cudaFree(D_in1);
-	cudaFree(D_in2);
-	return ok;
-}
-
-template<typename op>
-bool processVolCopy(float* out, const float* in1, const float* in2, float param, const SDimensions& dims)
-{
-	float* D_out;
-	float* D_in1;
-	float* D_in2;
-	size_t width = dims.iVolWidth;
-	unsigned int pitch;
-
-	bool ok = true;
-
-	ok &= allocateVolumeData(D_out, pitch, dims);
-	if (!ok)
-		return false;
-	ok &= allocateVolumeData(D_in1, pitch, dims);
-	if (!ok) {
-		cudaFree(D_out);
-		return false;
-	}
-	ok &= allocateVolumeData(D_in2, pitch, dims);
-	if (!ok) {
-		cudaFree(D_out);
-		cudaFree(D_in1);
-		return false;
-	}
-
-	ok &= copyVolumeToDevice(out, width, dims, D_out, pitch);
-	ok &= copyVolumeToDevice(in1, width, dims, D_in1, pitch);
-	ok &= copyVolumeToDevice(in2, width, dims, D_in2, pitch);
-
-	ok &= processVol<op>(D_out, D_in1, D_in2, param, pitch, dims);
-
-	ok &= copyVolumeFromDevice(out, width, dims, D_out, pitch);
-
-	cudaFree(D_out);
-	cudaFree(D_in1);
-	cudaFree(D_in2);
-	return ok;
-}
-
-
-
-
-
-
-
-
-template<typename op>
-bool processData(float* pfOut, unsigned int pitch, unsigned int width, unsigned int height, std::optional<cudaStream_t> _stream)
-{
-	StreamHelper stream(_stream);
-	if (!stream)
-		return false;
+	std::array<int, 2> dims = out->getShape();
 
 	dim3 blockSize(16,16);
-	dim3 gridSize((width+15)/16, (height+511)/512);
+	dim3 gridSize((dims[0]+15)/16, (dims[1]+511)/512);
+	float *pfOut = (float*)outs->getPtr().ptr;
+	unsigned int outPitch = outs->getPtr().pitch / sizeof(float);
 
-	devtoD<op, 32><<<gridSize, blockSize, 0, stream()>>>(pfOut, pitch, width, height);
+	devtoD<op, 32><<<gridSize, blockSize, 0, **stream>>>(pfOut, outPitch, dims[0], dims[1]);
 
-	return stream.syncIfSync(__FUNCTION__);
+	return stream.syncIfAuto(__FUNCTION__);
 }
 
 template<typename op>
-bool processData(float* pfOut, float fParam, unsigned int pitch, unsigned int width, unsigned int height, std::optional<cudaStream_t> _stream)
+bool processData(astra::CData2D *out, float fParam, const Stream &stream)
 {
-	StreamHelper stream(_stream);
-	if (!stream)
-		return false;
+	CDataGPU *outs = dynamic_cast<CDataGPU*>(out->getStorage());
+	assert(outs);
+	assert(!outs->getArray());
+	assert(stream.isValid());
+
+	std::array<int, 2> dims = out->getShape();
 
 	dim3 blockSize(16,16);
-	dim3 gridSize((width+15)/16, (height+15)/16);
+	dim3 gridSize((dims[0]+15)/16, (dims[1]+511)/512);
+	float *pfOut = (float*)outs->getPtr().ptr;
+	unsigned int outPitch = outs->getPtr().pitch / sizeof(float);
 
-	devFtoD<op, 32><<<gridSize, blockSize, 0, stream()>>>(pfOut, fParam, pitch, width, height);
+	devFtoD<op, 32><<<gridSize, blockSize, 0, **stream>>>(pfOut, fParam, outPitch, dims[0], dims[1]);
 
-	return stream.syncIfSync(__FUNCTION__);
+	return stream.syncIfAuto(__FUNCTION__);
 }
 
 template<typename op>
-bool processData(float* pfOut1, float* pfOut2, float fParam1, float fParam2, unsigned int pitch, unsigned int width, unsigned int height, std::optional<cudaStream_t> _stream)
+bool processData(astra::CData2D *out1, astra::CData2D *out2, float fParam1, float fParam2, const Stream &stream)
 {
-	StreamHelper stream(_stream);
-	if (!stream)
-		return false;
+	assert(out1->getShape() == out2->getShape());
+	CDataGPU *out1s = dynamic_cast<CDataGPU*>(out1->getStorage());
+	assert(out1s);
+	assert(!out1s->getArray());
+	CDataGPU *out2s = dynamic_cast<CDataGPU*>(out2->getStorage());
+	assert(out2s);
+	assert(!out2s->getArray());
+	assert(stream.isValid());
+
+	std::array<int, 2> dims = out1->getShape();
 
 	dim3 blockSize(16,16);
-	dim3 gridSize((width+15)/16, (height+15)/16);
+	dim3 gridSize((dims[0]+15)/16, (dims[1]+511)/512);
+	float *pfOut1 = (float*)out1s->getPtr().ptr;
+	float *pfOut2 = (float*)out2s->getPtr().ptr;
+	unsigned int outPitch = out1s->getPtr().pitch / sizeof(float);
+	assert(out1s->getPtr().pitch == out2s->getPtr().pitch);
 
-	devFFtoDD<op, 32><<<gridSize, blockSize, 0, stream()>>>(pfOut1, pfOut2, fParam1, fParam2, pitch, width, height);
+	devFFtoDD<op, 32><<<gridSize, blockSize, 0, **stream>>>(pfOut1, pfOut2, fParam1, fParam2, outPitch, dims[0], dims[1]);
 
-	return stream.syncIfSync(__FUNCTION__);
+	return stream.syncIfAuto(__FUNCTION__);
 }
 
 
 template<typename op>
-bool processData(float* pfOut, const float* pfIn, unsigned int pitch, unsigned int width, unsigned int height, std::optional<cudaStream_t> _stream)
+bool processData(astra::CData2D *out, const astra::CData2D *in, const Stream &stream)
 {
-	StreamHelper stream(_stream);
-	if (!stream)
-		return false;
+	assert(out->getShape() == in->getShape());
+	CDataGPU *outs = dynamic_cast<CDataGPU*>(out->getStorage());
+	assert(outs);
+	assert(!outs->getArray());
+	const astraCUDA::CDataGPU *ins = dynamic_cast<const astraCUDA::CDataGPU*>(in->getStorage());
+	assert(ins);
+	assert(!ins->getArray());
+	assert(stream.isValid());
+
+	std::array<int, 2> dims = out->getShape();
 
 	dim3 blockSize(16,16);
-	dim3 gridSize((width+15)/16, (height+15)/16);
+	dim3 gridSize((dims[0]+15)/16, (dims[1]+511)/512);
+	float *pfOut = (float*)outs->getPtr().ptr;
+	float *pfIn = (float*)ins->getPtr().ptr;
+	unsigned int outPitch = outs->getPtr().pitch / sizeof(float);
+	assert(outs->getPtr().pitch == ins->getPtr().pitch);
 
-	devDtoD<op, 32><<<gridSize, blockSize, 0, stream()>>>(pfOut, pfIn, pitch, width, height);
+	devDtoD<op, 32><<<gridSize, blockSize, 0, **stream>>>(pfOut, pfIn, outPitch, dims[0], dims[1]);
 
-	return stream.syncIfSync(__FUNCTION__);
+	return stream.syncIfAuto(__FUNCTION__);
 }
 
 template<typename op>
-bool processData(float* pfOut, const float* pfIn, float fParam, unsigned int pitch, unsigned int width, unsigned int height, std::optional<cudaStream_t> _stream)
+bool processData(astra::CData2D *out, const astra::CData2D *in, float fParam, const Stream &stream)
 {
-	StreamHelper stream(_stream);
-	if (!stream)
-		return false;
+	assert(out->getShape() == in->getShape());
+	CDataGPU *outs = dynamic_cast<CDataGPU*>(out->getStorage());
+	assert(outs);
+	assert(!outs->getArray());
+	const astraCUDA::CDataGPU *ins = dynamic_cast<const astraCUDA::CDataGPU*>(in->getStorage());
+	assert(ins);
+	assert(!ins->getArray());
+	assert(stream.isValid());
+
+	std::array<int, 2> dims = out->getShape();
 
 	dim3 blockSize(16,16);
-	dim3 gridSize((width+15)/16, (height+15)/16);
+	dim3 gridSize((dims[0]+15)/16, (dims[1]+511)/512);
+	float *pfOut = (float*)outs->getPtr().ptr;
+	float *pfIn = (float*)ins->getPtr().ptr;
+	unsigned int outPitch = outs->getPtr().pitch / sizeof(float);
+	assert(outs->getPtr().pitch == ins->getPtr().pitch);
 
-	devDFtoD<op, 32><<<gridSize, blockSize, 0, stream()>>>(pfOut, pfIn, fParam, pitch, width, height);
+	devDFtoD<op, 32><<<gridSize, blockSize, 0, **stream>>>(pfOut, pfIn, fParam, outPitch, dims[0], dims[1]);
 
-	return stream.syncIfSync(__FUNCTION__);
+	return stream.syncIfAuto(__FUNCTION__);
 }
 
 template<typename op>
-bool processData(float* pfOut, const float* pfIn1, const float* pfIn2, float fParam, unsigned int pitch, unsigned int width, unsigned int height, std::optional<cudaStream_t> _stream)
+bool processData(astra::CData2D *out, const astra::CData2D *in1, const astra::CData2D *in2, float fParam, const Stream &stream)
 {
-	StreamHelper stream(_stream);
-	if (!stream)
-		return false;
+	assert(out->getShape() == in1->getShape());
+	assert(out->getShape() == in2->getShape());
+	CDataGPU *outs = dynamic_cast<CDataGPU*>(out->getStorage());
+	assert(outs);
+	assert(!outs->getArray());
+	const astraCUDA::CDataGPU *in1s = dynamic_cast<const astraCUDA::CDataGPU*>(in1->getStorage());
+	assert(in1s);
+	assert(!in1s->getArray());
+	const astraCUDA::CDataGPU *in2s = dynamic_cast<const astraCUDA::CDataGPU*>(in2->getStorage());
+	assert(in2s);
+	assert(!in2s->getArray());
+	assert(stream.isValid());
+
+	std::array<int, 2> dims = out->getShape();
 
 	dim3 blockSize(16,16);
-	dim3 gridSize((width+15)/16, (height+15)/16);
+	dim3 gridSize((dims[0]+15)/16, (dims[1]+511)/512);
+	float *pfOut = (float*)outs->getPtr().ptr;
+	float *pfIn1 = (float*)in1s->getPtr().ptr;
+	float *pfIn2 = (float*)in2s->getPtr().ptr;
+	unsigned int outPitch = outs->getPtr().pitch / sizeof(float);
+	assert(outs->getPtr().pitch == in1s->getPtr().pitch);
+	assert(outs->getPtr().pitch == in2s->getPtr().pitch);
 
-	devDDFtoD<op, 32><<<gridSize, blockSize, 0, stream()>>>(pfOut, pfIn1, pfIn2, fParam, pitch, width, height);
+	devDDFtoD<op, 32><<<gridSize, blockSize, 0, **stream>>>(pfOut, pfIn1, pfIn2, fParam, outPitch, dims[0], dims[1]);
 
-	return stream.syncIfSync(__FUNCTION__);
+	return stream.syncIfAuto(__FUNCTION__);
 }
 
 template<typename op>
-bool processData(float* pfOut, const float* pfIn1, const float* pfIn2, unsigned int pitch, unsigned int width, unsigned int height, std::optional<cudaStream_t> _stream)
+bool processData(astra::CData2D *out, const astra::CData2D *in1, const astra::CData2D *in2, const Stream &stream)
 {
-	StreamHelper stream(_stream);
-	if (!stream)
-		return false;
+	assert(out->getShape() == in1->getShape());
+	assert(out->getShape() == in2->getShape());
+	CDataGPU *outs = dynamic_cast<CDataGPU*>(out->getStorage());
+	assert(outs);
+	assert(!outs->getArray());
+	const astraCUDA::CDataGPU *in1s = dynamic_cast<const astraCUDA::CDataGPU*>(in1->getStorage());
+	assert(in1s);
+	assert(!in1s->getArray());
+	const astraCUDA::CDataGPU *in2s = dynamic_cast<const astraCUDA::CDataGPU*>(in2->getStorage());
+	assert(in2s);
+	assert(!in2s->getArray());
+	assert(stream.isValid());
+
+	std::array<int, 2> dims = out->getShape();
 
 	dim3 blockSize(16,16);
-	dim3 gridSize((width+15)/16, (height+15)/16);
+	dim3 gridSize((dims[0]+15)/16, (dims[1]+511)/512);
+	float *pfOut = (float*)outs->getPtr().ptr;
+	float *pfIn1 = (float*)in1s->getPtr().ptr;
+	float *pfIn2 = (float*)in2s->getPtr().ptr;
+	unsigned int outPitch = outs->getPtr().pitch / sizeof(float);
+	assert(outs->getPtr().pitch == in1s->getPtr().pitch);
+	assert(outs->getPtr().pitch == in2s->getPtr().pitch);
 
-	devDDtoD<op, 32><<<gridSize, blockSize, 0, stream()>>>(pfOut, pfIn1, pfIn2, pitch, width, height);
+	devDDtoD<op, 32><<<gridSize, blockSize, 0, **stream>>>(pfOut, pfIn1, pfIn2, outPitch, dims[0], dims[1]);
 
-	return stream.syncIfSync(__FUNCTION__);
+	return stream.syncIfAuto(__FUNCTION__);
 }
-
-
-
-
-
-
-
-
-template<typename op>
-bool processVol(float* out, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream)
-{
-	return processData<op>(out, pitch, dims.iVolWidth, dims.iVolHeight, _stream);
-}
-
-template<typename op>
-bool processVol(float* out, float param, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream)
-{
-	return processData<op>(out, param, pitch, dims.iVolWidth, dims.iVolHeight, _stream);
-}
-
-template<typename op>
-bool processVol(float* out1, float* out2, float param1, float param2, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream)
-{
-	return processData<op>(out1, out2, param1, param2, pitch, dims.iVolWidth, dims.iVolHeight, _stream);
-}
-
-
-template<typename op>
-bool processVol(float* out, const float* in, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream)
-{
-	return processData<op>(out, in, pitch, dims.iVolWidth, dims.iVolHeight, _stream);
-}
-
-template<typename op>
-bool processVol(float* out, const float* in, float param, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream)
-{
-	return processData<op>(out, in, param, pitch, dims.iVolWidth, dims.iVolHeight, _stream);
-}
-
-template<typename op>
-bool processVol(float* out, const float* in1, const float* in2, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream)
-{
-	return processData<op>(out, in1, in2, pitch, dims.iVolWidth, dims.iVolHeight, _stream);
-}
-
-template<typename op>
-bool processVol(float* out, const float* in1, const float* in2, float param, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream)
-{
-	return processData<op>(out, in2, in2, param, pitch, dims.iVolWidth, dims.iVolHeight, _stream);
-}
-
-
-
-
-template<typename op>
-bool processSino(float* out, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream)
-{
-	return processData<op>(out, pitch, dims.iProjDets, dims.iProjAngles, _stream);
-}
-
-template<typename op>
-bool processSino(float* out, float param, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream)
-{
-	return processData<op>(out, param, pitch, dims.iProjDets, dims.iProjAngles, _stream);
-}
-
-template<typename op>
-bool processSino(float* out1, float* out2, float param1, float param2, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream)
-{
-	return processData<op>(out1, out2, param1, param2, pitch, dims.iProjDets, dims.iProjAngles, _stream);
-}
-
-
-template<typename op>
-bool processSino(float* out, const float* in, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream)
-{
-	return processData<op>(out, in, pitch, dims.iProjDets, dims.iProjAngles, _stream);
-}
-
-template<typename op>
-bool processSino(float* out, const float* in, float param, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream)
-{
-	return processData<op>(out, in, param, pitch, dims.iProjDets, dims.iProjAngles, _stream);
-}
-
-template<typename op>
-bool processSino(float* out, const float* in1, const float* in2, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream)
-{
-	return processData<op>(out, in1, in2, pitch, dims.iProjDets, dims.iProjAngles, _stream);
-}
-
-template<typename op>
-bool processSino(float* out, const float* in1, const float* in2, float param, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream)
-{
-	return processData<op>(out, in2, in2, param, pitch, dims.iProjDets, dims.iProjAngles, _stream);
-}
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -741,40 +481,25 @@ bool processSino(float* out, const float* in1, const float* in2, float param, un
 
 
 #define INST_DFtoD(name) \
-  template bool processVolCopy<name>(float* out, const float* in, float param, const SDimensions& dims); \
-  template bool processVol<name>(float* out, const float* in, float param, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream); \
-  template bool processSino<name>(float* out, const float* in, float param, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream);
+  template bool processData<name>(astra::CData2D* out, const astra::CData2D* in, float param, const Stream& stream);
 
 #define INST_DtoD(name) \
-  template bool processVolCopy<name>(float* out, const float* in, const SDimensions& dims); \
-  template bool processVol<name>(float* out, const float* in, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream); \
-  template bool processSino<name>(float* out, const float* in, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream);
+  template bool processData<name>(astra::CData2D* out, const astra::CData2D* in, const Stream& stream);
 
 #define INST_DDtoD(name) \
-  template bool processVolCopy<name>(float* out, const float* in1, const float* in2, const SDimensions& dims); \
-  template bool processVol<name>(float* out, const float* in1, const float* in2, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream); \
-  template bool processSino<name>(float* out, const float* in1, const float* in2, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream);
+  template bool processData<name>(astra::CData2D* out, const astra::CData2D* in1, const astra::CData2D* in2, const Stream& stream);
 
 #define INST_DDFtoD(name) \
-  template bool processVolCopy<name>(float* out, const float* in1, const float* in2, float fParam, const SDimensions& dims); \
-  template bool processVol<name>(float* out, const float* in1, const float* in2, float fParam, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream); \
-  template bool processSino<name>(float* out, const float* in1, const float* in2, float fParam, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream);
-
+  template bool processData<name>(astra::CData2D* out, const astra::CData2D* in1, const astra::CData2D* in2, float fParam, const Stream& stream);
 
 #define INST_toD(name) \
-  template bool processVolCopy<name>(float* out, const SDimensions& dims); \
-  template bool processVol<name>(float* out, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream); \
-  template bool processSino<name>(float* out, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream);
+  template bool processData<name>(astra::CData2D* out, const Stream& stream);
 
 #define INST_FtoD(name) \
-  template bool processVolCopy<name>(float* out, float param, const SDimensions& dims); \
-  template bool processVol<name>(float* out, float param, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream); \
-  template bool processSino<name>(float* out, float param, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream);
+  template bool processData<name>(astra::CData2D* out, float param, const Stream& stream);
 
 #define INST_FFtoDD(name) \
-  template bool processVolCopy<name>(float* out1, float* out2, float fParam1, float fParam2, const SDimensions& dims); \
-  template bool processVol<name>(float* out1, float* out2, float fParam1, float fParam2, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream); \
-  template bool processSino<name>(float* out1, float* out2, float fParam1, float fParam2, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream);
+  template bool processData<name>(astra::CData2D* out1, astra::CData2D* out2, float fParam1, float fParam2, const Stream& stream);
 
 
 

@@ -46,6 +46,7 @@ public:
 	int getHeight() const { return m_iDims[1]; }
 
 	std::string description() const;
+	virtual EDataType getType() const { return BASE; }
 
 	// TODO: Consider moving these operations elsewhere
 	CData2D& operator+=(const CData2D& _other);
@@ -58,7 +59,6 @@ public:
 	void clampMin(float32 _value);
 	void clampMax(float32 _value);
 
-protected:
 	CData2D(int x, int y, CDataStorage *storage) : CData({x, y}, storage) { }
 };
 

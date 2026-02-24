@@ -30,8 +30,11 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/CudaDataOperationAlgorithm.h"
 
 #include "astra/cuda/2d/astra.h"
+#include "astra/cuda/2d/arith.h"
+#include "astra/cuda/2d/mem2d.h"
 
 #include "astra/AstraObjectManager.h"
+#include "astra/Data2D.h"
 
 #include "astra/Logging.h"
 
@@ -113,43 +116,82 @@ bool CCudaDataOperationAlgorithm::run(int _iNrIterations)
 
 	astraCUDA::setGPUIndex(m_iGPUIndex);
 
-	astraCUDA::SDimensions dims;
-	// We slightly abuse dims here: width/height is not necessarily a volume
-	dims.iVolWidth = m_pData[0]->getWidth();
-	dims.iVolHeight = m_pData[0]->getHeight();
+	bool ok = true;
 
-	if (m_sOperation == "$1*s1" || m_sOperation == "$1.*s1") // data * scalar
-	{
-		if (m_pMask == NULL)
-			astraCUDA::processVolCopy<astraCUDA::opMul>(m_pData[0]->getFloat32Memory(), m_fScalar[0], dims);
-		else
-			astraCUDA::processVolCopy<astraCUDA::opMulMask>(m_pData[0]->getFloat32Memory(), m_pMask->getFloat32Memory(), m_fScalar[0], dims);
+	std::vector<CData2D*> D_data;
+	for (CData2D *data : m_pData) {
+		std::array<int, 2> volDims = data->getShape();
+		CDataStorage *s = astraCUDA::allocateGPUMemory(volDims[0], volDims[1], astraCUDA::INIT_NO);
+		if (!s) {
+			ok = false;
+			break;
+		}
+		CData2D *d = new CData2D(volDims[0], volDims[1], s);
+		ok &= astraCUDA::copyToGPUMemory(data, d);
+		if (!ok)
+			break;
+		D_data.push_back(d);
 	}
-	else if (m_sOperation == "$1/s1" || m_sOperation == "$1./s1") // data / scalar
-	{
-		if (m_pMask == NULL)
-			astraCUDA::processVolCopy<astraCUDA::opMul>(m_pData[0]->getFloat32Memory(), 1.0f/m_fScalar[0], dims);
-		else
-			astraCUDA::processVolCopy<astraCUDA::opMulMask>(m_pData[0]->getFloat32Memory(), m_pMask->getFloat32Memory(), 1.0f/m_fScalar[0], dims);
-	}
-	else if (m_sOperation == "$1+s1") // data + scalar
-	{
-		astraCUDA::processVolCopy<astraCUDA::opAdd>(m_pData[0]->getFloat32Memory(), m_fScalar[0], dims);
-	}
-	else if (m_sOperation == "$1-s1") // data - scalar
-	{
-		astraCUDA::processVolCopy<astraCUDA::opAdd>(m_pData[0]->getFloat32Memory(), -m_fScalar[0], dims);
-	} 
-	else if (m_sOperation == "$1.*$2") // data .* data
-	{
-		astraCUDA::processVolCopy<astraCUDA::opMul>(m_pData[0]->getFloat32Memory(), m_pData[1]->getFloat32Memory(), dims);
-	}
-	else if (m_sOperation == "$1+$2") // data + data
-	{
-		astraCUDA::processVolCopy<astraCUDA::opAdd>(m_pData[0]->getFloat32Memory(), m_pData[1]->getFloat32Memory(), dims);
+	CData2D *D_mask = nullptr;
+	if (ok && m_pMask) {
+		std::array<int, 2> volDims = m_pMask->getShape();
+		CDataStorage *s = astraCUDA::allocateGPUMemory(volDims[0], volDims[1], astraCUDA::INIT_NO);
+		if (s) {
+			D_mask = new CData2D(volDims[0], volDims[1], s);
+			ok &= astraCUDA::copyToGPUMemory(m_pMask, D_mask);
+		} else {
+			ok = false;
+		}
 	}
 
-	return true;
+	if (ok) {
+		if (m_sOperation == "$1*s1" || m_sOperation == "$1.*s1") // data * scalar
+		{
+			if (m_pMask == NULL)
+				ok &= astraCUDA::processData<astraCUDA::opMul>(D_data[0], m_fScalar[0]);
+			else
+				ok &= astraCUDA::processData<astraCUDA::opMulMask>(D_data[0], D_mask, m_fScalar[0]);
+		}
+		else if (m_sOperation == "$1/s1" || m_sOperation == "$1./s1") // data / scalar
+		{
+			if (m_pMask == NULL)
+				ok &= astraCUDA::processData<astraCUDA::opMul>(D_data[0], 1.0f/m_fScalar[0]);
+			else
+				ok &= astraCUDA::processData<astraCUDA::opMulMask>(D_data[0], D_mask, 1.0f/m_fScalar[0]);
+		}
+		else if (m_sOperation == "$1+s1") // data + scalar
+		{
+			ok &= astraCUDA::processData<astraCUDA::opAdd>(D_data[0], m_fScalar[0]);
+		}
+		else if (m_sOperation == "$1-s1") // data - scalar
+		{
+			ok &= astraCUDA::processData<astraCUDA::opAdd>(D_data[0], -m_fScalar[0]);
+		}
+		else if (m_sOperation == "$1.*$2") // data .* data
+		{
+			ok &= astraCUDA::processData<astraCUDA::opMul>(D_data[0], D_data[1]);
+		}
+		else if (m_sOperation == "$1+$2") // data + data
+		{
+			ok &= astraCUDA::processData<astraCUDA::opAdd>(D_data[0], D_data[1]);
+		}
+		else
+			ok = false;
+	}
+
+	// Only transfer the first data object back to host memory
+	ok &= astraCUDA::copyFromGPUMemory(m_pData[0], D_data[0]);
+
+	for (CData2D *d : D_data) {
+		astraCUDA::freeGPUMemory(d);
+		delete d;
+	}
+	if (D_mask) {
+		astraCUDA::freeGPUMemory(D_mask);
+		delete D_mask;
+	}
+
+	return ok;
 }
 
 //----------------------------------------------------------------------------------------

@@ -42,6 +42,7 @@ public:
 	CDataStorage() { }
 	virtual ~CDataStorage() { }
 
+	// TODO: Document these, and maybe change their meaning
 	virtual bool isMemory() const =0;
 	virtual bool isGPU() const =0;
 	virtual bool isFloat32() const =0;
