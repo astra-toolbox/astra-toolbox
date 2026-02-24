@@ -363,7 +363,7 @@ bool ConfigReader<T>::getOptionIntArray(const std::string &name, std::vector<int
 		return false;
 	}
 
-	markNodeParsed(name);
+	markOptionParsed(name);
 	return true;
 }
 

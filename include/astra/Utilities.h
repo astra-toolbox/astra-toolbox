@@ -80,6 +80,10 @@ _AstraExport std::vector<float> stringToFloatVector(const std::string& s);
 //< Throw exception on failure.
 _AstraExport std::vector<double> stringToDoubleVector(const std::string& s);
 
+//< Parse comma/semicolon-separated string as int vector.
+//< Throw exception on failure.
+_AstraExport std::vector<int> stringToIntVector(const std::string& s);
+
 template<typename T>
 _AstraExport std::vector<T> stringToVector(const std::string& s);
 

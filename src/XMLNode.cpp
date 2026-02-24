@@ -184,6 +184,11 @@ vector<double> XMLNode::getContentNumericalArrayDouble() const
 	return StringUtil::stringToDoubleVector(getContent());
 }
 
+vector<int> XMLNode::getContentNumericalArrayInt() const
+{
+	return StringUtil::stringToIntVector(getContent());
+}
+
 //-----------------------------------------------------------------------------	
 // Is attribute?
 bool XMLNode::hasAttribute(string _sName) const
