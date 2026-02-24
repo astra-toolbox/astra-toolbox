@@ -35,6 +35,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstdio>
 #include <cassert>
+#include <cstring>
 
 namespace astraCUDA3d {
 
