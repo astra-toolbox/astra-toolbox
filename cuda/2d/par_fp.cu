@@ -235,7 +235,7 @@ bool FP_simple_internal(float* D_volumeData, unsigned int volumePitch,
                float* D_projData, unsigned int projPitch,
                const SDimensions& dims, const SProjectorParams2D& params,
                const SParProjection* angles,
-               float outputScale, cudaStream_t stream)
+               cudaStream_t stream)
 {
 	assert(dims.iProjAngles <= g_MaxAngles);
 
@@ -281,10 +281,10 @@ bool FP_simple_internal(float* D_volumeData, unsigned int volumePitch,
 				//printf("angle block: %d to %d, %d\n", blockStart, blockEnd, blockVertical);
 				if (!blockVertical)
 					for (unsigned int i = 0; i < dims.iVolWidth; i += g_blockSlices)
-						FPhorizontal_simple<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, D_texObj, i, blockStart, blockEnd, dims, params.iRaysPerDet, outputScale);
+						FPhorizontal_simple<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, D_texObj, i, blockStart, blockEnd, dims, params.iRaysPerDet, params.fOutputScale);
 				else
 					for (unsigned int i = 0; i < dims.iVolHeight; i += g_blockSlices)
-						FPvertical_simple<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, D_texObj, i, blockStart, blockEnd, dims, params.iRaysPerDet, outputScale);
+						FPvertical_simple<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, D_texObj, i, blockStart, blockEnd, dims, params.iRaysPerDet, params.fOutputScale);
 			}
 			blockVertical = vertical;
 			blockStart = a;
@@ -303,8 +303,7 @@ bool FP_simple_internal(float* D_volumeData, unsigned int volumePitch,
 bool FP_simple(float* D_volumeData, unsigned int volumePitch,
                float* D_projData, unsigned int projPitch,
                const SDimensions& dims, const SProjectorParams2D& params,
-               const SParProjection* angles,
-               float outputScale)
+               const SParProjection* angles)
 {
 	TransferConstantsBuffer tcbuf(g_MaxAngles);
 
@@ -329,7 +328,7 @@ bool FP_simple(float* D_volumeData, unsigned int volumePitch,
 		ok &= FP_simple_internal(D_volumeData, volumePitch,
 		                         D_projData + iAngle * projPitch, projPitch,
 		                         subdims, params, angles + iAngle,
-		                         outputScale, stream);
+		                         stream);
 		if (!ok)
 			break;
 	}
@@ -340,11 +339,11 @@ bool FP_simple(float* D_volumeData, unsigned int volumePitch,
 
 bool FP(float* D_volumeData, unsigned int volumePitch,
         float* D_projData, unsigned int projPitch,
-        const SDimensions& dims, const SProjectorParams2D& params, const SParProjection* angles,
-        float outputScale)
+        const SDimensions& dims, const SProjectorParams2D& params,
+        const SParProjection* angles)
 {
 	return FP_simple(D_volumeData, volumePitch, D_projData, projPitch,
-	                 dims, params, angles, outputScale);
+	                 dims, params, angles);
 
 }
 

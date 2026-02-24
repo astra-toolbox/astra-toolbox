@@ -282,7 +282,7 @@ bool transferConstants(const SFanProjection* angles, unsigned int iProjAngles, b
 bool FanBP_internal(float* D_volumeData, unsigned int volumePitch,
            float* D_projData, unsigned int projPitch,
            const SDimensions& dims, const SProjectorParams2D &params, const SFanProjection* angles,
-           float fOutputScale, cudaStream_t stream)
+           cudaStream_t stream)
 {
 	assert(dims.iProjAngles <= g_MaxAngles);
 
@@ -296,9 +296,9 @@ bool FanBP_internal(float* D_volumeData, unsigned int volumePitch,
 
 	for (unsigned int i = 0; i < dims.iProjAngles; i += g_anglesPerBlock) {
 		if (params.iRaysPerPixelDim > 1)
-			devFanBP_SS<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, D_texObj, i, dims, params.iRaysPerPixelDim, fOutputScale);
+			devFanBP_SS<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, D_texObj, i, dims, params.iRaysPerPixelDim, params.fOutputScale);
 		else
-			devFanBP<false><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, D_texObj, i, dims, fOutputScale);
+			devFanBP<false><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, D_texObj, i, dims, params.fOutputScale);
 	}
 
 	bool ok = checkCuda(cudaStreamSynchronize(stream), "FanBP");
@@ -311,7 +311,7 @@ bool FanBP_internal(float* D_volumeData, unsigned int volumePitch,
 bool FanBP_FBPWeighted_internal(float* D_volumeData, unsigned int volumePitch,
            float* D_projData, unsigned int projPitch,
            const SDimensions& dims, const SProjectorParams2D &params, const SFanProjection* angles,
-           float fOutputScale, cudaStream_t stream)
+           cudaStream_t stream)
 {
 	assert(dims.iProjAngles <= g_MaxAngles);
 	assert(params.iRaysPerPixelDim == 1);
@@ -325,7 +325,7 @@ bool FanBP_FBPWeighted_internal(float* D_volumeData, unsigned int volumePitch,
 	             (dims.iVolHeight+g_blockSliceSize-1)/g_blockSliceSize);
 
 	for (unsigned int i = 0; i < dims.iProjAngles; i += g_anglesPerBlock) {
-		devFanBP<true><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, D_texObj, i, dims, fOutputScale);
+		devFanBP<true><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, D_texObj, i, dims, params.fOutputScale);
 	}
 
 	bool ok = checkCuda(cudaStreamSynchronize(stream), "FanBP_FBPWeighted");
@@ -340,8 +340,7 @@ bool FanBP_SART(float* D_volumeData, unsigned int volumePitch,
                 float* D_projData, unsigned int projPitch,
                 unsigned int angle,
                 const SDimensions& dims, const SProjectorParams2D &params,
-                const SFanProjection* angles,
-                float fOutputScale)
+                const SFanProjection* angles)
 {
 	assert(params.iRaysPerPixelDim == 1);
 	TransferConstantsBuffer tcbuf(1);
@@ -368,7 +367,7 @@ bool FanBP_SART(float* D_volumeData, unsigned int volumePitch,
 	dim3 dimGrid((dims.iVolWidth+g_blockSlices-1)/g_blockSlices,
 	             (dims.iVolHeight+g_blockSliceSize-1)/g_blockSliceSize);
 
-	devFanBP_SART<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, D_texObj, dims, fOutputScale);
+	devFanBP_SART<<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volumePitch, D_texObj, dims, params.fOutputScale);
 
 	ok = checkCuda(cudaStreamSynchronize(stream), "FanBP_SART");
 
@@ -380,8 +379,7 @@ bool FanBP_SART(float* D_volumeData, unsigned int volumePitch,
 
 bool FanBP(float* D_volumeData, unsigned int volumePitch,
            float* D_projData, unsigned int projPitch,
-           const SDimensions& dims, const SProjectorParams2D &params, const SFanProjection* angles,
-           float fOutputScale)
+           const SDimensions& dims, const SProjectorParams2D &params, const SFanProjection* angles)
 {
 	TransferConstantsBuffer tcbuf(g_MaxAngles);
 
@@ -404,7 +402,7 @@ bool FanBP(float* D_volumeData, unsigned int volumePitch,
 
 		ok &= FanBP_internal(D_volumeData, volumePitch,
 		                  D_projData + iAngle * projPitch, projPitch,
-		                  subdims, params, angles + iAngle, fOutputScale, stream);
+		                  subdims, params, angles + iAngle, stream);
 		if (!ok)
 			break;
 	}
@@ -416,8 +414,7 @@ bool FanBP(float* D_volumeData, unsigned int volumePitch,
 
 bool FanBP_FBPWeighted(float* D_volumeData, unsigned int volumePitch,
            float* D_projData, unsigned int projPitch,
-           const SDimensions& dims, const SProjectorParams2D& params, const SFanProjection* angles,
-           float fOutputScale)
+           const SDimensions& dims, const SProjectorParams2D& params, const SFanProjection* angles)
 {
 	TransferConstantsBuffer tcbuf(g_MaxAngles);
 
@@ -440,7 +437,7 @@ bool FanBP_FBPWeighted(float* D_volumeData, unsigned int volumePitch,
 
 		ok = FanBP_FBPWeighted_internal(D_volumeData, volumePitch,
 		                  D_projData + iAngle * projPitch, projPitch,
-		                  subdims, params, angles + iAngle, fOutputScale, stream);
+		                  subdims, params, angles + iAngle, stream);
 		if (!ok)
 			break;
 	}

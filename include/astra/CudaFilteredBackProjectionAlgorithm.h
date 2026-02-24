@@ -36,6 +36,10 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "cuda/2d/astra.h"
 
+namespace astraCUDA {
+struct SFilter_internal;
+}
+
 namespace astra
 {
 
@@ -47,6 +51,8 @@ public:
 private:
 	SFilterConfig m_filterConfig;
 	bool m_bShortScan; // short-scan mode for fan beam
+
+	astraCUDA::SFilter_internal *m_filter;
 
 public:
 	CCudaFilteredBackProjectionAlgorithm();
@@ -61,10 +67,14 @@ public:
 	 */
 	virtual std::string description() const;
 
+	/** Perform a number of iterations.
+	 *
+	 * @param _iNrIterations amount of iterations to perform.
+	 */
+	virtual bool run(int _iNrIterations = 0);
+
 protected:
 	bool check();
-
-	virtual void initCUDAAlgorithm();
 };
 
 // inline functions

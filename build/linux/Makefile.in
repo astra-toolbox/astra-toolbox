@@ -264,21 +264,18 @@ CUDA_CXX_OBJECTS=\
 CUDA_OBJECTS=\
 	cuda/dlpack_support.lo \
 	cuda/stream.lo \
-	cuda/2d/algo.lo \
 	cuda/2d/par_fp.lo \
 	cuda/2d/par_bp.lo \
 	cuda/2d/fan_fp.lo \
 	cuda/2d/fan_bp.lo \
 	cuda/2d/fbp.lo \
-	cuda/2d/sirt.lo \
 	cuda/2d/sart.lo \
-	cuda/2d/cgls.lo \
-	cuda/2d/em.lo \
 	cuda/2d/astra.lo \
 	cuda/2d/util.lo \
 	cuda/2d/arith.lo \
 	cuda/2d/fft.lo \
 	cuda/2d/darthelper.lo \
+	cuda/2d/mem2d.lo \
 	cuda/3d/darthelper3d.lo \
 	cuda/3d/cone_fp.lo \
 	cuda/3d/cone_bp.lo \

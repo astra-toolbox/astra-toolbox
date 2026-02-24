@@ -63,8 +63,6 @@ namespace astra {
  *
  */
 
-class AstraCGLS;
-
 class _AstraExport CCudaCglsAlgorithm : public CCudaReconstructionAlgorithm2D
 {
 	
@@ -94,9 +92,9 @@ public:
 	 * @param _pSinogram		ProjectionData2D object containing the sinogram
 	 * @param _pReconstruction	VolumeData2D for storing the reconstruction
 	 */
-	bool initialize(CProjector2D* _pProjector, 
-					CFloat32ProjectionData2D* _pSinogram, 
-					CFloat32VolumeData2D* _pReconstruction);
+	bool initialize(CProjector2D* _pProjector,
+	                CFloat32ProjectionData2D* _pSinogram,
+	                CFloat32VolumeData2D* _pReconstruction);
 
 	/** Get a description of the class.
 	 *
@@ -104,6 +102,29 @@ public:
 	 */
 	virtual std::string description() const;
 
+	virtual bool run(int _iNrIterations);
+
+	virtual bool getResidualNorm(float32& _fNorm);
+protected:
+	bool allocateBuffers();
+	void freeBuffers();
+
+	bool m_bBuffersInitialized;
+
+	// Input/output buffers (on device)
+	CData2D *D_projData;
+	CData2D *D_volData;
+
+	// Temporary buffers (on device)
+	CData2D *D_z;
+	CData2D *D_p;
+	CData2D *D_r;
+	CData2D *D_w;
+
+	// Mask buffers (on device)
+	CData2D *D_volMaskData;
+
+	float m_fGamma;
 };
 
 // inline functions

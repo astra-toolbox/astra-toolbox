@@ -7,22 +7,13 @@
     <CudaCompile Include="..\..\..\cuda\stream.cu">
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\cuda\2d\algo.cu">
-      <Filter>CUDA\cuda source</Filter>
-    </CudaCompile>
     <CudaCompile Include="..\..\..\cuda\2d\arith.cu">
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\cuda\2d\astra.cu">
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\cuda\2d\cgls.cu">
-      <Filter>CUDA\cuda source</Filter>
-    </CudaCompile>
     <CudaCompile Include="..\..\..\cuda\2d\darthelper.cu">
-      <Filter>CUDA\cuda source</Filter>
-    </CudaCompile>
-    <CudaCompile Include="..\..\..\cuda\2d\em.cu">
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\cuda\2d\fan_bp.cu">
@@ -37,6 +28,9 @@
     <CudaCompile Include="..\..\..\cuda\2d\fft.cu">
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>
+    <CudaCompile Include="..\..\..\cuda\2d\mem2d.cu">
+      <Filter>CUDA\cuda source</Filter>
+    </CudaCompile>
     <CudaCompile Include="..\..\..\cuda\2d\par_bp.cu">
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>
@@ -44,9 +38,6 @@
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\cuda\2d\sart.cu">
-      <Filter>CUDA\cuda source</Filter>
-    </CudaCompile>
-    <CudaCompile Include="..\..\..\cuda\2d\sirt.cu">
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\cuda\2d\util.cu">
@@ -596,25 +587,16 @@
     <ClInclude Include="..\..\..\include\astra\cuda\stream_internal.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\astra\cuda\2d\algo.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\include\astra\cuda\2d\arith.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\astra\cuda\2d\astra.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\astra\cuda\2d\cgls.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\include\astra\cuda\2d\darthelper.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\astra\cuda\2d\dims.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\astra\cuda\2d\em.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\astra\cuda\2d\fan_bp.h">
@@ -629,6 +611,9 @@
     <ClInclude Include="..\..\..\include\astra\cuda\2d\fft.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\astra\cuda\2d\mem2d.h">
+      <Filter>CUDA\cuda headers</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\astra\cuda\2d\par_bp.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
@@ -636,9 +621,6 @@
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\astra\cuda\2d\sart.h">
-      <Filter>CUDA\cuda headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\astra\cuda\2d\sirt.h">
       <Filter>CUDA\cuda headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\astra\cuda\2d\util.h">

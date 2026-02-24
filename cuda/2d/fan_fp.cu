@@ -221,7 +221,7 @@ static bool transferConstants(const SFanProjection *projs, unsigned int nth,
 bool FanFP_internal(float* D_volumeData, unsigned int volumePitch,
            float* D_projData, unsigned int projPitch,
            const SDimensions& dims, const SProjectorParams2D& params, const SFanProjection* angles,
-           float outputScale, cudaStream_t stream)
+           cudaStream_t stream)
 {
 	assert(dims.iProjAngles <= g_MaxAngles);
 
@@ -242,10 +242,10 @@ bool FanFP_internal(float* D_volumeData, unsigned int volumePitch,
 	             (dims.iProjDets+g_blockSliceSize-1)/g_blockSliceSize); // angle blocks, regions
 
 	for (unsigned int i = 0; i < dims.iVolWidth; i += g_blockSlices)
-		FanFPhorizontal<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, D_texObj, i, blockStart, blockEnd, dims, params.iRaysPerDet, outputScale);
+		FanFPhorizontal<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, D_texObj, i, blockStart, blockEnd, dims, params.iRaysPerDet, params.fOutputScale);
 
 	for (unsigned int i = 0; i < dims.iVolHeight; i += g_blockSlices)
-		FanFPvertical<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, D_texObj, i, blockStart, blockEnd, dims, params.iRaysPerDet, outputScale);
+		FanFPvertical<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, D_texObj, i, blockStart, blockEnd, dims, params.iRaysPerDet, params.fOutputScale);
 
 	bool ok = true;
 
@@ -259,8 +259,7 @@ bool FanFP_internal(float* D_volumeData, unsigned int volumePitch,
 
 bool FanFP(float* D_volumeData, unsigned int volumePitch,
            float* D_projData, unsigned int projPitch,
-           const SDimensions& dims, const SProjectorParams2D& params, const SFanProjection* angles,
-           float outputScale)
+           const SDimensions& dims, const SProjectorParams2D& params, const SFanProjection* angles)
 {
 	TransferConstantsBuffer tcbuf(g_MaxAngles);
 
@@ -284,7 +283,7 @@ bool FanFP(float* D_volumeData, unsigned int volumePitch,
 		ok &= FanFP_internal(D_volumeData, volumePitch,
 		                         D_projData + iAngle * projPitch, projPitch,
 		                         subdims, params, angles + iAngle,
-		                         outputScale, stream);
+		                         stream);
 		if (!ok)
 			break;
 	}

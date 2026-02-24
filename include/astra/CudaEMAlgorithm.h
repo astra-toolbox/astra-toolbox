@@ -75,6 +75,28 @@ public:
 	 * @return description string
 	 */
 	virtual std::string description() const;
+
+	virtual bool run(int _iNrIterations);
+
+	virtual bool getResidualNorm(float32& _fNorm);
+protected:
+	bool allocateBuffers();
+	void freeBuffers();
+
+	bool precomputeWeights();
+
+	bool m_bBuffersInitialized;
+
+	// Input/output buffers (on device)
+	CData2D *D_projData;
+	CData2D *D_volData;
+
+	// Precomputed weight buffers (on device)
+	CData2D *D_pixelWeight;
+
+	// Temporary buffers (on device)
+	CData2D *D_tmpProjData;
+	CData2D *D_tmpVolData;
 };
 
 // inline functions
