@@ -46,13 +46,13 @@ namespace astra {
 class DefaultFPPolicy {
 
 	//< Projection Data
-	CFloat32ProjectionData2D* m_pProjectionData;
+	float32* m_pProjectionData;
 	//< Volume Data
-	CFloat32VolumeData2D* m_pVolumeData;
+	const float32* m_pVolumeData;
 
 public:
 	FORCEINLINE DefaultFPPolicy();
-	FORCEINLINE DefaultFPPolicy(CFloat32VolumeData2D* _pVolumeData, CFloat32ProjectionData2D* _pProjectionData);
+	FORCEINLINE DefaultFPPolicy(const CFloat32VolumeData2D* _pVolumeData, CFloat32ProjectionData2D* _pProjectionData);
 	FORCEINLINE ~DefaultFPPolicy();
 
 	FORCEINLINE bool rayPrior(int _iRayIndex);
@@ -70,13 +70,13 @@ public:
 class DefaultBPPolicy {
 
 	//< Projection Data
-	CFloat32ProjectionData2D* m_pProjectionData;
+	const float32* m_pProjectionData;
 	//< Volume Data
-	CFloat32VolumeData2D* m_pVolumeData;
+	float32* m_pVolumeData;
 
 public:
 	FORCEINLINE DefaultBPPolicy();
-	FORCEINLINE DefaultBPPolicy(CFloat32VolumeData2D* _pVolumeData, CFloat32ProjectionData2D* _pProjectionData);
+	FORCEINLINE DefaultBPPolicy(CFloat32VolumeData2D* _pVolumeData, const CFloat32ProjectionData2D* _pProjectionData);
 	FORCEINLINE ~DefaultBPPolicy();
 
 	FORCEINLINE bool rayPrior(int _iRayIndex);
@@ -93,13 +93,13 @@ public:
  */
 class DiffFPPolicy {
 
-	CFloat32ProjectionData2D* m_pDiffProjectionData;
-	CFloat32ProjectionData2D* m_pBaseProjectionData;
-	CFloat32VolumeData2D* m_pVolumeData;
+	float32* m_pDiffProjectionData;
+	const float32* m_pBaseProjectionData;
+	const float32* m_pVolumeData;
 public:
 
 	FORCEINLINE DiffFPPolicy();
-	FORCEINLINE DiffFPPolicy(CFloat32VolumeData2D* _vol_data, CFloat32ProjectionData2D* _proj_data, CFloat32ProjectionData2D* _proj_data_base);
+	FORCEINLINE DiffFPPolicy(const CFloat32VolumeData2D* _vol_data, CFloat32ProjectionData2D* _proj_data, const CFloat32ProjectionData2D* _proj_data_base);
 	FORCEINLINE ~DiffFPPolicy();
 
 	FORCEINLINE bool rayPrior(int _iRayIndex);
@@ -139,13 +139,13 @@ public:
  */
 class TotalPixelWeightBySinogramPolicy {
 
-	CFloat32VolumeData2D* m_pPixelWeight;
-	CFloat32ProjectionData2D* m_pSinogram;
+	float32* m_pPixelWeight;
+	const float32* m_pSinogram;
 
 public:
 
 	FORCEINLINE TotalPixelWeightBySinogramPolicy();
-	FORCEINLINE TotalPixelWeightBySinogramPolicy(CFloat32ProjectionData2D* _pSinogram, CFloat32VolumeData2D* _pPixelWeight);
+	FORCEINLINE TotalPixelWeightBySinogramPolicy(const CFloat32ProjectionData2D* _pSinogram, CFloat32VolumeData2D* _pPixelWeight);
 	FORCEINLINE ~TotalPixelWeightBySinogramPolicy();
 
 	FORCEINLINE bool rayPrior(int _iRayIndex);
@@ -160,7 +160,7 @@ public:
  */
 class TotalPixelWeightPolicy {
 
-	CFloat32VolumeData2D* m_pPixelWeight;
+	float32* m_pPixelWeight;
 
 public:
 
@@ -180,7 +180,7 @@ public:
  */
 class TotalRayLengthPolicy {
 
-	CFloat32ProjectionData2D* m_pRayLength;
+	float32* m_pRayLength;
 
 public:
 
@@ -311,18 +311,18 @@ public:
  */
 class SIRTBPPolicy {
 
-	CFloat32ProjectionData2D* m_pSinogram;
-	CFloat32VolumeData2D* m_pReconstruction;
+	const float32* m_pSinogram;
+	float32* m_pReconstruction;
 
-	CFloat32ProjectionData2D* m_pTotalRayLength;
-	CFloat32VolumeData2D* m_pTotalPixelWeight;
+	const float32* m_pTotalRayLength;
+	const float32* m_pTotalPixelWeight;
 
 	float m_fRelaxation;
 
 public:
 
 	FORCEINLINE SIRTBPPolicy();
-	FORCEINLINE SIRTBPPolicy(CFloat32VolumeData2D* _pReconstruction, CFloat32ProjectionData2D* _pSinogram, CFloat32VolumeData2D* _pTotalPixelWeight, CFloat32ProjectionData2D* _pTotalRayLength, float _fRelaxation);
+	FORCEINLINE SIRTBPPolicy(CFloat32VolumeData2D* _pReconstruction, const CFloat32ProjectionData2D* _pSinogram, const CFloat32VolumeData2D* _pTotalPixelWeight, const CFloat32ProjectionData2D* _pTotalRayLength, float _fRelaxation);
 	FORCEINLINE ~SIRTBPPolicy();
 
 	FORCEINLINE bool rayPrior(int _iRayIndex);
@@ -338,12 +338,12 @@ public:
  */
 class SinogramMaskPolicy {
 
-	CFloat32ProjectionData2D* m_pSinogramMask;
+	const float32* m_pSinogramMask;
 
 public:
 
 	FORCEINLINE SinogramMaskPolicy();
-	FORCEINLINE SinogramMaskPolicy(CFloat32ProjectionData2D* _pSinogramMask);
+	FORCEINLINE SinogramMaskPolicy(const CFloat32ProjectionData2D* _pSinogramMask);
 	FORCEINLINE ~SinogramMaskPolicy();
 
 	FORCEINLINE bool rayPrior(int _iRayIndex);
@@ -358,12 +358,12 @@ public:
  */
 class ReconstructionMaskPolicy {
 
-	CFloat32VolumeData2D* m_pReconstructionMask;
+	const float32* m_pReconstructionMask;
 
 public:
 
 	FORCEINLINE ReconstructionMaskPolicy();
-	FORCEINLINE ReconstructionMaskPolicy(CFloat32VolumeData2D* _pReconstructionMask);
+	FORCEINLINE ReconstructionMaskPolicy(const CFloat32VolumeData2D* _pReconstructionMask);
 	FORCEINLINE ~ReconstructionMaskPolicy();
 
 	FORCEINLINE bool rayPrior(int _iRayIndex);

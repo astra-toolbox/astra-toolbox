@@ -67,7 +67,9 @@ void CForwardProjectionAlgorithm::_clear()
 {
 	m_pProjector = NULL;
 	m_pSinogram = NULL;
+	m_pSinogramMask = NULL;
 	m_pVolume = NULL;
+	m_pVolumeMask = NULL;
 	m_pForwardProjector = NULL;
 	m_bUseSinogramMask = false;
 	m_bUseVolumeMask = false;
