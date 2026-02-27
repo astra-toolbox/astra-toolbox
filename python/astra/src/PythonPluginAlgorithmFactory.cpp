@@ -43,6 +43,24 @@ namespace astra {
 
 void logPythonError();
 
+PyObject *getItemStringRef(PyObject *dict, const char *key)
+{
+#if PY_VERSION_HEX < 0x030d0000
+    PyObject *value;
+    value = PyDict_GetItemString(dict, key);
+    if (!value)
+        return nullptr;
+    Py_INCREF(value);
+    return value;
+#else
+    PyObject *value = nullptr;
+    int res = PyDict_GetItemStringRef(dict, key, &value);
+    if (res != 1)
+        return nullptr;
+    return value;
+#endif
+}
+
 CPythonPluginAlgorithmFactory::CPythonPluginAlgorithmFactory(){
     if(!Py_IsInitialized()){
         Py_Initialize();
@@ -122,8 +140,8 @@ bool CPythonPluginAlgorithmFactory::registerPluginClass(PyObject * className){
 }
 
 CAlgorithm * CPythonPluginAlgorithmFactory::getPlugin(const std::string &name){
-    PyObject *className = PyDict_GetItemString(pluginDict, name.c_str());
-    if(className==NULL) return NULL;
+    PyObject *className = getItemStringRef(pluginDict, name.c_str());
+    if (!className) return NULL;
     CPluginAlgorithm *alg = NULL;
     if(PyBytes_Check(className)){
         std::string str = std::string(PyBytes_AsString(className));
@@ -135,6 +153,7 @@ CAlgorithm * CPythonPluginAlgorithmFactory::getPlugin(const std::string &name){
     }else{
         alg = new CPluginAlgorithm(className);
     }
+    Py_DECREF(className);
     return alg;
 }
 
@@ -171,8 +190,8 @@ std::map<std::string, std::string> CPythonPluginAlgorithmFactory::getRegisteredM
 }
 
 std::string CPythonPluginAlgorithmFactory::getHelp(const std::string &name){
-    PyObject *className = PyDict_GetItemString(pluginDict, name.c_str());
-    if(className==NULL){
+    PyObject *className = getItemStringRef(pluginDict, name.c_str());
+    if (!className) {
         ASTRA_ERROR("Plugin %s not found!",name.c_str());
         PyErr_Clear();
         return "";
@@ -185,7 +204,10 @@ std::string CPythonPluginAlgorithmFactory::getHelp(const std::string &name){
     }else{
         pyclass = className;
     }
-    if(pyclass==NULL) return "";
+    if(pyclass==NULL){
+        Py_DECREF(className);
+        return "";
+    }
     if(inspect!=NULL){
         PyObject *retVal = PyObject_CallMethod(inspect,"getdoc","O",pyclass);
         if(retVal!=NULL){
@@ -204,6 +226,7 @@ std::string CPythonPluginAlgorithmFactory::getHelp(const std::string &name){
     if(PyBytes_Check(className)){
         Py_DECREF(pyclass);
     }
+    Py_DECREF(className);
     return ret;
 }
 
