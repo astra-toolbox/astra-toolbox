@@ -23,6 +23,15 @@
 #
 # -----------------------------------------------------------------------
 
+import os
+from . import config
+
+if len(config.extra_dll_directories) > 0:
+    for D in config.extra_dll_directories:
+        os.add_dll_directory(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), D))
+    del D
+
+
 # Import astra module first to make error message less confusing in case of import error
 from . import astra
 

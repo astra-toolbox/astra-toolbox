@@ -6,6 +6,6 @@ call "%B_VC%\vcvars64.bat"
 
 cd %~dp0
 
-msbuild astra_vc14.sln /p:Configuration=Release_CUDA /p:Platform=x64 /t:clean /maxcpucount:20
+msbuild astra.sln /p:Configuration=Release_CUDA /p:Platform=x64 /t:clean /maxcpucount:20
 
 pause

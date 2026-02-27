@@ -1,7 +1,10 @@
-choco install -y visualstudio2017community
-choco install -y visualstudio2017buildtools
-choco install -y visualstudio2017-workload-nativedesktop
-choco install -y visualstudio2017-workload-python
+@( 2017, 2022 ) | ForEach-Object {
+    choco install -y "visualstudio${_}community"
+    choco install -y "visualstudio${_}buildtools"
+    choco install -y "visualstudio${_}-workload-nativedesktop"
+    choco install -y "visualstudio${_}-workload-python"
+}
+
 choco install -y git
 choco install -y curl
 choco install -y unzip

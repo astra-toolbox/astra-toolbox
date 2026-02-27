@@ -9,7 +9,7 @@ call "%~dp0build_env.bat"
 
 cd /D %~dp0
 
-rd /s /q release
+IF EXIST release rd /s /q release
 
 mkdir release
 cd release
@@ -25,7 +25,7 @@ xcopy /e /i %R%\samples\matlab samples
 xcopy /e /i %R%\matlab\algorithms algorithms
 xcopy /e /i %R%\matlab\tools tools
 copy %R%\NEWS.txt .
-copy %R%\README.txt .
+copy %R%\README.md .
 copy %R%\COPYING COPYING.txt
 
 copy %B_VCREDIST% .
@@ -34,8 +34,8 @@ mkdir mex
 copy %R%\build\msvc\bin\x64\Release_CUDA\*.mexw64 mex
 copy %R%\build\msvc\bin\x64\Release_CUDA\AstraCuda64.dll mex
 copy %R%\build\msvc\bin\x64\Release_CUDA\AstraCuda64.lib mex
-copy "%CUDA_PATH_V12_8%\bin\cudart64_12.dll" mex
-copy "%CUDA_PATH_V12_8%\bin\cufft64_11.dll" mex
+copy "%B_CUDA_PATH%\bin\cudart64_12.dll" mex
+copy "%B_CUDA_PATH%\bin\cufft64_11.dll" mex
 
 pause
 

@@ -7,6 +7,6 @@ cd ..\..
 set R=%CD%
 
 echo Removing bin directories
-rd /s /q "%R%\build\msvc\bin\x64\Release_CUDA"
+IF EXIST "%R%\build\msvc\bin\x64\Release_CUDA" rd /s /q "%R%\build\msvc\bin\x64\Release_CUDA"
 
 pause
