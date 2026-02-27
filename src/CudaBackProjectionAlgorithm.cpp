@@ -39,21 +39,22 @@ namespace astra {
 // Constructor
 CCudaBackProjectionAlgorithm::CCudaBackProjectionAlgorithm() 
 {
-	m_bIsInitialized = false;
-	CCudaReconstructionAlgorithm2D::_clear();
+
 }
 
 //----------------------------------------------------------------------------------------
 // Destructor
 CCudaBackProjectionAlgorithm::~CCudaBackProjectionAlgorithm() 
 {
-	// The actual work is done by ~CCudaReconstructionAlgorithm2D
+
 }
 
 //---------------------------------------------------------------------------------------
 // Initialize - Config
 bool CCudaBackProjectionAlgorithm::initialize(const Config& _cfg)
 {
+	assert(!m_bIsInitialized);
+
 	ConfigReader<CAlgorithm> CR("CudaBackProjectionAlgorithm", this, _cfg);
 
 	m_bIsInitialized = CCudaReconstructionAlgorithm2D::initialize(_cfg);
@@ -70,9 +71,11 @@ bool CCudaBackProjectionAlgorithm::initialize(const Config& _cfg)
 //---------------------------------------------------------------------------------------
 // Initialize - C++
 bool CCudaBackProjectionAlgorithm::initialize(CProjector2D* _pProjector,
-                                     CFloat32ProjectionData2D* _pSinogram, 
-                                     CFloat32VolumeData2D* _pReconstruction)
+                                              CFloat32ProjectionData2D* _pSinogram, 
+                                              CFloat32VolumeData2D* _pReconstruction)
 {
+	assert(!m_bIsInitialized);
+
 	m_bIsInitialized = CCudaReconstructionAlgorithm2D::initialize(_pProjector, _pSinogram, _pReconstruction);
 
 	if (!m_bIsInitialized)

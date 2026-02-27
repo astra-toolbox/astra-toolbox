@@ -180,10 +180,6 @@ public:
 		return !std::holds_alternative<std::monostate>(projs);
 	}
 
-	void clear() {
-		projs = variant_t{};
-	}
-
 	bool isParallel() const {
 		return std::holds_alternative<std::vector<SPar3DProjection>>(projs);
 	}

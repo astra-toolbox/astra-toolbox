@@ -86,14 +86,6 @@ public:
 	                                 int _iDetectorColCount,
 	                                 std::vector<SPar3DProjection> &&_pProjectionAngles);
 
-	/** Copy constructor. 
-	 */
-	CParallelVecProjectionGeometry3D(const CParallelVecProjectionGeometry3D& _projGeom);
-
-	/** Destructor.
-	 */
-	~CParallelVecProjectionGeometry3D();
-
 	/** Initialize the geometry with a config object.
 	 *
 	 * @param _cfg Configuration Object
@@ -148,6 +140,11 @@ public:
 
 protected:
 	virtual bool initializeAngles(const Config& _cfg);
+
+private:
+	// Private default copy constructor for use by clone()
+	CParallelVecProjectionGeometry3D(const CParallelVecProjectionGeometry3D&)=default;
+
 };
 
 } // namespace astra

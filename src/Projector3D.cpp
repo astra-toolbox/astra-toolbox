@@ -38,32 +38,16 @@ namespace astra
 
 //----------------------------------------------------------------------------------------
 // Default constructor
-CProjector3D::CProjector3D() : configCheckData(0)
+CProjector3D::CProjector3D() : m_bIsInitialized(false), configCheckData(nullptr)
 {
-	_clear();
+
 }
 
-//----------------------------------------------------------------------------------------
-// Destructor
-CProjector3D::~CProjector3D()
+CProjector3D::CProjector3D(const CProjectionGeometry3D &_pProjectionGeometry, const CVolumeGeometry3D &_pVolumeGeometry)
+	: CProjector3D()
 {
-	if (m_bIsInitialized) clear();
-}
-
-//----------------------------------------------------------------------------------------
-// Clear for constructors
-void CProjector3D::_clear()
-{
-	m_pProjectionGeometry.reset();
-	m_pVolumeGeometry .reset();
-	m_bIsInitialized = false;
-}
-
-//----------------------------------------------------------------------------------------
-// Clear
-void CProjector3D::clear()
-{
-	m_bIsInitialized = false;
+	m_pProjectionGeometry.reset(_pProjectionGeometry.clone());
+	m_pVolumeGeometry.reset(_pVolumeGeometry.clone());
 }
 
 //----------------------------------------------------------------------------------------
@@ -85,6 +69,8 @@ bool CProjector3D::_check()
 // Initialize, use a Config object
 bool CProjector3D::initialize(const Config& _cfg)
 {
+	assert(!m_bIsInitialized);
+
 	ConfigReader<CProjector3D> CR("Projector3D", this, _cfg);
 
 	Config *subcfg;
@@ -119,15 +105,6 @@ bool CProjector3D::initialize(const Config& _cfg)
 
 	return true;
 }
-
-/*
-bool CProjector3D::initialize(astra::CProjectionGeometry3D *, astra::CVolumeGeometry3D *)
-{
-	ASTRA_ASSERT(false);
-
-	return false;
-}
-*/
 
 //----------------------------------------------------------------------------------------
 // Weights of each detector in a projection angle

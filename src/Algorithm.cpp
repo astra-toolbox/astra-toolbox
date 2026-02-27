@@ -33,7 +33,8 @@ namespace astra {
 
 //----------------------------------------------------------------------------------------
 // Constructor
-CAlgorithm::CAlgorithm() : configCheckData(0) {
+CAlgorithm::CAlgorithm() : m_bIsInitialized(false), configCheckData(nullptr)
+{
 	
 }
 

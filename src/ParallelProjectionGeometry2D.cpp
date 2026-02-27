@@ -39,65 +39,31 @@ namespace astra
 
 //----------------------------------------------------------------------------------------
 // Default constructor.
-CParallelProjectionGeometry2D::CParallelProjectionGeometry2D() :
-	CProjectionGeometry2D() 
+CParallelProjectionGeometry2D::CParallelProjectionGeometry2D()
 {
 
 }
 
 //----------------------------------------------------------------------------------------
 // Constructor.
-CParallelProjectionGeometry2D::CParallelProjectionGeometry2D(int _iProjectionAngleCount, 
-															 int _iDetectorCount, 
-															 float32 _fDetectorWidth, 
-															 const float32* _pfProjectionAngles)
+CParallelProjectionGeometry2D::CParallelProjectionGeometry2D(int _iProjectionAngleCount,
+                                                             int _iDetectorCount,
+                                                             float32 _fDetectorWidth,
+                                                             std::vector<float32> &&_pfProjectionAngles)
+	: CParallelProjectionGeometry2D()
 {
-	_clear();
 	initialize(_iProjectionAngleCount,
-				_iDetectorCount, 
-				_fDetectorWidth, 
-				_pfProjectionAngles);
-}
-
-//----------------------------------------------------------------------------------------
-CParallelProjectionGeometry2D::CParallelProjectionGeometry2D(const CParallelProjectionGeometry2D& _projGeom)
-{
-	_clear();
-	initialize(_projGeom.m_iProjectionAngleCount,
-				_projGeom.m_iDetectorCount, 
-				_projGeom.m_fDetectorWidth, 
-				_projGeom.m_pfProjectionAngles);
-}
-
-//----------------------------------------------------------------------------------------
-
-CParallelProjectionGeometry2D& CParallelProjectionGeometry2D::operator=(const CParallelProjectionGeometry2D& _other)
-{
-	if (m_bInitialized)
-		delete[] m_pfProjectionAngles;
-	m_bInitialized = _other.m_bInitialized;
-	if (_other.m_bInitialized) {
-		m_iProjectionAngleCount = _other.m_iProjectionAngleCount;
-		m_iDetectorCount = _other.m_iDetectorCount;
-		m_fDetectorWidth = _other.m_fDetectorWidth;
-		m_pfProjectionAngles = new float32[m_iProjectionAngleCount];
-		memcpy(m_pfProjectionAngles, _other.m_pfProjectionAngles, sizeof(float32)*m_iProjectionAngleCount);
-	}
-	return *this;
-	
-}
-
-//----------------------------------------------------------------------------------------
-// Destructor.
-CParallelProjectionGeometry2D::~CParallelProjectionGeometry2D()
-{
-
+	           _iDetectorCount, 
+	           _fDetectorWidth, 
+	           std::move(_pfProjectionAngles));
 }
 
 //---------------------------------------------------------------------------------------
 // Initialize - Config
 bool CParallelProjectionGeometry2D::initialize(const Config& _cfg)
 {
+	assert(!m_bInitialized);
+
 	ConfigReader<CProjectionGeometry2D> CR("ParallelProjectionGeometry2D", this, _cfg);	
 
 
@@ -113,14 +79,16 @@ bool CParallelProjectionGeometry2D::initialize(const Config& _cfg)
 //----------------------------------------------------------------------------------------
 // Initialization.
 bool CParallelProjectionGeometry2D::initialize(int _iProjectionAngleCount, 
-											   int _iDetectorCount, 
-											   float32 _fDetectorWidth, 
-											   const float32* _pfProjectionAngles)
+                                               int _iDetectorCount, 
+                                               float32 _fDetectorWidth, 
+                                               std::vector<float32> &&_pfProjectionAngles)
 {
-	_initialize(_iProjectionAngleCount, 
-			    _iDetectorCount, 
-			    _fDetectorWidth, 
-			    _pfProjectionAngles);
+	assert(!m_bInitialized);
+
+	_initialize(_iProjectionAngleCount,
+	            _iDetectorCount,
+	            _fDetectorWidth,
+	            std::move(_pfProjectionAngles));
 
 	// success
 	m_bInitialized = _check();
@@ -172,7 +140,7 @@ Config* CParallelProjectionGeometry2D::getConfiguration() const
 
 	CW.addInt("DetectorCount", getDetectorCount());
 	CW.addNumerical("DetectorWidth", getDetectorWidth());
-	CW.addNumericalArray("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
+	CW.addNumericalArray("ProjectionAngles", &m_pfProjectionAngles[0], m_iProjectionAngleCount);
 
 	return CW.getConfig();
 }
@@ -180,15 +148,11 @@ Config* CParallelProjectionGeometry2D::getConfiguration() const
 //----------------------------------------------------------------------------------------
 CParallelVecProjectionGeometry2D* CParallelProjectionGeometry2D::toVectorGeometry()
 {
-	SParProjection* vectors = genParProjections(m_iProjectionAngleCount,
+	std::vector<SParProjection> vectors = genParProjections(m_iProjectionAngleCount,
 	                                            m_iDetectorCount,
 	                                            m_fDetectorWidth,
-	                                            m_pfProjectionAngles, 0);
-	// TODO: ExtraOffsets?
-	CParallelVecProjectionGeometry2D* vecGeom = new CParallelVecProjectionGeometry2D();
-	vecGeom->initialize(m_iProjectionAngleCount, m_iDetectorCount, vectors);
-	delete[] vectors;
-	return vecGeom;
+	                                            &m_pfProjectionAngles[0], 0);
+	return new CParallelVecProjectionGeometry2D(m_iProjectionAngleCount, m_iDetectorCount, std::move(vectors));
 }
 
 } // end namespace astra

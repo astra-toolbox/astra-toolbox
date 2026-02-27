@@ -42,9 +42,9 @@ using namespace std;
 using namespace astra;
 
 CCudaFilteredBackProjectionAlgorithm::CCudaFilteredBackProjectionAlgorithm()
+	: m_filterConfig(), m_bShortScan(false)
 {
-	m_bIsInitialized = false;
-	CCudaReconstructionAlgorithm2D::_clear();
+
 }
 
 CCudaFilteredBackProjectionAlgorithm::~CCudaFilteredBackProjectionAlgorithm()
@@ -54,13 +54,9 @@ CCudaFilteredBackProjectionAlgorithm::~CCudaFilteredBackProjectionAlgorithm()
 
 bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 {
-	ConfigReader<CAlgorithm> CR("CudaFilteredBackProjectionAlgorithm", this, _cfg);
+	assert(!m_bIsInitialized);
 
-	// if already initialized, clear first
-	if (m_bIsInitialized)
-	{
-		clear();
-	}
+	ConfigReader<CAlgorithm> CR("CudaFilteredBackProjectionAlgorithm", this, _cfg);
 
 	m_bIsInitialized = CCudaReconstructionAlgorithm2D::initialize(_cfg);
 	if (!m_bIsInitialized)
@@ -89,11 +85,7 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 
 bool CCudaFilteredBackProjectionAlgorithm::initialize(CFloat32ProjectionData2D * _pSinogram, CFloat32VolumeData2D * _pReconstruction, E_FBPFILTER _eFilter, const float * _pfFilter /* = NULL */, int _iFilterWidth /* = 0 */, int _iGPUIndex /* = 0 */, float _fFilterParameter /* = -1.0f */)
 {
-	// if already initialized, clear first
-	if (m_bIsInitialized)
-	{
-		clear();
-	}
+	assert(!m_bIsInitialized);
 
 	// required classes
 	m_pSinogram = _pSinogram;

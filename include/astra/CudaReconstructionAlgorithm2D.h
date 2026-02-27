@@ -61,16 +61,6 @@ public:
 	 */
 	virtual bool initialize(const Config& _cfg);
 
-	/** Clear this class.
-	 */
-	virtual void clear();
-
-	/** Get a description of the class.
-	 *
-	 * @return description string
-	 */
-	virtual std::string description() const;
-
 	/** Get the norm of the residual image.
 	 *  Only a few algorithms support this method.
 	 *
@@ -101,10 +91,6 @@ protected:
 	 */
 	bool _check();
 
-	/** Initial clearing. Only to be used by constructors.
-	 */
-	void _clear();
-
 	/** Initialize class. For internal use only.
 	 */
 	bool initialize(CProjector2D* _pProjector,
@@ -133,9 +119,6 @@ protected:
 	void initializeFromProjector();
 	virtual bool requiresProjector() const { return false; }
 };
-
-// inline functions
-inline std::string CCudaReconstructionAlgorithm2D::description() const { return "2D CUDA Reconstruction Algorithm"; };
 
 } // end namespace
 

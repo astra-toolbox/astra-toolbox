@@ -42,51 +42,32 @@ namespace astra
 // Default constructor. Sets all variables to zero. 
 CParallelVecProjectionGeometry2D::CParallelVecProjectionGeometry2D()
 {
-	_clear();
-	m_pProjectionAngles = 0;
+
 }
 
 //----------------------------------------------------------------------------------------
 // Constructor.
 CParallelVecProjectionGeometry2D::CParallelVecProjectionGeometry2D(int _iProjectionAngleCount, 
-                                                                 int _iDetectorCount, 
-                                                                 const SParProjection* _pProjectionAngles)
+                                                                   int _iDetectorCount,
+                                                                   std::vector<SParProjection>&& _pProjectionAngles)
+	: CParallelVecProjectionGeometry2D()
 {
-	this->initialize(_iProjectionAngleCount, 
-	                 _iDetectorCount, 
-	                 _pProjectionAngles);
+	initialize(_iProjectionAngleCount,
+	           _iDetectorCount,
+	           std::move(_pProjectionAngles));
 }
-
-//----------------------------------------------------------------------------------------
-// Copy Constructor
-CParallelVecProjectionGeometry2D::CParallelVecProjectionGeometry2D(const CParallelVecProjectionGeometry2D& _projGeom)
-{
-	_clear();
-	this->initialize(_projGeom.m_iProjectionAngleCount,
-	                 _projGeom.m_iDetectorCount,
-	                 _projGeom.m_pProjectionAngles);
-}
-
-//----------------------------------------------------------------------------------------
-// Destructor.
-CParallelVecProjectionGeometry2D::~CParallelVecProjectionGeometry2D()
-{
-	// TODO
-	delete[] m_pProjectionAngles;
-}
-
 
 //----------------------------------------------------------------------------------------
 // Initialization.
 bool CParallelVecProjectionGeometry2D::initialize(int _iProjectionAngleCount, 
-											  int _iDetectorCount, 
-											  const SParProjection* _pProjectionAngles)
+                                                  int _iDetectorCount,
+                                                  std::vector<SParProjection>&& _pProjectionAngles)
 {
+	assert(!m_bInitialized);
+
 	m_iProjectionAngleCount = _iProjectionAngleCount;
 	m_iDetectorCount = _iDetectorCount;
-	m_pProjectionAngles = new SParProjection[m_iProjectionAngleCount];
-	for (int i = 0; i < m_iProjectionAngleCount; ++i)
-		m_pProjectionAngles[i] = _pProjectionAngles[i];
+	m_pProjectionAngles = std::move(_pProjectionAngles);
 
 	// TODO: check?
 
@@ -99,6 +80,8 @@ bool CParallelVecProjectionGeometry2D::initialize(int _iProjectionAngleCount,
 // Initialization with a Config object
 bool CParallelVecProjectionGeometry2D::initialize(const Config& _cfg)
 {
+	assert(!m_bInitialized);
+
 	ConfigReader<CProjectionGeometry2D> CR("ParallelVecProjectionGeometry2D", this, _cfg);	
 
 	// initialization of parent class
@@ -121,7 +104,7 @@ bool CParallelVecProjectionGeometry2D::initializeAngles(const Config& _cfg)
 		return false;
 	ASTRA_CONFIG_CHECK(data.size() % 6 == 0, "ParallelVecProjectionGeometry2D", "Vectors doesn't consist of 6-tuples.");
 	m_iProjectionAngleCount = data.size() / 6;
-	m_pProjectionAngles = new SParProjection[m_iProjectionAngleCount];
+	m_pProjectionAngles.resize(m_iProjectionAngleCount);
 
 	for (int i = 0; i < m_iProjectionAngleCount; ++i) {
 		SParProjection& p = m_pProjectionAngles[i];
@@ -160,11 +143,8 @@ bool CParallelVecProjectionGeometry2D::isEqual(const CProjectionGeometry2D &_pGe
 	// check all values
 	if (m_iProjectionAngleCount != pGeom2->m_iProjectionAngleCount) return false;
 	if (m_iDetectorCount != pGeom2->m_iDetectorCount) return false;
+	if (m_pProjectionAngles != pGeom2->m_pProjectionAngles) return false;
 	
-	for (int i = 0; i < m_iProjectionAngleCount; ++i) {
-		if (memcmp(&m_pProjectionAngles[i], &pGeom2->m_pProjectionAngles[i], sizeof(m_pProjectionAngles[i])) != 0) return false;
-	}
-
 	return true;
 }
 
@@ -179,6 +159,7 @@ bool CParallelVecProjectionGeometry2D::isOfType(const std::string& _sType)
 
 bool CParallelVecProjectionGeometry2D::_check()
 {
+	ASTRA_CONFIG_CHECK(m_pProjectionAngles.size() == m_iProjectionAngleCount, "ParallelVecProjectionGeometry2D", "Number of vectors does not match number of angles");
 	// TODO
 	return true;
 }
@@ -196,7 +177,7 @@ Config* CParallelVecProjectionGeometry2D::getConfiguration() const
 	vectors.resize(6 * m_iProjectionAngleCount);
 
 	for (int i = 0; i < m_iProjectionAngleCount; ++i) {
-		SParProjection& p = m_pProjectionAngles[i];
+		const SParProjection& p = m_pProjectionAngles[i];
 		vectors[6*i + 0] = p.fRayX;
 		vectors[6*i + 1] = p.fRayY;
 		vectors[6*i + 2] = p.fDetSX + 0.5 * m_iDetectorCount * p.fDetUX;

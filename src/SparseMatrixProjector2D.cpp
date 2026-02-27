@@ -42,16 +42,15 @@ using namespace astra;
 // default constructor
 CSparseMatrixProjector2D::CSparseMatrixProjector2D()
 {
-	_clear();
+
 }
 
 //----------------------------------------------------------------------------------------
 // constructor
 CSparseMatrixProjector2D::CSparseMatrixProjector2D(const CSparseMatrixProjectionGeometry2D &_pProjectionGeometry,
                                                    const CVolumeGeometry2D &_pReconstructionGeometry)
-
+	: CSparseMatrixProjector2D()
 {
-	_clear();
 	initialize(_pProjectionGeometry, _pReconstructionGeometry);
 }
 
@@ -59,23 +58,7 @@ CSparseMatrixProjector2D::CSparseMatrixProjector2D(const CSparseMatrixProjection
 // destructor
 CSparseMatrixProjector2D::~CSparseMatrixProjector2D()
 {
-	clear();
-}
 
-//---------------------------------------------------------------------------------------
-// Clear - Constructors
-void CSparseMatrixProjector2D::_clear()
-{
-	CProjector2D::_clear();
-	m_bIsInitialized = false;
-}
-
-//---------------------------------------------------------------------------------------
-// Clear - Public
-void CSparseMatrixProjector2D::clear()
-{
-	CProjector2D::clear();
-	m_bIsInitialized = false;
 }
 
 //---------------------------------------------------------------------------------------
@@ -104,10 +87,7 @@ bool CSparseMatrixProjector2D::_check()
 // Initialize, use a Config object
 bool CSparseMatrixProjector2D::initialize(const Config& _cfg)
 {
-	// if already initialized, clear first
-	if (m_bIsInitialized) {
-		clear();
-	}
+	assert(!m_bIsInitialized);
 
 	// initialization of parent class
 	if (!CProjector2D::initialize(_cfg)) {
@@ -122,12 +102,9 @@ bool CSparseMatrixProjector2D::initialize(const Config& _cfg)
 //---------------------------------------------------------------------------------------
 // Initialize
 bool CSparseMatrixProjector2D::initialize(const CSparseMatrixProjectionGeometry2D &_pProjectionGeometry,
-													 const CVolumeGeometry2D &_pVolumeGeometry)
+                                          const CVolumeGeometry2D &_pVolumeGeometry)
 {
-	// if already initialized, clear first
-	if (m_bIsInitialized) {
-		clear();
-	}
+	assert(!m_bIsInitialized);
 
 	// hardcopy geometries
 	m_pProjectionGeometry = _pProjectionGeometry.clone();

@@ -39,41 +39,35 @@ namespace astra
 
 //----------------------------------------------------------------------------------------
 // Default constructor.
-CParallelProjectionGeometry3D::CParallelProjectionGeometry3D() :
-	CProjectionGeometry3D() 
+CParallelProjectionGeometry3D::CParallelProjectionGeometry3D()
 {
 
 }
 
 //----------------------------------------------------------------------------------------
 // Constructor.
-CParallelProjectionGeometry3D::CParallelProjectionGeometry3D(int _iProjectionAngleCount, 
-					 									     int _iDetectorRowCount, 
-															 int _iDetectorColCount, 
-															 float32 _fDetectorWidth, 
-															 float32 _fDetectorHeight, 
-															 std::vector<float32> &&_pfProjectionAngles) :
-	CProjectionGeometry3D() 
+CParallelProjectionGeometry3D::CParallelProjectionGeometry3D(int _iProjectionAngleCount,
+                                                             int _iDetectorRowCount,
+                                                             int _iDetectorColCount,
+                                                             float32 _fDetectorWidth,
+                                                             float32 _fDetectorHeight,
+                                                             std::vector<float32> &&_pfProjectionAngles)
+	: CParallelProjectionGeometry3D() 
 {
-	initialize(_iProjectionAngleCount, 
-			   _iDetectorRowCount, 
-			   _iDetectorColCount, 
-			   _fDetectorWidth, 
-			   _fDetectorHeight, 
-			   std::move(_pfProjectionAngles));
-}
-
-//----------------------------------------------------------------------------------------
-// Destructor.
-CParallelProjectionGeometry3D::~CParallelProjectionGeometry3D()
-{
-
+	initialize(_iProjectionAngleCount,
+	           _iDetectorRowCount,
+	           _iDetectorColCount,
+	           _fDetectorWidth,
+	           _fDetectorHeight,
+	           std::move(_pfProjectionAngles));
 }
 
 //---------------------------------------------------------------------------------------
 // Initialize - Config
 bool CParallelProjectionGeometry3D::initialize(const Config& _cfg)
 {
+	assert(!m_bInitialized);
+
 	ConfigReader<CProjectionGeometry3D> CR("ParallelProjectionGeometry3D", this, _cfg);	
 	
 
@@ -88,13 +82,15 @@ bool CParallelProjectionGeometry3D::initialize(const Config& _cfg)
 
 //----------------------------------------------------------------------------------------
 // Initialization.
-bool CParallelProjectionGeometry3D::initialize(int _iProjectionAngleCount, 
-											   int _iDetectorRowCount, 
-											   int _iDetectorColCount, 
-											   float32 _fDetectorWidth, 
-											   float32 _fDetectorHeight, 
-											   std::vector<float32> &&_pfProjectionAngles)
+bool CParallelProjectionGeometry3D::initialize(int _iProjectionAngleCount,
+                                               int _iDetectorRowCount,
+                                               int _iDetectorColCount,
+                                               float32 _fDetectorWidth,
+                                               float32 _fDetectorHeight,
+                                               std::vector<float32> &&_pfProjectionAngles)
 {
+	assert(!m_bInitialized);
+
 	_initialize(_iProjectionAngleCount, 
 			    _iDetectorRowCount, 
 			    _iDetectorColCount, 
@@ -111,15 +107,7 @@ bool CParallelProjectionGeometry3D::initialize(int _iProjectionAngleCount,
 // Clone
 CProjectionGeometry3D* CParallelProjectionGeometry3D::clone() const
 {
-	CParallelProjectionGeometry3D* res = new CParallelProjectionGeometry3D();
-	res->m_bInitialized				= m_bInitialized;
-	res->m_iProjectionAngleCount	= m_iProjectionAngleCount;
-	res->m_iDetectorRowCount		= m_iDetectorRowCount;
-	res->m_iDetectorColCount		= m_iDetectorColCount;
-	res->m_fDetectorSpacingX		= m_fDetectorSpacingX;
-	res->m_fDetectorSpacingY		= m_fDetectorSpacingY;
-	res->m_pfProjectionAngles		= m_pfProjectionAngles;
-	return res;
+	return new CParallelProjectionGeometry3D(*this);
 }
 
 //----------------------------------------------------------------------------------------
@@ -141,11 +129,8 @@ bool CParallelProjectionGeometry3D::isEqual(const CProjectionGeometry3D * _pGeom
 	if (m_iDetectorColCount != pGeom2->m_iDetectorColCount) return false;
 	if (m_fDetectorSpacingX != pGeom2->m_fDetectorSpacingX) return false;
 	if (m_fDetectorSpacingY != pGeom2->m_fDetectorSpacingY) return false;
+	if (m_pfProjectionAngles != pGeom2->m_pfProjectionAngles) return false;
 	
-	for (int i = 0; i < m_iProjectionAngleCount; ++i) {
-		if (m_pfProjectionAngles[i] != pGeom2->m_pfProjectionAngles[i]) return false;
-	}
-
 	return true;
 }
 
@@ -190,13 +175,10 @@ void CParallelProjectionGeometry3D::projectPoint(double fX, double fY, double fZ
 
 CParallelProjectionGeometry2D * CParallelProjectionGeometry3D::createProjectionGeometry2D() const
 {
-	const float32 * pfProjectionAngles = getProjectionAngles(); //new float32[getProjectionCount()];
-	//getProjectionAngles(pfProjectionAngles);
+	std::vector<float32> angles = m_pfProjectionAngles;
 	
 	CParallelProjectionGeometry2D * pOutput = new CParallelProjectionGeometry2D(getProjectionCount(), 
-		getDetectorColCount(), getDetectorSpacingX(), pfProjectionAngles);
-
-	//delete [] pfProjectionAngles;
+		getDetectorColCount(), getDetectorSpacingX(), std::move(angles));
 
 	return pOutput;
 }

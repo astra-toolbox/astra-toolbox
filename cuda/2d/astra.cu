@@ -321,10 +321,14 @@ bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
 
 	int nth = pProjGeom->getProjectionAngleCount();
 
-	pProjs = genParProjections(nth,
+	std::vector<SParProjection> projs = genParProjections(nth,
 	                           pProjGeom->getDetectorCount(),
 	                           pProjGeom->getDetectorWidth(),
 	                           pProjGeom->getProjectionAngles(), 0);
+	// TODO: Directly use vector<SParProjection> in convertAstra
+	pProjs = new SParProjection[nth];
+	for (int i = 0; i < nth; ++i)
+		pProjs[i] = projs[i];
 
 	bool ok;
 	fOutputScale = 1.0f;
@@ -399,9 +403,13 @@ bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
 	float fDetSize = pProjGeom->getDetectorWidth();
 	const float *pfAngles = pProjGeom->getProjectionAngles();
 
-	pProjs = genFanProjections(nth, pProjGeom->getDetectorCount(),
+	std::vector<SFanProjection> projs = genFanProjections(nth, pProjGeom->getDetectorCount(),
                                fOriginSourceDistance, fOriginDetectorDistance,
 	                           fDetSize, pfAngles);
+	// TODO: Directly use vector<SFanProjection> in convertAstra
+	pProjs = new SFanProjection[nth];
+	for (int i = 0; i < nth; ++i)
+		pProjs[i] = projs[i];
 
 	convertAstraGeometry_internal(pVolGeom, nth, pProjs, outputScale);
 

@@ -57,14 +57,11 @@ protected:
 	std::unique_ptr<CVolumeGeometry3D> m_pVolumeGeometry; ///< Used volume geometry
 	bool m_bIsInitialized; ///< Has this class been initialized?
 
+	CProjector3D(const CProjectionGeometry3D &_pProjectionGeometry, const CVolumeGeometry3D &_pVolumeGeometry);
+
 	/** Check variable values.
 	 */
 	bool _check();
-
-	/** Clear all member variables, setting all numeric variables to 0 and all pointers to NULL. 
-	 * Should only be used by constructors.  Otherwise use the clear() function.
-	 */
-	void _clear();
 
 public:
 
@@ -73,13 +70,13 @@ public:
 	 */
 	CProjector3D();
 
-	/** Destructor, is virtual to show that we are aware subclass destructor is called.
+	/** Virtual default destructor.
 	 */
-	virtual ~CProjector3D();
+	virtual ~CProjector3D()=default;
 	
-	/** Clear all member variables, setting all numeric variables to 0 and all pointers to NULL. 
-	 */
-	void clear();
+	// Delete copy ctor/operator to prevent copying Projector3D objects
+	CProjector3D(const CProjector3D&)=delete;
+	CProjector3D& operator=(const CProjector3D&)=delete;
 
 	/** Initialize the projector with a config object.
 	 * This function does not set m_bInitialized to true.

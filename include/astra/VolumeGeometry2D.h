@@ -108,7 +108,7 @@ protected:
 	void _calculateDependents();
 public:
 
-    /** Default constructor. Sets all numeric member variables to 0 and all pointer member variables to NULL.
+	/** Default constructor. Sets all numeric member variables to 0 and all pointer member variables to NULL.
 	 *
 	 * If an object is constructed using this default constructor, it must always be followed by a call 
 	 * to one of the init() methods before the object can be used. Any use before calling init() is not allowed,
@@ -145,9 +145,8 @@ public:
 	 */
 	virtual ~CVolumeGeometry2D();
 
-	/** Clear all member variables, setting all numeric variables to 0 and all pointers to NULL. 
-	*/
-	void clear();
+	// Delete copy operator to prevent copying VolumeGeometry2D objects
+	CVolumeGeometry2D& operator=(const CVolumeGeometry2D&)=delete;
 
 	/** Create a hard copy. 
 	*/
@@ -382,6 +381,9 @@ private:
 	//< For Config unused argument checking
 	ConfigCheckData* configCheckData;
 	friend class ConfigReader<CVolumeGeometry2D>;
+
+	// Private default copy constructor for use by clone()
+	CVolumeGeometry2D(const CVolumeGeometry2D&)=default;
 };
 
 

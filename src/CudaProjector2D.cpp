@@ -35,38 +35,19 @@ namespace astra
 //----------------------------------------------------------------------------------------
 // Default constructor
 CCudaProjector2D::CCudaProjector2D()
+	: m_projectionKernel(ker2d_default),
+	  m_iVoxelSuperSampling(1),
+	  m_iDetectorSuperSampling(1),
+	  m_iGPUIndex(-1)
 {
-	_clear();
+
 }
 
 //----------------------------------------------------------------------------------------
 // Destructor
 CCudaProjector2D::~CCudaProjector2D()
 {
-	if (m_bIsInitialized) clear();
-}
 
-//----------------------------------------------------------------------------------------
-// Clear for constructors
-void CCudaProjector2D::_clear()
-{
-	m_pProjectionGeometry = NULL;
-	m_pVolumeGeometry = NULL;
-	m_bIsInitialized = false;
-
-	m_projectionKernel = ker2d_default;
-	m_iVoxelSuperSampling = 1;
-	m_iDetectorSuperSampling = 1;
-	m_iGPUIndex = -1;
-}
-
-//----------------------------------------------------------------------------------------
-// Clear
-void CCudaProjector2D::clear()
-{
-	ASTRA_DELETE(m_pProjectionGeometry);
-	ASTRA_DELETE(m_pVolumeGeometry);
-	m_bIsInitialized = false;
 }
 
 //----------------------------------------------------------------------------------------
@@ -88,12 +69,9 @@ bool CCudaProjector2D::_check()
 // Initialize, use a Config object
 bool CCudaProjector2D::initialize(const Config& _cfg)
 {
-	ConfigReader<CProjector2D> CR("CudaProjector2D", this, _cfg);
+	assert(!m_bIsInitialized);
 
-	// if already initialized, clear first
-	if (m_bIsInitialized) {
-		clear();
-	}
+	ConfigReader<CProjector2D> CR("CudaProjector2D", this, _cfg);
 
 	// initialization of parent class
 	if (!CProjector2D::initialize(_cfg)) {

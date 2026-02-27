@@ -52,6 +52,8 @@ public:
     // Return instance (including INCREF)
     PyObject *getInstance() const;
 
+    virtual std::string description() const { return "plugin"; }
+
 private:
     PyObject * instance;
 

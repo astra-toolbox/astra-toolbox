@@ -85,14 +85,6 @@ public:
 								  float32 _fDetectorHeight, 
 								  std::vector<float32> &&_pfProjectionAngles);
 
-	/** Copy constructor. 
-	 */
-	CParallelProjectionGeometry3D(const CParallelProjectionGeometry3D& _projGeom);
-
-	/** Destructor.
-	 */
-	~CParallelProjectionGeometry3D();
-
 	/** Initialize the geometry with a config object.
 	 *
 	 * @param _cfg Configuration Object
@@ -151,6 +143,11 @@ public:
 	  * @return the 2D geometry, this pointer needs to be delete-ed after use.
 	  */
 	CParallelProjectionGeometry2D * createProjectionGeometry2D() const;
+
+private:
+	// Private default copy constructor for use by clone()
+	CParallelProjectionGeometry3D(const CParallelProjectionGeometry3D&)=default;
+
 
 };
 

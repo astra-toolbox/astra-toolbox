@@ -40,57 +40,29 @@ namespace astra
 //----------------------------------------------------------------------------------------
 // Default constructor.
 CSparseMatrixProjectionGeometry2D::CSparseMatrixProjectionGeometry2D() :
-	CProjectionGeometry2D() 
+	m_pMatrix(nullptr)
 {
-	m_pMatrix = 0;
+
 }
 
 //----------------------------------------------------------------------------------------
 // Constructor.
-CSparseMatrixProjectionGeometry2D::CSparseMatrixProjectionGeometry2D(int _iProjectionAngleCount, 
-															 int _iDetectorCount,
-															 const CSparseMatrix* _pMatrix)
+CSparseMatrixProjectionGeometry2D::CSparseMatrixProjectionGeometry2D(int _iProjectionAngleCount,
+                                                                     int _iDetectorCount,
+                                                                     const CSparseMatrix* _pMatrix)
+	: CSparseMatrixProjectionGeometry2D()
 {
-	_clear();
 	initialize(_iProjectionAngleCount,
-				_iDetectorCount, 
-				_pMatrix);
-}
-
-//----------------------------------------------------------------------------------------
-CSparseMatrixProjectionGeometry2D::CSparseMatrixProjectionGeometry2D(const CSparseMatrixProjectionGeometry2D& _projGeom)
-{
-	_clear();
-	initialize(_projGeom.m_iProjectionAngleCount,
-				_projGeom.m_iDetectorCount, 
-				_projGeom.m_pMatrix);
-}
-
-//----------------------------------------------------------------------------------------
-
-CSparseMatrixProjectionGeometry2D& CSparseMatrixProjectionGeometry2D::operator=(const CSparseMatrixProjectionGeometry2D& _other)
-{
-	m_bInitialized = _other.m_bInitialized;
-	if (_other.m_bInitialized) {
-		m_pMatrix = _other.m_pMatrix;
-		m_iDetectorCount = _other.m_iDetectorCount;
-		m_fDetectorWidth = _other.m_fDetectorWidth;
-	}
-	return *this;
-	
-}
-
-//----------------------------------------------------------------------------------------
-// Destructor.
-CSparseMatrixProjectionGeometry2D::~CSparseMatrixProjectionGeometry2D()
-{
-	m_pMatrix = 0;
+	           _iDetectorCount,
+	           _pMatrix);
 }
 
 //---------------------------------------------------------------------------------------
 // Initialize - Config
 bool CSparseMatrixProjectionGeometry2D::initialize(const Config& _cfg)
 {
+	assert(!m_bInitialized);
+
 	ConfigReader<CProjectionGeometry2D> CR("SparseMatrixProjectionGeometry2D", this, _cfg);	
 
 	// initialization of parent class
@@ -112,20 +84,18 @@ bool CSparseMatrixProjectionGeometry2D::initialize(const Config& _cfg)
 
 //----------------------------------------------------------------------------------------
 // Initialization.
-bool CSparseMatrixProjectionGeometry2D::initialize(int _iProjectionAngleCount, 
-											   int _iDetectorCount, 
-											   const CSparseMatrix* _pMatrix)
+bool CSparseMatrixProjectionGeometry2D::initialize(int _iProjectionAngleCount,
+                                                   int _iDetectorCount,
+                                                   const CSparseMatrix* _pMatrix)
 {
-	if (m_bInitialized) {
-		clear();
-	}
+	assert(!m_bInitialized);
 
 	m_iProjectionAngleCount = _iProjectionAngleCount;
 	m_iDetectorCount = _iDetectorCount;
 
 	// FIXME: We should probably require these for consistency?
 	m_fDetectorWidth = 1.0f;
-	m_pfProjectionAngles = new float32[m_iProjectionAngleCount];
+	m_pfProjectionAngles.resize(m_iProjectionAngleCount);
 	for (int i = 0; i < m_iProjectionAngleCount; ++i)
 		m_pfProjectionAngles[i] = 0.0f;
 
@@ -194,7 +164,7 @@ Config* CSparseMatrixProjectionGeometry2D::getConfiguration() const
 
 	CW.addInt("DetectorCount", getDetectorCount());
 	CW.addNumerical("DetectorWidth", getDetectorWidth());
-	CW.addNumericalArray("ProjectionAngles", m_pfProjectionAngles, m_iProjectionAngleCount);
+	CW.addNumericalArray("ProjectionAngles", &m_pfProjectionAngles[0], m_iProjectionAngleCount);
 	CW.addID("MatrixID", CMatrixManager::getSingleton().getIndex(m_pMatrix));
 
 	return CW.getConfig();

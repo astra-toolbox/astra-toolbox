@@ -45,8 +45,6 @@ public:
 	bool setGeometry(const SDimensions3D& dims, const astra::Geometry3DParameters &projs, const SProjectorParams3D& params);
 
 protected:
-	void reset();
-
 	bool callFP(cudaPitchedPtr& D_volumeData, 
 	            cudaPitchedPtr& D_projData, 
 	            float outputScale);

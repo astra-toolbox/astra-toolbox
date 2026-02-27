@@ -32,7 +32,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 namespace astra {
 
-SParProjection* genParProjections(unsigned int iProjAngles,
+std::vector<SParProjection> genParProjections(unsigned int iProjAngles,
                                   unsigned int iProjDets,
                                   double fDetSize,
                                   const float *pfAngles,
@@ -48,7 +48,7 @@ SParProjection* genParProjections(unsigned int iProjAngles,
 	base.fDetUX = fDetSize;
 	base.fDetUY = 0.0f;
 
-	SParProjection* p = new SParProjection[iProjAngles];
+	std::vector<SParProjection> p(iProjAngles);
 
 #define ROTATE0(name,i,alpha) do { p[i].f##name##X = base.f##name##X * cos(alpha) - base.f##name##Y * sin(alpha); p[i].f##name##Y = base.f##name##X * sin(alpha) + base.f##name##Y * cos(alpha); } while(0)
 
@@ -74,14 +74,13 @@ SParProjection* genParProjections(unsigned int iProjAngles,
 }
 
 
-SFanProjection* genFanProjections(unsigned int iProjAngles,
+std::vector<SFanProjection> genFanProjections(unsigned int iProjAngles,
                                   unsigned int iProjDets,
                                   double fOriginSource, double fOriginDetector,
                                   double fDetSize,
                                   const float *pfAngles)
-//                                  const float *pfExtraOffsets)
 {
-	SFanProjection *pProjs = new SFanProjection[iProjAngles];
+	std::vector<SFanProjection> pProjs(iProjAngles);
 
 	float fSrcX0 = 0.0f;
 	float fSrcY0 = -fOriginSource;

@@ -82,10 +82,6 @@ public:
 					CFloat32ProjectionData2D* _pSinogram, 
 					CFloat32VolumeData2D* _pReconstruction);
 
-	/** Clear this class.
-	 */
-	virtual void clear();
-
 	/** Add a min/max constraint to the reconstruction process
 	 *
 	 * @param _bUseMin		True if the algorithm should use a min constraint.
@@ -115,37 +111,31 @@ public:
 	 *
 	 * @return projector
 	 */
-	CProjector2D* getProjector() const;
+	CProjector2D* getProjector() const { return m_pProjector; }
 
 	/** Get sinogram data object
 	 *
 	 * @return sinogram data object
 	 */
-	CFloat32ProjectionData2D* getSinogram() const;
+	CFloat32ProjectionData2D* getSinogram() const { return m_pSinogram; }
 
 	/** Get Reconstructed Data
 	 *
 	 * @return reconstruction
 	 */
-	CFloat32VolumeData2D* getReconstruction() const;
+	CFloat32VolumeData2D* getReconstruction() const { return m_pReconstruction; }
 
 	/** Get Fixed Reconstruction Mask
 	 *
 	 * @return fixed reconstruction mask
 	 */
-	CFloat32VolumeData2D* getReconstructionMask() const;
+	CFloat32VolumeData2D* getReconstructionMask() const { return m_pReconstructionMask; }
 
 	/** Perform a number of iterations.
 	 *
 	 * @param _iNrIterations amount of iterations to perform.
 	 */
 	virtual bool run(int _iNrIterations = 0) = 0;
-
-	/** Get a description of the class.
-	 *
-	 * @return description string
-	 */
-	virtual std::string description() const;
 
 	/** Get the norm of the residual image.
 	 *  Only a few algorithms support this method.
@@ -162,10 +152,6 @@ protected:
 	 * @return object initialized
 	 */
 	bool _check();
-
-	/** Initial clearing. Only to be used by constructors.
-	 */
-	void _clear();
 
 	//< Projector object.
 	CProjector2D* m_pProjector;
@@ -197,13 +183,6 @@ protected:
 	//< Specify if initialize/check should check for a valid Projector
 	virtual bool requiresProjector() const { return true; }
 };
-
-// inline functions
-inline std::string CReconstructionAlgorithm2D::description() const { return "3D Reconstruction Algorithm"; };
-inline CProjector2D* CReconstructionAlgorithm2D::getProjector() const { return m_pProjector; }
-inline CFloat32ProjectionData2D* CReconstructionAlgorithm2D::getSinogram() const { return m_pSinogram; }
-inline CFloat32VolumeData2D* CReconstructionAlgorithm2D::getReconstruction() const { return m_pReconstruction; }
-inline CFloat32VolumeData2D* CReconstructionAlgorithm2D::getReconstructionMask() const { return m_pReconstructionMask; }
 
 } // end namespace
 
