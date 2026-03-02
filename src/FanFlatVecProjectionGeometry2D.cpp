@@ -151,13 +151,6 @@ bool CFanFlatVecProjectionGeometry2D::isEqual(const CProjectionGeometry2D &_pGeo
 }
 
 //----------------------------------------------------------------------------------------
-// Is of type
-bool CFanFlatVecProjectionGeometry2D::isOfType(const std::string& _sType)
-{
-	return (_sType == "fanflat_vec");
-}
-
-//----------------------------------------------------------------------------------------
 
 bool CFanFlatVecProjectionGeometry2D::_check()
 {

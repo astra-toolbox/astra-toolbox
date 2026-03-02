@@ -86,7 +86,7 @@ public:
 	 * @param _cfg Configuration Object
 	 * @return initialization successful?
 	 */
-	virtual bool initialize(const Config& _cfg);
+	virtual bool initialize(const Config& _cfg) override;
 
 	/** Initialization. This function MUST be called after using the default constructor and MAY be called to 
 	 * reset a previously initialized object.
@@ -99,7 +99,7 @@ public:
 	                int _iDetectorCount, 
 	                std::vector<SFanProjection>&& _pfProjectionAngles);
 
-	virtual bool _check();
+	bool _check();
 
 	/** Create a hard copy. 
 	*/
@@ -110,11 +110,9 @@ public:
 	 * @param _sType geometry type to compare to.
 	 * @return true if _sType == "fanflat_vec".
 	 */
-	 virtual bool isOfType(const std::string& _sType);
+	virtual bool isOfType(const std::string& _sType) const override { return _sType == "fanflat_vec"; }
 
-    /** Return true if this geometry instance is the same as the one specified.
-	 *
-	 * @return true if this geometry instance is the same as the one specified.
+	/** Return true if this geometry instance is the same as the one specified.
 	 */
 	virtual bool isEqual(const CProjectionGeometry2D &) const override;
 
@@ -122,11 +120,11 @@ public:
 	 *
 	 * @return Configuration Object.
 	 */
-	virtual Config* getConfiguration() const;
+	virtual Config* getConfiguration() const override;
 
 	const SFanProjection* getProjectionVectors() const { return &m_pProjectionAngles[0]; }
 protected:
-	virtual bool initializeAngles(const Config& _cfg);
+	virtual bool initializeAngles(const Config& _cfg) override;
 
 private:
 	// Private default copy constructor for use by clone()

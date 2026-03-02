@@ -163,13 +163,6 @@ bool CConeVecProjectionGeometry3D::isEqual(const CProjectionGeometry3D * _pGeom2
 }
 
 //----------------------------------------------------------------------------------------
-// is of type
-bool CConeVecProjectionGeometry3D::isOfType(const std::string& _sType) const
-{
-	 return (_sType == "cone_vec");
-}
-
-//----------------------------------------------------------------------------------------
 // Get the configuration object
 Config* CConeVecProjectionGeometry3D::getConfiguration() const 
 {

@@ -126,8 +126,7 @@ protected:
 	 */
 	bool _check();
 	
-	/** Initialize the geometry. If the object has been initialized before, the object is reinitialized 
-	 * and memory is freed and reallocated if necessary.
+	/** Initialize the geometry.
 	 *
 	 *  @param _iProjectionAngleCount Number of projection angles.
 	 *  @param _iDetectorRowCount Number of rows of detectors.
@@ -167,8 +166,6 @@ public:
 	bool isInitialized() const;
 
 	/** Return true if this geometry instance is the same as the one specified.
-	 *
-	 * @return true if this geometry instance is the same as the one specified.
 	 */
 	virtual bool isEqual(const CProjectionGeometry3D *) const = 0;
 
@@ -334,7 +331,7 @@ public:
 	 * @param _sType geometry type to compare to.
 	 * @return true if the type of geometry defined in this class is the one specified in _sType. 
 	 */
-	 virtual bool isOfType(const std::string& _sType) const = 0;
+	virtual bool isOfType(const std::string& _sType) const = 0;
 
 	//< For Config unused argument checking
 	ConfigCheckData* configCheckData;

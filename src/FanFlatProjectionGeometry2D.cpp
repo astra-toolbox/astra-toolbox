@@ -144,13 +144,6 @@ bool CFanFlatProjectionGeometry2D::isEqual(const CProjectionGeometry2D &_pGeom2)
 }
 
 //----------------------------------------------------------------------------------------
-// Is of type
-bool CFanFlatProjectionGeometry2D::isOfType(const std::string& _sType)
-{
-	 return (_sType == "fanflat");
-}
-
-//----------------------------------------------------------------------------------------
 // Get the configuration object
 Config* CFanFlatProjectionGeometry2D::getConfiguration() const 
 {

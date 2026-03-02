@@ -165,13 +165,6 @@ bool CParallelVecProjectionGeometry3D::isEqual(const CProjectionGeometry3D * _pG
 }
 
 //----------------------------------------------------------------------------------------
-// is of type
-bool CParallelVecProjectionGeometry3D::isOfType(const std::string& _sType) const
-{
-	 return (_sType == "parallel3d_vec");
-}
-
-//----------------------------------------------------------------------------------------
 // Get the configuration object
 Config* CParallelVecProjectionGeometry3D::getConfiguration() const 
 {

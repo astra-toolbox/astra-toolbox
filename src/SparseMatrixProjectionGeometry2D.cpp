@@ -151,12 +151,6 @@ bool CSparseMatrixProjectionGeometry2D::isEqual(const CProjectionGeometry2D &_pG
 }
 
 //----------------------------------------------------------------------------------------
-// is of type
-bool CSparseMatrixProjectionGeometry2D::isOfType(const std::string& _sType)
-{
-	 return (_sType == "sparse_matrix");
-}
-//----------------------------------------------------------------------------------------
 // Get the configuration object
 Config* CSparseMatrixProjectionGeometry2D::getConfiguration() const 
 {
