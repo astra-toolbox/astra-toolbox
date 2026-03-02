@@ -92,6 +92,9 @@ bool CCudaDataOperationAlgorithm::initialize(const Config& _cfg)
 		m_pMask = dynamic_cast<CData2D*>(CData2DManager::getSingleton().get(id));
 	}
 
+	if (!ok)
+		return false;
+
 	_check();
 
 	if (!m_bIsInitialized)

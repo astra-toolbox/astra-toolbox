@@ -44,9 +44,6 @@ namespace astra {
 
 #include "astra/Projector2DImpl.inl"
 
-const int FFT = 1;
-const int IFFT = -1;
-
 //----------------------------------------------------------------------------------------
 // Constructor
 CFilteredBackProjectionAlgorithm::CFilteredBackProjectionAlgorithm() 
@@ -94,6 +91,10 @@ bool CFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 		ASTRA_ERROR("FBP currently only supports parallel projection geometries.");
 		return false;
 	}
+
+	if (!ok)
+		return false;
+
 
 	// TODO: check that the angles are linearly spaced between 0 and pi
 
