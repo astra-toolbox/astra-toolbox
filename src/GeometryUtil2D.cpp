@@ -320,14 +320,12 @@ bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
 	// TODO: Make EPS relative
 	const float EPS = 0.00001f;
 
-	int nx = pVolGeom->getGridColCount();
-	int ny = pVolGeom->getGridRowCount();
-	int nth = pProjGeom->getProjectionAngleCount();
 
 	// Check if pixels are square
 	if (std::abs(pVolGeom->getPixelLengthX() - pVolGeom->getPixelLengthY()) > EPS)
 		return false;
 
+	int nth = pProjGeom->getProjectionAngleCount();
 	projs.resize(nth);
 
 	// Copy vectors
