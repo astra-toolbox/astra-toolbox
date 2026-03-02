@@ -184,14 +184,14 @@ bool createArrayAndTextureObject2D(float* data, cudaArray*& dataArray, cudaTextu
 	texObj = 0;
 
 	if (!checkCuda(cudaCreateTextureObject(&texObj, &resDesc, &texDesc, NULL), "createTextureObject2D")) {
-		cudaFreeArray(dataArray);
+		logCuda(cudaFreeArray(dataArray), "createArrayAndTextureObject2D free");
 		return false;
 	}
 
 	bool ok = checkCuda(cudaMemcpy2DToArrayAsync(dataArray, 0, 0, data, pitch*sizeof(float), width*sizeof(float), height, cudaMemcpyDeviceToDevice, stream()), "createTextureObject2D memcpy");
 	ok &= stream.syncIfSync("createArrayAndTextureObject2D sync");
 	if (!ok) {
-		cudaFreeArray(dataArray);
+		logCuda(cudaFreeArray(dataArray), "createArrayAndTextureObject2D free");
 		return false;
 	}
 
@@ -341,7 +341,7 @@ float dotProduct2D(float* D_data, unsigned int pitch,
 
 	stream.sync("dotProduct2D");
 
-	cudaFree(D_buf);
+	logCuda(cudaFree(D_buf), "dotProduct2D free");
 
 	return x;
 }

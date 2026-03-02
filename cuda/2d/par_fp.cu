@@ -293,9 +293,9 @@ bool FP_simple_internal(float* D_volumeData, unsigned int volumePitch,
 
 	bool ok = checkCuda(cudaStreamSynchronize(stream), "par_fp");
 
-	cudaFreeArray(D_dataArray);
+	logCuda(cudaFreeArray(D_dataArray), "par_fp free array");
 
-	cudaDestroyTextureObject(D_texObj);
+	logCuda(cudaDestroyTextureObject(D_texObj), "par_fp destroy texture");
 
 	return ok;
 }
@@ -333,7 +333,7 @@ bool FP_simple(float* D_volumeData, unsigned int volumePitch,
 			break;
 	}
 	ok &= checkCuda(cudaStreamSynchronize(stream), "par_fp");
-	cudaStreamDestroy(stream);
+	logCuda(cudaStreamDestroy(stream), "par_fp destroy stream");
 	return ok;
 }
 

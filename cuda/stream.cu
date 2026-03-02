@@ -58,10 +58,10 @@ Stream::~Stream()
 {
 	if (isValid()) {
 		if (impl->autoSync)
-			checkCuda(cudaStreamSynchronize(impl->stream), "Stream autoSync");
+			logCuda(cudaStreamSynchronize(impl->stream), "Stream autoSync");
 
 		if (impl->owned)
-			cudaStreamDestroy(impl->stream);
+			logCuda(cudaStreamDestroy(impl->stream), "Stream destroy");
 	}
 }
 

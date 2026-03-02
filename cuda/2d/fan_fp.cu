@@ -251,8 +251,8 @@ bool FanFP_internal(float* D_volumeData, unsigned int volumePitch,
 
 	ok &= checkCuda(cudaStreamSynchronize(stream), "fan_fp");
 
-	cudaFreeArray(D_dataArray);
-	cudaDestroyTextureObject(D_texObj);
+	logCuda(cudaFreeArray(D_dataArray), "fan_fp free array");
+	logCuda(cudaDestroyTextureObject(D_texObj), "fan_fp destroy texture");
 
 	return ok;
 }
@@ -288,7 +288,7 @@ bool FanFP(float* D_volumeData, unsigned int volumePitch,
 			break;
 	}
 	ok &= checkCuda(cudaStreamSynchronize(stream), "fan_fp");
-	cudaStreamDestroy(stream);
+	logCuda(cudaStreamDestroy(stream), "fan_fp destroy stream");
 	return ok;
 }
 
