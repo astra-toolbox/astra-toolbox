@@ -265,27 +265,27 @@ bool runCudaFFT(int _iProjectionCount,
 		return false;
 	}
 	if (!checkCuda(cudaMemsetAsync(D_pfPaddedSource, 0, bufferMemSize, stream()), "runCudaFFT memset")) {
-		cudaFree(D_pfPaddedSource);
+		logCuda(cudaFree(D_pfPaddedSource), "runCudaFFT free");
 		return false;
 	}
 
 	// pitched memcpy 2D to handle both source pitch and target padding
 	if (!checkCuda(cudaMemcpy2DAsync(D_pfPaddedSource, _iPaddedSize*sizeof(float), D_pfSource, _iSourcePitch*sizeof(float), _iProjDets*sizeof(float), _iProjectionCount, cudaMemcpyDeviceToDevice, stream()), "runCudaFFT memcpy")) {
-		cudaFree(D_pfPaddedSource);
+		logCuda(cudaFree(D_pfPaddedSource), "runCudaFFT free");
 		return false;
 	}
 
 	if (!invokeCudaFFT(_iProjectionCount, _iPaddedSize, D_pfPaddedSource, D_pcTarget, stream())) {
-		cudaFree(D_pfPaddedSource);
+		logCuda(cudaFree(D_pfPaddedSource), "runCudaFFT free");
 		return false;
 	}
 
 	if (!stream.sync("runCudaFFT sync")) {
-		cudaFree(D_pfPaddedSource);
+		logCuda(cudaFree(D_pfPaddedSource), "runCudaFFT free");
 		return false;
 	}
 
-	cudaFree(D_pfPaddedSource);
+	logCuda(cudaFree(D_pfPaddedSource), "runCudaFFT free");
 	return true;
 }
 
@@ -308,7 +308,7 @@ bool runCudaIFFT(int _iProjectionCount, const cufftComplex *D_pcSource,
 	if (!invokeCudaIFFT(_iProjectionCount, _iPaddedSize,
 	                    D_pcSource, D_pfPaddedTarget, stream()))
 	{
-		cudaFree(D_pfPaddedTarget);
+		logCuda(cudaFree(D_pfPaddedTarget), "runCudaIFFT free");
 		return false;
 	}
 
@@ -316,22 +316,22 @@ bool runCudaIFFT(int _iProjectionCount, const cufftComplex *D_pcSource,
 	                      D_pfPaddedTarget, stream());
 
 	if (!checkCuda(cudaMemsetAsync(D_pfTarget, 0, sizeof(float) * _iProjectionCount * _iTargetPitch, stream()), "runCudaIFFT memset")) {
-		cudaFree(D_pfPaddedTarget);
+		logCuda(cudaFree(D_pfPaddedTarget), "runCudaIFFT free");
 		return false;
 	}
 
 	// pitched memcpy 2D to handle both source padding and target pitch
 	if (!checkCuda(cudaMemcpy2DAsync(D_pfTarget, _iTargetPitch*sizeof(float), D_pfPaddedTarget, _iPaddedSize*sizeof(float), _iProjDets*sizeof(float), _iProjectionCount, cudaMemcpyDeviceToDevice, stream()), "runCudaIFFT memcpy")) {
-		cudaFree(D_pfPaddedTarget);
+		logCuda(cudaFree(D_pfPaddedTarget), "runCudaIFFT free");
 		return false;
 	}
 
 	if (!stream.sync("runCudaIFFT sync")) {
-		cudaFree(D_pfPaddedTarget);
+		logCuda(cudaFree(D_pfPaddedTarget), "runCudaIFFT free");
 		return false;
 	}
 
-	cudaFree(D_pfPaddedTarget);
+	logCuda(cudaFree(D_pfPaddedTarget), "runCudaIFFT free");
 	return true;
 }
 
@@ -438,7 +438,7 @@ bool prepareCuFFTFilter(const SFilterConfig &cfg,
 			bool ok = uploadComplexArrayToDevice(filterRows, iHalfFFTSize, &hostFilter[0], D_filter, stream());
 			ok &= stream.syncIfSync("prepareCuFFTFilter upload");
 			if (!ok) {
-				cudaFree(D_filter);
+				logCuda(cudaFree(D_filter), "prepareCuFFTFilter free");
 				D_filter = nullptr;
 				return false;
 			}
@@ -463,7 +463,7 @@ bool prepareCuFFTFilter(const SFilterConfig &cfg,
 			bool ok = uploadComplexArrayToDevice(filterRows, iHalfFFTSize, &hostFilter[0], D_filter, stream());
 			ok &= stream.syncIfSync("prepareCuFFTFilter upload");
 			if (!ok) {
-				cudaFree(D_filter);
+				logCuda(cudaFree(D_filter), "prepareCuFFTFilter free");
 				D_filter = nullptr;
 				return false;
 			}
@@ -489,7 +489,7 @@ bool prepareCuFFTFilter(const SFilterConfig &cfg,
 			bool ok = uploadComplexArrayToDevice(filterRows, iHalfFFTSize, &hostFilter[0], D_filter, stream());
 			ok &= stream.syncIfSync("prepareCuFFTFilter upload");
 			if (!ok) {
-				cudaFree(D_filter);
+				logCuda(cudaFree(D_filter), "prepareCuFFTFilter free");
 				D_filter = nullptr;
 				return false;
 			}
@@ -519,12 +519,13 @@ bool prepareCuFFTFilter(const SFilterConfig &cfg,
 
 			float* D_spatialFilter = NULL;
 			if (!checkCuda(cudaMalloc((void **)&D_spatialFilter, sizeof(float) * iSpatialFilterSize), "prepareCuFFTFilter malloc")) {
-				cudaFree(D_filter);
+				logCuda(cudaFree(D_filter), "prepareCuFFTFilter free");
 				D_filter = nullptr;
 				return false;
 			}
 			if (!checkCuda(cudaMemcpy(D_spatialFilter, &hostSpatialFilter[0], sizeof(float) * iSpatialFilterSize, cudaMemcpyHostToDevice), "prepareCuFFTFilter memcpy")) {
-				cudaFree(D_filter);
+				logCuda(cudaFree(D_filter), "prepareCuFFTFilter free");
+				logCuda(cudaFree(D_spatialFilter), "prepareCuFFTFilter free");
 				D_filter = nullptr;
 				return false;
 			}
@@ -534,10 +535,10 @@ bool prepareCuFFTFilter(const SFilterConfig &cfg,
 			// need to synchronize here for the cudaFree
 			ok &= stream.sync("prepareCuFFTFilter FFT");
 
-			cudaFree(D_spatialFilter);
+			logCuda(cudaFree(D_spatialFilter), "prepareCuFFTFilter free");
 
 			if (!ok) {
-				cudaFree(D_filter);
+				logCuda(cudaFree(D_filter), "prepareCuFFTFilter free");
 				D_filter = nullptr;
 				return false;
 			}
@@ -567,12 +568,13 @@ bool prepareCuFFTFilter(const SFilterConfig &cfg,
 
 			float* D_spatialFilter = NULL;
 			if (!checkCuda(cudaMalloc((void **)&D_spatialFilter, sizeof(float) * iSpatialFilterSize), "prepareCuFFTFilter malloc")) {
-				cudaFree(D_filter);
+				logCuda(cudaFree(D_filter), "prepareCuFFTFilter free");
 				D_filter = nullptr;
 				return false;
 			}
 			if (!checkCuda(cudaMemcpy(D_spatialFilter, &hostSpatialFilter[0], sizeof(float) * iSpatialFilterSize, cudaMemcpyHostToDevice), "prepareCuFFTFilter memcpy")) {
-				cudaFree(D_filter);
+				logCuda(cudaFree(D_filter), "prepareCuFFTFilter free");
+				logCuda(cudaFree(D_spatialFilter), "prepareCuFFTFilter free");
 				D_filter = nullptr;
 				return false;
 			}
@@ -582,10 +584,10 @@ bool prepareCuFFTFilter(const SFilterConfig &cfg,
 			// need to synchronize here for the cudaFree
 			ok &= stream.sync("prepareCuFFTFilter FFT");
 
-			cudaFree(D_spatialFilter);
+			logCuda(cudaFree(D_spatialFilter), "prepareCuFFTFilter free");
 
 			if (!ok) {
-				cudaFree(D_filter);
+				logCuda(cudaFree(D_filter), "prepareCuFFTFilter free");
 				D_filter = nullptr;
 				return false;
 			}

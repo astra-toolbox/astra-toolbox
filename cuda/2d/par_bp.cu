@@ -216,7 +216,7 @@ bool BP_internal(float* D_volumeData, unsigned int volumePitch,
 
 	bool ok = checkCuda(cudaStreamSynchronize(stream), "par_bp");
 
-	cudaDestroyTextureObject(D_texObj);
+	logCuda(cudaDestroyTextureObject(D_texObj), "par_bp destroy texture");
 
 	return ok;
 }
@@ -253,7 +253,7 @@ bool BP(float* D_volumeData, unsigned int volumePitch,
 	}
 
 	ok &= checkCuda(cudaStreamSynchronize(stream), "par_bp");
-	cudaStreamDestroy(stream);
+	logCuda(cudaStreamDestroy(stream), "par_bp destroy stream");
 	return ok;
 }
 
@@ -285,7 +285,7 @@ bool BP_SART(float* D_volumeData, unsigned int volumePitch,
 
 	cudaStream_t stream;
 	if (!checkCuda(cudaStreamCreate(&stream), "BP_SART stream")) {
-		cudaDestroyTextureObject(D_texObj);
+		logCuda(cudaDestroyTextureObject(D_texObj), "BP_SART destroy texture");
 		return false;
 	}
 
@@ -293,8 +293,8 @@ bool BP_SART(float* D_volumeData, unsigned int volumePitch,
 
 	bool ok = checkCuda(cudaStreamSynchronize(stream), "BP_SART");
 
-	cudaStreamDestroy(stream);
-	cudaDestroyTextureObject(D_texObj);
+	logCuda(cudaStreamDestroy(stream), "BP_SART destroy stream");
+	logCuda(cudaDestroyTextureObject(D_texObj), "BP_SART destroy texture");
 
 	return ok;
 }

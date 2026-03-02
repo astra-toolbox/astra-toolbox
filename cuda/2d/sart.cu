@@ -76,7 +76,7 @@ bool mul_SART(astra::CData2D *dst, const astra::CData2D *src, int angle)
 	devMUL_SART<<<gridSize, blockSize, 0, stream>>>((float*)dsts->getPtr().ptr, src_ptr, dims[0]);
 
 	bool ok = checkCuda(cudaStreamSynchronize(stream), "MUL_SART");
-	cudaStreamDestroy(stream);
+	logCuda(cudaStreamDestroy(stream), "MUL_SART destroy stream");
 	return ok;
 }
 

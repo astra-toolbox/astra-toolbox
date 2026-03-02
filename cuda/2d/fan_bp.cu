@@ -303,7 +303,7 @@ bool FanBP_internal(float* D_volumeData, unsigned int volumePitch,
 
 	bool ok = checkCuda(cudaStreamSynchronize(stream), "FanBP");
 
-	cudaDestroyTextureObject(D_texObj);
+	logCuda(cudaDestroyTextureObject(D_texObj), "FanBP destroy texture");
 
 	return ok;
 }
@@ -330,7 +330,7 @@ bool FanBP_FBPWeighted_internal(float* D_volumeData, unsigned int volumePitch,
 
 	bool ok = checkCuda(cudaStreamSynchronize(stream), "FanBP_FBPWeighted");
 
-	cudaDestroyTextureObject(D_texObj);
+	logCuda(cudaDestroyTextureObject(D_texObj), "FanBP_FBPWeighted destroy texture");
 
 	return ok;
 }
@@ -352,14 +352,14 @@ bool FanBP_SART(float* D_volumeData, unsigned int volumePitch,
 	// only one angle
 	cudaTextureObject_t D_texObj;
 	if (!createTextureObjectPitch2D(D_projData, D_texObj, projPitch, dims.iProjDets, 1, cudaAddressModeClamp)) {
-		cudaStreamDestroy(stream);
+		logCuda(cudaStreamDestroy(stream), "FanBP_SART destroy stream");
 		return false;
 	}
 
 	bool ok = transferConstants(angles + angle, 1, false, tcbuf, stream);
 	if (!ok) {
-		cudaStreamDestroy(stream);
-		cudaDestroyTextureObject(D_texObj);
+		logCuda(cudaStreamDestroy(stream), "FanBP_SART destroy stream");
+		logCuda(cudaDestroyTextureObject(D_texObj), "FanBP_SART destroy texture");
 		return false;
 	}
 
@@ -371,8 +371,8 @@ bool FanBP_SART(float* D_volumeData, unsigned int volumePitch,
 
 	ok = checkCuda(cudaStreamSynchronize(stream), "FanBP_SART");
 
-	cudaStreamDestroy(stream);
-	cudaDestroyTextureObject(D_texObj);
+	logCuda(cudaStreamDestroy(stream), "FanBP_SART destroy stream");
+	logCuda(cudaDestroyTextureObject(D_texObj), "FanBP_SART destroy texture");
 
 	return ok;
 }
@@ -408,7 +408,7 @@ bool FanBP(float* D_volumeData, unsigned int volumePitch,
 	}
 
 	ok &= checkCuda(cudaStreamSynchronize(stream), "fan_bp");
-	cudaStreamDestroy(stream);
+	logCuda(cudaStreamDestroy(stream), "fan_bp destroy stream");
 	return ok;
 }
 
@@ -443,7 +443,7 @@ bool FanBP_FBPWeighted(float* D_volumeData, unsigned int volumePitch,
 	}
 
 	ok &= checkCuda(cudaStreamSynchronize(stream), "fan_bp_fbpweighted");
-	cudaStreamDestroy(stream);
+	logCuda(cudaStreamDestroy(stream), "fan_bp_fbpweighted destroy stream");
 	return ok;
 }
 
