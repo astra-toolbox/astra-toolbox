@@ -188,7 +188,7 @@ static bool convertAstraGeometry_internal(const CVolumeGeometry2D* pVolGeom,
 	const float EPS = 0.00001f;
 
 	// Check if pixels are square
-	if (abs(pVolGeom->getPixelLengthX() - pVolGeom->getPixelLengthY()) > EPS)
+	if (std::abs(pVolGeom->getPixelLengthX() - pVolGeom->getPixelLengthY()) > EPS)
 		return false;
 
 	float dx = -(pVolGeom->getWindowMinX() + pVolGeom->getWindowMaxX()) / 2;
@@ -282,7 +282,7 @@ bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
 	int nth = pProjGeom->getProjectionAngleCount();
 
 	// Check if pixels are square
-	if (abs(pVolGeom->getPixelLengthX() - pVolGeom->getPixelLengthY()) > EPS)
+	if (std::abs(pVolGeom->getPixelLengthX() - pVolGeom->getPixelLengthY()) > EPS)
 		return false;
 
 	// TODO: Deprecate this.
@@ -325,7 +325,7 @@ bool convertAstraGeometry(const CVolumeGeometry2D* pVolGeom,
 	int nth = pProjGeom->getProjectionAngleCount();
 
 	// Check if pixels are square
-	if (abs(pVolGeom->getPixelLengthX() - pVolGeom->getPixelLengthY()) > EPS)
+	if (std::abs(pVolGeom->getPixelLengthX() - pVolGeom->getPixelLengthY()) > EPS)
 		return false;
 
 	projs.resize(nth);
