@@ -165,13 +165,6 @@ bool CCylConeVecProjectionGeometry3D::isEqual(const CProjectionGeometry3D * _pGe
 }
 
 //----------------------------------------------------------------------------------------
-// is of type
-bool CCylConeVecProjectionGeometry3D::isOfType(const std::string& _sType) const
-{
-	 return (_sType == "cyl_cone_vec");
-}
-
-//----------------------------------------------------------------------------------------
 // Get the configuration object
 Config* CCylConeVecProjectionGeometry3D::getConfiguration() const 
 {

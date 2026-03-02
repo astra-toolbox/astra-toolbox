@@ -149,13 +149,6 @@ bool CParallelVecProjectionGeometry2D::isEqual(const CProjectionGeometry2D &_pGe
 }
 
 //----------------------------------------------------------------------------------------
-// Is of type
-bool CParallelVecProjectionGeometry2D::isOfType(const std::string& _sType)
-{
-	return (_sType == "parallel_vec");
-}
-
-//----------------------------------------------------------------------------------------
 
 bool CParallelVecProjectionGeometry2D::_check()
 {

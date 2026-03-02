@@ -135,13 +135,6 @@ bool CParallelProjectionGeometry3D::isEqual(const CProjectionGeometry3D * _pGeom
 }
 
 //----------------------------------------------------------------------------------------
-// is of type
-bool CParallelProjectionGeometry3D::isOfType(const std::string& _sType) const
-{
-	 return (_sType == "parallel3d");
-}
-
-//----------------------------------------------------------------------------------------
 // Get the configuration object
 Config* CParallelProjectionGeometry3D::getConfiguration() const 
 {

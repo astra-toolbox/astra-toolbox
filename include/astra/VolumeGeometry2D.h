@@ -162,9 +162,6 @@ public:
 	/** Initialization. Initializes an instance of the CVolumeGeometry2D class.
 	 * The minimal and maximal coordinates of the geometry will be set to -/+ half the number of rows/columns.
 	 *
-	 * If the object has been initialized before, the object is reinitialized and 
-	 * memory is freed and reallocated if necessary.
-	 *
 	 * @param _iGridColCount Number of columns in the volume grid.
 	 * @param _iGridRowCount Number of rows in the volume grid.
 	 * @return initialization successful
@@ -172,9 +169,6 @@ public:
 	bool initialize(int _iGridColCount, int _iGridRowCount);
 
 	/** Initialization. Initializes an instance of the CVolumeGeometry2D class.
-	 *
-	 * If the object has been initialized before, the object is reinitialized and 
-	 * memory is freed and reallocated if necessary.
 	 *
 	 * @param _iGridColCount Number of columns in the volume grid.
 	 * @param _iGridRowCount Number of rows in the volume grid.

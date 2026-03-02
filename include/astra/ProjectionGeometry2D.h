@@ -101,8 +101,7 @@ protected:
 	 */
 	bool _check();
 	
-	/** Initialization. Initializes an instance of the CProjectionGeometry2D class. If the object has been 
-	 * initialized before, the object is reinitialized and memory is freed and reallocated if necessary.
+	/** Initialization. Initializes an instance of the CProjectionGeometry2D class.
 	 *
 	 *  @param _iProjectionAngleCount Number of projection angles.
 	 *  @param _iDetectorCount Number of detectors, i.e., the number of detector measurements for each projection angle.
@@ -138,8 +137,6 @@ public:
 	bool isInitialized() const;
 
 	/** Return true if this geometry instance is the same as the one specified.
-	 *
-	 * @return true if this geometry instance is the same as the one specified.
 	 */
 	virtual bool isEqual(const CProjectionGeometry2D&) const = 0;
 
@@ -222,7 +219,7 @@ public:
 	 * @param _sType geometry type to compare to.
 	 * @return true if the type of geometry defined in this class is the one specified in _sType. 
 	 */
-	 virtual bool isOfType(const std::string& _sType) = 0;
+	virtual bool isOfType(const std::string& _sType) const = 0;
 
 private:
 	//< For Config unused argument checking

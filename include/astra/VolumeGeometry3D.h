@@ -186,9 +186,6 @@ public:
 	/** Initialization. Initializes an instance of the CVolumeGeometry3D class.
 	 * The minimal and maximal coordinates of the geometry will be set to -/+ half the number of rows/columns/slices.
 	 *
-	 * If the object has been initialized before, the object is reinitialized and 
-	 * memory is freed and reallocated if necessary.
-	 *
 	 * @param _iGridColCount Number of columns in the volume grid.
 	 * @param _iGridRowCount Number of rows in the volume grid.
 	 * @param _iGridSliceCount Number of slices in the volume grid.
@@ -197,9 +194,6 @@ public:
 	bool initialize(int _iGridColCount, int _iGridRowCount, int _iGridSliceCount);
 
 	/** Initialization. Initializes an instance of the CVolumeGeometry3D class.
-	 *
-	 * If the object has been initialized before, the object is reinitialized and 
-	 * memory is freed and reallocated if necessary.
 	 *
 	 * @param _iGridColCount Number of columns in the volume grid.
 	 * @param _iGridRowCount Number of rows in the volume grid.

@@ -97,7 +97,7 @@ public:
 	 * @param _cfg Configuration Object
 	 * @return initialization successful?
 	 */
-	virtual bool initialize(const Config& _cfg);
+	virtual bool initialize(const Config& _cfg) override;
 
 	/** Initialization. This function MUST be called after using the default constructor and MAY be called to 
 	 * reset a previously initialized object.
@@ -121,42 +121,37 @@ public:
 	virtual CProjectionGeometry2D* clone() const override;
 
 	/** Returns true if the type of geometry defined in this class is the one specified in _sType.
-	 *
-	 * @param _sType geometry type to compare to.
-	 * @return true if _sType == "fanflat".
 	 */
-	 virtual bool isOfType(const std::string& _sType);
+	virtual bool isOfType(const std::string& _sType) const override { return _sType == "fanflat"; }
 
 	/** Get all settings in a Config object.
 	 *
 	 * @return Configuration Object.
 	 */
-	virtual Config* getConfiguration() const;
+	virtual Config* getConfiguration() const override;
 
-    /** Return true if this geometry instance is the same as the one specified.
-	 *
-	 * @return true if this geometry instance is the same as the one specified.
+	/** Return true if this geometry instance is the same as the one specified.
 	 */
 	virtual bool isEqual(const CProjectionGeometry2D &) const override;
 
 	/** Returns the distance from the origin of the coordinate system to the source.
-     *
-     * @return Distance from the origin of the coordinate system to the source
-     */
+	 *
+	 * @return Distance from the origin of the coordinate system to the source
+	 */
 	float32 getOriginSourceDistance() const;
 	
 	/** Returns the distance from the origin of the coordinate system to the detector 
 	 * (i.e., the distance between the origin and its orthogonal projection onto the detector array).
-     *
-     * @return Distance from the origin of the coordinate system to the detector
-     */
+	 *
+	 * @return Distance from the origin of the coordinate system to the detector
+	 */
 	float32 getOriginDetectorDistance() const;
 
 	/** Returns the distance from the source to the detector
 	 * (i.e., the distance between the source and its orthogonal projection onto the detector array).
-     *
-     * @return Distance from the source to the detector
-     */
+	 *
+	 * @return Distance from the source to the detector
+	 */
 	float32 getSourceDetectorDistance() const;
 
 	/** Create a vector geom
