@@ -553,21 +553,21 @@ bool Par3DFP(cudaPitchedPtr D_volumeData,
 	// transfer volume to array
 	cudaArray* cuArray = allocateVolumeArray(dims);
 	if (!cuArray) {
-		cudaStreamDestroy(stream);
+		logCuda(cudaStreamDestroy(stream), "Par3DFP destroy stream");
 		return false;
 	}
 
 	cudaTextureObject_t D_texObj;
 	if (!createTextureObject3D(cuArray, D_texObj)) {
-		cudaStreamDestroy(stream);
-		cudaFreeArray(cuArray);
+		logCuda(cudaStreamDestroy(stream), "Par3DFP destroy stream");
+		logCuda(cudaFreeArray(cuArray), "Par3DFP free array");
 		return false;
 	}
 
 	if (!transferVolumeToArray(D_volumeData, cuArray, dims, stream)) {
-		cudaDestroyTextureObject(D_texObj);
-		cudaStreamDestroy(stream);
-		cudaFreeArray(cuArray);
+		logCuda(cudaDestroyTextureObject(D_texObj), "Par3DFP destroy texture");
+		logCuda(cudaStreamDestroy(stream), "Par3DFP destroy stream");
+		logCuda(cudaFreeArray(cuArray), "Par3DFP free array");
 		return false;
 	}
 
@@ -595,9 +595,9 @@ bool Par3DFP(cudaPitchedPtr D_volumeData,
 
 	ok &= checkCuda(cudaStreamSynchronize(stream), "Par3DFP sync");
 
-	cudaDestroyTextureObject(D_texObj);
-	cudaFreeArray(cuArray);
-	cudaStreamDestroy(stream);
+	logCuda(cudaDestroyTextureObject(D_texObj), "Par3DFP destroy texture");
+	logCuda(cudaFreeArray(cuArray), "Par3DFP free array");
+	logCuda(cudaStreamDestroy(stream), "Par3DFP destroy stream");
 
 	return ok;
 }
@@ -616,7 +616,7 @@ bool Par3DFP_SumSqW(cudaPitchedPtr D_volumeData,
 		return false;
 
 	if (!transferConstants(angles, dims.iProjAngles, tcbuf, stream)) {
-		cudaStreamDestroy(stream);
+		logCuda(cudaStreamDestroy(stream), "Par3DFP_SumSqW destroy stream");
 		return false;
 	}
 
@@ -722,7 +722,7 @@ bool Par3DFP_SumSqW(cudaPitchedPtr D_volumeData,
 	}
 
 	bool ok = checkCuda(cudaStreamSynchronize(stream), "Par3DFP_SumSqW");
-	cudaStreamDestroy(stream);
+	logCuda(cudaStreamDestroy(stream), "Par3DFP_SumSqW destroy stream");
 
 	// printf("%f\n", toc(t));
 

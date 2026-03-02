@@ -87,7 +87,7 @@ _AstraExport bool uploadMultipleProjections(CFloat32ProjectionData3D *proj,
 		return false;
 	}
 
-	cudaFree(D_proj.ptr);
+	logCuda(cudaFree(D_proj.ptr), "uploadMultipleProjections free");
 	return true;
 }
 
