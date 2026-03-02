@@ -44,6 +44,7 @@ class CData3D;
 namespace astraCUDA3d {
 
 using astraCUDA::checkCuda;
+using astraCUDA::logCuda;
 using astraCUDA::TransferConstantsBuffer_t;
 using astraCUDA::StreamHelper;
 

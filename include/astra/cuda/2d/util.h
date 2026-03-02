@@ -71,7 +71,8 @@ bool createArrayAndTextureObject2D(float* data, cudaArray*& dataArray, cudaTextu
 bool createTextureObjectPitch2D(float* D_data, cudaTextureObject_t& texObj, unsigned int pitch, unsigned int width, unsigned int height, cudaTextureAddressMode mode = cudaAddressModeBorder);
 
 
-bool checkCuda(cudaError_t err, const char *msg);
+[[nodiscard]] bool checkCuda(cudaError_t err, const char *msg);
+bool logCuda(cudaError_t err, const char *msg);
 
 float dotProduct2D(float* D_data, unsigned int pitch,
                    unsigned int width, unsigned int height,
