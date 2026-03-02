@@ -69,7 +69,7 @@ endif
 ifeq ($(amdhip),yes)
 CPPFLAGS   += @CPPFLAGS_HIP@ -DASTRA_CUDA
 # TODO: Check these warnings
-HIPCCFLAGS += @CPPFLAGS_HIP@ -I$(srcdir)/../../include -I$(srcdir)/../../lib/include -DASTRA_CUDA --std c++17 -DASTRA_BUILDING_HIP -Wno-unused-result -Wno-inconsistent-missing-override -Wno-absolute-value
+HIPCCFLAGS += @CPPFLAGS_HIP@ -I$(srcdir)/../../include -I$(srcdir)/../../lib/include -DASTRA_CUDA --std c++17 -DASTRA_BUILDING_HIP -Wno-absolute-value
 LDFLAGS    += @LDFLAGS_HIP@
 LIBS       += -lhipfft
 HIPCC       = @HIPCC@
