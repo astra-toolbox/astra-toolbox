@@ -103,8 +103,8 @@ namespace astraCUDA3d {
 
 		copyVolumeFromDevice(out, D_outData, dims);
 
-		cudaFree(D_outData.ptr);
-		cudaFree(D_inData.ptr);
+		logCuda(cudaFree(D_outData.ptr), "dartSmoothing 3d free");
+		logCuda(cudaFree(D_inData.ptr), "dartSmoothing 3d free");
 
 	}
 
@@ -209,8 +209,8 @@ namespace astraCUDA3d {
 
 		copyVolumeFromDevice(mask, D_maskData, dims);
 
-		cudaFree(D_maskData.ptr);
-		cudaFree(D_segmentationData.ptr);
+		logCuda(cudaFree(D_maskData.ptr), "dartMasking 3d free");
+		logCuda(cudaFree(D_segmentationData.ptr), "dartMasking 3d free");
 
 	}
 

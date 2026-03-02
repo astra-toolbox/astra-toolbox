@@ -256,7 +256,7 @@ bool Par3DBP_Array(cudaPitchedPtr D_volumeData,
 
 	cudaStream_t stream;
 	if (!checkCuda(cudaStreamCreate(&stream), "Par3DBP_Array stream")) {
-		cudaDestroyTextureObject(D_texObj);
+		logCuda(cudaDestroyTextureObject(D_texObj), "Par3DBP_Array destroy texture");
 		return false;
 	}
 
@@ -293,7 +293,7 @@ bool Par3DBP_Array(cudaPitchedPtr D_volumeData,
 		}
 
 		// After kernels are done, signal we're ready to transfer new constants
-		ok = checkCuda(cudaEventRecord(tcbuf.event, stream), "Par3DBP event");
+		ok = checkCuda(cudaEventRecord(tcbuf.event, stream), "Par3DBP_Array event");
 
 		if (!ok)
 			break;
@@ -303,10 +303,10 @@ bool Par3DBP_Array(cudaPitchedPtr D_volumeData,
 
 	}
 
-	ok = checkCuda(cudaStreamSynchronize(stream), "Par3DBP sync");
+	ok = checkCuda(cudaStreamSynchronize(stream), "Par3DBP_Array sync");
 
-	cudaDestroyTextureObject(D_texObj);
-	cudaStreamDestroy(stream);
+	logCuda(cudaDestroyTextureObject(D_texObj), "Par3DBP_Array destroy texture");
+	logCuda(cudaStreamDestroy(stream), "Par3DBP_Array destroy stream");
 
 	return ok;
 }
@@ -323,13 +323,13 @@ bool Par3DBP(cudaPitchedPtr D_volumeData,
 		return false;
 
 	if (!transferProjectionsToArray(D_projData, cuArray, dims)) {
-		cudaFreeArray(cuArray);
+		logCuda(cudaFreeArray(cuArray), "Par3DBP free array");
 		return false;
 	}
 
 	bool ret = Par3DBP_Array(D_volumeData, cuArray, dims, angles, params);
 
-	cudaFreeArray(cuArray);
+	logCuda(cudaFreeArray(cuArray), "Par3DBP free array");
 
 	return ret;
 }

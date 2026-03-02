@@ -90,7 +90,7 @@ astra::CDataStorage *allocateGPUMemory(unsigned int x, unsigned int y, unsigned 
 
 	if (zero == INIT_ZERO) {
 		if (!checkCuda(cudaMemset3D(ptr, 0, make_cudaExtent(sizeof(float)*x, y, z)), "allocateGPUMemory memset3d")) {
-			cudaFree(ptr.ptr);
+			logCuda(cudaFree(ptr.ptr), "allocateGPUMemory free");
 			return nullptr;
 		}
 	}

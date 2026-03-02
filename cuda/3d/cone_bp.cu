@@ -315,7 +315,7 @@ bool ConeBP_Array(cudaPitchedPtr D_volumeData,
 
 	cudaStream_t stream;
 	if (!checkCuda(cudaStreamCreate(&stream), "ConeBP_Array stream")) {
-		cudaDestroyTextureObject(D_texObj);
+		logCuda(cudaDestroyTextureObject(D_texObj), "ConeBP_Array destroy texture");
 		return false;
 	}
 
@@ -369,10 +369,10 @@ bool ConeBP_Array(cudaPitchedPtr D_volumeData,
 		// printf("%f\n", toc(t));
 	}
 
-	ok = checkCuda(cudaStreamSynchronize(stream), "ConeBP sync");
+	ok = checkCuda(cudaStreamSynchronize(stream), "ConeBP_Array sync");
 
-	cudaDestroyTextureObject(D_texObj);
-	cudaStreamDestroy(stream);
+	logCuda(cudaDestroyTextureObject(D_texObj), "ConeBP_Array destroy texture");
+	logCuda(cudaStreamDestroy(stream), "ConeBP_Array destroy stream");
 
 	return ok;
 }
@@ -389,13 +389,13 @@ bool ConeBP(cudaPitchedPtr D_volumeData,
 		return false;
 	
 	if (!transferProjectionsToArray(D_projData, cuArray, dims)) {
-		cudaFreeArray(cuArray);
+		logCuda(cudaFreeArray(cuArray), "ConeBP free array");
 		return false;
 	}
 
 	bool ret = ConeBP_Array(D_volumeData, cuArray, dims, angles, params);
 
-	cudaFreeArray(cuArray);
+	logCuda(cudaFreeArray(cuArray), "ConeBP free array");
 
 	return ret;
 }
