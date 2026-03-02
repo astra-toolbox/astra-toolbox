@@ -53,5 +53,12 @@ _AstraExport bool uploadMultipleProjections(CFloat32ProjectionData3D *proj,
 
 }
 
+namespace astraCUDA {
+_AstraExport bool setGPUIndex(int index);
+}
+namespace astraCUDA3d {
+using astraCUDA::setGPUIndex;
+}
+
 
 #endif

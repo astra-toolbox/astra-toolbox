@@ -101,8 +101,6 @@ bool zeroGPUMemory(astra::CData3D *data);
 
 bool assignGPUMemory(astra::CData3D *dst, const astra::CData3D *src);
 
-bool setGPUIndex(int index);
-
 bool copyIntoArray(astra::CData3D *data, astra::CData3D *subdata, const SSubDimensions3D &pos);
 
 
