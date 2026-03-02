@@ -368,4 +368,10 @@ bool checkCuda(cudaError_t err, const char *msg)
 	}
 }
 
+// Variant of checkCuda without [[nodiscard]]
+bool logCuda(cudaError_t err, const char *msg)
+{
+	return checkCuda(err, msg);
+}
+
 }
