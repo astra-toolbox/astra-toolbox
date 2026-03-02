@@ -213,21 +213,5 @@ namespace astraCUDA3d {
 		cudaFree(D_segmentationData.ptr);
 
 	}
-	// -------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-	bool setGPUIndex(int iGPUIndex)
-	{
-		if (iGPUIndex != -1) {
-			cudaSetDevice(iGPUIndex);
-			cudaError_t err = cudaGetLastError();
-
-			// Ignore errors caused by calling cudaSetDevice multiple times
-			if (err != cudaSuccess && err != cudaErrorSetOnActiveProcess)
-				return false;
-		}
-
-		return true;
-	}
-
 
 }
