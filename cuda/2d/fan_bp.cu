@@ -395,7 +395,7 @@ bool FanBP(float* D_volumeData, unsigned int volumePitch,
 			iEndAngle = dims.iProjAngles;
 		subdims.iProjAngles = iEndAngle - iAngle;
 
-		ok &= transferConstants(angles, dims.iProjAngles, false, tcbuf, stream);
+		ok &= transferConstants(angles + iAngle, subdims.iProjAngles, false, tcbuf, stream);
 		if (!ok)
 			break;
 
