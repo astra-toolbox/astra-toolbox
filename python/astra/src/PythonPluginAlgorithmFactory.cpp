@@ -46,6 +46,9 @@ void logPythonError();
 PyObject *getItemStringRef(PyObject *dict, const char *key)
 {
 #if PY_VERSION_HEX < 0x030d0000
+    // This emulates the behaviour of the Python 3.13+ function
+    // PyDict_GetItemStringRef, but without the thread-safety.
+    // That's no problem since freethreading was introduced with Python 3.13.
     PyObject *value;
     value = PyDict_GetItemString(dict, key);
     if (!value)
