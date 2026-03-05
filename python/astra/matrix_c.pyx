@@ -72,9 +72,9 @@ cdef astra_to_csr_matrix(CSparseMatrix *mat):
     data = np.zeros(mat.m_plRowStarts[mat.m_iHeight])
     for i in range(mat.m_iHeight+1):
         indptr[i] = mat.m_plRowStarts[i]
-    for i in range(mat.m_plRowStarts[mat.m_iHeight]):
-        indices[i] = mat.m_piColIndices[i]
-        data[i] = mat.m_pfValues[i]
+    for j in range(mat.m_plRowStarts[mat.m_iHeight]):
+        indices[j] = mat.m_piColIndices[j]
+        data[j] = mat.m_pfValues[j]
     return ss.csr_matrix((data,indices,indptr),shape=(mat.m_iHeight,mat.m_iWidth))
 
 def create(data):
