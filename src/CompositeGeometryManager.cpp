@@ -134,26 +134,26 @@ CDataGPUHandler::CDataGPUHandler(const CCompositeGeometryManager::CPart &part, a
 	// Can change this later to allow subvolumes if we need those.
 	size_t x, y, z;
 	part.getDims(x, y, z);
-	assert(x == _dataSource->getShape()[0]);
-	assert(y == _dataSource->getShape()[1]);
-	assert(z == _dataSource->getShape()[2]);
+	assert(x == (size_t)_dataSource->getShape()[0]);
+	assert(y == (size_t)_dataSource->getShape()[1]);
+	assert(z == (size_t)_dataSource->getShape()[2]);
 
 	if (zero == astraCUDA3d::INIT_ZERO) {
 		astraCUDA3d::zeroGPUMemory(_data);
 	}
 }
 bool CDataGPUHandler::copyToGPUMemory(const astraCUDA3d::SSubDimensions3D &pos) {
-	assert(pos.nx == _dataSource->getShape()[0]);
-	assert(pos.ny == _dataSource->getShape()[1]);
-	assert(pos.nz == _dataSource->getShape()[2]);
+	assert(pos.nx == (size_t)_dataSource->getShape()[0]);
+	assert(pos.ny == (size_t)_dataSource->getShape()[1]);
+	assert(pos.nz == (size_t)_dataSource->getShape()[2]);
 	assert(pos.pitch == pos.nx);
 	assert(pos.isFullVolume());
 	return true;
 }
 bool CDataGPUHandler::copyFromGPUMemory(const astraCUDA3d::SSubDimensions3D &pos) {
-	assert(pos.nx == _dataSource->getShape()[0]);
-	assert(pos.ny == _dataSource->getShape()[1]);
-	assert(pos.nz == _dataSource->getShape()[2]);
+	assert(pos.nx == (size_t)_dataSource->getShape()[0]);
+	assert(pos.ny == (size_t)_dataSource->getShape()[1]);
+	assert(pos.nz == (size_t)_dataSource->getShape()[2]);
 	assert(pos.pitch == pos.nx);
 	assert(pos.isFullVolume());
 	return true;

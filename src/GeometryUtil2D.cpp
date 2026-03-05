@@ -196,7 +196,7 @@ static bool convertAstraGeometry_internal(const CVolumeGeometry2D* pVolGeom,
 
 	float factor = 1.0f / pVolGeom->getPixelLengthX();
 
-	for (int i = 0; i < iProjectionAngleCount; ++i) {
+	for (unsigned int i = 0; i < iProjectionAngleCount; ++i) {
 		// CHECKME: Order of scaling and translation
 		projs[i].translate(dx, dy);
 		projs[i].scale(factor);

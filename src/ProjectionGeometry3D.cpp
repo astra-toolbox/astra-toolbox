@@ -42,7 +42,7 @@ bool CProjectionGeometry3D::_check()
 	ASTRA_CONFIG_CHECK(m_fDetectorSpacingX > 0.0f, "ProjectionGeometry3D", "m_fDetectorSpacingX should be positive.");
 	ASTRA_CONFIG_CHECK(m_fDetectorSpacingY > 0.0f, "ProjectionGeometry3D", "m_fDetectorSpacingY should be positive.");
 	ASTRA_CONFIG_CHECK(m_iProjectionAngleCount > 0, "ProjectionGeometry3D", "ProjectionAngleCount should be positive.");
-	ASTRA_CONFIG_CHECK(m_pfProjectionAngles.size() == m_iProjectionAngleCount, "ProjectionGeometry3D", "Number of angles does not match");
+	ASTRA_CONFIG_CHECK(m_pfProjectionAngles.size() == (size_t)m_iProjectionAngleCount, "ProjectionGeometry3D", "Number of angles does not match");
 
 /*
 	// autofix: angles in [0,2pi[
