@@ -152,7 +152,7 @@ bool CParallelVecProjectionGeometry2D::isEqual(const CProjectionGeometry2D &_pGe
 
 bool CParallelVecProjectionGeometry2D::_check()
 {
-	ASTRA_CONFIG_CHECK(m_pProjectionAngles.size() == m_iProjectionAngleCount, "ParallelVecProjectionGeometry2D", "Number of vectors does not match number of angles");
+	ASTRA_CONFIG_CHECK(m_pProjectionAngles.size() == (size_t)m_iProjectionAngleCount, "ParallelVecProjectionGeometry2D", "Number of vectors does not match number of angles");
 	// TODO
 	return true;
 }
