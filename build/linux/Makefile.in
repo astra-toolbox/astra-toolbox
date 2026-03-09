@@ -62,7 +62,7 @@ ifeq ($(cuda),yes)
 CPPFLAGS  += @CPPFLAGS_CUDA@ -DASTRA_CUDA
 NVCCFLAGS += @NVCCFLAGS_EXTRA@ @CPPFLAGS_CUDA@ -I$(srcdir)/../../include -DASTRA_CUDA --std c++17 -DASTRA_BUILDING_CUDA
 LDFLAGS   += @LDFLAGS_CUDA@
-LIBS      += -lcudart -lcufft
+LIBS      += -Wl,-Bstatic,-lcudart_static,-lcufft_static_nocallback,-lculibos,-Bdynamic,-ldl
 NVCC       = @NVCC@
 endif
 
@@ -425,7 +425,7 @@ ifeq ($(matlab),yes)
 mex: $(MATLAB_MEX)
 
 %.$(MEXSUFFIX): %.o $(MATLAB_CXX_OBJECTS) libastra.la
-	$(MEX) LDFLAGS="$(MEXLDFLAGS)" $(MEXFLAGS) $(LIBS) $(MEXLIBS) -lastra -output $* $*.o $(MATLAB_CXX_OBJECTS)
+	$(MEX) LDFLAGS="$(MEXLDFLAGS)" $(MEXFLAGS) $(MEXLIBS) -lastra -output $* $*.o $(MATLAB_CXX_OBJECTS)
 ifeq ($(install_type),module)
 ifeq ($(macos),yes)
 	@# tell macOS dynamic loader to look in mex directory for libastra.0.dylib
@@ -437,7 +437,7 @@ endif
 
 ifeq ($(python),yes)
 matlab/mex/astra_mex_plugin_c.$(MEXSUFFIX): matlab/mex/astra_mex_plugin_c.o $(MATLAB_CXX_OBJECTS) libastra.la
-	$(MEX) LDFLAGS="$(MEXLDFLAGS)" $(MEXFLAGS) $(LIBS) $(MEXLIBS) $(MODPYLIBS) -lastra -output matlab/mex/astra_mex_plugin_c $< $(MATLAB_CXX_OBJECTS)
+	$(MEX) LDFLAGS="$(MEXLDFLAGS)" $(MEXFLAGS) $(MEXLIBS) $(MODPYLIBS) -lastra -output matlab/mex/astra_mex_plugin_c $< $(MATLAB_CXX_OBJECTS)
 endif
 endif
 
@@ -450,11 +450,11 @@ ifeq ($(octave),yes)
 oct: $(OCTAVE_MEX)
 
 %.mex: %.o $(MATLAB_CXX_OBJECTS) $(OCTAVE_CXX_OBJECTS) libastra.la
-	mkoctfile --mex $(OCTFLAGS) $(OCTLDFLAGS) $(LIBS) -lastra --output $* $*.o $(MATLAB_CXX_OBJECTS) $(OCTAVE_CXX_OBJECTS)
+	mkoctfile --mex $(OCTFLAGS) $(OCTLDFLAGS) -lastra --output $* $*.o $(MATLAB_CXX_OBJECTS) $(OCTAVE_CXX_OBJECTS)
 
 ifeq ($(python),yes)
 matlab/mex/astra_mex_plugin_c.mex: matlab/mex/astra_mex_plugin_c.o $(MATLAB_CXX_OBJECTS) $(OCTAVE_CXX_OBJECTS) libastra.la
-	mkoctfile --mex $(OCTFLAGS) $(OCTLDFLAGS) $(LIBS) $(MODPYLIBS) -lastra --output matlab/mex/astra_mex_plugin_c $< $(MATLAB_CXX_OBJECTS) $(OCTAVE_CXX_OBJECTS)
+	mkoctfile --mex $(OCTFLAGS) $(OCTLDFLAGS) $(MODPYLIBS) -lastra --output matlab/mex/astra_mex_plugin_c $< $(MATLAB_CXX_OBJECTS) $(OCTAVE_CXX_OBJECTS)
 endif
 endif
 
@@ -577,8 +577,8 @@ endif
 
 
 ifeq ($(boostutf),yes)
-test.bin: $(ALL_OBJECTS) $(TEST_OBJECTS)
-	./libtool --mode=link $(LD) -o $@ $(LDFLAGS) $+ $(LIBS) $(BOOSTUTF_LIBS)
+test.bin: $(TEST_OBJECTS) libastra.la
+	$(LD) -o $@ $(LDFLAGS) -L$(abs_top_builddir)/.libs -Wl,-rpath=$(abs_top_builddir)/.libs $(BOOSTUTF_LIBS) $(LIBS) -lastra $(TEST_OBJECTS)
 
 test: test.bin
 	./test.bin
