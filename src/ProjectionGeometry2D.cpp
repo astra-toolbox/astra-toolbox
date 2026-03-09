@@ -35,55 +35,26 @@ namespace astra
 
 //----------------------------------------------------------------------------------------
 // Default constructor.
-CProjectionGeometry2D::CProjectionGeometry2D() : configCheckData(0)
+CProjectionGeometry2D::CProjectionGeometry2D()
+	: m_bInitialized(false),
+	  m_iProjectionAngleCount(0),
+	  m_iDetectorCount(0),
+	  m_fDetectorWidth(0.0f),
+	  configCheckData(nullptr)
 {
-	_clear();
+
 }
 
 //----------------------------------------------------------------------------------------
 // Constructor.
 CProjectionGeometry2D::CProjectionGeometry2D(int _iAngleCount, 
-											 int _iDetectorCount, 
-											 float32 _fDetectorWidth, 
-											 const float32* _pfProjectionAngles) : configCheckData(0)
+                                             int _iDetectorCount,
+                                             float32 _fDetectorWidth,
+                                             std::vector<float32> &&_pfProjectionAngles)
+	: CProjectionGeometry2D()
 {
-	_clear();
-	_initialize(_iAngleCount, _iDetectorCount, _fDetectorWidth, _pfProjectionAngles);
-}
-
-//----------------------------------------------------------------------------------------
-// Destructor.
-CProjectionGeometry2D::~CProjectionGeometry2D()
-{
-	if (m_bInitialized)	{
-		clear();
-	}
-}
-
-//----------------------------------------------------------------------------------------
-// Clear all member variables, setting all numeric variables to 0 and all pointers to NULL. 
-// Should only be used by constructors.  Otherwise use the clear() function.
-void CProjectionGeometry2D::_clear()
-{
-	m_iProjectionAngleCount = 0;
-	m_iDetectorCount = 0;
-	m_fDetectorWidth = 0.0f;
-	m_pfProjectionAngles = NULL;
-	m_bInitialized = false;
-}
-
-//----------------------------------------------------------------------------------------
-// Clear all member variables, setting all numeric variables to 0 and all pointers to NULL. 
-void CProjectionGeometry2D::clear()
-{
-	m_iProjectionAngleCount = 0;
-	m_iDetectorCount = 0;
-	m_fDetectorWidth = 0.0f;
-	if (m_bInitialized){
-		delete[] m_pfProjectionAngles;
-	}
-	m_pfProjectionAngles = NULL;
-	m_bInitialized = false;
+	_initialize(_iAngleCount, _iDetectorCount, _fDetectorWidth,
+	            std::move(_pfProjectionAngles));
 }
 
 //----------------------------------------------------------------------------------------
@@ -93,7 +64,7 @@ bool CProjectionGeometry2D::_check()
 	ASTRA_CONFIG_CHECK(m_iDetectorCount > 0, "ProjectionGeometry2D", "Detector Count should be positive.");
 	ASTRA_CONFIG_CHECK(m_fDetectorWidth > 0.0f, "ProjectionGeometry2D", "Detector Width should be positive.");
 	ASTRA_CONFIG_CHECK(m_iProjectionAngleCount > 0, "ProjectionGeometry2D", "ProjectionAngleCount should be positive.");
-	ASTRA_CONFIG_CHECK(m_pfProjectionAngles != NULL, "ProjectionGeometry2D", "ProjectionAngles not initialized");
+	ASTRA_CONFIG_CHECK(m_pfProjectionAngles.size() == m_iProjectionAngleCount, "ProjectionGeometry2D", "Number of angles does not match");
 
 	// autofix: angles in [0,2pi[
 	for (int i = 0; i < m_iProjectionAngleCount; i++) {
@@ -109,12 +80,9 @@ bool CProjectionGeometry2D::_check()
 // Initialization with a Config object
 bool CProjectionGeometry2D::initialize(const Config& _cfg)
 {
-	ConfigReader<CProjectionGeometry2D> CR("ProjectionGeometry2D", this, _cfg);	
+	assert(!m_bInitialized);
 
-	// uninitialize if the object was initialized before
-	if (m_bInitialized)	{
-		clear();
-	}
+	ConfigReader<CProjectionGeometry2D> CR("ProjectionGeometry2D", this, _cfg);
 
 	bool ok = true;
 
@@ -151,11 +119,10 @@ bool CProjectionGeometry2D::initializeAngles(const Config& _cfg)
 		return false;
 	m_iProjectionAngleCount = angles.size();
 	ASTRA_CONFIG_CHECK(m_iProjectionAngleCount > 0, "ProjectionGeometry2D", "Not enough ProjectionAngles specified.");
-	m_pfProjectionAngles = new float32[m_iProjectionAngleCount];
+	m_pfProjectionAngles.resize(m_iProjectionAngleCount);
 	for (int i = 0; i < m_iProjectionAngleCount; i++) {
 		m_pfProjectionAngles[i] = (float)angles[i];
 	}
-	ASTRA_CONFIG_CHECK(m_pfProjectionAngles != NULL, "ProjectionGeometry2D", "ProjectionAngles not initialized");
 
 	ASTRA_CONFIG_CHECK(m_fDetectorWidth > 0.0f, "ProjectionGeometry2D", "DetectorWidth should be positive.");
 	return true;
@@ -164,24 +131,18 @@ bool CProjectionGeometry2D::initializeAngles(const Config& _cfg)
 //----------------------------------------------------------------------------------------
 // Initialization.
 bool CProjectionGeometry2D::_initialize(int _iProjectionAngleCount, 
-									    int _iDetectorCount, 
-									    float32 _fDetectorWidth, 
-									    const float32* _pfProjectionAngles)
+                                        int _iDetectorCount,
+                                        float32 _fDetectorWidth,
+                                        std::vector<float32> &&_pfProjectionAngles)
 {
-	if (m_bInitialized) {
-		clear();
-	}
+	assert(!m_bInitialized);
 
 	// copy parameters
 	m_iProjectionAngleCount = _iProjectionAngleCount;
 	m_iDetectorCount = _iDetectorCount;
 	m_fDetectorWidth = _fDetectorWidth;
-	m_pfProjectionAngles = new float32[m_iProjectionAngleCount];
-	for (int i = 0; i < m_iProjectionAngleCount; i++) {
-		m_pfProjectionAngles[i] = _pfProjectionAngles[i];		
-	}
+	m_pfProjectionAngles = std::move(_pfProjectionAngles);
 
-	// Interface class, so don't set m_bInitialized to true
 	return true;
 }
 //---------------------------------------------------------------------------------------

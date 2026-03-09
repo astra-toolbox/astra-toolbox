@@ -40,30 +40,26 @@ namespace astra {
 //----------------------------------------------------------------------------------------
 // Constructor
 CCudaSirtAlgorithm::CCudaSirtAlgorithm() 
+	: m_pMinMask(nullptr),
+	  m_pMaxMask(nullptr),
+	  m_fLambda(1.0f)
 {
-	m_bIsInitialized = false;
-	CCudaReconstructionAlgorithm2D::_clear();
 
-	m_pMinMask = 0;
-	m_pMaxMask = 0;
-
-	m_fLambda = 1.0f;
 }
 
 //----------------------------------------------------------------------------------------
 // Destructor
 CCudaSirtAlgorithm::~CCudaSirtAlgorithm() 
 {
-	// The actual work is done by ~CCudaReconstructionAlgorithm2D
 
-	m_pMinMask = 0;
-	m_pMaxMask = 0;
 }
 
 //---------------------------------------------------------------------------------------
 // Initialize - Config
 bool CCudaSirtAlgorithm::initialize(const Config& _cfg)
 {
+	assert(!m_bIsInitialized);
+
 	ConfigReader<CAlgorithm> CR("CudaSirtAlgorithm", this, _cfg);
 
 	m_bIsInitialized = CCudaReconstructionAlgorithm2D::initialize(_cfg);
@@ -99,6 +95,8 @@ bool CCudaSirtAlgorithm::initialize(CProjector2D* _pProjector,
                                      CFloat32ProjectionData2D* _pSinogram, 
                                      CFloat32VolumeData2D* _pReconstruction)
 {
+	assert(!m_bIsInitialized);
+
 	m_bIsInitialized = CCudaReconstructionAlgorithm2D::initialize(_pProjector, _pSinogram, _pReconstruction);
 
 	if (!m_bIsInitialized)

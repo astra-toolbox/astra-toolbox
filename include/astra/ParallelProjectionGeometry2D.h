@@ -78,71 +78,57 @@ public:
 	 *  @param _iProjectionAngleCount Number of projection angles.
 	 *  @param _iDetectorCount Number of detectors, i.e., the number of detector measurements for each projection angle.
 	 *  @param _fDetectorWidth Width of a detector cell, in unit lengths. All detector cells are assumed to have equal width.
-	 *  @param _pfProjectionAngles Pointer to an array of projection angles. The angles will be copied from this array.
+	 *  @param _pfProjectionAngles Vector of projection angles. All angles are represented in radians.
 	 */
-	CParallelProjectionGeometry2D(int _iProjectionAngleCount, 
-								  int _iDetectorCount, 
-								  float32 _fDetectorWidth, 
-								  const float32* _pfProjectionAngles);
-
-	/** Copy constructor. 
-	 */
-	CParallelProjectionGeometry2D(const CParallelProjectionGeometry2D& _projGeom);
-
-	/** Destructor.
-	 */
-	~CParallelProjectionGeometry2D();
-
-	/** Assignment operator.
-	 */
-	CParallelProjectionGeometry2D& operator=(const CParallelProjectionGeometry2D& _other);
+	CParallelProjectionGeometry2D(int _iProjectionAngleCount,
+	                              int _iDetectorCount,
+	                              float32 _fDetectorWidth,
+	                              std::vector<float32> &&_pfProjectionAngles);
 
 	/** Initialize the geometry with a config object.
 	 *
 	 * @param _cfg Configuration Object
 	 * @return initialization successful?
 	 */
-	virtual bool initialize(const Config& _cfg);
+	virtual bool initialize(const Config& _cfg) override;
 
-	/** Initialization. Initializes an instance of the CProjectionGeometry2D class. If the object has been 
-	 * initialized before, the object is reinitialized and memory is freed and reallocated if necessary.
+	/** Initialization. Initializes an instance of the CProjectionGeometry2D class.
 	 *
 	 *  @param _iProjectionAngleCount Number of projection angles.
 	 *  @param _iDetectorCount Number of detectors, i.e., the number of detector measurements for each projection angle.
 	 *  @param _fDetectorWidth Width of a detector cell, in unit lengths. All detector cells are assumed to have equal width.
-	 *  @param _pfProjectionAngles Pointer to an array of projection angles. The angles will be copied from this array.
+	 *  @param _pfProjectionAngles Vector of projection angles. All angles are represented in radians.
 	 */
-	bool initialize(int _iProjectionAngleCount, 
-					int _iDetectorCount, 
-					float32 _fDetectorWidth, 
-					const float32* _pfProjectionAngles);
+	bool initialize(int _iProjectionAngleCount,
+	                int _iDetectorCount,
+	                float32 _fDetectorWidth,
+	                std::vector<float32> &&_pfProjectionAngles);
 
 	/** Create a hard copy. 
 	*/
 	virtual CProjectionGeometry2D* clone() const override;
 
-    /** Return true if this geometry instance is the same as the one specified.
-	 *
-	 * @return true if this geometry instance is the same as the one specified.
+	/** Return true if this geometry instance is the same as the one specified.
 	 */
 	virtual bool isEqual(const CProjectionGeometry2D &) const override;
 
 	/** Returns true if the type of geometry defined in this class is the one specified in _sType.
-	 *
-	 * @param _sType geometry type to compare to.
-	 * @return true if _sType == "parallel".
 	 */
-	virtual bool isOfType(const std::string& _sType);
+	virtual bool isOfType(const std::string& _sType) const override { return _sType == "parallel"; }
 
 	/** Get all settings in a Config object.
 	 *
 	 * @return Configuration Object.
 	 */
-	virtual Config* getConfiguration() const;
+	virtual Config* getConfiguration() const override;
 
 	/** Create a vector geom
 	*/
 	CParallelVecProjectionGeometry2D* toVectorGeometry();
+
+private:
+	// Private default copy constructor for use by clone()
+	CParallelProjectionGeometry2D(const CParallelProjectionGeometry2D&)=default;
 
 };
 

@@ -50,44 +50,24 @@ const int IFFT = -1;
 //----------------------------------------------------------------------------------------
 // Constructor
 CFilteredBackProjectionAlgorithm::CFilteredBackProjectionAlgorithm() 
+	: m_filterConfig()
 {
-	_clear();
+
 }
 
 //----------------------------------------------------------------------------------------
 // Destructor
 CFilteredBackProjectionAlgorithm::~CFilteredBackProjectionAlgorithm() 
 {
-	clear();
+
 }
-
-//---------------------------------------------------------------------------------------
-// Clear - Constructors
-void CFilteredBackProjectionAlgorithm::_clear()
-{
-	m_pProjector = NULL;
-	m_pSinogram = NULL;
-	m_pReconstruction = NULL;
-	m_bIsInitialized = false;
-}
-
-//---------------------------------------------------------------------------------------
-// Clear - Public
-void CFilteredBackProjectionAlgorithm::clear()
-{
-	m_pProjector = NULL;
-	m_pSinogram = NULL;
-	m_pReconstruction = NULL;
-	m_bIsInitialized = false;
-
-	m_filterConfig.m_pfCustomFilter.clear();
-}
-
 
 //---------------------------------------------------------------------------------------
 // Initialize, use a Config object
 bool CFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 {
+	assert(!m_bIsInitialized);
+
 	ConfigReader<CAlgorithm> CR("FilteredBackProjectionAlgorithm", this, _cfg);
 
 	bool ok = true;
@@ -125,10 +105,10 @@ bool CFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 //----------------------------------------------------------------------------------------
 // Initialize
 bool CFilteredBackProjectionAlgorithm::initialize(CProjector2D* _pProjector, 
-												  CFloat32VolumeData2D* _pVolume,
-												  CFloat32ProjectionData2D* _pSinogram)
+                                                  CFloat32VolumeData2D* _pVolume,
+                                                  CFloat32ProjectionData2D* _pSinogram)
 {
-	clear();
+	assert(!m_bIsInitialized);
 
 	// store classes
 	m_pProjector = _pProjector;

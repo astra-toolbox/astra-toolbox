@@ -58,87 +58,43 @@ bool CProjectionGeometry3D::_check()
 
 //----------------------------------------------------------------------------------------
 // Default constructor.
-CProjectionGeometry3D::CProjectionGeometry3D() : configCheckData(0)
+CProjectionGeometry3D::CProjectionGeometry3D()
+	: m_bInitialized(false),
+	  m_iProjectionAngleCount(0),
+	  m_iDetectorRowCount(0),
+	  m_iDetectorColCount(0),
+	  m_fDetectorSpacingX(0.0f),
+	  m_fDetectorSpacingY(0.0f),
+	  configCheckData(nullptr)
 {
-	_clear();
+
 }
 
 //----------------------------------------------------------------------------------------
 // Constructor.
-CProjectionGeometry3D::CProjectionGeometry3D(int _iAngleCount, 
-											 int _iDetectorRowCount, 
-											 int _iDetectorColCount, 
-											 float32 _fDetectorSpacingX, 
-											 float32 _fDetectorSpacingY, 
-											 std::vector<float32> &&_pfProjectionAngles) : configCheckData(0)
+CProjectionGeometry3D::CProjectionGeometry3D(int _iAngleCount,
+                                             int _iDetectorRowCount,
+                                             int _iDetectorColCount,
+                                             float32 _fDetectorSpacingX,
+                                             float32 _fDetectorSpacingY,
+                                             std::vector<float32> &&_pfProjectionAngles)
+	: CProjectionGeometry3D()
 {
-	_clear();
-	_initialize(_iAngleCount, 
-			    _iDetectorRowCount, 
-			    _iDetectorColCount, 
-			    _fDetectorSpacingX, 
-			    _fDetectorSpacingY, 
-			    std::move(_pfProjectionAngles));
-}
-
-//----------------------------------------------------------------------------------------
-// Copy constructor.
-CProjectionGeometry3D::CProjectionGeometry3D(const CProjectionGeometry3D& _projGeom)
-{
-	_clear();
-	_initialize(_projGeom.m_iProjectionAngleCount,
-				_projGeom.m_iDetectorRowCount, 
-				_projGeom.m_iDetectorColCount, 
-				_projGeom.m_fDetectorSpacingX, 
-				_projGeom.m_fDetectorSpacingY, 
-				std::vector<float32>(_projGeom.m_pfProjectionAngles));
-}
-
-//----------------------------------------------------------------------------------------
-// Destructor.
-CProjectionGeometry3D::~CProjectionGeometry3D()
-{
-	if (m_bInitialized)	{
-		clear();
-	}
-}
-
-//----------------------------------------------------------------------------------------
-// Clear all member variables, setting all numeric variables to 0 and all pointers to NULL. 
-// Should only be used by constructors.  Otherwise use the clear() function.
-void CProjectionGeometry3D::_clear()
-{
-	m_iProjectionAngleCount = 0;
-	m_iDetectorRowCount = 0;
-	m_iDetectorColCount = 0;
-	m_fDetectorSpacingX = 0.0f;
-	m_fDetectorSpacingY = 0.0f;
-	m_pfProjectionAngles.clear();
-	m_bInitialized = false;
-}
-
-//----------------------------------------------------------------------------------------
-// Clear all member variables, setting all numeric variables to 0 and all pointers to NULL. 
-void CProjectionGeometry3D::clear()
-{
-	m_iProjectionAngleCount = 0;
-	m_iDetectorRowCount = 0;
-	m_iDetectorColCount = 0;
-	m_fDetectorSpacingX = 0.0f;
-	m_fDetectorSpacingY = 0.0f;
-	m_pfProjectionAngles.clear();
-	m_bInitialized = false;
+	_initialize(_iAngleCount,
+	            _iDetectorRowCount,
+	            _iDetectorColCount,
+	            _fDetectorSpacingX,
+	            _fDetectorSpacingY,
+	            std::move(_pfProjectionAngles));
 }
 
 //----------------------------------------------------------------------------------------
 // Initialization with a Config object
 bool CProjectionGeometry3D::initialize(const Config& _cfg)
 {
-	ConfigReader<CProjectionGeometry3D> CR("ProjectionGeometry3D", this, _cfg);
+	assert(!m_bInitialized);
 
-	if (m_bInitialized) {
-		clear();
-	}
+	ConfigReader<CProjectionGeometry3D> CR("ProjectionGeometry3D", this, _cfg);
 
 	bool ok = true;
 
@@ -183,16 +139,14 @@ bool CProjectionGeometry3D::initializeAngles(const Config& _cfg)
 
 //----------------------------------------------------------------------------------------
 // Initialization.
-bool CProjectionGeometry3D::_initialize(int _iProjectionAngleCount, 
-										int _iDetectorRowCount, 
-										int _iDetectorColCount, 
-										float32 _fDetectorSpacingX, 
-										float32 _fDetectorSpacingY, 
-										std::vector<float32> &&_pfProjectionAngles)
+bool CProjectionGeometry3D::_initialize(int _iProjectionAngleCount,
+                                        int _iDetectorRowCount,
+                                        int _iDetectorColCount,
+                                        float32 _fDetectorSpacingX,
+                                        float32 _fDetectorSpacingY,
+                                        std::vector<float32> &&_pfProjectionAngles)
 {
-	if (m_bInitialized) {
-		clear();
-	}
+	assert(!m_bInitialized);
 
 	// copy parameters
 	m_iProjectionAngleCount = _iProjectionAngleCount;
