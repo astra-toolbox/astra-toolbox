@@ -187,6 +187,8 @@ bool CCudaBackProjectionAlgorithm3D::run(int _iNrIterations)
 		                                m_iGPUIndex, m_iVoxelSuperSampling);
 	} else {
 		CCompositeGeometryManager cgm;
+		if (m_iGPUIndex != -1)
+			cgm.setGPUIndices({m_iGPUIndex});
 
 		return cgm.doBP(m_pProjector, pReconMem, pSinoMem);
 	}
