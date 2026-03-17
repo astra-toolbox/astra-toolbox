@@ -89,8 +89,6 @@ void SIRT::reset()
 	useSinogramMask = false;
 
 	fRelaxation = 1.0f;
-
-	ReconAlgo3D::reset();
 }
 
 bool SIRT::enableVolumeMask()

@@ -39,8 +39,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 namespace astra
 {
 
-class XMLNode;
-
 /**
  * This class defines the interface for each 3D projection geometry. 
  * It has a number of data fields, such as width and height of detector
@@ -103,7 +101,7 @@ protected:
 	 *  @param _iDetectorColCount Number of columns detectors.
 	 *  @param _fDetectorSpacingX Spacing between the detector points on the X-axis, in unit lengths. Assumed to be constant throughout the entire detector plate.
 	 *  @param _fDetectorSpacingY Spacing between the detector points on the Y-axis, in unit lengths. Assumed to be constant throughout the entire detector plate.
-	 *  @param _pfProjectionAngles Pointer to an array of projection angles. The angles will be copied from this array. All angles 
+	 *  @param _pfProjectionAngles A vector of projection angles. All angles
 	 *                             are represented in radians and lie in the [0,2pi[ interval.
 	 */
 	CProjectionGeometry3D(int _iProjectionAngleCount,
@@ -113,9 +111,11 @@ protected:
 	                      float32 _fDetectorSpacingY,
 	                      std::vector<float32> &&_pfProjectionAngles);
 
-	/** Copy constructor. 
-	 */
-	CProjectionGeometry3D(const CProjectionGeometry3D& _projGeom);
+	// Delete copy operator to prevent copying ProjectionGeometry3D objects
+	CProjectionGeometry3D& operator=(const CProjectionGeometry3D&)=delete;
+
+	// Protected default copy constructor for use by derived classes
+	CProjectionGeometry3D(const CProjectionGeometry3D&)=default;
 
 	/** Check the values of this object.  If everything is ok, the object can be set to the initialized state.
 	 * The following statements are then guaranteed to hold:
@@ -126,21 +126,14 @@ protected:
 	 */
 	bool _check();
 	
-	/** Clear all member variables, setting all numeric variables to 0 and all pointers to NULL. 
-	 * Should only be used by constructors.  Otherwise use the clear() function.
-	 */
-	void _clear();
-
-	/** Initialize the geometry. If the object has been initialized before, the object is reinitialized 
-	 * and memory is freed and reallocated if necessary.
+	/** Initialize the geometry.
 	 *
 	 *  @param _iProjectionAngleCount Number of projection angles.
 	 *  @param _iDetectorRowCount Number of rows of detectors.
 	 *  @param _iDetectorColCount Number of columns detectors.
 	 *  @param _fDetectorSpacingX Spacing between the detector points on the X-axis, in unit lengths. Assumed to be constant throughout the entire detector plate.
 	 *  @param _fDetectorSpacingY Spacing between the detector points on the Y-axis, in unit lengths. Assumed to be constant throughout the entire detector plate.
-	 *  @param _pfProjectionAngles Pointer to an array of projection angles. The angles will be copied from this array. All angles 
-	 *                             are represented in radians and lie in the [0,2pi[ interval.
+	 *  @param _pfProjectionAngles Vector of projection angles. All angles are represented in radians.
 	 */
 	bool _initialize(int _iProjectionAngleCount,
 	                 int _iDetectorRowCount,
@@ -153,12 +146,8 @@ public:
 
 	/** Destructor 
 	 */
-	virtual ~CProjectionGeometry3D();
+	virtual ~CProjectionGeometry3D()=default;
 	
-	/** Clear all member variables, setting all numeric variables to 0 and all pointers to NULL. 
-	 */
-	virtual void clear();
-
 	/** Create a hard copy. 
 	*/
 	virtual CProjectionGeometry3D* clone() const = 0;
@@ -170,15 +159,13 @@ public:
 	 */
 	virtual bool initialize(const Config& _cfg);
 
-    /** Get the initialization state of the object.
+	/** Get the initialization state of the object.
 	 *
 	 * @return true iff the object has been initialized
 	 */
 	bool isInitialized() const;
 
-    /** Return true if this geometry instance is the same as the one specified.
-	 *
-	 * @return true if this geometry instance is the same as the one specified.
+	/** Return true if this geometry instance is the same as the one specified.
 	 */
 	virtual bool isEqual(const CProjectionGeometry3D *) const = 0;
 
@@ -344,7 +331,7 @@ public:
 	 * @param _sType geometry type to compare to.
 	 * @return true if the type of geometry defined in this class is the one specified in _sType. 
 	 */
-	 virtual bool isOfType(const std::string& _sType) const = 0;
+	virtual bool isOfType(const std::string& _sType) const = 0;
 
 	//< For Config unused argument checking
 	ConfigCheckData* configCheckData;

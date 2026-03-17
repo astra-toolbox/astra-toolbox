@@ -59,7 +59,7 @@ class _AstraExport CParallelVecProjectionGeometry2D : public CProjectionGeometry
 {
 protected:
 
-	SParProjection *m_pProjectionAngles;
+	std::vector<SParProjection> m_pProjectionAngles;
 
 public:
 
@@ -72,41 +72,29 @@ public:
 	 *
 	 * @param _iProjectionAngleCount Number of projection angles.
 	 * @param _iDetectorCount Number of detectors, i.e., the number of detector measurements for each projection angle.
-	 * @param _pfProjectionAngles Pointer to an array of projection angles. The angles will be copied from this array. 
+	 * @param _pfProjectionAngles Vector of projection vectors.
 	 */
-	CParallelVecProjectionGeometry2D(int _iProjectionAngleCount, 
-	                                int _iDetectorCount, 
-	                                const SParProjection* _pfProjectionAngles);
-
-	/** Copy constructor. 
-	 */
-	CParallelVecProjectionGeometry2D(const CParallelVecProjectionGeometry2D& _projGeom);
-
-	/** Assignment operator.
-	 */
-	CParallelVecProjectionGeometry2D& operator=(const CParallelVecProjectionGeometry2D& _other);
-
-	/** Destructor.
-	 */
-	virtual ~CParallelVecProjectionGeometry2D();
+	CParallelVecProjectionGeometry2D(int _iProjectionAngleCount,
+	                                 int _iDetectorCount,
+	                                 std::vector<SParProjection>&& _pfProjectionAngles);
 
 	/** Initialize the geometry with a config object.
 	 *
 	 * @param _cfg Configuration Object
 	 * @return initialization successful?
 	 */
-	virtual bool initialize(const Config& _cfg);
+	virtual bool initialize(const Config& _cfg) override;
 
 	/** Initialization. This function MUST be called after using the default constructor and MAY be called to 
 	 * reset a previously initialized object.
 	 *
 	 * @param _iProjectionAngleCount Number of projection angles.
 	 * @param _iDetectorCount Number of detectors, i.e., the number of detector measurements for each projection angle.
-	 * @param _pfProjectionAngles Pointer to an array of projection angles. The angles will be copied from this array.
+	 * @param _pfProjectionAngles Vector of projection vectors.
 	 */
 	bool initialize(int _iProjectionAngleCount, 
 	                int _iDetectorCount, 
-	                const SParProjection* _pfProjectionAngles);
+	                std::vector<SParProjection>&& _pfProjectionAngles);
 
 	virtual bool _check();
 
@@ -115,15 +103,10 @@ public:
 	virtual CProjectionGeometry2D* clone() const override;
 
 	/** Returns true if the type of geometry defined in this class is the one specified in _sType.
-	 *
-	 * @param _sType geometry type to compare to.
-	 * @return true if _sType == "fanflat_vec".
 	 */
-	 virtual bool isOfType(const std::string& _sType);
+	virtual bool isOfType(const std::string& _sType) const override { return _sType == "parallel_vec"; }
 
-    /** Return true if this geometry instance is the same as the one specified.
-	 *
-	 * @return true if this geometry instance is the same as the one specified.
+	/** Return true if this geometry instance is the same as the one specified.
 	 */
 	virtual bool isEqual(const CProjectionGeometry2D &) const override;
 
@@ -131,12 +114,17 @@ public:
 	 *
 	 * @return Configuration Object.
 	 */
-	virtual Config* getConfiguration() const;
+	virtual Config* getConfiguration() const override;
 
-	const SParProjection* getProjectionVectors() const { return m_pProjectionAngles; }
+	const SParProjection* getProjectionVectors() const { return &m_pProjectionAngles[0]; }
 
 protected:
-	virtual bool initializeAngles(const Config& _cfg);
+	virtual bool initializeAngles(const Config& _cfg) override;
+
+private:
+	// Private default copy constructor for use by clone()
+	CParallelVecProjectionGeometry2D(const CParallelVecProjectionGeometry2D& _projGeom)=default;
+
 };
 
 } // namespace astra

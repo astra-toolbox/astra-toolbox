@@ -43,16 +43,15 @@ using namespace astra;
 // default constructor
 CParallelBeamLineKernelProjector2D::CParallelBeamLineKernelProjector2D()
 {
-	_clear();
+
 }
 
 //----------------------------------------------------------------------------------------
 // constructor
 CParallelBeamLineKernelProjector2D::CParallelBeamLineKernelProjector2D(const CParallelProjectionGeometry2D &_pProjectionGeometry,
-																	   const CVolumeGeometry2D &_pReconstructionGeometry)
+                                                                       const CVolumeGeometry2D &_pReconstructionGeometry)
 
 {
-	_clear();
 	initialize(_pProjectionGeometry, _pReconstructionGeometry);
 }
 
@@ -60,23 +59,7 @@ CParallelBeamLineKernelProjector2D::CParallelBeamLineKernelProjector2D(const CPa
 // destructor
 CParallelBeamLineKernelProjector2D::~CParallelBeamLineKernelProjector2D()
 {
-	clear();
-}
 
-//---------------------------------------------------------------------------------------
-// Clear - Constructors
-void CParallelBeamLineKernelProjector2D::_clear()
-{
-	CProjector2D::_clear();
-	m_bIsInitialized = false;
-}
-
-//---------------------------------------------------------------------------------------
-// Clear - Public
-void CParallelBeamLineKernelProjector2D::clear()
-{
-	CProjector2D::clear();
-	m_bIsInitialized = false;
 }
 
 //---------------------------------------------------------------------------------------
@@ -98,10 +81,7 @@ bool CParallelBeamLineKernelProjector2D::_check()
 // Initialize, use a Config object
 bool CParallelBeamLineKernelProjector2D::initialize(const Config& _cfg)
 {
-	// if already initialized, clear first
-	if (m_bIsInitialized) {
-		clear();
-	}
+	assert(!m_bIsInitialized);
 
 	// initialization of parent class
 	if (!CProjector2D::initialize(_cfg)) {
@@ -116,12 +96,9 @@ bool CParallelBeamLineKernelProjector2D::initialize(const Config& _cfg)
 //---------------------------------------------------------------------------------------
 // Initialize
 bool CParallelBeamLineKernelProjector2D::initialize(const CParallelProjectionGeometry2D &_pProjectionGeometry,
-													const CVolumeGeometry2D &_pVolumeGeometry)
+                                                    const CVolumeGeometry2D &_pVolumeGeometry)
 {
-	// if already initialized, clear first
-	if (m_bIsInitialized) {
-		clear();
-	}
+	assert(!m_bIsInitialized);
 
 	// hardcopy geometries
 	m_pProjectionGeometry = _pProjectionGeometry.clone();

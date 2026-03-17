@@ -101,23 +101,14 @@ public:
 							  float32 _fOriginSourceDistance,
 							  float32 _fOriginDetectorDistance);
 
-	/** Copy constructor. 
-	 */
-	CConeProjectionGeometry3D(const CConeProjectionGeometry3D& _projGeom);
-
-	/** Destructor.
-	 */
-	~CConeProjectionGeometry3D();
-
 	/** Initialize the geometry with a config object.
 	 *
 	 * @param _cfg Configuration Object
 	 * @return initialization successful?
 	 */
-	virtual bool initialize(const Config& _cfg);
+	virtual bool initialize(const Config& _cfg) override;
 
-	/** Initialize the geometry. If the object has been initialized before, the object is reinitialized 
-	 * and memory is freed and reallocated if necessary.
+	/** Initialize the geometry.
 	 *
 	 *  @param _iProjectionAngleCount Number of projection angles.
 	 *  @param _iDetectorRowCount Number of rows of detectors.
@@ -139,26 +130,21 @@ public:
 
 	/** Create a hard copy. 
 	*/
-	virtual CProjectionGeometry3D* clone() const;
+	virtual CProjectionGeometry3D* clone() const override;
 
 	/** Return true if this geometry instance is the same as the one specified.
-	 *
-	 * @return true if this geometry instance is the same as the one specified.
 	 */
-	virtual bool isEqual(const CProjectionGeometry3D*) const;
+	virtual bool isEqual(const CProjectionGeometry3D*) const override;
 
 	/** Get all settings in a Config object.
 	 *
 	 * @return Configuration Object.
 	 */
-	virtual Config* getConfiguration() const;
+	virtual Config* getConfiguration() const override;
 
 	/** Returns true if the type of geometry defined in this class is the one specified in _sType.
-	 *
-	 * @param _sType geometry type to compare to.
-	 * @return true if _sType == "cone".
 	 */
-	virtual bool isOfType(const std::string& _sType) const;
+	virtual bool isOfType(const std::string& _sType) const override { return _sType == "cone"; }
 
 	/** Returns the distance from the origin of the coordinate system to the source.
 	 *
@@ -182,7 +168,12 @@ public:
 
 	virtual void projectPoint(double fX, double fY, double fZ,
 	                          int iAngleIndex,
-	                          double &fU, double &fV) const;
+	                          double &fU, double &fV) const override;
+
+private:
+	// Private default copy constructor for use by clone()
+	CConeProjectionGeometry3D(const CConeProjectionGeometry3D& _projGeom)=default;
+
 
 };
 

@@ -37,47 +37,34 @@ namespace astra {
 //----------------------------------------------------------------------------------------
 // Constructor
 CReconstructionAlgorithm2D::CReconstructionAlgorithm2D() 
+	: m_pProjector(nullptr),
+	  m_pSinogram(nullptr),
+	  m_pReconstruction(nullptr),
+	  m_bUseMinConstraint(false),
+	  m_fMinValue(0.0f),
+	  m_bUseMaxConstraint(false),
+	  m_fMaxValue(0.0f),
+	  m_pReconstructionMask(nullptr),
+	  m_bUseReconstructionMask(false),
+	  m_pSinogramMask(nullptr),
+	  m_bUseSinogramMask(false)
 {
-	_clear();
+
 }
 
 //----------------------------------------------------------------------------------------
 // Destructor
 CReconstructionAlgorithm2D::~CReconstructionAlgorithm2D() 
 {
-	clear();
-}
 
-//---------------------------------------------------------------------------------------
-// Clear - Constructors
-void CReconstructionAlgorithm2D::_clear()
-{
-	m_pProjector = NULL;
-	m_pSinogram = NULL;
-	m_pReconstruction = NULL;
-	m_bUseMinConstraint = false;
-	m_fMinValue = 0.0f;
-	m_bUseMaxConstraint = false;
-	m_fMaxValue = 0.0f;
-	m_bUseReconstructionMask = false;
-	m_pReconstructionMask = NULL;
-	m_bUseSinogramMask = false;
-	m_pSinogramMask = NULL;
-	m_bIsInitialized = false;
-}
-
-//---------------------------------------------------------------------------------------
-// Clear - Public
-void CReconstructionAlgorithm2D::clear()
-{
-	// Nothing to delete, so just _clear()
-	_clear();
 }
 
 //---------------------------------------------------------------------------------------
 // Initialize - Config
 bool CReconstructionAlgorithm2D::initialize(const Config& _cfg)
 {
+	assert(!m_bIsInitialized);
+
 	ConfigReader<CAlgorithm> CR("ReconstructionAlgorithm2D", this, _cfg);
 
 	bool ok = true;
@@ -147,9 +134,11 @@ bool CReconstructionAlgorithm2D::initialize(const Config& _cfg)
 //----------------------------------------------------------------------------------------
 // Initialize - C++
 bool CReconstructionAlgorithm2D::initialize(CProjector2D* _pProjector, 
-							   CFloat32ProjectionData2D* _pSinogram, 
-							   CFloat32VolumeData2D* _pReconstruction)
+                                            CFloat32ProjectionData2D* _pSinogram, 
+                                            CFloat32VolumeData2D* _pReconstruction)
 {
+	assert(!m_bIsInitialized);
+
 	m_pProjector = _pProjector;
 	m_pSinogram = _pSinogram;
 	m_pReconstruction = _pReconstruction;

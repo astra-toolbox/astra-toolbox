@@ -60,13 +60,6 @@ CCylConeVecProjectionGeometry3D::CCylConeVecProjectionGeometry3D(int _iProjectio
 	           std::move(_pProjectionAngles));
 }
 
-//----------------------------------------------------------------------------------------
-// Destructor.
-CCylConeVecProjectionGeometry3D::~CCylConeVecProjectionGeometry3D()
-{
-
-}
-
 //---------------------------------------------------------------------------------------
 // Initialize - Config
 bool CCylConeVecProjectionGeometry3D::initialize(const Config& _cfg)
@@ -141,15 +134,7 @@ bool CCylConeVecProjectionGeometry3D::initialize(int _iProjectionAngleCount,
 // Clone
 CProjectionGeometry3D* CCylConeVecProjectionGeometry3D::clone() const
 {
-	CCylConeVecProjectionGeometry3D* res = new CCylConeVecProjectionGeometry3D();
-	res->m_bInitialized				= m_bInitialized;
-	res->m_iProjectionAngleCount	= m_iProjectionAngleCount;
-	res->m_iDetectorRowCount		= m_iDetectorRowCount;
-	res->m_iDetectorColCount		= m_iDetectorColCount;
-	res->m_fDetectorSpacingX		= m_fDetectorSpacingX;
-	res->m_fDetectorSpacingY		= m_fDetectorSpacingY;
-	res->m_ProjectionAngles		= m_ProjectionAngles;
-	return res;
+	return new CCylConeVecProjectionGeometry3D(*this);
 }
 
 //----------------------------------------------------------------------------------------
@@ -177,13 +162,6 @@ bool CCylConeVecProjectionGeometry3D::isEqual(const CProjectionGeometry3D * _pGe
 	}
 
 	return true;
-}
-
-//----------------------------------------------------------------------------------------
-// is of type
-bool CCylConeVecProjectionGeometry3D::isOfType(const std::string& _sType) const
-{
-	 return (_sType == "cyl_cone_vec");
 }
 
 //----------------------------------------------------------------------------------------

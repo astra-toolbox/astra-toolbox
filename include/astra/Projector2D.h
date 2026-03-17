@@ -72,9 +72,9 @@ protected:
 	 */
 	CProjector2D(const CProjectionGeometry2D &_pProjectionGeometry, const CVolumeGeometry2D &_pVolumeGeometry);
 
-	/** Initial clearing. Only to be used by constructors.
-	 */
-	virtual void _clear();
+	// Delete copy ctor/operator to prevent copying Projector2D objects
+	CProjector2D(const CProjector2D&)=delete;
+	CProjector2D& operator=(const CProjector2D&)=delete;
 
 	/** Check the values of this object.  If everything is ok, the object can be set to the initialized state.
 	 * The following statements are then guaranteed to hold:
@@ -88,10 +88,6 @@ public:
 	/** Destructor.
 	 */
 	virtual ~CProjector2D();
-
-	/** Clear this class.
-	 */
-	virtual void clear();
 
 	/** Initialize the projector with a config object.
 	 * This function does not set m_bInitialized to true.

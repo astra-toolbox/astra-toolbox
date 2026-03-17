@@ -165,23 +165,12 @@ public:
 					  float32 _fWindowMaxY,
 					  float32 _fWindowMaxZ);
 
-	/**
-	 * Copy constructor
-	 */
-	CVolumeGeometry3D(const CVolumeGeometry3D& _other);
-
-	/**
-	 * Assignment operator
-	 */
-	CVolumeGeometry3D& operator=(const CVolumeGeometry3D& _other);
+	// Delete copy operator to prevent copying VolumeGeometry3D objects
+	CVolumeGeometry3D& operator=(const CVolumeGeometry3D&)=delete;
 
 	/** Destructor.
 	 */
 	virtual ~CVolumeGeometry3D();
-
-	/** Clear all member variables, setting all numeric variables to 0 and all pointers to NULL. 
-	*/
-	void clear();
 
 	/** Create a hard copy. 
 	*/
@@ -197,9 +186,6 @@ public:
 	/** Initialization. Initializes an instance of the CVolumeGeometry3D class.
 	 * The minimal and maximal coordinates of the geometry will be set to -/+ half the number of rows/columns/slices.
 	 *
-	 * If the object has been initialized before, the object is reinitialized and 
-	 * memory is freed and reallocated if necessary.
-	 *
 	 * @param _iGridColCount Number of columns in the volume grid.
 	 * @param _iGridRowCount Number of rows in the volume grid.
 	 * @param _iGridSliceCount Number of slices in the volume grid.
@@ -208,9 +194,6 @@ public:
 	bool initialize(int _iGridColCount, int _iGridRowCount, int _iGridSliceCount);
 
 	/** Initialization. Initializes an instance of the CVolumeGeometry3D class.
-	 *
-	 * If the object has been initialized before, the object is reinitialized and 
-	 * memory is freed and reallocated if necessary.
 	 *
 	 * @param _iGridColCount Number of columns in the volume grid.
 	 * @param _iGridRowCount Number of rows in the volume grid.
@@ -494,6 +477,9 @@ private:
 	//< For Config unused argument checking
 	ConfigCheckData* configCheckData;
 	friend class ConfigReader<CVolumeGeometry3D>;
+
+	// Private default copy constructor for use by clone()
+	CVolumeGeometry3D(const CVolumeGeometry3D&)=default;
 };
 
 

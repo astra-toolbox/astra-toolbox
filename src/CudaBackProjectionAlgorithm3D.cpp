@@ -46,21 +46,19 @@ namespace astra {
 
 //----------------------------------------------------------------------------------------
 // Constructor
-CCudaBackProjectionAlgorithm3D::CCudaBackProjectionAlgorithm3D() 
+CCudaBackProjectionAlgorithm3D::CCudaBackProjectionAlgorithm3D()
+	: m_iGPUIndex(-1), m_iVoxelSuperSampling(1), m_bSIRTWeighting(false)
 {
-	m_bIsInitialized = false;
-	m_iGPUIndex = -1;
-	m_iVoxelSuperSampling = 1;
-	m_bSIRTWeighting = false;
+
 }
 
 //----------------------------------------------------------------------------------------
 // Constructor with initialization
 CCudaBackProjectionAlgorithm3D::CCudaBackProjectionAlgorithm3D(CProjector3D* _pProjector, 
-								   CFloat32ProjectionData3D* _pProjectionData, 
-								   CFloat32VolumeData3D* _pReconstruction)
+                                                               CFloat32ProjectionData3D* _pProjectionData, 
+                                                               CFloat32VolumeData3D* _pReconstruction)
+	: CCudaBackProjectionAlgorithm3D()
 {
-	_clear();
 	initialize(_pProjector, _pProjectionData, _pReconstruction);
 }
 
@@ -68,7 +66,7 @@ CCudaBackProjectionAlgorithm3D::CCudaBackProjectionAlgorithm3D(CProjector3D* _pP
 // Destructor
 CCudaBackProjectionAlgorithm3D::~CCudaBackProjectionAlgorithm3D() 
 {
-	CReconstructionAlgorithm3D::_clear();
+
 }
 
 
@@ -105,12 +103,9 @@ void CCudaBackProjectionAlgorithm3D::initializeFromProjector()
 // Initialize - Config
 bool CCudaBackProjectionAlgorithm3D::initialize(const Config& _cfg)
 {
-	ConfigReader<CAlgorithm> CR("CudaBackProjectionAlgorithm3D", this, _cfg);
+	assert(!m_bIsInitialized);
 
-	// if already initialized, clear first
-	if (m_bIsInitialized) {
-		clear();
-	}
+	ConfigReader<CAlgorithm> CR("CudaBackProjectionAlgorithm3D", this, _cfg);
 
 	// initialization of parent class
 	if (!CReconstructionAlgorithm3D::initialize(_cfg)) {
@@ -144,10 +139,7 @@ bool CCudaBackProjectionAlgorithm3D::initialize(CProjector3D* _pProjector,
 								  CFloat32ProjectionData3D* _pSinogram, 
 								  CFloat32VolumeData3D* _pReconstruction)
 {
-	// if already initialized, clear first
-	if (m_bIsInitialized) {
-		clear();
-	}
+	assert(!m_bIsInitialized);
 
 	// required classes
 	m_pProjector = _pProjector;

@@ -81,36 +81,23 @@ public:
 	 * @param _iProjectionAngleCount Number of projection angles.
 	 * @param _iDetectorCount Number of detectors, i.e., the number of detector measurements for each projection angle.
 	 * @param _fDetectorWidth Width of a detector cell, in unit lengths. All detector cells are assumed to have equal width.
-	 * @param _pfProjectionAngles Pointer to an array of projection angles. The angles will be copied from this array. 
-	 *		  All angles are represented in radians.
+	 * @param _pfProjectionAngles Vector of projection angles. All angles are represented in radians.
 	 * @param _fOriginSourceDistance Distance from the origin of the coordinate system to the source
 	 * @param _fOriginDetectorDistance Distance from the origin of the coordinate system to the detector
 	 */
-	CFanFlatProjectionGeometry2D(int _iProjectionAngleCount, 
-								 int _iDetectorCount, 
-								 float32 _fDetectorWidth, 
-								 const float32* _pfProjectionAngles,
-								 float32 _fOriginSourceDistance, 
-								 float32 _fOriginDetectorDistance);
-
-	/** Copy constructor. 
-	 */
-	CFanFlatProjectionGeometry2D(const CFanFlatProjectionGeometry2D& _projGeom);
-
-	/** Assignment operator.
-	 */
-	CFanFlatProjectionGeometry2D& operator=(const CFanFlatProjectionGeometry2D& _other);
-
-	/** Destructor.
-	 */
-	virtual ~CFanFlatProjectionGeometry2D();
+	CFanFlatProjectionGeometry2D(int _iProjectionAngleCount,
+	                             int _iDetectorCount,
+	                             float32 _fDetectorWidth,
+	                             std::vector<float32>&& _pfProjectionAngles,
+	                             float32 _fOriginSourceDistance,
+	                             float32 _fOriginDetectorDistance);
 
 	/** Initialize the geometry with a config object.
 	 *
 	 * @param _cfg Configuration Object
 	 * @return initialization successful?
 	 */
-	virtual bool initialize(const Config& _cfg);
+	virtual bool initialize(const Config& _cfg) override;
 
 	/** Initialization. This function MUST be called after using the default constructor and MAY be called to 
 	 * reset a previously initialized object.
@@ -118,63 +105,62 @@ public:
 	 * @param _iProjectionAngleCount Number of projection angles.
 	 * @param _iDetectorCount Number of detectors, i.e., the number of detector measurements for each projection angle.
 	 * @param _fDetectorWidth Width of a detector cell, in unit lengths. All detector cells are assumed to have equal width.
-	 * @param _pfProjectionAngles Pointer to an array of projection angles. The angles will be copied from this array.
+	 * @param _pfProjectionAngles Vector of projection angles. All angles are represented in radians.
 	 * @param _fOriginSourceDistance Distance from the origin of the coordinate system to the source
 	 * @param _fOriginDetectorDistance Distance from the origin of the coordinate system to the detector
 	 */
-	bool initialize(int _iProjectionAngleCount, 
-					int _iDetectorCount, 
-					float32 _fDetectorWidth, 
-					const float32* _pfProjectionAngles,
-					float32 _fOriginSourceDistance, 
-					float32 _fOriginDetectorDistance);
+	bool initialize(int _iProjectionAngleCount,
+	                int _iDetectorCount,
+	                float32 _fDetectorWidth,
+	                std::vector<float32>&& _pfProjectionAngles,
+	                float32 _fOriginSourceDistance,
+	                float32 _fOriginDetectorDistance);
 
 	/** Create a hard copy. 
 	*/
 	virtual CProjectionGeometry2D* clone() const override;
 
 	/** Returns true if the type of geometry defined in this class is the one specified in _sType.
-	 *
-	 * @param _sType geometry type to compare to.
-	 * @return true if _sType == "fanflat".
 	 */
-	 virtual bool isOfType(const std::string& _sType);
+	virtual bool isOfType(const std::string& _sType) const override { return _sType == "fanflat"; }
 
 	/** Get all settings in a Config object.
 	 *
 	 * @return Configuration Object.
 	 */
-	virtual Config* getConfiguration() const;
+	virtual Config* getConfiguration() const override;
 
-    /** Return true if this geometry instance is the same as the one specified.
-	 *
-	 * @return true if this geometry instance is the same as the one specified.
+	/** Return true if this geometry instance is the same as the one specified.
 	 */
 	virtual bool isEqual(const CProjectionGeometry2D &) const override;
 
 	/** Returns the distance from the origin of the coordinate system to the source.
-     *
-     * @return Distance from the origin of the coordinate system to the source
-     */
+	 *
+	 * @return Distance from the origin of the coordinate system to the source
+	 */
 	float32 getOriginSourceDistance() const;
 	
 	/** Returns the distance from the origin of the coordinate system to the detector 
 	 * (i.e., the distance between the origin and its orthogonal projection onto the detector array).
-     *
-     * @return Distance from the origin of the coordinate system to the detector
-     */
+	 *
+	 * @return Distance from the origin of the coordinate system to the detector
+	 */
 	float32 getOriginDetectorDistance() const;
 
 	/** Returns the distance from the source to the detector
 	 * (i.e., the distance between the source and its orthogonal projection onto the detector array).
-     *
-     * @return Distance from the source to the detector
-     */
+	 *
+	 * @return Distance from the source to the detector
+	 */
 	float32 getSourceDetectorDistance() const;
 
 	/** Create a vector geom
 	*/
 	CFanFlatVecProjectionGeometry2D* toVectorGeometry();	
+
+private:
+	// Private default copy constructor for use by clone()
+	CFanFlatProjectionGeometry2D(const CFanFlatProjectionGeometry2D&)=default;
 };
 
 

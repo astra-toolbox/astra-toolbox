@@ -40,17 +40,25 @@ namespace astra {
 //----------------------------------------------------------------------------------------
 // Constructor
 CCglsAlgorithm::CCglsAlgorithm() 
+	: r(nullptr),
+	  w(nullptr),
+	  z(nullptr),
+	  p(nullptr),
+	  alpha(0.0f),
+	  beta(0.0f),
+	  gamma(0.0f),
+	  m_iIteration(0)
 {
-	_clear();
+
 }
 
 //---------------------------------------------------------------------------------------
 // Initialize - C++
 CCglsAlgorithm::CCglsAlgorithm(CProjector2D* _pProjector, 
-							   CFloat32ProjectionData2D* _pSinogram, 
-							   CFloat32VolumeData2D* _pReconstruction)
+                               CFloat32ProjectionData2D* _pSinogram,
+                               CFloat32VolumeData2D* _pReconstruction)
+	: CCglsAlgorithm()
 {
-	_clear();
 	initialize(_pProjector, _pSinogram, _pReconstruction);
 }
 
@@ -58,39 +66,10 @@ CCglsAlgorithm::CCglsAlgorithm(CProjector2D* _pProjector,
 // Destructor
 CCglsAlgorithm::~CCglsAlgorithm() 
 {
-	clear();
-}
-
-//---------------------------------------------------------------------------------------
-// Clear - Constructors
-void CCglsAlgorithm::_clear()
-{
-	CReconstructionAlgorithm2D::_clear();
-	r = NULL;
-	w = NULL;
-	z = NULL;
-	p = NULL;
-	alpha = 0.0f;
-	beta = 0.0f;
-	gamma = 0.0f;
-	m_iIteration = 0;
-	m_bIsInitialized = false;
-}
-
-//---------------------------------------------------------------------------------------
-// Clear - Public
-void CCglsAlgorithm::clear()
-{
-	CReconstructionAlgorithm2D::_clear();
-	ASTRA_DELETE(r);
-	ASTRA_DELETE(w);
-	ASTRA_DELETE(z);
-	ASTRA_DELETE(p);
-	alpha = 0.0f;
-	beta = 0.0f;
-	gamma = 0.0f;
-	m_iIteration = 0;
-	m_bIsInitialized = false;
+	delete r;
+	delete w;
+	delete z;
+	delete p;
 }
 
 //----------------------------------------------------------------------------------------
@@ -107,12 +86,9 @@ bool CCglsAlgorithm::_check()
 // Initialize - Config
 bool CCglsAlgorithm::initialize(const Config& _cfg)
 {
-	ConfigReader<CAlgorithm> CR("CglsAlgorithm", this, _cfg);
+	assert(!m_bIsInitialized);
 
-	// if already initialized, clear first
-	if (m_bIsInitialized) {
-		clear();
-	}
+	ConfigReader<CAlgorithm> CR("CglsAlgorithm", this, _cfg);
 
 	// initialization of parent class
 	if (!CReconstructionAlgorithm2D::initialize(_cfg)) {
@@ -137,13 +113,10 @@ bool CCglsAlgorithm::initialize(const Config& _cfg)
 //---------------------------------------------------------------------------------------
 // Initialize - C++
 bool CCglsAlgorithm::initialize(CProjector2D* _pProjector, 
-								CFloat32ProjectionData2D* _pSinogram, 
-								CFloat32VolumeData2D* _pReconstruction)
+                                CFloat32ProjectionData2D* _pSinogram, 
+                                CFloat32VolumeData2D* _pReconstruction)
 {
-	// if already initialized, clear first
-	if (m_bIsInitialized) {
-		clear();
-	}
+	assert(!m_bIsInitialized);
 
 	// required classes
 	m_pProjector = _pProjector;

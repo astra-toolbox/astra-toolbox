@@ -48,6 +48,10 @@ public:
 	 */
 	virtual ~CAlgorithm();
 
+	// Delete copy ctor/operator to prevent copying Algorithm objects
+	CAlgorithm(const CAlgorithm&)=delete;
+	CAlgorithm& operator=(const CAlgorithm&)=delete;
+
 	/** Initialize the algorithm with a config object.
 	 *
 	 * @param _cfg Configuration Object
@@ -71,7 +75,7 @@ public:
 	 *
 	 * @return description string
 	 */
-	virtual std::string description() const;
+	virtual std::string description() const = 0;
 
 	/** Set the GPU Index to run on.
 	 * TODO: Move this from CAlgorithm to a Context-like class
@@ -84,16 +88,6 @@ protected:
 	bool m_bIsInitialized;
 
 private:
-	/**
-	 * Private copy constructor to prevent CAlgorithms from being copied.
-	 */
-	CAlgorithm(const CAlgorithm&);
-
-	/**
-	 * Private assignment operator to prevent CAlgorithms from being copied.
-	 */
-	CAlgorithm& operator=(const CAlgorithm&);
-
 	//< For Config unused argument checking
 	ConfigCheckData* configCheckData;
 	friend class ConfigReader<CAlgorithm>;
@@ -101,7 +95,6 @@ private:
 };
 
 // inline functions
-inline std::string CAlgorithm::description() const { return "Algorithm"; };
 inline bool CAlgorithm::isInitialized() const { return m_bIsInitialized; }
 
 } // end namespace

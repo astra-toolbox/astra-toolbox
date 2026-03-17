@@ -59,58 +59,47 @@ bool CVolumeGeometry2D::_check()
 }
 
 //----------------------------------------------------------------------------------------
-// Clear all member variables, setting all numeric variables to 0 and all pointers to NULL. 
-void CVolumeGeometry2D::clear()
-{
-	m_iGridColCount = 0;
-	m_iGridRowCount = 0;
-	m_iGridTotCount = 0;
-
-	m_fWindowLengthX = 0.0f;
-	m_fWindowLengthY = 0.0f;
-	m_fWindowArea = 0.0f;
-
-	m_fPixelLengthX = 0.0f;
-	m_fPixelLengthY = 0.0f;
-	m_fPixelArea = 0.0f;
-
-	m_fDivPixelLengthX = 0.0f;  
-	m_fDivPixelLengthY = 0.0f;
-
-	m_fWindowMinX = 0.0f;
-	m_fWindowMinY = 0.0f;
-	m_fWindowMaxX = 0.0f;
-	m_fWindowMaxY = 0.0f;
-
-	m_bInitialized = false;
-}
-	
-//----------------------------------------------------------------------------------------
 // Default constructor.
-CVolumeGeometry2D::CVolumeGeometry2D() : configCheckData(0)
+CVolumeGeometry2D::CVolumeGeometry2D()
+	: m_bInitialized(false),
+	  m_iGridColCount(0),
+	  m_iGridRowCount(0),
+	  m_iGridTotCount(0),
+	  m_fWindowLengthX(0.0f),
+	  m_fWindowLengthY(0.0f),
+	  m_fWindowArea(0.0f),
+	  m_fPixelLengthX(0.0f),
+	  m_fPixelLengthY(0.0f),
+	  m_fPixelArea(0.0f),
+	  m_fDivPixelLengthX(0.0f),
+	  m_fDivPixelLengthY(0.0f),
+	  m_fWindowMinX(0.0f),
+	  m_fWindowMinY(0.0f),
+	  m_fWindowMaxX(0.0f),
+	  m_fWindowMaxY(0.0f),
+	  configCheckData(nullptr)
 {
-	clear();
+
 }
 
 //----------------------------------------------------------------------------------------
 // Default constructor
 CVolumeGeometry2D::CVolumeGeometry2D(int _iGridColCount, int _iGridRowCount)
- : configCheckData(0)
+	: CVolumeGeometry2D()
 {
-	clear();
 	initialize(_iGridColCount, _iGridRowCount);
 }
 
 //----------------------------------------------------------------------------------------
 // Constructor.
-CVolumeGeometry2D::CVolumeGeometry2D(int _iGridColCount, 
-									 int _iGridRowCount, 
-									 float32 _fWindowMinX, 
-									 float32 _fWindowMinY, 
-									 float32 _fWindowMaxX, 
-									 float32 _fWindowMaxY)
+CVolumeGeometry2D::CVolumeGeometry2D(int _iGridColCount,
+                                     int _iGridRowCount,
+                                     float32 _fWindowMinX,
+                                     float32 _fWindowMinY,
+                                     float32 _fWindowMaxX,
+                                     float32 _fWindowMaxY)
+	: CVolumeGeometry2D()
 {
-	clear();
 	initialize(_iGridColCount, 
 			   _iGridRowCount, 
 			   _fWindowMinX, 
@@ -123,46 +112,24 @@ CVolumeGeometry2D::CVolumeGeometry2D(int _iGridColCount,
 // Destructor.
 CVolumeGeometry2D::~CVolumeGeometry2D()
 {
-	if (m_bInitialized) {
-		clear();
-	}
+
 }
 
 //----------------------------------------------------------------------------------------
 // Clone
 CVolumeGeometry2D* CVolumeGeometry2D::clone() const
 {
-	CVolumeGeometry2D* res = new CVolumeGeometry2D();
-	res->m_bInitialized		= m_bInitialized;
-	res->m_iGridColCount	= m_iGridColCount;
-	res->m_iGridRowCount	= m_iGridRowCount;
-	res->m_iGridTotCount	= m_iGridTotCount;
-	res->m_fWindowLengthX	= m_fWindowLengthX;
-	res->m_fWindowLengthY	= m_fWindowLengthY;
-	res->m_fWindowArea		= m_fWindowArea;
-	res->m_fPixelLengthX	= m_fPixelLengthX;
-	res->m_fPixelLengthY	= m_fPixelLengthY;
-	res->m_fPixelArea		= m_fPixelArea;
-	res->m_fDivPixelLengthX = m_fDivPixelLengthX;
-	res->m_fDivPixelLengthY = m_fDivPixelLengthY;
-	res->m_fWindowMinX		= m_fWindowMinX;
-	res->m_fWindowMinY		= m_fWindowMinY;
-	res->m_fWindowMaxX		= m_fWindowMaxX;
-	res->m_fWindowMaxY		= m_fWindowMaxY;
-	return res;
+	return new CVolumeGeometry2D(*this);
 }
 
 //----------------------------------------------------------------------------------------
 // Initialization witha Config object
 bool CVolumeGeometry2D::initialize(const Config& _cfg)
 {
+	assert(!m_bInitialized);
+
 	ConfigReader<CVolumeGeometry2D> CR("VolumeGeometry2D", this, _cfg);
 	
-	// uninitialize if the object was initialized before
-	if (m_bInitialized)	{
-		clear();
-	}
-
 	bool ok = true;
 
 	// Required: number of voxels
@@ -189,6 +156,8 @@ bool CVolumeGeometry2D::initialize(const Config& _cfg)
 // Initialization.
 bool CVolumeGeometry2D::initialize(int _iGridColCount, int _iGridRowCount)
 {
+	assert(!m_bInitialized);
+
 	return initialize(_iGridColCount, 
 					  _iGridRowCount, 
 					  -_iGridColCount/2.0f,
@@ -199,16 +168,14 @@ bool CVolumeGeometry2D::initialize(int _iGridColCount, int _iGridRowCount)
 
 //----------------------------------------------------------------------------------------
 // Initialization.
-bool CVolumeGeometry2D::initialize(int _iGridColCount, 
-								   int _iGridRowCount, 
-								   float32 _fWindowMinX, 
-								   float32 _fWindowMinY, 
-								   float32 _fWindowMaxX, 
-								   float32 _fWindowMaxY)
+bool CVolumeGeometry2D::initialize(int _iGridColCount,
+                                   int _iGridRowCount,
+                                   float32 _fWindowMinX,
+                                   float32 _fWindowMinY,
+                                   float32 _fWindowMaxX,
+                                   float32 _fWindowMaxY)
 {
-	if (m_bInitialized)	{
-		clear();
-	}
+	assert(!m_bInitialized);
 
 	m_iGridColCount = _iGridColCount;
 	m_iGridRowCount = _iGridRowCount;
