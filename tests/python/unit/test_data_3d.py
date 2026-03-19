@@ -163,5 +163,5 @@ class TestAll:
 def test_shepp_logan(modified):
     geometry = astra.create_vol_geom(N_ROWS, N_COLS, N_SLICES)
     data_id, data = astra.data3d.shepp_logan(geometry, modified)
-    astra.data2d.delete(data_id)
+    astra.data3d.delete(data_id)
     assert not np.allclose(data, 0.0)

@@ -26,7 +26,10 @@ def op_tomo(dimensionality):
                                            DET_ROW_COUNT, DET_COL_COUNT, ANGLES)
         projector_id = astra.create_projector('cuda3d', proj_geom, vol_geom)
     yield astra.OpTomo(projector_id)
-    astra.projector.delete(projector_id)
+    if dimensionality == '2d':
+        astra.projector.delete(projector_id)
+    elif dimensionality == '3d':
+        astra.projector3d.delete(projector_id)
 
 
 @pytest.fixture

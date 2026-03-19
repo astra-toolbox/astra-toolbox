@@ -134,6 +134,12 @@ def make_algorithm_config(algorithm_type, proj_geom, options=None):
         algorithm_config['option'] = options
     return algorithm_config
 
+def delete_algorithm_objects(algorithm_config):
+    if algorithm_config['type'].startswith('FP'):
+        astra.data3d.delete(algorithm_config['VolumeDataId'])
+    else:
+        astra.data3d.delete(algorithm_config['ReconstructionDataId'])
+    astra.data3d.delete(algorithm_config['ProjectionDataId'])
 
 def get_algorithm_output(algorithm_config, n_iter=None):
     if n_iter is None:
@@ -145,12 +151,10 @@ def get_algorithm_output(algorithm_config, n_iter=None):
     astra.algorithm.run(algorithm_id, n_iter)
     if algorithm_config['type'].startswith('FP'):
         output = astra.data3d.get(algorithm_config['ProjectionDataId'])
-        astra.data3d.delete(algorithm_config['VolumeDataId'])
     else:
         output = astra.data3d.get(algorithm_config['ReconstructionDataId'])
-        astra.data3d.delete(algorithm_config['ReconstructionDataId'])
-    astra.data3d.delete(algorithm_config['ProjectionDataId'])
     astra.algorithm.delete(algorithm_id)
+    delete_algorithm_objects(algorithm_config)
     return output
 
 
@@ -294,4 +298,5 @@ class TestOptions:
         astra.algorithm.run(algorithm_id, 2)
         res_norm = astra.algorithm.get_res_norm(algorithm_id)
         astra.algorithm.delete(algorithm_id)
+        delete_algorithm_objects(algorithm_config)
         assert res_norm > 0.0

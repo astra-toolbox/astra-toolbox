@@ -56,7 +56,7 @@ def proj_geom(request):
 def projector(proj_geom):
     projector_id = astra.create_projector('cuda3d', proj_geom, VOL_GEOM)
     yield projector_id
-    astra.projector.delete(projector_id)
+    astra.projector3d.delete(projector_id)
 
 
 @pytest.fixture
@@ -109,6 +109,8 @@ class TestAll:
         assert all([not np.allclose(x, 0.0) for x in proj_data_iter1])
         assert all([not np.allclose(x, 0.0) for x in proj_data_iter2])
         assert all([not np.allclose(x, y) for x, y in zip(proj_data_iter1, proj_data_iter2)])
+        astra.data3d.delete(vol_ids)
+        astra.data3d.delete(proj_ids)
 
     def test_composite_BP3D(self, proj_geom, projector, proj_data, vol_buffer):
         vol_ids = [astra.data3d.create('-vol', VOL_GEOM, vol_buffer) for _ in range(2)]
@@ -120,6 +122,8 @@ class TestAll:
         assert all([not np.allclose(x, 0.0) for x in vol_data_iter1])
         assert all([not np.allclose(x, 0.0) for x in vol_data_iter2])
         assert all([not np.allclose(x, y) for x, y in zip(vol_data_iter1, vol_data_iter2)])
+        astra.data3d.delete(vol_ids)
+        astra.data3d.delete(proj_ids)
 
     def test_accumulate_FDK(self, proj_geom, projector, proj_data, vol_buffer):
         if proj_geom['type'].startswith('parallel'):
@@ -132,6 +136,8 @@ class TestAll:
         assert not np.allclose(vol_buffer, 0.0)
         assert not np.allclose(vol_buffer_iter1, 0.0)
         assert not np.allclose(vol_buffer, vol_buffer_iter1)
+        astra.data3d.delete(proj_id)
+        astra.data3d.delete(vol_id)
 
     def test_getProjectedBBox(self, proj_geom):
         minv, maxv = astra.experimental.getProjectedBBox(proj_geom, minx=0, maxx=1, miny=2, maxy=3,

@@ -38,6 +38,7 @@ def proj_geom(request):
         dummy_proj_geom = astra.create_proj_geom('parallel', DET_SPACING, DET_COUNT, ANGLES)
         dummy_proj_id = astra.create_projector('linear', dummy_proj_geom, VOL_GEOM)
         matrix_id = astra.projector.matrix(dummy_proj_id)
+        astra.projector.delete(dummy_proj_id)
         yield astra.create_proj_geom('sparse_matrix', DET_SPACING, DET_COUNT, ANGLES, matrix_id)
         astra.matrix.delete(matrix_id)
     elif geometry_type == 'short_scan':
@@ -130,6 +131,12 @@ def make_algorithm_config(algorithm_type, proj_geom, projector=None, options=Non
         algorithm_config['option'] = options
     return algorithm_config
 
+def delete_algorithm_objects(algorithm_config):
+    if algorithm_config['type'].startswith('FP'):
+        astra.data2d.delete(algorithm_config['VolumeDataId'])
+    else:
+        astra.data2d.delete(algorithm_config['ReconstructionDataId'])
+    astra.data2d.delete(algorithm_config['ProjectionDataId'])
 
 def get_algorithm_output(algorithm_config, n_iter=None):
     algorithm_id = astra.algorithm.create(algorithm_config)
@@ -145,12 +152,10 @@ def get_algorithm_output(algorithm_config, n_iter=None):
     astra.algorithm.run(algorithm_id, n_iter)
     if algorithm_config['type'].startswith('FP'):
         output = astra.data2d.get(algorithm_config['ProjectionDataId'])
-        astra.data2d.delete(algorithm_config['VolumeDataId'])
     else:
         output = astra.data2d.get(algorithm_config['ReconstructionDataId'])
-        astra.data2d.delete(algorithm_config['ReconstructionDataId'])
-    astra.data2d.delete(algorithm_config['ProjectionDataId'])
     astra.algorithm.delete(algorithm_id)
+    delete_algorithm_objects(algorithm_config)
     return output
 
 
@@ -459,4 +464,5 @@ class TestOptionsGPU:
         astra.algorithm.run(algorithm_id, 2)
         res_norm = astra.algorithm.get_res_norm(algorithm_id)
         astra.algorithm.delete(algorithm_id)
+        delete_algorithm_objects(algorithm_config)
         assert res_norm > 0.0
