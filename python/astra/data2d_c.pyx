@@ -153,14 +153,17 @@ def get_geometry(i):
     cdef CData2D * pDataObject = getObject(i)
     cdef CFloat32ProjectionData2D * pDataObject2
     cdef CFloat32VolumeData2D * pDataObject3
+    cdef Config * cfg
     if pDataObject.getType() == TWOPROJECTION:
         pDataObject2 = <CFloat32ProjectionData2D * >pDataObject
-        geom = utils.configToDict(pDataObject2.getGeometry().getConfiguration())
+        cfg = pDataObject2.getGeometry().getConfiguration()
     elif pDataObject.getType() == TWOVOLUME:
         pDataObject3 = <CFloat32VolumeData2D * >pDataObject
-        geom = utils.configToDict(pDataObject3.getGeometry().getConfiguration())
+        cfg = pDataObject3.getGeometry().getConfiguration()
     else:
         raise AstraError("Not a known data object")
+    geom = utils.configToDict(cfg)
+    del cfg
     return geom
 
 cdef CProjector2D * getProjector(i) except NULL:

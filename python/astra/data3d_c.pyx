@@ -95,14 +95,17 @@ def get_geometry(i):
     cdef CData3D * pDataObject = getObject(i)
     cdef CFloat32ProjectionData3D * pDataObject2
     cdef CFloat32VolumeData3D * pDataObject3
+    cdef Config * cfg
     if pDataObject.getType() == THREEPROJECTION:
         pDataObject2 = <CFloat32ProjectionData3D * >pDataObject
-        geom = utils.configToDict(pDataObject2.getGeometry().getConfiguration())
+        cfg = pDataObject2.getGeometry().getConfiguration()
     elif pDataObject.getType() == THREEVOLUME:
         pDataObject3 = <CFloat32VolumeData3D * >pDataObject
-        geom = utils.configToDict(pDataObject3.getGeometry().getConfiguration())
+        cfg = pDataObject3.getGeometry().getConfiguration()
     else:
         raise AstraError("Not a known data object")
+    geom = utils.configToDict(cfg)
+    del cfg
     return geom
 
 def change_geometry(i, geom):
