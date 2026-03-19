@@ -165,9 +165,6 @@
     <ClCompile Include="..\..\..\src\Logging.cpp">
       <Filter>Global &amp; Other\source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\PlatformDepSystemCode.cpp">
-      <Filter>Global &amp; Other\source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\Utilities.cpp">
       <Filter>Global &amp; Other\source</Filter>
     </ClCompile>
@@ -420,9 +417,6 @@
       <Filter>Global &amp; Other\headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\astra\Logging.h">
-      <Filter>Global &amp; Other\headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\astra\PlatformDepSystemCode.h">
       <Filter>Global &amp; Other\headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\astra\Singleton.h">

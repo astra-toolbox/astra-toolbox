@@ -218,7 +218,6 @@ BASE_OBJECTS=\
 	src/ParallelVecProjectionGeometry2D.lo \
 	src/ParallelProjectionGeometry3D.lo \
 	src/ParallelVecProjectionGeometry3D.lo \
-	src/PlatformDepSystemCode.lo \
 	src/PluginAlgorithmFactory.lo \
 	src/ProjectionGeometry2D.lo \
 	src/ProjectionGeometry2DFactory.lo \
