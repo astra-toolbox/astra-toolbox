@@ -245,6 +245,9 @@ bool CCglsAlgorithm::run(int _iNrIterations)
 		m_iIteration++;
 	}
 
+	delete pForwardProjector;
+	delete pBackProjector;
+
 	return true;
 }
 //----------------------------------------------------------------------------------------
