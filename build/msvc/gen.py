@@ -699,7 +699,7 @@ def write_main_project(vs_version):
       print('      <TargetMachinePlatform>64</TargetMachinePlatform>', file=F)
       print('      <GenerateLineInfo>true</GenerateLineInfo>', file=F)
       print(f'      <CodeGeneration>{CUDA_CC[(CUDA_MAJOR,CUDA_MINOR)]}</CodeGeneration>', file=F)
-      print('      <AdditionalOptions>-std=c++17 -diag-suppress=1394</AdditionalOptions>', file=F)
+      print('      <AdditionalOptions>-std=c++17 -diag-suppress=1394 -Wno-deprecated-gpu-targets</AdditionalOptions>', file=F)
       print('      <AdditionalCompilerOptions>/std:c++17</AdditionalCompilerOptions>', file=F)
       print('    </CudaCompile>', file=F)
     print('  </ItemDefinitionGroup>', file=F)
