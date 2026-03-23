@@ -25,50 +25,39 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#ifndef _CUDA_EM_H
-#define _CUDA_EM_H
+#ifndef ASTRA_CUDA_MEM3D_INTERNAL_H
+#define ASTRA_CUDA_MEM3D_INTERNAL_H
 
-#include "algo.h"
+#include "astra/Data.h"
+#include "astra/cuda/3d/mem3d.h"
 
 namespace astraCUDA {
 
-class _AstraExport EM : public ReconAlgo {
-public:
-	EM();
-	virtual ~EM();
 
-	// disable some features
-	virtual bool enableSinogramMask() { return false; }
-	virtual bool enableVolumeMask() { return false; }
-	virtual bool setMinConstraint(float) { return false; }
-	virtual bool setMaxConstraint(float) { return false; }
-
-	virtual bool init();
-
-	virtual bool iterate(unsigned int iterations);
-
-	virtual float computeDiffNorm();
+// TODO: Turn CDataGPU wrapping cudaArray into separate type
+class _AstraExport CDataGPU : public astra::CDataStorage {
 
 protected:
-	void reset();
-	bool precomputeWeights();
+	cudaPitchedPtr ptr;
+	cudaArray *arr;
 
- 	// Temporary buffers
-	float* D_projData;
-	unsigned int projPitch;
+	CDataGPU() : arr(nullptr) { ptr.ptr = nullptr; }
 
-	float* D_tmpData;
-	unsigned int tmpPitch;
+public:
 
-	// Geometry-specific precomputed data
-	float* D_pixelWeight;
-	unsigned int pixelPitch;
+	CDataGPU(cudaPitchedPtr _ptr) : ptr(_ptr), arr(nullptr)  { }
+	CDataGPU(cudaArray *_arr) : arr(_arr)  { ptr.ptr = nullptr; }
+
+	virtual bool isMemory() const { return false; }
+	virtual bool isGPU() const { return true; }
+	virtual bool isFloat32() const { return true; } // TODO
+
+	// The CUDA API isn't very const-friendly, so these functions drop
+	// consts from the pointers.
+	cudaArray* getArray() const { return const_cast<cudaArray*>(arr); }
+	cudaPitchedPtr getPtr() const { return ptr; }
+
 };
-
-_AstraExport bool doEM(float* D_volumeData, unsigned int volumePitch,
-          float* D_projData, unsigned int projPitch,
-          const SDimensions& dims, const float* angles,
-          const float* TOffsets, unsigned int iterations);
 
 }
 

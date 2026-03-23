@@ -87,7 +87,7 @@ bool XMLConfig::getInt(const std::string &name, int &iValue) const
 		return false;
 	try {
 		iValue = node.getContentInt();
-	} catch (const StringUtil::bad_cast &e) {
+	} catch (const StringUtil::bad_cast &) {
 		return false;
 	}
 	return true;
@@ -100,7 +100,7 @@ bool XMLConfig::getFloat(const std::string &name, float &fValue) const
 		return false;
 	try {
 		fValue = node.getContentNumerical();
-	} catch (const StringUtil::bad_cast &e) {
+	} catch (const StringUtil::bad_cast &) {
 		return false;
 	}
 	return true;
@@ -115,7 +115,7 @@ bool XMLConfig::getDoubleArray(const std::string &name, std::vector<double> &val
 		return false;
 	try {
 		values = node.getContentNumericalArrayDouble();
-	} catch (const StringUtil::bad_cast &e) {
+	} catch (const StringUtil::bad_cast &) {
 		return false;
 	}
 	return true;
@@ -132,7 +132,7 @@ bool XMLConfig::getIntArray(const std::string &name, std::vector<int> &values) c
 	std::vector<double> tmp;
 	try {
 		tmp = node.getContentNumericalArrayDouble();
-	} catch (const StringUtil::bad_cast &e) {
+	} catch (const StringUtil::bad_cast &) {
 		return false;
 	}
 	values.resize(tmp.size());
@@ -159,7 +159,7 @@ bool XMLConfig::getOptionFloat(const std::string &name, float &fValue) const
 {
 	try {
 		fValue = self.getOptionNumerical(name);
-	} catch (const StringUtil::bad_cast &e) {
+	} catch (const StringUtil::bad_cast &) {
 		return false;
 	}
 	return true;
@@ -169,7 +169,7 @@ bool XMLConfig::getOptionInt(const std::string &name, int &iValue) const
 {
 	try {
 		iValue = self.getOptionInt(name);
-	} catch (const StringUtil::bad_cast &e) {
+	} catch (const StringUtil::bad_cast &) {
 		return false;
 	}
 	return true;
@@ -180,7 +180,7 @@ bool XMLConfig::getOptionUInt(const std::string &name, unsigned int &iValue) con
 	int tmp = 0;
 	try {
 		tmp = self.getOptionInt(name);
-	} catch (const StringUtil::bad_cast &e) {
+	} catch (const StringUtil::bad_cast &) {
 		return false;
 	}
 	if (tmp < 0)
@@ -193,7 +193,7 @@ bool XMLConfig::getOptionBool(const std::string &name, bool &bValue) const
 {
 	try {
 		bValue = self.getOptionBool(name);
-	} catch (const StringUtil::bad_cast &e) {
+	} catch (const StringUtil::bad_cast &) {
 		return false;
 	}
 	return true;
@@ -217,7 +217,7 @@ bool XMLConfig::getOptionIntArray(const std::string &name, std::vector<int> &val
 			try {
 				for (size_t i = 0; i < data.size(); ++i)
 					values[i] = StringUtil::stringToInt(data[i]);
-			} catch (const StringUtil::bad_cast &e) {
+			} catch (const StringUtil::bad_cast &) {
 				return false;
 			}
 			return true;

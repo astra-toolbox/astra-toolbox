@@ -57,10 +57,10 @@ void CParallelBeamDistanceDrivenProjector2D::projectBlock_internal(int _iProjFro
 {
 	// get vector geometry
 	const CParallelVecProjectionGeometry2D* pVecProjectionGeometry;
-	if (dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry)) {
-		pVecProjectionGeometry = dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry)->toVectorGeometry();
+	if (dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry.get())) {
+		pVecProjectionGeometry = dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry.get())->toVectorGeometry();
 	} else {
-		pVecProjectionGeometry = dynamic_cast<CParallelVecProjectionGeometry2D*>(m_pProjectionGeometry);
+		pVecProjectionGeometry = dynamic_cast<CParallelVecProjectionGeometry2D*>(m_pProjectionGeometry.get());
 	}
 
 	// precomputations
@@ -218,6 +218,6 @@ void CParallelBeamDistanceDrivenProjector2D::projectBlock_internal(int _iProjFro
 		}
 	}
 
-	if (dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry))
+	if (dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry.get()))
 		delete pVecProjectionGeometry;
 }

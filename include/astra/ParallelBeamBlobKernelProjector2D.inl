@@ -111,10 +111,10 @@ void CParallelBeamBlobKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 {
 	// get vector geometry
 	const CParallelVecProjectionGeometry2D* pVecProjectionGeometry;
-	if (dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry)) {
-		pVecProjectionGeometry = dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry)->toVectorGeometry();
+	if (dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry.get())) {
+		pVecProjectionGeometry = dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry.get())->toVectorGeometry();
 	} else {
-		pVecProjectionGeometry = dynamic_cast<CParallelVecProjectionGeometry2D*>(m_pProjectionGeometry);
+		pVecProjectionGeometry = dynamic_cast<CParallelVecProjectionGeometry2D*>(m_pProjectionGeometry.get());
 	}
 
 	// precomputations
@@ -226,8 +226,6 @@ void CParallelBeamBlobKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 		} // end loop detector
 	} // end loop angles
 
-	// Delete created vec geometry if required
-	if (dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry))
+	if (dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry.get()))
 		delete pVecProjectionGeometry;
-
 }

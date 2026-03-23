@@ -28,59 +28,15 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _CUDA_SART_H
 #define _CUDA_SART_H
 
-#include "algo.h"
+namespace astra {
+class CData2D;
+}
 
 namespace astraCUDA {
 
-class _AstraExport SART : public ReconAlgo {
-public:
-	SART();
-	~SART();
+bool mul_SART(astra::CData2D *dst, const astra::CData2D *src, int angle);
 
-	// disable some features
-	virtual bool enableSinogramMask() { return false; }
-
-	virtual bool init();
-
-	virtual bool setProjectionOrder(int* projectionOrder, int projectionCount);
-
-	virtual bool iterate(unsigned int iterations);
-
-	virtual float computeDiffNorm();
-
-	void setRelaxation(float r) { fRelaxation = r; }
-
-protected:
-	void reset();
-	bool precomputeWeights();
-
-	bool callFP_SART(float* D_volumeData, unsigned int volumePitch,
-	                 float* D_projData, unsigned int projPitch,
-	                 unsigned int angle, float outputScale);
-	bool callBP_SART(float* D_volumeData, unsigned int volumePitch,
-	                 float* D_projData, unsigned int projPitch,
-	                 unsigned int angle, float outputScale);
-
-
-	// projection angle variables
-	bool customOrder;
-	int* projectionOrder;
-	int projectionCount;
-	int iteration;
-
- 	// Temporary buffers
-	float* D_projData;
-	unsigned int projPitch;
-
-	float* D_tmpData; // Only used when there's a volume mask
-	unsigned int tmpPitch;
-
-	// Geometry-specific precomputed data
-	float* D_lineWeight;
-	unsigned int linePitch;
-
-	float fRelaxation;
-};
+bool copy_SART(astra::CData2D *dst, const astra::CData2D *src, int angle);
 
 }
 

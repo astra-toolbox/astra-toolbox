@@ -318,8 +318,7 @@ cdef CFloat32VolumeData3D* linkVolFromGeometry3D(const CVolumeGeometry3D &pGeome
                              "specified in the geometry {}".format(data_shape, geom_shape))
 
         IF HAVE_CUDA==True:
-            hnd = wrapHandle(<float*>PyLong_AsVoidPtr(data.ptr), data.x, data.y, data.z, data.pitch/4)
-            pStorage = new CDataGPU(hnd)
+            pStorage = wrapHandle(<float*>PyLong_AsVoidPtr(data.ptr), data.x, data.y, data.z, data.pitch/4)
         ELSE:
             raise AstraError("CUDA support is not enabled in ASTRA")
         pDataObject3D = new CFloat32VolumeData3D(pGeometry, pStorage)
@@ -349,8 +348,7 @@ cdef CFloat32ProjectionData3D* linkProjFromGeometry3D(const CProjectionGeometry3
                              "specified in the geometry {}".format(data_shape, geom_shape))
 
         IF HAVE_CUDA==True:
-            hnd = wrapHandle(<float*>PyLong_AsVoidPtr(data.ptr), data.x, data.y, data.z, data.pitch/4)
-            pStorage = new CDataGPU(hnd)
+            pStorage = wrapHandle(<float*>PyLong_AsVoidPtr(data.ptr), data.x, data.y, data.z, data.pitch/4)
         ELSE:
             raise AstraError("CUDA support is not enabled in ASTRA")
         pDataObject3D = new CFloat32ProjectionData3D(pGeometry, pStorage)

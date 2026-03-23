@@ -50,7 +50,7 @@ static const unsigned int g_blockSlices = 64;
 
 // projection for angles that are roughly horizontal
 // (detector roughly vertical)
-__global__ void FPhorizontal_simple(float* D_projData, unsigned int projPitch, cudaTextureObject_t tex, unsigned int startSlice, unsigned int startAngle, unsigned int endAngle, const SDimensions dims, float outputScale)
+__global__ void FPhorizontal_simple(float* D_projData, unsigned int projPitch, cudaTextureObject_t tex, unsigned int startSlice, unsigned int startAngle, unsigned int endAngle, const SDimensions dims, int iRaysPerDet, float outputScale)
 {
 	const int relDet = threadIdx.x;
 	const int relAngle = threadIdx.y;
@@ -91,17 +91,17 @@ __global__ void FPhorizontal_simple(float* D_projData, unsigned int projPitch, c
 	if (endSlice > dims.iVolWidth)
 		endSlice = dims.iVolWidth;
 
-	if (dims.iRaysPerDet > 1) {
+	if (iRaysPerDet > 1) {
 
-		fP += (-0.5f*dims.iRaysPerDet + 0.5f)/dims.iRaysPerDet * fDetStep;
-		const float fSubDetStep = fDetStep / dims.iRaysPerDet;
-		fDistCorr /= dims.iRaysPerDet;
+		fP += (-0.5f*iRaysPerDet + 0.5f)/iRaysPerDet * fDetStep;
+		const float fSubDetStep = fDetStep / iRaysPerDet;
+		fDistCorr /= iRaysPerDet;
 
-		fSliceStep -= dims.iRaysPerDet * fSubDetStep;
+		fSliceStep -= iRaysPerDet * fSubDetStep;
 
 		for (int slice = startSlice; slice < endSlice; ++slice)
 		{
-			for (int iSubT = 0; iSubT < dims.iRaysPerDet; ++iSubT) {
+			for (int iSubT = 0; iSubT < iRaysPerDet; ++iSubT) {
 				fVal += tex2D<float>(tex, fS, fP);
 				fP += fSubDetStep;
 			}
@@ -127,7 +127,7 @@ __global__ void FPhorizontal_simple(float* D_projData, unsigned int projPitch, c
 
 // projection for angles that are roughly vertical
 // (detector roughly horizontal)
-__global__ void FPvertical_simple(float* D_projData, unsigned int projPitch, cudaTextureObject_t tex, unsigned int startSlice, unsigned int startAngle, unsigned int endAngle, const SDimensions dims, float outputScale)
+__global__ void FPvertical_simple(float* D_projData, unsigned int projPitch, cudaTextureObject_t tex, unsigned int startSlice, unsigned int startAngle, unsigned int endAngle, const SDimensions dims, int iRaysPerDet, float outputScale)
 {
 	const int relDet = threadIdx.x;
 	const int relAngle = threadIdx.y;
@@ -167,17 +167,17 @@ __global__ void FPvertical_simple(float* D_projData, unsigned int projPitch, cud
 	if (endSlice > dims.iVolHeight)
 		endSlice = dims.iVolHeight;
 
-	if (dims.iRaysPerDet > 1) {
+	if (iRaysPerDet > 1) {
 
-		fP += (-0.5f*dims.iRaysPerDet + 0.5f)/dims.iRaysPerDet * fDetStep;
-		const float fSubDetStep = fDetStep / dims.iRaysPerDet;
-		fDistCorr /= dims.iRaysPerDet;
+		fP += (-0.5f*iRaysPerDet + 0.5f)/iRaysPerDet * fDetStep;
+		const float fSubDetStep = fDetStep / iRaysPerDet;
+		fDistCorr /= iRaysPerDet;
 
-		fSliceStep -= dims.iRaysPerDet * fSubDetStep;
+		fSliceStep -= iRaysPerDet * fSubDetStep;
 
 		for (int slice = startSlice; slice < endSlice; ++slice)
 		{
-			for (int iSubT = 0; iSubT < dims.iRaysPerDet; ++iSubT) {
+			for (int iSubT = 0; iSubT < iRaysPerDet; ++iSubT) {
 				fVal += tex2D<float>(tex, fP, fS);
 				fP += fSubDetStep;
 			}
@@ -233,8 +233,9 @@ static bool transferConstants(const SParProjection *projs, unsigned int nth, uns
 
 bool FP_simple_internal(float* D_volumeData, unsigned int volumePitch,
                float* D_projData, unsigned int projPitch,
-               const SDimensions& dims, const SParProjection* angles,
-               float outputScale, cudaStream_t stream)
+               const SDimensions& dims, const SProjectorParams2D& params,
+               const SParProjection* angles,
+               cudaStream_t stream)
 {
 	assert(dims.iProjAngles <= g_MaxAngles);
 
@@ -280,10 +281,10 @@ bool FP_simple_internal(float* D_volumeData, unsigned int volumePitch,
 				//printf("angle block: %d to %d, %d\n", blockStart, blockEnd, blockVertical);
 				if (!blockVertical)
 					for (unsigned int i = 0; i < dims.iVolWidth; i += g_blockSlices)
-						FPhorizontal_simple<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, D_texObj, i, blockStart, blockEnd, dims, outputScale);
+						FPhorizontal_simple<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, D_texObj, i, blockStart, blockEnd, dims, params.iRaysPerDet, params.fOutputScale);
 				else
 					for (unsigned int i = 0; i < dims.iVolHeight; i += g_blockSlices)
-						FPvertical_simple<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, D_texObj, i, blockStart, blockEnd, dims, outputScale);
+						FPvertical_simple<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, D_texObj, i, blockStart, blockEnd, dims, params.iRaysPerDet, params.fOutputScale);
 			}
 			blockVertical = vertical;
 			blockStart = a;
@@ -292,17 +293,17 @@ bool FP_simple_internal(float* D_volumeData, unsigned int volumePitch,
 
 	bool ok = checkCuda(cudaStreamSynchronize(stream), "par_fp");
 
-	cudaFreeArray(D_dataArray);
+	logCuda(cudaFreeArray(D_dataArray), "par_fp free array");
 
-	cudaDestroyTextureObject(D_texObj);
+	logCuda(cudaDestroyTextureObject(D_texObj), "par_fp destroy texture");
 
 	return ok;
 }
 
 bool FP_simple(float* D_volumeData, unsigned int volumePitch,
                float* D_projData, unsigned int projPitch,
-               const SDimensions& dims, const SParProjection* angles,
-               float outputScale)
+               const SDimensions& dims, const SProjectorParams2D& params,
+               const SParProjection* angles)
 {
 	TransferConstantsBuffer tcbuf(g_MaxAngles);
 
@@ -326,23 +327,23 @@ bool FP_simple(float* D_volumeData, unsigned int volumePitch,
 
 		ok &= FP_simple_internal(D_volumeData, volumePitch,
 		                         D_projData + iAngle * projPitch, projPitch,
-		                         subdims, angles + iAngle,
-		                         outputScale, stream);
+		                         subdims, params, angles + iAngle,
+		                         stream);
 		if (!ok)
 			break;
 	}
 	ok &= checkCuda(cudaStreamSynchronize(stream), "par_fp");
-	cudaStreamDestroy(stream);
+	logCuda(cudaStreamDestroy(stream), "par_fp destroy stream");
 	return ok;
 }
 
 bool FP(float* D_volumeData, unsigned int volumePitch,
         float* D_projData, unsigned int projPitch,
-        const SDimensions& dims, const SParProjection* angles,
-        float outputScale)
+        const SDimensions& dims, const SProjectorParams2D& params,
+        const SParProjection* angles)
 {
 	return FP_simple(D_volumeData, volumePitch, D_projData, projPitch,
-	                 dims, angles, outputScale);
+	                 dims, params, angles);
 
 }
 

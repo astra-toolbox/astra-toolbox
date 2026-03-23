@@ -35,8 +35,6 @@ namespace astraCUDA3d {
 	void dartSmoothing(float* out, const float* in, float b, unsigned int radius, SDimensions3D dims);
 	void dartMasking(float* out, const float* in, unsigned int conn, unsigned int radius, unsigned int threshold, SDimensions3D dims);
 
-	bool setGPUIndex(int index);
-
 }
 
 #endif

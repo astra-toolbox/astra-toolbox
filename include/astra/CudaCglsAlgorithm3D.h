@@ -132,15 +132,35 @@ public:
 	virtual bool getResidualNorm(float32& _fNorm);
 
 protected:
+	void initializeFromProjector();
 
-	AstraCGLS3d* m_pCgls;
+	bool setupGeometry();
+
+	bool allocateBuffers();
+	void freeBuffers();
+
+	bool m_bBuffersInitialized;
 
 	int m_iGPUIndex;
-	bool m_bAstraCGLSInit;
-	int m_iDetectorSuperSampling;
-	int m_iVoxelSuperSampling;
 
-	void initializeFromProjector();
+	// Input/output buffers (on device)
+	CData3D *D_projData;
+	CData3D *D_volData;
+
+	// Intermediate buffers (on device)
+	CData3D *D_w;
+	CData3D *D_z;
+	CData3D *D_r;
+	CData3D *D_p;
+
+	// Mask data (on device)
+	CData3D *D_volMaskData;
+
+	astraCUDA3d::SProjectorParams3D m_params;
+	Geometry3DParameters m_geometry;
+
+	bool callFP(const CData3D *D_vol, CData3D *D_proj, float fScale);
+	bool callBP(CData3D *D_vol, const CData3D *D_proj, float fScale);
 };
 
 // inline functions

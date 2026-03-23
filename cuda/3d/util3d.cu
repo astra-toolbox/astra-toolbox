@@ -31,6 +31,9 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/cuda/2d/util.h"
 
+#include "astra/cuda/3d/mem3d_internal.h"
+
+#include "astra/Data3D.h"
 #include "astra/Logging.h"
 
 #include <cstdio>
@@ -72,31 +75,26 @@ cudaPitchedPtr allocateProjectionData(const SDimensions3D& dims)
 
 	return projData;
 }
-bool zeroVolumeData(cudaPitchedPtr& D_data, const SDimensions3D& dims)
-{
-	char* t = (char*)D_data.ptr;
 
-	for (unsigned int z = 0; z < dims.iVolZ; ++z) {
-		if (!checkCuda(cudaMemset2D(t, D_data.pitch, 0, dims.iVolX*sizeof(float), dims.iVolY), "zeroVolumeData 3D")) {
+bool zeroVolumeData(astra::CData3D *D_data)
+{
+	astraCUDA::CDataGPU *datas = dynamic_cast<astraCUDA::CDataGPU*>(D_data->getStorage());
+	assert(datas);
+	assert(!datas->getArray());
+
+	std::array<int, 3> dims = D_data->getShape();
+
+	char* t = (char*)datas->getPtr().ptr;
+
+	for (unsigned int z = 0; z < dims[2]; ++z) {
+		if (!checkCuda(cudaMemset2D(t, datas->getPtr().pitch, 0, dims[0]*sizeof(float), dims[1]), "zeroVolumeData 3D")) {
 			return false;
 		}
-		t += D_data.pitch * dims.iVolY;
+		t += datas->getPtr().pitch * dims[1];
 	}
 	return true;
 }
-bool zeroProjectionData(cudaPitchedPtr& D_data, const SDimensions3D& dims)
-{
-	char* t = (char*)D_data.ptr;
 
-	for (unsigned int z = 0; z < dims.iProjV; ++z) {
-		if (!checkCuda(cudaMemset2D(t, D_data.pitch, 0, dims.iProjU*sizeof(float), dims.iProjAngles), "zeroProjectionData 3D")) {
-			return false;
-		}
-		t += D_data.pitch * dims.iProjAngles;
-	}
-
-	return true;
-}
 bool copyVolumeToDevice(const float* data, cudaPitchedPtr& D_data, const SDimensions3D& dims, unsigned int pitch)
 {
 	if (!pitch)
@@ -221,51 +219,38 @@ bool copyProjectionsFromDevice(float* data, const cudaPitchedPtr& D_data, const 
 	return checkCuda(cudaMemcpy3D(&p), "copyProjectionsFromDevice 3D");
 }
 
-bool duplicateVolumeData(cudaPitchedPtr& D_dst, const cudaPitchedPtr& D_src, const SDimensions3D& dims)
+bool duplicateVolumeData(astra::CData3D *D_dst, const astra::CData3D *D_src)
 {
+	assert(D_dst->getShape() == D_src->getShape());
+	astraCUDA::CDataGPU *dsts = dynamic_cast<astraCUDA::CDataGPU*>(D_dst->getStorage());
+	assert(dsts);
+	assert(!dsts->getArray());
+	const astraCUDA::CDataGPU *srcs = dynamic_cast<const astraCUDA::CDataGPU*>(D_src->getStorage());
+	assert(srcs);
+	assert(!srcs->getArray());
+
+	std::array<int, 3> dims = D_src->getShape();
+
+
 	cudaExtent extentV;
-	extentV.width = dims.iVolX*sizeof(float);
-	extentV.height = dims.iVolY;
-	extentV.depth = dims.iVolZ;
+	extentV.width = dims[0]*sizeof(float);
+	extentV.height = dims[1];
+	extentV.depth = dims[2];
 
 	cudaPos zp = { 0, 0, 0 };
 
 	cudaMemcpy3DParms p;
 	p.srcArray = 0;
 	p.srcPos = zp;
-	p.srcPtr = D_src;
+	p.srcPtr = srcs->getPtr();
 	p.dstArray = 0;
 	p.dstPos = zp;
-	p.dstPtr = D_dst;
+	p.dstPtr = dsts->getPtr();
 	p.extent = extentV;
 	p.kind = cudaMemcpyDeviceToDevice;
 
 	return checkCuda(cudaMemcpy3D(&p), "duplicateVolumeData 3D");
 }
-
-bool duplicateProjectionData(cudaPitchedPtr& D_dst, const cudaPitchedPtr& D_src, const SDimensions3D& dims)
-{
-	cudaExtent extentV;
-	extentV.width = dims.iProjU*sizeof(float);
-	extentV.height = dims.iProjAngles;
-	extentV.depth = dims.iProjV;
-
-	cudaPos zp = { 0, 0, 0 };
-
-	cudaMemcpy3DParms p;
-	p.srcArray = 0;
-	p.srcPos = zp;
-	p.srcPtr = D_src;
-	p.dstArray = 0;
-	p.dstPos = zp;
-	p.dstPtr = D_dst;
-	p.extent = extentV;
-	p.kind = cudaMemcpyDeviceToDevice;
-
-	return checkCuda(cudaMemcpy3D(&p), "duplicateProjectionData 3D");
-}
-
-
 
 // TODO: Consider using a single array of size max(proj,volume) (per dim)
 //       instead of allocating a new one each time
@@ -417,10 +402,15 @@ bool createTextureObject3D(cudaArray* array, cudaTextureObject_t& texObj)
 
 
 
-float dotProduct3D(cudaPitchedPtr data, unsigned int x, unsigned int y,
-                   unsigned int z)
+float dotProduct3D(const astra::CData3D *D_data)
 {
-	return astraCUDA::dotProduct2D((float*)data.ptr, data.pitch/sizeof(float), x, y*z);
+	const astraCUDA::CDataGPU *datas = dynamic_cast<const astraCUDA::CDataGPU*>(D_data->getStorage());
+	assert(datas);
+	assert(!datas->getArray());
+
+	std::array<int, 3> dims = D_data->getShape();
+
+	return astraCUDA::dotProduct2D((float*)datas->getPtr().ptr, datas->getPtr().pitch/sizeof(float), dims[0], dims[1]*dims[2]);
 }
 
 

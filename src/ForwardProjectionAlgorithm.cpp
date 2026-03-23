@@ -114,6 +114,9 @@ bool CForwardProjectionAlgorithm::initialize(const Config& _cfg)
 	ok &= CR.getRequiredID("VolumeDataId", id);
 	m_pVolume = dynamic_cast<CFloat32VolumeData2D*>(CData2DManager::getSingleton().get(id));
 
+	if (!ok)
+		return false;
+
 	
 	if (CR.getOptionID("VolumeMaskId", id)) {
 		m_bUseVolumeMask = true;

@@ -39,8 +39,12 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/cuda/2d/astra.h"
 
+#include "astra/cuda/3d/mem3d_internal.h"
+
 #include "astra/Logging.h"
 #include "astra/Filters.h"
+
+#include "astra/Data3D.h"
 
 #include <cstdio>
 #include <cassert>
@@ -50,14 +54,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 namespace astraCUDA3d {
 
 
-struct SMemHandle3D_internal
-{
-	cudaPitchedPtr ptr;
-	cudaArray *arr;
-	unsigned int nx;
-	unsigned int ny;
-	unsigned int nz;
-};
 
 int maxBlockDimension()
 {
@@ -76,18 +72,14 @@ int maxBlockDimension()
 	return std::min(props.maxTexture3D[0], std::min(props.maxTexture3D[1], props.maxTexture3D[2]));
 }
 
-MemHandle3D allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Mem3DZeroMode zero)
+astra::CDataStorage *allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Mem3DZeroMode zero)
 {
-	SMemHandle3D_internal hnd;
-	hnd.nx = x;
-	hnd.ny = y;
-	hnd.nz = z;
-	hnd.arr = 0;
+	cudaPitchedPtr ptr;
 
 	size_t free = astraCUDA::availableGPUMemory();
 
-	if (!checkCuda(cudaMalloc3D(&hnd.ptr, make_cudaExtent(sizeof(float)*x, y, z)), "allocateGPUMemory malloc3d")) {
-		return MemHandle3D();
+	if (!checkCuda(cudaMalloc3D(&ptr, make_cudaExtent(sizeof(float)*x, y, z)), "allocateGPUMemory malloc3d")) {
+		return nullptr;
 	}
 
 	size_t free2 = astraCUDA::availableGPUMemory();
@@ -97,34 +89,80 @@ MemHandle3D allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Me
 
 
 	if (zero == INIT_ZERO) {
-		if (!checkCuda(cudaMemset3D(hnd.ptr, 0, make_cudaExtent(sizeof(float)*x, y, z)), "allocateGPUMemory memset3d")) {
-			cudaFree(hnd.ptr.ptr);
-			return MemHandle3D();
+		if (!checkCuda(cudaMemset3D(ptr, 0, make_cudaExtent(sizeof(float)*x, y, z)), "allocateGPUMemory memset3d")) {
+			logCuda(cudaFree(ptr.ptr), "allocateGPUMemory free");
+			return nullptr;
 		}
 	}
 
-	MemHandle3D ret;
-	ret.d = std::make_shared<SMemHandle3D_internal>();
-	*ret.d = hnd;
+	astraCUDA::CDataGPU *ret = new astraCUDA::CDataGPU(ptr);
 
 	return ret;
 }
 
-bool zeroGPUMemory(MemHandle3D &handle, unsigned int x, unsigned int y, unsigned int z)
+astra::CDataStorage *allocateGPUMemoryLike(const astra::CData3D *model, Mem3DZeroMode zero)
 {
-	SMemHandle3D_internal& hnd = *handle.d.get();
-	assert(!hnd.arr);
-	return checkCuda(cudaMemset3D(hnd.ptr, 0, make_cudaExtent(sizeof(float)*x, y, z)), "zeroGPUMemory");
+	assert(model);
+
+	std::array<int, 3> dims = model->getShape();
+
+	return allocateGPUMemory(dims[0], dims[1], dims[2], zero);
 }
 
-bool freeGPUMemory(MemHandle3D &handle)
+astra::CFloat32VolumeData3D *createGPUVolumeData3DLike(const astra::CFloat32VolumeData3D *model)
 {
+	astra::CDataStorage *storage = allocateGPUMemoryLike(model, INIT_ZERO);
+	if (!storage)
+		return nullptr;
+
+	return new astra::CFloat32VolumeData3D(model->getGeometry(), storage);
+}
+
+
+astra::CFloat32ProjectionData3D *createGPUProjectionData3DLike(const astra::CFloat32ProjectionData3D *model)
+{
+	astra::CDataStorage *storage = allocateGPUMemoryLike(model, INIT_ZERO);
+	if (!storage)
+		return nullptr;
+
+	return new astra::CFloat32ProjectionData3D(model->getGeometry(), storage);
+}
+
+astra::CData3D *createGPUData3DLike(const astra::CData3D *model)
+{
+	assert(model->getStorage());
+	assert(model->getStorage()->isFloat32());
+
+	std::array<int, 3> dims = model->getShape();
+	astra::CDataStorage *storage = allocateGPUMemory(dims[0], dims[1], dims[2], INIT_ZERO);
+	if (!storage)
+		return nullptr;
+	return new astra::CData3D(dims[0], dims[1], dims[2], storage);
+}
+
+
+bool zeroGPUMemory(astra::CData3D *data)
+{
+	astraCUDA::CDataGPU *ds = dynamic_cast<astraCUDA::CDataGPU*>(data->getStorage());
+	assert(ds);
+
+	std::array<int, 3> dims = data->getShape();
+
+	assert(!ds->getArray());
+	return checkCuda(cudaMemset3D(ds->getPtr(), 0, make_cudaExtent(sizeof(float)*dims[0], dims[1], dims[2])), "zeroGPUMemory");
+}
+
+bool freeGPUMemory(astra::CData3D *data)
+{
+	astraCUDA::CDataGPU *ds = dynamic_cast<astraCUDA::CDataGPU*>(data->getStorage());
+	assert(ds);
+
 	size_t free = astraCUDA::availableGPUMemory();
 	bool ok;
-	if (handle.d->arr)
-		ok = checkCuda(cudaFreeArray(handle.d->arr), "freeGPUMemory array");
+	if (ds->getArray())
+		ok = checkCuda(cudaFreeArray(ds->getArray()), "freeGPUMemory array");
 	else
-		ok = checkCuda(cudaFree(handle.d->ptr.ptr), "freeGPUMemory");
+		ok = checkCuda(cudaFree(ds->getPtr().ptr), "freeGPUMemory");
 	size_t free2 = astraCUDA::availableGPUMemory();
 
 	ASTRA_DEBUG("Freeing memory. (Pre: %lu, post: %lu)", free, free2);
@@ -132,13 +170,68 @@ bool freeGPUMemory(MemHandle3D &handle)
 	return ok;
 }
 
-bool copyToGPUMemory(const float *src, MemHandle3D &dst, const SSubDimensions3D &pos)
+bool assignGPUMemory(astra::CData3D *dst, const astra::CData3D *src)
+{
+	assert(dst->getShape() == src->getShape());
+
+	astraCUDA::CDataGPU *dsts = dynamic_cast<astraCUDA::CDataGPU*>(dst->getStorage());
+	assert(dsts);
+	assert(!dsts->getArray());
+	const astraCUDA::CDataGPU *srcs = dynamic_cast<const astraCUDA::CDataGPU*>(src->getStorage());
+	assert(srcs);
+	assert(!srcs->getArray());
+
+	std::array<int, 3> dims = src->getShape();
+
+	cudaExtent extentV;
+	extentV.width = dims[0]*sizeof(float);
+	extentV.height = dims[1];
+	extentV.depth = dims[2];
+
+	cudaPos zp = { 0, 0, 0 };
+
+	cudaMemcpy3DParms p;
+	p.srcArray = 0;
+	p.srcPos = zp;
+	p.srcPtr = srcs->getPtr();
+	p.dstArray = 0;
+	p.dstPos = zp;
+	p.dstPtr = dsts->getPtr();
+	p.extent = extentV;
+	p.kind = cudaMemcpyDeviceToDevice;
+
+	return checkCuda(cudaMemcpy3D(&p), "assignGPUMemory 3D");
+}
+
+bool copyToGPUMemory(const astra::CData3D *src, astra::CData3D *dst)
+{
+	assert(src->getShape() == dst->getShape());
+
+	std::array<int, 3> dims = src->getShape();
+
+	SSubDimensions3D pos;
+	pos.nx = pos.subnx = dims[0];
+	pos.ny = pos.subny = dims[1];
+	pos.nz = pos.subnz = dims[2];
+	pos.pitch = dims[0];
+	pos.subx = pos.suby = pos.subz = 0;
+
+	return copyToGPUMemory(src, dst, pos);
+}
+
+bool copyToGPUMemory(const astra::CData3D *src, astra::CData3D *dst, const SSubDimensions3D &pos)
 {
 	ASTRA_DEBUG("Copying %d x %d x %d to GPU", pos.subnx, pos.subny, pos.subnz);
 	ASTRA_DEBUG("Offset %d,%d,%d", pos.subx, pos.suby, pos.subz);
-	assert(!dst.d->arr);
+
+	assert(src->isFloat32Memory());
+	astraCUDA::CDataGPU *ds = dynamic_cast<astraCUDA::CDataGPU*>(dst->getStorage());
+	assert(ds);
+
+	assert(!ds->getArray());
+
 	cudaPitchedPtr s;
-	s.ptr = (void*)src; // const cast away
+	s.ptr = (void*)src->getFloat32Memory(); // const cast away
 	s.pitch = pos.pitch * sizeof(float);
 	s.xsize = pos.nx * sizeof(float);
 	s.ysize = pos.ny;
@@ -151,7 +244,7 @@ bool copyToGPUMemory(const float *src, MemHandle3D &dst, const SSubDimensions3D 
 
 	p.dstArray = 0;
 	p.dstPos = make_cudaPos(0, 0, 0);
-	p.dstPtr = dst.d->ptr;
+	p.dstPtr = ds->getPtr();
 
 	p.extent = make_cudaExtent(pos.subnx * sizeof(float), pos.subny, pos.subnz);
 
@@ -160,14 +253,36 @@ bool copyToGPUMemory(const float *src, MemHandle3D &dst, const SSubDimensions3D 
 	return checkCuda(cudaMemcpy3D(&p), "copyToGPUMemory");
 }
 
+bool copyFromGPUMemory(astra::CData3D *dst, const astra::CData3D *src)
+{
+	assert(src->getShape() == dst->getShape());
 
-bool copyFromGPUMemory(float *dst, MemHandle3D &src, const SSubDimensions3D &pos)
+	std::array<int, 3> dims = dst->getShape();
+
+	SSubDimensions3D pos;
+	pos.nx = pos.subnx = dims[0];
+	pos.ny = pos.subny = dims[1];
+	pos.nz = pos.subnz = dims[2];
+	pos.pitch = dims[0];
+	pos.subx = pos.suby = pos.subz = 0;
+
+	return copyFromGPUMemory(dst, src, pos);
+}
+
+
+
+bool copyFromGPUMemory(astra::CData3D *dst, const astra::CData3D *src, const SSubDimensions3D &pos)
 {
 	ASTRA_DEBUG("Copying %d x %d x %d from GPU", pos.subnx, pos.subny, pos.subnz);
 	ASTRA_DEBUG("Offset %d,%d,%d", pos.subx, pos.suby, pos.subz);
-	assert(!src.d->arr);
+
+	assert(dst->isFloat32Memory());
+	const astraCUDA::CDataGPU *ss = dynamic_cast<const astraCUDA::CDataGPU*>(src->getStorage());
+	assert(ss);
+
+	//assert(!src.d->arr);
 	cudaPitchedPtr d;
-	d.ptr = (void*)dst;
+	d.ptr = (void*)dst->getFloat32Memory();
 	d.pitch = pos.pitch * sizeof(float);
 	d.xsize = pos.nx * sizeof(float);
 	d.ysize = pos.ny;
@@ -180,15 +295,16 @@ bool copyFromGPUMemory(float *dst, MemHandle3D &src, const SSubDimensions3D &pos
 	p.dstPos = make_cudaPos(pos.subx * sizeof(float), pos.suby, pos.subz);
 	p.dstPtr = d;
 
-        if (src.d->ptr.ptr) {
-            p.srcArray = 0;
-            p.srcPtr = src.d->ptr;
-            p.extent = make_cudaExtent(pos.subnx * sizeof(float), pos.subny, pos.subnz);
-        } else {
-            p.srcArray = src.d->arr;
-            p.srcPtr.ptr = 0;
-            p.extent = make_cudaExtent(pos.subnx, pos.subny, pos.subnz);
-        }
+	if (!ss->getArray()) {
+		p.srcArray = 0;
+		p.srcPtr = ss->getPtr();
+		p.extent = make_cudaExtent(pos.subnx * sizeof(float), pos.subny, pos.subnz);
+	} else {
+		// CUDA interface limitation: cast const away
+		p.srcArray = const_cast<cudaArray*>(ss->getArray());
+		p.srcPtr.ptr = 0;
+		p.extent = make_cudaExtent(pos.subnx, pos.subny, pos.subnz);
+	}
 
 	p.kind = cudaMemcpyDeviceToHost;
 
@@ -196,57 +312,80 @@ bool copyFromGPUMemory(float *dst, MemHandle3D &src, const SSubDimensions3D &pos
 }
 
 
-bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D &volData, int iDetectorSuperSampling, astra::Cuda3DProjectionKernel projKernel)
+bool FP(astra::CFloat32ProjectionData3D *projData, const astra::CFloat32VolumeData3D *volData, int iDetectorSuperSampling, astra::Cuda3DProjectionKernel projKernel)
 {
-	assert(!projData.d->arr);
-	assert(!volData.d->arr);
-	SDimensions3D dims;
+	const astra::CProjectionGeometry3D &pProjGeom = projData->getGeometry();
+	const astra::CVolumeGeometry3D &pVolGeom = volData->getGeometry();
+
 	SProjectorParams3D params;
 	params.projKernel = projKernel;
-
-	bool ok = astra::convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
-	if (!ok)
-		return false;
 
 	params.iRaysPerDetDim = iDetectorSuperSampling;
 	if (iDetectorSuperSampling == 0)
 		return false;
 
-	auto res = astra::convertAstraGeometry(pVolGeom, pProjGeom, params.volScale);
+	astra::Geometry3DParameters geom = astra::convertAstraGeometry(&pVolGeom, &pProjGeom);
+	params.volScale = geom.getVolScale();
 
-	if (res.isParallel()) {
-		const SPar3DProjection* pParProjs = res.getParallel();
+	return FP(projData, volData, geom, params);
+}
 
-		switch (projKernel) {
+bool FP(astra::CData3D *projData, const astra::CData3D *volData, const astra::Geometry3DParameters &geom, SProjectorParams3D params)
+{
+	astraCUDA::CDataGPU *projs = dynamic_cast<astraCUDA::CDataGPU*>(projData->getStorage());
+	assert(projs);
+
+	const astraCUDA::CDataGPU *vols = dynamic_cast<const astraCUDA::CDataGPU*>(volData->getStorage());
+	assert(vols);
+
+	assert(!projs->getArray());
+	assert(!vols->getArray());
+
+	std::array<int, 3> projDims = projData->getShape();
+	std::array<int, 3> volDims = volData->getShape();
+	SDimensions3D dims = geom.getDims();
+	assert(projDims[0] == dims.iProjU);
+	assert(projDims[1] == dims.iProjAngles);
+	assert(projDims[2] == dims.iProjV);
+	assert(volDims[0] == dims.iVolX);
+	assert(volDims[1] == dims.iVolY);
+	assert(volDims[2] == dims.iVolZ);
+
+	bool ok = true;
+
+	if (geom.isParallel()) {
+		const SPar3DProjection* pParProjs = geom.getParallel();
+
+		switch (params.projKernel) {
 		case ker3d_default:
 		case ker3d_2d_weighting:
 		case ker3d_matched_bp:
-			ok &= Par3DFP(volData.d->ptr, projData.d->ptr, dims, pParProjs, params);
+			ok &= Par3DFP(vols->getPtr(), projs->getPtr(), geom.getDims(), pParProjs, params);
 			break;
 		case ker3d_sum_square_weights:
-			ok &= Par3DFP_SumSqW(volData.d->ptr, projData.d->ptr, dims, pParProjs, params);
+			ok &= Par3DFP_SumSqW(vols->getPtr(), projs->getPtr(), geom.getDims(), pParProjs, params);
 			break;
 		default:
 			ok = false;
 		}
-	} else if (res.isCone()) {
-		const SConeProjection* pConeProjs = res.getCone();
+	} else if (geom.isCone()) {
+		const SConeProjection* pConeProjs = geom.getCone();
 
-		switch (projKernel) {
+		switch (params.projKernel) {
 		case ker3d_default:
 		case ker3d_fdk_weighting:
 		case ker3d_2d_weighting:
 		case ker3d_matched_bp:
-			ok &= ConeFP(volData.d->ptr, projData.d->ptr, dims, pConeProjs, params);
+			ok &= ConeFP(vols->getPtr(), projs->getPtr(), geom.getDims(), pConeProjs, params);
 			break;
 		default:
 			ok = false;
 		}
-	} else if (res.isCylCone()) {
-		const SCylConeProjection* pCylConeProjs = res.getCylCone();
-		switch (projKernel) {
+	} else if (geom.isCylCone()) {
+		const SCylConeProjection* pCylConeProjs = geom.getCylCone();
+		switch (params.projKernel) {
 		case ker3d_default: case ker3d_matched_bp:
-			ok &= ConeCylFP(volData.d->ptr, projData.d->ptr, dims, pCylConeProjs, params);
+			ok &= ConeCylFP(vols->getPtr(), projs->getPtr(), geom.getDims(), pCylConeProjs, params);
 			break;
 		default:
 			ok = false;
@@ -257,62 +396,83 @@ bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, co
 	return ok;
 }
 
-bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D &volData, int iVoxelSuperSampling, astra::Cuda3DProjectionKernel projKernel)
+bool BP(const astra::CFloat32ProjectionData3D *projData, astra::CFloat32VolumeData3D *volData, int iVoxelSuperSampling, astra::Cuda3DProjectionKernel projKernel)
 {
-	assert(!volData.d->arr);
-	SDimensions3D dims;
+	const astra::CProjectionGeometry3D &pProjGeom = projData->getGeometry();
+	const astra::CVolumeGeometry3D &pVolGeom = volData->getGeometry();
+
 	SProjectorParams3D params;
 	params.projKernel = projKernel;
 
-	bool ok = astra::convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
-	if (!ok)
-		return false;
-
 	params.iRaysPerVoxelDim = iVoxelSuperSampling;
 
-	auto res = astra::convertAstraGeometry(pVolGeom, pProjGeom, params.volScale);
+	astra::Geometry3DParameters geom = astra::convertAstraGeometry(&pVolGeom, &pProjGeom);
+	params.volScale = geom.getVolScale();
 
-	if (res.isParallel()) {
-		const SPar3DProjection* pParProjs = res.getParallel();
-		switch (projKernel) {
+	return BP(projData, volData, geom, params);
+}
+
+bool BP(const astra::CData3D *projData, astra::CData3D *volData, const astra::Geometry3DParameters &geom, SProjectorParams3D params)
+{
+	const astraCUDA::CDataGPU *projs = dynamic_cast<const astraCUDA::CDataGPU*>(projData->getStorage());
+	assert(projs);
+	astraCUDA::CDataGPU *vols = dynamic_cast<astraCUDA::CDataGPU*>(volData->getStorage());
+	assert(vols);
+	assert(!vols->getArray());
+
+	std::array<int, 3> projDims = projData->getShape();
+	std::array<int, 3> volDims = volData->getShape();
+	SDimensions3D dims = geom.getDims();
+	assert(projDims[0] == dims.iProjU);
+	assert(projDims[1] == dims.iProjAngles);
+	assert(projDims[2] == dims.iProjV);
+	assert(volDims[0] == dims.iVolX);
+	assert(volDims[1] == dims.iVolY);
+	assert(volDims[2] == dims.iVolZ);
+
+	bool ok = true;
+
+	if (geom.isParallel()) {
+		const SPar3DProjection* pParProjs = geom.getParallel();
+		switch (params.projKernel) {
 		case ker3d_default:
 		case ker3d_2d_weighting:
-			if (projData.d->arr)
-				ok &= Par3DBP_Array(volData.d->ptr, projData.d->arr, dims, pParProjs, params);
+			if (projs->getArray())
+				ok &= Par3DBP_Array(vols->getPtr(), projs->getArray(), geom.getDims(), pParProjs, params);
 			else
-				ok &= Par3DBP(volData.d->ptr, projData.d->ptr, dims, pParProjs, params);
+				ok &= Par3DBP(vols->getPtr(), projs->getPtr(), geom.getDims(), pParProjs, params);
 			break;
 		default:
 			ok = false;
 		}
-	} else if (res.isCone()) {
-		const SConeProjection* pConeProjs = res.getCone();
-		switch (projKernel) {
+	} else if (geom.isCone()) {
+		const SConeProjection* pConeProjs = geom.getCone();
+		switch (params.projKernel) {
 		case ker3d_default:
 		case ker3d_fdk_weighting:
 		case ker3d_2d_weighting:
-			if (projData.d->arr)
-				ok &= ConeBP_Array(volData.d->ptr, projData.d->arr, dims, pConeProjs, params);
+			if (projs->getArray())
+				ok &= ConeBP_Array(vols->getPtr(), projs->getArray(), geom.getDims(), pConeProjs, params);
 			else
-				ok &= ConeBP(volData.d->ptr, projData.d->ptr, dims, pConeProjs, params);
+				ok &= ConeBP(vols->getPtr(), projs->getPtr(), geom.getDims(), pConeProjs, params);
 			break;
 		default:
 			ok = false;
 		}
-	} else if (res.isCylCone()) {
-		const SCylConeProjection* pCylConeProjs = res.getCylCone();
+	} else if (geom.isCylCone()) {
+		const SCylConeProjection* pCylConeProjs = geom.getCylCone();
 		// TODO: Add support for ker3d_2d_weighting?
 		// TODO: Add support for ker3d_fdk_weighting?
-		if (projKernel == ker3d_default) {
-			if (projData.d->arr)
-				ok &= ConeCylBP_Array(volData.d->ptr, projData.d->arr, dims, pCylConeProjs, params);
+		if (params.projKernel == ker3d_default) {
+			if (projs->getArray())
+				ok &= ConeCylBP_Array(vols->getPtr(), projs->getArray(), geom.getDims(), pCylConeProjs, params);
 			else
-				ok &= ConeCylBP(volData.d->ptr, projData.d->ptr, dims, pCylConeProjs, params);
-		} else if (projKernel == ker3d_matched_bp) {
-			if (projData.d->arr)
-				ok &= ConeCylBP_Array_matched(volData.d->ptr, projData.d->arr, dims, pCylConeProjs, params);
+				ok &= ConeCylBP(vols->getPtr(), projs->getPtr(), geom.getDims(), pCylConeProjs, params);
+		} else if (params.projKernel == ker3d_matched_bp) {
+			if (projs->getArray())
+				ok &= ConeCylBP_Array_matched(vols->getPtr(), projs->getArray(), geom.getDims(), pCylConeProjs, params);
 			else
-				ok &= ConeCylBP_matched(volData.d->ptr, projData.d->ptr, dims, pCylConeProjs, params);
+				ok &= ConeCylBP_matched(vols->getPtr(), projs->getPtr(), geom.getDims(), pCylConeProjs, params);
 		} else {
 			ok = false;
 		}
@@ -323,27 +483,33 @@ bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, co
 
 }
 
-bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D &volData, bool bShortScan, const astra::SFilterConfig &filterConfig, float fOutputScale)
+bool FDK(astra::CFloat32ProjectionData3D *projData, astra::CFloat32VolumeData3D *volData, bool bShortScan, const astra::SFilterConfig &filterConfig, float fOutputScale)
 {
-	assert(!projData.d->arr);
-	assert(!volData.d->arr);
-	SDimensions3D dims;
+	astraCUDA::CDataGPU *projs = dynamic_cast<astraCUDA::CDataGPU*>(projData->getStorage());
+	assert(projs);
+	const astra::CProjectionGeometry3D &pProjGeom = projData->getGeometry();
+
+	astraCUDA::CDataGPU *vols = dynamic_cast<astraCUDA::CDataGPU*>(volData->getStorage());
+	assert(vols);
+	const astra::CVolumeGeometry3D &pVolGeom = volData->getGeometry();
+
+
+
+	assert(!projs->getArray());
+	assert(!vols->getArray());
 	SProjectorParams3D params;
 	params.fOutputScale = fOutputScale;
 	params.projKernel = ker3d_fdk_weighting;
 
-	bool ok = astra::convertAstraGeometry_dims(pVolGeom, pProjGeom, dims);
-	if (!ok)
-		return false;
-
-	astra::Geometry3DParameters res = astra::convertAstraGeometry(pVolGeom, pProjGeom, params.volScale);
+	astra::Geometry3DParameters res = astra::convertAstraGeometry(&pVolGeom, &pProjGeom);
+	params.volScale = res.getVolScale();
 
 	if (!res.isCone())
 		return false;
 
 	const SConeProjection* pConeProjs = res.getCone();
 
-	ok &= FDK(volData.d->ptr, projData.d->ptr, pConeProjs, dims, params, bShortScan, filterConfig);
+	bool ok = FDK(vols->getPtr(), projs->getPtr(), pConeProjs, res.getDims(), params, bShortScan, filterConfig);
 
 	return ok;
 
@@ -351,7 +517,7 @@ bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, c
 
 }
 
-_AstraExport MemHandle3D wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch)
+_AstraExport astra::CDataStorage *wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch)
 {
 	cudaPitchedPtr ptr;
 	ptr.ptr = D_ptr;
@@ -359,18 +525,12 @@ _AstraExport MemHandle3D wrapHandle(float *D_ptr, unsigned int x, unsigned int y
 	ptr.pitch = sizeof(float) * pitch;
 	ptr.ysize = y;
 
-	SMemHandle3D_internal h;
-	h.ptr = ptr;
-	h.arr = 0;
+	astraCUDA::CDataGPU *ret = new astraCUDA::CDataGPU(ptr);
 
-	MemHandle3D hnd;
-	hnd.d = std::make_shared<SMemHandle3D_internal>();
-	*hnd.d = h;
-
-	return hnd;
+	return ret;
 }
 
-MemHandle3D createProjectionArrayHandle(const float *ptr, unsigned int x, unsigned int y, unsigned int z)
+astra::CDataStorage* createProjectionArrayHandle(const float *ptr, unsigned int x, unsigned int y, unsigned int z)
 {
 	SDimensions3D dims;
 	dims.iProjU = x;
@@ -380,34 +540,32 @@ MemHandle3D createProjectionArrayHandle(const float *ptr, unsigned int x, unsign
 	cudaArray* cuArray = allocateProjectionArray(dims);
 	transferHostProjectionsToArray(ptr, cuArray, dims);
 
-	SMemHandle3D_internal h;
-	h.arr = cuArray;
-	h.ptr.ptr = 0;
+	astraCUDA::CDataGPU *ret = new astraCUDA::CDataGPU(cuArray);
 
-	MemHandle3D hnd;
-	hnd.d = std::make_shared<SMemHandle3D_internal>();
-	*hnd.d = h;
-
-	return hnd;
+	return ret;
 }
 
-bool copyIntoArray(MemHandle3D &handle, MemHandle3D &subdata, const SSubDimensions3D &pos)
+bool copyIntoArray(astra::CData3D *data, astra::CData3D *subdata, const SSubDimensions3D &pos)
 {
-	assert(handle.d->arr);
-	assert(!handle.d->ptr.ptr);
-	assert(!subdata.d->arr);
-	assert(subdata.d->ptr.ptr);
+	astraCUDA::CDataGPU *datas = dynamic_cast<astraCUDA::CDataGPU*>(data->getStorage());
+	assert(datas);
+
+	astraCUDA::CDataGPU *subdatas = dynamic_cast<astraCUDA::CDataGPU*>(subdata->getStorage());
+	assert(subdatas);
+
+	assert(datas->getArray());
+	assert(!subdatas->getArray());
 
 	ASTRA_DEBUG("Copying %d x %d x %d into GPU array", pos.subnx, pos.subny, pos.subnz);
 	ASTRA_DEBUG("Offset %d,%d,%d", pos.subx, pos.suby, pos.subz);
-	ASTRA_DEBUG("Pitch %zu, xsize %zu, ysize %zu", subdata.d->ptr.pitch, subdata.d->ptr.xsize, subdata.d->ptr.ysize);
+	ASTRA_DEBUG("Pitch %zu, xsize %zu, ysize %zu", subdatas->getPtr().pitch, subdatas->getPtr().xsize, subdatas->getPtr().ysize);
 
 	cudaMemcpy3DParms p;
 	p.srcArray = 0;
 	p.srcPos = make_cudaPos(0, 0, 0);
-	p.srcPtr = subdata.d->ptr;
+	p.srcPtr = subdatas->getPtr();
 
-	p.dstArray = handle.d->arr;
+	p.dstArray = datas->getArray();
 	p.dstPos = make_cudaPos(pos.subx, pos.suby, pos.subz);
 	p.dstPtr.ptr = 0;
 

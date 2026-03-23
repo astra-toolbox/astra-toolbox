@@ -221,7 +221,7 @@ void CConeVecProjectionGeometry3D::projectPoint(double fX, double fY, double fZ,
 
 bool CConeVecProjectionGeometry3D::_check()
 {
-	ASTRA_CONFIG_CHECK(m_ProjectionAngles.size() == m_iProjectionAngleCount, "ConeVecProjectionGeometry3D", "Number of vectors does not match number of angles");
+	ASTRA_CONFIG_CHECK(m_ProjectionAngles.size() == (size_t)m_iProjectionAngleCount, "ConeVecProjectionGeometry3D", "Number of vectors does not match number of angles");
 
 	// TODO
 	return true;

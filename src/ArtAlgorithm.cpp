@@ -124,6 +124,8 @@ bool CArtAlgorithm::initialize(const Config& _cfg)
 		ok &= CR.getOptionNumerical("Relaxation", m_fLambda, 1.0f);
 	else
 		ok &= CR.getOptionNumerical("Lambda", m_fLambda, 1.0f);
+	if (!ok)
+		return false;
 
 	// success
 	m_bIsInitialized = _check();

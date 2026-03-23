@@ -28,7 +28,11 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _CUDA_ARITH_H
 #define _CUDA_ARITH_H
 
-#include <optional>
+#include "astra/cuda/stream.h"
+
+namespace astra {
+class CData2D;
+}
 
 namespace astraCUDA {
 
@@ -55,21 +59,13 @@ struct opSetMaskedValues;
 struct opMulMask;
 
 
-template<typename op> bool processVol(float* out, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
-template<typename op> bool processVol(float* out, float fParam, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
-template<typename op> bool processVol(float* out1, float* out2, float fParam1, float fParam2, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
-template<typename op> bool processVol(float* out, const float* in, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
-template<typename op> bool processVol(float* out, const float* in, float fParam, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
-template<typename op> bool processVol(float* out, const float* in1, const float* in2, float fParam, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
-template<typename op> bool processVol(float* out, const float* in1, const float* in2, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
-
-template<typename op> bool processSino(float* out, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
-template<typename op> bool processSino(float* out, float fParam, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
-template<typename op> bool processSino(float* out1, float* out2, float fParam1, float fParam2, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
-template<typename op> bool processSino(float* out, const float* in, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
-template<typename op> bool processSino(float* out, const float* in, float fParam, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
-template<typename op> bool processSino(float* out, const float* in1, const float* in2, float fParam, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
-template<typename op> bool processSino(float* out, const float* in1, const float* in2, unsigned int pitch, const SDimensions& dims, std::optional<cudaStream_t> _stream = {});
+template<typename op> bool processData(astra::CData2D *out, const Stream &stream = Stream(automatic_sync));
+template<typename op> bool processData(astra::CData2D *out, float fParam, const Stream &stream = Stream(automatic_sync));
+template<typename op> bool processData(astra::CData2D *out1, astra::CData2D *out2, float fParam1, float fParam2, const Stream &stream = Stream(automatic_sync));
+template<typename op> bool processData(astra::CData2D *out, const astra::CData2D *in, const Stream &stream = Stream(automatic_sync));
+template<typename op> bool processData(astra::CData2D *out, const astra::CData2D *in, float fParam, const Stream &stream = Stream(automatic_sync));
+template<typename op> bool processData(astra::CData2D *out, const astra::CData2D *in1, const astra::CData2D *in2, float fParam, const Stream &stream = Stream(automatic_sync));
+template<typename op> bool processData(astra::CData2D *out, const astra::CData2D *in1, const astra::CData2D *in2, const Stream &stream = Stream(automatic_sync));
 
 
 }

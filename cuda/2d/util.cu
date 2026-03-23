@@ -28,8 +28,10 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/cuda/gpu_runtime_wrapper.h"
 
 #include "astra/cuda/2d/util.h"
+#include "astra/cuda/3d/mem3d_internal.h"
 
 #include "astra/Logging.h"
+#include "astra/Data2D.h"
 
 #include <cstdio>
 #include <cassert>
@@ -182,14 +184,14 @@ bool createArrayAndTextureObject2D(float* data, cudaArray*& dataArray, cudaTextu
 	texObj = 0;
 
 	if (!checkCuda(cudaCreateTextureObject(&texObj, &resDesc, &texDesc, NULL), "createTextureObject2D")) {
-		cudaFreeArray(dataArray);
+		logCuda(cudaFreeArray(dataArray), "createArrayAndTextureObject2D free");
 		return false;
 	}
 
 	bool ok = checkCuda(cudaMemcpy2DToArrayAsync(dataArray, 0, 0, data, pitch*sizeof(float), width*sizeof(float), height, cudaMemcpyDeviceToDevice, stream()), "createTextureObject2D memcpy");
 	ok &= stream.syncIfSync("createArrayAndTextureObject2D sync");
 	if (!ok) {
-		cudaFreeArray(dataArray);
+		logCuda(cudaFreeArray(dataArray), "createArrayAndTextureObject2D free");
 		return false;
 	}
 
@@ -339,10 +341,22 @@ float dotProduct2D(float* D_data, unsigned int pitch,
 
 	stream.sync("dotProduct2D");
 
-	cudaFree(D_buf);
+	logCuda(cudaFree(D_buf), "dotProduct2D free");
 
 	return x;
 }
+
+float dotProduct2D(const astra::CData2D *D_data)
+{
+	const astraCUDA::CDataGPU *datas = dynamic_cast<const astraCUDA::CDataGPU*>(D_data->getStorage());
+	assert(datas);
+	assert(!datas->getArray());
+
+	std::array<int, 2> dims = D_data->getShape();
+
+	return dotProduct2D((float*)datas->getPtr().ptr, datas->getPtr().pitch/sizeof(float), dims[0], dims[1]);
+}
+
 
 bool checkCuda(cudaError_t err, const char *msg)
 {
@@ -352,6 +366,12 @@ bool checkCuda(cudaError_t err, const char *msg)
 	} else {
 		return true;
 	}
+}
+
+// Variant of checkCuda without [[nodiscard]]
+bool logCuda(cudaError_t err, const char *msg)
+{
+	return checkCuda(err, msg);
 }
 
 }

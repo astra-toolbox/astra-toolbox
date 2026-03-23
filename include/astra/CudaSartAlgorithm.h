@@ -99,13 +99,41 @@ public:
 	 */
 	virtual std::string description() const;
 
+	virtual bool run(int _iNrIterations);
+
+	virtual bool getResidualNorm(float32& _fNorm);
 protected:
+
+	bool allocateBuffers();
+	void freeBuffers();
+
+	bool precomputeWeights();
+
+	bool m_bBuffersInitialized;
+
+	// Input/output buffers (on device)
+	CData2D *D_projData;
+	CData2D *D_volData;
+
+	// Temporary buffers (on device)
+	CData2D *D_tmpProjData; // for single line
+	CData2D *D_tmpVolData;
+
+	// Mask buffers (on device)
+	CData2D *D_volMaskData;
+
+	// Weight buffers (on device)
+	CData2D *D_lineWeight;
 
 	/** Relaxation factor
 	 */
 	float m_fLambda;
 
-	virtual void initCUDAAlgorithm();
+	std::vector<int> m_projectionOrder;
+	int m_iIteration;
+
+	bool FP_SART(const astra::CData2D *D_vol, astra::CData2D *D_proj, int angle, float fScale);
+	bool BP_SART(astra::CData2D *D_vol, const astra::CData2D *D_proj, int angle, float fScale);
 };
 
 // inline functions

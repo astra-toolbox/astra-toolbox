@@ -37,22 +37,25 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #endif
 #include "../2d/util.h"
 
+namespace astra {
+class CData3D;
+}
+
 namespace astraCUDA3d {
 
 using astraCUDA::checkCuda;
+using astraCUDA::logCuda;
 using astraCUDA::TransferConstantsBuffer_t;
 using astraCUDA::StreamHelper;
 
 cudaPitchedPtr allocateVolumeData(const SDimensions3D& dims);
 cudaPitchedPtr allocateProjectionData(const SDimensions3D& dims);
-bool zeroVolumeData(cudaPitchedPtr& D_data, const SDimensions3D& dims);
-bool zeroProjectionData(cudaPitchedPtr& D_data, const SDimensions3D& dims);
+bool zeroVolumeData(astra::CData3D *D_data);
 bool copyVolumeToDevice(const float* data, cudaPitchedPtr& D_data, const SDimensions3D& dims, unsigned int pitch = 0);
 bool copyProjectionsToDevice(const float* data, cudaPitchedPtr& D_data, const SDimensions3D& dims, unsigned int pitch = 0);
 bool copyVolumeFromDevice(float* data, const cudaPitchedPtr& D_data, const SDimensions3D& dims, unsigned int pitch = 0);
 bool copyProjectionsFromDevice(float* data, const cudaPitchedPtr& D_data, const SDimensions3D& dims, unsigned int pitch = 0);
-bool duplicateVolumeData(cudaPitchedPtr& D_dest, const cudaPitchedPtr& D_src, const SDimensions3D& dims); 
-bool duplicateProjectionData(cudaPitchedPtr& D_dest, const cudaPitchedPtr& D_src, const SDimensions3D& dims); 
+bool duplicateVolumeData(astra::CData3D *D_dest, const astra::CData3D *D_src);
 
 
 bool transferProjectionsToArray(cudaPitchedPtr D_projData, cudaArray* array, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
@@ -65,7 +68,7 @@ cudaArray* allocateVolumeArray(const SDimensions3D& dims);
 
 bool createTextureObject3D(cudaArray* array, cudaTextureObject_t& texObj);
 
-float dotProduct3D(cudaPitchedPtr data, unsigned int x, unsigned int y, unsigned int z);
+float dotProduct3D(const astra::CData3D *D_data);
 
 int calcNextPowerOfTwo(int _iValue);
 

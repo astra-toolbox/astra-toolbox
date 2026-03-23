@@ -76,7 +76,7 @@ bool CParallelBeamBlobKernelProjector2D::_check()
 	// check base class
 	ASTRA_CONFIG_CHECK(CProjector2D::_check(), "ParallelBeamBlobKernelProjector2D", "Error in Projector2D initialization");
 
-	ASTRA_CONFIG_CHECK(dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry) || dynamic_cast<CParallelVecProjectionGeometry2D*>(m_pProjectionGeometry), "ParallelBeamBlobKernelProjector2D", "Unsupported projection geometry");
+	ASTRA_CONFIG_CHECK(dynamic_cast<CParallelProjectionGeometry2D*>(m_pProjectionGeometry.get()) || dynamic_cast<CParallelVecProjectionGeometry2D*>(m_pProjectionGeometry.get()), "ParallelBeamBlobKernelProjector2D", "Unsupported projection geometry");
 
 	ASTRA_CONFIG_CHECK(m_iBlobSampleCount > 0, "ParallelBeamBlobKernelProjector2D", "m_iBlobSampleCount should be strictly positive.");
 
@@ -137,8 +137,8 @@ bool CParallelBeamBlobKernelProjector2D::initialize(const CParallelProjectionGeo
 {
 	assert(!m_bIsInitialized);
 
-	m_pProjectionGeometry = _pProjectionGeometry.clone();
-	m_pVolumeGeometry = _pVolumeGeometry.clone();
+	m_pProjectionGeometry.reset(_pProjectionGeometry.clone());
+	m_pVolumeGeometry.reset(_pVolumeGeometry.clone());
 	m_fBlobSize = _fBlobSize;
 	m_fBlobSampleRate = _fBlobSampleRate;
 	m_iBlobSampleCount = _iBlobSampleCount;

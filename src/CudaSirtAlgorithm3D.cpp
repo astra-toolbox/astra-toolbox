@@ -39,20 +39,25 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/Logging.h"
 
 #include "astra/cuda/3d/astra3d.h"
-
-using namespace std;
+#include "astra/cuda/3d/mem3d.h"
+#include "astra/cuda/3d/arith3d.h"
 
 namespace astra {
 
 //----------------------------------------------------------------------------------------
 // Constructor
 CCudaSirtAlgorithm3D::CCudaSirtAlgorithm3D() 
-	: m_pSirt(nullptr),
+	: m_bBuffersInitialized(false),
 	  m_iGPUIndex(-1),
-	  m_bAstraSIRTInit(false),
-	  m_iDetectorSuperSampling(1),
-	  m_iVoxelSuperSampling(1),
-	  m_fLambda(1.0f)
+	  m_fRelaxation(1.0f),
+	  D_projData(nullptr),
+	  D_volData(nullptr),
+	  D_tmpProjData(nullptr),
+	  D_tmpVolData(nullptr),
+	  D_lineWeight(nullptr),
+	  D_pixelWeight(nullptr),
+	  D_projMaskData(nullptr),
+	  D_volMaskData(nullptr)
 {
 
 }
@@ -71,7 +76,7 @@ CCudaSirtAlgorithm3D::CCudaSirtAlgorithm3D(CProjector3D* _pProjector,
 // Destructor
 CCudaSirtAlgorithm3D::~CCudaSirtAlgorithm3D() 
 {
-	delete m_pSirt;
+	freeBuffers();
 }
 
 
@@ -89,8 +94,9 @@ bool CCudaSirtAlgorithm3D::_check()
 //----------------------------------------------------------------------------------------
 void CCudaSirtAlgorithm3D::initializeFromProjector()
 {
-	m_iVoxelSuperSampling = 1;
-	m_iDetectorSuperSampling = 1;
+	m_params.iRaysPerVoxelDim = 1;
+	m_params.iRaysPerDetDim = 1;
+	m_params.projKernel = astraCUDA3d::ker3d_default;
 	m_iGPUIndex = -1;
 
 	CCudaProjector3D* pCudaProjector = dynamic_cast<CCudaProjector3D*>(m_pProjector);
@@ -99,11 +105,12 @@ void CCudaSirtAlgorithm3D::initializeFromProjector()
 			ASTRA_WARN("non-CUDA Projector3D passed to SIRT3D_CUDA");
 		}
 	} else {
-		m_iVoxelSuperSampling = pCudaProjector->getVoxelSuperSampling();
-		m_iDetectorSuperSampling = pCudaProjector->getDetectorSuperSampling();
 		m_iGPUIndex = pCudaProjector->getGPUIndex();
-	}
 
+		m_params.iRaysPerVoxelDim = pCudaProjector->getVoxelSuperSampling();
+		m_params.iRaysPerDetDim = pCudaProjector->getDetectorSuperSampling();
+		m_params.projKernel = pCudaProjector->getProjectionKernel();
+	}
 }
 
 //--------------------------------------------------------------------------------------
@@ -121,13 +128,13 @@ bool CCudaSirtAlgorithm3D::initialize(const Config& _cfg)
 
 	bool ok = true;
 
-	ok &= CR.getOptionNumerical("Relaxation", m_fLambda, 1.0f);
+	ok &= CR.getOptionNumerical("Relaxation", m_fRelaxation, 1.0f);
 
 	initializeFromProjector();
 
 	// Deprecated options
-	ok &= CR.getOptionInt("VoxelSuperSampling", m_iVoxelSuperSampling, m_iVoxelSuperSampling);
-	ok &= CR.getOptionInt("DetectorSuperSampling", m_iDetectorSuperSampling, m_iDetectorSuperSampling);
+	ok &= CR.getOptionUInt("VoxelSuperSampling", m_params.iRaysPerVoxelDim, m_params.iRaysPerVoxelDim);
+	ok &= CR.getOptionUInt("DetectorSuperSampling", m_params.iRaysPerDetDim, m_params.iRaysPerDetDim);
 	if (CR.hasOption("GPUIndex"))
 		ok &= CR.getOptionInt("GPUIndex", m_iGPUIndex, m_iGPUIndex);
 	else
@@ -136,15 +143,15 @@ bool CCudaSirtAlgorithm3D::initialize(const Config& _cfg)
 		return false;
 
 	if (m_pSinogram->getGeometry().isOfType("cyl_cone_vec")
-	    && (m_iDetectorSuperSampling > 1 || m_iVoxelSuperSampling > 1)) {
+	    && (m_params.iRaysPerDetDim > 1 || m_params.iRaysPerVoxelDim > 1)) {
 		ASTRA_CONFIG_CHECK(false, "SIRT3D_CUDA",
 						   "Detector/voxel supersampling is not supported for cyl_cone_vec geometry.");
 	}
 
-	m_pSirt = new AstraSIRT3d();
-
-	m_bAstraSIRTInit = false;
-
+	if (!allocateBuffers())
+		return false;
+	if (!setupGeometry())
+		return false;
 
 	// success
 	m_bIsInitialized = _check();
@@ -154,109 +161,263 @@ bool CCudaSirtAlgorithm3D::initialize(const Config& _cfg)
 //----------------------------------------------------------------------------------------
 // Initialize - C++
 bool CCudaSirtAlgorithm3D::initialize(CProjector3D* _pProjector,
-								  CFloat32ProjectionData3D* _pSinogram,
-								  CFloat32VolumeData3D* _pReconstruction)
+                                      CFloat32ProjectionData3D* _pSinogram,
+                                      CFloat32VolumeData3D* _pReconstruction)
 {
 	assert(!m_bIsInitialized);
 
-	m_fLambda = 1.0f;
+	m_fRelaxation = 1.0f;
 
 	// required classes
 	m_pProjector = _pProjector;
 	m_pSinogram = _pSinogram;
 	m_pReconstruction = _pReconstruction;
 
-	m_pSirt = new AstraSIRT3d;
+	initializeFromProjector();
 
-	m_bAstraSIRTInit = false;
+	if (!allocateBuffers())
+		return false;
+	if (!setupGeometry())
+		return false;
 
 	// success
 	m_bIsInitialized = _check();
 	return m_bIsInitialized;
 }
 
+//--------------------------------------------------------------------------------------
+
+bool CCudaSirtAlgorithm3D::setupGeometry()
+{
+	m_geometry = astra::convertAstraGeometry(&m_pReconstruction->getGeometry(), &m_pSinogram->getGeometry());
+	m_params.volScale = m_geometry.getVolScale();
+
+	return m_geometry.isValid();
+}
+
+bool CCudaSirtAlgorithm3D::allocateBuffers()
+{
+	if (m_iGPUIndex != -1)
+		astraCUDA3d::setGPUIndex(m_iGPUIndex);
+
+	if ((D_volData = astraCUDA3d::createGPUData3DLike(m_pReconstruction)) == nullptr)
+		return false;
+	if ((D_tmpVolData = astraCUDA3d::createGPUData3DLike(m_pReconstruction)) == nullptr)
+		return false;
+	if ((D_pixelWeight = astraCUDA3d::createGPUData3DLike(m_pReconstruction)) == nullptr)
+		return false;
+	if (m_bUseReconstructionMask) {
+		if ((D_volMaskData = astraCUDA3d::createGPUData3DLike(m_pReconstruction)) == nullptr)
+			return false;
+	}
+	if ((D_projData = astraCUDA3d::createGPUData3DLike(m_pSinogram)) == nullptr)
+		return false;
+	if ((D_tmpProjData = astraCUDA3d::createGPUData3DLike(m_pSinogram)) == nullptr)
+		return false;
+	if (m_bUseSinogramMask) {
+		if ((D_projMaskData = astraCUDA3d::createGPUData3DLike(m_pSinogram)) == nullptr)
+			return false;
+	}
+	if ((D_lineWeight = astraCUDA3d::createGPUData3DLike(m_pSinogram)) == nullptr)
+		return false;
+
+	return true;
+}
+
+// TODO: Centralize this somehow
+// (By making GPU DataStorage objects keep track of if they should free their storage in their destructor)
+static void freeGPUMem(CData3D*& ptr)
+{
+	if (ptr) {
+		astraCUDA3d::freeGPUMemory(ptr);
+		delete ptr;
+		ptr = nullptr;
+	}
+}
+
+
+void CCudaSirtAlgorithm3D::freeBuffers()
+{
+	freeGPUMem(D_volData);
+	freeGPUMem(D_pixelWeight);
+	freeGPUMem(D_tmpVolData);
+	freeGPUMem(D_volMaskData);
+	freeGPUMem(D_projData);
+	freeGPUMem(D_tmpProjData);
+	freeGPUMem(D_lineWeight);
+	freeGPUMem(D_projMaskData);
+}
+
+bool CCudaSirtAlgorithm3D::precomputeWeights()
+{
+	bool ok = true;
+
+	astraCUDA3d::zeroGPUMemory(D_lineWeight);
+	if (m_bUseReconstructionMask) {
+		callFP(D_volMaskData, D_lineWeight, 1.0f);
+	} else {
+		astraCUDA3d::processVol3D<astraCUDA3d::opSet>(D_tmpVolData, 1.0f);
+		callFP(D_tmpVolData, D_lineWeight, 1.0f);
+	}
+	astraCUDA3d::processVol3D<astraCUDA3d::opInvert>(D_lineWeight);
+
+	if (m_bUseSinogramMask) {
+		// scale line weights with sinogram mask to zero out masked sinogram pixels
+		astraCUDA3d::processVol3D<astraCUDA3d::opMul>(D_lineWeight, D_projMaskData);
+	}
+
+	astraCUDA3d::zeroGPUMemory(D_pixelWeight);
+
+	if (m_bUseSinogramMask) {
+		callBP(D_pixelWeight, D_projMaskData, 1.0f);
+	} else {
+		astraCUDA3d::processVol3D<astraCUDA3d::opSet>(D_tmpProjData, 1.0f);
+		callBP(D_pixelWeight, D_tmpProjData, 1.0f);
+	}
+	astraCUDA3d::processVol3D<astraCUDA3d::opInvert>(D_pixelWeight);
+
+	if (m_bUseReconstructionMask) {
+		// scale pixel weights with mask to zero out masked pixels
+		astraCUDA3d::processVol3D<astraCUDA3d::opMul>(D_pixelWeight, D_volMaskData);
+	}
+	astraCUDA3d::processVol3D<astraCUDA3d::opMul>(D_pixelWeight, m_fRelaxation);
+
+	return ok;
+}
+
 //----------------------------------------------------------------------------------------
 // Iterate
+
 bool CCudaSirtAlgorithm3D::run(int _iNrIterations)
 {
 	// check initialized
 	ASTRA_ASSERT(m_bIsInitialized);
 
-	const CProjectionGeometry3D &projgeom = m_pSinogram->getGeometry();
-	const CVolumeGeometry3D &volgeom = m_pReconstruction->getGeometry();
-
 	bool ok = true;
 
-	if (!m_bAstraSIRTInit) {
+	if (m_iGPUIndex != -1)
+		astraCUDA3d::setGPUIndex(m_iGPUIndex);
 
-		ok &= m_pSirt->setGPUIndex(m_iGPUIndex);
+	if (!m_bBuffersInitialized) {
+		// We can't precompute lineWeights and pixelWeights when using a mask
+		if (!m_bUseReconstructionMask && !m_bUseSinogramMask)
+			ok &= precomputeWeights();
 
-		ok &= m_pSirt->setGeometry(&volgeom, &projgeom);
+		if (!ok) {
+			return false;
+		}
 
-		ok &= m_pSirt->enableSuperSampling(m_iVoxelSuperSampling, m_iDetectorSuperSampling);
-
-		if (m_bUseReconstructionMask)
-			ok &= m_pSirt->enableVolumeMask();
-		if (m_bUseSinogramMask)
-			ok &= m_pSirt->enableSinogramMask();
-
-		ok &= m_pSirt->setRelaxation(m_fLambda);
-
-		ASTRA_ASSERT(ok);
-
-		ok &= m_pSirt->init();
-
-		ASTRA_ASSERT(ok);
-
-		m_bAstraSIRTInit = true;
-
+		m_bBuffersInitialized = true;
 	}
 
 	ASTRA_ASSERT(m_pSinogram->isFloat32Memory());
 
-	ok = m_pSirt->setSinogram(m_pSinogram->getFloat32Memory(), m_pSinogram->getGeometry().getDetectorColCount());
-
-	ASTRA_ASSERT(ok);
+	ok &= astraCUDA3d::copyToGPUMemory(m_pSinogram, D_projData);
 
 	if (m_bUseReconstructionMask) {
 		ASTRA_ASSERT(m_pReconstructionMask->isFloat32Memory());
-		ok &= m_pSirt->setVolumeMask(m_pReconstructionMask->getFloat32Memory(), volgeom.getGridColCount());
+		ok &= astraCUDA3d::copyToGPUMemory(m_pReconstructionMask, D_volMaskData);
 	}
 	if (m_bUseSinogramMask) {
 		ASTRA_ASSERT(m_pSinogramMask->isFloat32Memory());
-		ok &= m_pSirt->setSinogramMask(m_pSinogramMask->getFloat32Memory(), m_pSinogramMask->getGeometry().getDetectorColCount());
+		ok &= astraCUDA3d::copyToGPUMemory(m_pSinogramMask, D_projMaskData);
 	}
 
 	ASTRA_ASSERT(m_pReconstruction->isFloat32Memory());
-	ok &= m_pSirt->setStartReconstruction(m_pReconstruction->getFloat32Memory(),
-	                                      volgeom.getGridColCount());
+	ok &= astraCUDA3d::copyToGPUMemory(m_pReconstruction, D_volData);
 
-	ASTRA_ASSERT(ok);
+	if (!ok)
+		return false;
 
-	if (m_bUseMinConstraint)
-		ok &= m_pSirt->setMinConstraint(m_fMinValue);
-	if (m_bUseMaxConstraint)
-		ok &= m_pSirt->setMaxConstraint(m_fMaxValue);
+	if (m_bUseReconstructionMask || m_bUseSinogramMask)
+		ok &= precomputeWeights();
 
-	ok &= m_pSirt->iterate(_iNrIterations);
-	ASTRA_ASSERT(ok);
+	if (!ok)
+		return false;
 
-	ok &= m_pSirt->getReconstruction(m_pReconstruction->getFloat32Memory(),
-	                                 volgeom.getGridColCount());
-	ASTRA_ASSERT(ok);
+	for (int iter = 0; iter < _iNrIterations && !astra::shouldAbort(); ++iter) {
+		// TODO: Error checking in this loop
+
+		// copy projection data to tmp buffer
+		astraCUDA3d::assignGPUMemory(D_tmpProjData, D_projData);
+
+		// do FP, subtracting it from projection data
+		if (m_bUseReconstructionMask) {
+			astraCUDA3d::assignGPUMemory(D_tmpVolData, D_volData);
+			astraCUDA3d::processVol3D<astraCUDA3d::opMul>(D_tmpVolData, D_volMaskData);
+			callFP(D_tmpVolData, D_tmpProjData, -1.0f);
+		} else {
+			callFP(D_volData, D_tmpProjData, -1.0f);
+		}
+
+		astraCUDA3d::processVol3D<astraCUDA3d::opMul>(D_tmpProjData, D_lineWeight);
+
+		astraCUDA3d::zeroGPUMemory(D_tmpVolData);
+
+		callBP(D_tmpVolData, D_tmpProjData, 1.0f);
+
+		// pixel weights also contain the volume mask and relaxation factor
+		astraCUDA3d::processVol3D<astraCUDA3d::opAddMul>(D_volData, D_tmpVolData, D_pixelWeight);
+
+		if (m_bUseMinConstraint)
+			astraCUDA3d::processVol3D<astraCUDA3d::opClampMin>(D_volData, m_fMinValue);
+		if (m_bUseMaxConstraint)
+			astraCUDA3d::processVol3D<astraCUDA3d::opClampMax>(D_volData, m_fMaxValue);
+	}
+
+	ok &= astraCUDA3d::copyFromGPUMemory(m_pReconstruction, D_volData);
 
 	return ok;
 }
 //----------------------------------------------------------------------------------------
 bool CCudaSirtAlgorithm3D::getResidualNorm(float32& _fNorm)
 {
-	if (!m_bIsInitialized || !m_pSirt)
+	if (!m_bIsInitialized || !m_bBuffersInitialized)
 		return false;
 
-	_fNorm = m_pSirt->computeDiffNorm();
+	if (m_iGPUIndex != -1)
+		astraCUDA3d::setGPUIndex(m_iGPUIndex);
+
+	bool ok = true;
+
+	// copy sinogram to projection data
+	ok &= astraCUDA3d::assignGPUMemory(D_tmpProjData, D_projData);
+
+	if (!ok)
+		return false;
+
+	// do FP, subtracting projection from sinogram
+	if (m_bUseReconstructionMask) {
+		ok &= astraCUDA3d::assignGPUMemory(D_tmpVolData, D_volData);
+		ok &= astraCUDA3d::processVol3D<astraCUDA3d::opMul>(D_tmpVolData, D_volMaskData);
+		ok &= callFP(D_tmpVolData, D_tmpProjData, -1.0f);
+	} else {
+		ok &= callFP(D_volData, D_tmpProjData, -1.0f);
+	}
+
+	if (!ok)
+		return false;
+
+	float s = astraCUDA3d::dotProduct3D(D_tmpProjData);
+	_fNorm = sqrt(s);
 
 	return true;
 }
+//----------------------------------------------------------------------------------------
+bool CCudaSirtAlgorithm3D::callFP(const CData3D *D_vol, CData3D *D_proj, float fScale)
+{
+	astraCUDA3d::SProjectorParams3D p = m_params;
+	p.fOutputScale *= fScale;
+	return astraCUDA3d::FP(D_proj, D_vol, m_geometry, p);
+}
+
+bool CCudaSirtAlgorithm3D::callBP(CData3D *D_vol, const CData3D *D_proj, float fScale)
+{
+	astraCUDA3d::SProjectorParams3D p = m_params;
+	p.fOutputScale *= fScale;
+	return astraCUDA3d::BP(D_proj, D_vol, m_geometry, p);
+}
+
 
 
 } // namespace astra

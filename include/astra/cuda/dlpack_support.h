@@ -25,47 +25,23 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#ifndef _CUDA_DIMS3D_H
-#define _CUDA_DIMS3D_H
 
-#include "astra/GeometryUtil3D.h"
+#ifndef _ASTRA_CUDA_DLPACK_SUPPORT_H
+#define _ASTRA_CUDA_DLPACK_SUPPORT_H
 
+#include "astra/Globals.h"
 
-namespace astraCUDA3d {
+#include "dlpack/dlpack.h"
 
-using astra::SConeProjection;
-using astra::SCylConeProjection;
-using astra::SPar3DProjection;
+namespace astra {
+class CDataStorage;
+}
 
+namespace astraCUDA {
 
-using astra::SDimensions3D;
-using astra::SVolScale3D;
-
-
-enum Cuda3DProjectionKernel {
-	ker3d_default = 0,
-	ker3d_sum_square_weights,
-	ker3d_fdk_weighting,
-	ker3d_2d_weighting,
-	ker3d_matched_bp
-};
-
-struct SProjectorParams3D {
-	SProjectorParams3D() :
-	    volScale(),
-	    iRaysPerDetDim(1), iRaysPerVoxelDim(1),
-	    fOutputScale(1.0f),
-	    projKernel(ker3d_default)
-	{ }
-
-	SVolScale3D volScale;
-	unsigned int iRaysPerDetDim;
-	unsigned int iRaysPerVoxelDim;
-	float fOutputScale;
-	Cuda3DProjectionKernel projKernel;
-};
+_AstraExport astra::CDataStorage *wrapDLTensor(DLManagedTensorVersioned *tensor_m);
+_AstraExport astra::CDataStorage *wrapDLTensor(DLManagedTensor *tensor_m);
 
 }
 
 #endif
-

@@ -110,15 +110,42 @@ public:
 	 */
 	virtual std::string description() const;
 
+	virtual bool run(int _iNrIterations);
+
+	virtual bool getResidualNorm(float32& _fNorm);
 protected:
+
+	bool allocateBuffers();
+	void freeBuffers();
+
+	bool precomputeWeights();
+
+	bool m_bBuffersInitialized;
+
 	CFloat32VolumeData2D* m_pMinMask;
 	CFloat32VolumeData2D* m_pMaxMask;
+
+	// Input/output buffers (on device)
+	CData2D *D_projData;
+	CData2D *D_volData;
+
+	// Temporary buffers (on device)
+	CData2D *D_tmpProjData;
+	CData2D *D_tmpVolData;
+
+	// Geometry-specific precomputed data (on device)
+	CData2D *D_lineWeight;
+	CData2D *D_pixelWeight;
+
+	// Mask data (on device)
+	CData2D *D_projMaskData;
+	CData2D *D_volMaskData;
+	CData2D *D_minMaskData;
+	CData2D *D_maxMaskData;
 
 	/** Relaxation factor
 	 */
 	float m_fLambda;
-
-	virtual void initCUDAAlgorithm();
 };
 
 // inline functions

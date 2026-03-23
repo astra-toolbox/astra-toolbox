@@ -36,7 +36,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/Logging.h"
 
-#include "astra/cuda/2d/algo.h"
+#include "astra/cuda/2d/mem2d.h"
 
 #include <ctime>
 
@@ -47,11 +47,7 @@ namespace astra {
 //----------------------------------------------------------------------------------------
 // Constructor
 CCudaReconstructionAlgorithm2D::CCudaReconstructionAlgorithm2D() 
-	: m_pAlgo(nullptr),
-	  m_iDetectorSuperSampling(1),
-	  m_iPixelSuperSampling(1),
-	  m_iGPUIndex(-1),
-	  m_bAlgoInit(false)
+	: m_iGPUIndex(-1)
 {
 
 }
@@ -60,14 +56,14 @@ CCudaReconstructionAlgorithm2D::CCudaReconstructionAlgorithm2D()
 // Destructor
 CCudaReconstructionAlgorithm2D::~CCudaReconstructionAlgorithm2D() 
 {
-	delete m_pAlgo;
+
 }
 
 //---------------------------------------------------------------------------------------
 void CCudaReconstructionAlgorithm2D::initializeFromProjector()
 {
-	m_iPixelSuperSampling = 1;
-	m_iDetectorSuperSampling = 1;
+	m_params.iRaysPerDet = 1;
+	m_params.iRaysPerPixelDim = 1;
 	m_iGPUIndex = -1;
 
 	// Projector
@@ -77,8 +73,8 @@ void CCudaReconstructionAlgorithm2D::initializeFromProjector()
 			ASTRA_WARN("non-CUDA Projector2D passed");
 		}
 	} else {
-		m_iDetectorSuperSampling = pCudaProjector->getDetectorSuperSampling();
-		m_iPixelSuperSampling = pCudaProjector->getVoxelSuperSampling();
+		m_params.iRaysPerDet = pCudaProjector->getDetectorSuperSampling();
+		m_params.iRaysPerPixelDim = pCudaProjector->getVoxelSuperSampling();
 		m_iGPUIndex = pCudaProjector->getGPUIndex();
 	}
 }
@@ -91,9 +87,7 @@ bool CCudaReconstructionAlgorithm2D::initialize(const Config& _cfg)
 
 	ConfigReader<CAlgorithm> CR("CudaReconstructionAlgorithm2D", this, _cfg);
 
-	m_bIsInitialized = CReconstructionAlgorithm2D::initialize(_cfg);
-
-	if (!m_bIsInitialized)
+	if (!CReconstructionAlgorithm2D::initialize(_cfg))
 		return false;
 
 	initializeFromProjector();
@@ -101,8 +95,8 @@ bool CCudaReconstructionAlgorithm2D::initialize(const Config& _cfg)
 	bool ok = true;
 
 	// Deprecated options
-	ok &= CR.getOptionInt("PixelSuperSampling", m_iPixelSuperSampling, m_iPixelSuperSampling);
-	ok &= CR.getOptionInt("DetectorSuperSampling", m_iDetectorSuperSampling, m_iDetectorSuperSampling);
+	ok &= CR.getOptionUInt("PixelSuperSampling", m_params.iRaysPerPixelDim, m_params.iRaysPerPixelDim);
+	ok &= CR.getOptionUInt("DetectorSuperSampling", m_params.iRaysPerDet, m_params.iRaysPerDet);
 
 	if (CR.hasOption("GPUIndex"))
 		ok &= CR.getOptionInt("GPUIndex", m_iGPUIndex, -1);
@@ -110,6 +104,9 @@ bool CCudaReconstructionAlgorithm2D::initialize(const Config& _cfg)
 		ok &= CR.getOptionInt("GPUindex", m_iGPUIndex, -1);
 
 	if (!ok)
+		return false;
+
+	if (!setupGeometry())
 		return false;
 
 	return _check();
@@ -131,6 +128,8 @@ bool CCudaReconstructionAlgorithm2D::initialize(CProjector2D* _pProjector,
 
 	initializeFromProjector();
 
+	setupGeometry();
+
 	return _check();
 }
 
@@ -142,9 +141,10 @@ bool CCudaReconstructionAlgorithm2D::_check()
 	if (!CReconstructionAlgorithm2D::_check())
 		return false;
 
-	ASTRA_CONFIG_CHECK(m_iDetectorSuperSampling >= 1, "CudaReconstructionAlgorithm2D", "DetectorSuperSampling must be a positive integer.");
-	ASTRA_CONFIG_CHECK(m_iPixelSuperSampling >= 1, "CudaReconstructionAlgorithm2D", "PixelSuperSampling must be a positive integer.");
+	ASTRA_CONFIG_CHECK(m_params.iRaysPerDet >= 1, "CudaReconstructionAlgorithm2D", "DetectorSuperSampling must be a positive integer.");
+	ASTRA_CONFIG_CHECK(m_params.iRaysPerPixelDim >= 1, "CudaReconstructionAlgorithm2D", "PixelSuperSampling must be a positive integer.");
 	ASTRA_CONFIG_CHECK(m_iGPUIndex >= -1, "CudaReconstructionAlgorithm2D", "GPUIndex must be a non-negative integer or -1.");
+	ASTRA_CONFIG_CHECK(m_geometry.isValid(), "CudaReconstructionAlgorithm2D", "Invalid geometry type.");
 
 	// check restrictions
 	// TODO: check restrictions built into cuda code
@@ -162,106 +162,28 @@ void CCudaReconstructionAlgorithm2D::setGPUIndex(int _iGPUIndex)
 
 bool CCudaReconstructionAlgorithm2D::setupGeometry()
 {
-	ASTRA_ASSERT(m_bIsInitialized);
-	ASTRA_ASSERT(!m_bAlgoInit);
+	const CVolumeGeometry2D& volGeom = m_pReconstruction->getGeometry();
+	const CProjectionGeometry2D& projGeom = m_pSinogram->getGeometry();
 
-	bool ok;
+	m_geometry = convertAstraGeometry(&volGeom, &projGeom);
 
-	// TODO: Probably not the best place for this...
-	ok = m_pAlgo->setGPUIndex(m_iGPUIndex);
-	if (!ok) return false;
+	m_params.fOutputScale = m_geometry.getOutputScale();
 
-	const CVolumeGeometry2D& volgeom = m_pReconstruction->getGeometry();
-	const CProjectionGeometry2D& projgeom = m_pSinogram->getGeometry();
-
-	ok = m_pAlgo->setGeometry(&volgeom, &projgeom);
-	if (!ok) return false;
-
-	ok = m_pAlgo->setSuperSampling(m_iDetectorSuperSampling, m_iPixelSuperSampling);
-	if (!ok) return false;
-
-	if (m_bUseReconstructionMask)
-		ok &= m_pAlgo->enableVolumeMask();
-	if (!ok) return false;
-	if (m_bUseSinogramMask)
-		ok &= m_pAlgo->enableSinogramMask();
-	if (!ok) return false;
-
-	ok &= m_pAlgo->init();
-	if (!ok) return false;
-
-
-	return true;
+	return m_geometry.isValid();
 }
 
-//----------------------------------------------------------------------------------------
-
-void CCudaReconstructionAlgorithm2D::initCUDAAlgorithm()
+bool CCudaReconstructionAlgorithm2D::callFP(const CData2D *D_vol, CData2D *D_proj, float fScale)
 {
-	bool ok;
-
-	ok = setupGeometry();
-	ASTRA_ASSERT(ok);
-
-	ok = m_pAlgo->allocateBuffers();
-	ASTRA_ASSERT(ok);
+	astraCUDA::SProjectorParams2D p = m_params;
+	p.fOutputScale *= fScale;
+	return astraCUDA::FP(D_proj, D_vol, m_geometry, p);
 }
 
-
-//----------------------------------------------------------------------------------------
-// Iterate
-bool CCudaReconstructionAlgorithm2D::run(int _iNrIterations)
+bool CCudaReconstructionAlgorithm2D::callBP(CData2D *D_vol, const CData2D *D_proj, float fScale)
 {
-	// check initialized
-	ASTRA_ASSERT(m_bIsInitialized);
-
-	bool ok = true;
-	const CVolumeGeometry2D& volgeom = m_pReconstruction->getGeometry();
-
-	if (!m_bAlgoInit) {
-		initCUDAAlgorithm();
-		m_bAlgoInit = true;
-	}
-
-	ok = m_pAlgo->copyDataToGPU(m_pSinogram->getFloat32Memory(), m_pSinogram->getGeometry().getDetectorCount(),
-	                            m_pReconstruction->getFloat32Memory(), volgeom.getGridColCount(),
-	                            m_bUseReconstructionMask ? m_pReconstructionMask->getFloat32Memory() : 0, volgeom.getGridColCount(),
-	                            m_bUseSinogramMask ? m_pSinogramMask->getFloat32Memory() : 0, m_pSinogram->getGeometry().getDetectorCount());
-
-	ASTRA_ASSERT(ok);
-
-	if (m_bUseMinConstraint) {
-		bool ret = m_pAlgo->setMinConstraint(m_fMinValue);
-		if (!ret) {
-			ASTRA_WARN("This algorithm ignores MinConstraint");
-		}
-	}
-	if (m_bUseMaxConstraint) {
-		bool ret= m_pAlgo->setMaxConstraint(m_fMaxValue);
-		if (!ret) {
-			ASTRA_WARN("This algorithm ignores MaxConstraint");
-		}
-	}
-
-	ok &= m_pAlgo->iterate(_iNrIterations);
-	ASTRA_ASSERT(ok);
-
-	ok &= m_pAlgo->getReconstruction(m_pReconstruction->getFloat32Memory(),
-	                                 volgeom.getGridColCount());
-
-	ASTRA_ASSERT(ok);
-
-	return ok;
-}
-
-bool CCudaReconstructionAlgorithm2D::getResidualNorm(float32& _fNorm)
-{
-	if (!m_bIsInitialized || !m_pAlgo)
-		return false;
-
-	_fNorm = m_pAlgo->computeDiffNorm();
-
-	return true;
+	astraCUDA::SProjectorParams2D p = m_params;
+	p.fOutputScale *= fScale;
+	return astraCUDA::BP(D_proj, D_vol, m_geometry, p);
 }
 
 } // namespace astra

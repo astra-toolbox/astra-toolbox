@@ -240,7 +240,7 @@ bool FDK_PreWeight(cudaPitchedPtr D_projData,
 		                "FDK_PreWeight transfer");
 		ok &= checkCuda(cudaStreamSynchronize(stream), "FDK_PreWeight");
 		if (!ok) {
-			cudaStreamDestroy(stream);
+			logCuda(cudaStreamDestroy(stream), "FDK_PreWeight destroy stream");
 			return false;
 		}
 
@@ -254,11 +254,11 @@ bool FDK_PreWeight(cudaPitchedPtr D_projData,
 		devFDK_ParkerWeight<<<dimGrid, dimBlock, 0, stream>>>(D_projData.ptr, projPitch, 0, dims.iProjAngles, fSrcOrigin, fDetOrigin, fDetUSize, fCentralFanAngle, fScale, dims);
 	}
 	if (!checkCuda(cudaStreamSynchronize(stream), "FDK_PreWeight")) {
-		cudaStreamDestroy(stream);
+		logCuda(cudaStreamDestroy(stream), "FDK_PreWeight destroy stream");
 		return false;
 	}
 
-	cudaStreamDestroy(stream);
+	logCuda(cudaStreamDestroy(stream), "FDK_PreWeight destroy stream");
 
 	return true;
 }
@@ -279,13 +279,13 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 	if (!ok) {
 		if (D_filter)
 			astraCUDA::freeComplexOnDevice(D_filter);
-		cudaStreamDestroy(stream);
+		logCuda(cudaStreamDestroy(stream), "FDK_Filter destroy stream");
 		return false;
 	}
 
 	if (!D_filter) {
 		// For FILTER_NONE
-		cudaStreamDestroy(stream);
+		logCuda(cudaStreamDestroy(stream), "FDK_Filter destroy stream");
 		return true;
 	}
 
@@ -296,24 +296,24 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 	cufftHandle planI;
 
 	if (!checkCufft(cufftPlan1d(&planF, iPaddedDetCount, CUFFT_R2C, dims.iProjAngles), "FDK filter FFT plan")) {
-		cudaStreamDestroy(stream);
+		logCuda(cudaStreamDestroy(stream), "FDK_Filter destroy stream");
 		astraCUDA::freeComplexOnDevice(D_filter);
 		return false;
 	}
 	if (!checkCufft(cufftSetStream(planF, stream), "FDK filter FFT plan stream")) {
-		cudaStreamDestroy(stream);
+		logCuda(cudaStreamDestroy(stream), "FDK_Filter destroy stream");
 		astraCUDA::freeComplexOnDevice(D_filter);
 		return false;
 	}
 
 	if (!checkCufft(cufftPlan1d(&planI, iPaddedDetCount, CUFFT_C2R, dims.iProjAngles), "FDK filter IFFT plan")) {
-		cudaStreamDestroy(stream);
+		logCuda(cudaStreamDestroy(stream), "FDK_Filter destroy stream");
 		astraCUDA::freeComplexOnDevice(D_filter);
 		cufftDestroy(planF);
 		return false;
 	}
 	if (!checkCufft(cufftSetStream(planI, stream), "FDK filter IFFT plan stream")) {
-		cudaStreamDestroy(stream);
+		logCuda(cudaStreamDestroy(stream), "FDK_Filter destroy stream");
 		astraCUDA::freeComplexOnDevice(D_filter);
 		cufftDestroy(planF);
 		cufftDestroy(planI);
@@ -329,7 +329,7 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 	cufftComplex * D_pcSinoFFT = NULL;
 
 	if (!astraCUDA::allocateComplexOnDevice(dims.iProjAngles, iHalfFFTSize, &D_pcSinoFFT)) {
-		cudaStreamDestroy(stream);
+		logCuda(cudaStreamDestroy(stream), "FDK_Filter destroy stream");
 		astraCUDA::freeComplexOnDevice(D_filter);
 		cufftDestroy(planF);
 		cufftDestroy(planI);
@@ -339,7 +339,7 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 	float * D_pfPadded = NULL;
 	size_t bufferMemSize = sizeof(float) * dims.iProjAngles * iPaddedDetCount;
 	if (!checkCuda(cudaMalloc((void **)&D_pfPadded, bufferMemSize), "FDK filter malloc")) {
-		cudaStreamDestroy(stream);
+		logCuda(cudaStreamDestroy(stream), "FDK_Filter destroy stream");
 		astraCUDA::freeComplexOnDevice(D_pcSinoFFT);
 		astraCUDA::freeComplexOnDevice(D_filter);
 		cufftDestroy(planF);
@@ -402,11 +402,11 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 	cufftDestroy(planF);
 	cufftDestroy(planI);
 
-	cudaFree(D_pfPadded);
+	logCuda(cudaFree(D_pfPadded), "FDK filter free");
 	astraCUDA::freeComplexOnDevice(D_pcSinoFFT);
 	astraCUDA::freeComplexOnDevice(D_filter);
 
-	cudaStreamDestroy(stream);
+	logCuda(cudaStreamDestroy(stream), "FDK filter destroy stream");
 
 	return ok;
 }
