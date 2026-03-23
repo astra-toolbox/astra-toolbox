@@ -63,16 +63,16 @@ struct SParProjection {
 
 
 	void translate(double dx, double dy) {
-		fDetSX += dx;
-		fDetSY += dy;
+		fDetSX = (float)(fDetSX + dx);
+		fDetSY = (float)(fDetSY + dy);
 	}
 	void scale(double factor) {
-		fRayX *= factor;
-		fRayY *= factor;
-		fDetSX *= factor;
-		fDetSY *= factor;
-		fDetUX *= factor;
-		fDetUY *= factor;
+		fRayX = (float)(fRayX * factor);
+		fRayY = (float)(fRayY * factor);
+		fDetSX = (float)(fDetSX * factor);
+		fDetSY = (float)(fDetSY * factor);
+		fDetUX = (float)(fDetUX * factor);
+		fDetUY = (float)(fDetUY * factor);
 	}
 
 	bool operator==(const SParProjection& o) const {
@@ -94,18 +94,18 @@ struct SFanProjection {
 	float fDetUX, fDetUY;
 
 	void translate(double dx, double dy) {
-		fSrcX += dx;
-		fSrcY += dy;
-		fDetSX += dx;
-		fDetSY += dy;
+		fSrcX = (float)(fSrcX + dx);
+		fSrcY = (float)(fSrcY + dy);
+		fDetSX = (float)(fDetSX + dx);
+		fDetSY = (float)(fDetSY + dy);
 	}
 	void scale(double factor) {
-		fSrcX *= factor;
-		fSrcY *= factor;
-		fDetSX *= factor;
-		fDetSY *= factor;
-		fDetUX *= factor;
-		fDetUY *= factor;
+		fSrcX = (float)(fSrcX * factor);
+		fSrcY = (float)(fSrcY * factor);
+		fDetSX = (float)(fDetSX * factor);
+		fDetSY = (float)(fDetSY * factor);
+		fDetUX = (float)(fDetUX * factor);
+		fDetUY = (float)(fDetUY * factor);
 	}
 
 	bool operator==(const SFanProjection& o) const {
