@@ -178,7 +178,7 @@ bool CCudaFilteredBackProjectionAlgorithm::run(int /*_iNrIterations*/)
 	}
 	CData2D *D_volData = new CData2D(volDims[0], volDims[1], s);
 
-	s = astraCUDA::allocateGPUMemory(projDims[0], projDims[1], astraCUDA::INIT_ZERO);
+	s = astraCUDA::allocateGPUMemory(projDims[0], projDims[1], astraCUDA::INIT_NO);
 	if (!s) {
 		astraCUDA::freeGPUMemory(D_volData);
 		delete D_volData;
