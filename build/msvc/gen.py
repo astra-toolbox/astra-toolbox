@@ -185,25 +185,22 @@ P_astra["filters"]["Global &amp; Other"] = [ "72fbe846-10ef-4c52-88df-13bd66c4cb
 P_astra["filters"]["Geometries"] = [ "7ef37c12-c98c-4dd6-938d-12f49279eae0" ]
 P_astra["filters"]["CUDA\\cuda source"] = [
 "04a878ed-77b4-4525-9bc2-38ccd65282c5",
-"cuda\\2d\\algo.cu",
+"cuda\\dlpack_support.cu",
+"cuda\\stream.cu",
 "cuda\\2d\\arith.cu",
 "cuda\\2d\\astra.cu",
-"cuda\\2d\\cgls.cu",
 "cuda\\2d\\darthelper.cu",
-"cuda\\2d\\em.cu",
 "cuda\\2d\\fan_bp.cu",
 "cuda\\2d\\fan_fp.cu",
 "cuda\\2d\\fbp.cu",
 "cuda\\2d\\fft.cu",
+"cuda\\2d\\mem2d.cu",
 "cuda\\2d\\par_bp.cu",
 "cuda\\2d\\par_fp.cu",
 "cuda\\2d\\sart.cu",
-"cuda\\2d\\sirt.cu",
 "cuda\\2d\\util.cu",
-"cuda\\3d\\algo3d.cu",
 "cuda\\3d\\arith3d.cu",
 "cuda\\3d\\astra3d.cu",
-"cuda\\3d\\cgls3d.cu",
 "cuda\\3d\\cone_bp.cu",
 "cuda\\3d\\cone_fp.cu",
 "cuda\\3d\\cone_cyl.cu",
@@ -213,7 +210,6 @@ P_astra["filters"]["CUDA\\cuda source"] = [
 "cuda\\3d\\mem3d.cu",
 "cuda\\3d\\par3d_bp.cu",
 "cuda\\3d\\par3d_fp.cu",
-"cuda\\3d\\sirt3d.cu",
 "cuda\\3d\\util3d.cu",
 ]
 P_astra["filters"]["Algorithms\\source"] = [
@@ -315,26 +311,24 @@ P_astra["filters"]["CUDA\\astra source"] = [
 ]
 P_astra["filters"]["CUDA\\cuda headers"] = [
 "4e17872e-db7d-41bc-9760-fad1c253b583",
-"include\\astra\\cuda\\2d\\algo.h",
+"include\\astra\\cuda\\dlpack_support.h",
+"include\\astra\\cuda\\stream.h",
+"include\\astra\\cuda\\stream_internal.h",
 "include\\astra\\cuda\\2d\\arith.h",
 "include\\astra\\cuda\\2d\\astra.h",
-"include\\astra\\cuda\\2d\\cgls.h",
 "include\\astra\\cuda\\2d\\darthelper.h",
 "include\\astra\\cuda\\2d\\dims.h",
-"include\\astra\\cuda\\2d\\em.h",
 "include\\astra\\cuda\\2d\\fan_bp.h",
 "include\\astra\\cuda\\2d\\fan_fp.h",
 "include\\astra\\cuda\\2d\\fbp.h",
 "include\\astra\\cuda\\2d\\fft.h",
+"include\\astra\\cuda\\2d\\mem2d.h",
 "include\\astra\\cuda\\2d\\par_bp.h",
 "include\\astra\\cuda\\2d\\par_fp.h",
 "include\\astra\\cuda\\2d\\sart.h",
-"include\\astra\\cuda\\2d\\sirt.h",
 "include\\astra\\cuda\\2d\\util.h",
-"include\\astra\\cuda\\3d\\algo3d.h",
 "include\\astra\\cuda\\3d\\arith3d.h",
 "include\\astra\\cuda\\3d\\astra3d.h",
-"include\\astra\\cuda\\3d\\cgls3d.h",
 "include\\astra\\cuda\\3d\\cone_bp.h",
 "include\\astra\\cuda\\3d\\cone_fp.h",
 "include\\astra\\cuda\\3d\\cone_cyl.h",
@@ -342,9 +336,9 @@ P_astra["filters"]["CUDA\\cuda headers"] = [
 "include\\astra\\cuda\\3d\\dims3d.h",
 "include\\astra\\cuda\\3d\\fdk.h",
 "include\\astra\\cuda\\3d\\mem3d.h",
+"include\\astra\\cuda\\3d\\mem3d_internal.h",
 "include\\astra\\cuda\\3d\\par3d_bp.h",
 "include\\astra\\cuda\\3d\\par3d_fp.h",
-"include\\astra\\cuda\\3d\\sirt3d.h",
 "include\\astra\\cuda\\3d\\util3d.h",
 ]
 P_astra["filters"]["Algorithms\\headers"] = [
@@ -705,7 +699,7 @@ def write_main_project(vs_version):
       print('      <TargetMachinePlatform>64</TargetMachinePlatform>', file=F)
       print('      <GenerateLineInfo>true</GenerateLineInfo>', file=F)
       print(f'      <CodeGeneration>{CUDA_CC[(CUDA_MAJOR,CUDA_MINOR)]}</CodeGeneration>', file=F)
-      print('      <AdditionalOptions>-std=c++17</AdditionalOptions>', file=F)
+      print('      <AdditionalOptions>-std=c++17 -diag-suppress=1394 -Wno-deprecated-gpu-targets</AdditionalOptions>', file=F)
       print('      <AdditionalCompilerOptions>/std:c++17</AdditionalCompilerOptions>', file=F)
       print('    </CudaCompile>', file=F)
     print('  </ItemDefinitionGroup>', file=F)

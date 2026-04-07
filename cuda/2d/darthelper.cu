@@ -70,7 +70,7 @@ void roiSelect(float* out, float radius, unsigned int width, unsigned int height
 
 	copyVolumeFromDevice(out, width, dims, D_data, pitch);
 
-	cudaFree(D_data);
+	logCuda(cudaFree(D_data), "roiSelect free");
 }
 
 
@@ -269,9 +269,8 @@ void dartMask(float* mask, const float* segmentation, unsigned int conn, unsigne
 
 	copyVolumeFromDevice(mask, width, dims, D_maskData, pitch);
 
-	cudaFree(D_segmentationData);
-	cudaFree(D_maskData);
-
+	logCuda(cudaFree(D_segmentationData), "dartMask free");
+	logCuda(cudaFree(D_maskData), "dartMark free");
 }
 
 
@@ -353,9 +352,8 @@ void dartSmoothing(float* out, const float* in, float b, unsigned int radius, un
 
 	copyVolumeFromDevice(out, width, dims, D_outData, pitch);
 
-	cudaFree(D_outData);
-	cudaFree(D_inData);
-
+	logCuda(cudaFree(D_outData), "dartSmoothing free");
+	logCuda(cudaFree(D_inData), "dartSmoothing free");
 }
 
 

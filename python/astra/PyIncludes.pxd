@@ -164,11 +164,7 @@ IF HAVE_CUDA==True:
         cdef cppclass CCudaProjector2D
 
     cdef extern from "astra/Data3D.h" namespace "astraCUDA3d":
-        cdef cppclass MemHandle3D:
-            pass
-
-    cdef extern from "astra/Data3D.h" namespace "astraCUDA3d":
-        cdef MemHandle3D wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch)
+        cdef CDataStorage* wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch)
 
 
 cdef extern from "astra/SparseMatrix.h" namespace "astra":
@@ -258,7 +254,3 @@ cdef extern from "astra/Data3D.h" namespace "astra":
     cdef CFloat32ProjectionData3D* createCFloat32ProjectionData3DMemory(unique_ptr[CProjectionGeometry3D]&&)
     cdef CFloat32ProjectionData3D* createCFloat32ProjectionData3DMemory(const CProjectionGeometry3D &)
 
-IF HAVE_CUDA==True:
-    cdef extern from "astra/Data3D.h" namespace "astra":
-        cdef cppclass CDataGPU(CDataStorage):
-            CDataGPU(MemHandle3D)

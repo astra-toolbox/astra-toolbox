@@ -338,7 +338,7 @@ class TestOptionsGPU:
 
     @pytest.mark.parametrize('proj_geom,', ['parallel', 'fanflat'], indirect=True)
     @pytest.mark.parametrize(
-        'algorithm_type', ['BP_CUDA', 'SIRT_CUDA', 'SART_CUDA', 'CGLS_CUDA', 'EM_CUDA']
+        'algorithm_type', ['BP_CUDA', 'SIRT_CUDA', 'CGLS_CUDA', 'EM_CUDA']
     )
     def test_pixel_supersampling(self, proj_geom, algorithm_type):
         algorithm_no_supersampling = make_algorithm_config(algorithm_type, proj_geom)

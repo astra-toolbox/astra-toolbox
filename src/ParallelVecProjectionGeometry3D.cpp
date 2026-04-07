@@ -221,7 +221,7 @@ void CParallelVecProjectionGeometry3D::projectPoint(double fX, double fY, double
 
 bool CParallelVecProjectionGeometry3D::_check()
 {
-	ASTRA_CONFIG_CHECK(m_ProjectionAngles.size() == m_iProjectionAngleCount, "ParallelVecProjectionGeometry3D", "Number of vectors does not match number of angles");
+	ASTRA_CONFIG_CHECK(m_ProjectionAngles.size() == (size_t)m_iProjectionAngleCount, "ParallelVecProjectionGeometry3D", "Number of vectors does not match number of angles");
 
 	// TODO
 	return true;

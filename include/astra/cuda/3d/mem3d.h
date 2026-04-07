@@ -30,38 +30,18 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra3d.h"
 
-#include <memory>
-
 namespace astra {
 class CVolumeGeometry3D;
 class CProjectionGeometry3D;
+class CFloat32VolumeData3D;
+class CFloat32ProjectionData3D;
 struct SFilterConfig;
+class CData3D;
+class CDataStorage;
 }
 
 
-// MemHandle3D defines a very basic opaque interface to GPU memory pointers.
-// Its intended use is allowing ASTRA code to pass around GPU pointers without
-// requiring CUDA headers.
-//
-// It generally wraps CUDA linear global memory.
-//
-// As a very basic extension, it also allows wrapping a CUDA 3D array.
-// This extension (only) allows creating a CUDA 3D array, copying projection
-// data into it, performing a BP from the array, and freeing the array.
-
 namespace astraCUDA3d {
-
-// TODO: Make it possible to delete these handles when they're no longer
-// necessary inside the FP/BP
-//
-// TODO: Add functions for querying capacity
-
-struct SMemHandle3D_internal;
-
-struct MemHandle3D {
-	std::shared_ptr<SMemHandle3D_internal> d;
-	operator bool() const { return (bool)d; }
-};
 
 struct SSubDimensions3D {
 	unsigned int nx;
@@ -74,6 +54,11 @@ struct SSubDimensions3D {
 	unsigned int subx;
 	unsigned int suby;
 	unsigned int subz;
+
+	bool isFullVolume() const {
+		return (subx == 0 && suby == 0 && subz == 0 &&
+		        subnx == nx && subny == ny && subnz == nz);
+	}
 };
 
 /*
@@ -91,29 +76,44 @@ enum Mem3DZeroMode {
 
 int maxBlockDimension();
 
-_AstraExport MemHandle3D wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch);
-MemHandle3D createProjectionArrayHandle(const float *ptr, unsigned int x, unsigned int y, unsigned int z);
+_AstraExport astra::CDataStorage* wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch);
+astra::CDataStorage* createProjectionArrayHandle(const float *ptr, unsigned int x, unsigned int y, unsigned int z);
 
-MemHandle3D allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Mem3DZeroMode zero);
+astra::CDataStorage *allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Mem3DZeroMode zero);
 
-bool copyToGPUMemory(const float *src, MemHandle3D &dst, const SSubDimensions3D &pos);
+astra::CDataStorage *allocateGPUMemoryLike(const astra::CData3D *model, Mem3DZeroMode zero);
+astra::CFloat32VolumeData3D *createGPUVolumeData3DLike(const astra::CFloat32VolumeData3D *model);
+astra::CFloat32ProjectionData3D *createGPUProjectionData3DLike(const astra::CFloat32ProjectionData3D *model);
 
-bool copyFromGPUMemory(float *dst, MemHandle3D &src, const SSubDimensions3D &pos);
+// Create base object without attached geometry
+astra::CData3D *createGPUData3DLike(const astra::CData3D *model);
 
-bool freeGPUMemory(MemHandle3D &handle);
+bool copyToGPUMemory(const astra::CData3D *src, astra::CData3D *dst);
+bool copyToGPUMemory(const astra::CData3D *src, astra::CData3D *dst, const SSubDimensions3D &pos);
 
-bool zeroGPUMemory(MemHandle3D &handle, unsigned int x, unsigned int y, unsigned int z);
-
-bool setGPUIndex(int index);
-
-bool copyIntoArray(MemHandle3D &handle, MemHandle3D &subdata, const SSubDimensions3D &pos);
+bool copyFromGPUMemory(astra::CData3D *dst, const astra::CData3D *src);
+bool copyFromGPUMemory(astra::CData3D *dst, const astra::CData3D *src, const SSubDimensions3D &pos);
 
 
-bool FP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D &volData, int iDetectorSuperSampling, astra::Cuda3DProjectionKernel projKernel);
+bool freeGPUMemory(astra::CData3D *data);
 
-bool BP(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D &volData, int iVoxelSuperSampling, astra::Cuda3DProjectionKernel projKernel);
+bool zeroGPUMemory(astra::CData3D *data);
 
-bool FDK(const astra::CProjectionGeometry3D* pProjGeom, MemHandle3D &projData, const astra::CVolumeGeometry3D* pVolGeom, MemHandle3D &volData, bool bShortScan, const astra::SFilterConfig &filterConfig, float fOutputScale = 1.0f);
+bool assignGPUMemory(astra::CData3D *dst, const astra::CData3D *src);
+
+bool copyIntoArray(astra::CData3D *data, astra::CData3D *subdata, const SSubDimensions3D &pos);
+
+
+bool FP(astra::CFloat32ProjectionData3D *projData, const astra::CFloat32VolumeData3D *volData, int iDetectorSuperSampling, astra::Cuda3DProjectionKernel projKernel);
+bool FP(astra::CData3D *projData, const astra::CData3D *volData, const astra::Geometry3DParameters &geom, SProjectorParams3D params);
+
+bool BP(const astra::CFloat32ProjectionData3D *projData, astra::CFloat32VolumeData3D *volData, int iVoxelSuperSampling, astra::Cuda3DProjectionKernel projKernel);
+bool BP(const astra::CData3D *projData, astra::CData3D *volData, const astra::Geometry3DParameters &geom, SProjectorParams3D params);
+
+bool FDK(astra::CFloat32ProjectionData3D *projData, astra::CFloat32VolumeData3D *volData, bool bShortScan, const astra::SFilterConfig &filterConfig, float fOutputScale = 1.0f);
+
+// TODO: This is currently defined in util3d, not in mem3d
+float dotProduct3D(const astra::CData3D *D_data);
 
 }
 

@@ -25,42 +25,21 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#ifndef _CUDA_ALGO3D_H
-#define _CUDA_ALGO3D_H
 
-#include "dims3d.h"
-#include "util3d.h"
+#ifndef _ASTRA_CUDA_STREAM_INTERNAL_H
+#define _ASTRA_CUDA_STREAM_INTERNAL_H
 
-namespace astra {
-class GeometryParameters3D;
-}
+namespace astraCUDA {
 
-namespace astraCUDA3d {
+struct Stream_internal {
+	Stream_internal(cudaStream_t s) : owned(false), autoSync(false), stream(s) { }
+	bool owned;
+	bool autoSync;
+	cudaStream_t stream;
 
-class _AstraExport ReconAlgo3D {
-public:
-	ReconAlgo3D();
-	~ReconAlgo3D();
-
-	bool setGeometry(const SDimensions3D& dims, const astra::Geometry3DParameters &projs, const SProjectorParams3D& params);
-
-protected:
-	bool callFP(cudaPitchedPtr& D_volumeData, 
-	            cudaPitchedPtr& D_projData, 
-	            float outputScale);
-	bool callBP(cudaPitchedPtr& D_volumeData, 
-	            cudaPitchedPtr& D_projData,
-	            float outputScale);
-
-	SDimensions3D dims;
-	SProjectorParams3D params;
-	astra::Geometry3DParameters projs;
-
-	float fOutputScale;
+	cudaStream_t operator*() const { return stream; }
 };
-
 
 }
 
 #endif
-

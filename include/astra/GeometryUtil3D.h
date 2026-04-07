@@ -153,12 +153,12 @@ struct SCylConeProjection {
 
 
 struct SDimensions3D {
-	unsigned int iVolX;
-	unsigned int iVolY;
-	unsigned int iVolZ;
-	unsigned int iProjAngles;
-	unsigned int iProjU; // number of detectors in the U direction
-	unsigned int iProjV; // number of detectors in the V direction
+	unsigned int iVolX = 0;
+	unsigned int iVolY = 0;
+	unsigned int iVolZ = 0;
+	unsigned int iProjAngles = 0;
+	unsigned int iProjU = 0; // number of detectors in the U direction
+	unsigned int iProjV = 0; // number of detectors in the V direction
 };
 
 
@@ -173,8 +173,8 @@ class _AstraExport Geometry3DParameters {
 public:
 	using variant_t = std::variant<std::monostate, std::vector<SPar3DProjection>, std::vector<SConeProjection>, std::vector<SCylConeProjection> >;
 
-	Geometry3DParameters() {}
-	Geometry3DParameters(variant_t && p) : projs(p) { }
+	Geometry3DParameters() { }
+	Geometry3DParameters(variant_t && p, SDimensions3D d, SVolScale3D vs) : projs(std::move(p)), dims(d), volScale(vs) { }
 
 	bool isValid() const {
 		return !std::holds_alternative<std::monostate>(projs);
@@ -211,9 +211,19 @@ public:
 		return &std::get<std::vector<SCylConeProjection>>(projs)[0];
 	}
 
+	const SDimensions3D& getDims() const {
+		return dims;
+	}
+
+	const SVolScale3D& getVolScale() const {
+		return volScale;
+	}
+
 
 private:
 	variant_t projs;
+	SDimensions3D dims;
+	SVolScale3D volScale;
 };
 
 
@@ -314,14 +324,8 @@ CProjectionGeometry3D* getSubProjectionGeometry_Angle(const CProjectionGeometry3
 
 
 
-bool convertAstraGeometry_dims(const CVolumeGeometry3D* pVolGeom,
-                               const CProjectionGeometry3D* pProjGeom,
-                               SDimensions3D& dims);
-
 Geometry3DParameters convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
-                                        const CProjectionGeometry3D* pProjGeom,
-                                        SVolScale3D& scale);
-
+                                        const CProjectionGeometry3D* pProjGeom);
 
 
 }

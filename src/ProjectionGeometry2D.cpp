@@ -64,7 +64,7 @@ bool CProjectionGeometry2D::_check()
 	ASTRA_CONFIG_CHECK(m_iDetectorCount > 0, "ProjectionGeometry2D", "Detector Count should be positive.");
 	ASTRA_CONFIG_CHECK(m_fDetectorWidth > 0.0f, "ProjectionGeometry2D", "Detector Width should be positive.");
 	ASTRA_CONFIG_CHECK(m_iProjectionAngleCount > 0, "ProjectionGeometry2D", "ProjectionAngleCount should be positive.");
-	ASTRA_CONFIG_CHECK(m_pfProjectionAngles.size() == m_iProjectionAngleCount, "ProjectionGeometry2D", "Number of angles does not match");
+	ASTRA_CONFIG_CHECK(m_pfProjectionAngles.size() == (size_t)m_iProjectionAngleCount, "ProjectionGeometry2D", "Number of angles does not match");
 
 	// autofix: angles in [0,2pi[
 	for (int i = 0; i < m_iProjectionAngleCount; i++) {

@@ -63,7 +63,7 @@ void CFanFlatBeamStripKernelProjector2D::projectBlock_internal(int _iProjFrom, i
 	float32 x2L, x2R;
 	int iVolumeIndex, iRayIndex;
 	
-	CFanFlatProjectionGeometry2D* projgeom = static_cast<CFanFlatProjectionGeometry2D*>(m_pProjectionGeometry);
+	CFanFlatProjectionGeometry2D* projgeom = dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pProjectionGeometry.get());
 
 	// Other precalculations
 	float32 PW = m_pVolumeGeometry->getPixelLengthX();

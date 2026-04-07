@@ -30,12 +30,14 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifdef ASTRA_CUDA
 
 #include "astra/cuda/2d/astra.h"
+#include "astra/cuda/2d/mem2d.h"
 
 #include "astra/AstraObjectManager.h"
 #include "astra/ParallelProjectionGeometry2D.h"
 #include "astra/FanFlatProjectionGeometry2D.h"
 #include "astra/FanFlatVecProjectionGeometry2D.h"
 #include "astra/CudaProjector2D.h"
+#include "astra/Data2D.h"
 
 #include "astra/Logging.h"
 
@@ -175,48 +177,47 @@ bool CCudaForwardProjectionAlgorithm::run(int)
 
 	const CVolumeGeometry2D &pVolGeom = m_pVolume->getGeometry();
 	const CProjectionGeometry2D &pProjGeom = m_pSinogram->getGeometry();
-	astraCUDA::SDimensions dims;
+	std::array<int, 2> volDims = m_pVolume->getShape();
+	std::array<int, 2> projDims = m_pSinogram->getShape();
 
-	ok = convertAstraGeometry_dims(&pVolGeom, &pProjGeom, dims);
+	astraCUDA::SProjectorParams2D params;
+	params.iRaysPerDet = m_iDetectorSuperSampling;
+	Geometry2DParameters geom = convertAstraGeometry(&pVolGeom, &pProjGeom);
+	params.fOutputScale = geom.getOutputScale();
 
-	if (!ok)
+	if (!geom.isValid())
 		return false;
 
-	astraCUDA::SParProjection* pParProjs = 0;
-	astraCUDA::SFanProjection* pFanProjs = 0;
-	float fOutputScale = 1.0f;
+	if (m_iGPUIndex != -1)
+		astraCUDA::setGPUIndex(m_iGPUIndex);
 
-	ok = convertAstraGeometry(&pVolGeom, &pProjGeom, pParProjs, pFanProjs, fOutputScale);
-	if (!ok)
+	CDataStorage *s;
+	s = astraCUDA::allocateGPUMemory(volDims[0], volDims[1], astraCUDA::INIT_NO);
+	if (!s) {
 		return false;
-
-	if (pParProjs) {
-		assert(!pFanProjs);
-
-		ok = astraCudaFP(m_pVolume->getFloat32Memory(), m_pSinogram->getFloat32Memory(),
-		                 pVolGeom.getGridColCount(), pVolGeom.getGridRowCount(),
-		                 pProjGeom.getProjectionAngleCount(),
-		                 pProjGeom.getDetectorCount(),
-		                 pParProjs,
-		                 m_iDetectorSuperSampling, 1.0f * fOutputScale, m_iGPUIndex);
-
-		delete[] pParProjs;
-
-	} else {
-		assert(pFanProjs);
-
-		ok = astraCudaFanFP(m_pVolume->getFloat32Memory(), m_pSinogram->getFloat32Memory(),
-		                    pVolGeom.getGridColCount(), pVolGeom.getGridRowCount(),
-		                    pProjGeom.getProjectionAngleCount(),
-		                    pProjGeom.getDetectorCount(),
-		                    pFanProjs,
-		                    m_iDetectorSuperSampling, fOutputScale, m_iGPUIndex);
-
-		delete[] pFanProjs;
-
 	}
+	CData2D *D_volData = new CData2D(volDims[0], volDims[1], s);
 
-	ASTRA_ASSERT(ok);
+	s = astraCUDA::allocateGPUMemory(projDims[0], projDims[1], astraCUDA::INIT_ZERO);
+	if (!s) {
+		astraCUDA::freeGPUMemory(D_volData);
+		delete D_volData;
+		return false;
+	}
+	CData2D *D_projData = new CData2D(projDims[0], projDims[1], s);
+
+	ok = astraCUDA::copyToGPUMemory(m_pVolume, D_volData);
+
+	if (ok)
+		ok &= astraCUDA::FP(D_projData, D_volData, geom, params);
+
+	if (ok)
+		ok &= astraCUDA::copyFromGPUMemory(m_pSinogram, D_projData);
+
+	astraCUDA::freeGPUMemory(D_volData);
+	astraCUDA::freeGPUMemory(D_projData);
+	delete D_volData;
+	delete D_projData;
 
 	return ok;
 }

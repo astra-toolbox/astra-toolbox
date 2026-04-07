@@ -86,14 +86,20 @@ public:
 	 * @param _pReconstruction	VolumeData2D object for storing the reconstructed volume.
 	 */
 	bool initialize(CProjector2D* _pProjector,
-	                CFloat32ProjectionData2D* _pSinogram, 
-					CFloat32VolumeData2D* _pReconstruction);
+	                CFloat32ProjectionData2D* _pSinogram,
+	                CFloat32VolumeData2D* _pReconstruction);
 
 	/** Get a description of the class.
 	 *
 	 * @return description string
 	 */
 	virtual std::string description() const;
+
+	/** Perform a number of iterations.
+	 *
+	 * @param _iNrIterations amount of iterations to perform.
+	 */
+	virtual bool run(int _iNrIterations = 0);
 };
 
 // inline functions

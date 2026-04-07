@@ -455,21 +455,21 @@ bool ConeFP(cudaPitchedPtr D_volumeData,
 	// transfer volume to array
 	cudaArray* cuArray = allocateVolumeArray(dims);
 	if (!cuArray) {
-		cudaStreamDestroy(stream);
+		logCuda(cudaStreamDestroy(stream), "ConeFP destroy stream");
 		return false;
 	}
 
 	cudaTextureObject_t D_texObj;
 	if (!createTextureObject3D(cuArray, D_texObj)) {
-		cudaStreamDestroy(stream);
-		cudaFreeArray(cuArray);
+		logCuda(cudaStreamDestroy(stream), "ConeFP destroy stream");
+		logCuda(cudaFreeArray(cuArray), "ConeFP free array");
 		return false;
 	}
 
 	if (!transferVolumeToArray(D_volumeData, cuArray, dims, stream)) {
-		cudaDestroyTextureObject(D_texObj);
-		cudaStreamDestroy(stream);
-		cudaFreeArray(cuArray);
+		logCuda(cudaDestroyTextureObject(D_texObj), "ConeFP destroy texture");
+		logCuda(cudaStreamDestroy(stream), "ConeFP destroy stream");
+		logCuda(cudaFreeArray(cuArray), "ConeFP free array");
 		return false;
 	}
 
@@ -496,9 +496,9 @@ bool ConeFP(cudaPitchedPtr D_volumeData,
 
 	ok &= checkCuda(cudaStreamSynchronize(stream), "ConeFP sync");
 
-	cudaDestroyTextureObject(D_texObj);
-	cudaFreeArray(cuArray);
-	cudaStreamDestroy(stream);
+	logCuda(cudaDestroyTextureObject(D_texObj), "ConeFP destroy texture");
+	logCuda(cudaFreeArray(cuArray), "ConeFP free array");
+	logCuda(cudaStreamDestroy(stream), "ConeFP destroy stream");
 
 	return ok;
 }

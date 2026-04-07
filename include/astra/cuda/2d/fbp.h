@@ -25,78 +25,20 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
-#include "algo.h"
 #include "astra/Filters.h"
+#include "dims.h"
+
+namespace astra {
+class CData2D;
+}
 
 namespace astraCUDA {
 
-class _AstraExport FBP : public ReconAlgo {
-public:
-	FBP();
-	~FBP();
+struct SFilter_internal;
+SFilter_internal *prepareFilter(const astra::SFilterConfig &_cfg, const SDimensions &dims);
+void freeFilter(SFilter_internal *f);
 
-	virtual bool useSinogramMask() { return false; }
-	virtual bool useVolumeMask() { return false; }
-
-	// Returns the required size of a filter in the fourier domain
-	// when multiplying it with the fft of the projection data.
-	// Its value is equal to the smallest power of two larger than
-	// or equal to twice the number of detectors in the spatial domain.
-	//
-	// _iDetectorCount is the number of detectors in the spatial domain.
-	static int calcFourierFilterSize(int _iDetectorCount);
-
-	// Sets the filter type. Some filter types require the user to supply an
-	// array containing the filter.
-	// The number of elements in a filter in the fourier domain should be equal
-	// to the value returned by calcFourierFilterSize().
-	// The following types require a filter:
-	//
-	// - FILTER_PROJECTION:
-	// The filter size should be equal to the output of
-	// calcFourierFilterSize(). The filtered sinogram is
-	// multiplied with the supplied filter.
-	//
-	// - FILTER_SINOGRAM:
-	// Same as FILTER_PROJECTION, but now the filter should contain a row for
-	// every projection direction.
-	//
-	// - FILTER_RPROJECTION:
-	// The filter should now contain one kernel (= ifft of filter), with the
-	// peak in the center. The filter width
-	// can be any value. If odd, the peak is assumed to be in the center, if
-	// even, it is assumed to be at floor(filter-width/2).
-	//
-	// - FILTER_RSINOGRAM
-	// Same as FILTER_RPROJECTION, but now the supplied filter should contain a
-	// row for every projection direction.
-	//
-	// A large number of other filters (FILTER_RAMLAK, FILTER_SHEPPLOGAN,
-	// FILTER_COSINE, FILTER_HAMMING, and FILTER_HANN)
-	// have a D variable, which gives the cutoff point in the frequency domain.
-	// Setting this value to 1.0 will include the whole filter
-	bool setFilter(const astra::SFilterConfig &_cfg);
-
-	bool setShortScan(bool ss) { m_bShortScan = ss; return true; }
-
-	// Scale the final reconstruction.
-	// May be called at any time before iterate().
-	bool setReconstructionScale(float fScale);
-
-
-	virtual bool init();
-
-	virtual bool iterate(unsigned int iterations);
-
-	virtual float computeDiffNorm() { return 0.0f; } // TODO
-
-protected:
-	void reset();
-
-	void* D_filter; // cufftComplex*
-	bool m_bSingleFilter; // Same filter for every projection?
-	bool m_bShortScan;
-	float fReconstructionScale;
-};
+// NB: unless filtering is disabled, this will modify D_proj
+bool FBP(astra::CData2D *D_vol, astra::CData2D *D_proj, const astra::Geometry2DParameters &geom, SProjectorParams2D params, const SFilter_internal *f, bool shortScan);
 
 }

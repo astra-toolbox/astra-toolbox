@@ -44,6 +44,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #pragma warning (disable : 4530)
 // disable warning: no suitable definition provided for explicit template instantiation request
 #pragma warning (disable : 4661)
+// disable warning: class X needs to have dll-interface to be used by clients of class Y
+#pragma warning (disable : 4251)
 
 #endif
 
@@ -75,10 +77,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #ifdef DLL_EXPORTS
 #define _AstraExport __declspec(dllexport)
-#define EXPIMP_TEMPLATE
 #else
 #define _AstraExport __declspec(dllimport)
-#define EXPIMP_TEMPLATE extern
 #endif
 
 #else

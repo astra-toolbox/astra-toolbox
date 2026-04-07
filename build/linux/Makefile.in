@@ -60,7 +60,7 @@ BOOSTUTF_LIBS=@LIBS_BOOSTUTF@
 
 ifeq ($(cuda),yes)
 CPPFLAGS  += @CPPFLAGS_CUDA@ -DASTRA_CUDA
-NVCCFLAGS += @NVCCFLAGS_EXTRA@ @CPPFLAGS_CUDA@ -I$(srcdir)/../../include -DASTRA_CUDA --std c++17 -DASTRA_BUILDING_CUDA
+NVCCFLAGS += @NVCCFLAGS_EXTRA@ @CPPFLAGS_CUDA@ -I$(srcdir)/../../include -I$(srcdir)/../../lib/include -DASTRA_CUDA --std c++17 -DASTRA_BUILDING_CUDA
 LDFLAGS   += @LDFLAGS_CUDA@
 LIBS      += -lcudart -lcufft
 NVCC       = @NVCC@
@@ -69,7 +69,7 @@ endif
 ifeq ($(amdhip),yes)
 CPPFLAGS   += @CPPFLAGS_HIP@ -DASTRA_CUDA
 # TODO: Check these warnings
-HIPCCFLAGS += @CPPFLAGS_HIP@ -I$(srcdir)/../../include -DASTRA_CUDA --std c++17 -DASTRA_BUILDING_HIP -Wno-unused-result -Wno-inconsistent-missing-override -Wno-absolute-value
+HIPCCFLAGS += @CPPFLAGS_HIP@ -I$(srcdir)/../../include -I$(srcdir)/../../lib/include -DASTRA_CUDA --std c++17 -DASTRA_BUILDING_HIP -Wno-absolute-value
 LDFLAGS    += @LDFLAGS_HIP@
 LIBS       += -lhipfft
 HIPCC       = @HIPCC@
@@ -262,24 +262,21 @@ CUDA_CXX_OBJECTS=\
 	src/CudaForwardProjectionAlgorithm3D.lo
 
 CUDA_OBJECTS=\
-	cuda/2d/algo.lo \
+	cuda/dlpack_support.lo \
+	cuda/stream.lo \
 	cuda/2d/par_fp.lo \
 	cuda/2d/par_bp.lo \
 	cuda/2d/fan_fp.lo \
 	cuda/2d/fan_bp.lo \
 	cuda/2d/fbp.lo \
-	cuda/2d/sirt.lo \
 	cuda/2d/sart.lo \
-	cuda/2d/cgls.lo \
-	cuda/2d/em.lo \
 	cuda/2d/astra.lo \
 	cuda/2d/util.lo \
 	cuda/2d/arith.lo \
 	cuda/2d/fft.lo \
 	cuda/2d/darthelper.lo \
+	cuda/2d/mem2d.lo \
 	cuda/3d/darthelper3d.lo \
-	cuda/3d/algo3d.lo \
-	cuda/3d/cgls3d.lo \
 	cuda/3d/cone_fp.lo \
 	cuda/3d/cone_bp.lo \
 	cuda/3d/cone_cyl.lo \
@@ -287,7 +284,6 @@ CUDA_OBJECTS=\
 	cuda/3d/fdk.lo \
 	cuda/3d/par3d_fp.lo \
 	cuda/3d/par3d_bp.lo \
-	cuda/3d/sirt3d.lo \
 	cuda/3d/astra3d.lo \
 	cuda/3d/util3d.lo \
 	cuda/3d/arith3d.lo \
@@ -413,7 +409,7 @@ PYTHON_SRC=\
 	astra/src/PythonPluginAlgorithm.h
 
 
-OBJECT_DIRS = src/ tests/ cuda/2d/ cuda/3d/ matlab/mex/ ./
+OBJECT_DIRS = src/ tests/ cuda/ cuda/2d/ cuda/3d/ matlab/mex/ ./
 DEPDIRS = $(addsuffix $(DEPDIR),$(OBJECT_DIRS))
 -include $(wildcard $(addsuffix /*.d,$(DEPDIRS)))
 LIBDIRS = $(addsuffix .libs,./ src/ cuda/2d/ cuda/3d/)

@@ -38,7 +38,9 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/Logging.h"
 
-#include "astra/cuda/3d/astra3d.h"
+#include "astra/cuda/3d/dims3d.h"
+#include "astra/cuda/3d/arith3d.h"
+#include "astra/cuda/3d/mem3d.h"
 
 using namespace std;
 
@@ -154,6 +156,111 @@ bool CCudaBackProjectionAlgorithm3D::initialize(CProjector3D* _pProjector,
 	m_bIsInitialized = _check();
 	return m_bIsInitialized;
 }
+//----------------------------------------------------------------------------------------
+// SIRT-weighted backprojection
+// This computes the column weights, divides by them, and adds the
+// result to the current volume. This is both more expensive and more
+// GPU memory intensive than the regular BP, but allows saving system RAM.
+
+static bool astraCudaBP_SIRTWeighted(CFloat32VolumeData3D *pVolume,
+                                     const CFloat32ProjectionData3D* pProjections,
+                                     int iGPUIndex, int iVoxelSuperSampling)
+{
+	astraCUDA3d::SProjectorParams3D params;
+
+	params.iRaysPerVoxelDim = iVoxelSuperSampling;
+
+	Geometry3DParameters projs = astra::convertAstraGeometry(&pVolume->getGeometry(), &pProjections->getGeometry());
+	params.volScale = projs.getVolScale();
+
+	if (!projs.isValid())
+		return false;
+
+	if (iGPUIndex != -1) {
+		if (!astraCUDA3d::setGPUIndex(iGPUIndex))
+			return false;
+	}
+
+	std::array<int, 3> volDims = pVolume->getShape();
+	std::array<int, 3> projDims = pProjections->getShape();
+
+	CDataStorage *s;
+	s = astraCUDA3d::allocateGPUMemory(volDims[0], volDims[1], volDims[2], astraCUDA3d::INIT_ZERO);
+	if (!s) {
+		return false;
+	}
+	CData3D *D_volData = new CData3D(volDims[0], volDims[1], volDims[2], s);
+
+	s = astraCUDA3d::allocateGPUMemory(volDims[0], volDims[1], volDims[2], astraCUDA3d::INIT_ZERO);
+	if (!s) {
+		astraCUDA3d::freeGPUMemory(D_volData);
+		delete D_volData;
+		return false;
+	}
+	CData3D *D_pixelWeight = new CData3D(volDims[0], volDims[1], volDims[2], s);
+
+	s = astraCUDA3d::allocateGPUMemory(projDims[0], projDims[1], projDims[2], astraCUDA3d::INIT_NO);
+	if (!s) {
+		astraCUDA3d::freeGPUMemory(D_volData);
+		astraCUDA3d::freeGPUMemory(D_pixelWeight);
+		delete D_volData;
+		delete D_pixelWeight;
+		return false;
+	}
+	CData3D *D_projData = new CData3D(projDims[0], projDims[1], projDims[2], s);
+
+	// Compute weights
+	bool ok = true;
+	ok &= astraCUDA3d::processVol3D<astraCUDA3d::opSet>(D_projData, 1.0f);
+
+	ok &= astraCUDA3d::BP(D_pixelWeight, D_projData, projs, params);
+
+	ok &= astraCUDA3d::processVol3D<astraCUDA3d::opInvert>(D_pixelWeight);
+	if (!ok) {
+		astraCUDA3d::freeGPUMemory(D_volData);
+		astraCUDA3d::freeGPUMemory(D_pixelWeight);
+		astraCUDA3d::freeGPUMemory(D_projData);
+		delete D_volData;
+		delete D_pixelWeight;
+		delete D_projData;
+		return false;
+	}
+
+	ok &= astraCUDA3d::copyToGPUMemory(pProjections, D_projData);
+	ok &= astraCUDA3d::BP(D_volData, D_projData, projs, params);
+
+	// Multiply with weights
+	ok &= astraCUDA3d::processVol3D<astraCUDA3d::opMul>(D_volData, D_pixelWeight);
+
+	// Upload previous iterate to D_pixelWeight...
+	ok &= astraCUDA3d::copyToGPUMemory(pVolume, D_pixelWeight);
+	if (!ok) {
+		astraCUDA3d::freeGPUMemory(D_volData);
+		astraCUDA3d::freeGPUMemory(D_pixelWeight);
+		astraCUDA3d::freeGPUMemory(D_projData);
+		delete D_volData;
+		delete D_pixelWeight;
+		delete D_projData;
+		return false;
+	}
+	// ...and add it to the weighted BP
+	ok &= astraCUDA3d::processVol3D<astraCUDA3d::opAdd>(D_volData, D_pixelWeight);
+
+	// Then copy the result back
+	ok &= astraCUDA3d::copyFromGPUMemory(pVolume, D_volData);
+
+	astraCUDA3d::freeGPUMemory(D_volData);
+	astraCUDA3d::freeGPUMemory(D_pixelWeight);
+	astraCUDA3d::freeGPUMemory(D_projData);
+
+	delete D_volData;
+	delete D_pixelWeight;
+	delete D_projData;
+
+	return ok;
+}
+
+
 
 //----------------------------------------------------------------------------------------
 // Iterate
@@ -167,15 +274,12 @@ bool CCudaBackProjectionAlgorithm3D::run(int _iNrIterations)
 	CFloat32VolumeData3D* pReconMem = dynamic_cast<CFloat32VolumeData3D*>(m_pReconstruction);
 	ASTRA_ASSERT(pReconMem);
 
-	const CProjectionGeometry3D& projgeom = pSinoMem->getGeometry();
-	const CVolumeGeometry3D& volgeom = pReconMem->getGeometry();
-
 	if (m_bSIRTWeighting) {
 		ASTRA_ASSERT(m_pSinogram->isFloat32Memory());
 		ASTRA_ASSERT(m_pReconstruction->isFloat32Memory());
-		return astraCudaBP_SIRTWeighted(m_pReconstruction->getFloat32Memory(),
-		                                m_pSinogram->getFloat32Memory(),
-		                                &volgeom, &projgeom,
+
+		return astraCudaBP_SIRTWeighted(m_pReconstruction,
+		                                m_pSinogram,
 		                                m_iGPUIndex, m_iVoxelSuperSampling);
 	} else {
 		CCompositeGeometryManager cgm;

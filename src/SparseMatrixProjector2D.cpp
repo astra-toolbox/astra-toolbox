@@ -72,9 +72,9 @@ bool CSparseMatrixProjector2D::_check()
 	ASTRA_CONFIG_CHECK(m_pProjectionGeometry->isInitialized(), "SparseMatrixProjector2D", "Projection geometry not initialized");
 	
 
-	ASTRA_CONFIG_CHECK(dynamic_cast<CSparseMatrixProjectionGeometry2D*>(m_pProjectionGeometry), "SparseMatrixProjector2D", "Unsupported projection geometry");
+	ASTRA_CONFIG_CHECK(dynamic_cast<CSparseMatrixProjectionGeometry2D*>(m_pProjectionGeometry.get()), "SparseMatrixProjector2D", "Unsupported projection geometry");
 
-	const CSparseMatrix* pMatrix = dynamic_cast<CSparseMatrixProjectionGeometry2D*>(m_pProjectionGeometry)->getMatrix();
+	const CSparseMatrix* pMatrix = dynamic_cast<CSparseMatrixProjectionGeometry2D*>(m_pProjectionGeometry.get())->getMatrix();
 	ASTRA_CONFIG_CHECK(pMatrix, "SparseMatrixProjector2D", "No matrix specified in projection geometry");
 
 	ASTRA_CONFIG_CHECK(pMatrix->m_iWidth == (unsigned int)m_pVolumeGeometry->getGridTotCount(), "SparseMatrixProjector2D", "Matrix width doesn't match volume geometry");
@@ -107,8 +107,8 @@ bool CSparseMatrixProjector2D::initialize(const CSparseMatrixProjectionGeometry2
 	assert(!m_bIsInitialized);
 
 	// hardcopy geometries
-	m_pProjectionGeometry = _pProjectionGeometry.clone();
-	m_pVolumeGeometry = _pVolumeGeometry.clone();
+	m_pProjectionGeometry.reset(_pProjectionGeometry.clone());
+	m_pVolumeGeometry.reset(_pVolumeGeometry.clone());
 
 	// success
 	m_bIsInitialized = _check();
@@ -120,7 +120,7 @@ bool CSparseMatrixProjector2D::initialize(const CSparseMatrixProjectionGeometry2
 // Get maximum amount of weights on a single ray
 int CSparseMatrixProjector2D::getProjectionWeightsCount(int _iProjectionIndex)
 {
-	const CSparseMatrix* pMatrix = dynamic_cast<CSparseMatrixProjectionGeometry2D*>(m_pProjectionGeometry)->getMatrix();
+	const CSparseMatrix* pMatrix = dynamic_cast<CSparseMatrixProjectionGeometry2D*>(m_pProjectionGeometry.get())->getMatrix();
 
 	unsigned int iMax = 0;
 	unsigned long lSize = m_pProjectionGeometry->getDetectorCount();

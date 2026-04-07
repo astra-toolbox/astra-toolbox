@@ -48,7 +48,8 @@ public:
 
 	std::string description() const;
 
-protected:
+	virtual EDataType getType() const { return BASE; }
+
 	CData3D(int x, int y, int z, CDataStorage *storage) : CData({x, y, z}, storage) { }
 };
 
@@ -93,29 +94,6 @@ public:
 	virtual EDataType getType() const { return VOLUME; }
 };
 
-
-#ifdef ASTRA_CUDA
-
-class _AstraExport CDataGPU : public CDataStorage {
-
-protected:
-	/** Handle for the memory block */
-	astraCUDA3d::MemHandle3D m_hnd;
-	CDataGPU() { }
-
-public:
-
-	CDataGPU(astraCUDA3d::MemHandle3D hnd) : m_hnd(hnd) { }
-
-	virtual bool isMemory() const { return false; }
-	virtual bool isGPU() const { return true; }
-	virtual bool isFloat32() const { return true; } // TODO
-
-	astraCUDA3d::MemHandle3D& getHandle() { return m_hnd; }
-
-};
-
-#endif
 
 // Utility functions that create CDataMemory and Data3D objects together
 _AstraExport CFloat32ProjectionData3D *createCFloat32ProjectionData3DMemory(const CProjectionGeometry3D &geom);

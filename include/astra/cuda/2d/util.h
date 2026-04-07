@@ -71,7 +71,8 @@ bool createArrayAndTextureObject2D(float* data, cudaArray*& dataArray, cudaTextu
 bool createTextureObjectPitch2D(float* D_data, cudaTextureObject_t& texObj, unsigned int pitch, unsigned int width, unsigned int height, cudaTextureAddressMode mode = cudaAddressModeBorder);
 
 
-bool checkCuda(cudaError_t err, const char *msg);
+[[nodiscard]] bool checkCuda(cudaError_t err, const char *msg);
+bool logCuda(cudaError_t err, const char *msg);
 
 float dotProduct2D(float* D_data, unsigned int pitch,
                    unsigned int width, unsigned int height,
@@ -96,7 +97,7 @@ public:
 	}
 	~StreamHelper() {
 		if (ownsStream)
-			cudaStreamDestroy(stream);
+			logCuda(cudaStreamDestroy(stream), "StreamHelper destroy");
 	}
 
 	cudaStream_t operator()() const { return stream; }
@@ -128,22 +129,22 @@ template<typename... T>
 class TransferConstantsBuffer_t
 {
 public:
-        TransferConstantsBuffer_t(size_t count)
+	TransferConstantsBuffer_t(size_t count)
 	// Slightly hackish way to construct each vector in the tuple with the count argument.
 	// To be able to use the '...' expansion on count, T needs to appear in the expression,
 	// so we use a comma operator with void(sizeof(T)) which has no effect.
 	: d{ (void(sizeof(T)), count)... }
 	{
-                checkCuda(cudaEventCreateWithFlags(&event, cudaEventDisableTiming),
-		          "TransferConstantsBuffer event create");
-        }
-        ~TransferConstantsBuffer_t() {
-                cudaEventDestroy(event);
-        }
+		logCuda(cudaEventCreateWithFlags(&event, cudaEventDisableTiming),
+		        "TransferConstantsBuffer event create");
+	}
+	~TransferConstantsBuffer_t() {
+		logCuda(cudaEventDestroy(event), "TransferConstantsBuffer event destroy");
+	}
 
-        std::tuple<std::vector<T>...> d;
+	std::tuple<std::vector<T>...> d;
 
-        cudaEvent_t event;
+	cudaEvent_t event;
 
 };
 

@@ -30,6 +30,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 #include <vector>
+#include <memory>
 
 #include "Globals.h"
 #include "Config.h"
@@ -57,8 +58,8 @@ class _AstraExport CProjector2D
 {
 
 protected:
-	CProjectionGeometry2D* m_pProjectionGeometry; ///< Used projection geometry
-	CVolumeGeometry2D* m_pVolumeGeometry; ///< Used volume geometry
+	std::unique_ptr<CProjectionGeometry2D> m_pProjectionGeometry; ///< Used projection geometry
+	std::unique_ptr<CVolumeGeometry2D> m_pVolumeGeometry; ///< Used volume geometry
 	bool m_bIsInitialized; ///< Has this class been initialized?
 
 	/** Default Constructor.
@@ -85,9 +86,9 @@ protected:
 
 public:
 	
-	/** Destructor.
+	/** Virtual default destructor.
 	 */
-	virtual ~CProjector2D();
+	virtual ~CProjector2D()=default;
 
 	/** Initialize the projector with a config object.
 	 * This function does not set m_bInitialized to true.

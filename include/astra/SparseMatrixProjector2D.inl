@@ -59,7 +59,7 @@ void CSparseMatrixProjector2D::projectSingleRay(int _iProjection, int _iDetector
 	ASTRA_ASSERT(m_bIsInitialized);
 
 	int iRayIndex = _iProjection * m_pProjectionGeometry->getDetectorCount() + _iDetector;
-	const CSparseMatrix* pMatrix = dynamic_cast<CSparseMatrixProjectionGeometry2D*>(m_pProjectionGeometry)->getMatrix();
+	const CSparseMatrix* pMatrix = dynamic_cast<CSparseMatrixProjectionGeometry2D*>(m_pProjectionGeometry.get())->getMatrix();
 
 	// POLICY: RAY PRIOR
 	if (!p.rayPrior(iRayIndex)) return;

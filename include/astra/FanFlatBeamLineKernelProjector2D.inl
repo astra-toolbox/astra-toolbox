@@ -55,10 +55,10 @@ void CFanFlatBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, in
 {
 	// get vector geometry
 	const CFanFlatVecProjectionGeometry2D* pVecProjectionGeometry;
-	if (dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pProjectionGeometry)) {
-		pVecProjectionGeometry = dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pProjectionGeometry)->toVectorGeometry();
+	if (dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pProjectionGeometry.get())) {
+		pVecProjectionGeometry = dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pProjectionGeometry.get())->toVectorGeometry();
 	} else {
-		pVecProjectionGeometry = dynamic_cast<CFanFlatVecProjectionGeometry2D*>(m_pProjectionGeometry);
+		pVecProjectionGeometry = dynamic_cast<CFanFlatVecProjectionGeometry2D*>(m_pProjectionGeometry.get());
 	}
 
 	// precomputations
@@ -206,7 +206,7 @@ void CFanFlatBeamLineKernelProjector2D::projectBlock_internal(int _iProjFrom, in
 	} // end loop angles
 
 	// Delete created vec geometry if required
-	if (dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pProjectionGeometry))
+	if (dynamic_cast<CFanFlatProjectionGeometry2D*>(m_pProjectionGeometry.get()))
 		delete pVecProjectionGeometry;
 
 }
