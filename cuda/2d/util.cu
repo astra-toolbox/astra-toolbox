@@ -359,6 +359,8 @@ bool dotProduct2D(float* D_data, unsigned int pitch,
 bool checkCuda(cudaError_t err, const char *msg)
 {
 	if (err != cudaSuccess) {
+		// TODO: Should we call cudaGetLastError() here to reset
+		// the error condition (in the case of non-fatal errors) ?
 		ASTRA_ERROR("%s: CUDA error %d: %s.", msg, err, cudaGetErrorString(err));
 		return false;
 	} else {

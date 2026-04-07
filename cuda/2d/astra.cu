@@ -81,6 +81,7 @@ _AstraExport std::string getCudaDeviceString(int device)
 	cudaDeviceProp prop;
 	err = cudaGetDeviceProperties(&prop, device);
 	if (err != cudaSuccess) {
+		(void)cudaGetLastError(); // Reset error condition
 		snprintf(buf, 1024, "GPU #%d: Invalid device (%d): %s", device, err, cudaGetErrorString(err));
 		return buf;
 	}
