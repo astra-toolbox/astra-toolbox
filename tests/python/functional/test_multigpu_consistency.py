@@ -5,6 +5,9 @@ import pytest
 @pytest.mark.slow
 def test_multigpu_consistency():
 
+    if 'Invalid' in astra.get_gpu_info(1):
+        pytest.skip("No second GPU available")
+
     def print_diff(a, b):
         x = np.abs((a-b).reshape(-1))
         print(np.linalg.norm(x, ord=2), np.max(x), np.max(np.abs(a)), np.max(np.abs(b)))
