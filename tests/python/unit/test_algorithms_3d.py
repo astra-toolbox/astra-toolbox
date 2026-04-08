@@ -300,3 +300,26 @@ class TestOptions:
         astra.algorithm.delete(algorithm_id)
         delete_algorithm_objects(algorithm_config)
         assert res_norm > 0.0
+
+    @pytest.mark.parametrize('proj_geom,', ['parallel3d'], indirect=True)
+    @pytest.mark.parametrize('algorithm_type', ['SIRT3D_CUDA', 'CGLS3D_CUDA'])
+    def test_get_res_norm_invariance(self, proj_geom, algorithm_type):
+        # Test that get_res_norm returns consistent results, and also doesn't
+        # change the reconstruction
+        algorithm_config = make_algorithm_config(algorithm_type, proj_geom)
+        algorithm_id = astra.algorithm.create(algorithm_config)
+        astra.algorithm.run(algorithm_id, 2)
+        astra.algorithm.run(algorithm_id, 2)
+        reconstruction_without = get_algorithm_output(algorithm_config)
+
+        algorithm_config = make_algorithm_config(algorithm_type, proj_geom)
+        algorithm_id = astra.algorithm.create(algorithm_config)
+        astra.algorithm.run(algorithm_id, 2)
+        res_norm1 = astra.algorithm.get_res_norm(algorithm_id)
+        res_norm2 = astra.algorithm.get_res_norm(algorithm_id)
+        assert res_norm1 > 0.0
+        assert res_norm2 > 0.0
+        assert np.allclose(res_norm1, res_norm2)
+        astra.algorithm.run(algorithm_id, 2)
+        reconstruction_with = get_algorithm_output(algorithm_config)
+        assert np.allclose(reconstruction_with, reconstruction_without)
