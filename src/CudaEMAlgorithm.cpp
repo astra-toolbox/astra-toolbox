@@ -229,11 +229,11 @@ bool CCudaEMAlgorithm::getResidualNorm(float32& _fNorm)
 
 	// copy sinogram to projection data
 	astraCUDA::assignGPUMemory(D_tmpProjData, D_projData);
-	callFP(D_volData, D_projData, -1.0f);
+	callFP(D_volData, D_tmpProjData, -1.0f);
 
-	// compute norm of D_projData
+	// compute norm of D_tmpProjData
 
-	float s = astraCUDA::dotProduct2D(D_projData);
+	float s = astraCUDA::dotProduct2D(D_tmpProjData);
 
 	_fNorm = sqrt(s);
 
