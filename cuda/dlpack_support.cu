@@ -84,4 +84,17 @@ astra::CDataStorage *wrapDLTensor(DLManagedTensor *tensor_m)
 	return new CDataStorageDLPackGPU<DLManagedTensor>(tensor_m);
 }
 
+bool isSupportedDLPackGPUType(DLDeviceType type)
+{
+#ifdef ASTRA_BUILDING_CUDA
+	if (type == kDLCUDA || type == kDLCUDAManaged)
+		return true;
+#endif
+#ifdef ASTRA_BUILDING_HIP
+	if (type == kDLROCM)
+		return true;
+#endif
+	return false;
+}
+
 }

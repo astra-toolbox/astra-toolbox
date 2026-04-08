@@ -41,6 +41,7 @@ namespace astraCUDA {
 
 _AstraExport astra::CDataStorage *wrapDLTensor(DLManagedTensorVersioned *tensor_m);
 _AstraExport astra::CDataStorage *wrapDLTensor(DLManagedTensor *tensor_m);
+_AstraExport bool isSupportedDLPackGPUType(DLDeviceType type);
 
 }
 

@@ -165,21 +165,21 @@ astra::CDataStorage *getDLTensorStorage(DLT *tensor_m, std::array<int, D> dims, 
 {
 	DLTensor *tensor = &tensor_m->dl_tensor;
 
-	switch (tensor->device.device_type) {
-	case kDLCPU:
-	case kDLCUDAHost:
-		if (!checkDLTensor(tensor, dims, error))
-			return nullptr;
-		return new CDataStorageDLPackCPU(tensor_m);
 #ifdef ASTRA_CUDA
-	case kDLCUDA:
-	case kDLCUDAManaged:
+	if (astraCUDA::isSupportedDLPackGPUType(tensor->device.device_type)) {
 		if (!checkDLTensor(tensor, dims, error))
 			return nullptr;
 		return astraCUDA::wrapDLTensor(tensor_m);
+	}
 #endif
-	// TODO: Add support for kDLROCM, for the case when astra is built with
-	// cuda-but-actually-hip, and later when it is in its own namespace
+
+	switch (tensor->device.device_type) {
+	case kDLCPU:
+	case kDLCUDAHost:
+	case kDLROCMHost:
+		if (!checkDLTensor(tensor, dims, error))
+			return nullptr;
+		return new CDataStorageDLPackCPU(tensor_m);
 	default:
 		error = "Unsupported dlpack device type";
 		return nullptr;
