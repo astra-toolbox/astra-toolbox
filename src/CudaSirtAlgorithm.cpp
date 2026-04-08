@@ -388,8 +388,9 @@ bool CCudaSirtAlgorithm::getResidualNorm(float32& _fNorm)
 	}
 
 	// compute norm of D_projData
-
-	float s = astraCUDA::dotProduct2D(D_tmpProjData);
+	float s;
+	if (!astraCUDA::dotProduct2D(D_tmpProjData, s))
+		return false;
 
 	_fNorm = sqrt(s);
 

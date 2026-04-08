@@ -302,7 +302,7 @@ bool CCudaCglsAlgorithm3D::run(int _iNrIterations)
 		if (m_bUseReconstructionMask)
 			astraCUDA3d::processVol3D<astraCUDA3d::opMul>(D_p, D_volMaskData);
 
-		gamma = astraCUDA3d::dotProduct3D(D_p);
+		astraCUDA3d::dotProduct3D(D_p, gamma);
 	}
 
 
@@ -314,7 +314,8 @@ bool CCudaCglsAlgorithm3D::run(int _iNrIterations)
 		callFP(D_p, D_w, 1.0f);
 
 		// alpha = gamma / <w,w>
-		float ww = astraCUDA3d::dotProduct3D(D_w);
+		float ww;
+		astraCUDA3d::dotProduct3D(D_w, ww);
 		float alpha = gamma / ww;
 
 		// x += alpha*p
@@ -330,7 +331,7 @@ bool CCudaCglsAlgorithm3D::run(int _iNrIterations)
 			astraCUDA3d::processVol3D<astraCUDA3d::opMul>(D_z, D_volMaskData);
 
 		float beta = 1.0f / gamma;
-		gamma = astraCUDA3d::dotProduct3D(D_z);
+		astraCUDA3d::dotProduct3D(D_z, gamma);
 
 		beta *= gamma;
 
@@ -374,7 +375,10 @@ bool CCudaCglsAlgorithm3D::getResidualNorm(float32& _fNorm)
 	if (!ok)
 		return false;
 
-	float s = astraCUDA3d::dotProduct3D(D_w);
+	float s;
+	if (!astraCUDA3d::dotProduct3D(D_w, s))
+		return false;
+
 	_fNorm = sqrt(s);
 
 	return true;

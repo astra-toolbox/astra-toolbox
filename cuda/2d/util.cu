@@ -301,9 +301,10 @@ __global__ void reduce2D(float *g_idata, float *g_odata,
 		g_odata[blockIdx.y * gridDim.x + blockIdx.x] = sdata[0];
 }
 
-float dotProduct2D(float* D_data, unsigned int pitch,
-                   unsigned int width, unsigned int height,
-                   std::optional<cudaStream_t> _stream)
+bool dotProduct2D(float* D_data, unsigned int pitch,
+                  unsigned int width, unsigned int height,
+                  float &fRet,
+                  std::optional<cudaStream_t> _stream)
 {
 	StreamHelper stream(_stream);
 	if (!stream)
@@ -317,7 +318,9 @@ float dotProduct2D(float* D_data, unsigned int pitch,
 	dim3 dimGrid2(bx, by);
 
 	float* D_buf;
-	cudaMalloc(&D_buf, sizeof(float) * (bx * by + 1) );
+	if (!checkCuda(cudaMalloc(&D_buf, sizeof(float) * (bx * by + 1) ), "dotProduct2D malloc")) {
+		return false;
+	}
 	float* D_res = D_buf + (bx*by);
 
 	// Step 1: reduce 2D from image to a single vector, taking sum of squares
@@ -337,26 +340,21 @@ float dotProduct2D(float* D_data, unsigned int pitch,
 		reduce1D<1><<< 1, 1, sizeof(float)*1*2, stream()>>>(D_buf, D_res, bx*by);
 
 	float x;
-	cudaMemcpyAsync(&x, D_res, 4, cudaMemcpyDeviceToHost, stream());
+	if (!checkCuda(cudaMemcpyAsync(&x, D_res, 4, cudaMemcpyDeviceToHost, stream()), "dotProduct2D memcpy")) {
+		logCuda(cudaFree(D_buf), "dotProduct2D free");
+		return false;
+	}
 
-	stream.sync("dotProduct2D");
+	if (!stream.sync("dotProduct2D")) {
+		logCuda(cudaFree(D_buf), "dotProduct2D free");
+		return false;
+	}
 
 	logCuda(cudaFree(D_buf), "dotProduct2D free");
 
-	return x;
+	fRet = x;
+	return true;
 }
-
-float dotProduct2D(const astra::CData2D *D_data)
-{
-	const astraCUDA::CDataGPU *datas = dynamic_cast<const astraCUDA::CDataGPU*>(D_data->getStorage());
-	assert(datas);
-	assert(!datas->getArray());
-
-	std::array<int, 2> dims = D_data->getShape();
-
-	return dotProduct2D((float*)datas->getPtr().ptr, datas->getPtr().pitch/sizeof(float), dims[0], dims[1]);
-}
-
 
 bool checkCuda(cudaError_t err, const char *msg)
 {

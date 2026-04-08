@@ -232,8 +232,9 @@ bool CCudaEMAlgorithm::getResidualNorm(float32& _fNorm)
 	callFP(D_volData, D_tmpProjData, -1.0f);
 
 	// compute norm of D_tmpProjData
-
-	float s = astraCUDA::dotProduct2D(D_tmpProjData);
+	float s;
+	if (!astraCUDA::dotProduct2D(D_tmpProjData, s))
+		return false;
 
 	_fNorm = sqrt(s);
 

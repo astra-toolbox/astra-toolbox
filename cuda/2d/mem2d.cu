@@ -408,6 +408,18 @@ bool BP_SART(const astra::CData2D *projData, astra::CData2D *volData, const astr
 
 }
 
+bool dotProduct2D(const astra::CData2D *D_data, float &fRet)
+{
+	const astraCUDA::CDataGPU *datas = dynamic_cast<const astraCUDA::CDataGPU*>(D_data->getStorage());
+	assert(datas);
+	assert(!datas->getArray());
+
+	std::array<int, 2> dims = D_data->getShape();
+
+	return dotProduct2D((float*)datas->getPtr().ptr, datas->getPtr().pitch/sizeof(float), dims[0], dims[1], fRet);
+}
+
+
 
 
 }

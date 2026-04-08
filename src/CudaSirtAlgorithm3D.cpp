@@ -398,7 +398,10 @@ bool CCudaSirtAlgorithm3D::getResidualNorm(float32& _fNorm)
 	if (!ok)
 		return false;
 
-	float s = astraCUDA3d::dotProduct3D(D_tmpProjData);
+	float s;
+	if (!astraCUDA3d::dotProduct3D(D_tmpProjData, s))
+		return false;
+
 	_fNorm = sqrt(s);
 
 	return true;

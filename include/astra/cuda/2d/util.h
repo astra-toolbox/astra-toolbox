@@ -74,9 +74,9 @@ bool createTextureObjectPitch2D(float* D_data, cudaTextureObject_t& texObj, unsi
 [[nodiscard]] bool checkCuda(cudaError_t err, const char *msg);
 bool logCuda(cudaError_t err, const char *msg);
 
-float dotProduct2D(float* D_data, unsigned int pitch,
-                   unsigned int width, unsigned int height,
-                   std::optional<cudaStream_t> _stream = {});
+bool dotProduct2D(float* D_data, unsigned int pitch,
+                  unsigned int width, unsigned int height, float &fRet,
+                  std::optional<cudaStream_t> _stream = {});
 
 
 // Helper class for functions taking a std::optional<cudaStream_t> argument.

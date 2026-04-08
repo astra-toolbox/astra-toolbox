@@ -68,7 +68,7 @@ cudaArray* allocateVolumeArray(const SDimensions3D& dims);
 
 bool createTextureObject3D(cudaArray* array, cudaTextureObject_t& texObj);
 
-float dotProduct3D(const astra::CData3D *D_data);
+bool dotProduct3D(const astra::CData3D *D_data, float &fRet);
 
 int calcNextPowerOfTwo(int _iValue);
 

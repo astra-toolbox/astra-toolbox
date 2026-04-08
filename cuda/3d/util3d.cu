@@ -29,8 +29,6 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/cuda/3d/util3d.h"
 
-#include "astra/cuda/2d/util.h"
-
 #include "astra/cuda/3d/mem3d_internal.h"
 
 #include "astra/Data3D.h"
@@ -400,18 +398,6 @@ bool createTextureObject3D(cudaArray* array, cudaTextureObject_t& texObj)
 	return checkCuda(cudaCreateTextureObject(&texObj, &resDesc, &texDesc, NULL), "createTextureObject3D");
 }
 
-
-
-float dotProduct3D(const astra::CData3D *D_data)
-{
-	const astraCUDA::CDataGPU *datas = dynamic_cast<const astraCUDA::CDataGPU*>(D_data->getStorage());
-	assert(datas);
-	assert(!datas->getArray());
-
-	std::array<int, 3> dims = D_data->getShape();
-
-	return astraCUDA::dotProduct2D((float*)datas->getPtr().ptr, datas->getPtr().pitch/sizeof(float), dims[0], dims[1]*dims[2]);
-}
 
 
 int calcNextPowerOfTwo(int _iValue)

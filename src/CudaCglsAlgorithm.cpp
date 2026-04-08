@@ -210,7 +210,7 @@ bool CCudaCglsAlgorithm::run(int iterations)
 		if (m_bUseReconstructionMask)
 			astraCUDA::processData<astraCUDA::opMul>(D_p, D_volMaskData);
 
-		m_fGamma = astraCUDA::dotProduct2D(D_p);
+		astraCUDA::dotProduct2D(D_p, m_fGamma);
 	}
 
 
@@ -222,7 +222,8 @@ bool CCudaCglsAlgorithm::run(int iterations)
 		callFP(D_p, D_w, 1.0f);
 
 		// alpha = gamma / <w,w>
-		float ww = astraCUDA::dotProduct2D(D_w);
+		float ww;
+		astraCUDA::dotProduct2D(D_w, ww);
 		float alpha = m_fGamma / ww;
 
 		// x += alpha*p
@@ -239,7 +240,7 @@ bool CCudaCglsAlgorithm::run(int iterations)
 			astraCUDA::processData<astraCUDA::opMul>(D_z, D_volMaskData);
 
 		float beta = 1.0f / m_fGamma;
-		m_fGamma = astraCUDA::dotProduct2D(D_z);
+		astraCUDA::dotProduct2D(D_z, m_fGamma);
 		beta *= m_fGamma;
 
 		// p = z + beta*p
@@ -275,9 +276,10 @@ bool CCudaCglsAlgorithm::getResidualNorm(float32& _fNorm)
 		callFP(D_volData, D_w, -1.0f);
 	}
 
-	// compute norm of D_w
-
-	float s = astraCUDA::dotProduct2D(D_w);
+	// compute norm of D_projData
+	float s;
+	if (!astraCUDA::dotProduct2D(D_w, s))
+		return false;
 
 	_fNorm = sqrt(s);
 

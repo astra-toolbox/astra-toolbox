@@ -344,7 +344,11 @@ bool CCudaSartAlgorithm::getResidualNorm(float32& _fNorm)
 	}
 
 	// compute norm of D_p
-	float s = astraCUDA::dotProduct2D(D_p);
+	float s;
+	if (!astraCUDA::dotProduct2D(D_p, s)) {
+		freeGPUMem(D_p);
+		return false;
+	}
 
 	freeGPUMem(D_p);
 

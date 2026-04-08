@@ -112,8 +112,7 @@ bool BP(const astra::CData3D *projData, astra::CData3D *volData, const astra::Ge
 
 bool FDK(astra::CFloat32ProjectionData3D *projData, astra::CFloat32VolumeData3D *volData, bool bShortScan, const astra::SFilterConfig &filterConfig, float fOutputScale = 1.0f);
 
-// TODO: This is currently defined in util3d, not in mem3d
-float dotProduct3D(const astra::CData3D *D_data);
+bool dotProduct3D(const astra::CData3D *D_data, float &fRet);
 
 }
 

@@ -82,8 +82,7 @@ bool BP(const astra::CFloat32ProjectionData2D *projData, astra::CFloat32VolumeDa
 bool BP(const astra::CData2D *projData, astra::CData2D *volData, const astra::Geometry2DParameters &geom, SProjectorParams2D params);
 bool BP_SART(const astra::CData2D *projData, astra::CData2D *volData, const astra::Geometry2DParameters &geom, SProjectorParams2D params, int angle);
 
-// TODO: This is currently defined in util, not in mem2d
-float dotProduct2D(const astra::CData2D *D_data);
+bool dotProduct2D(const astra::CData2D *D_data, float &fRet);
 
 }
 
