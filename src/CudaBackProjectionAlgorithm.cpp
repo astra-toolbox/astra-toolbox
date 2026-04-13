@@ -86,7 +86,7 @@ bool CCudaBackProjectionAlgorithm::run(int /*_iNrIterations*/)
 {
 	assert(m_bIsInitialized);
 
-	bool ok;
+	bool ok = true;
 
 	std::array<int, 2> volDims = m_pReconstruction->getShape();
 	std::array<int, 2> projDims = m_pSinogram->getShape();
@@ -109,13 +109,30 @@ bool CCudaBackProjectionAlgorithm::run(int /*_iNrIterations*/)
 	}
 	CData2D *D_projData = new CData2D(projDims[0], projDims[1], s);
 
-	ok = astraCUDA::copyToGPUMemory(m_pSinogram, D_projData);
+	if (m_pSinogram->isFloat32Memory()) {
+		ok &= astraCUDA::copyToGPUMemory(m_pSinogram, D_projData);
+	} else if (m_pSinogram->isFloat32GPU()) {
+		// TODO: re-use memory instead of copying
+		// (need to ensure everything works when pitches are not consistent)
+		ok &= astraCUDA::assignGPUMemory(D_projData, m_pSinogram);
+	} else {
+		ok = false;
+	}
 
 	if (ok)
 		ok &= callBP(D_volData, D_projData, 1.0f);
 
-	if (ok)
-		ok &= astraCUDA::copyFromGPUMemory(m_pReconstruction, D_volData);
+	if (ok) {
+		if (m_pReconstruction->isFloat32Memory()) {
+			ok &= astraCUDA::copyFromGPUMemory(m_pReconstruction, D_volData);
+		} else if (m_pReconstruction->isFloat32GPU()) {
+			// TODO: re-use memory instead of copying
+			// (need to ensure everything works when pitches are not consistent)
+			ok &= astraCUDA::assignGPUMemory(m_pReconstruction, D_volData);
+		} else {
+			ok = false;
+		}
+	}
 
 	astraCUDA::freeGPUMemory(D_volData);
 	astraCUDA::freeGPUMemory(D_projData);

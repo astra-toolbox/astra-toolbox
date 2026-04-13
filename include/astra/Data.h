@@ -94,10 +94,11 @@ public:
 	CDataStorage *getStorage() { return m_storage; }
 	const CDataStorage *getStorage() const { return m_storage; }
 
-	// Convenience functions as this is the common case
 	bool isFloat32Memory() const { return m_storage->isMemory() && m_storage->isFloat32(); }
 	float32 *getFloat32Memory() { return isFloat32Memory() ? dynamic_cast<CDataMemory<float32>*>(m_storage)->getData() : nullptr; }
 	const float32 *getFloat32Memory() const { return isFloat32Memory() ? dynamic_cast<const CDataMemory<float32>*>(m_storage)->getData() : nullptr; }
+
+	bool isFloat32GPU() const { return m_storage->isGPU() && m_storage->isFloat32(); }
 
 	// Legacy function. Maybe remove?
 	bool isInitialized() const { return true; }
