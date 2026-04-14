@@ -269,10 +269,6 @@ cdef CFloat32VolumeData2D* linkVolFromGeometry2D(const CVolumeGeometry2D &pGeome
         pDataObject2D = getDLTensor(capsule, pGeometry, dlerror)
         if not pDataObject2D:
             raise ValueError("Failed to link dlpack array: " + wrap_from_bytes(dlerror))
-        # TODO: Refactoring 2D GPU algorithms to support this
-        # (And add checks to the CPU algorithms that data is in host memory)
-        if not pDataObject2D.isFloat32Memory():
-            raise ValueError("For 2D objects, linking GPU tensors is not yet supported.")
         return pDataObject2D
 
     raise TypeError("Data should be an array with DLPack support")
@@ -289,10 +285,6 @@ cdef CFloat32ProjectionData2D* linkProjFromGeometry2D(const CProjectionGeometry2
         pDataObject2D = getDLTensor(capsule, pGeometry, dlerror)
         if not pDataObject2D:
             raise ValueError("Failed to link dlpack array: " + wrap_from_bytes(dlerror))
-        # TODO: Refactoring 2D GPU algorithms to support this
-        # (And add checks to the CPU algorithms that data is in host memory)
-        if not pDataObject2D.isFloat32Memory():
-            raise ValueError("For 2D objects, linking GPU tensors is not yet supported.")
         return pDataObject2D
 
     raise TypeError("Data should be an array with DLPack support")
