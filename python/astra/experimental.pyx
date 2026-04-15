@@ -85,22 +85,16 @@ IF HAVE_CUDA==True:
             CCudaBackProjectionAlgorithm()
             bool initialize(CProjector2D*, CFloat32ProjectionData2D*, CFloat32VolumeData2D*)
 
-
-
     from . cimport PyProjector3DManager
     from .PyProjector3DManager cimport CProjector3DManager
     from . cimport PyData3DManager
     from .PyData3DManager cimport CData3DManager
-    from . cimport PyData2DManager
-    from .PyData2DManager cimport CData2DManager
 
-    cdef CProjector3DManager * manProj3D = <CProjector3DManager * >PyProjector3DManager.getSingletonPtr()
-    cdef CData2DManager * man2d = <CData2DManager * >PyData2DManager.getSingletonPtr()
-    cdef CData3DManager * man3d = <CData3DManager * >PyData3DManager.getSingletonPtr()
 
     def do_composite(projector_id, vol_ids, proj_ids, mode, t):
         if mode != MODE_ADD and mode != MODE_SET:
             raise AstraError("Internal error: wrong composite mode")
+        cdef CData3DManager * man3d = <CData3DManager * >PyData3DManager.getSingletonPtr()
         cdef EJobMode eMode = mode;
         cdef vector[CFloat32VolumeData3D *] vol
         cdef CFloat32VolumeData3D * pVolObject
@@ -121,6 +115,7 @@ IF HAVE_CUDA==True:
                 raise AstraError("Data object not initialized properly")
             proj.push_back(pProjObject)
         cdef CCompositeGeometryManager m
+        cdef CProjector3DManager * manProj3D = <CProjector3DManager * >PyProjector3DManager.getSingletonPtr()
         cdef CProjector3D * projector = manProj3D.get(projector_id) # may be NULL
         cdef bool ret = True
         if t == "FP":
@@ -149,6 +144,7 @@ IF HAVE_CUDA==True:
     def accumulate_FDK(projector_id, vol_id, proj_id):
         cdef CFloat32VolumeData3D * pVolObject
         cdef CFloat32ProjectionData3D * pProjObject
+        cdef CData3DManager * man3d = <CData3DManager * >PyData3DManager.getSingletonPtr()
         pVolObject = dynamic_cast_vol_mem(man3d.get(vol_id))
         if pVolObject == NULL:
             raise AstraError("Data object not found")
@@ -160,6 +156,7 @@ IF HAVE_CUDA==True:
         if not pProjObject.isInitialized():
             raise AstraError("Data object not initialized properly")
         cdef CCompositeGeometryManager m
+        cdef CProjector3DManager * manProj3D = <CProjector3DManager * >PyProjector3DManager.getSingletonPtr()
         cdef CProjector3D * projector = manProj3D.get(projector_id) # may be NULL
         cdef SFilterConfig filterConfig
         filterConfig.m_eType = FILTER_RAMLAK
@@ -176,6 +173,7 @@ IF HAVE_CUDA==True:
         if mode != MODE_ADD and mode != MODE_SET:
             raise AstraError("Internal error: wrong composite mode")
         cdef EJobMode eMode = mode
+        cdef CProjector3DManager * manProj3D = <CProjector3DManager * >PyProjector3DManager.getSingletonPtr()
         cdef CProjector3D * projector = manProj3D.get(projector_id)
         if projector == NULL:
             raise AstraError("Projector not found")
