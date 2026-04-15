@@ -207,6 +207,12 @@ bool CSartAlgorithm::_check()
 		ASTRA_CONFIG_CHECK(0 <= m_piProjectionOrder[i] && m_piProjectionOrder[i] < m_pProjector->getProjectionGeometry().getProjectionAngleCount(), "SART", "Projection Order out of range.");
 	}
 
+	ASTRA_CONFIG_CHECK(m_pSinogram->isFloat32Memory(), "SART", "Projection data object not a float32 host memory object");
+	ASTRA_CONFIG_CHECK(m_pReconstruction->isFloat32Memory(), "SART", "Reconstruction data object not a float32 host memory object");
+
+	ASTRA_CONFIG_CHECK(!m_bUseSinogramMask || m_pSinogramMask->isFloat32Memory(), "SART", "Projection mask object not a float32 host memory object");
+	ASTRA_CONFIG_CHECK(!m_bUseReconstructionMask || m_pReconstructionMask->isFloat32Memory(), "SART", "Reconstruction mask object not a float32 host memory object");
+
 	return true;
 }
 

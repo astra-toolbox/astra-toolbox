@@ -70,6 +70,12 @@ bool CArtAlgorithm::_check()
 		}
 	}
 
+	ASTRA_CONFIG_CHECK(m_pSinogram->isFloat32Memory(), "ART", "Projection data object not a float32 host memory object");
+	ASTRA_CONFIG_CHECK(m_pReconstruction->isFloat32Memory(), "ART", "Reconstruction data object not a float32 host memory object");
+
+	ASTRA_CONFIG_CHECK(!m_bUseSinogramMask || m_pSinogramMask->isFloat32Memory(), "ART", "Projection mask object not a float32 host memory object");
+	ASTRA_CONFIG_CHECK(!m_bUseReconstructionMask || m_pReconstructionMask->isFloat32Memory(), "ART", "Reconstruction mask object not a float32 host memory object");
+
 	// success
 	return true;
 }

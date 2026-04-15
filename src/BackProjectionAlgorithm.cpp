@@ -69,6 +69,12 @@ bool CBackProjectionAlgorithm::_check()
 	// check base class
 	ASTRA_CONFIG_CHECK(CReconstructionAlgorithm2D::_check(), "BP", "Error in ReconstructionAlgorithm2D initialization");
 
+	ASTRA_CONFIG_CHECK(m_pSinogram->isFloat32Memory(), "BP", "Projection data object not a float32 host memory object");
+	ASTRA_CONFIG_CHECK(m_pReconstruction->isFloat32Memory(), "BP", "Reconstruction data object not a float32 host memory object");
+
+	ASTRA_CONFIG_CHECK(!m_bUseSinogramMask || m_pSinogramMask->isFloat32Memory(), "BP", "Projection mask object not a float32 host memory object");
+	ASTRA_CONFIG_CHECK(!m_bUseReconstructionMask || m_pReconstructionMask->isFloat32Memory(), "BP", "Reconstruction mask object not a float32 host memory object");
+
 	return true;
 }
 

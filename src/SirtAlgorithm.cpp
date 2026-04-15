@@ -85,6 +85,12 @@ bool CSirtAlgorithm::_check()
 	ASTRA_CONFIG_CHECK(m_pDiffSinogram, "SIRT", "Invalid DiffSinogram Object");
 	ASTRA_CONFIG_CHECK(m_pDiffSinogram->isInitialized(), "SIRT", "Invalid DiffSinogram Object");
 
+	ASTRA_CONFIG_CHECK(m_pSinogram->isFloat32Memory(), "SIRT", "Projection data object not a float32 host memory object");
+	ASTRA_CONFIG_CHECK(m_pReconstruction->isFloat32Memory(), "SIRT", "Reconstruction data object not a float32 host memory object");
+
+	ASTRA_CONFIG_CHECK(!m_bUseSinogramMask || m_pSinogramMask->isFloat32Memory(), "SIRT", "Projection mask object not a float32 host memory object");
+	ASTRA_CONFIG_CHECK(!m_bUseReconstructionMask || m_pReconstructionMask->isFloat32Memory(), "SIRT", "Reconstruction mask object not a float32 host memory object");
+
 	return true;
 }
 
