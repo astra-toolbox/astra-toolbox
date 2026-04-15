@@ -205,6 +205,9 @@ bool CReconstructionAlgorithm3D::_check()
 	ASTRA_CONFIG_CHECK(m_pReconstruction->getGeometry()->isEqual(m_pProjector->getVolumeGeometry()), "Reconstruction3D", "Reconstruction Data not compatible with the specified Projector.");
 #endif
 
+	ASTRA_CONFIG_CHECK(!m_bUseSinogramMask || m_pSinogramMask, "Reconstruction3D", "Projection mask object not valid");
+	ASTRA_CONFIG_CHECK(!m_bUseReconstructionMask || m_pReconstructionMask, "Reconstruction3D", "Reconstruction mask object not valid");
+
 	// success
 	return true;
 }

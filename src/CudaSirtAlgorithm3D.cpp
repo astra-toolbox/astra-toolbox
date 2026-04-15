@@ -87,6 +87,11 @@ bool CCudaSirtAlgorithm3D::_check()
 	// check base class
 	ASTRA_CONFIG_CHECK(CReconstructionAlgorithm3D::_check(), "SIRT3D", "Error in ReconstructionAlgorithm3D initialization");
 
+	ASTRA_CONFIG_CHECK(m_pSinogram->isFloat32Memory(), "SIRT3D", "Projection data object not a float32 host memory object");
+	ASTRA_CONFIG_CHECK(m_pReconstruction->isFloat32Memory(), "SIRT3D", "Reconstruction data object not a float32 host memory object");
+
+	ASTRA_CONFIG_CHECK(!m_bUseSinogramMask || m_pSinogramMask->isFloat32Memory(), "SIRT3D", "Projection mask object not a float32 host memory object");
+	ASTRA_CONFIG_CHECK(!m_bUseReconstructionMask || m_pReconstructionMask->isFloat32Memory(), "SIRT3D", "Reconstruction mask object not a float32 host memory object");
 
 	return true;
 }

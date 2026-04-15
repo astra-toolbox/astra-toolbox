@@ -91,6 +91,11 @@ bool CCudaCglsAlgorithm3D::_check()
 	ASTRA_CONFIG_CHECK(!m_bUseMaxConstraint, "CGLS3D", "MaxConstraint is not supported");
 	ASTRA_CONFIG_CHECK(!m_bUseSinogramMask, "CGLS3D", "SinogramMask is not supported");
 
+	ASTRA_CONFIG_CHECK(m_pSinogram->isFloat32Memory(), "CGLS3D", "Projection data object not a float32 host memory object");
+	ASTRA_CONFIG_CHECK(m_pReconstruction->isFloat32Memory(), "CGLS3D", "Reconstruction data object not a float32 host memory object");
+
+	ASTRA_CONFIG_CHECK(!m_bUseReconstructionMask || m_pReconstructionMask->isFloat32Memory(), "CGLS3D", "Reconstruction mask object not a float32 host memory object");
+
 	return true;
 }
 
