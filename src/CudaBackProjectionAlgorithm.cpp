@@ -95,13 +95,13 @@ bool CCudaBackProjectionAlgorithm::run(int /*_iNrIterations*/)
 		astraCUDA::setGPUIndex(m_iGPUIndex);
 
 	CDataStorage *s;
-	s = astraCUDA::allocateGPUMemory(volDims[0], volDims[1], astraCUDA::INIT_NO);
+	s = astraCUDA::allocateGPUMemory(volDims[0], volDims[1], astraCUDA::INIT_ZERO);
 	if (!s) {
 		return false;
 	}
 	CData2D *D_volData = new CData2D(volDims[0], volDims[1], s);
 
-	s = astraCUDA::allocateGPUMemory(projDims[0], projDims[1], astraCUDA::INIT_ZERO);
+	s = astraCUDA::allocateGPUMemory(projDims[0], projDims[1], astraCUDA::INIT_NO);
 	if (!s) {
 		astraCUDA::freeGPUMemory(D_volData);
 		delete D_volData;
