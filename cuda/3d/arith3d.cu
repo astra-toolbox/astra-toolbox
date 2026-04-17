@@ -290,6 +290,7 @@ bool processVol3D(astra::CData3D *out, const astra::CData3D *in, const Stream &s
 	dim3 gridSize((dims[0]+15)/16, (dims[1]+511)/512);
 	float *pfOut = (float*)outs->getPtr().ptr;
 	unsigned int outPitch = outs->getPtr().pitch / sizeof(float);
+	assert(outs->getPtr().pitch == ins->getPtr().pitch);
 	const float *pfIn = (const float*)ins->getPtr().ptr;
 	unsigned int step = outs->getPtr().pitch/sizeof(float) * dims[1];
 
@@ -320,6 +321,7 @@ bool processVol3D(astra::CData3D *out, const astra::CData3D *in, float fParam, c
 	dim3 gridSize((dims[0]+15)/16, (dims[1]+511)/512);
 	float *pfOut = (float*)outs->getPtr().ptr;
 	unsigned int outPitch = outs->getPtr().pitch / sizeof(float);
+	assert(outs->getPtr().pitch == ins->getPtr().pitch);
 	const float *pfIn = (const float*)ins->getPtr().ptr;
 	unsigned int step = outs->getPtr().pitch/sizeof(float) * dims[1];
 
@@ -354,6 +356,8 @@ bool processVol3D(astra::CData3D *out, const astra::CData3D *in1, const astra::C
 	dim3 gridSize((dims[0]+15)/16, (dims[1]+511)/512);
 	float *pfOut = (float*)outs->getPtr().ptr;
 	unsigned int outPitch = outs->getPtr().pitch / sizeof(float);
+	assert(outs->getPtr().pitch == in1s->getPtr().pitch);
+	assert(outs->getPtr().pitch == in2s->getPtr().pitch);
 	const float *pfIn1 = (const float*)in1s->getPtr().ptr;
 	const float *pfIn2 = (const float*)in2s->getPtr().ptr;
 	unsigned int step = outs->getPtr().pitch/sizeof(float) * dims[1];
@@ -390,6 +394,8 @@ bool processVol3D(astra::CData3D *out, const astra::CData3D *in1, const astra::C
 	dim3 gridSize((dims[0]+15)/16, (dims[1]+511)/512);
 	float *pfOut = (float*)outs->getPtr().ptr;
 	unsigned int outPitch = outs->getPtr().pitch / sizeof(float);
+	assert(outs->getPtr().pitch == in1s->getPtr().pitch);
+	assert(outs->getPtr().pitch == in2s->getPtr().pitch);
 	const float *pfIn1 = (const float*)in1s->getPtr().ptr;
 	const float *pfIn2 = (const float*)in2s->getPtr().ptr;
 	unsigned int step = outs->getPtr().pitch/sizeof(float) * dims[1];

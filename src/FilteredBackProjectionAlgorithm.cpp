@@ -140,6 +140,9 @@ bool CFilteredBackProjectionAlgorithm::_check()
 
 	ASTRA_CONFIG_CHECK(checkCustomFilterSize(m_filterConfig, m_pSinogram->getGeometry()), "FBP", "Filter size mismatch");
 
+	ASTRA_CONFIG_CHECK(m_pSinogram->isFloat32Memory(), "FBP", "Projection data object not a float32 host memory object");
+	ASTRA_CONFIG_CHECK(m_pReconstruction->isFloat32Memory(), "FBP", "Reconstruction data object not a float32 host memory object");
+
 	// success
 	return true;
 }

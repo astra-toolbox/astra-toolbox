@@ -86,6 +86,12 @@ bool CForwardProjectionAlgorithm::_check()
 	ASTRA_CONFIG_CHECK(m_pSinogram->getGeometry().isEqual(m_pProjector->getProjectionGeometry()), "ForwardProjection", "Projection Data not compatible with the specified Projector.");
 	ASTRA_CONFIG_CHECK(m_pVolume->getGeometry().isEqual(m_pProjector->getVolumeGeometry()), "ForwardProjection", "Volume Data not compatible with the specified Projector.");
 
+	ASTRA_CONFIG_CHECK(m_pSinogram->isFloat32Memory(), "ForwardProjection", "Projection data object not a float32 host memory object");
+	ASTRA_CONFIG_CHECK(m_pVolume->isFloat32Memory(), "ForwardProjection", "Volume data object not a float32 host memory object");
+
+	ASTRA_CONFIG_CHECK(!m_bUseSinogramMask || m_pSinogramMask->isFloat32Memory(), "ForwardProjection", "Projection mask object not a float32 host memory object");
+	ASTRA_CONFIG_CHECK(!m_bUseVolumeMask || m_pVolumeMask->isFloat32Memory(), "ForwardProjection", "Volume mask object not a float32 host memory object");
+
 	// success
 	return true;
 }

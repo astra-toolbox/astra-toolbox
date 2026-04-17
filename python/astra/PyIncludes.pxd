@@ -134,11 +134,11 @@ cdef extern from "astra/Algorithm.h" namespace "astra":
         bool isInitialized()
 
 cdef extern from "astra/ReconstructionAlgorithm2D.h" namespace "astra":
-    cdef cppclass CReconstructionAlgorithm2D:
+    cdef cppclass CReconstructionAlgorithm2D(CAlgorithm):
         bool getResidualNorm(float32&)
 
 cdef extern from "astra/ReconstructionAlgorithm3D.h" namespace "astra":
-    cdef cppclass CReconstructionAlgorithm3D:
+    cdef cppclass CReconstructionAlgorithm3D(CAlgorithm):
         bool getResidualNorm(float32&)
 
 cdef extern from "astra/Projector2D.h" namespace "astra":

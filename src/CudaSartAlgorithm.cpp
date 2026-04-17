@@ -225,9 +225,9 @@ bool CCudaSartAlgorithm::run(int _iNrIterations)
 	if (m_iGPUIndex != -1)
 		astraCUDA::setGPUIndex(m_iGPUIndex);
 
+	bool ok = true;
 
 	if (!m_bBuffersInitialized) {
-		bool ok = true;
 		if (!m_bUseReconstructionMask)
 			ok = precomputeWeights();
 		if (!ok)
@@ -235,14 +235,33 @@ bool CCudaSartAlgorithm::run(int _iNrIterations)
 		m_bBuffersInitialized = true;
 	}
 
-	ASTRA_ASSERT(m_pSinogram->isFloat32Memory());
-	bool ok = astraCUDA::copyToGPUMemory(m_pSinogram, D_projData);
+	if (m_pSinogram->isFloat32Memory()) {
+		ok &= astraCUDA::copyToGPUMemory(m_pSinogram, D_projData);
+	} else if (m_pSinogram->isFloat32GPU()) {
+		// TODO: re-use memory instead of copying
+		// (need to ensure everything works when pitches are not consistent)
+		ok &= astraCUDA::assignGPUMemory(D_projData, m_pSinogram);
+	} else {
+		ok = false;
+	}
+
+	if (!ok)
+		return false;
+
 	if (m_bUseReconstructionMask) {
 		ASTRA_ASSERT(m_pReconstructionMask->isFloat32Memory());
 		ok &= astraCUDA::copyToGPUMemory(m_pReconstructionMask, D_volMaskData);
 	}
-	ASTRA_ASSERT(m_pReconstruction->isFloat32Memory());
-	ok &= astraCUDA::copyToGPUMemory(m_pReconstruction, D_volData);
+
+	if (m_pReconstruction->isFloat32Memory()) {
+		ok &= astraCUDA::copyToGPUMemory(m_pReconstruction, D_volData);
+	} else if (m_pReconstruction->isFloat32GPU()) {
+		// TODO: re-use memory instead of copying
+		// (need to ensure everything works when pitches are not consistent)
+		ok &= astraCUDA::assignGPUMemory(D_volData, m_pReconstruction);
+	} else {
+		ok = false;
+	}
 
 	if (!ok)
 		return false;
@@ -295,7 +314,18 @@ bool CCudaSartAlgorithm::run(int _iNrIterations)
 
 	}
 
-	ok &= astraCUDA::copyFromGPUMemory(m_pReconstruction, D_volData);
+	if (ok) {
+		if (m_pReconstruction->isFloat32Memory()) {
+			ok &= astraCUDA::copyFromGPUMemory(m_pReconstruction, D_volData);
+		} else if (m_pReconstruction->isFloat32GPU()) {
+			// TODO: re-use memory instead of copying
+			// (need to ensure everything works when pitches are not consistent)
+			ok &= astraCUDA::assignGPUMemory(m_pReconstruction, D_volData);
+		} else {
+			ok = false;
+		}
+	}
+
 	if (!ok)
 		return false;
 

@@ -28,9 +28,24 @@
 include "config.pxi"
 
 from . cimport utils
+from .PyIncludes cimport *
 from .utils import wrap_from_bytes
 from .utils cimport createProjectionGeometry3D
+from .utils cimport linkVolFromGeometry2D, linkProjFromGeometry2D
 from .log import AstraError
+
+from . cimport PyProjector2DManager
+from .PyProjector2DManager cimport CProjector2DManager
+
+cdef extern from "astra/ForwardProjectionAlgorithm.h" namespace "astra":
+    cdef cppclass CForwardProjectionAlgorithm(CAlgorithm):
+        CForwardProjectionAlgorithm(CProjector2D*, CFloat32VolumeData2D*, CFloat32ProjectionData2D*)
+cdef extern from "astra/BackProjectionAlgorithm.h" namespace "astra":
+    cdef cppclass CBackProjectionAlgorithm(CReconstructionAlgorithm2D):
+        CBackProjectionAlgorithm(CProjector2D*, CFloat32ProjectionData2D*, CFloat32VolumeData2D*)
+
+
+
 
 IF HAVE_CUDA==True:
 
@@ -59,20 +74,27 @@ IF HAVE_CUDA==True:
     cdef extern from *:
         CFloat32VolumeData3D * dynamic_cast_vol_mem "dynamic_cast<astra::CFloat32VolumeData3D*>" (CData3D * )
         CFloat32ProjectionData3D * dynamic_cast_proj_mem "dynamic_cast<astra::CFloat32ProjectionData3D*>" (CData3D * )
+        CCudaProjector2D* dynamic_cast_cuda_projector "dynamic_cast<astra::CCudaProjector2D*>" (CProjector2D*)
 
-
+    cdef extern from "astra/CudaForwardProjectionAlgorithm.h" namespace "astra":
+        cdef cppclass CCudaForwardProjectionAlgorithm(CAlgorithm):
+            CCudaForwardProjectionAlgorithm()
+            bool initialize(CProjector2D*, CFloat32VolumeData2D*, CFloat32ProjectionData2D*)
+    cdef extern from "astra/CudaBackProjectionAlgorithm.h" namespace "astra":
+        cdef cppclass CCudaBackProjectionAlgorithm(CReconstructionAlgorithm2D):
+            CCudaBackProjectionAlgorithm()
+            bool initialize(CProjector2D*, CFloat32ProjectionData2D*, CFloat32VolumeData2D*)
 
     from . cimport PyProjector3DManager
     from .PyProjector3DManager cimport CProjector3DManager
     from . cimport PyData3DManager
     from .PyData3DManager cimport CData3DManager
 
-    cdef CProjector3DManager * manProj = <CProjector3DManager * >PyProjector3DManager.getSingletonPtr()
-    cdef CData3DManager * man3d = <CData3DManager * >PyData3DManager.getSingletonPtr()
 
     def do_composite(projector_id, vol_ids, proj_ids, mode, t):
         if mode != MODE_ADD and mode != MODE_SET:
             raise AstraError("Internal error: wrong composite mode")
+        cdef CData3DManager * man3d = <CData3DManager * >PyData3DManager.getSingletonPtr()
         cdef EJobMode eMode = mode;
         cdef vector[CFloat32VolumeData3D *] vol
         cdef CFloat32VolumeData3D * pVolObject
@@ -93,7 +115,8 @@ IF HAVE_CUDA==True:
                 raise AstraError("Data object not initialized properly")
             proj.push_back(pProjObject)
         cdef CCompositeGeometryManager m
-        cdef CProjector3D * projector = manProj.get(projector_id) # may be NULL
+        cdef CProjector3DManager * manProj3D = <CProjector3DManager * >PyProjector3DManager.getSingletonPtr()
+        cdef CProjector3D * projector = manProj3D.get(projector_id) # may be NULL
         cdef bool ret = True
         if t == "FP":
             with nogil:
@@ -121,6 +144,7 @@ IF HAVE_CUDA==True:
     def accumulate_FDK(projector_id, vol_id, proj_id):
         cdef CFloat32VolumeData3D * pVolObject
         cdef CFloat32ProjectionData3D * pProjObject
+        cdef CData3DManager * man3d = <CData3DManager * >PyData3DManager.getSingletonPtr()
         pVolObject = dynamic_cast_vol_mem(man3d.get(vol_id))
         if pVolObject == NULL:
             raise AstraError("Data object not found")
@@ -132,7 +156,8 @@ IF HAVE_CUDA==True:
         if not pProjObject.isInitialized():
             raise AstraError("Data object not initialized properly")
         cdef CCompositeGeometryManager m
-        cdef CProjector3D * projector = manProj.get(projector_id) # may be NULL
+        cdef CProjector3DManager * manProj3D = <CProjector3DManager * >PyProjector3DManager.getSingletonPtr()
+        cdef CProjector3D * projector = manProj3D.get(projector_id) # may be NULL
         cdef SFilterConfig filterConfig
         filterConfig.m_eType = FILTER_RAMLAK
         cdef bool ret = True
@@ -148,7 +173,8 @@ IF HAVE_CUDA==True:
         if mode != MODE_ADD and mode != MODE_SET:
             raise AstraError("Internal error: wrong composite mode")
         cdef EJobMode eMode = mode
-        cdef CProjector3D * projector = manProj.get(projector_id)
+        cdef CProjector3DManager * manProj3D = <CProjector3DManager * >PyProjector3DManager.getSingletonPtr()
+        cdef CProjector3D * projector = manProj3D.get(projector_id)
         if projector == NULL:
             raise AstraError("Projector not found")
         cdef CFloat32VolumeData3D * pVol = linkVolFromGeometry3D(projector.getVolumeGeometry(), vol)
@@ -181,10 +207,10 @@ IF HAVE_CUDA==True:
 
         :param projector_id: A 3D projector object handle
         :type datatype: :class:`int`
-        :param vol: The input data, as either a numpy array, or a GPULink object
-        :type datatype: :class:`numpy.ndarray` or :class:`astra.data3d.GPULink`
-        :param proj: The pre-allocated output data, either numpy array or GPULink
-        :type datatype: :class:`numpy.ndarray` or :class:`astra.data3d.GPULink`
+        :param vol: The input data, as either a numpy array, or other DLPack object
+        :type datatype: :class:`numpy.ndarray`
+        :param proj: The pre-allocated output data, either numpy array, or other DLPack object
+        :type datatype: :class:`numpy.ndarray`
         """
         direct_FPBP3D(projector_id, vol, proj, MODE_SET, "FP")
 
@@ -193,10 +219,10 @@ IF HAVE_CUDA==True:
 
         :param projector_id: A 3D projector object handle
         :type datatype: :class:`int`
-        :param vol: The pre-allocated output data, as either a numpy array, or a GPULink object
-        :type datatype: :class:`numpy.ndarray` or :class:`astra.data3d.GPULink`
-        :param proj: The input data, either numpy array or GPULink
-        :type datatype: :class:`numpy.ndarray` or :class:`astra.data3d.GPULink`
+        :param vol: The pre-allocated output data, as either a numpy array, or other DLPack object
+        :type datatype: :class:`numpy.ndarray`
+        :param proj: The input data, either numpy array, or other DLPack objects
+        :type datatype: :class:`numpy.ndarray`
         """
         direct_FPBP3D(projector_id, vol, proj, MODE_SET, "BP")
 
@@ -213,5 +239,105 @@ IF HAVE_CUDA==True:
         ppGeometry = createProjectionGeometry3D(geometry)
         ppGeometry.get().projectPoint(x, y, z, angle, u, v)
         return (u, v)
+
+    def direct_FPBP2D(projector_id, vol, proj, t):
+        cdef CProjector2DManager * manProj2D = <CProjector2DManager * >PyProjector2DManager.getSingletonPtr()
+        cdef CProjector2D * projector = manProj2D.get(projector_id)
+        if projector == NULL:
+            raise AstraError("Projector not found")
+        cdef CFloat32VolumeData2D * pVol = linkVolFromGeometry2D(projector.getVolumeGeometry(), vol)
+        cdef CFloat32ProjectionData2D * pProj = linkProjFromGeometry2D(projector.getProjectionGeometry(), proj)
+        cdef CAlgorithm *pAlg = NULL
+        cdef CCudaProjector2D *pCudaProj = dynamic_cast_cuda_projector(projector)
+        cdef bool ret = True
+        cdef CCudaForwardProjectionAlgorithm * pf
+        cdef CCudaBackProjectionAlgorithm * pb
+
+        try:
+            if pCudaProj == NULL:
+                if t == "FP":
+                    pAlg = new CForwardProjectionAlgorithm(projector, pVol, pProj)
+                elif t == "BP":
+                    pAlg = new CBackProjectionAlgorithm(projector, pProj, pVol)
+                else:
+                    raise AstraError("Internal error: wrong op type")
+            else:
+                if t == "FP":
+                    pf = new CCudaForwardProjectionAlgorithm()
+                    pf.initialize(projector, pVol, pProj)
+                    pAlg = pf
+                elif t == "BP":
+                    pb = new CCudaBackProjectionAlgorithm()
+                    pb.initialize(projector, pProj, pVol)
+                    pAlg = pb
+                else:
+                    raise AstraError("Internal error: wrong op type")
+
+            if not pAlg.isInitialized():
+                raise AstraError("Failed to initialize algorithm")
+
+            with nogil:
+                pAlg.run(1)
+        finally:
+            del pVol
+            del pProj
+            del pAlg
+
+ELSE:
+
+    def direct_FPBP2D(projector_id, vol, proj, t):
+        cdef CProjector2DManager * manProj2D = <CProjector2DManager * >PyProjector2DManager.getSingletonPtr()
+        cdef CProjector2D * projector = manProj2D.get(projector_id)
+        if projector == NULL:
+            raise AstraError("Projector not found")
+        cdef CFloat32VolumeData2D * pVol = linkVolFromGeometry2D(projector.getVolumeGeometry(), vol)
+        cdef CFloat32ProjectionData2D * pProj = linkProjFromGeometry2D(projector.getProjectionGeometry(), proj)
+        cdef CAlgorithm *pAlg = NULL
+        cdef bool ret = True
+
+        try:
+            if t == "FP":
+                pAlg = new CForwardProjectionAlgorithm(projector, pVol, pProj)
+            elif t == "BP":
+                pAlg = new CBackProjectionAlgorithm(projector, pProj, pVol)
+            else:
+                raise AstraError("Internal error: wrong op type")
+
+            if not pAlg.isInitialized():
+                raise AstraError("Failed to initialize algorithm")
+
+            with nogil:
+                pAlg.run(1)
+        finally:
+            del pVol
+            del pProj
+            del pAlg
+
+
+
+
+def direct_FP2D(projector_id, vol, proj):
+    """Perform a 2D forward projection with pre-allocated input/output.
+
+    :param projector_id: A 2D projector object handle
+    :type datatype: :class:`int`
+    :param vol: The input data, as either a numpy array, or other DLPack object
+    :type datatype: :class:`numpy.ndarray`
+    :param proj: The pre-allocated output data, either numpy array, or other DLPack object
+    :type datatype: :class:`numpy.ndarray`
+    """
+    direct_FPBP2D(projector_id, vol, proj, "FP")
+
+def direct_BP2D(projector_id, vol, proj):
+    """Perform a 2D back projection with pre-allocated input/output.
+
+    :param projector_id: A 2D projector object handle
+    :type datatype: :class:`int`
+    :param vol: The pre-allocated output data, as either a numpy array, or other DLPack object
+    :type datatype: :class:`numpy.ndarray`
+    :param proj: The input data, either numpy array, or other DLPack objects
+    :type datatype: :class:`numpy.ndarray`
+    """
+    direct_FPBP2D(projector_id, vol, proj, "BP")
 
 

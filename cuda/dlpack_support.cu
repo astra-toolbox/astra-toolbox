@@ -50,14 +50,16 @@ CDataStorageDLPackGPU<DLT>::CDataStorageDLPackGPU(DLT *tensor_m)
 {
 	DLTensor *tensor = &m_pTensor->dl_tensor;
 
+	assert(tensor->ndim >= 2);
+
 	uint8_t* data = static_cast<uint8_t*>(tensor->data);
 	data += tensor->byte_offset;
-	unsigned int pitch = tensor->shape[2];
+	unsigned int pitch = tensor->shape[tensor->ndim-1];
 
 	ptr.ptr = data;
-	ptr.xsize = sizeof(float) * tensor->shape[2];
+	ptr.xsize = sizeof(float) * tensor->shape[tensor->ndim-1];
 	ptr.pitch = sizeof(float) * pitch;
-	ptr.ysize = tensor->shape[1];
+	ptr.ysize = tensor->shape[tensor->ndim-2];
 }
 
 
