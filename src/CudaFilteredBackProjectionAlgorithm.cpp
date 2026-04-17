@@ -25,6 +25,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
+#ifdef ASTRA_CUDA
+
 #include <astra/CudaFilteredBackProjectionAlgorithm.h>
 #include <astra/FanFlatProjectionGeometry2D.h>
 
@@ -223,3 +225,5 @@ bool CCudaFilteredBackProjectionAlgorithm::run(int /*_iNrIterations*/)
 
 	return ok;
 }
+
+#endif // ASTRA_CUDA

@@ -25,6 +25,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
+#ifdef ASTRA_CUDA
+
 #include "astra/CudaBackProjectionAlgorithm3D.h"
 
 #include "astra/AstraObjectManager.h"
@@ -291,3 +293,5 @@ bool CCudaBackProjectionAlgorithm3D::run(int _iNrIterations)
 
 
 } // namespace astra
+
+#endif // ASTRA_CUDA

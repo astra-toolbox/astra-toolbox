@@ -25,6 +25,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------
 */
 
+#ifdef ASTRA_CUDA
+
 #include "astra/CudaCglsAlgorithm3D.h"
 
 #include "astra/AstraObjectManager.h"
@@ -407,3 +409,5 @@ bool CCudaCglsAlgorithm3D::callBP(CData3D *D_vol, const CData3D *D_proj, float f
 
 
 } // namespace astra
+
+#endif // ASTRA_CUDA
