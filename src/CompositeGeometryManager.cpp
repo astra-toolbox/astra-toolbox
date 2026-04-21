@@ -54,10 +54,12 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 namespace astra {
 
+std::mutex g_GPUParams_mutex;
 SGPUParams* CCompositeGeometryManager::s_params = 0;
 
 CCompositeGeometryManager::CCompositeGeometryManager()
 {
+	std::unique_lock lock{g_GPUParams_mutex};
 	m_iMaxSize = 0;
 
 	if (s_params) {
@@ -1463,6 +1465,7 @@ bool CCompositeGeometryManager::doJobs(TJobSetInternal &jobset)
 //static
 void CCompositeGeometryManager::setGlobalGPUParams(const SGPUParams& params)
 {
+	std::unique_lock lock{g_GPUParams_mutex};
 	delete s_params;
 
 	s_params = new SGPUParams;
