@@ -60,6 +60,8 @@ bool CArtAlgorithm::_check()
 
 	ASTRA_CONFIG_CHECK(m_piProjectionOrder.size() == m_piDetectorOrder.size(), "ART", "Different sizes of ray order lists.");
 
+	ASTRA_CONFIG_CHECK(!m_piProjectionOrder.empty(), "ART", "Empty ray order lists.");
+
 	// check ray order list
 	for (unsigned int i = 0; i < m_piProjectionOrder.size(); i++) {
 		if (m_piProjectionOrder[i] < 0 || m_piProjectionOrder[i] > m_pSinogram->getAngleCount()-1) {
@@ -109,6 +111,8 @@ bool CArtAlgorithm::initialize(const Config& _cfg)
 		}
 	} else if (projOrder == "custom") {
 		std::vector<int> rayOrderList;
+		if (!CR.hasOption("RayOrderList"))
+			return false;
 		if (!CR.getOptionIntArray("RayOrderList", rayOrderList))
 			return false;
 		iRayCount = rayOrderList.size() / 2;
