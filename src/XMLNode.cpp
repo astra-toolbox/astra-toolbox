@@ -151,27 +151,6 @@ bool XMLNode::getContentBool() const
 }
 
 //-----------------------------------------------------------------------------	
-// Get node content - STRING LIST
-vector<string> XMLNode::getContentArray() const
-{
-	// get listsize
-	int iSize = StringUtil::stringToInt(getAttribute("listsize"));
-	// create result array
-	vector<string> res(iSize);
-	// loop all list item nodes
-	list<XMLNode> nodes = getNodes("ListItem");
-	for (list<XMLNode>::iterator it = nodes.begin(); it != nodes.end(); ++it) {
-		int iIndex = it->getAttributeNumerical("index");
-		string sValue = it->getAttribute("value");
-		ASTRA_ASSERT(iIndex < iSize);
-		res[iIndex] = sValue;
-	}
-
-	// return 
-	return res;
-}
-
-//-----------------------------------------------------------------------------	
 // Get node content - NUMERICAL LIST
 // NB: A 2D matrix is returned as a linear list
 vector<float32> XMLNode::getContentNumericalArray() const

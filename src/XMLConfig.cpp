@@ -129,6 +129,7 @@ bool XMLConfig::getIntArray(const std::string &name, std::vector<int> &values) c
 	if (!node)
 		return false;
 	// TODO: Don't go via doubles
+	// (But ensure Matlab's default double values do still work)
 	std::vector<double> tmp;
 	try {
 		tmp = node.getContentNumericalArrayDouble();
@@ -209,21 +210,22 @@ bool XMLConfig::getOptionIntArray(const std::string &name, std::vector<int> &val
 {
 	values.clear();
 
-	std::list<XMLNode> nodes = self.getNodes("Option");
-	for (XMLNode &it : nodes) {
-		if (it.getAttribute("key") == name) {
-			std::vector<std::string> data = it.getContentArray();
-			values.resize(data.size());
-			try {
-				for (size_t i = 0; i < data.size(); ++i)
-					values[i] = StringUtil::stringToInt(data[i]);
-			} catch (const StringUtil::bad_cast &) {
-				return false;
-			}
-			return true;
-		}
+	// TODO: Don't go via floats
+	// (But ensure Matlab's default double values do still work)
+	std::vector<float32> tmp;
+	try {
+		tmp = self.getOptionNumericalArray(name);
+	} catch (const StringUtil::bad_cast &) {
+		return false;
 	}
-	return false;
+	values.resize(tmp.size());
+	for (size_t i = 0; i < tmp.size(); ++i) {
+		int t = static_cast<int>(tmp[i]);
+		if (t != tmp[i])
+			return false;
+		values[i] = t;
+	}
+	return true;
 }
 
 std::list<std::string> XMLConfig::checkUnparsed(const ConfigCheckData &data) const
