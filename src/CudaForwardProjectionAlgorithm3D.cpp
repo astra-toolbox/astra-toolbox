@@ -49,15 +49,13 @@ namespace astra {
 
 //----------------------------------------------------------------------------------------
 // Constructor
-CCudaForwardProjectionAlgorithm3D::CCudaForwardProjectionAlgorithm3D() 
+CCudaForwardProjectionAlgorithm3D::CCudaForwardProjectionAlgorithm3D()
 {
 	m_bIsInitialized = false;
-	m_iGPUIndex = -1;
 	m_iDetectorSuperSampling = 1;
 	m_pProjector = 0;
 	m_pProjections = 0;
 	m_pVolume = 0;
-
 }
 
 //----------------------------------------------------------------------------------------
@@ -71,7 +69,7 @@ CCudaForwardProjectionAlgorithm3D::~CCudaForwardProjectionAlgorithm3D()
 void CCudaForwardProjectionAlgorithm3D::initializeFromProjector()
 {
 	m_iDetectorSuperSampling = 1;
-	m_iGPUIndex = -1;
+	m_GPUIndices.clear();
 
 	CCudaProjector3D* pCudaProjector = dynamic_cast<CCudaProjector3D*>(m_pProjector);
 	if (!pCudaProjector) {
@@ -80,7 +78,7 @@ void CCudaForwardProjectionAlgorithm3D::initializeFromProjector()
 		}
 	} else {
 		m_iDetectorSuperSampling = pCudaProjector->getDetectorSuperSampling();
-		m_iGPUIndex = pCudaProjector->getGPUIndex();
+		m_GPUIndices = pCudaProjector->getGPUIndices();
 	}
 }
 
@@ -119,9 +117,9 @@ bool CCudaForwardProjectionAlgorithm3D::initialize(const Config& _cfg)
 	// Deprecated options
 	ok &= CR.getOptionInt("DetectorSuperSampling", m_iDetectorSuperSampling, m_iDetectorSuperSampling);
 	if (CR.hasOption("GPUIndex"))
-		ok &= CR.getOptionInt("GPUIndex", m_iGPUIndex, -1);
-	else
-		ok &= CR.getOptionInt("GPUindex", m_iGPUIndex, -1);
+		ok &= CR.getOptionIntArray("GPUIndex", m_GPUIndices, true);
+	else if (CR.hasOption("GPUindex"))
+		ok &= CR.getOptionIntArray("GPUindex", m_GPUIndices, true);
 	if (!ok)
 		return false;
 
@@ -135,10 +133,11 @@ bool CCudaForwardProjectionAlgorithm3D::initialize(const Config& _cfg)
 }
 
 
-bool CCudaForwardProjectionAlgorithm3D::initialize(CProjector3D* _pProjector, 
-                                  CFloat32ProjectionData3D* _pProjections, 
-                                  CFloat32VolumeData3D* _pVolume,
-                                  int _iGPUindex, int _iDetectorSuperSampling)
+bool CCudaForwardProjectionAlgorithm3D::initialize(CProjector3D* _pProjector,
+                                                   CFloat32ProjectionData3D* _pProjections,
+                                                   CFloat32VolumeData3D* _pVolume,
+                                                   std::vector<int> _GPUIndices,
+                                                   int _iDetectorSuperSampling)
 {
 	m_pProjector = _pProjector;
 	
@@ -148,12 +147,22 @@ bool CCudaForwardProjectionAlgorithm3D::initialize(CProjector3D* _pProjector,
 
 	CCudaProjector3D* pCudaProjector = dynamic_cast<CCudaProjector3D*>(m_pProjector);
 	if (!pCudaProjector) {
-		// TODO: Report
+		if (m_pProjector) {
+			ASTRA_WARN("non-CUDA Projector3D passed to FP3D_CUDA");
+		}
 		m_iDetectorSuperSampling = _iDetectorSuperSampling;
-		m_iGPUIndex = _iGPUindex;
+		m_GPUIndices = _GPUIndices;
 	} else {
-		m_iDetectorSuperSampling = pCudaProjector->getDetectorSuperSampling();
-		m_iGPUIndex = pCudaProjector->getGPUIndex();
+		if (_iDetectorSuperSampling == -1)
+			m_iDetectorSuperSampling = pCudaProjector->getDetectorSuperSampling();
+		else
+			m_iDetectorSuperSampling = _iDetectorSuperSampling;
+
+		if (_GPUIndices.empty())
+			m_GPUIndices = pCudaProjector->getGPUIndices();
+		else
+			m_GPUIndices = _GPUIndices;
+
 	}
 
 	// success
@@ -180,7 +189,6 @@ bool CCudaForwardProjectionAlgorithm3D::check()
 	ASTRA_CONFIG_CHECK(m_pVolume->isInitialized(), "FP3D_CUDA", "Volume Data Object Not Initialized.");
 
 	ASTRA_CONFIG_CHECK(m_iDetectorSuperSampling >= 1, "FP3D_CUDA", "DetectorSuperSampling must be a positive integer.");
-	ASTRA_CONFIG_CHECK(m_iGPUIndex >= -1, "FP3D_CUDA", "GPUIndex must be a non-negative integer.");
 
 	// check compatibility between projector and data classes
 //	ASTRA_CONFIG_CHECK(m_pSinogram->getGeometry()->isEqual(m_pProjector->getProjectionGeometry()), "SIRT_CUDA", "Projection Data not compatible with the specified Projector.");
@@ -207,12 +215,6 @@ bool CCudaForwardProjectionAlgorithm3D::check()
 	return true;
 }
 
-
-void CCudaForwardProjectionAlgorithm3D::setGPUIndex(int _iGPUIndex)
-{
-	m_iGPUIndex = _iGPUIndex;
-}
-
 //----------------------------------------------------------------------------------------
 // Run
 bool CCudaForwardProjectionAlgorithm3D::run(int)
@@ -221,8 +223,8 @@ bool CCudaForwardProjectionAlgorithm3D::run(int)
 	assert(m_bIsInitialized);
 
 	CCompositeGeometryManager cgm;
-	if (m_iGPUIndex != -1)
-		cgm.setGPUIndices({m_iGPUIndex});
+	if (!m_GPUIndices.empty())
+		cgm.setGPUIndices(m_GPUIndices);
 
 	return cgm.doFP(m_pProjector, m_pVolume, m_pProjections);
 }

@@ -51,15 +51,15 @@ namespace astra {
 //----------------------------------------------------------------------------------------
 // Constructor
 CCudaBackProjectionAlgorithm3D::CCudaBackProjectionAlgorithm3D()
-	: m_iGPUIndex(-1), m_iVoxelSuperSampling(1), m_bSIRTWeighting(false)
+	: m_iVoxelSuperSampling(1), m_bSIRTWeighting(false)
 {
 
 }
 
 //----------------------------------------------------------------------------------------
 // Constructor with initialization
-CCudaBackProjectionAlgorithm3D::CCudaBackProjectionAlgorithm3D(CProjector3D* _pProjector, 
-                                                               CFloat32ProjectionData3D* _pProjectionData, 
+CCudaBackProjectionAlgorithm3D::CCudaBackProjectionAlgorithm3D(CProjector3D* _pProjector,
+                                                               CFloat32ProjectionData3D* _pProjectionData,
                                                                CFloat32VolumeData3D* _pReconstruction)
 	: CCudaBackProjectionAlgorithm3D()
 {
@@ -68,7 +68,7 @@ CCudaBackProjectionAlgorithm3D::CCudaBackProjectionAlgorithm3D(CProjector3D* _pP
 
 //----------------------------------------------------------------------------------------
 // Destructor
-CCudaBackProjectionAlgorithm3D::~CCudaBackProjectionAlgorithm3D() 
+CCudaBackProjectionAlgorithm3D::~CCudaBackProjectionAlgorithm3D()
 {
 
 }
@@ -89,7 +89,7 @@ bool CCudaBackProjectionAlgorithm3D::_check()
 void CCudaBackProjectionAlgorithm3D::initializeFromProjector()
 {
 	m_iVoxelSuperSampling = 1;
-	m_iGPUIndex = -1;
+	m_GPUIndices.clear();
 
 	CCudaProjector3D* pCudaProjector = dynamic_cast<CCudaProjector3D*>(m_pProjector);
 	if (!pCudaProjector) {
@@ -98,7 +98,7 @@ void CCudaBackProjectionAlgorithm3D::initializeFromProjector()
 		}
 	} else {
 		m_iVoxelSuperSampling = pCudaProjector->getVoxelSuperSampling();
-		m_iGPUIndex = pCudaProjector->getGPUIndex();
+		m_GPUIndices = pCudaProjector->getGPUIndices();
 	}
 
 }
@@ -123,9 +123,9 @@ bool CCudaBackProjectionAlgorithm3D::initialize(const Config& _cfg)
 	// Deprecated options
 	ok &= CR.getOptionInt("VoxelSuperSampling", m_iVoxelSuperSampling, m_iVoxelSuperSampling);
 	if (CR.hasOption("GPUIndex"))
-		ok &= CR.getOptionInt("GPUIndex", m_iGPUIndex, m_iGPUIndex);
-	else
-		ok &= CR.getOptionInt("GPUindex", m_iGPUIndex, m_iGPUIndex);
+		ok &= CR.getOptionIntArray("GPUIndex", m_GPUIndices, true);
+	else if (CR.hasOption("GPUindex"))
+		ok &= CR.getOptionIntArray("GPUindex", m_GPUIndices, true);
 
 	ok &= CR.getOptionBool("SIRTWeighting", m_bSIRTWeighting, false);
 
@@ -139,9 +139,9 @@ bool CCudaBackProjectionAlgorithm3D::initialize(const Config& _cfg)
 
 //----------------------------------------------------------------------------------------
 // Initialize - C++
-bool CCudaBackProjectionAlgorithm3D::initialize(CProjector3D* _pProjector, 
-								  CFloat32ProjectionData3D* _pSinogram, 
-								  CFloat32VolumeData3D* _pReconstruction)
+bool CCudaBackProjectionAlgorithm3D::initialize(CProjector3D* _pProjector,
+                                                CFloat32ProjectionData3D* _pSinogram,
+                                                CFloat32VolumeData3D* _pReconstruction)
 {
 	assert(!m_bIsInitialized);
 
@@ -280,13 +280,18 @@ bool CCudaBackProjectionAlgorithm3D::run(int _iNrIterations)
 		ASTRA_ASSERT(m_pSinogram->isFloat32Memory());
 		ASTRA_ASSERT(m_pReconstruction->isFloat32Memory());
 
+		// TODO: Warn if multiple GPUs specified but only one is used?
+		int iGPUIndex = -1;
+		if (!m_GPUIndices.empty())
+			iGPUIndex = m_GPUIndices[0];
+
 		return astraCudaBP_SIRTWeighted(m_pReconstruction,
 		                                m_pSinogram,
-		                                m_iGPUIndex, m_iVoxelSuperSampling);
+		                                iGPUIndex, m_iVoxelSuperSampling);
 	} else {
 		CCompositeGeometryManager cgm;
-		if (m_iGPUIndex != -1)
-			cgm.setGPUIndices({m_iGPUIndex});
+		if (!m_GPUIndices.empty())
+			cgm.setGPUIndices(m_GPUIndices);
 
 		return cgm.doBP(m_pProjector, pReconMem, pSinoMem);
 	}
