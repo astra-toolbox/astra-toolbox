@@ -1285,11 +1285,20 @@ public:
 	WorkQueue(CCompositeGeometryManager::TJobSetInternal &_jobs) : m_jobs(_jobs), failed(false) {
 		m_iter = m_jobs.begin();
 	}
-	void flag_failure() {
+	void flag_failure(const std::string &err) {
 		failed = true;
+		lock();
+		// We overwrite any existing error. Might have to change that
+		// if we ever change the Python error capture mechanism.
+		m_error = err;
+		unlock();
 	}
 	bool has_failed() const {
 		return failed;
+	}
+	std::string get_error() const {
+		// (Not thread safe on purpose)
+		return m_error;
 	}
 	bool receive(CCompositeGeometryManager::TJobSetInternal::const_iterator &i) {
 		if (failed)
@@ -1320,6 +1329,7 @@ private:
 	CCompositeGeometryManager::TJobSetInternal::const_iterator m_iter;
 	std::atomic<bool> failed;
 	std::mutex m_mutex;
+	std::string m_error;
 };
 
 struct WorkThreadInfo {
@@ -1336,7 +1346,10 @@ void runEntries(WorkThreadInfo* info)
 		astraCUDA3d::setGPUIndex(info->m_iGPU);
 		if (!doJob(i)) {
 			ASTRA_DEBUG("Thread on GPU %d reporting failure", info->m_iGPU);
-			info->m_queue->flag_failure();
+			// Capture last error message from this thread to
+			// report it back to the main thread.
+			std::string err = CLogger::getLastErrMsg();
+			info->m_queue->flag_failure(err);
 		}
 	}
 	ASTRA_DEBUG("Finishing thread on GPU %d", info->m_iGPU);
@@ -1449,8 +1462,12 @@ bool CCompositeGeometryManager::doJobs(TJobSetInternal &jobset)
 
 		runWorkQueue(wq, m_GPUIndices);
 
-		if (wq.has_failed())
+		if (wq.has_failed()) {
+			std::string err = wq.get_error();
+			if (!err.empty())
+				ASTRA_ERROR("%s", err.c_str());
 			return false;
+		}
 
 	}
 
