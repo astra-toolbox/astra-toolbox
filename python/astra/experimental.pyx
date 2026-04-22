@@ -274,7 +274,7 @@ IF HAVE_CUDA==True:
                     raise AstraError("Internal error: wrong op type")
 
             if not pAlg.isInitialized():
-                raise AstraError("Failed to initialize algorithm")
+                raise AstraError("Failed to initialize algorithm", append_log=True)
 
             with nogil:
                 pAlg.run(1)
@@ -304,7 +304,7 @@ ELSE:
                 raise AstraError("Internal error: wrong op type")
 
             if not pAlg.isInitialized():
-                raise AstraError("Failed to initialize algorithm")
+                raise AstraError("Failed to initialize algorithm", append_log=True)
 
             with nogil:
                 pAlg.run(1)
