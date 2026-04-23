@@ -29,12 +29,6 @@ channel. To install ASTRA into the current conda environement, run:
 conda install -c astra-toolbox -c nvidia astra-toolbox
 ```
 
-We also provide development packages between releases occasionally:
-
-```
-conda install -c astra-toolbox/label/dev -c nvidia astra-toolbox
-```
-
 ### Linux, using pip for Python packages
 
 Requirements: Python environment with 64 bit Python 3.9-3.13.
