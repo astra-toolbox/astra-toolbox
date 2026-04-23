@@ -206,12 +206,28 @@ bool XMLConfig::getOptionString(const std::string &name, std::string &sValue) co
 	return true;
 }
 
-bool XMLConfig::getOptionIntArray(const std::string &name, std::vector<int> &values) const
+bool XMLConfig::getOptionIntArray(const std::string &name, std::vector<int> &values, bool acceptScalar) const
 {
 	values.clear();
 
 	// TODO: Don't go via floats
 	// (But ensure Matlab's default double values do still work)
+
+	if (acceptScalar) {
+		float x = -1;
+		try {
+			x = self.getOptionNumerical(name);
+			int t = static_cast<int>(x);
+			if (t == x) {
+				values.push_back(t);
+				return true;
+			}
+			// fall through to array parsing
+		} catch (const StringUtil::bad_cast &) {
+			// fall through to array parsing
+		}
+	}
+
 	std::vector<float32> tmp;
 	try {
 		tmp = self.getOptionNumericalArray(name);
