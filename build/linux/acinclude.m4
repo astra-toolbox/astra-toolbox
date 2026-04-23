@@ -81,6 +81,32 @@ AS_IF([test $? = 0],[$2],[
   $3])
 ])
 
+dnl ASTRA_CHECK_PYTHON_MODULE_VERSION(import-name, minimum version, action-if-ok, action-if-not-ok, action-if-not-checked)
+AC_DEFUN([ASTRA_CHECK_PYTHON_MODULE_VERSION],[
+cat >conftest.py <<_ACEOF
+try:
+  import sys
+  # Not very nice to import from setuptools._vendor,
+  # but not worth it to add an extra dependency for this check.
+  from setuptools._vendor.packaging.version import Version
+  from $1 import __version__ as module_version
+  module_version = Version(module_version)
+  req_version = Version("$2")
+except:
+  # Unable to perform version check (with this method)
+  sys.exit(2)
+
+if module_version >= req_version:
+  sys.exit(0)
+else:
+  sys.exit(1)
+_ACEOF
+  ASTRA_RUN_LOGOUTPUT($PYTHON conftest.py)
+  ac_status=$?
+  AS_IF([test $ac_status = 0],[$3])
+  AS_IF([test $ac_status = 1],[$4])
+  AS_IF([test $ac_status = 2],[$5])
+])
 
 dnl ASTRA_CHECK_NVCC(variable-to-set,cppflags-to-set)
 AC_DEFUN([ASTRA_CHECK_NVCC],[
