@@ -56,7 +56,7 @@ AC_DEFUN([ASTRA_RUN_STOREOUTPUT],[{
   ac_status=$?
   cat $2 >&AS_MESSAGE_LOG_FD
   AS_ECHO(["$as_me:${as_lineno-$LINENO}: \$? = $ac_status"]) >&AS_MESSAGE_LOG_FD
-  test $ac_status = 0;
+  ( exit $ac_status )
  }])
 
 dnl ASTRA_RUN_LOGOUTPUT(command)
@@ -65,7 +65,7 @@ AC_DEFUN([ASTRA_RUN_LOGOUTPUT],[{
   ( $1 ) >&AS_MESSAGE_LOG_FD 2>&1
   ac_status=$?
   AS_ECHO(["$as_me:${as_lineno-$LINENO}: \$? = $ac_status"]) >&AS_MESSAGE_LOG_FD
-  test $ac_status = 0;
+  ( exit $ac_status )
  }])
 
 

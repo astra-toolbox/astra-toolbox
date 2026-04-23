@@ -328,6 +328,8 @@ if test x"$with_python" != x -a x"$with_python" != xno; then
     AC_MSG_ERROR(You need the Cython module to install the ASTRA toolbox for Python)
   fi
   ASTRA_CHECK_PYTHON_MODULE_VERSION(cython,[3.1],,HAVEPYTHON=no,)
+  # This version check could fail to work; we assume we have a good version in
+  # that case.
   if test x$HAVEPYTHON = xno; then
     AC_MSG_RESULT(not >= 3.1)
     AC_MSG_ERROR(You need Cython >= 3.1 to install the ASTRA toolbox for Python)
