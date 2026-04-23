@@ -23,10 +23,22 @@ Requirements: [conda](https://conda.io/) Python environment, with 64 bit Python 
 
 We provide packages for the ASTRA Toolbox in the `astra-toolbox` channel for the
 conda package manager. We depend on CUDA packages available from the `nvidia`
-channel. To install ASTRA into the current conda environement, run:
+channel. To install ASTRA into the current conda environment, run:
 
 ```
 conda install -c astra-toolbox -c nvidia astra-toolbox
+```
+
+We also support ASTRA Toolbox distribution in the [conda-forge](https://conda-forge.org/) channel. It may be less up-to-date than the main channel, but it includes builds for Linux on ARM and macOS on Apple Silicon (CPU-only functionality):
+
+```bash
+conda install -c conda-forge astra-toolbox
+```
+
+CPU-only builds (no GPU acceleration and CUDA dependencies, 2D algorithms only) can be installed from conda-forge using:
+
+```bash
+conda install -c conda-forge astra-toolbox=*=py*
 ```
 
 ### Linux, using pip for Python packages
