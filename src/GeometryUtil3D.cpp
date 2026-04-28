@@ -799,8 +799,6 @@ Geometry3DParameters convertAstraGeometry(const CVolumeGeometry3D* pVolGeom,
 			return Geometry3DParameters(std::move(cylConeProjs), dims, volScale);
 		else
 			return Geometry3DParameters();
-	} else {
-		ok = false;
 	}
 
 	return Geometry3DParameters();
