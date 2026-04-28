@@ -185,6 +185,8 @@ static void add_ellipsoid(T *data, unsigned int width, unsigned int height, unsi
 
 
 void generateSheppLogan(CFloat32VolumeData2D *data, bool modified) {
+	ASTRA_ASSERT(data->isFloat32Memory());
+
    	std::vector<Ellipse> ells = {
 	//x,    y,      axisx,   axisy,rot, value
  	{ 0,    0,      0.69,   0.92,   0,  2 },

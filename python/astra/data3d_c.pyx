@@ -205,6 +205,8 @@ def dimensions(i):
 def shepp_logan(i, modified=True):
     cdef CData3D * pDataObject = getObject(i)
     cdef CFloat32VolumeData3D * pVolumeDataObject = <CFloat32VolumeData3D * >pDataObject
+    if not pDataObject.isFloat32Memory():
+        raise ValueError("Data object is not float32/memory")
     generateSheppLogan3D(pVolumeDataObject, modified);
 
 def delete(ids):

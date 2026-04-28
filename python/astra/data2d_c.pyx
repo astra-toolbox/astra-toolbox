@@ -258,6 +258,8 @@ def get_single(i):
 def shepp_logan(i, modified=True):
     cdef CData2D * pDataObject = getObject(i)
     cdef CFloat32VolumeData2D * pVolumeDataObject = <CFloat32VolumeData2D *>getObject(i)
+    if not pDataObject.isFloat32Memory():
+        raise ValueError("Data object is not float32/memory")
     generateSheppLogan(pVolumeDataObject, modified);
 
 def info():
