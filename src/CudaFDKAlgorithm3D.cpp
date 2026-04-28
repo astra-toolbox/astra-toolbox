@@ -90,6 +90,7 @@ bool CCudaFDKAlgorithm3D::_check()
 		cube = false;
 	ASTRA_CONFIG_CHECK(cube, "CUDA_FDK", "Voxels must be cubes for FDK");
 
+	ASTRA_CONFIG_CHECK(m_filterConfig.m_eType != FILTER_ERROR, "CUDA_FDK", "Invalid filter name");
 
 
 	return true;
