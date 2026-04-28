@@ -463,6 +463,8 @@ float *genFilter(const SFilterConfig &_cfg,
 		}
 		default:
 		{
+			delete[] pfW;
+			delete[] pfFilt;
 			ASTRA_ERROR("Cannot serve requested filter");
 			return NULL;
 		}
