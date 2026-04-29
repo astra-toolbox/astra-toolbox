@@ -97,3 +97,16 @@ class TestAll:
         astra.data2d.delete(vol_data_id)
         assert np.allclose(vol_buffer, vol_data_ref)
 
+    def test_direct_FP(self, proj_geom, projector, vol_data, proj_buffer):
+        astra.projector.direct_FP(projector, vol_data, out=proj_buffer)
+        assert not np.allclose(proj_buffer, 0.0)
+        proj_data_id, proj_data_ref = astra.create_sino(vol_data, projector)
+        astra.data2d.delete(proj_data_id)
+        assert np.allclose(proj_buffer, proj_data_ref)
+
+    def test_direct_BP(self, proj_geom, projector, proj_data, vol_buffer):
+        astra.projector.direct_BP(projector, proj_data, out=vol_buffer)
+        assert not np.allclose(vol_buffer, 0.0)
+        vol_data_id, vol_data_ref = astra.create_backprojection(proj_data, projector)
+        astra.data2d.delete(vol_data_id)
+        assert np.allclose(vol_buffer, vol_data_ref)
