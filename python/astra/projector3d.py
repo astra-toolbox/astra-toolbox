@@ -98,3 +98,31 @@ def is_cuda(i):
 
     """
     return p.is_cuda(i)
+
+def direct_FP(projector_id, volume, *, out):
+    """Perform a forward projection.
+
+    Input volume and output projection data are pre-allocated tensors,
+    such as numpy arrays, or more generally tensors supporting the DLPack
+    standard. They must satisfy the criteria of astra.data3d.link().
+
+    If the specified projector is a CUDA projector, the input and output
+    tensors can be CPU or GPU tensors.
+    """
+    from astra.experimental import direct_FP3D
+    direct_FP3D(projector_id, volume, out)
+    return out
+
+def direct_BP(projector_id, projection, *, out):
+    """Perform a backprojection.
+
+    Input projection data and output volume are pre-allocated tensors,
+    such as numpy arrays, or more generally tensors supporting the DLPack
+    standard. They must satisfy the criteria of astra.data3d.link().
+
+    If the specified projector is a CUDA projector, the input and output
+    tensors can be CPU or GPU tensors.
+    """
+    from astra.experimental import direct_BP3D
+    direct_BP3D(projector_id, out, projection)
+    return out
