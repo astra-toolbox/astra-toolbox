@@ -99,6 +99,14 @@ class TestAll:
         assert not np.allclose(vol_buffer_iter2, 0.0)
         assert not np.allclose(vol_buffer, vol_buffer_iter2)
 
+    def test_direct_FP(self, proj_geom, projector, vol_data, proj_buffer):
+        astra.projector3d.direct_FP(projector, vol_data, out=proj_buffer)
+        assert not np.allclose(proj_buffer, 0.0)
+
+    def test_direct_BP(self, proj_geom, projector, proj_data, vol_buffer):
+        astra.projector3d.direct_BP(projector, proj_data, out=vol_buffer)
+        assert not np.allclose(vol_buffer, 0.0)
+
     def test_composite_FP3D(self, proj_geom, projector, vol_data, proj_buffer):
         vol_ids = [astra.data3d.create('-vol', VOL_GEOM, vol_data) for _ in range(2)]
         proj_ids = [astra.data3d.create('-sino', proj_geom, proj_buffer) for _ in range(2)]
