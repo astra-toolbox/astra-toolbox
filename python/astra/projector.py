@@ -108,3 +108,31 @@ def matrix(i):
 
     """
     return p.matrix(i)
+
+def direct_FP(projector_id, volume, *, out):
+    """Perform a forward projection.
+
+    Input volume and output projection data are pre-allocated tensors,
+    such as numpy arrays, or more generally tensors supporting the DLPack
+    standard. They must satisfy the criteria of astra.data2d.link().
+
+    If the specified projector is a CUDA projector, the input and output
+    tensors can be CPU or GPU tensors.
+    """
+    from astra.experimental import direct_FP2D
+    direct_FP2D(projector_id, volume, out)
+    return out
+
+def direct_BP(projector_id, projection, *, out):
+    """Perform a backprojection.
+
+    Input projection data and output volume are pre-allocated tensors,
+    such as numpy arrays, or more generally tensors supporting the DLPack
+    standard. They must satisfy the criteria of astra.data2d.link().
+
+    If the specified projector is a CUDA projector, the input and output
+    tensors can be CPU or GPU tensors.
+    """
+    from astra.experimental import direct_BP2D
+    direct_BP2D(projector_id, out, projection)
+    return out
