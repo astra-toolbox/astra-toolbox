@@ -34,6 +34,21 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include <cstdio>
 #include <mutex>
 
+
+// Note on thread safety:
+//
+// We aim for the logging itself to be thread-safe.
+//
+// There should be no locks in the loglevel checks, so if no messages are
+// logged, there are no synchronization delays.
+//
+// Setting logging options is not expected to be atomic.
+// We should aim for it not to crash, though.
+//
+// Recording error messages for reporting to our Python interface is done per
+// thread, with a thread_local LastErrMsg.
+
+
 namespace astra {
 
 std::once_flag clog_initialization_flag;
@@ -226,6 +241,6 @@ bool CLogger::setCallbackScreen(void (*cb)(const char *msg, size_t len)){
 bool CLogger::m_bEnabledScreen = true;
 bool CLogger::m_bEnabledFile = true;
 bool CLogger::m_bFileProvided = false;
-std::string CLogger::m_sLastErrMsg;
+thread_local std::string CLogger::m_sLastErrMsg;
 
 }

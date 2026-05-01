@@ -27,7 +27,7 @@ requirements:
   host:
     - setuptools
     - python
-    - cython >=3
+    - cython >=3.1
     - nomkl # [not win]
     - numpy {{ numpy_host }}
     - scipy

@@ -112,7 +112,10 @@ void CCudaSirtAlgorithm3D::initializeFromProjector()
 			ASTRA_WARN("non-CUDA Projector3D passed to SIRT3D_CUDA");
 		}
 	} else {
-		m_iGPUIndex = pCudaProjector->getGPUIndex();
+		// TODO: Warn if multiple GPUs specified but only one is used?
+		std::vector<int> indices = pCudaProjector->getGPUIndices();
+		if (!indices.empty())
+			m_iGPUIndex = indices[0];
 
 		m_params.iRaysPerVoxelDim = pCudaProjector->getVoxelSuperSampling();
 		m_params.iRaysPerDetDim = pCudaProjector->getDetectorSuperSampling();
