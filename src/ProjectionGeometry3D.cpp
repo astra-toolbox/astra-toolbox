@@ -165,8 +165,8 @@ void CProjectionGeometry3D::getProjectedBBox(double fXMin, double fXMax,
                                              double &fUMin, double &fUMax,
                                              double &fVMin, double &fVMax) const
 {
-	double vmin_g, vmax_g;
-	double umin_g, umax_g;
+	double vmin_g = 0.0, vmax_g = 0.0;
+	double umin_g = 0.0, umax_g = 0.0;
 
 	assert(getProjectionCount() > 0);
 	for (int i = 0; i < getProjectionCount(); ++i) {

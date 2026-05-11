@@ -258,7 +258,7 @@ void CCylConeVecProjectionGeometry3D::getProjectedBBoxSingleAngle(int iAngle,
 	double vmin = 1e20;
 	double vmax = -1e20;
 
-	double near_plane, far_plane;
+	double near_plane = 0.0, far_plane = 0.0;
 
 	for (int j = 8; j >= 0; --j) {
 		if (vol_u[j] < umin)
