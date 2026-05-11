@@ -46,7 +46,7 @@ namespace astra {
 //----------------------------------------------------------------------------------------
 // Constructor
 CCudaFDKAlgorithm3D::CCudaFDKAlgorithm3D()
-	: m_iGPUIndex(-1), m_iVoxelSuperSampling(1)
+	: m_iVoxelSuperSampling(1)
 {
 
 }
@@ -100,7 +100,7 @@ bool CCudaFDKAlgorithm3D::_check()
 void CCudaFDKAlgorithm3D::initializeFromProjector()
 {
 	m_iVoxelSuperSampling = 1;
-	m_iGPUIndex = -1;
+	m_GPUIndices.clear();
 
 	CCudaProjector3D* pCudaProjector = dynamic_cast<CCudaProjector3D*>(m_pProjector);
 	if (!pCudaProjector) {
@@ -109,7 +109,7 @@ void CCudaFDKAlgorithm3D::initializeFromProjector()
 		}
 	} else {
 		m_iVoxelSuperSampling = pCudaProjector->getVoxelSuperSampling();
-		m_iGPUIndex = pCudaProjector->getGPUIndex();
+		m_GPUIndices = pCudaProjector->getGPUIndices();
 	}
 
 }
@@ -133,9 +133,9 @@ bool CCudaFDKAlgorithm3D::initialize(const Config& _cfg)
 	bool ok = true;
 	ok &= CR.getOptionInt("VoxelSuperSampling", m_iVoxelSuperSampling, m_iVoxelSuperSampling);
 	if (CR.hasOption("GPUIndex"))
-		ok &= CR.getOptionInt("GPUIndex", m_iGPUIndex, m_iGPUIndex);
-	else
-		ok &= CR.getOptionInt("GPUindex", m_iGPUIndex, m_iGPUIndex);
+		ok &= CR.getOptionIntArray("GPUIndex", m_GPUIndices, true);
+	else if (CR.hasOption("GPUindex"))
+		ok &= CR.getOptionIntArray("GPUindex", m_GPUIndices, true);
 	if (!ok)
 		return false;
 
@@ -191,6 +191,8 @@ bool CCudaFDKAlgorithm3D::run(int _iNrIterations)
 	ASTRA_ASSERT(pReconMem);
 
 	CCompositeGeometryManager cgm;
+	if (!m_GPUIndices.empty())
+		cgm.setGPUIndices(m_GPUIndices);
 
 	return cgm.doFDK(m_pProjector, pReconMem, pSinoMem, m_bShortScan, m_filterConfig);
 }

@@ -60,7 +60,7 @@ private:
 	virtual bool getOptionUInt(const std::string &name, unsigned int &iValue) const;
 	virtual bool getOptionBool(const std::string &name, bool &bValue) const;
 	virtual bool getOptionString(const std::string &name, std::string &sValue) const;
-	virtual bool getOptionIntArray(const std::string &name, std::vector<int> &values) const;
+	virtual bool getOptionIntArray(const std::string &name, std::vector<int> &values, bool acceptScalar=false) const;
 
 	virtual std::list<std::string> checkUnparsed(const ConfigCheckData &data) const;
 private:

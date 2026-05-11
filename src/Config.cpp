@@ -355,10 +355,10 @@ bool ConfigReader<T>::getOptionString(const std::string &name, std::string &sVal
 }
 
 template<class T>
-bool ConfigReader<T>::getOptionIntArray(const std::string &name, std::vector<int> &values)
+bool ConfigReader<T>::getOptionIntArray(const std::string &name, std::vector<int> &values, bool acceptScalar)
 {
 	values.clear();
-	if (cfg->hasOption(name) && !cfg->getOptionIntArray(name, values)) {
+	if (cfg->hasOption(name) && !cfg->getOptionIntArray(name, values, acceptScalar)) {
 		astra::CLogger::error(__FILE__, __LINE__, "Configuration error in %s: option %s must be an integer array.", objName, name.c_str());
 		return false;
 	}

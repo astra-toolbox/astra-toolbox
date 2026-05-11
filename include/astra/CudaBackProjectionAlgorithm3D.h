@@ -109,16 +109,15 @@ public:
 	 */
 	virtual std::string description() const;
 
-	/**  
-	 * Sets the index of the used GPU index: first GPU has index 0
+	/** Sets the index/indices of the used GPU(s): first GPU has index 0
 	 *
-	 * @param _iGPUIndex New GPU index.
+	 * @param _GPUIndices New GPU index/indices.
 	 */
-	void setGPUIndex(int _iGPUIndex) { m_iGPUIndex = _iGPUIndex; }
+	void setGPUIndices(const std::vector<int> &_GPUIndices) { m_GPUIndices = _GPUIndices; }
 
 protected:
 
-	int m_iGPUIndex;
+	std::vector<int> m_GPUIndices;
 	int m_iVoxelSuperSampling;
 
 	/** Option to compute the column weights on the fly, divide by

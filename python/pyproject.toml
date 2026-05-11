@@ -2,7 +2,7 @@
 # (And figure out how to not make that ship every single file)
 
 [build-system]
-requires = ["setuptools", "numpy", "Cython"]
+requires = ["setuptools", "numpy", "Cython >= 3.1"]
 build-backend = "setuptools.build_meta"
 
 [tool.astra.nocuda]

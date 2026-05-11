@@ -43,8 +43,7 @@ namespace astra
 CCudaProjector3D::CCudaProjector3D()
 	: m_projectionKernel(ker3d_default),
 	  m_iVoxelSuperSampling(1),
-	  m_iDetectorSuperSampling(1),
-	  m_iGPUIndex(-1)
+	  m_iDetectorSuperSampling(1)
 {
 
 }
@@ -54,12 +53,12 @@ CCudaProjector3D::CCudaProjector3D(const CProjectionGeometry3D &_pProjectionGeom
                                    Cuda3DProjectionKernel _projectionKernel,
                                    int _iVoxelSuperSampling,
                                    int _iDetectorSuperSampling,
-                                   int _iGPUIndex)
+                                   std::vector<int> _GPUIndices)
 	: CProjector3D(_pProjectionGeometry, _pVolumeGeometry),
 	  m_projectionKernel(_projectionKernel),
 	  m_iVoxelSuperSampling(_iVoxelSuperSampling),
 	  m_iDetectorSuperSampling(_iDetectorSuperSampling),
-	  m_iGPUIndex(_iGPUIndex)
+	  m_GPUIndices(_GPUIndices)
 {
 
 }
@@ -112,10 +111,11 @@ bool CCudaProjector3D::initialize(const Config& _cfg)
 	ok &= CR.getOptionInt("VoxelSuperSampling", m_iVoxelSuperSampling, 1);
 	ok &= CR.getOptionInt("DetectorSuperSampling", m_iDetectorSuperSampling, 1);
 
-	if (CR.hasOption("GPUIndex"))
-		ok &= CR.getOptionInt("GPUIndex", m_iGPUIndex, -1);
-	else
-		ok &= CR.getOptionInt("GPUindex", m_iGPUIndex, -1);
+	if (CR.hasOption("GPUIndex")) {
+		ok &= CR.getOptionIntArray("GPUIndex", m_GPUIndices, true);
+	} else {
+		ok &= CR.getOptionIntArray("GPUindex", m_GPUIndices, true);
+	}
 	if (!ok)
 		return false;
 
@@ -128,7 +128,7 @@ bool CCudaProjector3D::initialize(const CProjectionGeometry3D &_pProjectionGeome
                                   Cuda3DProjectionKernel _projectionKernel,
                                   int _iVoxelSuperSampling,
                                   int _iDetectorSuperSampling,
-                                  int _iGPUIndex)
+                                  std::vector<int> _GPUIndices)
 {
 	assert(!m_bIsInitialized);
 
@@ -138,7 +138,7 @@ bool CCudaProjector3D::initialize(const CProjectionGeometry3D &_pProjectionGeome
 	m_projectionKernel = _projectionKernel;
 	m_iVoxelSuperSampling = _iVoxelSuperSampling;
 	m_iDetectorSuperSampling = _iDetectorSuperSampling;
-	m_iGPUIndex = _iGPUIndex;
+	m_GPUIndices = _GPUIndices;
 
 	m_bIsInitialized = _check();
 	return m_bIsInitialized;

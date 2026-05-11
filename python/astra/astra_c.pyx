@@ -93,9 +93,24 @@ IF HAVE_CUDA==True:
     if memory != 0 and memory < 1024*1024:
         raise AstraError("Setting GPU memory lower than 1MB is not supported")
     params.memory = memory
+
+    # We let Cython convert idx into a std::vector<int>
     params.GPUIndices = idx
+
+    if not params.GPUIndices.empty():
+        ret = setGPUIndex(params.GPUIndices[0])
+    else:
+        ret = True
+
+    # If a single GPU is specified, we clear the globally set GPUIndices in
+    # CompositeGeometryManager, and instead rely on the fact that this GPU
+    # will be set as the active CUDA device. This lets separate threads
+    # set different active GPUs, without the global CompositeGeometryManager
+    # state overriding that.
+    if params.GPUIndices.size() == 1:
+        params.GPUIndices.clear()
+
     setGlobalGPUParams(params)
-    ret = setGPUIndex(params.GPUIndices[0])
     if not ret:
         print("Failed to set GPU " + str(params.GPUIndices[0]))
   def get_gpu_info(idx=-1):

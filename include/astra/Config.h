@@ -73,7 +73,7 @@ protected:
 	virtual bool getOptionUInt(const std::string &name, unsigned int &iValue) const = 0;
 	virtual bool getOptionBool(const std::string &name, bool &bValue) const = 0;
 	virtual bool getOptionString(const std::string &name, std::string &sValue) const = 0;
-	virtual bool getOptionIntArray(const std::string &name, std::vector<int> &values) const = 0;
+	virtual bool getOptionIntArray(const std::string &name, std::vector<int> &values, bool acceptScalar=false) const = 0;
 
 	virtual std::list<std::string> checkUnparsed(const ConfigCheckData &data) const = 0;
 };
@@ -127,7 +127,7 @@ public:
 	bool getOptionUInt(const std::string &name, unsigned int &iValue, unsigned int iDefaultValue);
 	bool getOptionBool(const std::string &name, bool &bValue, bool bDefaultValue);
 	bool getOptionString(const std::string &name, std::string &sValue, std::string sDefaultValue);
-	bool getOptionIntArray(const std::string &name, std::vector<int> &values);
+	bool getOptionIntArray(const std::string &name, std::vector<int> &values, bool acceptScalar=false);
 
 	// Get and parse an option value as ID. Returns true if the option is
 	// present and successfully parsed. Returns false and -1 if the option is

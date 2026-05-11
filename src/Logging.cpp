@@ -226,6 +226,6 @@ bool CLogger::setCallbackScreen(void (*cb)(const char *msg, size_t len)){
 bool CLogger::m_bEnabledScreen = true;
 bool CLogger::m_bEnabledFile = true;
 bool CLogger::m_bFileProvided = false;
-std::string CLogger::m_sLastErrMsg;
+thread_local std::string CLogger::m_sLastErrMsg;
 
 }

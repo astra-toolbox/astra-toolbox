@@ -69,11 +69,11 @@ public:
 	 * @param _pReconstruction	VolumeData3D object containing the volume.
 	 * @return initialization successful?
 	 */
-	bool initialize(CProjector3D* _pProjector, 
-					CFloat32ProjectionData3D* _pSinogram, 
-					CFloat32VolumeData3D* _pReconstruction,
-					int _iGPUindex = -1, int _iDetectorSuperSampling = 1);
-
+	bool initialize(CProjector3D* _pProjector,
+	                CFloat32ProjectionData3D* _pSinogram,
+	                CFloat32VolumeData3D* _pReconstruction,
+	                std::vector<int> _GPUIndices = {},
+	                int _iDetectorSuperSampling = -1);
 
 	/** Perform a number of iterations.
 	 *
@@ -93,18 +93,17 @@ public:
 	 */
 	bool check();
 
-	/**  
-	 * Sets the index of the used GPU index: first GPU has index 0
+	/** Sets the index/indices of the used GPU(s): first GPU has index 0
 	 *
-	 * @param _iGPUIndex New GPU index.
+	 * @param _GPUIndices New GPU index/indices.
 	 */
-	void setGPUIndex(int _iGPUIndex);
+	void setGPUIndices(const std::vector<int> &_GPUIndices) { m_GPUIndices = _GPUIndices; }
 
 protected:
 	CProjector3D* m_pProjector;
 	CFloat32ProjectionData3D* m_pProjections;
 	CFloat32VolumeData3D* m_pVolume;
-	int m_iGPUIndex;
+	std::vector<int> m_GPUIndices;
 	int m_iDetectorSuperSampling;
 
 	void initializeFromProjector();
