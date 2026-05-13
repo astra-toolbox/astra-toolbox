@@ -412,7 +412,7 @@ PYTHON_SRC=\
 OBJECT_DIRS = src/ tests/ cuda/ cuda/2d/ cuda/3d/ matlab/mex/ ./
 DEPDIRS = $(addsuffix $(DEPDIR),$(OBJECT_DIRS))
 -include $(wildcard $(addsuffix /*.d,$(DEPDIRS)))
-LIBDIRS = $(addsuffix .libs,./ src/ cuda/2d/ cuda/3d/)
+LIBDIRS = $(addsuffix .libs,./ src/ cuda/ cuda/2d/ cuda/3d/)
 
 SONAME=$(shell . ${abs_top_builddir}/libastra.la; echo $$dlname)
 
