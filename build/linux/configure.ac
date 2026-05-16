@@ -359,8 +359,8 @@ AC_SUBST(HAVEPYTHON)
 AC_CANONICAL_HOST
 case $host_os in
   darwin* )
-        CXXFLAGS_OS="-stdlib=libstdc++ -mmacosx-version-min=10.6"
-        LDFLAGS_OS="-stdlib=libstdc++"
+        CXXFLAGS_OS="-stdlib=libc++ -mmacosx-version-min=10.6"
+        LDFLAGS_OS="-stdlib=libc++"
         IS_MACOS=yes
         ;;
     *)
