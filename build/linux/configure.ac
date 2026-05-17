@@ -238,7 +238,7 @@ if test x"$with_matlab" != x; then
     MATLAB_ROOT="$with_matlab"
     AC_SUBST(MATLAB_ROOT)
     # TODO: maybe catch mex warnings
-    ASTRA_CHECK_MEX_SUFFIX([mexa64 mexglx mexmaci64 mexmaci],[MEXSUFFIX])
+    ASTRA_CHECK_MEX_SUFFIX([mexa64 mexglx mexmaci64 mexmaci mexmaca64],[MEXSUFFIX])
     if test x$MEXSUFFIX = x; then
       AC_MSG_FAILURE([Unable to determine matlab mex suffix])
       HAVEMATLAB=no
