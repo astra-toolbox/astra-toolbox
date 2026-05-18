@@ -93,7 +93,11 @@ endif
 # MODLDFLAGS are the base LDFLAGS for matlab, octave, python modules
 MODLDFLAGS=$(LDFLAGS) -L$(abs_top_builddir)/.libs
 ifeq ($(install_type),module)
+ifeq ($(macos),yes)
+MODLDFLAGS+=-Wl,-rpath,@loader_path
+else
 MODLDFLAGS+=-Wl,-rpath,'\$$ORIGIN'
+endif
 endif
 
 ifeq ($(python),yes)
