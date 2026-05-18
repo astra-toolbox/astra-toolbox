@@ -426,21 +426,13 @@ DEPDIRS = $(addsuffix $(DEPDIR),$(OBJECT_DIRS))
 -include $(wildcard $(addsuffix /*.d,$(DEPDIRS)))
 LIBDIRS = $(addsuffix .libs,./ src/ cuda/ cuda/2d/ cuda/3d/)
 
-SONAME=$(shell . ${abs_top_builddir}/libastra.la; echo $$dlname)
+SONAME=`. ${abs_top_builddir}/libastra.la; echo $$dlname`
 
 ifeq ($(matlab),yes)
 mex: $(MATLAB_MEX)
 
 %.$(MEXSUFFIX): %.o $(MATLAB_CXX_OBJECTS) libastra.la
 	$(MEX) LDFLAGS="$(MEXLDFLAGS)" $(MEXFLAGS) $(LIBS) $(MEXLIBS) -lastra -output $* $*.o $(MATLAB_CXX_OBJECTS)
-ifeq ($(install_type),module)
-ifeq ($(macos),yes)
-	@# tell macOS dynamic loader to look in mex directory for libastra.0.dylib
-	@# CHECKME: some versions of otool return a two-line output for otool -DX?
-	@# (xcode 8.2.1 / macos 10.11.6 ?)
-	install_name_tool -change `otool -DX .libs/$(SONAME) | tail -n 1` @loader_path/$(SONAME) $@
-endif
-endif
 
 ifeq ($(python),yes)
 matlab/mex/astra_mex_plugin_c.$(MEXSUFFIX): matlab/mex/astra_mex_plugin_c.o $(MATLAB_CXX_OBJECTS) libastra.la
@@ -503,6 +495,13 @@ python-wheel-stamp: python-staging-stamp libastra.la
 
 libastra.la: $(ALL_OBJECTS)
 	./libtool --mode=link --tag=CXX $(LD) -rpath $(libdir) -o $@ $(LDFLAGS) $(LIBS) $+
+ifeq ($(install_type),module)
+ifeq ($(macos),yes)
+	@# On MacOS, make the library more relocatable by replacing the absolute
+	@# path in the library id that libtool forces.
+	install_name_tool -id @rpath/$(SONAME) .libs/$(SONAME)
+endif
+endif
 
 %.o: %.cpp
 	$(MKDIR) $(*D)/$(DEPDIR)
