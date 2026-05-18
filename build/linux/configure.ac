@@ -238,7 +238,7 @@ if test x"$with_matlab" != x; then
     MATLAB_ROOT="$with_matlab"
     AC_SUBST(MATLAB_ROOT)
     # TODO: maybe catch mex warnings
-    ASTRA_CHECK_MEX_SUFFIX([mexa64 mexglx mexmaci64 mexmaci],[MEXSUFFIX])
+    ASTRA_CHECK_MEX_SUFFIX([mexa64 mexglx mexmaci64 mexmaci mexmaca64],[MEXSUFFIX])
     if test x$MEXSUFFIX = x; then
       AC_MSG_FAILURE([Unable to determine matlab mex suffix])
       HAVEMATLAB=no
@@ -359,8 +359,8 @@ AC_SUBST(HAVEPYTHON)
 AC_CANONICAL_HOST
 case $host_os in
   darwin* )
-        CXXFLAGS_OS="-stdlib=libstdc++ -mmacosx-version-min=10.6"
-        LDFLAGS_OS="-stdlib=libstdc++"
+        CXXFLAGS_OS="-stdlib=libc++ -mmacosx-version-min=10.10"
+        LDFLAGS_OS="-stdlib=libc++"
         IS_MACOS=yes
         ;;
     *)
