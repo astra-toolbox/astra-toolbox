@@ -116,6 +116,13 @@ MODPYLIBS=-l$(PYLIBVER)
 
 # ASTRA_CONFIG selection
 ifeq ($(install_type),module)
+ifeq ($(macos),yes)
+ifeq ($(cuda),yes)
+ASTRA_CONFIG = macos_module_cuda
+else
+ASTRA_CONFIG = macos_module
+endif
+else
 ifeq ($(cuda),yes)
 ASTRA_CONFIG = linux_module_cuda
 else
@@ -123,6 +130,7 @@ ifeq ($(amdhip),yes)
 ASTRA_CONFIG = linux_module_cuda
 else
 ASTRA_CONFIG = linux_module
+endif
 endif
 endif
 else
