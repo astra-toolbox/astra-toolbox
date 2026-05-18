@@ -135,15 +135,32 @@ This will install the Astra library and C++ headers.
 
 ### macOS, from source
 
-Use the Homebrew package manager to install libtool, autoconf, automake.
+Install Xcode and use the Homebrew package manager to install libtool, autoconf, automake.
+
+#### For MATLAB
 
 ```
 cd build/linux
 ./autogen.sh
-CPPFLAGS="-I/usr/local/include" NVCCFLAGS="-I/usr/local/include" ./configure \
-  --with-cuda=/usr/local/cuda \
-  --with-matlab=/Applications/MATLAB_R2016b.app \
+./configure \
+  --with-matlab=/Applications/MATLAB_R2026a.app \
   --prefix=$HOME/astra \
+  --with-install-type=module
+make
+make install
+```
+
+#### For Python
+
+Note that macOS (Apple Silicon) packages are available from [conda-forge](https://conda-forge.org/) distribution of ASTRA.
+
+Additional requirements: Python (3.x), pip, setuptools, Cython, scipy
+
+```
+cd build/linux
+./autogen.sh
+./configure \
+  --with-python=python3 \
   --with-install-type=module
 make
 make install
