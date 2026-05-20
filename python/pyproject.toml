@@ -19,6 +19,14 @@ cuda = false
 extra_lib = [ 'astra/libastra.so*' ]
 cuda = true
 
+[tool.astra.macos_module]
+extra_lib = [ 'astra/libastra*.dylib' ]
+cuda = false
+
+[tool.astra.macos_module_cuda]
+extra_lib = [ 'astra/libastra*.dylib' ]
+cuda = true
+
 [tool.astra.windows_cuda]
 extra_lib = [ 'astra/AstraCuda64.dll' ]
 install_requires = ['nvidia-cuda-runtime-cu12', 'nvidia-cufft-cu12' ]
