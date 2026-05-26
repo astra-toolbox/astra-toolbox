@@ -64,19 +64,6 @@ def geom_size(geom, dim=None):
 
     return s
 
-def checkArrayForLink(data):
-    """Check if a numpy array is suitable for direct usage (contiguous, etc.)
-
-    This function raises an exception if not.
-    """
-
-    if not isinstance(data, np.ndarray):
-        raise ValueError("Data should be numpy.ndarray")
-    if data.dtype != np.float32:
-        raise ValueError("Numpy array should be float32")
-    if not (data.flags['C_CONTIGUOUS'] and data.flags['ALIGNED']):
-        raise ValueError("Numpy array should be C_CONTIGUOUS and ALIGNED")
-
 class GPULink(object):
     """Utility class for astra.data3d.link with a CUDA pointer
 

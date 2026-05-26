@@ -24,8 +24,6 @@
 # -----------------------------------------------------------------------
 
 from . import data2d_c as d
-from .pythonutils import checkArrayForLink
-
 
 def clear():
     """Clear all 2D data objects."""
@@ -66,7 +64,6 @@ def link(datatype, geometry, data):
     :returns: :class:`int` -- the ID of the constructed object.
 
     """
-    checkArrayForLink(data)
     return d.create(datatype,geometry,data,True)
 
 def store(i, data):

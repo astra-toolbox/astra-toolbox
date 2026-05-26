@@ -41,7 +41,7 @@ from .PyXMLDocument cimport XMLDocument
 from .PyXMLDocument cimport XMLNode
 from .PyIncludes cimport *
 
-from .pythonutils import GPULink, checkArrayForLink
+from .pythonutils import GPULink
 from .log import AstraError
 
 cdef extern from "Python.h":
