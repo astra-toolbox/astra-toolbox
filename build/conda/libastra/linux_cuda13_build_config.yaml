@@ -1,0 +1,34 @@
+cuda_dep_type:
+  - modular
+
+cudatoolkit:
+  - 13
+
+cudatoolkit_build:
+  - 13.0
+
+# Starting at CUDA 12.5, the libcufft packages depend on cuda-version,
+# so our dependencies can be more relaxed.
+libcufft_dep:
+  - ">=12.0,<13"
+
+cudacudart_dep:
+  - ">=13.0,<14.0"
+
+pytorchcuda_dep:
+  - ">=13.0,<14.0"
+
+cudatoolkit_dep:
+  - ">=13.0,<14.0"
+
+c_compiler_version:    # [linux or win]
+  - 11.2               # [linux or win]
+cxx_compiler_version:  # [linux or win]
+  - 11.2               # [linux or win]
+zip_keys:
+  - cudatoolkit
+  - cudatoolkit_build
+  - libcufft_dep
+  - cudacudart_dep
+  - pytorchcuda_dep
+  - cudatoolkit_dep

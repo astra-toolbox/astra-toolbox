@@ -31,8 +31,10 @@ CONF=linux_$3_build_config.yaml
 
 conda build --no-test -c nvidia -m astra-toolbox/build/conda/libastra/${CONF} astra-toolbox/build/conda/libastra
 
-[ x$4 = xfull ] && conda build -c nvidia -m astra-toolbox/build/conda/astra-toolbox/${CONF} astra-toolbox/build/conda/astra-toolbox
+conda build -c nvidia -m astra-toolbox/build/conda/astra-toolbox/${CONF} astra-toolbox/build/conda/astra-toolbox
 
-[ x$4 = xfull ] && conda build --test -c nvidia /root/miniconda3/conda-bld/linux-64/libastra*tar.bz2
+conda build --test -c nvidia /root/miniconda3/conda-bld/linux-64/libastra*.conda
 
-cp /root/miniconda3/conda-bld/linux-64/*astra* /out
+[ x$4 = xfull ] && cp /root/miniconda3/conda-bld/linux-64/astra-toolbox* /out
+
+cp /root/miniconda3/conda-bld/linux-64/libastra* /out

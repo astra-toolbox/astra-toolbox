@@ -1,0 +1,18 @@
+# In this configuration, build only for a single version of python to enable
+# testing the libastra packages
+
+python:
+  - 3.14
+numpy_host:
+  - ">=2,<3"
+numpy_run:
+  - ">=2,<3"
+zip_keys:
+  - python
+  - numpy_host
+  - numpy_run
+
+c_compiler_version:
+  - 11.2
+cxx_compiler_version:
+  - 11.2
