@@ -5,7 +5,7 @@ cudatoolkit:
   - 13
 
 cudatoolkit_build:
-  - 13.0
+  - 13.2
 
 # Starting at CUDA 12.5, the libcufft packages depend on cuda-version,
 # so our dependencies can be more relaxed.
