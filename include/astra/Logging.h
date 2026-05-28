@@ -53,7 +53,12 @@ class _AstraExport CLogger
   static bool m_bEnabledFile;
   static bool m_bEnabledScreen;
   static bool m_bFileProvided;
+#ifndef _MSC_VER
   static thread_local std::string m_sLastErrMsg;
+#else
+  // thread_local and _AstraExport don't work together on Windows
+  static std::string m_sLastErrMsg;
+#endif
   static void _assureIsInitialized();
   static void _setLastErrMsg(const char *sfile, int sline, const char *fmt, va_list ap);
   static void _setLevel(int id, log_level m_eLevel);

@@ -164,7 +164,8 @@ def prepare_ext_modules():
         ext = Extension(modulename, sources=sources, libraries=["astra"])
         assert not hasattr(ext, 'cython_directives')
         ext.cython_directives = {'language_level': "3" }
-        if sysconfig.get_config_var("Py_GIL_DISABLED") == 1:
+        # NB: Disable freethreading on Windows
+        if os.name != 'nt' and sysconfig.get_config_var("Py_GIL_DISABLED") == 1:
             ext.cython_directives['freethreading_compatible'] = True
         ext_modules.append(ext)
 
