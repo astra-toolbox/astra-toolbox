@@ -44,6 +44,7 @@ CUDA130=https://developer.download.nvidia.com/compute/cuda/13.0.3/local_installe
 CUDA131=https://developer.download.nvidia.com/compute/cuda/13.1.2/local_installers/cuda_13.1.2_590.48.01_linux.run
 #CUDA132=https://developer.download.nvidia.com/compute/cuda/13.2.0/local_installers/cuda_13.2.0_595.45.04_linux.run
 CUDA132=https://developer.download.nvidia.com/compute/cuda/13.2.1/local_installers/cuda_13.2.1_595.58.03_linux.run
+CUDA133=https://developer.download.nvidia.com/compute/cuda/13.3.0/local_installers/cuda_13.3.0_610.43.02_linux.run
 
 setup_download() {
   mkdir -p sw

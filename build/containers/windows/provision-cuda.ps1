@@ -23,6 +23,7 @@
 #'https://developer.download.nvidia.com/compute/cuda/13.0.3/local_installers/cuda_13.0.3_windows.exe'
 'https://developer.download.nvidia.com/compute/cuda/13.1.2/local_installers/cuda_13.1.2_windows.exe'
 #'https://developer.download.nvidia.com/compute/cuda/13.2.1/local_installers/cuda_13.2.1_windows.exe'
+#'https://developer.download.nvidia.com/compute/cuda/13.3.0/local_installers/cuda_13.3.0_windows.exe'
 
 ) | ForEach-Object {
   $filename = ([uri] $_).Segments[-1]
