@@ -205,8 +205,8 @@ bool CCudaSirtAlgorithm::precomputeWeights()
 	if (m_bUseSinogramMask) {
 		callBP(D_pixelWeight, D_projMaskData, 1.0f);
 	} else {
-		astraCUDA::processData<astraCUDA::opSet>(D_projData, 1.0f);
-		callBP(D_pixelWeight, D_projData, 1.0f);
+		astraCUDA::processData<astraCUDA::opSet>(D_tmpProjData, 1.0f);
+		callBP(D_pixelWeight, D_tmpProjData, 1.0f);
 	}
 	astraCUDA::processData<astraCUDA::opInvert>(D_pixelWeight);
 
