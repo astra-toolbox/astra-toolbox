@@ -8,6 +8,19 @@ License: Open Source under GPLv3
 Contact: astra@astra-toolbox.com
 Website: https://www.astra-toolbox.com/
 -----------------------------------------------------------------------
+2.5.0 (2026-06-17)
+ * add support for 2D projectors in DLPack functionality
+ * add direct_FP/direct_BP to astra.projector and astra.projector3d modules
+ * add experimental support for ROCm/HIP tensors in "direct" and "link" functionality 
+ * major internal refactoring of data management and CUDA subsystems
+ * fix memory leaks in several places
+ * fix the crash in fanflat BP_CUDA with more than 2560 angles
+ * add PyPI distribution for Windows
+ * add support for CUDA 13 and Visual Studio 2022 on Windows
+ * add support and distribution for free-threading Python version (Linux only)
+ * update set_gpu_index and other GPU selection options for multi-threading contexts
+ * fix building on modern macOS
+
 2.4.1 (2025-12-16)
  * fix DLPack support for certain arrays with dimensions of size 1
  * fix using FBP from a multi-threaded script

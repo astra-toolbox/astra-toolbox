@@ -7,4 +7,4 @@ set B_CUDA_PATH=%CUDA_PATH_V12_9%
 
 set B_VCREDIST=C:\Users\Vagrant\vc_redist.x64.exe
 
-set B_RELEASE=2.4.0
+set B_RELEASE=2.5.0
