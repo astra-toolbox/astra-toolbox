@@ -383,7 +383,7 @@ bool FP(astra::CData3D *projData, const astra::CData3D *volData, const astra::Ge
 			ok = false;
 		}
 	} else if (geom.isCylCone()) {
-		const SCylConeProjection* pCylConeProjs = geom.getCylCone();
+		const std::vector<SCylConeProjection>& pCylConeProjs = geom.getCylCone();
 		switch (params.projKernel) {
 		case ker3d_default: case ker3d_matched_bp:
 			ok &= ConeCylFP(vols->getPtr(), projs->getPtr(), geom.getDims(), pCylConeProjs, params);
@@ -461,17 +461,17 @@ bool BP(const astra::CData3D *projData, astra::CData3D *volData, const astra::Ge
 			ok = false;
 		}
 	} else if (geom.isCylCone()) {
-		const SCylConeProjection* pCylConeProjs = geom.getCylCone();
+		const std::vector<SCylConeProjection>& pCylConeProjs = geom.getCylCone();
 		// TODO: Add support for ker3d_2d_weighting?
 		// TODO: Add support for ker3d_fdk_weighting?
 		if (params.projKernel == ker3d_default) {
 			if (projs->getArray())
-				ok &= ConeCylBP_Array(vols->getPtr(), projs->getArray(), geom.getDims(), pCylConeProjs, params);
+				return false;
 			else
 				ok &= ConeCylBP(vols->getPtr(), projs->getPtr(), geom.getDims(), pCylConeProjs, params);
 		} else if (params.projKernel == ker3d_matched_bp) {
 			if (projs->getArray())
-				ok &= ConeCylBP_Array_matched(vols->getPtr(), projs->getArray(), geom.getDims(), pCylConeProjs, params);
+				ok = false;
 			else
 				ok &= ConeCylBP_matched(vols->getPtr(), projs->getPtr(), geom.getDims(), pCylConeProjs, params);
 		} else {

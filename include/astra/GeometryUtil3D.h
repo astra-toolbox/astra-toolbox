@@ -198,11 +198,8 @@ public:
 	const std::vector<SConeProjection>& getCone() const {
 		return std::get<std::vector<SConeProjection>>(projs);
 	}
-	const SCylConeProjection *getCylCone() const {
-		if (!std::holds_alternative<std::vector<SCylConeProjection>>(projs))
-			return nullptr;
-
-		return &std::get<std::vector<SCylConeProjection>>(projs)[0];
+	const std::vector<SCylConeProjection>& getCylCone() const {
+		return std::get<std::vector<SCylConeProjection>>(projs);
 	}
 
 	const SDimensions3D& getDims() const {
