@@ -50,23 +50,44 @@ using astraCUDA::StreamHelper;
 
 cudaPitchedPtr allocateVolumeData(const SDimensions3D& dims);
 cudaPitchedPtr allocateProjectionData(const SDimensions3D& dims);
+cudaPitchedPtr allocateProjectionData_UVAngle(const SDimensions3D& dims);
 bool zeroVolumeData(astra::CData3D *D_data);
+bool zeroVolumeData(cudaPitchedPtr D_data, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
 bool copyVolumeToDevice(const float* data, cudaPitchedPtr& D_data, const SDimensions3D& dims, unsigned int pitch = 0);
 bool copyProjectionsToDevice(const float* data, cudaPitchedPtr& D_data, const SDimensions3D& dims, unsigned int pitch = 0);
 bool copyVolumeFromDevice(float* data, const cudaPitchedPtr& D_data, const SDimensions3D& dims, unsigned int pitch = 0);
 bool copyProjectionsFromDevice(float* data, const cudaPitchedPtr& D_data, const SDimensions3D& dims, unsigned int pitch = 0);
 bool duplicateVolumeData(astra::CData3D *D_dest, const astra::CData3D *D_src);
 
-
 bool transferProjectionsToArray(cudaPitchedPtr D_projData, cudaArray* array, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
+bool transferProjectionsToArray_LayeredAngle(cudaPitchedPtr D_projData, cudaArray* array, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
 bool transferHostProjectionsToArray(const float *projData, cudaArray* array, const SDimensions3D& dims);
 bool transferVolumeToArray(cudaPitchedPtr D_volumeData, cudaArray* array, const SDimensions3D& dims, std::optional<cudaStream_t> _stream = {});
 bool zeroProjectionArray(cudaArray* array, const SDimensions3D& dims);
 bool zeroVolumeArray(cudaArray* array, const SDimensions3D& dims);
 cudaArray* allocateProjectionArray(const SDimensions3D& dims);
+cudaArray* allocateProjectionArray_LayeredAngle(const SDimensions3D& dims);
 cudaArray* allocateVolumeArray(const SDimensions3D& dims);
+cudaArray* allocateVolumeArray_LayeredZ(const SDimensions3D& dims);
 
 bool createTextureObject3D(cudaArray* array, cudaTextureObject_t& texObj);
+
+bool permute_XYZ_to_ZXY_subX(cudaPitchedPtr D_outData, cudaPitchedPtr D_volData,
+                             int startX,
+                             const SDimensions3D& bufdims, const SDimensions3D& dims,
+                             bool invert,
+                             std::optional<cudaStream_t> _stream = {});
+bool permute_XYZ_to_XZY_subY(cudaPitchedPtr D_outData, cudaPitchedPtr D_volData,
+                             int startY,
+                             const SDimensions3D& bufdims, const SDimensions3D& dims,
+                             bool invert,
+                             std::optional<cudaStream_t> _stream = {});
+bool permute_UTV_to_UVT_subT(cudaPitchedPtr D_outData, cudaPitchedPtr D_projData,
+                             int startT,
+                             const SDimensions3D& bufdims, const SDimensions3D& dims,
+                             bool invert,
+                             std::optional<cudaStream_t> _stream = {});
+
 
 bool dotProduct3D(const astra::CData3D *D_data, float &fRet);
 
@@ -86,6 +107,12 @@ inline Vec3 scaled_cross3(const Vec3 &a, const Vec3 &b, const Vec3 &sc) {
 	ret.z *= sc.x * sc.y;
 	return ret;
 }
+
+
+inline dim3 computeGrid3Ceil(int x, int xs, int y, int ys, int z, int zs) {
+	return dim3( (x+xs-1)/xs, (y+ys-1)/ys, (z+zs-1)/zs );
+}
+
 
 }
 

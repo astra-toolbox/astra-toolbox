@@ -32,6 +32,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 namespace astraCUDA3d {
 
+// TODO: Clean these up
 using astraCUDA::Stream;
 using astraCUDA::automatic_sync;
 
