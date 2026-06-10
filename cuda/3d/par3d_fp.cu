@@ -29,20 +29,25 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "astra/cuda/3d/util3d.h"
 #include "astra/cuda/3d/dims3d.h"
+#include "astra/cuda/3d/proj3d.h"
 
 #include <cstdio>
 #include <cassert>
 
-namespace astraCUDA3d {
-
-static const unsigned int g_anglesPerBlock = 4;
-
-// thickness of the slices we're splitting the volume up into
+static const unsigned int g_anglesPerBlock = 15;
 static const unsigned int g_blockSlices = 32;
 static const unsigned int g_detBlockU = 32;
-static const unsigned int g_detBlockV = 32;
+static const unsigned int g_detBlockV = 15;
 
 static const unsigned g_MaxAngles = 1024;
+
+
+#include "ray3d.inl"
+
+
+namespace astraCUDA3d {
+
+// TODO: We can remove RayZ if we need to (by dividing RayX and RayY by it)
 __constant__ float gC_RayX[g_MaxAngles];
 __constant__ float gC_RayY[g_MaxAngles];
 __constant__ float gC_RayZ[g_MaxAngles];
@@ -55,66 +60,37 @@ __constant__ float gC_DetUZ[g_MaxAngles];
 __constant__ float gC_DetVX[g_MaxAngles];
 __constant__ float gC_DetVY[g_MaxAngles];
 __constant__ float gC_DetVZ[g_MaxAngles];
+__constant__ int gC_index[g_MaxAngles];
 
 
-// x=0, y=1, z=2
-struct DIR_X {
-	__device__ float nSlices(const SDimensions3D& dims) const { return dims.iVolX; }
-	__device__ float nDim1(const SDimensions3D& dims) const { return dims.iVolY; }
-	__device__ float nDim2(const SDimensions3D& dims) const { return dims.iVolZ; }
-	__device__ float c0(float x, float y, float z) const { return x; }
-	__device__ float c1(float x, float y, float z) const { return y; }
-	__device__ float c2(float x, float y, float z) const { return z; }
-	__device__ float tex(cudaTextureObject_t tex, float f0, float f1, float f2) const { return tex3D<float>(tex, f0, f1, f2); }
-	__device__ float x(float f0, float f1, float f2) const { return f0; }
-	__device__ float y(float f0, float f1, float f2) const { return f1; }
-	__device__ float z(float f0, float f1, float f2) const { return f2; }
-};
-
-// y=0, x=1, z=2
-struct DIR_Y {
-	__device__ float nSlices(const SDimensions3D& dims) const { return dims.iVolY; }
-	__device__ float nDim1(const SDimensions3D& dims) const { return dims.iVolX; }
-	__device__ float nDim2(const SDimensions3D& dims) const { return dims.iVolZ; }
-	__device__ float c0(float x, float y, float z) const { return y; }
-	__device__ float c1(float x, float y, float z) const { return x; }
-	__device__ float c2(float x, float y, float z) const { return z; }
-	__device__ float tex(cudaTextureObject_t tex, float f0, float f1, float f2) const { return tex3D<float>(tex, f1, f0, f2); }
-	__device__ float x(float f0, float f1, float f2) const { return f1; }
-	__device__ float y(float f0, float f1, float f2) const { return f0; }
-	__device__ float z(float f0, float f1, float f2) const { return f2; }
-};
-
-// z=0, x=1, y=2
-struct DIR_Z {
-	__device__ float nSlices(const SDimensions3D& dims) const { return dims.iVolZ; }
-	__device__ float nDim1(const SDimensions3D& dims) const { return dims.iVolX; }
-	__device__ float nDim2(const SDimensions3D& dims) const { return dims.iVolY; }
-	__device__ float c0(float x, float y, float z) const { return z; }
-	__device__ float c1(float x, float y, float z) const { return x; }
-	__device__ float c2(float x, float y, float z) const { return y; }
-	__device__ float tex(cudaTextureObject_t tex, float f0, float f1, float f2) const { return tex3D<float>(tex, f1, f2, f0); }
-	__device__ float x(float f0, float f1, float f2) const { return f1; }
-	__device__ float y(float f0, float f1, float f2) const { return f2; }
-	__device__ float z(float f0, float f1, float f2) const { return f0; }
-};
-
-struct SCALE_CUBE {
-	float fOutputScale;
-	__device__ float scale(float a1, float a2) const { return sqrt(a1*a1+a2*a2+1.0f) * fOutputScale; }
-};
-
-struct SCALE_NONCUBE {
-	float fScale1;
-	float fScale2;
-	float fOutputScale;
-	__device__ float scale(float a1, float a2) const { return sqrt(a1*a1*fScale1+a2*a2*fScale2+1.0f) * fOutputScale; }
-};
 
 using TransferConstantsBuffer = TransferConstantsBuffer_t<float>;
 
-bool transferConstants(const SPar3DProjection* angles, unsigned int iProjAngles,
-                       TransferConstantsBuffer& buf, cudaStream_t stream)
+class Par3DFP_t : public RayDrivenProjector3D<TransferConstantsBuffer, SPar3DProjection> {
+public:
+	virtual bool sortProjections(const SDimensions3D& dims,
+	                             const std::vector<SPar3DProjection> &angles,
+	                             std::vector<SPar3DProjection>& anglesX,
+	                             std::vector<SPar3DProjection>& anglesY,
+	                             std::vector<SPar3DProjection>& anglesZ,
+	                             std::vector<int>& indicesX,
+	                             std::vector<int>& indicesY,
+	                             std::vector<int>& indicesZ) override;
+	virtual bool transferConstants(const SPar3DProjection* angles, const int* indices,
+	                               unsigned int iProjAngles,
+	                               TransferConstantsBuffer& buf, cudaStream_t stream) override;
+	virtual bool dispatchKernel(float *D_projData, unsigned int projPitch,
+	                            cudaTextureObject_t tex,
+	                            float fStartSlice,
+	                            const SDimensions3D& dims,
+	                            const SDimensions3D& blockDims,
+	                            const SProjectorParams3D& params,
+	                            int majordim,
+	                            cudaStream_t stream) override;
+};
+
+bool Par3DFP_t::transferConstants(const SPar3DProjection* angles, const int* indices, unsigned int iProjAngles,
+                                  TransferConstantsBuffer& buf, cudaStream_t stream)
 {
 	float* tmp = &(std::get<0>(buf.d))[0];
 
@@ -139,28 +115,30 @@ bool transferConstants(const SPar3DProjection* angles, unsigned int iProjAngles,
 
 #undef TRANSFER_TO_CONSTANT
 
+	// TODO: If we ever move the temp buffers into pinned memory for
+	// true async transfer, also use extra buffer for the indices.
+	ok &= checkCuda(cudaMemcpyToSymbolAsync(gC_index, indices, iProjAngles * sizeof(int), 0, cudaMemcpyHostToDevice, stream), "transferConstants transfer indices");
+
+	ok &= checkCuda(cudaEventRecord(buf.event, stream), "transferConstants event");
+
 	return true;
 }
 
 
-// threadIdx: x = u detector
-//            y = relative angle
-// blockIdx:  x = u/v detector
-//            y = angle block
+// TODO: De-duplicate these kernels (regular, super-sampling, SumSqW) in a
+// way that doesn't cause the cuda compiler to require more registers for
+// them
 
-
-template<class COORD, class SCALE>
+template<class SCALE>
 __global__ void par3D_FP_t(float* D_projData, unsigned int projPitch,
                            cudaTextureObject_t tex,
-                           unsigned int startSlice,
-                           unsigned int startAngle, unsigned int endAngle,
-                           const SDimensions3D dims,
+                           float fStartSlice,
+                           const SDimensions3D blockDims, unsigned int totalAngles,
+                           unsigned int detBlockV, unsigned int blockSlices,
                            SCALE sc)
 {
-	COORD c;
-
-	int angle = startAngle + blockIdx.y * g_anglesPerBlock + threadIdx.y;
-	if (angle >= endAngle)
+	int angle = blockIdx.y * blockDim.y + threadIdx.y;
+	if (angle >= blockDims.iProjAngles)
 		return;
 
 	const float fRayX = gC_RayX[angle];
@@ -176,72 +154,71 @@ __global__ void par3D_FP_t(float* D_projData, unsigned int projPitch,
 	const float fDetSY = gC_DetSY[angle] + 0.5f * fDetUY + 0.5f * fDetVY;
 	const float fDetSZ = gC_DetSZ[angle] + 0.5f * fDetUZ + 0.5f * fDetVZ;
 
-	const float a1 = c.c1(fRayX,fRayY,fRayZ) / c.c0(fRayX,fRayY,fRayZ);
-	const float a2 = c.c2(fRayX,fRayY,fRayZ) / c.c0(fRayX,fRayY,fRayZ);
-	const float fDistCorr = sc.scale(a1, a2);
+	// Get original index of this projection (for in the output array)
+	angle = gC_index[angle];
 
-
-	const int detectorU = (blockIdx.x%((dims.iProjU+g_detBlockU-1)/g_detBlockU)) * g_detBlockU + threadIdx.x;
-	if (detectorU >= dims.iProjU)
+	const int detectorU = blockIdx.x * blockDim.x + threadIdx.x;
+	if (detectorU >= blockDims.iProjU)
 		return;
-	const int startDetectorV = (blockIdx.x/((dims.iProjU+g_detBlockU-1)/g_detBlockU)) * g_detBlockV;
-	int endDetectorV = startDetectorV + g_detBlockV;
-	if (endDetectorV > dims.iProjV)
-		endDetectorV = dims.iProjV;
 
-	int endSlice = startSlice + g_blockSlices;
-	if (endSlice > c.nSlices(dims))
-		endSlice = c.nSlices(dims);
+	const float ax = fRayX / fRayZ;
+	const float ay = fRayY / fRayZ;
+	const float fDistCorr = sc.scale(ax, ay);
+
+	const int startDetectorV = blockIdx.z * detBlockV;
+	int endDetectorV = startDetectorV + detBlockV;
+	if (endDetectorV > blockDims.iProjV)
+		endDetectorV = blockDims.iProjV;
+
+	int sliceCount = blockSlices;
+	if (sliceCount > blockDims.iVolZ)
+		sliceCount = blockDims.iVolZ;
 
 	for (int detectorV = startDetectorV; detectorV < endDetectorV; ++detectorV)
 	{
 		/* Trace ray in direction Ray to (detectorU,detectorV) from  */
-		/* X = startSlice to X = endSlice                            */
+		/* Z = 0 to Z = sliceCount                            */
 
 		const float fDetX = fDetSX + detectorU*fDetUX + detectorV*fDetVX;
 		const float fDetY = fDetSY + detectorU*fDetUY + detectorV*fDetVY;
 		const float fDetZ = fDetSZ + detectorU*fDetUZ + detectorV*fDetVZ;
 
-		/*        (x)   ( 1)       ( 0)    */
-		/* ray:   (y) = (ay) * x + (by)    */
-		/*        (z)   (az)       (bz)    */
+		/*        (x)   (ax)       (bx)    */
+		/* ray:   (y) = (ay) * z + (by)    */
+		/*        (z)   ( 1)       ( 0)    */
 
-		const float b1 = c.c1(fDetX,fDetY,fDetZ) - a1 * c.c0(fDetX,fDetY,fDetZ);
-		const float b2 = c.c2(fDetX,fDetY,fDetZ) - a2 * c.c0(fDetX,fDetY,fDetZ);
+		const float bx = fDetX - ax * fDetZ;
+		const float by = fDetY - ay * fDetZ;
 
 		float fVal = 0.0f;
 
-		float f0 = startSlice + 0.5f;
-		float f1 = a1 * (startSlice - 0.5f*c.nSlices(dims) + 0.5f) + b1 + 0.5f*c.nDim1(dims) - 0.5f + 0.5f;
-		float f2 = a2 * (startSlice - 0.5f*c.nSlices(dims) + 0.5f) + b2 + 0.5f*c.nDim2(dims) - 0.5f + 0.5f;
+		float fx = ax * fStartSlice + bx + 0.5f*blockDims.iVolX - 0.5f + 0.5f;
+		float fy = ay * fStartSlice + by + 0.5f*blockDims.iVolY - 0.5f + 0.5f;
 
-		for (int s = startSlice; s < endSlice; ++s)
+		for (int s = 0; s < sliceCount; ++s)
 		{
-			fVal += c.tex(tex, f0, f1, f2);
-			f0 += 1.0f;
-			f1 += a1;
-			f2 += a2;
+			fVal += tex2DLayered<float>(tex, fx, fy, s);
+			fx += ax;
+			fy += ay;
 		}
 
 		fVal *= fDistCorr;
 
-		D_projData[(size_t)(detectorV*dims.iProjAngles+angle)*projPitch+detectorU] += fVal;
+		D_projData[(size_t)(detectorV*totalAngles+angle)*projPitch+detectorU] += fVal;
 	}
 }
 
 // Supersampling version
-template<class COORD>
 __global__ void par3D_FP_SS_t(float* D_projData, unsigned int projPitch,
                               cudaTextureObject_t tex,
-                              unsigned int startSlice,
-                              unsigned int startAngle, unsigned int endAngle,
-                              const SDimensions3D dims, int iRaysPerDetDim,
+                              float fStartSlice,
+                              const SDimensions3D blockDims, unsigned int totalAngles,
+                              int iRaysPerDetDim,
+                              unsigned int detBlockV, unsigned int blockSlices,
                               SCALE_NONCUBE sc)
 {
-	COORD c;
-
-	int angle = startAngle + blockIdx.y * g_anglesPerBlock + threadIdx.y;
-	if (angle >= endAngle)
+	int angle = blockIdx.y * blockDim.y + threadIdx.y;
+	if (angle >= blockDims.iProjAngles)
 		return;
 
 	const float fRayX = gC_RayX[angle];
@@ -257,22 +234,25 @@ __global__ void par3D_FP_SS_t(float* D_projData, unsigned int projPitch,
 	const float fDetSY = gC_DetSY[angle] + 0.5f * fDetUY + 0.5f * fDetVY;
 	const float fDetSZ = gC_DetSZ[angle] + 0.5f * fDetUZ + 0.5f * fDetVZ;
 
-	const float a1 = c.c1(fRayX,fRayY,fRayZ) / c.c0(fRayX,fRayY,fRayZ);
-	const float a2 = c.c2(fRayX,fRayY,fRayZ) / c.c0(fRayX,fRayY,fRayZ);
-	const float fDistCorr = sc.scale(a1, a2);
+	// Get original index of this projection (for in the output array)
+	angle = gC_index[angle];
 
-
-	const int detectorU = (blockIdx.x%((dims.iProjU+g_detBlockU-1)/g_detBlockU)) * g_detBlockU + threadIdx.x;
-	if (detectorU >= dims.iProjU)
+	const int detectorU = blockIdx.x * blockDim.x + threadIdx.x;
+	if (detectorU >= blockDims.iProjU)
 		return;
-	const int startDetectorV = (blockIdx.x/((dims.iProjU+g_detBlockU-1)/g_detBlockU)) * g_detBlockV;
-	int endDetectorV = startDetectorV + g_detBlockV;
-	if (endDetectorV > dims.iProjV)
-		endDetectorV = dims.iProjV;
 
-	int endSlice = startSlice + g_blockSlices;
-	if (endSlice > c.nSlices(dims))
-		endSlice = c.nSlices(dims);
+	const float ax = fRayX / fRayZ;
+	const float ay = fRayY / fRayZ;
+	const float fDistCorr = sc.scale(ax, ay);
+
+	const int startDetectorV = blockIdx.z * detBlockV;
+	int endDetectorV = startDetectorV + detBlockV;
+	if (endDetectorV > blockDims.iProjV)
+		endDetectorV = blockDims.iProjV;
+
+	int sliceCount = blockSlices;
+	if (sliceCount > blockDims.iVolZ)
+		sliceCount = blockDims.iVolZ;
 
 	const float fSubStep = 1.0f/iRaysPerDetDim;
 
@@ -287,32 +267,29 @@ __global__ void par3D_FP_SS_t(float* D_projData, unsigned int projPitch,
 		for (int iSubV = 0; iSubV < iRaysPerDetDim; ++iSubV, fdV+=fSubStep) {
 
 		/* Trace ray in direction Ray to (detectorU,detectorV) from  */
-		/* X = startSlice to X = endSlice                            */
+		/* Z = 0 to Z = sliceCount                            */
 
 		const float fDetX = fDetSX + fdU*fDetUX + fdV*fDetVX;
 		const float fDetY = fDetSY + fdU*fDetUY + fdV*fDetVY;
 		const float fDetZ = fDetSZ + fdU*fDetUZ + fdV*fDetVZ;
 
-		/*        (x)   ( 1)       ( 0)    */
-		/* ray:   (y) = (ay) * x + (by)    */
-		/*        (z)   (az)       (bz)    */
+		/*        (x)   (ax)       (bx)    */
+		/* ray:   (y) = (ay) * z + (by)    */
+		/*        (z)   ( 1)       ( 0)    */
 
-		const float b1 = c.c1(fDetX,fDetY,fDetZ) - a1 * c.c0(fDetX,fDetY,fDetZ);
-		const float b2 = c.c2(fDetX,fDetY,fDetZ) - a2 * c.c0(fDetX,fDetY,fDetZ);
-
+		const float bx = fDetX - ax * fDetZ;
+		const float by = fDetY - ay * fDetZ;
 
 		float fVal = 0.0f;
 
-		float f0 = startSlice + 0.5f;
-		float f1 = a1 * (startSlice - 0.5f*c.nSlices(dims) + 0.5f) + b1 + 0.5f*c.nDim1(dims) - 0.5f + 0.5f;
-		float f2 = a2 * (startSlice - 0.5f*c.nSlices(dims) + 0.5f) + b2 + 0.5f*c.nDim2(dims) - 0.5f + 0.5f;
+		float fx = ax * fStartSlice + bx + 0.5f*blockDims.iVolX - 0.5f + 0.5f;
+		float fy = ay * fStartSlice + by + 0.5f*blockDims.iVolY - 0.5f + 0.5f;
 
-		for (int s = startSlice; s < endSlice; ++s)
+		for (int s = 0; s < sliceCount; ++s)
 		{
-			fVal += c.tex(tex, f0, f1, f2);
-			f0 += 1.0f;
-			f1 += a1;
-			f2 += a2;
+			fVal += tex2DLayered<float>(tex, fx, fy, s);
+			fx += ax;
+			fy += ay;
 		}
 
 		fV += fVal;
@@ -321,7 +298,7 @@ __global__ void par3D_FP_SS_t(float* D_projData, unsigned int projPitch,
 		}
 
 		fV *= fDistCorr;
-		D_projData[(size_t)(detectorV*dims.iProjAngles+angle)*projPitch+detectorU] += fV / (iRaysPerDetDim * iRaysPerDetDim);
+		D_projData[(size_t)(detectorV*totalAngles+angle)*projPitch+detectorU] += fV / (iRaysPerDetDim * iRaysPerDetDim);
 	}
 }
 
@@ -340,17 +317,14 @@ __device__ float dirWeights(float fX, float fN) {
 	return 0.0f; // outside image on right
 }
 
-template<class COORD>
 __global__ void par3D_FP_SumSqW_t(float* D_projData, unsigned int projPitch,
-                                  unsigned int startSlice,
-                                  unsigned int startAngle, unsigned int endAngle,
-                                  const SDimensions3D dims,
+                                  float fStartSlice,
+                                  const SDimensions3D blockDims, unsigned int totalAngles,
+                                  unsigned int detBlockV, unsigned int blockSlices,
                                   SCALE_NONCUBE sc)
 {
-	COORD c;
-
-	int angle = startAngle + blockIdx.y * g_anglesPerBlock + threadIdx.y;
-	if (angle >= endAngle)
+	int angle = blockIdx.y * blockDim.y + threadIdx.y;
+	if (angle >= blockDims.iProjAngles)
 		return;
 
 	const float fRayX = gC_RayX[angle];
@@ -366,369 +340,200 @@ __global__ void par3D_FP_SumSqW_t(float* D_projData, unsigned int projPitch,
 	const float fDetSY = gC_DetSY[angle] + 0.5f * fDetUY + 0.5f * fDetVY;
 	const float fDetSZ = gC_DetSZ[angle] + 0.5f * fDetUZ + 0.5f * fDetVZ;
 
-	const float a1 = c.c1(fRayX,fRayY,fRayZ) / c.c0(fRayX,fRayY,fRayZ);
-	const float a2 = c.c2(fRayX,fRayY,fRayZ) / c.c0(fRayX,fRayY,fRayZ);
-	const float fDistCorr = sc.scale(a1, a2);
+	// Get original index of this projection (for in the output array)
+	angle = gC_index[angle];
 
-
-	const int detectorU = (blockIdx.x%((dims.iProjU+g_detBlockU-1)/g_detBlockU)) * g_detBlockU + threadIdx.x;
-	if (detectorU >= dims.iProjU)
+	const int detectorU = blockIdx.x * blockDim.x + threadIdx.x;
+	if (detectorU >= blockDims.iProjU)
 		return;
-	const int startDetectorV = (blockIdx.x/((dims.iProjU+g_detBlockU-1)/g_detBlockU)) * g_detBlockV;
-	int endDetectorV = startDetectorV + g_detBlockV;
-	if (endDetectorV > dims.iProjV)
-		endDetectorV = dims.iProjV;
 
-	int endSlice = startSlice + g_blockSlices;
-	if (endSlice > c.nSlices(dims))
-		endSlice = c.nSlices(dims);
+	const float ax = fRayX / fRayZ;
+	const float ay = fRayY / fRayZ;
+	const float fDistCorr = sc.scale(ax, ay);
+
+	const int startDetectorV = blockIdx.z * detBlockV;
+	int endDetectorV = startDetectorV + detBlockV;
+	if (endDetectorV > blockDims.iProjV)
+		endDetectorV = blockDims.iProjV;
+
+	int sliceCount = blockSlices;
+	if (sliceCount > blockDims.iVolZ)
+		sliceCount = blockDims.iVolZ;
 
 	for (int detectorV = startDetectorV; detectorV < endDetectorV; ++detectorV)
 	{
 		/* Trace ray in direction Ray to (detectorU,detectorV) from  */
-		/* X = startSlice to X = endSlice                            */
+		/* Z = 0 to Z = sliceCount                            */
 
 		const float fDetX = fDetSX + detectorU*fDetUX + detectorV*fDetVX;
 		const float fDetY = fDetSY + detectorU*fDetUY + detectorV*fDetVY;
 		const float fDetZ = fDetSZ + detectorU*fDetUZ + detectorV*fDetVZ;
 
-		/*        (x)   ( 1)       ( 0)    */
-		/* ray:   (y) = (ay) * x + (by)    */
-		/*        (z)   (az)       (bz)    */
+		/*        (x)   (ax)       (bx)    */
+		/* ray:   (y) = (ay) * z + (by)    */
+		/*        (z)   ( 1)       ( 0)    */
 
-		const float b1 = c.c1(fDetX,fDetY,fDetZ) - a1 * c.c0(fDetX,fDetY,fDetZ);
-		const float b2 = c.c2(fDetX,fDetY,fDetZ) - a2 * c.c0(fDetX,fDetY,fDetZ);
+		const float bx = fDetX - ax * fDetZ;
+		const float by = fDetY - ay * fDetZ;
 
 		float fVal = 0.0f;
 
-		float f0 = startSlice + 0.5f;
-		float f1 = a1 * (startSlice - 0.5f*c.nSlices(dims) + 0.5f) + b1 + 0.5f*c.nDim1(dims) - 0.5f + 0.5f;
-		float f2 = a2 * (startSlice - 0.5f*c.nSlices(dims) + 0.5f) + b2 + 0.5f*c.nDim2(dims) - 0.5f + 0.5f;
+		float fx = ax * fStartSlice + bx + 0.5f*blockDims.iVolX - 0.5f + 0.5f;
+		float fy = ay * fStartSlice + by + 0.5f*blockDims.iVolY - 0.5f + 0.5f;
 
-		for (int s = startSlice; s < endSlice; ++s)
+		for (int s = 0; s < sliceCount; ++s)
 		{
-			fVal += dirWeights(f1, c.nDim1(dims)) * dirWeights(f2, c.nDim2(dims));
-			f0 += 1.0f;
-			f1 += a1;
-			f2 += a2;
+			fVal += dirWeights(fx, blockDims.iVolX) * dirWeights(fy, blockDims.iVolY);
+			fx += ax;
+			fy += ay;
 		}
 
 		fVal *= fDistCorr * fDistCorr;
-		D_projData[(size_t)(detectorV*dims.iProjAngles+angle)*projPitch+detectorU] += fVal;
+		D_projData[(size_t)(detectorV*totalAngles+angle)*projPitch+detectorU] += fVal;
 	}
 }
 
 // Supersampling version
 // TODO
 
-
-bool Par3DFP_Array_internal(cudaPitchedPtr D_projData,
-                   cudaTextureObject_t D_texObj,
-                   const SDimensions3D& dims,
-                   unsigned int angleCount, const SPar3DProjection* angles,
-                   const SProjectorParams3D& params, cudaStream_t stream)
+bool Par3DFP_t::sortProjections(const SDimensions3D& dims, const std::vector<SPar3DProjection>& angles,
+                               std::vector<SPar3DProjection>& anglesX,
+                               std::vector<SPar3DProjection>& anglesY,
+                               std::vector<SPar3DProjection>& anglesZ,
+                               std::vector<int>& indicesX,
+                               std::vector<int>& indicesY,
+                               std::vector<int>& indicesZ)
 {
-	dim3 dimBlock(g_detBlockU, g_anglesPerBlock); // region size, angles
+	assert(dims.iProjAngles == angles.size());
 
-	// Run over all angles, grouping them into groups of the same
-	// orientation (roughly horizontal vs. roughly vertical).
-	// Start a stream of grids for each such group.
+	anglesX.clear();
+	anglesX.reserve(dims.iProjAngles);
+	anglesY.clear();
+	anglesY.reserve(dims.iProjAngles);
+	anglesZ.clear();
+	anglesZ.reserve(dims.iProjAngles);
+	indicesX.clear();
+	indicesX.reserve(dims.iProjAngles);
+	indicesY.clear();
+	indicesY.reserve(dims.iProjAngles);
+	indicesZ.clear();
+	indicesZ.reserve(dims.iProjAngles);
 
-	unsigned int blockStart = 0;
-	unsigned int blockEnd = 0;
-	int blockDirection = 0;
+	for (unsigned int i = 0; i < dims.iProjAngles; ++i) {
+		float dX = fabsf(angles[i].fRayX);
+		float dY = fabsf(angles[i].fRayY);
+		float dZ = fabsf(angles[i].fRayZ);
 
-	bool cube = true;
-	if (abs(params.volScale.fX / params.volScale.fY - 1.0) > 0.00001)
-		cube = false;
-	if (abs(params.volScale.fX / params.volScale.fZ - 1.0) > 0.00001)
-		cube = false;
-
-	SCALE_CUBE scube;
-	scube.fOutputScale = params.fOutputScale * params.volScale.fX;
-
-	SCALE_NONCUBE snoncubeX;
-	float fS1 = params.volScale.fY / params.volScale.fX;
-	snoncubeX.fScale1 = fS1 * fS1;
-	float fS2 = params.volScale.fZ / params.volScale.fX;
-	snoncubeX.fScale2 = fS2 * fS2;
-	snoncubeX.fOutputScale = params.fOutputScale * params.volScale.fX;
-
-	SCALE_NONCUBE snoncubeY;
-	fS1 = params.volScale.fX / params.volScale.fY;
-	snoncubeY.fScale1 = fS1 * fS1;
-	fS2 = params.volScale.fY / params.volScale.fY;
-	snoncubeY.fScale2 = fS2 * fS2;
-	snoncubeY.fOutputScale = params.fOutputScale * params.volScale.fY;
-
-	SCALE_NONCUBE snoncubeZ;
-	fS1 = params.volScale.fX / params.volScale.fZ;
-	snoncubeZ.fScale1 = fS1 * fS1;
-	fS2 = params.volScale.fY / params.volScale.fZ;
-	snoncubeZ.fScale2 = fS2 * fS2;
-	snoncubeZ.fOutputScale = params.fOutputScale * params.volScale.fZ;
-
-	// timeval t;
-	// tic(t);
-
-	for (unsigned int a = 0; a <= angleCount; ++a) {
-		int dir = -1;
-		if (a != angleCount) {
-			float dX = fabsf(angles[a].fRayX);
-			float dY = fabsf(angles[a].fRayY);
-			float dZ = fabsf(angles[a].fRayZ);
-
-			if (dX >= dY && dX >= dZ)
-				dir = 0;
-			else if (dY >= dX && dY >= dZ)
-				dir = 1;
-			else
-				dir = 2;
-		}
-
-		if (a == angleCount || dir != blockDirection) {
-			// block done
-
-			blockEnd = a;
-			if (blockStart != blockEnd) {
-
-				dim3 dimGrid(
-				             ((dims.iProjU+g_detBlockU-1)/g_detBlockU)*((dims.iProjV+g_detBlockV-1)/g_detBlockV),
-(blockEnd-blockStart+g_anglesPerBlock-1)/g_anglesPerBlock);
-
-				// printf("angle block: %d to %d, %d (%dx%d, %dx%d)\n", blockStart, blockEnd, blockDirection, dimGrid.x, dimGrid.y, dimBlock.x, dimBlock.y);
-
-				if (blockDirection == 0) {
-					for (unsigned int i = 0; i < dims.iVolX; i += g_blockSlices)
-						if (params.iRaysPerDetDim == 1)
-								if (cube)
-										par3D_FP_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), D_texObj, i, blockStart, blockEnd, dims, scube);
-								else
-										par3D_FP_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float),  D_texObj,i, blockStart, blockEnd, dims, snoncubeX);
-						else
-							par3D_FP_SS_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float),  D_texObj,i, blockStart, blockEnd, dims, params.iRaysPerDetDim, snoncubeX);
-				} else if (blockDirection == 1) {
-					for (unsigned int i = 0; i < dims.iVolY; i += g_blockSlices)
-						if (params.iRaysPerDetDim == 1)
-								if (cube)
-										par3D_FP_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float),  D_texObj,i, blockStart, blockEnd, dims, scube);
-								else
-										par3D_FP_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float),  D_texObj,i, blockStart, blockEnd, dims, snoncubeY);
-						else
-							par3D_FP_SS_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float),  D_texObj,i, blockStart, blockEnd, dims, params.iRaysPerDetDim, snoncubeY);
-				} else if (blockDirection == 2) {
-					for (unsigned int i = 0; i < dims.iVolZ; i += g_blockSlices)
-						if (params.iRaysPerDetDim == 1)
-								if (cube)
-										par3D_FP_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float),  D_texObj,i, blockStart, blockEnd, dims, scube);
-								else
-										par3D_FP_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float),  D_texObj,i, blockStart, blockEnd, dims, snoncubeZ);
-						else
-							par3D_FP_SS_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float),  D_texObj,i, blockStart, blockEnd, dims, params.iRaysPerDetDim, snoncubeZ);
-				}
-
-			}
-
-			blockDirection = dir;
-			blockStart = a;
+		if (dX >= dY && dX >= dZ) {
+			// X
+			// X <- Y, Y <- Z, Z <- X
+			SPar3DProjection a;
+			a.fRayX = angles[i].fRayY;
+			a.fRayY = angles[i].fRayZ;
+			a.fRayZ = angles[i].fRayX;
+			a.fDetSX = angles[i].fDetSY;
+			a.fDetSY = angles[i].fDetSZ;
+			a.fDetSZ = angles[i].fDetSX;
+			a.fDetUX = angles[i].fDetUY;
+			a.fDetUY = angles[i].fDetUZ;
+			a.fDetUZ = angles[i].fDetUX;
+			a.fDetVX = angles[i].fDetVY;
+			a.fDetVY = angles[i].fDetVZ;
+			a.fDetVZ = angles[i].fDetVX;
+			//fprintf(stderr, "Index %d -> X\n", i);
+			anglesX.push_back(a);
+			indicesX.push_back(i);
+		} else if (dY >= dX && dY >= dZ) {
+			// Y
+			// X <- X, Y <- Z, Z <- Y
+			SPar3DProjection a;
+			a.fRayX = angles[i].fRayX;
+			a.fRayY = angles[i].fRayZ;
+			a.fRayZ = angles[i].fRayY;
+			a.fDetSX = angles[i].fDetSX;
+			a.fDetSY = angles[i].fDetSZ;
+			a.fDetSZ = angles[i].fDetSY;
+			a.fDetUX = angles[i].fDetUX;
+			a.fDetUY = angles[i].fDetUZ;
+			a.fDetUZ = angles[i].fDetUY;
+			a.fDetVX = angles[i].fDetVX;
+			a.fDetVY = angles[i].fDetVZ;
+			a.fDetVZ = angles[i].fDetVY;
+			anglesY.push_back(a);
+			indicesY.push_back(i);
+		} else {
+			// Z
+			// No coordinate permutations
+			anglesZ.push_back(angles[i]);
+			indicesZ.push_back(i);
 		}
 	}
-
-	// printf("%f\n", toc(t));
-
 	return true;
+}
+
+
+bool Par3DFP_t::dispatchKernel(float *D_projData, unsigned int projPitch,
+	                       cudaTextureObject_t D_texObj,
+	                       float fStartSlice,
+	                       const SDimensions3D& dims,
+	                       const SDimensions3D& blockDims,
+	                       const SProjectorParams3D& params,
+	                       int majordim,
+                               cudaStream_t stream)
+{
+	bool cube = isVolCube(params);
+	SCALE_CUBE scube = getCubeScaling(params);
+	SCALE_NONCUBE snoncube = getGenericScaling(params, majordim);
+
+	dim3 dimBlock(g_detBlockU, g_anglesPerBlock);
+	dim3 dimGrid = computeGrid3Ceil(blockDims.iProjU, g_detBlockU,
+	                                blockDims.iProjAngles, g_anglesPerBlock,
+	                                blockDims.iProjV, g_detBlockV);
+
+	switch (params.projKernel) {
+	case ker3d_default:
+	case ker3d_2d_weighting:
+	case ker3d_matched_bp:
+		if (params.iRaysPerDetDim == 1) {
+			if (cube)
+				par3D_FP_t<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, D_texObj, fStartSlice, blockDims, dims.iProjAngles, g_detBlockV, g_blockSlices, scube);
+			else
+				par3D_FP_t<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, D_texObj, fStartSlice, blockDims, dims.iProjAngles, g_detBlockV, g_blockSlices, snoncube);
+		} else {
+			par3D_FP_SS_t<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, D_texObj, fStartSlice, blockDims, dims.iProjAngles, params.iRaysPerDetDim, g_detBlockV, g_blockSlices, snoncube);
+		}
+		return true;
+	case ker3d_sum_square_weights:
+		if (params.iRaysPerDetDim == 1) {
+			par3D_FP_SumSqW_t<<<dimGrid, dimBlock, 0, stream>>>(D_projData, projPitch, fStartSlice, blockDims, dims.iProjAngles, g_detBlockV, g_blockSlices, snoncube);
+		} else {
+			// TODO
+			return false;
+		}
+		return true;
+	default:
+		return false;
+	}
 }
 
 bool Par3DFP(cudaPitchedPtr D_volumeData,
              cudaPitchedPtr D_projData,
-             const SDimensions3D& dims, const SPar3DProjection* angles,
+             const SDimensions3D& dims, const std::vector<SPar3DProjection>& angles,
              const SProjectorParams3D& params)
 {
-	TransferConstantsBuffer tcbuf(g_MaxAngles);
-
-	cudaStream_t stream;
-	if (!checkCuda(cudaStreamCreate(&stream), "Par3DFP stream"))
-		return false;
-
-	// transfer volume to array
-	cudaArray* cuArray = allocateVolumeArray(dims);
-	if (!cuArray) {
-		logCuda(cudaStreamDestroy(stream), "Par3DFP destroy stream");
-		return false;
-	}
-
-	cudaTextureObject_t D_texObj;
-	if (!createTextureObject3D(cuArray, D_texObj)) {
-		logCuda(cudaStreamDestroy(stream), "Par3DFP destroy stream");
-		logCuda(cudaFreeArray(cuArray), "Par3DFP free array");
-		return false;
-	}
-
-	if (!transferVolumeToArray(D_volumeData, cuArray, dims, stream)) {
-		logCuda(cudaDestroyTextureObject(D_texObj), "Par3DFP destroy texture");
-		logCuda(cudaStreamDestroy(stream), "Par3DFP destroy stream");
-		logCuda(cudaFreeArray(cuArray), "Par3DFP free array");
-		return false;
-	}
-
-	bool ok = true;
-
-	for (unsigned int iAngle = 0; iAngle < dims.iProjAngles; iAngle += g_MaxAngles) {
-		unsigned int iEndAngle = iAngle + g_MaxAngles;
-		if (iEndAngle >= dims.iProjAngles)
-			iEndAngle = dims.iProjAngles;
-
-		ok = transferConstants(angles + iAngle, iEndAngle - iAngle, tcbuf, stream);
-		if (!ok)
-			break;
-
-
-		cudaPitchedPtr D_subprojData = D_projData;
-		D_subprojData.ptr = (char*)D_projData.ptr + iAngle * D_projData.pitch;
-
-		ok = Par3DFP_Array_internal(D_subprojData, D_texObj,
-		                             dims, iEndAngle - iAngle, angles + iAngle,
-		                             params, stream);
-		if (!ok)
-			break;
-	}
-
-	ok &= checkCuda(cudaStreamSynchronize(stream), "Par3DFP sync");
-
-	logCuda(cudaDestroyTextureObject(D_texObj), "Par3DFP destroy texture");
-	logCuda(cudaFreeArray(cuArray), "Par3DFP free array");
-	logCuda(cudaStreamDestroy(stream), "Par3DFP destroy stream");
-
-	return ok;
+	Par3DFP_t P;
+	return P.project(D_volumeData, D_projData, Par3DFP_t::MODE_FORWARD, dims, angles, params);
 }
 
 
-
-bool Par3DFP_SumSqW(cudaPitchedPtr D_volumeData,
-                    cudaPitchedPtr D_projData,
-                    const SDimensions3D& dims, const SPar3DProjection* angles,
+bool Par3DFP_SumSqW(cudaPitchedPtr D_projData,
+                    const SDimensions3D& dims, const std::vector<SPar3DProjection>& angles,
                     const SProjectorParams3D& params)
 {
-	TransferConstantsBuffer tcbuf(dims.iProjAngles);
-
-	cudaStream_t stream;
-	if (!checkCuda(cudaStreamCreate(&stream), "Par3DFP_SumSqW stream"))
-		return false;
-
-	if (!transferConstants(angles, dims.iProjAngles, tcbuf, stream)) {
-		logCuda(cudaStreamDestroy(stream), "Par3DFP_SumSqW destroy stream");
-		return false;
-	}
-
-	dim3 dimBlock(g_detBlockU, g_anglesPerBlock); // region size, angles
-
-	// Run over all angles, grouping them into groups of the same
-	// orientation (roughly horizontal vs. roughly vertical).
-	// Start a stream of grids for each such group.
-
-	unsigned int blockStart = 0;
-	unsigned int blockEnd = 0;
-	int blockDirection = 0;
-
-	SCALE_NONCUBE snoncubeX;
-	float fS1 = params.volScale.fY / params.volScale.fX;
-	snoncubeX.fScale1 = fS1 * fS1;
-	float fS2 = params.volScale.fZ / params.volScale.fX;
-	snoncubeX.fScale2 = fS2 * fS2;
-	snoncubeX.fOutputScale = params.fOutputScale * params.volScale.fX;
-
-	SCALE_NONCUBE snoncubeY;
-	fS1 = params.volScale.fX / params.volScale.fY;
-	snoncubeY.fScale1 = fS1 * fS1;
-	fS2 = params.volScale.fY / params.volScale.fY;
-	snoncubeY.fScale2 = fS2 * fS2;
-	snoncubeY.fOutputScale = params.fOutputScale * params.volScale.fY;
-
-	SCALE_NONCUBE snoncubeZ;
-	fS1 = params.volScale.fX / params.volScale.fZ;
-	snoncubeZ.fScale1 = fS1 * fS1;
-	fS2 = params.volScale.fY / params.volScale.fZ;
-	snoncubeZ.fScale2 = fS2 * fS2;
-	snoncubeZ.fOutputScale = params.fOutputScale * params.volScale.fZ;
-
-
-	// timeval t;
-	// tic(t);
-
-	for (unsigned int a = 0; a <= dims.iProjAngles; ++a) {
-		int dir;
-		if (a != dims.iProjAngles) {
-			float dX = fabsf(angles[a].fRayX);
-			float dY = fabsf(angles[a].fRayY);
-			float dZ = fabsf(angles[a].fRayZ);
-
-			if (dX >= dY && dX >= dZ)
-				dir = 0;
-			else if (dY >= dX && dY >= dZ)
-				dir = 1;
-			else
-				dir = 2;
-		}
-
-		if (a == dims.iProjAngles || dir != blockDirection) {
-			// block done
-
-			blockEnd = a;
-			if (blockStart != blockEnd) {
-
-				dim3 dimGrid(
-				             ((dims.iProjU+g_detBlockU-1)/g_detBlockU)*((dims.iProjV+g_detBlockV-1)/g_detBlockV),
-(blockEnd-blockStart+g_anglesPerBlock-1)/g_anglesPerBlock);
-
-				// printf("angle block: %d to %d, %d (%dx%d, %dx%d)\n", blockStart, blockEnd, blockDirection, dimGrid.x, dimGrid.y, dimBlock.x, dimBlock.y);
-
-				if (blockDirection == 0) {
-					for (unsigned int i = 0; i < dims.iVolX; i += g_blockSlices)
-						if (params.iRaysPerDetDim == 1)
-							par3D_FP_SumSqW_t<DIR_X><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, snoncubeX);
-						else
-#if 0
-							par3D_FP_SS_SumSqW_dirX<<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, fOutputScale);
-#else
-							assert(false);
-#endif
-				} else if (blockDirection == 1) {
-					for (unsigned int i = 0; i < dims.iVolY; i += g_blockSlices)
-						if (params.iRaysPerDetDim == 1)
-							par3D_FP_SumSqW_t<DIR_Y><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, snoncubeY);
-						else
-#if 0
-							par3D_FP_SS_SumSqW_dirY<<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, fOutputScale);
-#else
-							assert(false);
-#endif
-				} else if (blockDirection == 2) {
-					for (unsigned int i = 0; i < dims.iVolZ; i += g_blockSlices)
-						if (params.iRaysPerDetDim == 1)
-							par3D_FP_SumSqW_t<DIR_Z><<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, snoncubeZ);
-						else
-#if 0
-							par3D_FP_SS_SumSqW_dirZ<<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, D_projData.pitch/sizeof(float), i, blockStart, blockEnd, dims, fOutputScale);
-#else
-							assert(false);
-#endif
-				}
-
-			}
-
-			blockDirection = dir;
-			blockStart = a;
-		}
-	}
-
-	bool ok = checkCuda(cudaStreamSynchronize(stream), "Par3DFP_SumSqW");
-	logCuda(cudaStreamDestroy(stream), "Par3DFP_SumSqW destroy stream");
-
-	// printf("%f\n", toc(t));
-
-	return ok;
+	Par3DFP_t P;
+	cudaPitchedPtr dummy = { nullptr, 0, 0, 0 };
+	return P.project(dummy, D_projData, Par3DFP_t::MODE_FW_NOINPUT, dims, angles, params);
 }
-
 
 
 
