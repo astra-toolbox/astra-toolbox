@@ -191,11 +191,8 @@ public:
 	}
 
 
-	const SPar3DProjection *getParallel() const {
-		if (!std::holds_alternative<std::vector<SPar3DProjection>>(projs))
-			return nullptr;
-
-		return &std::get<std::vector<SPar3DProjection>>(projs)[0];
+	const std::vector<SPar3DProjection>& getParallel() const {
+		return std::get<std::vector<SPar3DProjection>>(projs);
 	}
 
 	const std::vector<SConeProjection>& getCone() const {

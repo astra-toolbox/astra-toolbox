@@ -355,16 +355,16 @@ bool FP(astra::CData3D *projData, const astra::CData3D *volData, const astra::Ge
 	bool ok = true;
 
 	if (geom.isParallel()) {
-		const SPar3DProjection* pParProjs = geom.getParallel();
+		const std::vector<SPar3DProjection>& pParProjs = geom.getParallel();
 
 		switch (params.projKernel) {
 		case ker3d_default:
 		case ker3d_2d_weighting:
 		case ker3d_matched_bp:
-			ok &= Par3DFP(vols->getPtr(), projs->getPtr(), geom.getDims(), pParProjs, params);
+			ok &= Par3DFP(vols->getPtr(), projs->getPtr(), geom.getDims(), &pParProjs[0], params);
 			break;
 		case ker3d_sum_square_weights:
-			ok &= Par3DFP_SumSqW(vols->getPtr(), projs->getPtr(), geom.getDims(), pParProjs, params);
+			ok &= Par3DFP_SumSqW(vols->getPtr(), projs->getPtr(), geom.getDims(), &pParProjs[0], params);
 			break;
 		default:
 			ok = false;
@@ -434,12 +434,12 @@ bool BP(const astra::CData3D *projData, astra::CData3D *volData, const astra::Ge
 	bool ok = true;
 
 	if (geom.isParallel()) {
-		const SPar3DProjection* pParProjs = geom.getParallel();
+		const std::vector<SPar3DProjection>& pParProjs = geom.getParallel();
 		switch (params.projKernel) {
 		case ker3d_default:
 		case ker3d_2d_weighting:
 			if (projs->getArray())
-				ok &= Par3DBP_Array(vols->getPtr(), projs->getArray(), geom.getDims(), pParProjs, params);
+				return false;
 			else
 				ok &= Par3DBP(vols->getPtr(), projs->getPtr(), geom.getDims(), pParProjs, params);
 			break;
