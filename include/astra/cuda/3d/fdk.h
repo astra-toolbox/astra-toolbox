@@ -49,7 +49,7 @@ bool FDK_Filter(cudaPitchedPtr D_projData,
 
 bool FDK(cudaPitchedPtr D_volumeData,
          cudaPitchedPtr D_projData,
-         const SConeProjection* angles,
+         const std::vector<SConeProjection>& angles,
          const SDimensions3D& dims, SProjectorParams3D params, bool bShortScan,
          const astra::SFilterConfig& filterConfig);
 

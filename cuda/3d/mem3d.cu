@@ -370,14 +370,14 @@ bool FP(astra::CData3D *projData, const astra::CData3D *volData, const astra::Ge
 			ok = false;
 		}
 	} else if (geom.isCone()) {
-		const SConeProjection* pConeProjs = geom.getCone();
+		const std::vector<SConeProjection>& pConeProjs = geom.getCone();
 
 		switch (params.projKernel) {
 		case ker3d_default:
 		case ker3d_fdk_weighting:
 		case ker3d_2d_weighting:
 		case ker3d_matched_bp:
-			ok &= ConeFP(vols->getPtr(), projs->getPtr(), geom.getDims(), pConeProjs, params);
+			ok &= ConeFP(vols->getPtr(), projs->getPtr(), geom.getDims(), &pConeProjs[0], params);
 			break;
 		default:
 			ok = false;
@@ -447,13 +447,13 @@ bool BP(const astra::CData3D *projData, astra::CData3D *volData, const astra::Ge
 			ok = false;
 		}
 	} else if (geom.isCone()) {
-		const SConeProjection* pConeProjs = geom.getCone();
+		const std::vector<SConeProjection>& pConeProjs = geom.getCone();
 		switch (params.projKernel) {
 		case ker3d_default:
 		case ker3d_fdk_weighting:
 		case ker3d_2d_weighting:
 			if (projs->getArray())
-				ok &= ConeBP_Array(vols->getPtr(), projs->getArray(), geom.getDims(), pConeProjs, params);
+				return false;
 			else
 				ok &= ConeBP(vols->getPtr(), projs->getPtr(), geom.getDims(), pConeProjs, params);
 			break;
@@ -508,9 +508,7 @@ bool FDK(astra::CFloat32ProjectionData3D *projData, astra::CFloat32VolumeData3D 
 	if (!res.isCone())
 		return false;
 
-	const SConeProjection* pConeProjs = res.getCone();
-
-	bool ok = FDK(vols->getPtr(), projs->getPtr(), pConeProjs, res.getDims(), params, bShortScan, filterConfig);
+	bool ok = FDK(vols->getPtr(), projs->getPtr(), res.getCone(), res.getDims(), params, bShortScan, filterConfig);
 
 	return ok;
 
