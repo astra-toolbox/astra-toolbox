@@ -30,4 +30,5 @@ copy ..\build\msvc\bin\x64\Release_CUDA\AstraCuda64.dll astra
 mkdir dist
 move *.whl dist
 
+cd /D %~dp0
 pause
