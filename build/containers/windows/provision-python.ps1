@@ -4,7 +4,7 @@ choco install -y python312 --version=3.12.10
 choco install -y python313 --version=3.13.11
 choco install -y python314 --version=3.14.0
 
-C:\python310\python -m pip install numpy scipy cython setuptools wheel
+C:\python310\python -m pip install numpy scipy cython setuptools wheel tomli
 C:\python311\python -m pip install numpy scipy cython setuptools wheel
 C:\python312\python -m pip install numpy scipy cython setuptools wheel
 C:\python313\python -m pip install numpy scipy cython setuptools wheel
