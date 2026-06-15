@@ -38,7 +38,7 @@ for i = 1:nIters;
 
   residual_error(i) = astra_mex_algorithm('get_res_norm', alg_id);
   rec = astra_mex_data2d('get', rec_id);
-  phantom_error(i) = sqrt(sumsqr(rec - P));
+  phantom_error(i) = sqrt(sum((rec(:) - P(:)).^2));
 end
 
 % Get the result
