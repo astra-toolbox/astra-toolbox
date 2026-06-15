@@ -728,8 +728,7 @@ def write_mex_project(P, vs_version):
       print('      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>', file=F)
 #    print('      <WarningLevel>Level3</WarningLevel>', file=F)
     #print('      <AdditionalIncludeDirectories>$(MATLAB_ROOT)\\extern\\include\\;..\\..\\lib\\include;..\\..\\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
-    # FIXME: This CUDA_PATH shouldn't be necessary
-    print('      <AdditionalIncludeDirectories>$(MATLAB_ROOT)\\extern\\include\\;$(CUDA_PATH)\\include;..\\..\\..\\lib\\include;..\\..\\..\\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
+    print('      <AdditionalIncludeDirectories>$(MATLAB_ROOT)\\extern\\include\\;..\\..\\..\\lib\\include;..\\..\\..\\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>', file=F)
     print('      <OpenMPSupport>true</OpenMPSupport>', file=F)
     if c.debug:
       print('      <Optimization>Disabled</Optimization>', file=F)
