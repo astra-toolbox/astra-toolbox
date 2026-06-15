@@ -673,6 +673,7 @@ def write_main_project(vs_version):
       d+="ASTRA_CUDA;ASTRA_BUILDING_CUDA;"
     d+="__SSE2__;"
     d+="DLL_EXPORTS;_CRT_SECURE_NO_WARNINGS;"
+    d+="_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR;"  # FIXME: Check if still need in Matlab versions later than 2023b
     d+='%(PreprocessorDefinitions)</PreprocessorDefinitions>'
     print(d, file=F)
     print('      <MultiProcessorCompilation>true</MultiProcessorCompilation>', file=F)
@@ -743,6 +744,7 @@ def write_mex_project(P, vs_version):
       d+="ASTRA_CUDA;ASTRA_BUILDING_CUDA;"
     d+="__SSE2__;"
     d+="MATLAB_MEXCMD_RELEASE=700;"
+    d+="_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR;"  # FIXME: Check if still need in Matlab versions later than 2023b
 #    d+="DLL_EXPORTS;_CRT_SECURE_NO_WARNINGS;"
     d+='%(PreprocessorDefinitions)</PreprocessorDefinitions>'
     print(d, file=F)
