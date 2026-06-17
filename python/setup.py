@@ -187,7 +187,7 @@ setup(
     packages=['astra', 'astra.plugins'],
     install_requires=['numpy', 'scipy'] + extra_install_requires,
     name='astra-toolbox',
-    version='2.5.0',
+    version='2.5.99',
     description='High-performance GPU primitives and algorithms for 2D and 3D tomography',
     long_description=long_description,
     long_description_content_type='text/markdown',

@@ -80,7 +80,7 @@ from .tests import (
     test_noCUDA
 )
 
-__version__ = '2.5.0'
+__version__ = '2.5.99'
 
 import os
 

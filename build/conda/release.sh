@@ -5,7 +5,7 @@ set -e
 D=`mktemp -d`
 cp build.sh $D
 
-V=2.5.0
+V=2.5.99
 B=0
 
 podman run --rm -v $D:/out:z astra-build-cuda11 /bin/bash /out/build.sh $V $B cuda11 full
