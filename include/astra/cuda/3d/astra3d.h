@@ -44,13 +44,6 @@ using astraCUDA3d::ker3d_sum_square_weights;
 using astraCUDA3d::ker3d_fdk_weighting;
 using astraCUDA3d::ker3d_2d_weighting;
 
-
-_AstraExport bool uploadMultipleProjections(CFloat32ProjectionData3D *proj,
-                                            const float *data,
-                                            unsigned int y_min,
-                                            unsigned int y_max);
-
-
 }
 
 namespace astraCUDA {

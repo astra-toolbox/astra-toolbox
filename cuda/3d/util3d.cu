@@ -122,7 +122,6 @@ bool zeroVolumeData(astra::CData3D *D_data)
 {
 	astraCUDA::CDataGPU *datas = dynamic_cast<astraCUDA::CDataGPU*>(D_data->getStorage());
 	assert(datas);
-	assert(!datas->getArray());
 
 	std::array<int, 3> dims = D_data->getShape();
 
@@ -266,10 +265,8 @@ bool duplicateVolumeData(astra::CData3D *D_dst, const astra::CData3D *D_src)
 	assert(D_dst->getShape() == D_src->getShape());
 	astraCUDA::CDataGPU *dsts = dynamic_cast<astraCUDA::CDataGPU*>(D_dst->getStorage());
 	assert(dsts);
-	assert(!dsts->getArray());
 	const astraCUDA::CDataGPU *srcs = dynamic_cast<const astraCUDA::CDataGPU*>(D_src->getStorage());
 	assert(srcs);
-	assert(!srcs->getArray());
 
 	std::array<int, 3> dims = D_src->getShape();
 

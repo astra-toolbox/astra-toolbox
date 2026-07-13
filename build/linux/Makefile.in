@@ -297,7 +297,6 @@ CUDA_OBJECTS=\
 	cuda/3d/par3d_fp.lo \
 	cuda/3d/par3d_bp.lo \
 	cuda/3d/proj3d.lo \
-	cuda/3d/astra3d.lo \
 	cuda/3d/util3d.lo \
 	cuda/3d/arith3d.lo \
 	cuda/3d/mem3d.lo

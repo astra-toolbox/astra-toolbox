@@ -77,7 +77,6 @@ enum Mem3DZeroMode {
 int maxBlockDimension();
 
 _AstraExport astra::CDataStorage* wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch);
-astra::CDataStorage* createProjectionArrayHandle(const float *ptr, unsigned int x, unsigned int y, unsigned int z);
 
 astra::CDataStorage *allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Mem3DZeroMode zero);
 
@@ -100,9 +99,6 @@ bool freeGPUMemory(astra::CData3D *data);
 bool zeroGPUMemory(astra::CData3D *data);
 
 bool assignGPUMemory(astra::CData3D *dst, const astra::CData3D *src);
-
-bool copyIntoArray(astra::CData3D *data, astra::CData3D *subdata, const SSubDimensions3D &pos);
-
 
 bool FP(astra::CFloat32ProjectionData3D *projData, const astra::CFloat32VolumeData3D *volData, int iDetectorSuperSampling, astra::Cuda3DProjectionKernel projKernel);
 bool FP(astra::CData3D *projData, const astra::CData3D *volData, const astra::Geometry3DParameters &geom, SProjectorParams3D params);

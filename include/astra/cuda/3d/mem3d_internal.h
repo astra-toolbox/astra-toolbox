@@ -34,27 +34,22 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 namespace astraCUDA {
 
 
-// TODO: Turn CDataGPU wrapping cudaArray into separate type
 class _AstraExport CDataGPU : public astra::CDataStorage {
 
 protected:
 	cudaPitchedPtr ptr;
-	cudaArray *arr;
 
-	CDataGPU() : arr(nullptr) { ptr.ptr = nullptr; }
+	CDataGPU() { ptr.ptr = nullptr; }
 
 public:
 
-	CDataGPU(cudaPitchedPtr _ptr) : ptr(_ptr), arr(nullptr)  { }
-	CDataGPU(cudaArray *_arr) : arr(_arr)  { ptr.ptr = nullptr; }
+	CDataGPU(cudaPitchedPtr _ptr) : ptr(_ptr) { }
 
 	virtual bool isMemory() const { return false; }
 	virtual bool isGPU() const { return true; }
 	virtual bool isFloat32() const { return true; } // TODO
 
-	// The CUDA API isn't very const-friendly, so these functions drop
-	// consts from the pointers.
-	cudaArray* getArray() const { return const_cast<cudaArray*>(arr); }
+	// The CUDA API isn't very const-friendly, so drop const from the pointers.
 	cudaPitchedPtr getPtr() const { return ptr; }
 
 };

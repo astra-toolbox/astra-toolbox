@@ -295,9 +295,6 @@ bool FBP(astra::CData2D *D_vol, astra::CData2D *D_proj,
 	const astraCUDA::CDataGPU *vols = dynamic_cast<const astraCUDA::CDataGPU*>(D_vol->getStorage());
 	assert(vols);
 
-	assert(!projs->getArray());
-	assert(!vols->getArray());
-
 	float *D_sinoData = (float *)projs->getPtr().ptr;
 	int sinoPitch = projs->getPtr().pitch / sizeof(float);
 	float *D_volumeData = (float *)vols->getPtr().ptr;

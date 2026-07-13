@@ -46,9 +46,6 @@
     <CudaCompile Include="..\..\..\cuda\3d\arith3d.cu">
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\cuda\3d\astra3d.cu">
-      <Filter>CUDA\cuda source</Filter>
-    </CudaCompile>
     <CudaCompile Include="..\..\..\cuda\3d\cone_bp.cu">
       <Filter>CUDA\cuda source</Filter>
     </CudaCompile>

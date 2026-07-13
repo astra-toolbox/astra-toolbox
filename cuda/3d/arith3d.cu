@@ -229,7 +229,6 @@ bool processVol3D(astra::CData3D *out, const Stream &stream)
 {
 	astraCUDA::CDataGPU *outs = dynamic_cast<astraCUDA::CDataGPU*>(out->getStorage());
 	assert(outs);
-	assert(!outs->getArray());
 	assert(stream.isValid());
 
 	std::array<int, 3> dims = out->getShape();
@@ -253,7 +252,6 @@ bool processVol3D(astra::CData3D *out, float fParam, const Stream &stream)
 {
 	astraCUDA::CDataGPU *outs = dynamic_cast<astraCUDA::CDataGPU*>(out->getStorage());
 	assert(outs);
-	assert(!outs->getArray());
 	assert(stream.isValid());
 
 	std::array<int, 3> dims = out->getShape();
@@ -278,10 +276,8 @@ bool processVol3D(astra::CData3D *out, const astra::CData3D *in, const Stream &s
 	assert(out->getShape() == in->getShape());
 	astraCUDA::CDataGPU *outs = dynamic_cast<astraCUDA::CDataGPU*>(out->getStorage());
 	assert(outs);
-	assert(!outs->getArray());
 	const astraCUDA::CDataGPU *ins = dynamic_cast<const astraCUDA::CDataGPU*>(in->getStorage());
 	assert(ins);
-	assert(!ins->getArray());
 	assert(stream.isValid());
 
 	std::array<int, 3> dims = out->getShape();
@@ -309,10 +305,8 @@ bool processVol3D(astra::CData3D *out, const astra::CData3D *in, float fParam, c
 	assert(out->getShape() == in->getShape());
 	astraCUDA::CDataGPU *outs = dynamic_cast<astraCUDA::CDataGPU*>(out->getStorage());
 	assert(outs);
-	assert(!outs->getArray());
 	const astraCUDA::CDataGPU *ins = dynamic_cast<const astraCUDA::CDataGPU*>(in->getStorage());
 	assert(ins);
-	assert(!ins->getArray());
 	assert(stream.isValid());
 
 	std::array<int, 3> dims = out->getShape();
@@ -341,13 +335,10 @@ bool processVol3D(astra::CData3D *out, const astra::CData3D *in1, const astra::C
 	assert(out->getShape() == in2->getShape());
 	astraCUDA::CDataGPU *outs = dynamic_cast<astraCUDA::CDataGPU*>(out->getStorage());
 	assert(outs);
-	assert(!outs->getArray());
 	const astraCUDA::CDataGPU *in1s = dynamic_cast<const astraCUDA::CDataGPU*>(in1->getStorage());
 	assert(in1s);
-	assert(!in1s->getArray());
 	const astraCUDA::CDataGPU *in2s = dynamic_cast<const astraCUDA::CDataGPU*>(in2->getStorage());
 	assert(in2s);
-	assert(!in2s->getArray());
 	assert(stream.isValid());
 
 	std::array<int, 3> dims = out->getShape();
@@ -379,13 +370,10 @@ bool processVol3D(astra::CData3D *out, const astra::CData3D *in1, const astra::C
 	assert(out->getShape() == in2->getShape());
 	astraCUDA::CDataGPU *outs = dynamic_cast<astraCUDA::CDataGPU*>(out->getStorage());
 	assert(outs);
-	assert(!outs->getArray());
 	const astraCUDA::CDataGPU *in1s = dynamic_cast<const astraCUDA::CDataGPU*>(in1->getStorage());
 	assert(in1s);
-	assert(!in1s->getArray());
 	const astraCUDA::CDataGPU *in2s = dynamic_cast<const astraCUDA::CDataGPU*>(in2->getStorage());
 	assert(in2s);
-	assert(!in2s->getArray());
 	assert(stream.isValid());
 
 	std::array<int, 3> dims = out->getShape();

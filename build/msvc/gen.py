@@ -200,7 +200,6 @@ P_astra["filters"]["CUDA\\cuda source"] = [
 "cuda\\2d\\sart.cu",
 "cuda\\2d\\util.cu",
 "cuda\\3d\\arith3d.cu",
-"cuda\\3d\\astra3d.cu",
 "cuda\\3d\\cone_bp.cu",
 "cuda\\3d\\cone_fp.cu",
 "cuda\\3d\\cone_cyl.cu",
