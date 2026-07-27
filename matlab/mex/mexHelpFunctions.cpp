@@ -65,6 +65,14 @@ string mexToString(const mxArray* pInput)
 		return StringUtil::doubleToString(mxGetScalar(pInput));
 	}
 
+	// is scalar logical?
+	if (mxIsLogical(pInput) && mxGetM(pInput)*mxGetN(pInput) == 1) {
+		if (mxGetScalar(pInput))
+			return "true";
+		else
+			return "false";
+	}
+
 	return "";
 }
 
@@ -177,7 +185,7 @@ bool structToXMLNode(XMLNode node, const mxArray* pStruct)
 		}
 
 		// scalar
-		else if (mxIsNumeric(pField) && mxGetM(pField)*mxGetN(pField) == 1) {
+		else if ((mxIsNumeric(pField) || mxIsLogical(pField)) && mxGetM(pField)*mxGetN(pField) == 1) {
 			string sValue = mexToString(pField);
 			node.addChildNode(sFieldName, sValue);
 		}
@@ -225,7 +233,7 @@ bool optionsToXMLNode(XMLNode node, const mxArray* pOptionStruct)
 		}
 	
 		// string or scalar
-		if (mxIsChar(pField) || mexIsScalar(pField)) {
+		if (mxIsChar(pField) || ((mxIsNumeric(pField) || mxIsLogical(pField)) && mxGetM(pField)*mxGetN(pField) == 1)) {
 			string sValue = mexToString(pField);
 			node.addOption(sFieldName, sValue);
 		}
