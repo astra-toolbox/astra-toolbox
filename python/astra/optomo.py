@@ -55,7 +55,6 @@ class OpTomo(scipy.sparse.linalg.LinearOperator):
     """
 
     def __init__(self,proj_id):
-        self.dtype = np.float32
         try:
             self.vg = projector.volume_geometry(proj_id)
             self.pg = projector.projection_geometry(proj_id)
@@ -76,7 +75,7 @@ class OpTomo(scipy.sparse.linalg.LinearOperator):
         self.sshape = functions.geom_size(self.pg)
         self.ssize = reduce(operator.mul,self.sshape)
 
-        self.shape = (self.ssize, self.vsize)
+        super().__init__( np.float32, (self.ssize, self.vsize) )
 
         self.proj_id = proj_id
 
