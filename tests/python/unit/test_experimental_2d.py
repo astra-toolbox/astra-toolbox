@@ -81,7 +81,7 @@ def proj_buffer():
 @pytest.mark.parametrize(
     'proj_geom', ['parallel', 'parallel_vec', 'fanflat', 'fanflat_vec'], indirect=True
 )
-@pytest.mark.parametrize('proj_type,', ['cpu', 'gpu'])
+@pytest.mark.parametrize('proj_type', ['cpu', 'gpu'])
 class TestAll:
     def test_direct_FP2D(self, proj_geom, projector, vol_data, proj_buffer):
         astra.experimental.direct_FP2D(projector, vol_data, proj_buffer)

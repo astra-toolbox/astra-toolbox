@@ -80,7 +80,7 @@ def proj_buffer():
 
 
 @pytest.mark.parametrize(
-    'proj_geom,', ['parallel3d', 'parallel3d_vec', 'cone', 'cone_vec'], indirect=True
+    'proj_geom', ['parallel3d', 'parallel3d_vec', 'cone', 'cone_vec'], indirect=True
 )
 class TestAll:
     def test_direct_FP3D(self, proj_geom, projector, vol_data, proj_buffer):

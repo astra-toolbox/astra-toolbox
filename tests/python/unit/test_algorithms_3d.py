@@ -159,7 +159,7 @@ def get_algorithm_output(algorithm_config, n_iter=None):
 
 
 @pytest.mark.parametrize(
-    'proj_geom,',
+    'proj_geom',
     ['parallel3d', 'parallel3d_vec', 'cone', 'cone_vec', 'cyl_cone_vec'],
     indirect=True
 )
@@ -175,7 +175,7 @@ def test_algorithms(proj_geom, algorithm_type):
 
 
 class TestOptions:
-    @pytest.mark.parametrize('proj_geom,', ['parallel3d', 'cone'], indirect=True)
+    @pytest.mark.parametrize('proj_geom', ['parallel3d', 'cone'], indirect=True)
     @pytest.mark.parametrize('algorithm_type', ['FP3D_CUDA', 'SIRT3D_CUDA', 'CGLS3D_CUDA'])
     def test_detector_supersampling_fp(self, proj_geom, algorithm_type):
         if algorithm_type == 'FP3D_CUDA':
@@ -188,7 +188,7 @@ class TestOptions:
         assert not np.allclose(output_with_supersampling, DATA_INIT_VALUE)
         assert not np.allclose(output_with_supersampling, output_no_supersampling)
 
-    @pytest.mark.parametrize('proj_geom,', ['parallel3d', 'cone'], indirect=True)
+    @pytest.mark.parametrize('proj_geom', ['parallel3d', 'cone'], indirect=True)
     @pytest.mark.parametrize(
         'algorithm_type', ['BP3D_CUDA', 'FDK_CUDA', 'SIRT3D_CUDA', 'CGLS3D_CUDA']
     )
@@ -256,7 +256,7 @@ class TestOptions:
         assert not np.allclose(reconstruction_with_short_scan, DATA_INIT_VALUE)
         assert not np.allclose(reconstruction_with_short_scan, reconstruction_no_short_scan)
 
-    @pytest.mark.parametrize('proj_geom,', ['parallel3d'], indirect=True)
+    @pytest.mark.parametrize('proj_geom', ['parallel3d'], indirect=True)
     def test_min_max_constraint(self, proj_geom):
         algorithm_no_constrains = make_algorithm_config('SIRT3D_CUDA', proj_geom)
         algorithm_with_constrains = make_algorithm_config(
@@ -269,7 +269,7 @@ class TestOptions:
         assert reconstruction_with_constrains.min() == 0.0
         assert reconstruction_with_constrains.max() == 0.125
 
-    @pytest.mark.parametrize('proj_geom,', ['parallel3d'], indirect=True)
+    @pytest.mark.parametrize('proj_geom', ['parallel3d'], indirect=True)
     @pytest.mark.parametrize('algorithm_type', ['SIRT3D_CUDA', 'CGLS3D_CUDA'])
     def test_reconstruction_mask(self, proj_geom,  reconstruction_mask, algorithm_type):
         algorithm_config = make_algorithm_config(
@@ -280,7 +280,7 @@ class TestOptions:
         mask = (astra.data3d.get(reconstruction_mask) > 0)
         assert np.allclose(reconstruction[~mask], DATA_INIT_VALUE)
 
-    @pytest.mark.parametrize('proj_geom,', ['parallel3d'], indirect=True)
+    @pytest.mark.parametrize('proj_geom', ['parallel3d'], indirect=True)
     def test_sinogram_mask(self, proj_geom, sinogram_mask):
         algorithm_no_mask = make_algorithm_config('SIRT3D_CUDA', proj_geom)
         algorithm_with_sino_mask = make_algorithm_config('SIRT3D_CUDA', proj_geom,
@@ -290,7 +290,7 @@ class TestOptions:
         assert not np.allclose(reconstruction_with_sino_mask, DATA_INIT_VALUE)
         assert not np.allclose(reconstruction_with_sino_mask, reconstruction_no_mask)
 
-    @pytest.mark.parametrize('proj_geom,', ['parallel3d'], indirect=True)
+    @pytest.mark.parametrize('proj_geom', ['parallel3d'], indirect=True)
     @pytest.mark.parametrize('algorithm_type', ['SIRT3D_CUDA', 'CGLS3D_CUDA'])
     def test_get_res_norm(self, proj_geom, algorithm_type):
         algorithm_config = make_algorithm_config(algorithm_type, proj_geom)
@@ -301,7 +301,7 @@ class TestOptions:
         delete_algorithm_objects(algorithm_config)
         assert res_norm > 0.0
 
-    @pytest.mark.parametrize('proj_geom,', ['parallel3d'], indirect=True)
+    @pytest.mark.parametrize('proj_geom', ['parallel3d'], indirect=True)
     @pytest.mark.parametrize('algorithm_type', ['SIRT3D_CUDA', 'CGLS3D_CUDA'])
     def test_get_res_norm_invariance(self, proj_geom, algorithm_type):
         # Test that get_res_norm returns consistent results, and also doesn't

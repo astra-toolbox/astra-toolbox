@@ -181,7 +181,7 @@ def test_cpu_algorithms(projector, proj_geom, algorithm_type):
 
 
 @pytest.mark.parametrize(
-    'proj_geom,', ['parallel', 'parallel_vec', 'fanflat', 'fanflat_vec'], indirect=True
+    'proj_geom', ['parallel', 'parallel_vec', 'fanflat', 'fanflat_vec'], indirect=True
 )
 @pytest.mark.parametrize(
     'algorithm_type',
@@ -309,7 +309,7 @@ class TestOptionsCPU:
 
 
 class TestOptionsGPU:
-    @pytest.mark.parametrize('proj_geom,', ['parallel', 'fanflat'], indirect=True)
+    @pytest.mark.parametrize('proj_geom', ['parallel', 'fanflat'], indirect=True)
     def test_detector_supersampling_fp(self, proj_geom):
         algorithm_no_supersampling = make_algorithm_config(
             algorithm_type='FP_CUDA', proj_geom=proj_geom
@@ -322,7 +322,7 @@ class TestOptionsGPU:
         assert not np.allclose(proj_with_supersampling, DATA_INIT_VALUE)
         assert not np.allclose(proj_with_supersampling, proj_no_supersampling)
 
-    @pytest.mark.parametrize('proj_geom,', ['parallel', 'fanflat'], indirect=True)
+    @pytest.mark.parametrize('proj_geom', ['parallel', 'fanflat'], indirect=True)
     @pytest.mark.parametrize('algorithm_type', ['SIRT_CUDA', 'SART_CUDA', 'CGLS_CUDA', 'EM_CUDA'])
     def test_detector_supersampling_iterative(self, proj_geom, algorithm_type):
         algorithm_no_supersampling = make_algorithm_config(algorithm_type, proj_geom)
@@ -334,7 +334,7 @@ class TestOptionsGPU:
         assert not np.allclose(rec_with_supersampling, DATA_INIT_VALUE)
         assert not np.allclose(rec_with_supersampling, rec_no_supersampling)
 
-    @pytest.mark.parametrize('proj_geom,', ['parallel', 'fanflat'], indirect=True)
+    @pytest.mark.parametrize('proj_geom', ['parallel', 'fanflat'], indirect=True)
     @pytest.mark.parametrize(
         'algorithm_type', ['BP_CUDA', 'SIRT_CUDA', 'CGLS_CUDA', 'EM_CUDA']
     )
@@ -402,7 +402,7 @@ class TestOptionsGPU:
         assert not np.allclose(reconstruction_with_short_scan, DATA_INIT_VALUE)
         assert not np.allclose(reconstruction_with_short_scan, reconstruction_no_short_scan)
 
-    @pytest.mark.parametrize('proj_geom,', ['parallel'], indirect=True)
+    @pytest.mark.parametrize('proj_geom', ['parallel'], indirect=True)
     @pytest.mark.parametrize('algorithm_type', ['SIRT_CUDA', 'SART_CUDA'])
     def test_min_max_constraint(self, proj_geom, algorithm_type):
         algorithm_no_constrains = make_algorithm_config(algorithm_type, proj_geom)
@@ -416,7 +416,7 @@ class TestOptionsGPU:
         assert reconstruction_with_constrains.min() == 0.0
         assert reconstruction_with_constrains.max() == 0.125
 
-    @pytest.mark.parametrize('proj_geom,', ['parallel'], indirect=True)
+    @pytest.mark.parametrize('proj_geom', ['parallel'], indirect=True)
     @pytest.mark.parametrize('algorithm_type', ['SIRT_CUDA', 'SART_CUDA', 'CGLS_CUDA'])
     def test_reconstruction_mask(self, proj_geom, algorithm_type, reconstruction_mask):
         algorithm_config = make_algorithm_config(
@@ -427,7 +427,7 @@ class TestOptionsGPU:
         mask = (astra.data2d.get(reconstruction_mask) > 0)
         assert np.allclose(reconstruction[~mask], DATA_INIT_VALUE)
 
-    @pytest.mark.parametrize('proj_geom,', ['parallel'], indirect=True)
+    @pytest.mark.parametrize('proj_geom', ['parallel'], indirect=True)
     def test_sinogram_mask(self, proj_geom, sinogram_mask):
         algorithm_no_mask = make_algorithm_config(algorithm_type='SIRT_CUDA', proj_geom=proj_geom)
         algorithm_with_sino_mask = make_algorithm_config(
@@ -439,7 +439,7 @@ class TestOptionsGPU:
         assert not np.allclose(reconstruction_with_sino_mask, DATA_INIT_VALUE)
         assert not np.allclose(reconstruction_with_sino_mask, reconstruction_no_mask)
 
-    @pytest.mark.parametrize('proj_geom,', ['parallel'], indirect=True)
+    @pytest.mark.parametrize('proj_geom', ['parallel'], indirect=True)
     @pytest.mark.parametrize('projection_order', ['random', 'sequential', 'custom'])
     def test_sart_projection_order(self, proj_geom, projection_order):
         options = {'ProjectionOrder': projection_order}
@@ -453,7 +453,7 @@ class TestOptionsGPU:
         reconstruction = get_algorithm_output(algorithm_config)
         assert not np.allclose(reconstruction, DATA_INIT_VALUE)
 
-    @pytest.mark.parametrize('proj_geom,', ['parallel'], indirect=True)
+    @pytest.mark.parametrize('proj_geom', ['parallel'], indirect=True)
     @pytest.mark.parametrize('algorithm_type', ['SIRT_CUDA', 'SART_CUDA', 'CGLS_CUDA', 'EM_CUDA'])
     def test_get_res_norm(self, proj_geom, algorithm_type):
         algorithm_config = make_algorithm_config(algorithm_type, proj_geom)
@@ -464,7 +464,7 @@ class TestOptionsGPU:
         delete_algorithm_objects(algorithm_config)
         assert res_norm > 0.0
 
-    @pytest.mark.parametrize('proj_geom,', ['parallel'], indirect=True)
+    @pytest.mark.parametrize('proj_geom', ['parallel'], indirect=True)
     @pytest.mark.parametrize('algorithm_type', ['SIRT_CUDA', 'SART_CUDA', 'CGLS_CUDA', 'EM_CUDA'])
     def test_get_res_norm_invariance(self, proj_geom, algorithm_type):
         # Test that get_res_norm returns consistent results, and also doesn't
