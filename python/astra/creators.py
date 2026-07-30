@@ -539,11 +539,11 @@ def create_reconstruction(rec_type, proj_id, sinogram, iterations=1, use_mask='n
         cfg['options']['ReconstructionMaskId'] = mask_id
     if not filterType == None:
         cfg['FilterType'] = filterType
-    if not filterData == None:
+    if filterData is not None:
         if isinstance(filterData, np.ndarray):
             nexpow = int(
                 pow(2, math.ceil(math.log(2 * proj_geom['DetectorCount'], 2))))
-            filtSize = nexpow / 2 + 1
+            filtSize = nexpow // 2 + 1
             filt_proj_geom = create_proj_geom(
                 'parallel', 1.0, filtSize, proj_geom['ProjectionAngles'])
             filt_id = data2d.create('-sino', filt_proj_geom, filterData)
@@ -564,7 +564,7 @@ def create_reconstruction(rec_type, proj_id, sinogram, iterations=1, use_mask='n
         data2d.delete(sino_id)
     if use_mask == 'yes' and isinstance(mask, np.ndarray):
         data2d.delete(mask_id)
-    if not filterData == None:
+    if filterData is not None:
         if isinstance(filterData, np.ndarray):
             data2d.delete(filt_id)
     if returnData:
