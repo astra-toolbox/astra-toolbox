@@ -30,6 +30,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/cuda/3d/util3d.h"
 #include "astra/cuda/3d/dims3d.h"
 #include "astra/cuda/3d/proj3d.h"
+#include "astra/cuda/3d/cone_bp_internal.h"
 
 #include <cstdio>
 #include <cassert>
@@ -52,42 +53,9 @@ static const unsigned int g_detBlockV = 32;
 
 namespace astraCUDA3d {
 
-struct DevConeParams {
-	float4 fNumU;
-	float4 fNumV;
-	float4 fDen;
-};
-
 __constant__ DevConeParams gC_C[g_MaxAngles];
 
 using TransferConstantsBuffer = TransferConstantsBuffer_t<DevConeParams>;
-
-class ConeBP_t : public VoxelDrivenProjector3D<TransferConstantsBuffer, SConeProjection> {
-public:
-	virtual bool prepareProjections(cudaPitchedPtr D_tmpProjBuffer,
-	                                cudaPitchedPtr D_projData,
-	                                const SConeProjection *D_geom,
-	                                unsigned int startAngle,
-	                                const SDimensions3D& bufDims,
-	                                const SDimensions3D& dims,
-	                                const SProjectorParams3D& params,
-	                                cudaStream_t stream) override;
-
-	virtual bool transferConstants(const SConeProjection* angles,
-	                               unsigned int iProjAngles,
-	                               const SProjectorParams3D& params,
-	                               TransferConstantsBuffer& buf,
-	                               cudaStream_t stream) override;
-
-	virtual bool dispatchKernel_BP(float *D_volData, unsigned int volPitch,
-	                               cudaTextureObject_t tex,
-	                               unsigned int angleCount,
-	                               const SDimensions3D& dims,
-	                               const SProjectorParams3D& params,
-	                               cudaStream_t stream) override;
-};
-
-
 
 
 template<Cuda3DProjectionKernel KERNEL, unsigned int ZSIZE>
