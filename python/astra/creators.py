@@ -537,9 +537,9 @@ def create_reconstruction(rec_type, proj_id, sinogram, iterations=1, use_mask='n
         else:
             mask_id = mask
         cfg['options']['ReconstructionMaskId'] = mask_id
-    if not filterType == None:
+    if filterType is not None:
         cfg['FilterType'] = filterType
-    if not filterData == None:
+    if filterData is not None:
         if isinstance(filterData, np.ndarray):
             nexpow = int(
                 pow(2, math.ceil(math.log(2 * proj_geom['DetectorCount'], 2))))
@@ -564,7 +564,7 @@ def create_reconstruction(rec_type, proj_id, sinogram, iterations=1, use_mask='n
         data2d.delete(sino_id)
     if use_mask == 'yes' and isinstance(mask, np.ndarray):
         data2d.delete(mask_id)
-    if not filterData == None:
+    if filterData is not None:
         if isinstance(filterData, np.ndarray):
             data2d.delete(filt_id)
     if returnData:

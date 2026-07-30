@@ -72,7 +72,7 @@ def data_op(op, data, scalar, gpu_core, mask=None):
     cfg['Operation'] = op
     cfg['Scalar'] = scalar
     cfg['DataId'] = data
-    if not mask == None:
+    if mask is not None:
         cfg['MaskId'] = mask
     cfg['option']['GPUindex'] = gpu_core
     alg_id = algorithm.create(cfg)
