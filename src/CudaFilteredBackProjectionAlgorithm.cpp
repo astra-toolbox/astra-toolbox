@@ -79,11 +79,16 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(const Config& _cfg)
 
 	initializeFromProjector();
 
+	m_bIsInitialized = check();
+	if (!m_bIsInitialized)
+		return false;
+
+	// Set GPU and prepare filter if checks passed
 	if (m_iGPUIndex != -1)
 		astraCUDA::setGPUIndex(m_iGPUIndex);
+
 	m_filter = astraCUDA::prepareFilter(m_filterConfig, m_geometry.getDims());
 
-	m_bIsInitialized = check();
 	return m_bIsInitialized;
 }
 
@@ -123,11 +128,16 @@ bool CCudaFilteredBackProjectionAlgorithm::initialize(CFloat32ProjectionData2D *
 
 	m_filterConfig.m_fParameter = _fFilterParameter;
 
+	m_bIsInitialized = check();
+	if (!m_bIsInitialized)
+		return false;
+
+	// Set GPU and prepare filter if checks passed
 	if (m_iGPUIndex != -1)
 		astraCUDA::setGPUIndex(m_iGPUIndex);
+
 	m_filter = astraCUDA::prepareFilter(m_filterConfig, m_geometry.getDims());
 
-	m_bIsInitialized = check();
 	return m_bIsInitialized;
 }
 
