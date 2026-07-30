@@ -541,11 +541,17 @@ def create_reconstruction(rec_type, proj_id, sinogram, iterations=1, use_mask='n
         cfg['FilterType'] = filterType
     if filterData is not None:
         if isinstance(filterData, np.ndarray):
-            nexpow = int(
-                pow(2, math.ceil(math.log(2 * proj_geom['DetectorCount'], 2))))
-            filtSize = nexpow / 2 + 1
-            filt_proj_geom = create_proj_geom(
-                'parallel', 1.0, filtSize, proj_geom['ProjectionAngles'])
+            if filterData.ndim == 1:
+                filterData = np.expand_dims(filterData, axis=0)
+            if filterData.ndim != 2:
+                raise ValueError("filterData must be 1D or 2D")
+            if filterData.shape[0] == 1:
+                angles = np.array([0.], dtype=np.float32)
+            else:
+                angles = proj_geom['ProjectionAngles']
+            # The reconstruction algorithm will further check if the shape of
+            # filterData is appropriate for the given filter type.
+            filt_proj_geom = create_proj_geom('parallel', 1.0, filterData.shape[1], angles)
             filt_id = data2d.create('-sino', filt_proj_geom, filterData)
         else:
             filt_id = filterData
