@@ -347,6 +347,8 @@ bool FP(astra::CData3D *projData, const astra::CData3D *volData, const astra::Ge
 		case ker3d_default:
 		case ker3d_2d_weighting:
 		case ker3d_matched_bp:
+		case ker3d_dfdx: case ker3d_dfdy: case ker3d_dfdz:
+		case ker3d_dfdxs: case ker3d_dfdys: case ker3d_dfdzs:
 			ok &= Par3DFP(vols->getPtr(), projs->getPtr(), geom.getDims(), pParProjs, params);
 			break;
 		case ker3d_sum_square_weights:
