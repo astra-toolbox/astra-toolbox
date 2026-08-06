@@ -248,5 +248,5 @@ for k, l in __combinations_ss.items():
       for dss in [1, 2]:
         def h(k, v, a, i, vss, dss):
           return lambda self: self.single_test(k, v, a, i, vss, dss)
-        setattr(TestRecScale, 'test_ss_' + a + '_' + k + '_' + v + '_' + str(vss) + '_' + str(dss), h(k, A['projector'], A['alg'], A['iters'], vss, dss))
+        setattr(TestRecScale, 'test_ss_' + A['alg'] + '_' + k + '_' + A['projector'] + '_' + str(vss) + '_' + str(dss), h(k, A['projector'], A['alg'], A['iters'], vss, dss))
 
