@@ -283,24 +283,142 @@ reducePart(const CCompositeGeometryManager::CPart *base,
            const CCompositeGeometryManager::CPart *other);
 
 
-static bool requiresInputGPUAllocation(const CCompositeGeometryManager::SJobInternal &job)
-{
-	if (job.pInput->pData->getStorage()->isMemory())
-		return true;
-	if (job.eType == CCompositeGeometryManager::JOB_FDK)
-		return true;
-	return false;
-}
-
-static bool requiresOutputGPUAllocation(const CCompositeGeometryManager::CPart &part)
+static bool requiresGPUAllocation(const CCompositeGeometryManager::CPart &part)
 {
 	return part.pData->getStorage()->isMemory();
+}
+
+// Counted in elements, assuming the input isn't split into subparts further.
+static size_t getRequiredInputBufferSize(const CCompositeGeometryManager::CPart &input)
+{
+	size_t x, y, z;
+	input.getDims(x, y, z);
+
+	// TODO: delegate this to the projector that has the constant 32
+	size_t bufSlices = 32;
+
+	if (input.eType == CCompositeGeometryManager::CPart::PART_PROJ) {
+		size_t sliceSize = x * z;
+		size_t slices = std::min(y, bufSlices);
+		// Two buffers, each of size slices * sliceSize
+		return 2 * slices * sliceSize;
+
+	} else if (input.eType == CCompositeGeometryManager::CPart::PART_VOL) {
+		size_t sizeX = 2 * std::min(x, bufSlices) * y * z;
+		size_t sizeY = 2 * std::min(y, bufSlices) * x * z;
+		size_t sizeZ = 2 * std::min(z, bufSlices) * x * y;
+		return std::max(sizeX, std::max(sizeY, sizeZ));
+	} else {
+		ASTRA_ERROR("Internal error: invalid part type");
+		return 0;
+	}
+}
+
+static size_t getMaxInputSlices(const CCompositeGeometryManager::CPart &input, size_t remainingSize, int axis, bool inputOnGPU)
+{
+	// TODO: delegate this to the projector that has the constant 32
+	size_t bufSlices = 32;
+
+	if (input.eType == CCompositeGeometryManager::CPart::PART_PROJ) {
+		if (axis != 1) {
+			// TODO: generalize this when it becomes necessary for the splitting logic
+			ASTRA_ERROR("Internal error: splitting projection over unexpected axis.");
+			return 0;
+		}
+
+		size_t x, y, z;
+		input.getDims(x, y, z);
+
+		size_t sliceSize = x * z;
+		size_t sliceCount = remainingSize / sliceSize;
+
+		if (inputOnGPU) {
+			// These slices can all be allocated to the temp buffer.
+			if (sliceCount >= 2*bufSlices) {
+				// Everything fits
+				return y;
+			} else {
+				// We have a problem: no room for temp buffer.
+				// TODO: Handle this
+				return 0;
+			}
+		} else {
+			// Slices must be split between input and two temp buffers
+			if (sliceCount >= 3*bufSlices) {
+				return sliceCount - 2*bufSlices;
+			} else {
+				return sliceCount / 3;
+			}
+		}
+
+
+	} else if (input.eType == CCompositeGeometryManager::CPart::PART_VOL) {
+		if (axis != 2) {
+			// TODO: generalize this when it becomes necessary for the splitting logic
+			ASTRA_ERROR("Internal error: splitting volume over unexpected axis.");
+			return 0;
+		}
+
+		size_t d[3];
+		input.getDims(d[0], d[1], d[2]);
+
+		size_t maxSlices;
+
+		// Buffer size when projecting along Z direction
+		// TODO: de-duplicate with PART_PROJ case
+		size_t sliceSize = d[0] * d[1];
+		size_t sliceCount = remainingSize / sliceSize;
+
+		if (inputOnGPU) {
+			// These slices can all be allocated to the temp buffer.
+			if (sliceCount >= 2*bufSlices) {
+				// Everything fits
+				maxSlices = d[2];
+			} else {
+				// We have a problem: no room for temp buffer.
+				// TODO: Handle this
+				maxSlices = 0;
+			}
+		} else {
+			// Slices must be split between input and two temp buffers
+			if (sliceCount >= 3*bufSlices) {
+				maxSlices = sliceCount - 2*bufSlices;
+			} else {
+				maxSlices = sliceCount / 3;
+			}
+		}
+
+		// Buffer size when projection along X or Y direction
+		for (int i = 0; i < 2; ++i) {
+			sliceSize = d[1-i] * std::min(bufSlices, d[i]);
+			sliceCount = remainingSize / sliceSize;
+			if (inputOnGPU) {
+				// These slices can all be allocated to the temp buffer.
+				maxSlices = std::min(maxSlices, sliceCount / 2);
+			} else {
+				// Split between input and two temp buffers
+				maxSlices = std::min(maxSlices, sliceCount / 3);
+			}
+		}
+
+		return maxSlices;
+	} else {
+		ASTRA_ERROR("Internal error: invalid part type");
+		return 0;
+	}
 }
 
 bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize, int div, TJobSetInternal &split)
 {
 	int maxBlockDim = astraCUDA3d::maxBlockDimension();
 	ASTRA_DEBUG("Found max block dim %d", maxBlockDim);
+
+	// Reduce maxBlockDim to ensure there's room for at least 3(?) slices of maxBlockDim x maxBlockDim floats?
+	// (But don't go below 512, since then we probably won't have enough memory for misc allocations anyway...)
+	while (maxBlockDim > 512 && (size_t)maxBlockDim*maxBlockDim*3 > maxSize) {
+		maxBlockDim /= 2;
+		ASTRA_DEBUG("Shrinking maxBlockDim to %d to fit available memory", maxBlockDim);
+	}
 
 	split.clear();
 
@@ -321,22 +439,39 @@ bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize,
 		//    c. create jobs for new (input,output) subparts
 
 		bool allInputOnGPU = true;
+		size_t maxInputBufferSize = 0;
 		for (const SJobInternal &job : L) {
-			if (requiresInputGPUAllocation(job)) {
+			if (requiresGPUAllocation(*job.pInput)) {
 				allInputOnGPU = false;
 				break;
+			} else {
+				maxInputBufferSize = std::max(maxInputBufferSize, getRequiredInputBufferSize(*job.pInput));
 			}
 		}
 
-		// Three potential buffers: input, output, texture array
+		// Three potential buffers: input, output, temporary input buffers
 		size_t outputMemSize;
-		if (requiresOutputGPUAllocation(*pOutput)) {
+		if (requiresGPUAllocation(*pOutput)) {
 			if (allInputOnGPU) {
-				// Needed buffers: output, texture array
-				outputMemSize = maxSize/2;
+				if (maxSize < maxInputBufferSize) {
+					// TODO: how do we handle this?
+					ASTRA_WARN("Possibly not enough memory for temporary buffer for GPU input tensor");
+					outputMemSize = 1;
+				} else {
+					// Needed buffers: output, temp
+					outputMemSize = maxSize - maxInputBufferSize;
+				}
 			} else {
-				// Needed buffers: input, output, texture array
-				outputMemSize = maxSize/3;
+				// Needed buffers: input, output, temp
+				// This is the common case.
+
+				if (pOutput->eType == CPart::PART_PROJ) {
+					// We use 33% of memory for the output buffer
+					outputMemSize = (1*maxSize)/3;
+				} else {
+					// We use 75% of memory for the output buffer
+					outputMemSize = (3*maxSize)/4;
+				}
 			}
 		} else {
 			// Output already on GPU
@@ -344,11 +479,10 @@ bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize,
 		}
 
 		TPartList splitOutput;
-		// We now split projection data over the angle axis by default,
-		// and volume data over the z axis.
+		// We split projection data over the v axis by default,
+		// and volume data over the z axis. This behaves well for geometries
+		// where the v and z axes are somewhat aligned.
 		int axisOutput = 2;
-		if (pOutput->eType == CPart::PART_PROJ)
-			axisOutput = 1;
 
 		splitPart(axisOutput, std::move(pOutput), splitOutput, outputMemSize, UINT_MAX, div);
 #if 0
@@ -372,7 +506,7 @@ bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize,
 
 			std::unique_ptr<CPart> outputPart{std::move(*i_out)};
 
-			if (requiresOutputGPUAllocation(*outputPart)) {
+			if (requiresGPUAllocation(*outputPart)) {
 				if (!L.empty()) {
 					costHeuristic_download += outputPart->getSize();
 					if (L.front().eMode == MODE_ADD)
@@ -400,12 +534,6 @@ bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize,
 					continue;
 				}
 
-				size_t remainingSize = maxSize;
-				if (requiresOutputGPUAllocation(*outputPart))
-					remainingSize -= outputPart->getSize();
-				if (requiresInputGPUAllocation(job))
-					remainingSize /= 2;
-
 				int axisInputFirst = 2;
 				int axisInputSecond = 0;
 				int axisInputThird = 1;
@@ -429,9 +557,23 @@ bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize,
 				for (std::unique_ptr<CPart> &inputPart : splitInput2)
 					splitPart(axisInputThird, std::move(inputPart), splitInput3, 1024ULL*1024*1024*1024, maxBlockDim, 1);
 
+
+				size_t remainingSize = maxSize;
+				if (requiresGPUAllocation(*outputPart))
+					remainingSize -= outputPart->getSize();
+
+				// We split each remaining input part along z axis (volumes) or angle axis (projections).
+				// We compute the maximum number of slices that fit in remaining memory, when also counting
+				// the temporary buffer size needed (which itself depends on the number of slices).
+
 				splitInput2.clear();
-				for (std::unique_ptr<CPart> &inputPart : splitInput3)
-					splitPart(axisInputFirst, std::move(inputPart), splitInput, remainingSize, maxBlockDim, 1);
+				for (std::unique_ptr<CPart> &inputPart : splitInput3) {
+					size_t maxSlices = getMaxInputSlices(*inputPart, remainingSize, axisInputFirst, !requiresGPUAllocation(*job.pInput));
+					if (maxSlices == 0)
+						maxSlices = 1; // TODO: Handle this case where we expect nothing will fit.
+
+					splitPart(axisInputFirst, std::move(inputPart), splitInput, 1024ULL*1024*1024*1024, maxSlices, 1);
+				}
 				splitInput3.clear();
 
 				ASTRA_DEBUG("Input split into %zu parts", splitInput.size());
@@ -449,7 +591,7 @@ bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize,
 					size_t tx, ty, tz;
 					newjob.pInput->getDims(tx, ty, tz);
 
-					size_t memUsage = sizeof(float) * (2 * tx * ty * tz + outx * outy * outz);
+					size_t memUsage = sizeof(float) * (tx * ty * tz + outx * outy * outz + getRequiredInputBufferSize(*newjob.pInput));
 					costHeuristic_memory = std::max(costHeuristic_memory, memUsage);
 
 					switch (newjob.eType) {
@@ -465,7 +607,7 @@ bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize,
 							break;
 					}
 
-					if (requiresInputGPUAllocation(newjob))
+					if (requiresGPUAllocation(*newjob.pInput))
 						costHeuristic_upload += tx * ty * tz;
 
 					newjobs.push_back(std::move(newjob));

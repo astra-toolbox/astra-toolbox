@@ -70,7 +70,10 @@ int maxBlockDimension()
 		return 0;
 	}
 
-	return std::min(props.maxTexture3D[0], std::min(props.maxTexture3D[1], props.maxTexture3D[2]));
+	int width = props.maxTexture2DLayered[0];
+	int height = props.maxTexture2DLayered[1];
+
+	return std::min(width, height);
 }
 
 astra::CDataStorage *allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Mem3DZeroMode zero)
