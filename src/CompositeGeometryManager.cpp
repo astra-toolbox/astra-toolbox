@@ -66,6 +66,8 @@ CCompositeGeometryManager::CCompositeGeometryManager()
 		m_iMaxSize = s_params->memory;
 		m_GPUIndices = s_params->GPUIndices;
 	}
+
+	m_debuggingFlags = 0;
 }
 
 
@@ -117,6 +119,82 @@ public:
 	}
 };
 
+static void* allocDebuggingMemory()
+{
+	// TODO: allow shrinking this buffer size
+	void *mem = nullptr;
+	size_t size = astraCUDA::totalGPUMemory();
+#ifdef _MSC_VER
+	commonStorage = _aligned_malloc(size, 16);
+#else
+	int ret = posix_memalign(&mem, 16, size);
+	assert(ret == 0);
+#endif
+	return mem;
+}
+
+class CDebuggingDataMemory : public CDataMemory<float32> {
+public:
+	CDebuggingDataMemory() : CDataMemory()
+	{
+		// Allocate single host memory buffer equal to GPU memory size.
+		// NB: This looks at the currently active GPU
+		// NB: This memory is never freed
+		static void *commonStorage = allocDebuggingMemory();
+		m_pfData = (float32*)commonStorage;
+	}
+};
+
+_AstraExport CDataStorage* createDebuggingDataStorage()
+{
+	return new CDebuggingDataMemory();
+}
+
+class CDebuggingMemoryHandler : public CDataMemoryHandler {
+public:
+	CDebuggingMemoryHandler(const CCompositeGeometryManager::CPart &part, astraCUDA3d::Mem3DZeroMode zero, unsigned int flags)
+	: CDataMemoryHandler(part, zero)
+	{
+		doUpload = !(flags & CCompositeGeometryManager::DEBUGCGM_NO_UPLOAD);
+		doDownload = !(flags & CCompositeGeometryManager::DEBUGCGM_NO_DOWNLOAD);
+	}
+
+	virtual bool copyToGPUMemory(const astraCUDA3d::SSubDimensions3D &) {
+		if (!doUpload) {
+			ASTRA_DEBUG("Skipping upload");
+			return true;
+		}
+		// TODO: check buffer is large enough
+		astraCUDA3d::SSubDimensions3D fake;
+		std::array<int, 3> dims = _data->getShape();
+		fake.nx = fake.subnx = dims[0];
+		fake.ny = fake.subny = dims[1];
+		fake.nz = fake.subnz = dims[2];
+		fake.pitch = dims[0];
+		fake.subx = fake.suby = fake.subz = 0;
+		return astraCUDA3d::copyToGPUMemory(_dataSource, _data, fake);
+	}
+	virtual bool copyFromGPUMemory(const astraCUDA3d::SSubDimensions3D &) {
+		if (!doDownload) {
+			ASTRA_DEBUG("Skipping download");
+			return true;
+		}
+		// TODO: check buffer is large enough
+		astraCUDA3d::SSubDimensions3D fake;
+		std::array<int, 3> dims = _data->getShape();
+		fake.nx = fake.subnx = dims[0];
+		fake.ny = fake.subny = dims[1];
+		fake.nz = fake.subnz = dims[2];
+		fake.pitch = dims[0];
+		fake.subx = fake.suby = fake.subz = 0;
+		return astraCUDA3d::copyFromGPUMemory(_dataSource, _data, fake);
+	}
+private:
+	bool doUpload;
+	bool doDownload;
+};
+
+
 class CDataGPUHandler : public CGPUMemoryHandler {
 public:
 	CDataGPUHandler(const CCompositeGeometryManager::CPart& part, astraCUDA3d::Mem3DZeroMode zero);
@@ -162,11 +240,15 @@ bool CDataGPUHandler::copyFromGPUMemory(const astraCUDA3d::SSubDimensions3D &pos
 }
 
 
-std::unique_ptr<CGPUMemoryHandler> createGPUMemoryHandler(const CCompositeGeometryManager::CPart &part, astraCUDA3d::Mem3DZeroMode zero) {
-	if (part.pData->getStorage()->isMemory())
+std::unique_ptr<CGPUMemoryHandler> createGPUMemoryHandler(const CCompositeGeometryManager::CPart &part, astraCUDA3d::Mem3DZeroMode zero, unsigned int debuggingFlags) {
+	if (dynamic_cast<CDebuggingDataMemory*>(part.pData->getStorage())) {
+		return std::unique_ptr<CGPUMemoryHandler>(new CDebuggingMemoryHandler(part, zero, debuggingFlags));
+	}
+	if (part.pData->getStorage()->isMemory()) {
 		return std::unique_ptr<CGPUMemoryHandler>(new CDataMemoryHandler(part, zero));
-	else
+	} else {
 		return std::unique_ptr<CGPUMemoryHandler>(new CDataGPUHandler(part, zero));
+	}
 }
 
 
@@ -222,7 +304,10 @@ bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize,
 
 	split.clear();
 
-	size_t costHeuristic = 0;
+	size_t costHeuristic_compute = 0;
+	size_t costHeuristic_upload = 0;
+	size_t costHeuristic_download = 0;
+	size_t costHeuristic_memory = 0;
 
 	for (TJobSetInternal::iterator i = jobs.begin(); i != jobs.end(); ++i)
 	{
@@ -286,6 +371,17 @@ bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize,
 			TJobListInternal newjobs;
 
 			std::unique_ptr<CPart> outputPart{std::move(*i_out)};
+
+			if (requiresOutputGPUAllocation(*outputPart)) {
+				if (!L.empty()) {
+					costHeuristic_download += outputPart->getSize();
+					if (L.front().eMode == MODE_ADD)
+						costHeuristic_upload += outputPart->getSize();
+				}
+			}
+			size_t outx, outy, outz;
+			outputPart->getDims(outx, outy, outz);
+
 			for (const SJobInternal &job : L)
 			{
 				std::unique_ptr<CPart> input = reducePart(job.pInput.get(), outputPart.get());
@@ -298,7 +394,9 @@ bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize,
 					newjob.pProjector = job.pProjector;
 					newjob.FDKSettings = job.FDKSettings;
 					newjob.eType = JOB_NOP;
+					newjob.debuggingFlags = m_debuggingFlags;
 					newjobs.push_back(std::move(newjob));
+					ASTRA_DEBUG("splitJobs: new NOP job: -> %zu x %zu x %zu", outx, outy, outz);
 					continue;
 				}
 
@@ -346,20 +444,29 @@ bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize,
 					newjob.pProjector = job.pProjector;
 					newjob.FDKSettings = job.FDKSettings;
 					newjob.eType = job.eType;
+					newjob.debuggingFlags = m_debuggingFlags;
 
 					size_t tx, ty, tz;
 					newjob.pInput->getDims(tx, ty, tz);
 
+					size_t memUsage = sizeof(float) * (2 * tx * ty * tz + outx * outy * outz);
+					costHeuristic_memory = std::max(costHeuristic_memory, memUsage);
+
 					switch (newjob.eType) {
 						case JOB_FP:
-							costHeuristic += outputPart.get()->getSize() * cbrt(tx * ty * tz);
+							costHeuristic_compute += outputPart.get()->getSize() * cbrt(tx * ty * tz);
+							ASTRA_DEBUG("splitJobs: new FP job: %zu x %zu x %zu -> %zu x %zu x %zu (%zu bytes)", tx, ty, tz, outx, outy, outz, memUsage);
 							break;
 						case JOB_BP: case JOB_FDK:
-							costHeuristic += outputPart.get()->getSize() * ty;
+							costHeuristic_compute += outputPart.get()->getSize() * ty;
+							ASTRA_DEBUG("splitJobs: new %s job: %zu x %zu x %zu -> %zu x %zu x %zu (%zu bytes)", (newjob.eType == JOB_BP ? "BP" : "FDK"), tx, ty, tz, outx, outy, outz, memUsage);
 							break;
 						case JOB_NOP:
 							break;
 					}
+
+					if (requiresInputGPUAllocation(newjob))
+						costHeuristic_upload += tx * ty * tz;
 
 					newjobs.push_back(std::move(newjob));
 
@@ -369,11 +476,15 @@ bool CCompositeGeometryManager::splitJobs(TJobSetInternal &jobs, size_t maxSize,
 				}
 
 			}
+
 			split.push_back(std::make_pair(std::move(outputPart), std::move(newjobs)));
 		}
 	}
 
-	ASTRA_DEBUG("splitJobs cost heuristic: %zu", costHeuristic);
+	ASTRA_DEBUG("splitJobs compute heuristic: %zu", costHeuristic_compute);
+	ASTRA_DEBUG("splitJobs download: %zu", costHeuristic_download);
+	ASTRA_DEBUG("splitJobs upload: %zu", costHeuristic_upload);
+	ASTRA_DEBUG("splitJobs max memory: %zu", costHeuristic_memory);
 
 	return true;
 }
@@ -981,6 +1092,8 @@ CCompositeGeometryManager::SJob CCompositeGeometryManager::createJobFP(CProjecto
 	ASTRA_DEBUG("CCompositeGeometryManager::createJobFP");
 	// Create single job for FP
 
+	// TODO: Check dimensions/geometry match?
+
 	CVolumePart *input = new CVolumePart{pVolData};
 	ASTRA_DEBUG("Main FP VolumePart -> %p", (void*)input);
 
@@ -1002,6 +1115,8 @@ CCompositeGeometryManager::SJob CCompositeGeometryManager::createJobBP(CProjecto
 {
 	ASTRA_DEBUG("CCompositeGeometryManager::createJobBP");
 	// Create single job for BP
+
+	// TODO: Check dimensions/geometry match?
 
 	CProjectionPart *input = new CProjectionPart{pProjData};
 
@@ -1154,7 +1269,7 @@ static bool doJob(const CCompositeGeometryManager::TJobSetInternal::const_iterat
 		return true;
 	}
 
-	std::unique_ptr<CGPUMemoryHandler> dstMem = createGPUMemoryHandler(*output, zero ? astraCUDA3d::INIT_ZERO : astraCUDA3d::INIT_NO);
+	std::unique_ptr<CGPUMemoryHandler> dstMem = createGPUMemoryHandler(*output, zero ? astraCUDA3d::INIT_ZERO : astraCUDA3d::INIT_NO, L.begin()->debuggingFlags);
 	bool ok = dstMem->getData() != nullptr;
 	if (!ok) {
 		ASTRA_ERROR("Error allocating GPU memory");
@@ -1188,7 +1303,7 @@ static bool doJob(const CCompositeGeometryManager::TJobSetInternal::const_iterat
 		size_t inx, iny, inz;
 		j.pInput->getDims(inx, iny, inz);
 
-		std::unique_ptr<CGPUMemoryHandler> srcMem = createGPUMemoryHandler(*j.pInput.get(), astraCUDA3d::INIT_NO);
+		std::unique_ptr<CGPUMemoryHandler> srcMem = createGPUMemoryHandler(*j.pInput.get(), astraCUDA3d::INIT_NO, i->debuggingFlags);
 		ok = srcMem->getData() != nullptr;
 		if (!ok) {
 			ASTRA_ERROR("Error allocating GPU memory");
@@ -1393,6 +1508,8 @@ bool CCompositeGeometryManager::doJobs(TJobList &jobs)
 	TJobSetInternal jobset;
 
 	for (SJob &job : jobs) {
+		// TODO: Check dimensions/geometry of projector and data match?
+
 		TJobListInternal newjobs;
 		SJobInternal newjob{std::move(job.pInput)};
 		newjob.eMode = job.eMode;
@@ -1411,6 +1528,9 @@ bool CCompositeGeometryManager::doJobs(TJobSetInternal &jobset)
 	// TODO: Proper clean up if substeps fail (Or as proper as possible)
 
 	ASTRA_DEBUG("CCompositeGeometryManager::doJobs starting");
+	if (m_debuggingFlags)
+		ASTRA_WARN("CCompositeGeometryManager::doJobs running with debuggingFlags = %d", m_debuggingFlags);
+
 
 	size_t maxSize = m_iMaxSize;
 	if (maxSize == 0) {
@@ -1438,6 +1558,11 @@ bool CCompositeGeometryManager::doJobs(TJobSetInternal &jobset)
 	TJobSetInternal split;
 	splitJobs(jobset, maxSize, div, split);
 	jobset.clear();
+
+	if (m_debuggingFlags & DEBUGCGM_NO_EXECUTION) {
+		ASTRA_WARN("CCompositeGeometryManager::doJobs running in NO_EXECUTION mode. Skipping execution after splitJobs.");
+		return true;
+	}
 
 	if (m_GPUIndices.size() <= 1) {
 
@@ -1477,6 +1602,17 @@ bool CCompositeGeometryManager::doJobs(TJobSetInternal &jobset)
 }
 
 
+
+void CCompositeGeometryManager::setDebuggingFlags(unsigned int flags)
+{
+	m_debuggingFlags = flags;
+
+	if ((flags & (DEBUGCGM_NO_UPLOAD | DEBUGCGM_NO_DOWNLOAD)) &&
+	    !(flags & DEBUGCGM_FAKE_MEMORY))
+	{
+		ASTRA_ERROR("Debugging flags NO_UPLOAD/NO_DOWNLOAD require FAKE_MEMORY");
+	}
+}
 
 
 //static

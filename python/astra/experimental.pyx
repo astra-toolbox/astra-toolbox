@@ -70,6 +70,8 @@ IF HAVE_CUDA==True:
             bool doFP(CProjector3D *, vector[CFloat32VolumeData3D *], vector[CFloat32ProjectionData3D *], EJobMode) nogil
             bool doBP(CProjector3D *, vector[CFloat32VolumeData3D *], vector[CFloat32ProjectionData3D *], EJobMode) nogil
             bool doFDK(CProjector3D *, CFloat32VolumeData3D *, CFloat32ProjectionData3D *, bool, SFilterConfig &, EJobMode) nogil
+            void setDebuggingFlags(unsigned int flags)
+        cdef CDataStorage* createDebuggingDataStorage()
 
     cdef extern from *:
         CFloat32VolumeData3D * dynamic_cast_vol_mem "dynamic_cast<astra::CFloat32VolumeData3D*>" (CData3D * )
@@ -225,6 +227,63 @@ IF HAVE_CUDA==True:
         :type datatype: :class:`numpy.ndarray`
         """
         direct_FPBP3D(projector_id, vol, proj, MODE_SET, "BP")
+
+    DEBUGCGM_NO_EXECUTION = 1
+    DEBUGCGM_NO_UPLOAD = 2
+    DEBUGCGM_NO_DOWNLOAD = 4
+    DEBUGCGM_FAKE_MEMORY = 8
+    def debugCGM(projector_id, vol, proj, job_type, mode, flags_):
+        if mode != MODE_ADD and mode != MODE_SET:
+            raise AstraError("Invalid composite mode")
+        if job_type not in ("FP", "BP", "FDK"):
+            raise AstraError("Invalid composite job")
+        cdef EJobMode eMode = mode
+        cdef unsigned int flags = flags_
+        cdef CProjector3DManager * manProj3D = <CProjector3DManager * >PyProjector3DManager.getSingletonPtr()
+        cdef CProjector3D * projector = manProj3D.get(projector_id)
+        if projector == NULL:
+            raise AstraError("Projector not found")
+        cdef CFloat32VolumeData3D * pVol = NULL
+        if flags & DEBUGCGM_FAKE_MEMORY:
+            pVol = new CFloat32VolumeData3D(projector.getVolumeGeometry(), createDebuggingDataStorage())
+        else:
+            pVol = linkVolFromGeometry3D(projector.getVolumeGeometry(), vol)
+        cdef CFloat32ProjectionData3D * pProj = NULL
+        if flags & DEBUGCGM_FAKE_MEMORY:
+            pProj = new CFloat32ProjectionData3D(projector.getProjectionGeometry(), createDebuggingDataStorage())
+        else:
+            pProj = linkProjFromGeometry3D(projector.getProjectionGeometry(), proj)
+        cdef vector[CFloat32VolumeData3D *] vols
+        cdef vector[CFloat32ProjectionData3D *] projs
+        vols.push_back(pVol)
+        projs.push_back(pProj)
+        cdef CCompositeGeometryManager m
+        m.setDebuggingFlags(flags)
+        cdef bool ret = True
+        cdef SFilterConfig filterConfig
+        try:
+            if job_type == "FP":
+                with nogil:
+                    ret = m.doFP(projector, vols, projs, eMode)
+                if not ret:
+                    AstraError("Failed to perform FP", append_log=True)
+            elif job_type == "BP":
+                with nogil:
+                    ret = m.doBP(projector, vols, projs, eMode)
+                if not ret:
+                    AstraError("Failed to perform BP", append_log=True)
+            elif job_type == "FDK":
+                filterConfig.m_eType = FILTER_RAMLAK
+                with nogil:
+                    ret = m.doFDK(projector, pVol, pProj, False, filterConfig, eMode)
+                if not ret:
+                    AstraError("Failed to perform BP", append_log=True)
+            else:
+                AstraError("Internal error: wrong op type")
+        finally:
+            del pVol
+            del pProj
+
 
     def getProjectedBBox(geometry, minx, maxx, miny, maxy, minz, maxz):
         cdef unique_ptr[CProjectionGeometry3D] ppGeometry

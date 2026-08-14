@@ -50,6 +50,7 @@ class CFloat32VolumeData3D;
 class CVolumeGeometry3D;
 class CProjectionGeometry3D;
 class CProjector3D;
+class CDataStorage;
 
 
 struct SGPUParams {
@@ -148,12 +149,13 @@ public:
 	struct SJobInternal {
 	public:
 		SJobInternal(std::unique_ptr<CPart> &&_pInput)
-			: pInput(std::move(_pInput)), pProjector(0), FDKSettings{} { }
+			: pInput(std::move(_pInput)), pProjector(0), FDKSettings{}, debuggingFlags(0) { }
 		std::unique_ptr<CPart> pInput;
 		CProjector3D *pProjector;
 		SFDKSettings FDKSettings;
 		EJobType eType;
 		EJobMode eMode;
+		unsigned int debuggingFlags;
 	};
 
 	typedef std::list<SJob> TJobList;
@@ -192,6 +194,14 @@ public:
 
 	static void setGlobalGPUParams(const SGPUParams& params);
 
+	enum CGMDebuggingFlags {
+		DEBUGCGM_NO_EXECUTION = 1,
+		DEBUGCGM_NO_UPLOAD = 2,
+		DEBUGCGM_NO_DOWNLOAD = 4,
+		DEBUGCGM_FAKE_MEMORY = 8
+	};
+	void setDebuggingFlags(unsigned int flags);
+
 protected:
 
 	bool splitJobs(TJobSetInternal &jobs, size_t maxSize, int div, TJobSetInternal &split);
@@ -199,9 +209,21 @@ protected:
 	std::vector<int> m_GPUIndices;
 	size_t m_iMaxSize;
 
+	unsigned int m_debuggingFlags;
 
 	static SGPUParams* s_params;
 };
+
+
+// NB: For benchmarking/tuning/debugging purposes only.
+// Create a data storage with a single GPU-memory-sized buffer shared between
+// all debugging data storages. All reads and writes by CompositeGeometryManager
+// accessing this buffer will access the start of the buffer, regardless of the
+// subblock requested. This allows this object to be storage for very large
+// geometries without requiring it to be fully allocated in host memory.
+// Obviously this will produce nonsensical output, but mostly valid timings.
+_AstraExport CDataStorage* createDebuggingDataStorage();
+
 
 }
 
