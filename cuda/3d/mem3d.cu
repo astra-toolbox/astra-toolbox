@@ -79,13 +79,15 @@ astra::CDataStorage *allocateGPUMemory(unsigned int x, unsigned int y, unsigned 
 
 	size_t free = astraCUDA::availableGPUMemory();
 
-	if (!checkCuda(cudaMalloc3D(&ptr, make_cudaExtent(sizeof(float)*x, y, z)), "allocateGPUMemory malloc3d")) {
+	if (!checkCuda(cudaMalloc(&ptr.ptr,(size_t)sizeof(float)*x*y*z), "allocateGPUMemory malloc")) {
 		return nullptr;
 	}
+	ptr.pitch = ptr.xsize = sizeof(float)*x;
+	ptr.ysize = y;
 
 	size_t free2 = astraCUDA::availableGPUMemory();
 
-	ASTRA_DEBUG("Allocated %d x %d x %d on GPU. (Pre: %lu, post: %lu)", x, y, z, free, free2);
+	ASTRA_DEBUG("Allocated %d x %d x %d on GPU, pitch %zu. (Pre: %lu, post: %lu)", x, y, z, ptr.pitch, free, free2);
 
 
 
