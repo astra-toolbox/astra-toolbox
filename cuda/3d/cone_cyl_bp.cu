@@ -121,6 +121,9 @@ __global__ void dev_cylcone_BP(float* D_volData, unsigned int volPitch,
 
 			const float R = gC_C[angle].fR;
 
+			const float invR = 1.0f / R;
+			const float invDetUT = 1.0f / gC_C[angle].fDetUT;
+
 			for (int idx = 0; idx < ZSIZE; idx++)
 			{
 				const float A = ra * ra + rb * rb;
@@ -131,7 +134,7 @@ __global__ void dev_cylcone_BP(float* D_volData, unsigned int volPitch,
 					continue;
 				const float t = (-B + sqrt(D)) / A; // cancelled removed factor 2 ( = sqrt(4))
 
-				const float theta = asin((t * rb + sb) / R) / gC_C[angle].fDetUT;
+				const float theta = asin((t * rb + sb) * invR) * invDetUT;
 				const float v = (t * rc + sc) * gC_C[angle].fInvNormV; // TODO: fold invnormv into rc, sc, dc
 
 				const float fU = theta + 0.5f * dims.iProjU; // TODO: CHECKME
