@@ -51,7 +51,7 @@ struct DevCylConeParamsBP {
 	float4 fCb;
 	float4 fCc;
 	float3 fSmC;
-	float fDetUT;
+	float fInvDetUT;
 	float fInvNormV;
 	float fR;
 };
@@ -122,7 +122,7 @@ __global__ void dev_cylcone_BP(float* D_volData, unsigned int volPitch,
 			const float R = gC_C[angle].fR;
 
 			const float invR = 1.0f / R;
-			const float invDetUT = 1.0f / gC_C[angle].fDetUT;
+			const float invDetUT = gC_C[angle].fInvDetUT;
 
 			for (int idx = 0; idx < ZSIZE; idx++)
 			{
@@ -218,7 +218,7 @@ bool ConeCylBP_t::transferConstants(const SCylConeProjection* angles, unsigned i
 #endif
 		
 		// angular increment
-		p[i].fDetUT = u.norm() / fRadius;
+		p[i].fInvDetUT = fRadius / u.norm();
 		p[i].fInvNormV = 1.0 / v.norm();
 
 		p[i].fR = fRadius;
