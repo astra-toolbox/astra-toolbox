@@ -52,7 +52,6 @@ struct DevCylConeParamsBP {
 	float4 fCc;
 	float3 fSmC;
 	float fInvDetUT;
-	float fInvNormV;
 	float fR;
 };
 
@@ -135,7 +134,7 @@ __global__ void dev_cylcone_BP(float* D_volData, unsigned int volPitch,
 				const float t = (-B + sqrt(D)) / A; // cancelled removed factor 2 ( = sqrt(4))
 
 				const float theta = asin((t * rb + sb) * invR) * invDetUT;
-				const float v = (t * rc + sc) * gC_C[angle].fInvNormV; // TODO: fold invnormv into rc, sc, dc
+				const float v = (t * rc + sc); // division by v.norm() is folded into rc and sc
 
 				const float fU = theta + 0.5f * dims.iProjU; // TODO: CHECKME
 				const float fV = v + 0.5f * dims.iProjV; // TODO: CHECKME
@@ -189,10 +188,13 @@ bool ConeCylBP_t::transferConstants(const SCylConeProjection* angles, unsigned i
 		Vec3 cyla_n = cyla * (1.0 / cyla.norm());
 		Vec3 cylb_n = cylb * (1.0 / cylb.norm());
 		Vec3 cylc_n = cylc * (1.0 / cylc.norm());
-		Vec3 v_n = v * (1.0 / v.norm());
+
+		// We need v with the reciprocal of its norm for converting from
+		// coordinate to v index.
+		Vec3 v_r = v * (1.0 / (v.norm() * v.norm()));
 
 		// Without this scaling factor, the ray density in a point x is given
-		// by 1 / (| cross(u,v | * t^2 ). We rescale all components of C here
+		// by 1 / (| cross(u,v) | * t^2 ). We rescale all components of C here
 		// so that the ray density is instead given by 1 / t^2.
 
 		double fScale = sqrt(cross3(u, v).norm());
@@ -203,23 +205,22 @@ bool ConeCylBP_t::transferConstants(const SCylConeProjection* angles, unsigned i
 		p[i].fCb.x = cylb_n.x * fScale;
 		p[i].fCb.y = cylb_n.y * fScale;
 		p[i].fCb.z = cylb_n.z * fScale;
-		p[i].fCc.x = v_n.x * fScale;
-		p[i].fCc.y = v_n.y * fScale;
-		p[i].fCc.z = v_n.z * fScale;
+		p[i].fCc.x = v_r.x * fScale;
+		p[i].fCc.y = v_r.y * fScale;
+		p[i].fCc.z = v_r.z * fScale;
 
 		p[i].fCa.w = -s.dot(cyla_n) * fScale;
 		p[i].fCb.w = -s.dot(cylb_n) * fScale;
-		p[i].fCc.w = -s.dot(v_n) * fScale;
+		p[i].fCc.w = -s.dot(v_r) * fScale;
 
 #if 1
 		p[i].fSmC.x = (s - cylc).dot(cyla_n);
 		p[i].fSmC.y = (s - cylc).dot(cylb_n);
-		p[i].fSmC.z = (s - cylc).dot(v_n);
+		p[i].fSmC.z = (s - cylc).dot(v_r);
 #endif
 		
 		// angular increment
 		p[i].fInvDetUT = fRadius / u.norm();
-		p[i].fInvNormV = 1.0 / v.norm();
 
 		p[i].fR = fRadius;
 
