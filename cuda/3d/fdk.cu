@@ -332,8 +332,6 @@ bool FDK_t::filter(cudaPitchedPtr D_projData,
 			D_filter += iHalfFFTSize;
 	}
 
-	ok &= checkCuda(cudaStreamSynchronize(stream), "FDK filter sync");
-
 	return ok;
 }
 
