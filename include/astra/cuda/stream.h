@@ -80,4 +80,10 @@ private:
 
 }
 
+namespace astraCUDA3d {
+using astraCUDA::Stream;
+using astraCUDA::automatic_sync;
+}
+
+
 #endif
