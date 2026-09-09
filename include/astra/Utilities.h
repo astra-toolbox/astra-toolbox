@@ -37,6 +37,11 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 namespace astra {
 
+// Allocate memory aligned to 'alignment' bytes. Alignment must be to a
+// power of two. Returns nullptr in case of failure. Result must be freed
+// by a call to freeAlignedMemory.
+void *allocateAlignedMemory(size_t sizeInBytes, int alignment = 16);
+void freeAlignedMemory(void *mem);
 
 
 namespace StringUtil {

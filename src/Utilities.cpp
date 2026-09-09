@@ -30,8 +30,38 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 #include <locale>
 #include <iomanip>
+#include <cassert>
+#include <cstdint>
 
 namespace astra {
+
+void *allocateAlignedMemory(size_t sizeInBytes, int alignment)
+{
+	void *mem = nullptr;
+#ifdef _MSC_VER
+	mem = _aligned_malloc(sizeInBytes, alignment);
+#else
+	int ret = posix_memalign((void**)&mem, alignment, sizeInBytes);
+	if (ret != 0)
+		mem = nullptr;
+#endif
+
+	// Assuming alignment is a power of two here. The allocation functions
+	// also require this.
+	assert((reinterpret_cast<uintptr_t>(mem) & (alignment-1)) == 0);
+
+	return mem;
+}
+
+void freeAlignedMemory(void *mem)
+{
+#ifdef _MSC_VER
+	_aligned_free(mem);
+#else
+	free(mem);
+#endif
+}
+
 
 namespace StringUtil {
 

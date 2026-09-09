@@ -28,6 +28,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 
 #include "astra/Data2D.h"
+#include "astra/Utilities.h"
 
 namespace astra {
 
@@ -46,14 +47,7 @@ void CDataMemory<T>::_allocateData(size_t size)
 	ASTRA_ASSERT(m_pfData == NULL);
 	ASTRA_ASSERT(m_bOwnData);
 
-	// allocate contiguous block
-#ifdef _MSC_VER
-	m_pfData = (T*)_aligned_malloc(size * sizeof(T), 16);
-#else
-	int ret = posix_memalign((void**)&m_pfData, 16, size * sizeof(T));
-	ASTRA_ASSERT(ret == 0);
-#endif
-	ASTRA_ASSERT(((size_t)m_pfData & 15) == 0);
+	m_pfData = (T*)allocateAlignedMemory(sizeof(T) * size, 16);
 }
 
 template<typename T>
@@ -62,13 +56,7 @@ void CDataMemory<T>::_freeData()
 	if (!m_bOwnData)
 		return;
 
-	// free memory for data block
-#ifdef _MSC_VER
-	_aligned_free(m_pfData);
-#else
-	free(m_pfData);
-#endif
-
+	freeAlignedMemory(m_pfData);
 	m_pfData = nullptr;
 }
 

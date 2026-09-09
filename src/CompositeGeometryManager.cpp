@@ -123,15 +123,8 @@ public:
 static void* allocDebuggingMemory()
 {
 	// TODO: allow shrinking this buffer size
-	void *mem = nullptr;
 	size_t size = astraCUDA::totalGPUMemory();
-#ifdef _MSC_VER
-	commonStorage = _aligned_malloc(size, 16);
-#else
-	int ret = posix_memalign(&mem, 16, size);
-	assert(ret == 0);
-#endif
-	return mem;
+	return allocateAlignedMemory(size, 16);
 }
 
 class CDebuggingDataMemory : public CDataMemory<float32> {
