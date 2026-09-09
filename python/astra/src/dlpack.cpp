@@ -161,7 +161,7 @@ bool checkDLTensor(DLTensor *tensor, std::array<int, D> dims, std::string &error
 
 
 template<class DLT, size_t D>
-astra::CDataStorage *getDLTensorStorage(DLT *tensor_m, std::array<int, D> dims, std::string &error)
+std::unique_ptr<astra::CDataStorage> getDLTensorStorage(DLT *tensor_m, std::array<int, D> dims, std::string &error)
 {
 	DLTensor *tensor = &tensor_m->dl_tensor;
 
@@ -179,7 +179,7 @@ astra::CDataStorage *getDLTensorStorage(DLT *tensor_m, std::array<int, D> dims, 
 	case kDLROCMHost:
 		if (!checkDLTensor(tensor, dims, error))
 			return nullptr;
-		return new CDataStorageDLPackCPU(tensor_m);
+		return std::unique_ptr<astra::CDataStorage>(new CDataStorageDLPackCPU(tensor_m));
 	default:
 		error = "Unsupported dlpack device type";
 		return nullptr;
@@ -187,14 +187,14 @@ astra::CDataStorage *getDLTensorStorage(DLT *tensor_m, std::array<int, D> dims, 
 }
 
 template<size_t D>
-astra::CDataStorage *getDLTensorStorage(PyObject *obj, std::array<int, D> dims, std::string &error)
+std::unique_ptr<astra::CDataStorage> getDLTensorStorage(PyObject *obj, std::array<int, D> dims, std::string &error)
 {
 	if (!PyCapsule_CheckExact(obj)) {
 		error = "Invalid capsule";
 		return nullptr;
 	}
 
-	astra::CDataStorage *storage = nullptr;
+	std::unique_ptr<astra::CDataStorage> storage;
 
 	if (PyCapsule_IsValid(obj, "dltensor")) {
 		// DLPack pre-1.0 unversioned interface
@@ -250,28 +250,28 @@ astra::CFloat32VolumeData2D* getDLTensor(PyObject *obj, const astra::CVolumeGeom
 	if (!PyCapsule_CheckExact(obj))
 		return nullptr;
 
-	// x,y,z
+	// x,y
 	std::array<int, 2> dims{pGeom.getGridColCount(), pGeom.getGridRowCount()};
 
-	astra::CDataStorage *storage = getDLTensorStorage(obj, dims, error);
+	std::unique_ptr<astra::CDataStorage> storage = getDLTensorStorage(obj, dims, error);
 	if (!storage)
 		return nullptr;
 
-	return new astra::CFloat32VolumeData2D(pGeom, storage);
+	return new astra::CFloat32VolumeData2D(pGeom, std::move(storage));
 }
 astra::CFloat32ProjectionData2D* getDLTensor(PyObject *obj, const astra::CProjectionGeometry2D &pGeom, std::string &error)
 {
 	if (!PyCapsule_CheckExact(obj))
 		return nullptr;
 
-	// x,y,z
+	// u,angle
 	std::array<int, 2> dims{pGeom.getDetectorCount(), pGeom.getProjectionAngleCount()};
 
-	astra::CDataStorage *storage = getDLTensorStorage(obj, dims, error);
+	std::unique_ptr<astra::CDataStorage> storage = getDLTensorStorage(obj, dims, error);
 	if (!storage)
 		return nullptr;
 
-	return new astra::CFloat32ProjectionData2D(pGeom, storage);
+	return new astra::CFloat32ProjectionData2D(pGeom, std::move(storage));
 }
 
 astra::CFloat32VolumeData3D* getDLTensor(PyObject *obj, const astra::CVolumeGeometry3D &pGeom, std::string &error)
@@ -282,23 +282,23 @@ astra::CFloat32VolumeData3D* getDLTensor(PyObject *obj, const astra::CVolumeGeom
 	// x,y,z
 	std::array<int, 3> dims{pGeom.getGridColCount(), pGeom.getGridRowCount(), pGeom.getGridSliceCount()};
 
-	astra::CDataStorage *storage = getDLTensorStorage(obj, dims, error);
+	std::unique_ptr<astra::CDataStorage> storage = getDLTensorStorage(obj, dims, error);
 	if (!storage)
 		return nullptr;
 
-	return new astra::CFloat32VolumeData3D(pGeom, storage);
+	return new astra::CFloat32VolumeData3D(pGeom, std::move(storage));
 }
 astra::CFloat32ProjectionData3D* getDLTensor(PyObject *obj, const astra::CProjectionGeometry3D &pGeom, std::string &error)
 {
 	if (!PyCapsule_CheckExact(obj))
 		return nullptr;
 
-	// x,y,z
+	// u,angle,v
 	std::array<int, 3> dims{pGeom.getDetectorColCount(), pGeom.getProjectionCount(), pGeom.getDetectorRowCount()};
 
-	astra::CDataStorage *storage = getDLTensorStorage(obj, dims, error);
+	std::unique_ptr<astra::CDataStorage> storage = getDLTensorStorage(obj, dims, error);
 	if (!storage)
 		return nullptr;
 
-	return new astra::CFloat32ProjectionData3D(pGeom, storage);
+	return new astra::CFloat32ProjectionData3D(pGeom, std::move(storage));
 }

@@ -51,6 +51,7 @@ IF HAVE_CUDA==True:
 
     from .PyIncludes cimport *
     from libcpp.vector cimport vector
+    from libcpp.utility cimport move
 
     cdef extern from "astra/Filters.h" namespace "astra":
         cdef enum E_FBPFILTER:
@@ -71,7 +72,7 @@ IF HAVE_CUDA==True:
             bool doBP(CProjector3D *, vector[CFloat32VolumeData3D *], vector[CFloat32ProjectionData3D *], EJobMode) nogil
             bool doFDK(CProjector3D *, CFloat32VolumeData3D *, CFloat32ProjectionData3D *, bool, SFilterConfig &, EJobMode) nogil
             void setDebuggingFlags(unsigned int flags)
-        cdef CDataStorage* createDebuggingDataStorage()
+        cdef unique_ptr[CDataStorage] createDebuggingDataStorage()
 
     cdef extern from *:
         CFloat32VolumeData3D * dynamic_cast_vol_mem "dynamic_cast<astra::CFloat32VolumeData3D*>" (CData3D * )
@@ -245,12 +246,12 @@ IF HAVE_CUDA==True:
             raise AstraError("Projector not found")
         cdef CFloat32VolumeData3D * pVol = NULL
         if flags & DEBUGCGM_FAKE_MEMORY:
-            pVol = new CFloat32VolumeData3D(projector.getVolumeGeometry(), createDebuggingDataStorage())
+            pVol = new CFloat32VolumeData3D(projector.getVolumeGeometry(), move(createDebuggingDataStorage()))
         else:
             pVol = linkVolFromGeometry3D(projector.getVolumeGeometry(), vol)
         cdef CFloat32ProjectionData3D * pProj = NULL
         if flags & DEBUGCGM_FAKE_MEMORY:
-            pProj = new CFloat32ProjectionData3D(projector.getProjectionGeometry(), createDebuggingDataStorage())
+            pProj = new CFloat32ProjectionData3D(projector.getProjectionGeometry(), move(createDebuggingDataStorage()))
         else:
             pProj = linkProjFromGeometry3D(projector.getProjectionGeometry(), proj)
         cdef vector[CFloat32VolumeData3D *] vols

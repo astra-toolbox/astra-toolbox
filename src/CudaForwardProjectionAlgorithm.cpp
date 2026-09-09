@@ -177,8 +177,6 @@ bool CCudaForwardProjectionAlgorithm::run(int)
 
 	const CVolumeGeometry2D &pVolGeom = m_pVolume->getGeometry();
 	const CProjectionGeometry2D &pProjGeom = m_pSinogram->getGeometry();
-	std::array<int, 2> volDims = m_pVolume->getShape();
-	std::array<int, 2> projDims = m_pSinogram->getShape();
 
 	astraCUDA::SProjectorParams2D params;
 	params.iRaysPerDet = m_iDetectorSuperSampling;
@@ -191,20 +189,17 @@ bool CCudaForwardProjectionAlgorithm::run(int)
 	if (m_iGPUIndex != -1)
 		astraCUDA::setGPUIndex(m_iGPUIndex);
 
-	CDataStorage *s;
-	s = astraCUDA::allocateGPUMemory(volDims[0], volDims[1], astraCUDA::INIT_NO);
-	if (!s) {
+	CData2D *D_volData = astraCUDA::createGPUData2DLike(m_pVolume, astraCUDA::INIT_NO);
+	if (!D_volData) {
 		return false;
 	}
-	CData2D *D_volData = new CData2D(volDims[0], volDims[1], s);
 
-	s = astraCUDA::allocateGPUMemory(projDims[0], projDims[1], astraCUDA::INIT_ZERO);
-	if (!s) {
+	CData2D *D_projData = astraCUDA::createGPUData2DLike(m_pSinogram, astraCUDA::INIT_ZERO);
+	if (!D_projData) {
 		astraCUDA::freeGPUMemory(D_volData);
 		delete D_volData;
 		return false;
 	}
-	CData2D *D_projData = new CData2D(projDims[0], projDims[1], s);
 
 	if (m_pVolume->isFloat32Memory()) {
 		ok &= astraCUDA::copyToGPUMemory(m_pVolume, D_volData);

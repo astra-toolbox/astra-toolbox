@@ -51,7 +51,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 namespace astraCUDA {
 
 
-astra::CDataStorage *allocateGPUMemory(unsigned int x, unsigned int y, Mem3DZeroMode zero)
+std::unique_ptr<astra::CDataStorage> allocateGPUMemory(unsigned int x, unsigned int y, Mem3DZeroMode zero)
 {
 	cudaPitchedPtr ptr;
 
@@ -81,10 +81,10 @@ astra::CDataStorage *allocateGPUMemory(unsigned int x, unsigned int y, Mem3DZero
 
 	astraCUDA::CDataGPU *ret = new astraCUDA::CDataGPU(ptr);
 
-	return ret;
+	return std::unique_ptr<astra::CDataStorage>(ret);
 }
 
-astra::CDataStorage *allocateGPUMemoryLike(const astra::CData2D *model, Mem3DZeroMode zero)
+std::unique_ptr<astra::CDataStorage> allocateGPUMemoryLike(const astra::CData2D *model, Mem3DZeroMode zero)
 {
 	assert(model);
 
@@ -95,33 +95,33 @@ astra::CDataStorage *allocateGPUMemoryLike(const astra::CData2D *model, Mem3DZer
 
 astra::CFloat32VolumeData2D *createGPUVolumeData2DLike(const astra::CFloat32VolumeData2D *model)
 {
-	astra::CDataStorage *storage = allocateGPUMemoryLike(model, INIT_ZERO);
+	std::unique_ptr<astra::CDataStorage> storage = allocateGPUMemoryLike(model, INIT_ZERO);
 	if (!storage)
 		return nullptr;
 
-	return new astra::CFloat32VolumeData2D(model->getGeometry(), storage);
+	return new astra::CFloat32VolumeData2D(model->getGeometry(), std::move(storage));
 }
 
 
 astra::CFloat32ProjectionData2D *createGPUProjectionData2DLike(const astra::CFloat32ProjectionData2D *model)
 {
-	astra::CDataStorage *storage = allocateGPUMemoryLike(model, INIT_ZERO);
+	std::unique_ptr<astra::CDataStorage> storage = allocateGPUMemoryLike(model, INIT_ZERO);
 	if (!storage)
 		return nullptr;
 
-	return new astra::CFloat32ProjectionData2D(model->getGeometry(), storage);
+	return new astra::CFloat32ProjectionData2D(model->getGeometry(), std::move(storage));
 }
 
-astra::CData2D *createGPUData2DLike(const astra::CData2D *model)
+astra::CData2D *createGPUData2DLike(const astra::CData2D *model, Mem3DZeroMode zero)
 {
 	assert(model->getStorage());
 	assert(model->getStorage()->isFloat32());
 
 	std::array<int, 2> dims = model->getShape();
-	astra::CDataStorage *storage = allocateGPUMemory(dims[0], dims[1], INIT_ZERO);
+	std::unique_ptr<astra::CDataStorage> storage = allocateGPUMemory(dims[0], dims[1], zero);
 	if (!storage)
 		return nullptr;
-	return new astra::CData2D(dims[0], dims[1], storage);
+	return new astra::CData2D(dims[0], dims[1], std::move(storage));
 }
 
 

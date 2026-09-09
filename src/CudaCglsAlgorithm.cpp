@@ -109,25 +109,25 @@ bool CCudaCglsAlgorithm::allocateBuffers()
 	if (m_iGPUIndex != -1)
 		astraCUDA::setGPUIndex(m_iGPUIndex);
 
-	if ((D_volData = astraCUDA::createGPUData2DLike(m_pReconstruction)) == nullptr)
+	if ((D_volData = astraCUDA::createGPUData2DLike(m_pReconstruction, astraCUDA::INIT_ZERO)) == nullptr)
 		return false;
-	if ((D_p = astraCUDA::createGPUData2DLike(m_pReconstruction)) == nullptr)
+	if ((D_p = astraCUDA::createGPUData2DLike(m_pReconstruction, astraCUDA::INIT_ZERO)) == nullptr)
 		return false;
-	if ((D_z = astraCUDA::createGPUData2DLike(m_pReconstruction)) == nullptr)
+	if ((D_z = astraCUDA::createGPUData2DLike(m_pReconstruction, astraCUDA::INIT_ZERO)) == nullptr)
 		return false;
 	if (m_bUseReconstructionMask) {
-		if ((D_volMaskData = astraCUDA::createGPUData2DLike(m_pReconstruction)) == nullptr)
+		if ((D_volMaskData = astraCUDA::createGPUData2DLike(m_pReconstruction, astraCUDA::INIT_ZERO)) == nullptr)
 			return false;
 	}
-	if ((D_projData = astraCUDA::createGPUData2DLike(m_pSinogram)) == nullptr)
+	if ((D_projData = astraCUDA::createGPUData2DLike(m_pSinogram, astraCUDA::INIT_ZERO)) == nullptr)
 		return false;
-	if ((D_r = astraCUDA::createGPUData2DLike(m_pSinogram)) == nullptr)
+	if ((D_r = astraCUDA::createGPUData2DLike(m_pSinogram, astraCUDA::INIT_ZERO)) == nullptr)
 		return false;
-	if ((D_w = astraCUDA::createGPUData2DLike(m_pSinogram)) == nullptr)
+	if ((D_w = astraCUDA::createGPUData2DLike(m_pSinogram, astraCUDA::INIT_ZERO)) == nullptr)
 		return false;
 #if 0
 	if (m_bUseSinogramMask) {
-		if ((D_projMaskData = astraCUDA::createGPUData2DLike(m_pSinogram)) == nullptr)
+		if ((D_projMaskData = astraCUDA::createGPUData2DLike(m_pSinogram, astraCUDA::INIT_ZERO)) == nullptr)
 			return false;
 	}
 #endif

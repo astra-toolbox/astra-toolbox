@@ -59,15 +59,15 @@ public:
 	void clampMin(float32 _value);
 	void clampMax(float32 _value);
 
-	CData2D(int x, int y, CDataStorage *storage) : CData({x, y}, storage) { }
+	CData2D(int x, int y, std::unique_ptr<CDataStorage> &&storage) : CData({x, y}, std::move(storage)) { }
 };
 
 template <class G>
 class _AstraExport CData2DObject : public CData2D {
 protected:
 	std::unique_ptr<G> m_pGeometry;
-	CData2DObject(int x, int y, std::unique_ptr<G>&& geom, CDataStorage *storage) : CData2D(x, y, storage), m_pGeometry(std::move(geom)) { }
-	CData2DObject(int x, int y, const G &geom, CDataStorage *storage) : CData2D(x, y, storage), m_pGeometry(geom.clone()) { }
+	CData2DObject(int x, int y, std::unique_ptr<G>&& geom, std::unique_ptr<CDataStorage>&& storage) : CData2D(x, y, std::move(storage)), m_pGeometry(std::move(geom)) { }
+	CData2DObject(int x, int y, const G &geom, std::unique_ptr<CDataStorage>&& storage) : CData2D(x, y, std::move(storage)), m_pGeometry(geom.clone()) { }
 	virtual ~CData2DObject() { }
 
 public:
@@ -80,8 +80,8 @@ public:
 class _AstraExport CFloat32ProjectionData2D : public CData2DObject<CProjectionGeometry2D> {
 public:
 
-	CFloat32ProjectionData2D(std::unique_ptr<CProjectionGeometry2D>&& geom, CDataStorage *storage) : CData2DObject<CProjectionGeometry2D>(geom->getDetectorCount(), geom->getProjectionAngleCount(), std::move(geom), storage) { }
-	CFloat32ProjectionData2D(const CProjectionGeometry2D &geom, CDataStorage *storage) : CData2DObject<CProjectionGeometry2D>(geom.getDetectorCount(), geom.getProjectionAngleCount(), geom, storage) { }
+	CFloat32ProjectionData2D(std::unique_ptr<CProjectionGeometry2D>&& geom, std::unique_ptr<CDataStorage> &&storage) : CData2DObject<CProjectionGeometry2D>(geom->getDetectorCount(), geom->getProjectionAngleCount(), std::move(geom), std::move(storage)) { }
+	CFloat32ProjectionData2D(const CProjectionGeometry2D &geom, std::unique_ptr<CDataStorage>&& storage) : CData2DObject<CProjectionGeometry2D>(geom.getDetectorCount(), geom.getProjectionAngleCount(), geom, std::move(storage)) { }
 
 	int getDetectorCount() const { return m_iDims[0]; }
 	int getAngleCount() const { return m_iDims[1]; }
@@ -91,8 +91,8 @@ public:
 
 class _AstraExport CFloat32VolumeData2D : public CData2DObject<CVolumeGeometry2D> {
 public:
-	CFloat32VolumeData2D(std::unique_ptr<CVolumeGeometry2D>&& geom, CDataStorage *storage) : CData2DObject<CVolumeGeometry2D>(geom->getGridColCount(), geom->getGridRowCount(), std::move(geom), storage) { }
-	CFloat32VolumeData2D(const CVolumeGeometry2D &geom, CDataStorage *storage) : CData2DObject<CVolumeGeometry2D>(geom.getGridColCount(), geom.getGridRowCount(), geom, storage) { }
+	CFloat32VolumeData2D(std::unique_ptr<CVolumeGeometry2D>&& geom, std::unique_ptr<CDataStorage>&& storage) : CData2DObject<CVolumeGeometry2D>(geom->getGridColCount(), geom->getGridRowCount(), std::move(geom), std::move(storage)) { }
+	CFloat32VolumeData2D(const CVolumeGeometry2D &geom, std::unique_ptr<CDataStorage> &&storage) : CData2DObject<CVolumeGeometry2D>(geom.getGridColCount(), geom.getGridRowCount(), geom, std::move(storage)) { }
 
 	int getColCount() const { return m_iDims[0]; }
 	int getRowCount() const { return m_iDims[1]; }

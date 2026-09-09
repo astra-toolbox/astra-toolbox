@@ -210,25 +210,25 @@ bool CCudaSirtAlgorithm3D::allocateBuffers()
 	if (m_iGPUIndex != -1)
 		astraCUDA3d::setGPUIndex(m_iGPUIndex);
 
-	if ((D_volData = astraCUDA3d::createGPUData3DLike(m_pReconstruction)) == nullptr)
+	if ((D_volData = astraCUDA3d::createGPUData3DLike(m_pReconstruction, astraCUDA3d::INIT_ZERO)) == nullptr)
 		return false;
-	if ((D_tmpVolData = astraCUDA3d::createGPUData3DLike(m_pReconstruction)) == nullptr)
+	if ((D_tmpVolData = astraCUDA3d::createGPUData3DLike(m_pReconstruction, astraCUDA3d::INIT_ZERO)) == nullptr)
 		return false;
-	if ((D_pixelWeight = astraCUDA3d::createGPUData3DLike(m_pReconstruction)) == nullptr)
+	if ((D_pixelWeight = astraCUDA3d::createGPUData3DLike(m_pReconstruction, astraCUDA3d::INIT_ZERO)) == nullptr)
 		return false;
 	if (m_bUseReconstructionMask) {
-		if ((D_volMaskData = astraCUDA3d::createGPUData3DLike(m_pReconstruction)) == nullptr)
+		if ((D_volMaskData = astraCUDA3d::createGPUData3DLike(m_pReconstruction, astraCUDA3d::INIT_ZERO)) == nullptr)
 			return false;
 	}
-	if ((D_projData = astraCUDA3d::createGPUData3DLike(m_pSinogram)) == nullptr)
+	if ((D_projData = astraCUDA3d::createGPUData3DLike(m_pSinogram, astraCUDA3d::INIT_ZERO)) == nullptr)
 		return false;
-	if ((D_tmpProjData = astraCUDA3d::createGPUData3DLike(m_pSinogram)) == nullptr)
+	if ((D_tmpProjData = astraCUDA3d::createGPUData3DLike(m_pSinogram, astraCUDA3d::INIT_ZERO)) == nullptr)
 		return false;
 	if (m_bUseSinogramMask) {
-		if ((D_projMaskData = astraCUDA3d::createGPUData3DLike(m_pSinogram)) == nullptr)
+		if ((D_projMaskData = astraCUDA3d::createGPUData3DLike(m_pSinogram, astraCUDA3d::INIT_ZERO)) == nullptr)
 			return false;
 	}
-	if ((D_lineWeight = astraCUDA3d::createGPUData3DLike(m_pSinogram)) == nullptr)
+	if ((D_lineWeight = astraCUDA3d::createGPUData3DLike(m_pSinogram, astraCUDA3d::INIT_ZERO)) == nullptr)
 		return false;
 
 	return true;

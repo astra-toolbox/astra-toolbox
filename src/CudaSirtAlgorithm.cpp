@@ -124,33 +124,33 @@ bool CCudaSirtAlgorithm::allocateBuffers()
 	if (m_iGPUIndex != -1)
 		astraCUDA::setGPUIndex(m_iGPUIndex);
 
-	if ((D_volData = astraCUDA::createGPUData2DLike(m_pReconstruction)) == nullptr)
+	if ((D_volData = astraCUDA::createGPUData2DLike(m_pReconstruction, astraCUDA::INIT_ZERO)) == nullptr)
 		return false;
-	if ((D_tmpVolData = astraCUDA::createGPUData2DLike(m_pReconstruction)) == nullptr)
+	if ((D_tmpVolData = astraCUDA::createGPUData2DLike(m_pReconstruction, astraCUDA::INIT_ZERO)) == nullptr)
 		return false;
-	if ((D_pixelWeight = astraCUDA::createGPUData2DLike(m_pReconstruction)) == nullptr)
+	if ((D_pixelWeight = astraCUDA::createGPUData2DLike(m_pReconstruction, astraCUDA::INIT_ZERO)) == nullptr)
 		return false;
 	if (m_bUseReconstructionMask) {
-		if ((D_volMaskData = astraCUDA::createGPUData2DLike(m_pReconstruction)) == nullptr)
+		if ((D_volMaskData = astraCUDA::createGPUData2DLike(m_pReconstruction, astraCUDA::INIT_ZERO)) == nullptr)
 			return false;
 	}
 	if (m_pMinMask) {
-		if ((D_minMaskData = astraCUDA::createGPUData2DLike(m_pReconstruction)) == nullptr)
+		if ((D_minMaskData = astraCUDA::createGPUData2DLike(m_pReconstruction, astraCUDA::INIT_ZERO)) == nullptr)
 			return false;
 	}
 	if (m_pMaxMask) {
-		if ((D_maxMaskData = astraCUDA::createGPUData2DLike(m_pReconstruction)) == nullptr)
+		if ((D_maxMaskData = astraCUDA::createGPUData2DLike(m_pReconstruction, astraCUDA::INIT_ZERO)) == nullptr)
 			return false;
 	}
-	if ((D_projData = astraCUDA::createGPUData2DLike(m_pSinogram)) == nullptr)
+	if ((D_projData = astraCUDA::createGPUData2DLike(m_pSinogram, astraCUDA::INIT_ZERO)) == nullptr)
 		return false;
-	if ((D_tmpProjData = astraCUDA::createGPUData2DLike(m_pSinogram)) == nullptr)
+	if ((D_tmpProjData = astraCUDA::createGPUData2DLike(m_pSinogram, astraCUDA::INIT_ZERO)) == nullptr)
 		return false;
 	if (m_bUseSinogramMask) {
-		if ((D_projMaskData = astraCUDA::createGPUData2DLike(m_pSinogram)) == nullptr)
+		if ((D_projMaskData = astraCUDA::createGPUData2DLike(m_pSinogram, astraCUDA::INIT_ZERO)) == nullptr)
 			return false;
 	}
-	if ((D_lineWeight = astraCUDA::createGPUData2DLike(m_pSinogram)) == nullptr)
+	if ((D_lineWeight = astraCUDA::createGPUData2DLike(m_pSinogram, astraCUDA::INIT_ZERO)) == nullptr)
 		return false;
 
 	return true;

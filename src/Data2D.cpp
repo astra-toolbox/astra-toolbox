@@ -151,7 +151,7 @@ CFloat32ProjectionData2D *createCFloat32ProjectionData2DMemory(const CProjection
 	CDataStorage *storage = new CDataMemory<float32>(size);
 	if (!storage)
 		return 0;
-	return new CFloat32ProjectionData2D(geom, storage);
+	return new CFloat32ProjectionData2D(geom, std::unique_ptr<CDataStorage>(storage));
 }
 
 CFloat32ProjectionData2D *createCFloat32ProjectionData2DMemory(std::unique_ptr<CProjectionGeometry2D> &&geom)
@@ -162,7 +162,7 @@ CFloat32ProjectionData2D *createCFloat32ProjectionData2DMemory(std::unique_ptr<C
 	CDataStorage *storage = new CDataMemory<float32>(size);
 	if (!storage)
 		return 0;
-	return new CFloat32ProjectionData2D(std::move(geom), storage);
+	return new CFloat32ProjectionData2D(std::move(geom), std::unique_ptr<CDataStorage>(storage));
 }
 
 
@@ -171,7 +171,7 @@ CFloat32VolumeData2D *createCFloat32VolumeData2DMemory(const CVolumeGeometry2D &
 	CDataStorage *storage = new CDataMemory<float32>(geom.getGridTotCount());
 	if (!storage)
 		return 0;
-	return new CFloat32VolumeData2D(geom, storage);
+	return new CFloat32VolumeData2D(geom, std::unique_ptr<CDataStorage>(storage));
 }
 
 CFloat32VolumeData2D *createCFloat32VolumeData2DMemory(std::unique_ptr<CVolumeGeometry2D> &&geom)
@@ -179,7 +179,7 @@ CFloat32VolumeData2D *createCFloat32VolumeData2DMemory(std::unique_ptr<CVolumeGe
 	CDataStorage *storage = new CDataMemory<float32>(geom->getGridTotCount());
 	if (!storage)
 		return 0;
-	return new CFloat32VolumeData2D(std::move(geom), storage);
+	return new CFloat32VolumeData2D(std::move(geom), std::unique_ptr<CDataStorage>(storage));
 }
 
 template class CDataMemory<float32>;

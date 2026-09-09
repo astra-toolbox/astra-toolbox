@@ -76,14 +76,14 @@ CDataStorageDLPackGPU<DLT>::~CDataStorageDLPackGPU()
 
 
 
-astra::CDataStorage *wrapDLTensor(DLManagedTensorVersioned *tensor_m)
+std::unique_ptr<astra::CDataStorage> wrapDLTensor(DLManagedTensorVersioned *tensor_m)
 {
-	return new CDataStorageDLPackGPU<DLManagedTensorVersioned>(tensor_m);
+	return std::unique_ptr<astra::CDataStorage>(new CDataStorageDLPackGPU<DLManagedTensorVersioned>(tensor_m));
 }
 
-astra::CDataStorage *wrapDLTensor(DLManagedTensor *tensor_m)
+std::unique_ptr<astra::CDataStorage> wrapDLTensor(DLManagedTensor *tensor_m)
 {
-	return new CDataStorageDLPackGPU<DLManagedTensor>(tensor_m);
+	return std::unique_ptr<astra::CDataStorage>(new CDataStorageDLPackGPU<DLManagedTensor>(tensor_m));
 }
 
 bool isSupportedDLPackGPUType(DLDeviceType type)

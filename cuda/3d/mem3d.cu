@@ -76,7 +76,7 @@ int maxBlockDimension()
 	return std::min(width, height);
 }
 
-astra::CDataStorage *allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Mem3DZeroMode zero)
+std::unique_ptr<astra::CDataStorage> allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Mem3DZeroMode zero)
 {
 	cudaPitchedPtr ptr;
 
@@ -103,10 +103,10 @@ astra::CDataStorage *allocateGPUMemory(unsigned int x, unsigned int y, unsigned 
 
 	astraCUDA::CDataGPU *ret = new astraCUDA::CDataGPU(ptr);
 
-	return ret;
+	return std::unique_ptr<astra::CDataStorage>(ret);
 }
 
-astra::CDataStorage *allocateGPUMemoryLike(const astra::CData3D *model, Mem3DZeroMode zero)
+std::unique_ptr<astra::CDataStorage> allocateGPUMemoryLike(const astra::CData3D *model, Mem3DZeroMode zero)
 {
 	assert(model);
 
@@ -117,33 +117,33 @@ astra::CDataStorage *allocateGPUMemoryLike(const astra::CData3D *model, Mem3DZer
 
 astra::CFloat32VolumeData3D *createGPUVolumeData3DLike(const astra::CFloat32VolumeData3D *model)
 {
-	astra::CDataStorage *storage = allocateGPUMemoryLike(model, INIT_ZERO);
+	std::unique_ptr<astra::CDataStorage> storage = allocateGPUMemoryLike(model, INIT_ZERO);
 	if (!storage)
 		return nullptr;
 
-	return new astra::CFloat32VolumeData3D(model->getGeometry(), storage);
+	return new astra::CFloat32VolumeData3D(model->getGeometry(), std::move(storage));
 }
 
 
 astra::CFloat32ProjectionData3D *createGPUProjectionData3DLike(const astra::CFloat32ProjectionData3D *model)
 {
-	astra::CDataStorage *storage = allocateGPUMemoryLike(model, INIT_ZERO);
+	std::unique_ptr<astra::CDataStorage> storage = allocateGPUMemoryLike(model, INIT_ZERO);
 	if (!storage)
 		return nullptr;
 
-	return new astra::CFloat32ProjectionData3D(model->getGeometry(), storage);
+	return new astra::CFloat32ProjectionData3D(model->getGeometry(), std::move(storage));
 }
 
-astra::CData3D *createGPUData3DLike(const astra::CData3D *model)
+astra::CData3D *createGPUData3DLike(const astra::CData3D *model, Mem3DZeroMode zero)
 {
 	assert(model->getStorage());
 	assert(model->getStorage()->isFloat32());
 
 	std::array<int, 3> dims = model->getShape();
-	astra::CDataStorage *storage = allocateGPUMemory(dims[0], dims[1], dims[2], INIT_ZERO);
+	std::unique_ptr<astra::CDataStorage> storage = allocateGPUMemory(dims[0], dims[1], dims[2], zero);
 	if (!storage)
 		return nullptr;
-	return new astra::CData3D(dims[0], dims[1], dims[2], storage);
+	return new astra::CData3D(dims[0], dims[1], dims[2], std::move(storage));
 }
 
 
@@ -485,7 +485,7 @@ bool FDK(astra::CFloat32ProjectionData3D *projData, astra::CFloat32VolumeData3D 
 
 }
 
-_AstraExport astra::CDataStorage *wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch)
+_AstraExport std::unique_ptr<astra::CDataStorage> wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch)
 {
 	cudaPitchedPtr ptr;
 	ptr.ptr = D_ptr;
@@ -495,7 +495,7 @@ _AstraExport astra::CDataStorage *wrapHandle(float *D_ptr, unsigned int x, unsig
 
 	astraCUDA::CDataGPU *ret = new astraCUDA::CDataGPU(ptr);
 
-	return ret;
+	return std::unique_ptr<astra::CDataStorage>(ret);
 }
 
 bool dotProduct3D(const astra::CData3D *D_data, float &fRet)

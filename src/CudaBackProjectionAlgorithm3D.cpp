@@ -183,33 +183,26 @@ static bool astraCudaBP_SIRTWeighted(CFloat32VolumeData3D *pVolume,
 			return false;
 	}
 
-	std::array<int, 3> volDims = pVolume->getShape();
-	std::array<int, 3> projDims = pProjections->getShape();
-
-	CDataStorage *s;
-	s = astraCUDA3d::allocateGPUMemory(volDims[0], volDims[1], volDims[2], astraCUDA3d::INIT_ZERO);
-	if (!s) {
+	CData3D *D_volData = astraCUDA3d::createGPUData3DLike(pVolume, astraCUDA3d::INIT_ZERO);
+	if (!D_volData) {
 		return false;
 	}
-	CData3D *D_volData = new CData3D(volDims[0], volDims[1], volDims[2], s);
 
-	s = astraCUDA3d::allocateGPUMemory(volDims[0], volDims[1], volDims[2], astraCUDA3d::INIT_ZERO);
-	if (!s) {
+	CData3D *D_pixelWeight = astraCUDA3d::createGPUData3DLike(pVolume, astraCUDA3d::INIT_ZERO);
+	if (!D_pixelWeight) {
 		astraCUDA3d::freeGPUMemory(D_volData);
 		delete D_volData;
 		return false;
 	}
-	CData3D *D_pixelWeight = new CData3D(volDims[0], volDims[1], volDims[2], s);
 
-	s = astraCUDA3d::allocateGPUMemory(projDims[0], projDims[1], projDims[2], astraCUDA3d::INIT_NO);
-	if (!s) {
+	CData3D *D_projData = astraCUDA3d::createGPUData3DLike(pProjections, astraCUDA3d::INIT_NO);
+	if (!D_projData) {
 		astraCUDA3d::freeGPUMemory(D_volData);
 		astraCUDA3d::freeGPUMemory(D_pixelWeight);
 		delete D_volData;
 		delete D_pixelWeight;
 		return false;
 	}
-	CData3D *D_projData = new CData3D(projDims[0], projDims[1], projDims[2], s);
 
 	// Compute weights
 	bool ok = true;

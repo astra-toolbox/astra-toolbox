@@ -52,14 +52,14 @@ using astraCUDA3d::INIT_ZERO;
 
 _AstraExport astra::CDataStorage* wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int pitch);
 
-astra::CDataStorage *allocateGPUMemory(unsigned int x, unsigned int y, Mem3DZeroMode zero);
+std::unique_ptr<astra::CDataStorage> allocateGPUMemory(unsigned int x, unsigned int y, Mem3DZeroMode zero);
 
-astra::CDataStorage *allocateGPUMemoryLike(const astra::CData2D *model, Mem3DZeroMode zero);
+std::unique_ptr<astra::CDataStorage> allocateGPUMemoryLike(const astra::CData2D *model, Mem3DZeroMode zero);
 astra::CFloat32VolumeData2D *createGPUVolumeData2DLike(const astra::CFloat32VolumeData2D *model);
 astra::CFloat32ProjectionData2D *createGPUProjectionData2DLike(const astra::CFloat32ProjectionData2D *model);
 
 // Create base object without attached geometry
-astra::CData2D *createGPUData2DLike(const astra::CData2D *model);
+astra::CData2D *createGPUData2DLike(const astra::CData2D *model, Mem3DZeroMode zero);
 
 bool copyToGPUMemory(const astra::CData2D *src, astra::CData2D *dst);
 

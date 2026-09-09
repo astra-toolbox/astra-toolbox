@@ -107,8 +107,8 @@ cdef extern from "astra/Data2D.h" namespace "astra":
 
 cdef extern from "astra/Data2D.h" namespace "astra":
     cdef cppclass CFloat32VolumeData2D(CData2D):
-        CFloat32VolumeData2D(unique_ptr[CVolumeGeometry2D]&&, CDataStorage*)
-        CFloat32VolumeData2D(const CVolumeGeometry2D &, CDataStorage*)
+        CFloat32VolumeData2D(unique_ptr[CVolumeGeometry2D]&&, unique_ptr[CDataStorage]&&)
+        CFloat32VolumeData2D(const CVolumeGeometry2D &, unique_ptr[CDataStorage]&&)
         CVolumeGeometry2D& getGeometry()
         void changeGeometry(const CVolumeGeometry2D&)
         void changeGeometry(unique_ptr[CVolumeGeometry2D] &&)
@@ -117,8 +117,8 @@ cdef extern from "astra/Data2D.h" namespace "astra":
 
 cdef extern from "astra/Data2D.h" namespace "astra":
     cdef cppclass CFloat32ProjectionData2D(CData2D):
-        CFloat32ProjectionData2D(unique_ptr[CProjectionGeometry2D]&&, CDataStorage*)
-        CFloat32ProjectionData2D(const CProjectionGeometry2D &, CDataStorage*)
+        CFloat32ProjectionData2D(unique_ptr[CProjectionGeometry2D]&&, unique_ptr[CDataStorage]&&)
+        CFloat32ProjectionData2D(const CProjectionGeometry2D &, unique_ptr[CDataStorage]&&)
         CProjectionGeometry2D& getGeometry()
         void changeGeometry(const CProjectionGeometry2D&)
         void changeGeometry(unique_ptr[CProjectionGeometry2D] &&)
@@ -164,7 +164,7 @@ IF HAVE_CUDA==True:
         cdef cppclass CCudaProjector2D
 
     cdef extern from "astra/Data3D.h" namespace "astraCUDA3d":
-        cdef CDataStorage* wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch)
+        cdef unique_ptr[CDataStorage] wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch)
 
 
 cdef extern from "astra/SparseMatrix.h" namespace "astra":
@@ -230,8 +230,8 @@ cdef extern from "astra/Data3D.h" namespace "astra":
 
 cdef extern from "astra/Data3D.h" namespace "astra":
     cdef cppclass CFloat32VolumeData3D(CData3D):
-        CFloat32VolumeData3D(unique_ptr[CVolumeGeometry3D]&&, CDataStorage*)
-        CFloat32VolumeData3D(const CVolumeGeometry3D &, CDataStorage*)
+        CFloat32VolumeData3D(unique_ptr[CVolumeGeometry3D]&&, unique_ptr[CDataStorage]&&)
+        CFloat32VolumeData3D(const CVolumeGeometry3D &, unique_ptr[CDataStorage]&&)
         const CVolumeGeometry3D& getGeometry()
         void changeGeometry(const CVolumeGeometry3D&)
         void changeGeometry(unique_ptr[CVolumeGeometry3D] &&)
@@ -243,8 +243,8 @@ cdef extern from "astra/Data3D.h" namespace "astra":
 
 cdef extern from "astra/Data3D.h" namespace "astra":
     cdef cppclass CFloat32ProjectionData3D(CData3D):
-        CFloat32ProjectionData3D(unique_ptr[CProjectionGeometry3D]&&, CDataStorage*)
-        CFloat32ProjectionData3D(const CProjectionGeometry3D &, CDataStorage*)
+        CFloat32ProjectionData3D(unique_ptr[CProjectionGeometry3D]&&, unique_ptr[CDataStorage]&&)
+        CFloat32ProjectionData3D(const CProjectionGeometry3D &, unique_ptr[CDataStorage]&&)
         const CProjectionGeometry3D& getGeometry()
         void changeGeometry(const CProjectionGeometry3D&)
         void changeGeometry(unique_ptr[CProjectionGeometry3D] &&)

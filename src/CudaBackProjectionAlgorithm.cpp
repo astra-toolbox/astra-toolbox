@@ -88,26 +88,19 @@ bool CCudaBackProjectionAlgorithm::run(int /*_iNrIterations*/)
 
 	bool ok = true;
 
-	std::array<int, 2> volDims = m_pReconstruction->getShape();
-	std::array<int, 2> projDims = m_pSinogram->getShape();
-
 	if (m_iGPUIndex != -1)
 		astraCUDA::setGPUIndex(m_iGPUIndex);
 
-	CDataStorage *s;
-	s = astraCUDA::allocateGPUMemory(volDims[0], volDims[1], astraCUDA::INIT_ZERO);
-	if (!s) {
+	CData2D *D_volData = astraCUDA::createGPUData2DLike(m_pReconstruction, astraCUDA::INIT_ZERO);
+	if (!D_volData)
 		return false;
-	}
-	CData2D *D_volData = new CData2D(volDims[0], volDims[1], s);
 
-	s = astraCUDA::allocateGPUMemory(projDims[0], projDims[1], astraCUDA::INIT_NO);
-	if (!s) {
+	CData2D *D_projData = astraCUDA::createGPUData2DLike(m_pSinogram, astraCUDA::INIT_NO);
+	if (!D_projData) {
 		astraCUDA::freeGPUMemory(D_volData);
 		delete D_volData;
 		return false;
 	}
-	CData2D *D_projData = new CData2D(projDims[0], projDims[1], s);
 
 	if (m_pSinogram->isFloat32Memory()) {
 		ok &= astraCUDA::copyToGPUMemory(m_pSinogram, D_projData);

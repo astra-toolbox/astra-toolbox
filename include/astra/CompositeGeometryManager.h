@@ -222,7 +222,7 @@ protected:
 // subblock requested. This allows this object to be storage for very large
 // geometries without requiring it to be fully allocated in host memory.
 // Obviously this will produce nonsensical output, but mostly valid timings.
-_AstraExport CDataStorage* createDebuggingDataStorage();
+_AstraExport std::unique_ptr<CDataStorage> createDebuggingDataStorage();
 
 
 }

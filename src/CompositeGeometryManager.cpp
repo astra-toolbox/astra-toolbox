@@ -93,14 +93,14 @@ public:
 
 		size_t x, y, z;
 		part.getDims(x, y, z);
-		CDataStorage *storage = astraCUDA3d::allocateGPUMemory(x, y, z, zero);
+		std::unique_ptr<CDataStorage> storage = astraCUDA3d::allocateGPUMemory(x, y, z, zero);
 		if (!storage)
 			_data = nullptr;
 
 		if (part.eType == CCompositeGeometryManager::CPart::PART_VOL) {
-			_data = new CFloat32VolumeData3D(*dynamic_cast<const CCompositeGeometryManager::CVolumePart&>(part).pGeom, storage);
+			_data = new CFloat32VolumeData3D(*dynamic_cast<const CCompositeGeometryManager::CVolumePart&>(part).pGeom, std::move(storage));
 		} else if (part.eType == CCompositeGeometryManager::CPart::PART_PROJ) {
-			_data = new CFloat32ProjectionData3D(*dynamic_cast<const CCompositeGeometryManager::CProjectionPart&>(part).pGeom, storage);
+			_data = new CFloat32ProjectionData3D(*dynamic_cast<const CCompositeGeometryManager::CProjectionPart&>(part).pGeom, std::move(storage));
 		} else {
 			assert(false);
 		}
@@ -145,9 +145,9 @@ public:
 	}
 };
 
-_AstraExport CDataStorage* createDebuggingDataStorage()
+_AstraExport std::unique_ptr<CDataStorage> createDebuggingDataStorage()
 {
-	return new CDebuggingDataMemory();
+	return std::unique_ptr<CDataStorage>(new CDebuggingDataMemory());
 }
 
 class CDebuggingMemoryHandler : public CDataMemoryHandler {

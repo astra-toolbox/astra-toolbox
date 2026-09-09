@@ -260,7 +260,6 @@ def getDLPackCapsule(data):
 
 cdef CFloat32VolumeData2D* linkVolFromGeometry2D(const CVolumeGeometry2D &pGeometry, data) except NULL:
     cdef CFloat32VolumeData2D * pDataObject2D = NULL
-    cdef CDataStorage * pStorage
     cdef string dlerror = b""
 
     # TODO: investigate the stream argument to __dlpack__().
@@ -276,7 +275,6 @@ cdef CFloat32VolumeData2D* linkVolFromGeometry2D(const CVolumeGeometry2D &pGeome
 
 cdef CFloat32ProjectionData2D* linkProjFromGeometry2D(const CProjectionGeometry2D &pGeometry, data) except NULL:
     cdef CFloat32ProjectionData2D * pDataObject2D = NULL
-    cdef CDataStorage * pStorage
     cdef string dlerror = b""
 
     # TODO: investigate the stream argument to __dlpack__().
@@ -291,7 +289,7 @@ cdef CFloat32ProjectionData2D* linkProjFromGeometry2D(const CProjectionGeometry2
 
 cdef CFloat32VolumeData3D* linkVolFromGeometry3D(const CVolumeGeometry3D &pGeometry, data) except NULL:
     cdef CFloat32VolumeData3D * pDataObject3D = NULL
-    cdef CDataStorage * pStorage
+    cdef unique_ptr[CDataStorage] pStorage
     cdef string dlerror = b""
 
     # TODO: investigate the stream argument to __dlpack__().
@@ -313,7 +311,7 @@ cdef CFloat32VolumeData3D* linkVolFromGeometry3D(const CVolumeGeometry3D &pGeome
             pStorage = wrapHandle(<float*>PyLong_AsVoidPtr(data.ptr), data.x, data.y, data.z, data.pitch/4)
         ELSE:
             raise AstraError("CUDA support is not enabled in ASTRA")
-        pDataObject3D = new CFloat32VolumeData3D(pGeometry, pStorage)
+        pDataObject3D = new CFloat32VolumeData3D(pGeometry, move(pStorage))
         return pDataObject3D
 
     raise TypeError("Data should be an array with DLPack support, or a GPULink object")
@@ -321,7 +319,7 @@ cdef CFloat32VolumeData3D* linkVolFromGeometry3D(const CVolumeGeometry3D &pGeome
 
 cdef CFloat32ProjectionData3D* linkProjFromGeometry3D(const CProjectionGeometry3D &pGeometry, data) except NULL:
     cdef CFloat32ProjectionData3D * pDataObject3D = NULL
-    cdef CDataStorage * pStorage
+    cdef unique_ptr[CDataStorage] pStorage
     cdef string dlerror = b""
 
     # TODO: investigate the stream argument to __dlpack__().
@@ -343,7 +341,7 @@ cdef CFloat32ProjectionData3D* linkProjFromGeometry3D(const CProjectionGeometry3
             pStorage = wrapHandle(<float*>PyLong_AsVoidPtr(data.ptr), data.x, data.y, data.z, data.pitch/4)
         ELSE:
             raise AstraError("CUDA support is not enabled in ASTRA")
-        pDataObject3D = new CFloat32ProjectionData3D(pGeometry, pStorage)
+        pDataObject3D = new CFloat32ProjectionData3D(pGeometry, move(pStorage))
         return pDataObject3D
 
     raise TypeError("Data should be an array with DLPack support, or a GPULink object")
