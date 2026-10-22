@@ -351,6 +351,13 @@ if test x"$with_python" != x -a x"$with_python" != xno; then
     fi
   fi
   AC_MSG_RESULT(yes)
+  AC_MSG_CHECKING(for pip module)
+  ASTRA_TRY_PYTHON([import pip],,HAVEPYTHON=no)
+  if test x$HAVEPYTHON = xno; then
+    AC_MSG_RESULT(no)
+    AC_MSG_ERROR(You need the pip module to install the ASTRA toolbox in Python)
+  fi
+  AC_MSG_RESULT(yes)
 fi
 
 AC_SUBST(HAVEPYTHON)
