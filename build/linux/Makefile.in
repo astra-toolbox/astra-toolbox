@@ -721,6 +721,7 @@ install-headers:
 	$(INSTALL_SH) -m 755 -d $(DESTDIR)$(includedir)/astra/cuda/3d
 	$(INSTALL_SH) -m 644 $(srcdir)/../../include/astra/*.h $(DESTDIR)$(includedir)/astra
 	$(INSTALL_SH) -m 644 $(srcdir)/../../include/astra/*.inl $(DESTDIR)$(includedir)/astra
+	$(INSTALL_SH) -m 644 $(srcdir)/../../include/astra/cuda/*.h $(DESTDIR)$(includedir)/astra/cuda
 	$(INSTALL_SH) -m 644 $(srcdir)/../../include/astra/cuda/2d/*.h $(DESTDIR)$(includedir)/astra/cuda/2d
 	$(INSTALL_SH) -m 644 $(srcdir)/../../include/astra/cuda/3d/*.h $(DESTDIR)$(includedir)/astra/cuda/3d
 
