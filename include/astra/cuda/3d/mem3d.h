@@ -29,6 +29,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #define _CUDA_MEM3D_H
 
 #include "astra3d.h"
+#include <memory>
 
 namespace astra {
 class CVolumeGeometry3D;
@@ -76,17 +77,16 @@ enum Mem3DZeroMode {
 
 int maxBlockDimension();
 
-_AstraExport astra::CDataStorage* wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch);
-astra::CDataStorage* createProjectionArrayHandle(const float *ptr, unsigned int x, unsigned int y, unsigned int z);
+_AstraExport std::unique_ptr<astra::CDataStorage> wrapHandle(float *D_ptr, unsigned int x, unsigned int y, unsigned int z, unsigned int pitch);
 
-astra::CDataStorage *allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Mem3DZeroMode zero);
+std::unique_ptr<astra::CDataStorage> allocateGPUMemory(unsigned int x, unsigned int y, unsigned int z, Mem3DZeroMode zero);
 
-astra::CDataStorage *allocateGPUMemoryLike(const astra::CData3D *model, Mem3DZeroMode zero);
+std::unique_ptr<astra::CDataStorage> allocateGPUMemoryLike(const astra::CData3D *model, Mem3DZeroMode zero);
 astra::CFloat32VolumeData3D *createGPUVolumeData3DLike(const astra::CFloat32VolumeData3D *model);
 astra::CFloat32ProjectionData3D *createGPUProjectionData3DLike(const astra::CFloat32ProjectionData3D *model);
 
 // Create base object without attached geometry
-astra::CData3D *createGPUData3DLike(const astra::CData3D *model);
+astra::CData3D *createGPUData3DLike(const astra::CData3D *model, Mem3DZeroMode zero);
 
 bool copyToGPUMemory(const astra::CData3D *src, astra::CData3D *dst);
 bool copyToGPUMemory(const astra::CData3D *src, astra::CData3D *dst, const SSubDimensions3D &pos);
@@ -100,9 +100,6 @@ bool freeGPUMemory(astra::CData3D *data);
 bool zeroGPUMemory(astra::CData3D *data);
 
 bool assignGPUMemory(astra::CData3D *dst, const astra::CData3D *src);
-
-bool copyIntoArray(astra::CData3D *data, astra::CData3D *subdata, const SSubDimensions3D &pos);
-
 
 bool FP(astra::CFloat32ProjectionData3D *projData, const astra::CFloat32VolumeData3D *volData, int iDetectorSuperSampling, astra::Cuda3DProjectionKernel projKernel);
 bool FP(astra::CData3D *projData, const astra::CData3D *volData, const astra::Geometry3DParameters &geom, SProjectorParams3D params);

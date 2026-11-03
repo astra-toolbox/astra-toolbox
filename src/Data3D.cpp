@@ -80,7 +80,7 @@ CFloat32ProjectionData3D *createCFloat32ProjectionData3DMemory(const CProjection
 	CDataStorage *storage = new CDataMemory<float32>(size);
 	if (!storage)
 		return 0;
-	return new CFloat32ProjectionData3D(geom, storage);
+	return new CFloat32ProjectionData3D(geom, std::unique_ptr<CDataStorage>(storage));
 }
 
 CFloat32ProjectionData3D *createCFloat32ProjectionData3DMemory(std::unique_ptr<CProjectionGeometry3D> &&geom)
@@ -91,7 +91,7 @@ CFloat32ProjectionData3D *createCFloat32ProjectionData3DMemory(std::unique_ptr<C
 	CDataStorage *storage = new CDataMemory<float32>(size);
 	if (!storage)
 		return 0;
-	return new CFloat32ProjectionData3D(std::move(geom), storage);
+	return new CFloat32ProjectionData3D(std::move(geom), std::unique_ptr<CDataStorage>(storage));
 }
 
 
@@ -100,7 +100,7 @@ CFloat32VolumeData3D *createCFloat32VolumeData3DMemory(const CVolumeGeometry3D &
 	CDataStorage *storage = new CDataMemory<float32>(geom.getGridTotCount());
 	if (!storage)
 		return 0;
-	return new CFloat32VolumeData3D(geom, storage);
+	return new CFloat32VolumeData3D(geom, std::unique_ptr<CDataStorage>(storage));
 }
 
 CFloat32VolumeData3D *createCFloat32VolumeData3DMemory(std::unique_ptr<CVolumeGeometry3D> &&geom)
@@ -108,7 +108,7 @@ CFloat32VolumeData3D *createCFloat32VolumeData3DMemory(std::unique_ptr<CVolumeGe
 	CDataStorage *storage = new CDataMemory<float32>(geom->getGridTotCount());
 	if (!storage)
 		return 0;
-	return new CFloat32VolumeData3D(std::move(geom), storage);
+	return new CFloat32VolumeData3D(std::move(geom), std::unique_ptr<CDataStorage>(storage));
 }
 
 template class CData3DObject<CProjectionGeometry3D>;

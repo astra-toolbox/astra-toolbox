@@ -50,15 +50,15 @@ public:
 
 	virtual EDataType getType() const { return BASE; }
 
-	CData3D(int x, int y, int z, CDataStorage *storage) : CData({x, y, z}, storage) { }
+	CData3D(int x, int y, int z, std::unique_ptr<CDataStorage>&& storage) : CData({x, y, z}, std::move(storage)) { }
 };
 
 template <class G>
 class _AstraExport CData3DObject : public CData3D {
 protected:
 	std::unique_ptr<G> m_pGeometry;
-	CData3DObject(int x, int y, int z, std::unique_ptr<G>&& geom, CDataStorage *storage) : CData3D(x, y, z, storage), m_pGeometry(std::move(geom)) { }
-	CData3DObject(int x, int y, int z, const G &geom, CDataStorage *storage) : CData3D(x, y, z, storage), m_pGeometry(geom.clone()) { }
+	CData3DObject(int x, int y, int z, std::unique_ptr<G>&& geom, std::unique_ptr<CDataStorage>&& storage) : CData3D(x, y, z, std::move(storage)), m_pGeometry(std::move(geom)) { }
+	CData3DObject(int x, int y, int z, const G &geom, std::unique_ptr<CDataStorage> &&storage) : CData3D(x, y, z, std::move(storage)), m_pGeometry(geom.clone()) { }
 	virtual ~CData3DObject() { }
 
 public:
@@ -71,8 +71,8 @@ public:
 class _AstraExport CFloat32ProjectionData3D : public CData3DObject<CProjectionGeometry3D> {
 public:
 
-	CFloat32ProjectionData3D(std::unique_ptr<CProjectionGeometry3D>&& geom, CDataStorage *storage) : CData3DObject<CProjectionGeometry3D>(geom->getDetectorColCount(), geom->getProjectionCount(), geom->getDetectorRowCount(), std::move(geom), storage) { }
-	CFloat32ProjectionData3D(const CProjectionGeometry3D &geom, CDataStorage *storage) : CData3DObject<CProjectionGeometry3D>(geom.getDetectorColCount(), geom.getProjectionCount(), geom.getDetectorRowCount(), geom, storage) { }
+	CFloat32ProjectionData3D(std::unique_ptr<CProjectionGeometry3D>&& geom, std::unique_ptr<CDataStorage>&& storage) : CData3DObject<CProjectionGeometry3D>(geom->getDetectorColCount(), geom->getProjectionCount(), geom->getDetectorRowCount(), std::move(geom), std::move(storage)) { }
+	CFloat32ProjectionData3D(const CProjectionGeometry3D &geom, std::unique_ptr<CDataStorage> &&storage) : CData3DObject<CProjectionGeometry3D>(geom.getDetectorColCount(), geom.getProjectionCount(), geom.getDetectorRowCount(), geom, std::move(storage)) { }
 
 	int getDetectorRowCount() const { return m_iDims[2]; }
 	int getDetectorColCount() const { return m_iDims[0]; }
@@ -84,8 +84,8 @@ public:
 
 class _AstraExport CFloat32VolumeData3D : public CData3DObject<CVolumeGeometry3D> {
 public:
-	CFloat32VolumeData3D(std::unique_ptr<CVolumeGeometry3D>&& geom, CDataStorage *storage) : CData3DObject<CVolumeGeometry3D>(geom->getGridColCount(), geom->getGridRowCount(), geom->getGridSliceCount(), std::move(geom), storage) { }
-	CFloat32VolumeData3D(const CVolumeGeometry3D &geom, CDataStorage *storage) : CData3DObject<CVolumeGeometry3D>(geom.getGridColCount(), geom.getGridRowCount(), geom.getGridSliceCount(), geom, storage) { }
+	CFloat32VolumeData3D(std::unique_ptr<CVolumeGeometry3D>&& geom, std::unique_ptr<CDataStorage> &&storage) : CData3DObject<CVolumeGeometry3D>(geom->getGridColCount(), geom->getGridRowCount(), geom->getGridSliceCount(), std::move(geom), std::move(storage)) { }
+	CFloat32VolumeData3D(const CVolumeGeometry3D &geom, std::unique_ptr<CDataStorage>&& storage) : CData3DObject<CVolumeGeometry3D>(geom.getGridColCount(), geom.getGridRowCount(), geom.getGridSliceCount(), geom, std::move(storage)) { }
 
 	int getColCount() const { return m_iDims[0]; }
 	int getRowCount() const { return m_iDims[1]; }

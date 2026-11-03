@@ -20,6 +20,7 @@
 #define cudaAddressModeBorder hipAddressModeBorder
 #define cudaAddressModeClamp hipAddressModeClamp
 #define cudaArray hipArray
+#define cudaArrayLayered hipArrayLayered
 #define cudaChannelFormatDesc hipChannelFormatDesc
 #define cudaChannelFormatKindFloat hipChannelFormatKindFloat
 #define cudaCreateChannelDesc hipCreateChannelDesc
@@ -60,6 +61,7 @@
 #define cudaMemGetInfo hipMemGetInfo
 #define cudaMemset2DAsync hipMemset2DAsync
 #define cudaMemset2D hipMemset2D
+#define cudaMemset3DAsync hipMemset3DAsync
 #define cudaMemset3D hipMemset3D
 #define cudaMemsetAsync hipMemsetAsync
 #define cudaPitchedPtr hipPitchedPtr

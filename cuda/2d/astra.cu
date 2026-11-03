@@ -113,6 +113,14 @@ _AstraExport size_t availableGPUMemory()
     return free;
 }
 
+_AstraExport size_t totalGPUMemory()
+{
+    size_t free, total;
+    cudaError_t err = cudaMemGetInfo(&free, &total);
+    if (err != cudaSuccess)
+        return 0;
+    return total;
+}
 
 
 

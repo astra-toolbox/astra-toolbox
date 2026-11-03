@@ -82,7 +82,7 @@ class _AstraExport CData {
 public:
 	typedef enum {BASE, PROJECTION, VOLUME} EDataType;
 
-	virtual ~CData() { delete m_storage; }
+	virtual ~CData() { }
 
 	int getDimensionCount() const { return D; }
 	std::array<int, D> getShape() const { return m_iDims; }
@@ -91,12 +91,12 @@ public:
 
 	virtual EDataType getType() const =0;
 
-	CDataStorage *getStorage() { return m_storage; }
-	const CDataStorage *getStorage() const { return m_storage; }
+	CDataStorage *getStorage() { return m_storage.get(); }
+	const CDataStorage *getStorage() const { return m_storage.get(); }
 
 	bool isFloat32Memory() const { return m_storage->isMemory() && m_storage->isFloat32(); }
-	float32 *getFloat32Memory() { return isFloat32Memory() ? dynamic_cast<CDataMemory<float32>*>(m_storage)->getData() : nullptr; }
-	const float32 *getFloat32Memory() const { return isFloat32Memory() ? dynamic_cast<const CDataMemory<float32>*>(m_storage)->getData() : nullptr; }
+	float32 *getFloat32Memory() { return isFloat32Memory() ? dynamic_cast<CDataMemory<float32>*>(m_storage.get())->getData() : nullptr; }
+	const float32 *getFloat32Memory() const { return isFloat32Memory() ? dynamic_cast<const CDataMemory<float32>*>(m_storage.get())->getData() : nullptr; }
 
 	bool isFloat32GPU() const { return m_storage->isGPU() && m_storage->isFloat32(); }
 
@@ -104,8 +104,8 @@ public:
 	bool isInitialized() const { return true; }
 
 protected:
-	CData(std::array<int, D> dims, CDataStorage *storage)
-		: m_iDims(dims), m_storage(storage)
+	CData(std::array<int, D> dims, std::unique_ptr<CDataStorage> &&storage)
+		: m_iDims(dims), m_storage(std::move(storage))
 	{
 		m_iSize = std::reduce(std::cbegin(m_iDims), std::cend(m_iDims), (size_t)1, std::multiplies<size_t>());
 	}
@@ -113,7 +113,7 @@ protected:
 	std::array<int, D> m_iDims;
 	size_t m_iSize;
 
-	CDataStorage *m_storage;
+	std::unique_ptr<CDataStorage> m_storage;
 };
 
 

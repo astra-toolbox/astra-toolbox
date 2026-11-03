@@ -51,7 +51,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 namespace astraCUDA {
 
 
-astra::CDataStorage *allocateGPUMemory(unsigned int x, unsigned int y, Mem3DZeroMode zero)
+std::unique_ptr<astra::CDataStorage> allocateGPUMemory(unsigned int x, unsigned int y, Mem3DZeroMode zero)
 {
 	cudaPitchedPtr ptr;
 
@@ -81,10 +81,10 @@ astra::CDataStorage *allocateGPUMemory(unsigned int x, unsigned int y, Mem3DZero
 
 	astraCUDA::CDataGPU *ret = new astraCUDA::CDataGPU(ptr);
 
-	return ret;
+	return std::unique_ptr<astra::CDataStorage>(ret);
 }
 
-astra::CDataStorage *allocateGPUMemoryLike(const astra::CData2D *model, Mem3DZeroMode zero)
+std::unique_ptr<astra::CDataStorage> allocateGPUMemoryLike(const astra::CData2D *model, Mem3DZeroMode zero)
 {
 	assert(model);
 
@@ -95,33 +95,33 @@ astra::CDataStorage *allocateGPUMemoryLike(const astra::CData2D *model, Mem3DZer
 
 astra::CFloat32VolumeData2D *createGPUVolumeData2DLike(const astra::CFloat32VolumeData2D *model)
 {
-	astra::CDataStorage *storage = allocateGPUMemoryLike(model, INIT_ZERO);
+	std::unique_ptr<astra::CDataStorage> storage = allocateGPUMemoryLike(model, INIT_ZERO);
 	if (!storage)
 		return nullptr;
 
-	return new astra::CFloat32VolumeData2D(model->getGeometry(), storage);
+	return new astra::CFloat32VolumeData2D(model->getGeometry(), std::move(storage));
 }
 
 
 astra::CFloat32ProjectionData2D *createGPUProjectionData2DLike(const astra::CFloat32ProjectionData2D *model)
 {
-	astra::CDataStorage *storage = allocateGPUMemoryLike(model, INIT_ZERO);
+	std::unique_ptr<astra::CDataStorage> storage = allocateGPUMemoryLike(model, INIT_ZERO);
 	if (!storage)
 		return nullptr;
 
-	return new astra::CFloat32ProjectionData2D(model->getGeometry(), storage);
+	return new astra::CFloat32ProjectionData2D(model->getGeometry(), std::move(storage));
 }
 
-astra::CData2D *createGPUData2DLike(const astra::CData2D *model)
+astra::CData2D *createGPUData2DLike(const astra::CData2D *model, Mem3DZeroMode zero)
 {
 	assert(model->getStorage());
 	assert(model->getStorage()->isFloat32());
 
 	std::array<int, 2> dims = model->getShape();
-	astra::CDataStorage *storage = allocateGPUMemory(dims[0], dims[1], INIT_ZERO);
+	std::unique_ptr<astra::CDataStorage> storage = allocateGPUMemory(dims[0], dims[1], zero);
 	if (!storage)
 		return nullptr;
-	return new astra::CData2D(dims[0], dims[1], storage);
+	return new astra::CData2D(dims[0], dims[1], std::move(storage));
 }
 
 
@@ -133,7 +133,6 @@ bool zeroGPUMemory(astra::CData2D *data)
 
 	std::array<int, 2> dims = data->getShape();
 
-	assert(!ds->getArray());
 	return checkCuda(cudaMemset2D(ds->getPtr().ptr, ds->getPtr().pitch, 0, sizeof(float)*dims[0], dims[1]), "zeroGPUMemory memset2d");
 }
 
@@ -143,7 +142,6 @@ bool freeGPUMemory(astra::CData2D *data)
 	assert(ds);
 
 	size_t free = astraCUDA::availableGPUMemory();
-	assert(!ds->getArray());
 
 	bool ok = checkCuda(cudaFree(ds->getPtr().ptr), "freeGPUMemory");
 	size_t free2 = astraCUDA::availableGPUMemory();
@@ -159,10 +157,8 @@ bool assignGPUMemory(astra::CData2D *dst, const astra::CData2D *src)
 
 	astraCUDA::CDataGPU *dsts = dynamic_cast<astraCUDA::CDataGPU*>(dst->getStorage());
 	assert(dsts);
-	assert(!dsts->getArray());
 	const astraCUDA::CDataGPU *srcs = dynamic_cast<const astraCUDA::CDataGPU*>(src->getStorage());
 	assert(srcs);
-	assert(!srcs->getArray());
 
 	std::array<int, 2> dims = src->getShape();
 
@@ -180,8 +176,6 @@ bool copyToGPUMemory(const astra::CData2D *src, astra::CData2D *dst)
 	astraCUDA::CDataGPU *ds = dynamic_cast<astraCUDA::CDataGPU*>(dst->getStorage());
 	assert(ds);
 
-	assert(!ds->getArray());
-
 	return checkCuda(cudaMemcpy2D(ds->getPtr().ptr, ds->getPtr().pitch, src->getFloat32Memory(), sizeof(float)*dims[0], sizeof(float)*dims[0], dims[1], cudaMemcpyHostToDevice), "copyToGPUMemory memcpy2d");
 }
 
@@ -195,8 +189,6 @@ bool copyFromGPUMemory(astra::CData2D *dst, const astra::CData2D *src)
 	assert(dst->isFloat32Memory());
 	const astraCUDA::CDataGPU *srcs = dynamic_cast<const astraCUDA::CDataGPU*>(src->getStorage());
 	assert(srcs);
-
-	assert(!srcs->getArray());
 
 	return checkCuda(cudaMemcpy2D(dst->getFloat32Memory(), sizeof(float)*dims[0], srcs->getPtr().ptr, srcs->getPtr().pitch, sizeof(float)*dims[0], dims[1], cudaMemcpyDeviceToHost), "copyFromGPUMemory memcpy2d");
 
@@ -228,9 +220,6 @@ bool FP(astra::CData2D *projData, const astra::CData2D *volData, const astra::Ge
 
 	const astraCUDA::CDataGPU *vols = dynamic_cast<const astraCUDA::CDataGPU*>(volData->getStorage());
 	assert(vols);
-
-	assert(!projs->getArray());
-	assert(!vols->getArray());
 
 	std::array<int, 2> projDims = projData->getShape();
 	std::array<int, 2> volDims = volData->getShape();
@@ -280,10 +269,8 @@ bool BP(const astra::CData2D *projData, astra::CData2D *volData, const astra::Ge
 {
 	const astraCUDA::CDataGPU *projs = dynamic_cast<const astraCUDA::CDataGPU*>(projData->getStorage());
 	assert(projs);
-	assert(!projs->getArray());
 	astraCUDA::CDataGPU *vols = dynamic_cast<astraCUDA::CDataGPU*>(volData->getStorage());
 	assert(vols);
-	assert(!vols->getArray());
 
 	std::array<int, 2> projDims = projData->getShape();
 	std::array<int, 2> volDims = volData->getShape();
@@ -337,9 +324,6 @@ bool FP_SART(astra::CData2D *projData, const astra::CData2D *volData, const astr
 	const astraCUDA::CDataGPU *vols = dynamic_cast<const astraCUDA::CDataGPU*>(volData->getStorage());
 	assert(vols);
 
-	assert(!projs->getArray());
-	assert(!vols->getArray());
-
 	std::array<int, 2> projDims = projData->getShape();
 	std::array<int, 2> volDims = volData->getShape();
 	SDimensions dims = geom.getDims();
@@ -374,10 +358,8 @@ bool BP_SART(const astra::CData2D *projData, astra::CData2D *volData, const astr
 {
 	const astraCUDA::CDataGPU *projs = dynamic_cast<const astraCUDA::CDataGPU*>(projData->getStorage());
 	assert(projs);
-	assert(!projs->getArray());
 	astraCUDA::CDataGPU *vols = dynamic_cast<astraCUDA::CDataGPU*>(volData->getStorage());
 	assert(vols);
-	assert(!vols->getArray());
 
 	std::array<int, 2> projDims = projData->getShape();
 	std::array<int, 2> volDims = volData->getShape();
@@ -412,7 +394,6 @@ bool dotProduct2D(const astra::CData2D *D_data, float &fRet)
 {
 	const astraCUDA::CDataGPU *datas = dynamic_cast<const astraCUDA::CDataGPU*>(D_data->getStorage());
 	assert(datas);
-	assert(!datas->getArray());
 
 	std::array<int, 2> dims = D_data->getShape();
 

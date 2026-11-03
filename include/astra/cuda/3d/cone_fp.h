@@ -30,14 +30,9 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 namespace astraCUDA3d {
 
-_AstraExport bool ConeFP_Array(cudaArray *D_volArray,
-                  cudaPitchedPtr D_projData,
-                  const SDimensions3D& dims, const SConeProjection* angles,
-                  const SProjectorParams3D& params);
-
 _AstraExport bool ConeFP(cudaPitchedPtr D_volumeData,
             cudaPitchedPtr D_projData,
-            const SDimensions3D& dims, const SConeProjection* angles,
+            const SDimensions3D& dims, const std::vector<SConeProjection>& angles,
             const SProjectorParams3D& params);
 
 }

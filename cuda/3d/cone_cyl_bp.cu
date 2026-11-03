@@ -28,22 +28,23 @@ SOFTWARE.
 
 #include "astra/cuda/3d/util3d.h"
 #include "astra/cuda/3d/dims3d.h"
+#include "astra/cuda/3d/proj3d.h"
 
 #include "astra/Logging.h"
 
 #include <cstdio>
 #include <cassert>
 
-namespace astraCUDA3d {
-
-static const unsigned int g_volBlockZ = 6;
-
+static const unsigned int g_volBlockZ = 8;
 static const unsigned int g_anglesPerBlock = 32;
 static const unsigned int g_volBlockX = 16;
 static const unsigned int g_volBlockY = 32;
 
-// must be divisible by anglesPerBlock
-static const unsigned g_MaxAngles = 768;
+static const unsigned g_MaxAngles = g_anglesPerBlock;
+
+#include "voxel3d.inl"
+
+namespace astraCUDA3d {
 
 struct DevCylConeParamsBP {
 	float4 fCa;
@@ -57,38 +58,43 @@ struct DevCylConeParamsBP {
 
 __constant__ DevCylConeParamsBP gC_C[g_MaxAngles];
 
-//__launch_bounds__(32*16, 4)
+using TransferConstantsBuffer = TransferConstantsBuffer_t<DevCylConeParamsBP>;
+
+class ConeCylBP_t : public VoxelDrivenProjector3D<TransferConstantsBuffer, SCylConeProjection> {
+public:
+	virtual bool transferConstants(const SCylConeProjection* angles,
+	                               unsigned int iProjAngles,
+	                               const SProjectorParams3D& params,
+	                               TransferConstantsBuffer& buf,
+	                               cudaStream_t stream) override;
+
+	virtual bool dispatchKernel_BP(float *D_volData, unsigned int volPitch,
+	                               cudaTextureObject_t tex,
+	                               unsigned int angleCount,
+	                               const SDimensions3D& dims,
+	                               const SProjectorParams3D& params,
+	                               cudaStream_t stream) override;
+};
+
+
+
 template<unsigned int ZSIZE>
-__global__ void dev_cylcone_BP(void* D_volData, unsigned int volPitch,
+__global__ void dev_cylcone_BP(float* D_volData, unsigned int volPitch,
                             cudaTextureObject_t tex,
-                            int startAngle, int angleOffset,
+                            int angleCount,
                             const astraCUDA3d::SDimensions3D dims,
                             float fOutputScale,
                             float fvx, float fvy, float fvz )
 {
-	float* volData = (float*)D_volData;
-
-	int endAngle = startAngle + g_anglesPerBlock;
-	if (endAngle > dims.iProjAngles - angleOffset)
-		endAngle = dims.iProjAngles - angleOffset;
-
-	// threadIdx: x = rel x
-	//            y = rel y
-
-	// blockIdx:  x = x + y
-	//            y = z
-
-
-
-	const int X = blockIdx.x % ((dims.iVolX+g_volBlockX-1)/g_volBlockX) * g_volBlockX + threadIdx.x;
-	const int Y = blockIdx.x / ((dims.iVolX+g_volBlockX-1)/g_volBlockX) * g_volBlockY + threadIdx.y;
+	const int X = blockIdx.x * blockDim.x + threadIdx.x;
+	const int Y = blockIdx.y * blockDim.y + threadIdx.y;
 
 	if (X >= dims.iVolX)
 		return;
 	if (Y >= dims.iVolY)
 		return;
 
-	const int startZ = blockIdx.y * g_volBlockZ;
+	const int startZ = blockIdx.z * g_volBlockZ;
 	const float fX = fvx * (X - 0.5f*dims.iVolX + 0.5f);
 	const float fY = fvy * (Y - 0.5f*dims.iVolY + 0.5f);
 	const float fZ = fvz * (startZ - 0.5f*dims.iVolZ + 0.5f);
@@ -99,9 +105,7 @@ __global__ void dev_cylcone_BP(void* D_volData, unsigned int volPitch,
 
 
 	{
-		float fAngle = startAngle + angleOffset + 0.5f;
-
-		for (int angle = startAngle; angle < endAngle; ++angle, fAngle += 1.0f)
+		for (int angle = 0; angle < angleCount; ++angle)
 		{
 			const float4 fCa  = gC_C[angle].fCa;
 			const float4 fCb  = gC_C[angle].fCb;
@@ -135,7 +139,7 @@ __global__ void dev_cylcone_BP(void* D_volData, unsigned int volPitch,
 
 				//printf("%f,%f,%f %f,%f,%f %f %f theta: %f v: %f U: %f V: %f (%d %d)\n", fX, fY, fZ, A, B, C, D, t, theta, v, fU, fV, dims.iProjU, dims.iProjV);
 //printf("%f %f %f\n", (ra * ra + rb * rb + rc * rc), t, (ra * ra + rb * rb + rc * rc) / t);
-				float fVal = tex3D<float>(tex, fU, fAngle, fV);
+				float fVal = tex2DLayered<float>(tex, fU, fV, angle);
 				// The ray density is 1 / t^2
 				// (t is scaled in transferConstants for this)
 				Z[idx] += fVal * t * t;
@@ -153,13 +157,10 @@ __global__ void dev_cylcone_BP(void* D_volData, unsigned int volPitch,
 		endZ = dims.iVolZ - startZ;
 
 	for(int i=0; i < endZ; i++)
-		volData[((startZ+i)*dims.iVolY+Y)*volPitch+X] += Z[i] * fOutputScale;
+		D_volData[((startZ+i)*dims.iVolY+Y)*volPitch+X] += Z[i] * fOutputScale;
 } //End kernel
 
-
-using TransferConstantsBuffer = TransferConstantsBuffer_t<DevCylConeParamsBP>;
-
-bool transferConstants_conecylbp(const SCylConeProjection* angles, unsigned int iProjAngles, const SProjectorParams3D& params,
+bool ConeCylBP_t::transferConstants(const SCylConeProjection* angles, unsigned int iProjAngles, const SProjectorParams3D& params,
                                  TransferConstantsBuffer& buf, cudaStream_t stream)
 {
 	DevCylConeParamsBP *p = &(std::get<0>(buf.d))[0];
@@ -232,92 +233,35 @@ bool transferConstants_conecylbp(const SCylConeProjection* angles, unsigned int 
 }
 
 
-bool ConeCylBP_Array(cudaPitchedPtr D_volumeData,
-                  cudaArray *D_projArray,
-                  const SDimensions3D& dims, const SCylConeProjection* angles,
-                  const SProjectorParams3D& params)
+bool ConeCylBP_t::dispatchKernel_BP(float *D_volumeData, unsigned int volPitch, cudaTextureObject_t D_texObj, unsigned int angleCount, const SDimensions3D& dims, const SProjectorParams3D& params, cudaStream_t stream)
 {
-	TransferConstantsBuffer tcbuf(g_MaxAngles);
+	dim3 dimBlock(g_volBlockX, g_volBlockY);
 
-	cudaTextureObject_t D_texObj;
-	if (!createTextureObject3D(D_projArray, D_texObj))
-		return false;
+	dim3 dimGrid = computeGrid3Ceil(dims.iVolX, g_volBlockX,
+	                                dims.iVolY, g_volBlockY,
+	                                dims.iVolZ, g_volBlockZ);
 
-	cudaStream_t stream;
-	if (!checkCuda(cudaStreamCreate(&stream), "ConeCylBP_Array stream")) {
-		logCuda(cudaDestroyTextureObject(D_texObj), "ConeCylBP_Array destroy stream");
-		return false;
-	}
-
-	float fOutputScale = params.fOutputScale * (params.volScale.fX * params.volScale.fY * params.volScale.fZ);
-
-	bool ok = true;
-
-	for (unsigned int th = 0; th < dims.iProjAngles; th += g_MaxAngles) {
-		unsigned int angleCount = g_MaxAngles;
-		if (th + angleCount > dims.iProjAngles)
-			angleCount = dims.iProjAngles - th;
-
-		ok = transferConstants_conecylbp(angles, angleCount, params, tcbuf, stream);
-		if (!ok)
-			break;
-
-		dim3 dimBlock(g_volBlockX, g_volBlockY);
-
-		dim3 dimGrid(((dims.iVolX/1+g_volBlockX-1)/(g_volBlockX))*((dims.iVolY/1+1*g_volBlockY-1)/(1*g_volBlockY)), (dims.iVolZ+g_volBlockZ-1)/g_volBlockZ);
-
-		// timeval t;
-		// tic(t);
-
-		for (unsigned int i = 0; i < angleCount; i += g_anglesPerBlock) {
-		// printf("Calling BP: %d, %dx%d, %dx%d to %p\n", i, dimBlock.x, dimBlock.y, dimGrid.x, dimGrid.y, (void*)D_volumeData.ptr); 
-			if (params.iRaysPerVoxelDim == 1) {
-				if (dims.iVolZ == 1) {
-					dev_cylcone_BP<1><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), D_texObj, i, th, dims, fOutputScale, params.volScale.fX, params.volScale.fY, params.volScale.fZ);
-
-				} else {
-					dev_cylcone_BP<g_volBlockZ><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData.ptr, D_volumeData.pitch/sizeof(float), D_texObj, i, th, dims, fOutputScale, params.volScale.fX, params.volScale.fY, params.volScale.fZ);
-				}
+	if (params.iRaysPerVoxelDim == 1) {
+		if (dims.iVolZ == 1) {
+			dev_cylcone_BP<1><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volPitch, D_texObj, angleCount, dims, params.fOutputScale, params.volScale.fX, params.volScale.fY, params.volScale.fZ);
 			} else {
-				// TODO?
-				assert(false);
-			}
+			dev_cylcone_BP<g_volBlockZ><<<dimGrid, dimBlock, 0, stream>>>(D_volumeData, volPitch, D_texObj, angleCount, dims, params.fOutputScale, params.volScale.fX, params.volScale.fY, params.volScale.fZ);
 		}
-
-		angles = angles + angleCount;
-		// printf("%f\n", toc(t));
-
+	} else {
+		// TODO?
+		return false;
 	}
 
-	ok = checkCuda(cudaStreamSynchronize(stream), "ConeCylBP sync");
-
-	logCuda(cudaDestroyTextureObject(D_texObj), "ConeCylBP_Array destroy texture");
-	logCuda(cudaStreamDestroy(stream), "ConeCylBP_Array destroy stream");
-
-	return ok;
+	return true;
 }
 
 bool ConeCylBP(cudaPitchedPtr D_volumeData,
             cudaPitchedPtr D_projData,
-            const SDimensions3D& dims, const SCylConeProjection* angles,
+            const SDimensions3D& dims, const std::vector<SCylConeProjection>& angles,
             const SProjectorParams3D& params)
 {
-	// transfer projections to array
-
-	cudaArray* cuArray = allocateProjectionArray(dims);
-	if (!cuArray)
-		return false;
-
-	if (!transferProjectionsToArray(D_projData, cuArray, dims)) {
-		logCuda(cudaFreeArray(cuArray), "ConeCylBP free array");
-		return false;
-	}
-
-	bool ret = ConeCylBP_Array(D_volumeData, cuArray, dims, angles, params);
-
-	logCuda(cudaFreeArray(cuArray), "ConeCylBP free array");
-
-	return ret;
+	ConeCylBP_t CC;
+	return CC.project(D_volumeData, D_projData, ConeCylBP_t::MODE_BACKWARD, false, dims, angles, params);
 }
 
 

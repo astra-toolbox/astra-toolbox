@@ -49,6 +49,7 @@ _AstraExport std::string getCudaDeviceString(int device);
 _AstraExport bool setGPUIndex(int index);
 
 _AstraExport size_t availableGPUMemory();
+_AstraExport size_t totalGPUMemory();
 
 }
 #endif

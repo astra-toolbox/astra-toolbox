@@ -31,8 +31,12 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/cuda/3d/dims3d.h"
 #include "astra/cuda/3d/arith3d.h"
 #include "astra/cuda/3d/cone_bp.h"
+#include "astra/cuda/3d/cone_bp_internal.h"
 
 #include "astra/cuda/2d/fft.h"
+
+#include "astra/cuda/stream.h"
+#include "astra/cuda/stream_internal.h"
 
 #include "astra/Logging.h"
 
@@ -42,7 +46,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 namespace astraCUDA3d {
 
-static const unsigned int g_anglesPerWeightBlock = 16;
+static const unsigned int g_anglesPerPrepareBlock = 16;
 static const unsigned int g_detBlockU = 32;
 static const unsigned int g_detBlockV = 32;
 
@@ -60,25 +64,97 @@ bool checkCufft(cufftResult err, const char *msg)
 	}
 }
 
+struct ParkerWeightingData {
+	double fCentralFanAngle = 0.0;
+	double fCentralRayLength = 0.0;
+	double fDetUSize = 0.0;
+	double fScale = 0.0;
+	double fAngleBase = 0.0;
+};
+struct PreWeightData {
+	double fSrcOrigin = 0.0;
+	double fDetOrigin = 0.0;
+	double fZShift = 0.0;
+	double fDetUSize = 0.0;
+	double fDetVSize = 0.0;
+};
+
+class FDK_t : public ConeBP_t {
+public:
+	FDK_t()
+	: m_D_filter(nullptr),
+	  m_bSingleFilter(true),
+	  m_D_pcSinoFFT(nullptr),
+	  m_D_pfPadded(nullptr),
+	  m_bShortScan(false),
+	  m_D_pfParkerAngles(nullptr)
+	{ }
+
+	bool prepareFilter(const SDimensions3D& dims,
+	                   const astra::SFilterConfig &filterConfig,
+	                   cudaStream_t stream);
+
+	void freeBuffers();
+
+	bool prepareWeighting(bool bShortScan,
+	                      const std::vector<SConeProjection>& angles,
+	                      const SDimensions3D& dims,
+	                      const SProjectorParams3D& params);
+
+	virtual bool prepareProjections(cudaPitchedPtr D_tmpProjBuffer,
+	                                cudaPitchedPtr D_projData,
+	                                const SConeProjection *D_geom,
+	                                unsigned int startAngle,
+	                                const SDimensions3D& bufDims,
+	                                const SDimensions3D& dims,
+	                                const SProjectorParams3D& params,
+	                                cudaStream_t stream) override;
+
+private:
+	bool filter(cudaPitchedPtr D_projData,
+	            unsigned int startAngle,
+	            const SDimensions3D& bufdims, const SDimensions3D& dims,
+	            const SProjectorParams3D& params,
+	            cudaStream_t stream);
+
+	bool doParkerWeighting(cudaPitchedPtr D_projData,
+	                       unsigned int startAngle,
+	                       const SDimensions3D& bufdims, const SDimensions3D& dims,
+	                       cudaStream_t stream);
+
+	cufftComplex *m_D_filter;
+	bool m_bSingleFilter;
+
+	cufftComplex * m_D_pcSinoFFT;
+	float * m_D_pfPadded;
+
+	cufftHandle m_planF;
+	cufftHandle m_planI;
+
+	// Parker weighting parameters
+	bool m_bShortScan;
+	ParkerWeightingData m_Parker;
+	float * m_D_pfParkerAngles;
+
+	// Pre-weighting parameters
+	PreWeightData m_preweight;
+};
 
 
-// TODO: To support non-cube voxels, preweighting needs per-view
-// parameters. NB: Need to properly take into account the
-// anisotropic volume normalization done for that too.
-
-
-__global__ void devFDK_preweight(void* D_projData, unsigned int projPitch, unsigned int startAngle, unsigned int endAngle, float fSrcOrigin, float fDetOrigin, float fZShift, float fDetUSize, float fDetVSize, const SDimensions3D dims)
+__global__ void devFDK_preweight(float* D_outData, const float* D_projData, unsigned int projPitchOut, unsigned int projPitchIn, unsigned int startAngle, float fSrcOrigin, float fDetOrigin, float fZShift, float fDetUSize, float fDetVSize, const SDimensions3D bufdims, const SDimensions3D dims)
 {
-	float* projData = (float*)D_projData;
-	int angle = startAngle + blockIdx.y * g_anglesPerWeightBlock + threadIdx.y;
-	if (angle >= endAngle)
+	int angle = blockIdx.z * blockDim.y + threadIdx.y;
+	if (startAngle + angle >= dims.iProjAngles)
+		return;
+	if (angle >= bufdims.iProjAngles)
 		return;
 
-	const int detectorU = (blockIdx.x%((dims.iProjU+g_detBlockU-1)/g_detBlockU)) * g_detBlockU + threadIdx.x;
-	const int startDetectorV = (blockIdx.x/((dims.iProjU+g_detBlockU-1)/g_detBlockU)) * g_detBlockV;
+	const int detectorU = blockIdx.x * blockDim.x + threadIdx.x;
+	const int startDetectorV = blockIdx.y * g_detBlockV;
 	int endDetectorV = startDetectorV + g_detBlockV;
 	if (endDetectorV > dims.iProjV)
 		endDetectorV = dims.iProjV;
+
 
 	// We need the length of the central ray and the length of the ray(s) to
 	// our detector pixel(s).
@@ -106,35 +182,35 @@ __global__ void devFDK_preweight(void* D_projData, unsigned int projPitch, unsig
 
 		const float fWeight = fW / fRayLength;
 
-		projData[(detectorV*dims.iProjAngles+angle)*projPitch+detectorU] *= fWeight;
+		D_outData[(size_t)(angle*bufdims.iProjV+detectorV)*projPitchOut+detectorU] = D_projData[(size_t)(detectorV*dims.iProjAngles+startAngle+angle)*projPitchIn+detectorU] * fWeight;
 
 		fV += fDetVSize;
 	}
 }
 
-__global__ void devFDK_ParkerWeight(void* D_projData, unsigned int projPitch, unsigned int startAngle, unsigned int endAngle, float fSrcOrigin, float fDetOrigin, float fDetUSize, float fCentralFanAngle, float fScale, const SDimensions3D dims)
+__global__ void devFDK_ParkerWeight(float* D_projData, unsigned int projPitch, const float* D_relAngles, unsigned int startAngle,
+		float fCentralRayLength, float fDetUSize, float fCentralFanAngle, float fScale, const SDimensions3D bufDims, unsigned int totalAngles)
 {
-	float* projData = (float*)D_projData;
-	int angle = startAngle + blockIdx.y * g_anglesPerWeightBlock + threadIdx.y;
-	if (angle >= endAngle)
+	int angle = blockIdx.z * blockDim.y + threadIdx.y;
+	if (startAngle + angle >= totalAngles)
+		return;
+	if (angle >= bufDims.iProjAngles)
 		return;
 
-	const int detectorU = (blockIdx.x%((dims.iProjU+g_detBlockU-1)/g_detBlockU)) * g_detBlockU + threadIdx.x;
-	const int startDetectorV = (blockIdx.x/((dims.iProjU+g_detBlockU-1)/g_detBlockU)) * g_detBlockV;
+	const int detectorU = blockIdx.x * blockDim.x + threadIdx.x;
+	const int startDetectorV = blockIdx.y * g_detBlockV;
 	int endDetectorV = startDetectorV + g_detBlockV;
-	if (endDetectorV > dims.iProjV)
-		endDetectorV = dims.iProjV;
+	if (endDetectorV > bufDims.iProjV)
+		endDetectorV = bufDims.iProjV;
 
 	// We need the length of the central ray and the length of the projection
-	// of our ray onto the central slice
-
-	const float fCentralRayLength = fSrcOrigin + fDetOrigin;
+	// of our ray onto the central slice to compute gamma
 
 	// TODO: Detector pixel size
-	const float fU = (detectorU - 0.5f*dims.iProjU + 0.5f) * fDetUSize;
+	const float fU = (detectorU - 0.5f*bufDims.iProjU + 0.5f) * fDetUSize;
 
 	const float fGamma = atanf(fU / fCentralRayLength);
-	float fBeta = gC_angle[angle];
+	float fBeta = D_relAngles[startAngle+angle];
 
 	// compute the weight depending on the location in the central fan's radon
 	// space
@@ -158,324 +234,379 @@ __global__ void devFDK_ParkerWeight(void* D_projData, unsigned int projPitch, un
 
 	for (int detectorV = startDetectorV; detectorV < endDetectorV; ++detectorV)
 	{
-		projData[(detectorV*dims.iProjAngles+angle)*projPitch+detectorU] *= fWeight;
+		D_projData[(size_t)(angle*bufDims.iProjV+detectorV)*projPitch+detectorU] *= fWeight;
 	}
 }
 
-
-
-// Perform the FDK pre-weighting and filtering
-bool FDK_PreWeight(cudaPitchedPtr D_projData,
-                float fSrcOrigin, float fDetOrigin,
-                float fZShift,
-                float fDetUSize, float fDetVSize,
-                bool bShortScan,
-                const SDimensions3D& dims, const float* angles)
+bool FDK_t::doParkerWeighting(cudaPitchedPtr D_projData,
+	                      unsigned int startAngle,
+	                      const SDimensions3D& bufdims, const SDimensions3D& dims,
+	                      cudaStream_t stream)
 {
-	// The pre-weighting factor for a ray is the cosine of the angle between
-	// the central line and the ray.
+	if (!m_bShortScan)
+		return true;
 
-	cudaStream_t stream;
-	if (!checkCuda(cudaStreamCreate(&stream), "FDK_PreWeight stream"))
-		return false;
-
-	dim3 dimBlock(g_detBlockU, g_anglesPerWeightBlock);
-	dim3 dimGrid( ((dims.iProjU+g_detBlockU-1)/g_detBlockU)*((dims.iProjV+g_detBlockV-1)/g_detBlockV),
-	              (dims.iProjAngles+g_anglesPerWeightBlock-1)/g_anglesPerWeightBlock);
+	dim3 dimBlock(g_detBlockU, g_anglesPerPrepareBlock);
+	dim3 dimGrid = computeGrid3Ceil(dims.iProjU, g_detBlockU,
+	                                dims.iProjV, g_detBlockV,
+	                                bufdims.iProjAngles, g_anglesPerPrepareBlock);
 
 	int projPitch = D_projData.pitch/sizeof(float);
 
-	devFDK_preweight<<<dimGrid, dimBlock, 0, stream>>>(D_projData.ptr, projPitch, 0, dims.iProjAngles, fSrcOrigin, fDetOrigin, fZShift, fDetUSize, fDetVSize, dims);
-
-	if (bShortScan && dims.iProjAngles > 1) {
-		ASTRA_DEBUG("Doing Parker weighting");
-		// We do short-scan Parker weighting
-
-		// First, determine (in a very basic way) the interval that's
-		// been scanned. We assume angles[0] is one of the endpoints of the
-		// range.
-		float fdA = angles[1] - angles[0];
-
-		while (fdA < -M_PI)
-			fdA += 2*M_PI;
-		while (fdA >= M_PI)
-			fdA -= 2*M_PI;
-
-		float fAngleBase;
-		if (fdA >= 0.0f) {
-			// going up from angles[0]
-			fAngleBase = angles[0];
-			ASTRA_DEBUG("Second angle >= first angle, so assuming angles are incrementing");
-		} else {
-			// going down from angles[0]
-			fAngleBase = angles[dims.iProjAngles - 1];
-			ASTRA_DEBUG("Second angle < first angle, so assuming angles are decrementing");
-		}
-
-		// We pick the lowest end of the range, and then
-		// move all angles so they fall in [0,2pi)
-
-		std::vector<float> fRelAngles(dims.iProjAngles);
-		for (unsigned int i = 0; i < dims.iProjAngles; ++i) {
-			float f = angles[i] - fAngleBase;
-			while (f >= 2*M_PI)
-				f -= 2*M_PI;
-			while (f < 0)
-				f += 2*M_PI;
-			fRelAngles[i] = f;
-		}
-
-		float fRange = fabs(fRelAngles[dims.iProjAngles-1] - fRelAngles[0]);
-		// Adjust for discretisation
-		fRange /= dims.iProjAngles - 1;
-		fRange *= dims.iProjAngles;
-
-		ASTRA_DEBUG("Assuming angles are linearly ordered and equally spaced for Parker weighting. Angular range %f radians", fRange);
-		float fScale = fRange / M_PI;
-
-		bool ok = true;
-		ok &= checkCuda(cudaMemcpyToSymbolAsync(gC_angle, &fRelAngles[0],
-		                                        dims.iProjAngles*sizeof(float), 0,
-		                                        cudaMemcpyHostToDevice, stream),
-		                "FDK_PreWeight transfer");
-		ok &= checkCuda(cudaStreamSynchronize(stream), "FDK_PreWeight");
-		if (!ok) {
-			logCuda(cudaStreamDestroy(stream), "FDK_PreWeight destroy stream");
-			return false;
-		}
-
-		float fCentralFanAngle = fabs(atanf(fDetUSize * (dims.iProjU*0.5f) /
-		                               (fSrcOrigin + fDetOrigin)));
-
-		if (fRange + 1e-3 < M_PI + 2*fCentralFanAngle) {
-			ASTRA_WARN("Angular range (%f rad) smaller than Parker weighting range (%f rad)", fRange, M_PI + 2*fCentralFanAngle);
-		}
-
-		devFDK_ParkerWeight<<<dimGrid, dimBlock, 0, stream>>>(D_projData.ptr, projPitch, 0, dims.iProjAngles, fSrcOrigin, fDetOrigin, fDetUSize, fCentralFanAngle, fScale, dims);
-	}
-	if (!checkCuda(cudaStreamSynchronize(stream), "FDK_PreWeight")) {
-		logCuda(cudaStreamDestroy(stream), "FDK_PreWeight destroy stream");
-		return false;
-	}
-
-	logCuda(cudaStreamDestroy(stream), "FDK_PreWeight destroy stream");
+	devFDK_ParkerWeight<<<dimGrid, dimBlock, 0, stream>>>((float*)D_projData.ptr, projPitch, m_D_pfParkerAngles, startAngle, m_Parker.fCentralRayLength, m_Parker.fDetUSize, m_Parker.fCentralFanAngle, m_Parker.fScale, bufdims, dims.iProjAngles);
 
 	return true;
 }
 
-bool FDK_Filter(cudaPitchedPtr D_projData,
-                const astra::SFilterConfig &filterConfig,
-                const SDimensions3D& dims)
+bool FDK_t::filter(cudaPitchedPtr D_projData,
+                   unsigned int startAngle,
+                   const SDimensions3D& bufdims, const SDimensions3D& dims,
+                   const SProjectorParams3D& params,
+                   cudaStream_t stream)
 {
-	cudaStream_t stream;
-	if (!checkCuda(cudaStreamCreate(&stream), "FDK_Filter stream"))
+	if (!m_D_filter)
+		return true;
+
+	// Filter the current subset of projections
+	unsigned int angleCount = bufdims.iProjAngles;
+	if (startAngle + angleCount > dims.iProjAngles)
+		angleCount = dims.iProjAngles - startAngle;
+
+	int iPaddedDetCount = calcNextPowerOfTwo(2 * dims.iProjU);
+	size_t bufferMemSize = sizeof(float) * dims.iProjV * iPaddedDetCount;
+	int iHalfFFTSize = astra::calcFFTFourierSize(iPaddedDetCount);
+
+	// We process one projection image at a time
+	float* D_imgData = (float*)D_projData.ptr;
+	cufftComplex* D_filter = m_D_filter;
+	if (!m_bSingleFilter)
+		D_filter += startAngle * iHalfFFTSize;
+	bool ok = true;
+	for (unsigned int angle = 0; angle < angleCount; ++angle)
+	{
+		if (!checkCuda(cudaMemsetAsync(m_D_pfPadded, 0, bufferMemSize, stream), "FDK filter pre memset")) {
+			ok = false;
+			break;
+		}
+
+		// pitched memcpy 2D to handle both source pitch and target padding
+		if (!checkCuda(cudaMemcpy2DAsync(m_D_pfPadded, iPaddedDetCount*sizeof(float), D_imgData, D_projData.pitch, dims.iProjU*sizeof(float), dims.iProjV, cudaMemcpyDeviceToDevice, stream), "FDK filter memcpy")) {
+			ok = false;
+			break;
+		}
+
+		if (!checkCufft(cufftExecR2C(m_planF, (cufftReal *)m_D_pfPadded, m_D_pcSinoFFT), "FDK filter forward exec")) {
+			ok = false;
+			break;
+		}
+
+		// Always call the 2D applyFilter with singleFilter = true,
+		// since we are calling it on a single projection image, and
+		// not on a sinogram.
+		if (!astraCUDA::applyFilter(dims.iProjV, iHalfFFTSize, m_D_pcSinoFFT, D_filter, true, stream)) {
+			ok = false;
+			break;
+		}
+
+		// Getting rid of the const qualifier is due to cufft API issue?
+		if (!checkCufft(cufftExecC2R(m_planI, (cufftComplex *)m_D_pcSinoFFT,
+	                      (cufftReal *)m_D_pfPadded), "FDK filter inverse exec"))
+		{
+			ok = false;
+			break;
+		}
+
+		if (!checkCuda(cudaMemsetAsync(D_imgData, 0, dims.iProjV * D_projData.pitch, stream), "FDK filter post memset")) {
+			ok = false;
+			break;
+		}
+
+		// pitched memcpy 2D to handle both source padding and target pitch
+		if (!checkCuda(cudaMemcpy2DAsync(D_imgData, D_projData.pitch, m_D_pfPadded, iPaddedDetCount*sizeof(float), dims.iProjU*sizeof(float), dims.iProjV, cudaMemcpyDeviceToDevice, stream), "FDK filter memcpy")) {
+			ok = false;
+			break;
+		}
+
+		D_imgData += dims.iProjV * (D_projData.pitch / sizeof(float));
+		if (!m_bSingleFilter)
+			D_filter += iHalfFFTSize;
+	}
+
+	return ok;
+}
+
+void FDK_t::freeBuffers()
+{
+	if (m_D_filter) {
+		cufftDestroy(m_planF);
+		cufftDestroy(m_planI);
+
+		logCuda(cudaFree(m_D_pfPadded), "FDK filter free");
+		astraCUDA::freeComplexOnDevice(m_D_pcSinoFFT);
+		astraCUDA::freeComplexOnDevice(m_D_filter);
+	}
+
+	if (m_bShortScan) {
+		logCuda(cudaFree(m_D_pfParkerAngles), "FDK shortscan free");
+	}
+}
+
+bool FDK_t::prepareProjections(cudaPitchedPtr D_outData, cudaPitchedPtr D_projData,
+                               const SConeProjection* D_geom,
+                               unsigned int startAngle,
+                               const SDimensions3D& bufdims, const SDimensions3D& dims,
+                               const SProjectorParams3D& params,
+                               cudaStream_t stream)
+{
+	dim3 dimBlock(g_detBlockU, g_anglesPerPrepareBlock);
+	dim3 dimGrid = computeGrid3Ceil(dims.iProjU, g_detBlockU,
+	                                dims.iProjV, g_detBlockV,
+	                                bufdims.iProjAngles, g_anglesPerPrepareBlock);
+
+	int projPitchOut = D_outData.pitch/sizeof(float);
+	int projPitchIn = D_projData.pitch/sizeof(float);
+
+	devFDK_preweight<<<dimGrid, dimBlock, 0, stream>>>((float*)D_outData.ptr, (const float*)D_projData.ptr, projPitchOut, projPitchIn, startAngle, m_preweight.fSrcOrigin, m_preweight.fDetOrigin, m_preweight.fZShift, m_preweight.fDetUSize, m_preweight.fDetVSize, bufdims, dims);
+
+	bool ok = doParkerWeighting(D_outData, startAngle, bufdims, dims, stream);
+	if (!ok)
 		return false;
 
-	bool singleFilter;
-	cufftComplex *D_filter;
+	ok &= filter(D_outData, startAngle, bufdims, dims, params, stream);
+
+	return ok;
+}
+
+bool FDK_t::prepareFilter(const SDimensions3D& dims,
+                          const astra::SFilterConfig &filterConfig,
+                          cudaStream_t stream)
+{
+	cufftComplex *D_filter = nullptr;
+	bool singleFilter = true;
 
 	bool ok = astraCUDA::prepareCuFFTFilter(filterConfig, D_filter, singleFilter, dims.iProjAngles, dims.iProjU, stream);
 
 	if (!ok) {
 		if (D_filter)
 			astraCUDA::freeComplexOnDevice(D_filter);
-		logCuda(cudaStreamDestroy(stream), "FDK_Filter destroy stream");
 		return false;
 	}
 
 	if (!D_filter) {
-		// For FILTER_NONE
-		logCuda(cudaStreamDestroy(stream), "FDK_Filter destroy stream");
+		// No filtering step requested
+		m_D_filter = nullptr;
 		return true;
 	}
+
+	// We pre-plan the FFTs for a projection image.
 
 	int iPaddedDetCount = calcNextPowerOfTwo(2 * dims.iProjU);
 	int iHalfFFTSize = astra::calcFFTFourierSize(iPaddedDetCount);
 
-	cufftHandle planF;
-	cufftHandle planI;
-
-	if (!checkCufft(cufftPlan1d(&planF, iPaddedDetCount, CUFFT_R2C, dims.iProjAngles), "FDK filter FFT plan")) {
-		logCuda(cudaStreamDestroy(stream), "FDK_Filter destroy stream");
-		astraCUDA::freeComplexOnDevice(D_filter);
+	if (!checkCufft(cufftPlan1d(&m_planF, iPaddedDetCount, CUFFT_R2C, dims.iProjV), "FDK filter FFT plan")) {
+		if (D_filter)
+			astraCUDA::freeComplexOnDevice(D_filter);
 		return false;
 	}
-	if (!checkCufft(cufftSetStream(planF, stream), "FDK filter FFT plan stream")) {
-		logCuda(cudaStreamDestroy(stream), "FDK_Filter destroy stream");
-		astraCUDA::freeComplexOnDevice(D_filter);
-		return false;
-	}
-
-	if (!checkCufft(cufftPlan1d(&planI, iPaddedDetCount, CUFFT_C2R, dims.iProjAngles), "FDK filter IFFT plan")) {
-		logCuda(cudaStreamDestroy(stream), "FDK_Filter destroy stream");
-		astraCUDA::freeComplexOnDevice(D_filter);
-		cufftDestroy(planF);
-		return false;
-	}
-	if (!checkCufft(cufftSetStream(planI, stream), "FDK filter IFFT plan stream")) {
-		logCuda(cudaStreamDestroy(stream), "FDK_Filter destroy stream");
-		astraCUDA::freeComplexOnDevice(D_filter);
-		cufftDestroy(planF);
-		cufftDestroy(planI);
+	if (!checkCufft(cufftSetStream(m_planF, stream), "FDK filter FFT plan stream")) {
+		if (D_filter)
+			astraCUDA::freeComplexOnDevice(D_filter);
+		cufftDestroy(m_planF);
 		return false;
 	}
 
-	int projPitch = D_projData.pitch/sizeof(float);
+	if (!checkCufft(cufftPlan1d(&m_planI, iPaddedDetCount, CUFFT_C2R, dims.iProjV), "FDK filter IFFT plan")) {
+		if (D_filter)
+			astraCUDA::freeComplexOnDevice(D_filter);
+		cufftDestroy(m_planF);
+		return false;
+	}
+	if (!checkCufft(cufftSetStream(m_planI, stream), "FDK filter IFFT plan stream")) {
+		if (D_filter)
+			astraCUDA::freeComplexOnDevice(D_filter);
+		cufftDestroy(m_planF);
+		cufftDestroy(m_planI);
+		return false;
+	}
 
-
-	// We process one sinogram at a time.
-	float* D_sinoData = (float*)D_projData.ptr;
-
-	cufftComplex * D_pcSinoFFT = NULL;
-
-	if (!astraCUDA::allocateComplexOnDevice(dims.iProjAngles, iHalfFFTSize, &D_pcSinoFFT)) {
-		logCuda(cudaStreamDestroy(stream), "FDK_Filter destroy stream");
+	// Pre-allocate FFT buffers
+	cufftComplex * D_pcSinoFFT = nullptr;
+	if (!astraCUDA::allocateComplexOnDevice(dims.iProjV, iHalfFFTSize, &D_pcSinoFFT)) {
 		astraCUDA::freeComplexOnDevice(D_filter);
-		cufftDestroy(planF);
-		cufftDestroy(planI);
+		cufftDestroy(m_planF);
+		cufftDestroy(m_planI);
 		return false;
 	}
 
 	float * D_pfPadded = NULL;
-	size_t bufferMemSize = sizeof(float) * dims.iProjAngles * iPaddedDetCount;
+	size_t bufferMemSize = sizeof(float) * dims.iProjV * iPaddedDetCount;
 	if (!checkCuda(cudaMalloc((void **)&D_pfPadded, bufferMemSize), "FDK filter malloc")) {
-		logCuda(cudaStreamDestroy(stream), "FDK_Filter destroy stream");
 		astraCUDA::freeComplexOnDevice(D_pcSinoFFT);
 		astraCUDA::freeComplexOnDevice(D_filter);
-		cufftDestroy(planF);
-		cufftDestroy(planI);
+		cufftDestroy(m_planF);
+		cufftDestroy(m_planI);
 		return false;
 	}
 
-	ok = true;
-	for (int v = 0; v < dims.iProjV; ++v) {
-		if (!checkCuda(cudaMemsetAsync(D_pfPadded, 0, bufferMemSize, stream), "FDK filter memset")) {
-			ok = false;
-			break;
-		}
+	m_D_filter = D_filter;
+	m_bSingleFilter = singleFilter;
+	m_D_pcSinoFFT = D_pcSinoFFT;
+	m_D_pfPadded = D_pfPadded;
 
-		// pitched memcpy 2D to handle both source pitch and target padding
-		if (!checkCuda(cudaMemcpy2DAsync(D_pfPadded, iPaddedDetCount*sizeof(float), D_sinoData, projPitch*sizeof(float), dims.iProjU*sizeof(float), dims.iProjAngles, cudaMemcpyDeviceToDevice, stream), "FDK filter memcpy")) {
-			ok = false;
-			break;
-		}
+	return true;
+}
 
-		if (!checkCufft(cufftExecR2C(planF, (cufftReal *)D_pfPadded, D_pcSinoFFT), "FDK filter forward exec")) {
-			ok = false;
-			break;
-		}
+bool FDK_t::prepareWeighting(bool bShortScan,
+                             const std::vector<SConeProjection>& angles,
+                             const SDimensions3D& dims,
+                             const SProjectorParams3D& params)
+{
+	assert(angles.size() == dims.iProjAngles);
+	if (dims.iProjAngles <= 1)
+		bShortScan = false;
 
-		if (!astraCUDA::applyFilter(dims.iProjAngles, iHalfFFTSize, D_pcSinoFFT, D_filter, singleFilter, stream)) {
-			ok = false;
-			break;
-		}
+	m_bShortScan = bShortScan;
 
-		// Getting rid of the const qualifier is due to cufft API issue?
-		if (!checkCufft(cufftExecC2R(planI, (cufftComplex *)D_pcSinoFFT,
-	                      (cufftReal *)D_pfPadded), "FDK filter inverse exec"))
-		{
-			ok = false;
-			break;
-		}
+	const SConeProjection& p0 = angles[0];
 
-		if (!astraCUDA::rescaleInverseFourier(dims.iProjAngles, iPaddedDetCount, D_pfPadded, stream)) {
-			ok = false;
-			break;
-		}
+	// NB: We don't support arbitrary cone_vec geometries here.
+	// Only those that are vertical sub-geometries
+	// (cf. CompositeGeometryManager) of regular cone geometries.
 
-		if (!checkCuda(cudaMemsetAsync(D_sinoData, 0, sizeof(float) * dims.iProjAngles * projPitch, stream), "FDK filter memset")) {
-			ok = false;
-			break;
-		}
+	// assuming U is in the XY plane, V is parallel to Z axis
+	double fDetCX = p0.fDetSX + 0.5*dims.iProjU*p0.fDetUX;
+	double fDetCY = p0.fDetSY + 0.5*dims.iProjU*p0.fDetUY;
+	double fDetCZ = p0.fDetSZ + 0.5*dims.iProjV*p0.fDetVZ;
 
-		// pitched memcpy 2D to handle both source padding and target pitch
-		if (!checkCuda(cudaMemcpy2DAsync(D_sinoData, projPitch*sizeof(float), D_pfPadded, iPaddedDetCount*sizeof(float), dims.iProjU*sizeof(float), dims.iProjAngles, cudaMemcpyDeviceToDevice, stream), "FDK filter memcpy")) {
-			ok = false;
-			break;
-		}
+	m_preweight.fSrcOrigin = sqrt(p0.fSrcX*p0.fSrcX + p0.fSrcY*p0.fSrcY);
+	m_preweight.fDetOrigin = sqrt(fDetCX*fDetCX + fDetCY*fDetCY);
 
-		D_sinoData += (dims.iProjAngles * projPitch);
+	m_preweight.fDetUSize = sqrt(p0.fDetUX*p0.fDetUX + p0.fDetUY*p0.fDetUY);
+	m_preweight.fDetVSize = std::abs(p0.fDetVZ);
+
+	m_preweight.fZShift = fDetCZ - p0.fSrcZ;
+
+
+	if (!m_bShortScan)
+		return true;
+
+	ASTRA_DEBUG("Doing Parker weighting");
+	// We do short-scan Parker weighting
+
+	m_Parker.fDetUSize = m_preweight.fDetUSize;
+
+	m_Parker.fCentralRayLength = m_preweight.fSrcOrigin + m_preweight.fDetOrigin;
+
+
+
+	std::vector<double> circAngles;
+	circAngles.resize(dims.iProjAngles);
+
+	for (unsigned int i = 0; i < dims.iProjAngles; ++i)
+		circAngles[i] = -atan2(angles[i].fSrcX, angles[i].fSrcY) + M_PI;
+
+
+	// First, determine (in a very basic way) the interval that's
+	// been scanned. We assume angles[0] is one of the endpoints of the
+	// range.
+	float fdA = circAngles[1] - circAngles[0];
+
+	while (fdA < -M_PI)
+		fdA += 2*M_PI;
+	while (fdA >= M_PI)
+		fdA -= 2*M_PI;
+
+	if (fdA >= 0.0f) {
+		// going up from angles[0]
+		m_Parker.fAngleBase = circAngles[0];
+		ASTRA_DEBUG("Second angle >= first angle, so assuming angles are incrementing");
+	} else {
+		// going down from angles[0]
+		m_Parker.fAngleBase = circAngles[dims.iProjAngles - 1];
+		ASTRA_DEBUG("Second angle < first angle, so assuming angles are decrementing");
 	}
 
-	ok &= checkCuda(cudaStreamSynchronize(stream), "FDK filter sync");
+	// We pick the lowest end of the range, and then
+	// move all angles so they fall in [0,2pi)
 
-	cufftDestroy(planF);
-	cufftDestroy(planI);
+	std::vector<float> relAngles(dims.iProjAngles);
+	for (unsigned int i = 0; i < dims.iProjAngles; ++i) {
+		double f = circAngles[i] - m_Parker.fAngleBase;
+		while (f >= 2*M_PI)
+			f -= 2*M_PI;
+		while (f < 0)
+			f += 2*M_PI;
+		relAngles[i] = f;
+	}
 
-	logCuda(cudaFree(D_pfPadded), "FDK filter free");
-	astraCUDA::freeComplexOnDevice(D_pcSinoFFT);
-	astraCUDA::freeComplexOnDevice(D_filter);
+	double fRange = fabs(relAngles[dims.iProjAngles-1] - relAngles[0]);
+	// Adjust for discretisation
+	fRange /= dims.iProjAngles - 1;
+	fRange *= dims.iProjAngles;
 
-	logCuda(cudaStreamDestroy(stream), "FDK filter destroy stream");
+	ASTRA_DEBUG("Assuming angles are linearly ordered and equally spaced for Parker weighting. Angular range %f radians", fRange);
+	m_Parker.fScale = fRange / M_PI;
 
-	return ok;
+	m_Parker.fCentralFanAngle = fabs(atan(m_Parker.fDetUSize * (dims.iProjU*0.5f) /
+	                               m_Parker.fCentralRayLength));
+
+	if (fRange + 1e-3 < M_PI + 2*m_Parker.fCentralFanAngle) {
+		ASTRA_WARN("Angular range (%f rad) smaller than Parker weighting range (%f rad)", fRange, M_PI + 2*m_Parker.fCentralFanAngle);
+	}
+
+	// Upload relAngles array to GPU memory
+	if (!checkCuda(cudaMalloc((void**)&m_D_pfParkerAngles, sizeof(float) * dims.iProjAngles), "prepareWeighting alloc")) {
+		return false;
+	}
+
+	// TODO: async
+
+	if (!checkCuda(cudaMemcpy(m_D_pfParkerAngles, &relAngles[0], sizeof(float) * dims.iProjAngles, cudaMemcpyHostToDevice), "prepareWeighting memcpy")) {
+		logCuda(cudaFree(m_D_pfParkerAngles), "prepareWeighting free buffer");
+		return false;
+	}
+
+	return true;
 }
 
 
 bool FDK(cudaPitchedPtr D_volumeData,
          cudaPitchedPtr D_projData,
-         const SConeProjection* angles,
-         const SDimensions3D& dims, SProjectorParams3D params, bool bShortScan,
+         const std::vector<SConeProjection>& angles,
+         const SDimensions3D& dims, SProjectorParams3D params_, bool bShortScan,
          const astra::SFilterConfig &filterConfig)
 {
-	bool ok;
+	Stream stream;
+	SProjectorParams3D params = params_;
 
-	// NB: We don't support arbitrary cone_vec geometries here.
-	// Only those that are vertical sub-geometries
-	// (cf. CompositeGeometryManager) of regular cone geometries.
-	assert(dims.iProjAngles > 0);
-	const SConeProjection& p0 = angles[0];
+	FDK_t F;
 
-	// assuming U is in the XY plane, V is parallel to Z axis
-	float fDetCX = p0.fDetSX + 0.5*dims.iProjU*p0.fDetUX;
-	float fDetCY = p0.fDetSY + 0.5*dims.iProjU*p0.fDetUY;
-	float fDetCZ = p0.fDetSZ + 0.5*dims.iProjV*p0.fDetVZ;
+	bool ok = true;
+	ok = F.prepareWeighting(bShortScan, angles, dims, params);
+	if (!ok)
+		return false;
 
-	float fSrcOrigin = sqrt(p0.fSrcX*p0.fSrcX + p0.fSrcY*p0.fSrcY);
-	float fDetOrigin = sqrt(fDetCX*fDetCX + fDetCY*fDetCY);
-	float fDetUSize = sqrt(p0.fDetUX*p0.fDetUX + p0.fDetUY*p0.fDetUY);
-	float fDetVSize = abs(p0.fDetVZ);
-
-	float fZShift = fDetCZ - p0.fSrcZ;
-
-	float *pfAngles = new float[dims.iProjAngles];
-	for (unsigned int i = 0; i < dims.iProjAngles; ++i) {
-		// FIXME: Sign/order
-		pfAngles[i] = -atan2(angles[i].fSrcX, angles[i].fSrcY) + M_PI;
+	ok = F.prepareFilter(dims, filterConfig, **stream);
+	if (!ok) {
+		F.freeBuffers();
+		return false;
 	}
 
+	if (filterConfig.m_eType != astra::FILTER_NONE) {
+		// HACK: when we do filtering, we introduce an extra factor of iPaddedDetCount
+		// from the fft, ifft combination. We want to cancel that.
+		int iPaddedDetCount = calcNextPowerOfTwo(2 * dims.iProjU);
+		params.fOutputScale /= iPaddedDetCount;
+	}
 
-#if 1
-	ok = FDK_PreWeight(D_projData, fSrcOrigin, fDetOrigin,
-	                fZShift, fDetUSize, fDetVSize,
-	                bShortScan, dims, pfAngles);
-#else
-	ok = true;
-#endif
-	delete[] pfAngles;
+	ok = F.project(D_volumeData, D_projData, ConeBP_t::MODE_BACKWARD, false, dims, angles, params, stream);
 
-	if (!ok)
-		return false;
+	// TODO: superfluous with current sync at end of project() ?
+	ok &= stream.sync("FDK sync");
 
-#if 1
-	// Perform filtering
-	ok = FDK_Filter(D_projData, filterConfig, dims);
-#endif
+	F.freeBuffers();
 
-	if (!ok)
-		return false;
-
-	// Perform BP
-	assert(params.projKernel == ker3d_fdk_weighting);
-
-	//ok = FDK_BP(D_volumeData, D_projData, fSrcOrigin, fDetOrigin, 0.0f, 0.0f, fDetUSize, fDetVSize, dims, pfAngles);
-	ok = ConeBP(D_volumeData, D_projData, dims, angles, params);
-
-	if (!ok)
-		return false;
-
-	return true;
+	return ok;
 }
-
 
 }

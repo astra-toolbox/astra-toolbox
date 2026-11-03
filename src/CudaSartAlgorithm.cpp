@@ -146,25 +146,25 @@ bool CCudaSartAlgorithm::allocateBuffers()
 	if (m_iGPUIndex != -1)
 		astraCUDA::setGPUIndex(m_iGPUIndex);
 
-	if ((D_volData = astraCUDA::createGPUData2DLike(m_pReconstruction)) == nullptr)
+	if ((D_volData = astraCUDA::createGPUData2DLike(m_pReconstruction, astraCUDA::INIT_ZERO)) == nullptr)
 		return false;
 	if (m_bUseReconstructionMask) {
-		if ((D_volMaskData = astraCUDA::createGPUData2DLike(m_pReconstruction)) == nullptr)
+		if ((D_volMaskData = astraCUDA::createGPUData2DLike(m_pReconstruction, astraCUDA::INIT_ZERO)) == nullptr)
 			return false;
 
 		// Only allocate D_tmpVolData if we use a mask
-		if ((D_tmpVolData = astraCUDA::createGPUData2DLike(m_pReconstruction)) == nullptr)
+		if ((D_tmpVolData = astraCUDA::createGPUData2DLike(m_pReconstruction, astraCUDA::INIT_ZERO)) == nullptr)
 			return false;
 	}
-	if ((D_projData = astraCUDA::createGPUData2DLike(m_pSinogram)) == nullptr)
+	if ((D_projData = astraCUDA::createGPUData2DLike(m_pSinogram, astraCUDA::INIT_ZERO)) == nullptr)
 		return false;
-	if ((D_lineWeight = astraCUDA::createGPUData2DLike(m_pSinogram)) == nullptr)
+	if ((D_lineWeight = astraCUDA::createGPUData2DLike(m_pSinogram, astraCUDA::INIT_ZERO)) == nullptr)
 		return false;
 
-	astra::CDataStorage *storage = astraCUDA::allocateGPUMemory(m_pSinogram->getDetectorCount(), 1, astraCUDA::INIT_ZERO);
+	std::unique_ptr<CDataStorage> storage = astraCUDA::allocateGPUMemory(m_pSinogram->getDetectorCount(), 1, astraCUDA::INIT_ZERO);
 	if (!storage)
 		return false;
-	D_tmpProjData = new astra::CData2D(m_pSinogram->getDetectorCount(), 1, storage);
+	D_tmpProjData = new astra::CData2D(m_pSinogram->getDetectorCount(), 1, std::move(storage));
 
 	return true;
 }
@@ -200,7 +200,7 @@ bool CCudaSartAlgorithm::precomputeWeights()
 		callFP(D_volMaskData, D_lineWeight, 1.0f);
 	} else {
 		// Allocate tmpData temporarily
-		CData2D *D_tmpData = astraCUDA::createGPUData2DLike(m_pReconstruction);
+		CData2D *D_tmpData = astraCUDA::createGPUData2DLike(m_pReconstruction, astraCUDA::INIT_NO);
 		if (!D_tmpData)
 			return false;
 
@@ -358,7 +358,7 @@ bool CCudaSartAlgorithm::getResidualNorm(float32& _fNorm)
 		return false;
 
 	CData2D *D_p;
-	if ((D_p = astraCUDA::createGPUData2DLike(m_pSinogram)) == nullptr)
+	if ((D_p = astraCUDA::createGPUData2DLike(m_pSinogram, astraCUDA::INIT_NO)) == nullptr)
 		return false;
 
 	// copy sinogram to D_p

@@ -108,16 +108,16 @@ bool CCudaEMAlgorithm::allocateBuffers()
 	if (m_iGPUIndex != -1)
 		astraCUDA::setGPUIndex(m_iGPUIndex);
 
-	if ((D_volData = astraCUDA::createGPUData2DLike(m_pReconstruction)) == nullptr)
+	if ((D_volData = astraCUDA::createGPUData2DLike(m_pReconstruction, astraCUDA::INIT_ZERO)) == nullptr)
 		return false;
-	if ((D_tmpVolData = astraCUDA::createGPUData2DLike(m_pReconstruction)) == nullptr)
+	if ((D_tmpVolData = astraCUDA::createGPUData2DLike(m_pReconstruction, astraCUDA::INIT_ZERO)) == nullptr)
 		return false;
-	if ((D_pixelWeight = astraCUDA::createGPUData2DLike(m_pReconstruction)) == nullptr)
+	if ((D_pixelWeight = astraCUDA::createGPUData2DLike(m_pReconstruction, astraCUDA::INIT_ZERO)) == nullptr)
 		return false;
 
-	if ((D_projData = astraCUDA::createGPUData2DLike(m_pSinogram)) == nullptr)
+	if ((D_projData = astraCUDA::createGPUData2DLike(m_pSinogram, astraCUDA::INIT_ZERO)) == nullptr)
 		return false;
-	if ((D_tmpProjData = astraCUDA::createGPUData2DLike(m_pSinogram)) == nullptr)
+	if ((D_tmpProjData = astraCUDA::createGPUData2DLike(m_pSinogram, astraCUDA::INIT_ZERO)) == nullptr)
 		return false;
 
 	return true;

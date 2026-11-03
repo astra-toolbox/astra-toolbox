@@ -312,6 +312,7 @@ bool runCudaIFFT(int _iProjectionCount, const cufftComplex *D_pcSource,
 		return false;
 	}
 
+	// TODO: We can probably fold this into some other operation
 	rescaleInverseFourier(_iProjectionCount, _iPaddedSize,
 	                      D_pfPaddedTarget, stream());
 

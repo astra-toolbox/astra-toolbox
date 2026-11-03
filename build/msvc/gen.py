@@ -200,7 +200,6 @@ P_astra["filters"]["CUDA\\cuda source"] = [
 "cuda\\2d\\sart.cu",
 "cuda\\2d\\util.cu",
 "cuda\\3d\\arith3d.cu",
-"cuda\\3d\\astra3d.cu",
 "cuda\\3d\\cone_bp.cu",
 "cuda\\3d\\cone_fp.cu",
 "cuda\\3d\\cone_cyl.cu",
@@ -210,6 +209,7 @@ P_astra["filters"]["CUDA\\cuda source"] = [
 "cuda\\3d\\mem3d.cu",
 "cuda\\3d\\par3d_bp.cu",
 "cuda\\3d\\par3d_fp.cu",
+"cuda\\3d\\proj3d.cu",
 "cuda\\3d\\util3d.cu",
 ]
 P_astra["filters"]["Algorithms\\source"] = [
@@ -339,6 +339,7 @@ P_astra["filters"]["CUDA\\cuda headers"] = [
 "include\\astra\\cuda\\3d\\mem3d_internal.h",
 "include\\astra\\cuda\\3d\\par3d_bp.h",
 "include\\astra\\cuda\\3d\\par3d_fp.h",
+"include\\astra\\cuda\\3d\\proj3d.h",
 "include\\astra\\cuda\\3d\\util3d.h",
 ]
 P_astra["filters"]["Algorithms\\headers"] = [
@@ -456,6 +457,11 @@ P_astra["filters"]["Projectors\\inline"] = [
 "include\\astra\\ParallelBeamLineKernelProjector2D.inl",
 "include\\astra\\ParallelBeamStripKernelProjector2D.inl",
 "include\\astra\\SparseMatrixProjector2D.inl",
+]
+P_astra["filters"]["CUDA\\inline"] = [
+"782307cc-0dd0-4559-a28a-8c8f3720f11d",
+"cuda\\3d\\ray3d.inl",
+"cuda\\3d\\voxel3d.inl"
 ]
 
 P_astra["files"] = []

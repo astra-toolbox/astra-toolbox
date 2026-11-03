@@ -33,14 +33,16 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "dlpack/dlpack.h"
 
+#include <memory>
+
 namespace astra {
 class CDataStorage;
 }
 
 namespace astraCUDA {
 
-_AstraExport astra::CDataStorage *wrapDLTensor(DLManagedTensorVersioned *tensor_m);
-_AstraExport astra::CDataStorage *wrapDLTensor(DLManagedTensor *tensor_m);
+_AstraExport std::unique_ptr<astra::CDataStorage> wrapDLTensor(DLManagedTensorVersioned *tensor_m);
+_AstraExport std::unique_ptr<astra::CDataStorage> wrapDLTensor(DLManagedTensor *tensor_m);
 _AstraExport bool isSupportedDLPackGPUType(DLDeviceType type);
 
 }

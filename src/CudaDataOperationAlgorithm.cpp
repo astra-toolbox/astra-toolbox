@@ -123,13 +123,11 @@ bool CCudaDataOperationAlgorithm::run(int _iNrIterations)
 
 	std::vector<CData2D*> D_data;
 	for (CData2D *data : m_pData) {
-		std::array<int, 2> volDims = data->getShape();
-		CDataStorage *s = astraCUDA::allocateGPUMemory(volDims[0], volDims[1], astraCUDA::INIT_NO);
-		if (!s) {
+		CData2D *d = astraCUDA::createGPUData2DLike(data, astraCUDA::INIT_NO);
+		if (!d) {
 			ok = false;
 			break;
 		}
-		CData2D *d = new CData2D(volDims[0], volDims[1], s);
 		ok &= astraCUDA::copyToGPUMemory(data, d);
 		if (!ok)
 			break;
@@ -137,10 +135,8 @@ bool CCudaDataOperationAlgorithm::run(int _iNrIterations)
 	}
 	CData2D *D_mask = nullptr;
 	if (ok && m_pMask) {
-		std::array<int, 2> volDims = m_pMask->getShape();
-		CDataStorage *s = astraCUDA::allocateGPUMemory(volDims[0], volDims[1], astraCUDA::INIT_NO);
-		if (s) {
-			D_mask = new CData2D(volDims[0], volDims[1], s);
+		D_mask = astraCUDA::createGPUData2DLike(m_pMask, astraCUDA::INIT_NO);
+		if (D_mask) {
 			ok &= astraCUDA::copyToGPUMemory(m_pMask, D_mask);
 		} else {
 			ok = false;

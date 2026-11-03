@@ -54,10 +54,8 @@ bool mul_SART(astra::CData2D *dst, const astra::CData2D *src, int angle)
 
 	astraCUDA::CDataGPU *dsts = dynamic_cast<astraCUDA::CDataGPU*>(dst->getStorage());
 	assert(dsts);
-	assert(!dsts->getArray());
 	const astraCUDA::CDataGPU *srcs = dynamic_cast<const astraCUDA::CDataGPU*>(src->getStorage());
 	assert(srcs);
-	assert(!srcs->getArray());
 
 	std::array<int, 2> dims = src->getShape();
 	assert(angle >= 0);
@@ -87,10 +85,8 @@ bool copy_SART(astra::CData2D *dst, const astra::CData2D *src, int angle)
 
 	astraCUDA::CDataGPU *dsts = dynamic_cast<astraCUDA::CDataGPU*>(dst->getStorage());
 	assert(dsts);
-	assert(!dsts->getArray());
 	const astraCUDA::CDataGPU *srcs = dynamic_cast<const astraCUDA::CDataGPU*>(src->getStorage());
 	assert(srcs);
-	assert(!srcs->getArray());
 
 	std::array<int, 2> dims = src->getShape();
 	assert(angle >= 0);
