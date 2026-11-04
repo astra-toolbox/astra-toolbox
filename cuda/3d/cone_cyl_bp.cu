@@ -36,7 +36,7 @@ SOFTWARE.
 #include <cassert>
 
 static const unsigned int g_volBlockZ = 8;
-static const unsigned int g_anglesPerBlock = 32;
+static const unsigned int g_anglesPerBlock = astraCUDA3d::g_cuda3d_blockSlices; // TODO:clean up
 static const unsigned int g_volBlockX = 16;
 static const unsigned int g_volBlockY = 32;
 

@@ -35,7 +35,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 
 static const unsigned int g_anglesPerBlock = 15;
-static const unsigned int g_blockSlices = 32;
+static const unsigned int g_blockSlices = astraCUDA3d::g_cuda3d_blockSlices; // TODO:clean up
 static const unsigned int g_detBlockU = 32;
 static const unsigned int g_detBlockV = 15;
 

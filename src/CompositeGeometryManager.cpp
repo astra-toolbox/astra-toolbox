@@ -42,6 +42,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #include "astra/Logging.h"
 
 #include "astra/cuda/2d/astra.h"
+#include "astra/cuda/3d/astra3d.h"
 #include "astra/cuda/3d/mem3d.h"
 
 #include <cstring>
@@ -295,7 +296,7 @@ static size_t getRequiredInputBufferSize(const CCompositeGeometryManager::CPart 
 	input.getDims(x, y, z);
 
 	// TODO: delegate this to the projector that has the constant 32
-	size_t bufSlices = 32;
+	size_t bufSlices = astraCUDA3d::g_cuda3d_blockSlices;
 
 	if (input.eType == CCompositeGeometryManager::CPart::PART_PROJ) {
 		size_t sliceSize = x * z;
@@ -317,7 +318,7 @@ static size_t getRequiredInputBufferSize(const CCompositeGeometryManager::CPart 
 static size_t getMaxInputSlices(const CCompositeGeometryManager::CPart &input, size_t remainingSize, int axis, bool inputOnGPU)
 {
 	// TODO: delegate this to the projector that has the constant 32
-	size_t bufSlices = 32;
+	size_t bufSlices = astraCUDA3d::g_cuda3d_blockSlices;
 
 	if (input.eType == CCompositeGeometryManager::CPart::PART_PROJ) {
 		if (axis != 1) {

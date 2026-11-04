@@ -29,6 +29,9 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 namespace astraCUDA3d {
 
+// Check that we don't allocate more than CompositeGeometryManager expects
+static_assert(g_MaxAngles <= g_cuda3d_blockSlices);
+
 // Combined "outer loop" for calling voxel-driven kernels. It processes a
 // small block of angles at a time, copies those into a temp buffer,
 // permuting axes, and binds a layered texture to the result.

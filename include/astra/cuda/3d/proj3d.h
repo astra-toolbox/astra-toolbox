@@ -28,6 +28,7 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 #ifndef _CUDA_FP3D_H
 #define _CUDA_FP3D_H
 
+#include "astra/cuda/3d/astra3d.h"
 #include "astra/cuda/3d/dims3d.h"
 #include "astra/cuda/3d/util3d.h"
 #include "astra/cuda/stream.h"

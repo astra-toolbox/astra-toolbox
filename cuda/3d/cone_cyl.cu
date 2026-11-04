@@ -53,8 +53,14 @@ SOFTWARE.
 #include "astra/cuda/3d/dims3d.h"
 #include "astra/cuda/3d/proj3d.h"
 
+
 static const unsigned int g_anglesPerBlock = 8;
+// TODO: clean this up
+// NB: This is smaller than g_cuda3d_blockSlices, which means CGM will
+// overestimate how much memory we need, which is not ideal, but also not a
+// major problem.
 static const unsigned int g_blockSlices = 24;
+
 static const unsigned int g_detBlockU = 32;
 static const unsigned int g_detBlockV = 16;
 

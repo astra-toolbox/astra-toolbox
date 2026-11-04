@@ -29,6 +29,8 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 namespace astraCUDA3d {
 
+// Check that we don't allocate more than CompositeGeometryManager expects
+static_assert(g_blockSlices <= g_cuda3d_blockSlices);
 
 
 // Combined "outer loop" for calling ray-driven kernels. It sorts projections

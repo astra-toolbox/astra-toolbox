@@ -30,9 +30,14 @@ along with the ASTRA Toolbox. If not, see <http://www.gnu.org/licenses/>.
 
 #include "dims3d.h"
 
+namespace astraCUDA3d {
+// TODO: clean this up
+// Number of slices in the 3D temporary input buffer for projectors.
+// CompositeGeometryManager and the projectors both need access to this.
+static const unsigned int g_cuda3d_blockSlices = 32;
+}
+
 namespace astra {
-
-
 
 class CFloat32VolumeData3D;
 class CFloat32ProjectionData3D;
