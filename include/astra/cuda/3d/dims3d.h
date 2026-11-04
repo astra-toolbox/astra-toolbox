@@ -47,7 +47,13 @@ enum Cuda3DProjectionKernel {
 	ker3d_sum_square_weights,
 	ker3d_fdk_weighting,
 	ker3d_2d_weighting,
-	ker3d_matched_bp
+	ker3d_matched_bp,
+	ker3d_dfdx,
+	ker3d_dfdy,
+	ker3d_dfdz,
+	ker3d_dfdxs,
+	ker3d_dfdys,
+	ker3d_dfdzs
 };
 
 struct SProjectorParams3D {
