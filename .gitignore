@@ -8,6 +8,9 @@
 __pycache__
 .vscode/*
 
+/tests/regression/inputs
+/tests/regression/outputs
+
 # Cython-generated files
 /python/astra/*.cpp
 /python/astra/config.pxi
