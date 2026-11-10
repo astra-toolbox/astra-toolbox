@@ -86,8 +86,8 @@ _AstraExport std::string getCudaDeviceString(int device)
 		return buf;
 	}
 
-	long mem = prop.totalGlobalMem / (1024*1024);
-	snprintf(buf, 1024, "GPU #%d: %s, with %ldMB, CUDA compute capability %d.%d", device, prop.name, mem, prop.major, prop.minor);
+	size_t mem = prop.totalGlobalMem / (1024*1024);
+	snprintf(buf, 1024, "GPU #%d: %s, with %zuMB, CUDA compute capability %d.%d", device, prop.name, mem, prop.major, prop.minor);
 	return buf;
 }
 

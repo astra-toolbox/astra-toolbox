@@ -217,7 +217,7 @@ static bool transferConstants(const SParProjection *projs, unsigned int nth, uns
 
 	bool ok = checkCuda(cudaStreamWaitEvent(stream, buf.event, 0), "transferConstants wait");
 
-	for (int i = 0; i < nth; ++i)
+	for (unsigned int i = 0; i < nth; ++i)
 		getParParameters(projs[i], ndets, angles[i], detsizes[i], offsets[i]);
 
 	ok &= checkCuda(cudaMemcpyToSymbolAsync(gC_angle, angles, nth*sizeof(float), 0, cudaMemcpyHostToDevice, stream), "transferConstants angles");
