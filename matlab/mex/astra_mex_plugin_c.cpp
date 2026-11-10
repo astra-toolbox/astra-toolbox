@@ -47,7 +47,8 @@ static void fixLapackLoading()
     // to use its internal lapack library instead of
     // Matlab's MKL library to avoid errors. To do this,
     // we set Python's dlopen flags to RTLD_NOW|RTLD_DEEPBIND
-    // and import 'numpy.linalg.lapack_lite' here. We reset
+    // and import 'numpy.linalg._umath_linalg' (which links against
+    // numpy's internal LAPACK) here. We reset
     // Python's dlopen flags afterwards.
     PyObject *sys = PyImport_ImportModule("sys");
     if (sys != NULL) {
@@ -55,7 +56,7 @@ static void fixLapackLoading()
         if (curFlags != NULL) {
             PyObject *retVal = PyObject_CallMethod(sys, "setdlopenflags", "i", 10); // RTLD_NOW|RTLD_DEEPBIND
             if (retVal != NULL) {
-                PyObject *lapack = PyImport_ImportModule("numpy.linalg.lapack_lite");
+                PyObject *lapack = PyImport_ImportModule("numpy.linalg._umath_linalg");
                 if (lapack != NULL) {
                     Py_DECREF(lapack);
                 }
