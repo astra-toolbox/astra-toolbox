@@ -58,6 +58,20 @@ public:
 	~CDataMemory_simple() { m_pfData = nullptr; }
 };
 
+astra::CFloat32VolumeData3D *wrapVolumeData(const astra::CVolumeGeometry3D& geom, float *data)
+{
+	std::unique_ptr<astra::CDataStorage> m = std::make_unique<CDataMemory_simple>(data);
+	return new astra::CFloat32VolumeData3D(geom, std::move(m));
+}
+astra::CFloat32ProjectionData3D *wrapProjectionData(const astra::CProjectionGeometry3D& geom, float *data)
+{
+	std::unique_ptr<astra::CDataStorage> m = std::make_unique<CDataMemory_simple>(data);
+	return new astra::CFloat32ProjectionData3D(geom, std::move(m));
+}
+
+
+
+
 #ifdef ASTRA_CUDA
 
 //-----------------------------------------------------------------------------------------
@@ -105,15 +119,13 @@ void astra_mex_direct_fp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 	// Allocate input data
 	astra::CFloat32VolumeData3D* pInput;
 	if (mxIsSingle(data)) {
-		std::unique_ptr<astra::CDataStorage> m(new CDataMemory_simple((float *)mxGetData(data)));
-		pInput = new astra::CFloat32VolumeData3D(pVolGeom, std::move(m));
+		pInput = wrapVolumeData(pVolGeom, (float *)mxGetData(data));
 	} else {
 		size_t dataSize = pVolGeom.getGridColCount();
 		dataSize *= pVolGeom.getGridRowCount();
 		dataSize *= pVolGeom.getGridSliceCount();
 
-		std::unique_ptr<CDataStorage> pStorage(new CDataMemory<float>(dataSize));
-		pInput = new astra::CFloat32VolumeData3D(pVolGeom, std::move(pStorage));
+		pInput = astra::createCFloat32VolumeData3DMemory(pVolGeom);
 
 		copyMexToCFloat32Array(data, pInput->getFloat32Memory(), dataSize);
 	}
@@ -139,15 +151,9 @@ void astra_mex_direct_fp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 		const mwSize elem_size = mxGetElementSize(pOutputMx);
 		mxSetData(pOutputMx, mxMalloc(elem_size * num_elems));
 
-		std::unique_ptr<astra::CDataStorage> m(new CDataMemory_simple((float *)mxGetData(pOutputMx)));
-		pOutput = new astra::CFloat32ProjectionData3D(pProjGeom, std::move(m));
+		pOutput = wrapProjectionData(pProjGeom, (float *)mxGetData(pOutputMx));
 	} else {
-		size_t dataSize = pProjGeom.getDetectorColCount();
-		dataSize *= pProjGeom.getProjectionCount();
-		dataSize *= pProjGeom.getDetectorRowCount();
-
-		std::unique_ptr<CDataStorage> pStorage(new CDataMemory<float>(dataSize));
-		pOutput = new astra::CFloat32ProjectionData3D(pProjGeom, std::move(pStorage));
+		pOutput = astra::createCFloat32ProjectionData3DMemory(pProjGeom);
 	}
 
 	// Perform FP
@@ -225,15 +231,13 @@ void astra_mex_direct_bp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 	// Allocate input data
 	astra::CFloat32ProjectionData3D* pInput;
 	if (mxIsSingle(data)) {
-		std::unique_ptr<astra::CDataStorage> m(new CDataMemory_simple((float *)mxGetData(data)));
-		pInput = new astra::CFloat32ProjectionData3D(pProjGeom, std::move(m));
+		pInput = wrapProjectionData(pProjGeom, (float *)mxGetData(data));
 	} else {
 		size_t dataSize = pProjGeom.getDetectorColCount();
 		dataSize *= pProjGeom.getProjectionCount();
 		dataSize *= pProjGeom.getDetectorRowCount();
 
-		std::unique_ptr<CDataStorage> pStorage(new CDataMemory<float>(dataSize));
-		pInput = new astra::CFloat32ProjectionData3D(pProjGeom, std::move(pStorage));
+		pInput = astra::createCFloat32ProjectionData3DMemory(pProjGeom);
 		copyMexToCFloat32Array(data, pInput->getFloat32Memory(), dataSize);
 	}
 
@@ -258,15 +262,9 @@ void astra_mex_direct_bp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 		const mwSize elem_size = mxGetElementSize(pOutputMx);
 		mxSetData(pOutputMx, mxMalloc(elem_size * num_elems));
 
-		std::unique_ptr<astra::CDataStorage> m(new CDataMemory_simple((float *)mxGetData(pOutputMx)));
-		pOutput = new astra::CFloat32VolumeData3D(pVolGeom, std::move(m));
+		pOutput = wrapVolumeData(pVolGeom,(float *)mxGetData(pOutputMx));
 	} else {
-		size_t dataSize = pVolGeom.getGridColCount();
-		dataSize *= pVolGeom.getGridRowCount();
-		dataSize *= pVolGeom.getGridSliceCount();
-
-		std::unique_ptr<CDataStorage> pStorage(new CDataMemory<float>(dataSize));
-		pOutput = new astra::CFloat32VolumeData3D(pVolGeom, std::move(pStorage));
+		pOutput = astra::createCFloat32VolumeData3DMemory(pVolGeom);
 	}
 
 	// Perform BP

@@ -213,9 +213,6 @@ allocateDataObject(const std::string & sDataType,
 		}
 
 		// Initialize data object
-		size_t dataSize = pGeometry->getGridColCount();
-		dataSize *= pGeometry->getGridRowCount();
-		dataSize *= pGeometry->getGridSliceCount();
 #ifdef USE_MATLAB_UNDOCUMENTED
 		if (unshare) {
 			std::unique_ptr<astra::CDataStorage> pHandle(new CDataStorageMatlab(data, bUnshare, iZ));
@@ -225,12 +222,10 @@ allocateDataObject(const std::string & sDataType,
 		}
 		else
 		{
-			std::unique_ptr<astra::CDataStorage> pStorage(new astra::CDataMemory<float>(dataSize));
-			pDataObject3D = new astra::CFloat32VolumeData3D(*pGeometry, std::move(pStorage));
+			pDataObject3D = astra::createCFloat32VolumeData3DMemory(*pGeometry);
 		}
 #else
-		std::unique_ptr<astra::CDataStorage> pStorage(new astra::CDataMemory<float>(dataSize));
-		pDataObject3D = new astra::CFloat32VolumeData3D(*pGeometry, std::move(pStorage));
+		pDataObject3D = astra::createCFloat32VolumeData3DMemory(*pGeometry);
 #endif
 		delete pGeometry;
 	}
@@ -264,9 +259,6 @@ allocateDataObject(const std::string & sDataType,
 		}
 
 		// Initialize data object
-		size_t dataSize = pGeometry->getDetectorColCount();
-		dataSize *= pGeometry->getProjectionCount();
-		dataSize *= pGeometry->getDetectorRowCount();
 #ifdef USE_MATLAB_UNDOCUMENTED
 		if (unshare)
 		{
@@ -277,12 +269,10 @@ allocateDataObject(const std::string & sDataType,
 		}
 		else
 		{
-			std::unique_ptr<astra::CDataStorage> pStorage(new astra::CDataMemory<float>(dataSize));
-			pDataObject3D = new astra::CFloat32ProjectionData3D(*pGeometry, std::move(pStorage));
+			pDataObject3D = astra::createCFloat32ProjectionData3DMemory(std::move(pGeometry));
 		}
 #else
-		std::unique_ptr<astra::CDataStorage> pStorage(new astra::CDataMemory<float>(dataSize));
-		pDataObject3D = new astra::CFloat32ProjectionData3D(*pGeometry, std::move(pStorage));
+		pDataObject3D = astra::createCFloat32ProjectionData3DMemory(std::move(pGeometry));
 #endif
 	}
 	else
