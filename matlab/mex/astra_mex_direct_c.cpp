@@ -105,15 +105,15 @@ void astra_mex_direct_fp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 	// Allocate input data
 	astra::CFloat32VolumeData3D* pInput;
 	if (mxIsSingle(data)) {
-		astra::CDataStorage* m = new CDataMemory_simple((float *)mxGetData(data));
-		pInput = new astra::CFloat32VolumeData3D(pVolGeom, m);
+		std::unique_ptr<astra::CDataStorage> m(new CDataMemory_simple((float *)mxGetData(data)));
+		pInput = new astra::CFloat32VolumeData3D(pVolGeom, std::move(m));
 	} else {
 		size_t dataSize = pVolGeom.getGridColCount();
 		dataSize *= pVolGeom.getGridRowCount();
 		dataSize *= pVolGeom.getGridSliceCount();
 
-		CDataStorage* pStorage = new CDataMemory<float>(dataSize);
-		pInput = new astra::CFloat32VolumeData3D(pVolGeom, pStorage);
+		std::unique_ptr<CDataStorage> pStorage(new CDataMemory<float>(dataSize));
+		pInput = new astra::CFloat32VolumeData3D(pVolGeom, std::move(pStorage));
 
 		copyMexToCFloat32Array(data, pInput->getFloat32Memory(), dataSize);
 	}
@@ -139,15 +139,15 @@ void astra_mex_direct_fp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 		const mwSize elem_size = mxGetElementSize(pOutputMx);
 		mxSetData(pOutputMx, mxMalloc(elem_size * num_elems));
 
-		astra::CDataStorage* m = new CDataMemory_simple((float *)mxGetData(pOutputMx));
-		pOutput = new astra::CFloat32ProjectionData3D(pProjGeom, m);
+		std::unique_ptr<astra::CDataStorage> m(new CDataMemory_simple((float *)mxGetData(pOutputMx)));
+		pOutput = new astra::CFloat32ProjectionData3D(pProjGeom, std::move(m));
 	} else {
 		size_t dataSize = pProjGeom.getDetectorColCount();
 		dataSize *= pProjGeom.getProjectionCount();
 		dataSize *= pProjGeom.getDetectorRowCount();
 
-		CDataStorage* pStorage = new CDataMemory<float>(dataSize);
-		pOutput = new astra::CFloat32ProjectionData3D(pProjGeom, pStorage);
+		std::unique_ptr<CDataStorage> pStorage(new CDataMemory<float>(dataSize));
+		pOutput = new astra::CFloat32ProjectionData3D(pProjGeom, std::move(pStorage));
 	}
 
 	// Perform FP
@@ -225,15 +225,15 @@ void astra_mex_direct_bp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 	// Allocate input data
 	astra::CFloat32ProjectionData3D* pInput;
 	if (mxIsSingle(data)) {
-		astra::CDataStorage* m = new CDataMemory_simple((float *)mxGetData(data));
-		pInput = new astra::CFloat32ProjectionData3D(pProjGeom, m);
+		std::unique_ptr<astra::CDataStorage> m(new CDataMemory_simple((float *)mxGetData(data)));
+		pInput = new astra::CFloat32ProjectionData3D(pProjGeom, std::move(m));
 	} else {
 		size_t dataSize = pProjGeom.getDetectorColCount();
 		dataSize *= pProjGeom.getProjectionCount();
 		dataSize *= pProjGeom.getDetectorRowCount();
 
-		CDataStorage* pStorage = new CDataMemory<float>(dataSize);
-		pInput = new astra::CFloat32ProjectionData3D(pProjGeom, pStorage);
+		std::unique_ptr<CDataStorage> pStorage(new CDataMemory<float>(dataSize));
+		pInput = new astra::CFloat32ProjectionData3D(pProjGeom, std::move(pStorage));
 		copyMexToCFloat32Array(data, pInput->getFloat32Memory(), dataSize);
 	}
 
@@ -258,15 +258,15 @@ void astra_mex_direct_bp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 		const mwSize elem_size = mxGetElementSize(pOutputMx);
 		mxSetData(pOutputMx, mxMalloc(elem_size * num_elems));
 
-		astra::CDataStorage* m = new CDataMemory_simple((float *)mxGetData(pOutputMx));
-		pOutput = new astra::CFloat32VolumeData3D(pVolGeom, m);
+		std::unique_ptr<astra::CDataStorage> m(new CDataMemory_simple((float *)mxGetData(pOutputMx)));
+		pOutput = new astra::CFloat32VolumeData3D(pVolGeom, std::move(m));
 	} else {
 		size_t dataSize = pVolGeom.getGridColCount();
 		dataSize *= pVolGeom.getGridRowCount();
 		dataSize *= pVolGeom.getGridSliceCount();
 
-		CDataStorage* pStorage = new CDataMemory<float>(dataSize);
-		pOutput = new astra::CFloat32VolumeData3D(pVolGeom, pStorage);
+		std::unique_ptr<CDataStorage> pStorage(new CDataMemory<float>(dataSize));
+		pOutput = new astra::CFloat32VolumeData3D(pVolGeom, std::move(pStorage));
 	}
 
 	// Perform BP
