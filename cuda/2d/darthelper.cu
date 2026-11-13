@@ -98,7 +98,7 @@ __global__ void devDartMask(float* mask, const float* in, unsigned int conn, uns
 			|| 
 			(conn == 4 && // 4-connected
 		        (                      d[o1] != d[o2] ||                      
-		         d[o2 - 1] != d[o2] ||                  d[o3 + 1] != d[o2] ||
+		         d[o2 - 1] != d[o2] ||                  d[o2 + 1] != d[o2] ||
 				                       d[o3] != d[o2]                      )))
 		{
 			m[o2] = 1.0f;
