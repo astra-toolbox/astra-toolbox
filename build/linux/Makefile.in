@@ -630,7 +630,7 @@ endif
 
 ifeq ($(install_type),dir)
 # everything into @prefix@
-install: install-libraries install-matlab install-python install-octave
+install: install-libraries install-matlab install-python-dir install-octave
 
 MATLABBASE=@prefix@/matlab
 OCTAVEBASE=@prefix@/octave
@@ -660,7 +660,7 @@ endif
 
 
 ifeq ($(python),yes)
-install-python: py
+install-python-dir: py
 	cd python/dist; $(PYTHON) -m pip install --force-reinstall --no-deps -t $(DESTDIR)$(PYTHONBASE) *.whl
 
 install-python-site-packages: py
@@ -668,7 +668,7 @@ install-python-site-packages: py
 	cd python/dist; $(PYTHON) -m pip install --force-reinstall --no-deps $(patsubst %,--root=%,$(DESTDIR)) *.whl
 else
 install-python-site-packages:
-install-python:
+install-python-dir:
 endif
 
 ifeq ($(matlab),yes)
@@ -743,7 +743,7 @@ $(srcdir)/configure: $(srcdir)/configure.ac $(srcdir)/acinclude.m4
 	@echo "configure.ac has been changed. Regenerating configure script"
 	cd $(srcdir) && $(SHELL) ./autogen.sh
 
-.PHONY: all mex test clean distclean install install-libraries py install-python-site-packages install-python install-matlab install-octave install-matlab-so install-octave-so install-headers install-dev
+.PHONY: all mex test clean distclean install install-libraries py install-python-site-packages install-python-dir install-matlab install-octave install-matlab-so install-octave-so install-headers install-dev
 
 # don't remove intermediate files:
 .SECONDARY:
