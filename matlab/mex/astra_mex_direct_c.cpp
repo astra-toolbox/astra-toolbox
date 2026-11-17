@@ -135,7 +135,7 @@ void astra_mex_direct_fp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 	// If the input is single, we also allocate single output.
 	// Otherwise, double.
 	astra::CFloat32ProjectionData3D* pOutput;
-	mxArray *pOutputMx;
+	mxArray *pOutputMx = nullptr;
 	if (mxIsSingle(data)) {
 		mwSize dims[3];
 		dims[0] = pProjGeom.getDetectorColCount();
@@ -246,7 +246,7 @@ void astra_mex_direct_bp3d(int& nlhs, mxArray* plhs[], int& nrhs, const mxArray*
 	// If the input is single, we also allocate single output.
 	// Otherwise, double.
 	astra::CFloat32VolumeData3D* pOutput;
-	mxArray *pOutputMx;
+	mxArray *pOutputMx = nullptr;
 	if (mxIsSingle(data)) {
 		mwSize dims[3];
 		dims[0] = pVolGeom.getGridColCount();
